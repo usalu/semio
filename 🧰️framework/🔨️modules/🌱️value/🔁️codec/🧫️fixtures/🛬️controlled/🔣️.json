@@ -1,0 +1,361 @@
+{
+  "entries": [
+    {
+      "label": "雪\u0000exact",
+      "samples": [
+        -2,
+        0,
+        42
+      ],
+      "optional": true
+    },
+    {
+      "label": "",
+      "samples": [],
+      "optional": null
+    }
+  ],
+  "hashSetSemantics": {
+    "wire": "array",
+    "duplicates": "collapse",
+    "iteration": "unspecified",
+    "errors": "first-invalid-wire-index"
+  },
+  "hashSets": [
+    {
+      "id": "empty",
+      "input": [],
+      "accepted": true,
+      "members": [],
+      "invalidIndex": null
+    },
+    {
+      "id": "duplicate-collapse",
+      "input": [
+        7,
+        2,
+        7,
+        0,
+        2
+      ],
+      "accepted": true,
+      "members": [
+        0,
+        2,
+        7
+      ],
+      "invalidIndex": null
+    },
+    {
+      "id": "uint32-boundary",
+      "input": [
+        4294967295,
+        0
+      ],
+      "accepted": true,
+      "members": [
+        0,
+        4294967295
+      ],
+      "invalidIndex": null
+    },
+    {
+      "id": "negative",
+      "input": [
+        1,
+        -1,
+        "later"
+      ],
+      "accepted": false,
+      "members": [],
+      "invalidIndex": 1
+    },
+    {
+      "id": "overflow",
+      "input": [
+        4294967296
+      ],
+      "accepted": false,
+      "members": [],
+      "invalidIndex": 0
+    },
+    {
+      "id": "string",
+      "input": [
+        1,
+        "2"
+      ],
+      "accepted": false,
+      "members": [],
+      "invalidIndex": 1
+    },
+    {
+      "id": "null-item",
+      "input": [
+        null
+      ],
+      "accepted": false,
+      "members": [],
+      "invalidIndex": 0
+    },
+    {
+      "id": "object-shape",
+      "input": {
+        "a": 1
+      },
+      "accepted": false,
+      "members": [],
+      "invalidIndex": null
+    }
+  ],
+  "dropOwners": [
+    {
+      "id": "complete",
+      "input": {
+        "secret": "grant雪",
+        "later": 3
+      },
+      "accepted": true
+    },
+    {
+      "id": "partial-failure",
+      "input": {
+        "secret": "grant雪",
+        "later": "invalid"
+      },
+      "accepted": false
+    }
+  ],
+  "representations": [
+    {
+      "kind": "adjacent",
+      "value": {
+        "kind": "empty"
+      }
+    },
+    {
+      "kind": "adjacent",
+      "value": {
+        "kind": "label",
+        "payload": "雪"
+      }
+    },
+    {
+      "kind": "adjacent",
+      "value": {
+        "kind": "record",
+        "payload": {
+          "required": 2,
+          "optional": null
+        }
+      }
+    },
+    {
+      "kind": "internal",
+      "value": {
+        "kind": "empty"
+      }
+    },
+    {
+      "kind": "internal",
+      "value": {
+        "kind": "record",
+        "required": 2
+      }
+    },
+    {
+      "kind": "external",
+      "value": "empty"
+    },
+    {
+      "kind": "external",
+      "value": {
+        "label": "雪"
+      }
+    },
+    {
+      "kind": "external",
+      "value": {
+        "record": {
+          "required": 2
+        }
+      }
+    },
+    {
+      "kind": "transparent",
+      "value": "snow"
+    },
+    {
+      "kind": "flattened",
+      "value": {
+        "known": 7,
+        "one": "first",
+        "two": "second"
+      }
+    },
+    {
+      "kind": "defaults",
+      "value": {}
+    }
+  ],
+  "attributes": {
+    "display": "雪",
+    "converted": "exact",
+    "skipped": "must ignore"
+  },
+  "limits": {
+    "nullableSlots": 20000,
+    "largeTextBytes": 100000,
+    "deepIntrinsicLevels": 2048,
+    "recursiveDerivedLevels": 80,
+    "maximumDerivedDepth": 64,
+    "interiorCancellationUnit": 256
+  },
+  "binary32NanBridges": [
+    {
+      "word": "7f800001",
+      "binary64Word": "7ff0000020000000"
+    },
+    {
+      "word": "7fc00042",
+      "binary64Word": "7ff8000840000000"
+    },
+    {
+      "word": "ff800001",
+      "binary64Word": "fff0000020000000"
+    }
+  ],
+  "binary32Words": [
+    "00000000",
+    "80000000",
+    "00000001",
+    "7f800000",
+    "ff800000",
+    "7f800001",
+    "7fc00042",
+    "ff800001"
+  ],
+  "floatWords": [
+    "0000000000000000",
+    "0000000000000001",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000042"
+  ],
+  "octets": [
+    0,
+    127,
+    128,
+    255
+  ],
+  "customDefaults": [
+    {
+      "id": "bridge-bare-missing",
+      "mode": "bare",
+      "input": {},
+      "plainPayload": null,
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value default has no controlled constructor"
+    },
+    {
+      "id": "bridge-bare-present",
+      "mode": "bare",
+      "input": {
+        "payload": {
+          "snow": "雪",
+          "n": 3
+        }
+      },
+      "plainPayload": {
+        "snow": "雪",
+        "n": 3
+      },
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value conversion has no controlled constructor"
+    },
+    {
+      "id": "bridge-option-missing",
+      "mode": "option",
+      "input": {},
+      "plainPayload": null,
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value default has no controlled constructor"
+    },
+    {
+      "id": "bridge-option-present",
+      "mode": "option",
+      "input": {
+        "payload": "雪"
+      },
+      "plainPayload": "雪",
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value conversion has no controlled constructor"
+    },
+    {
+      "id": "bridge-container-missing",
+      "mode": "container",
+      "input": {},
+      "plainPayload": null,
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value default has no controlled constructor"
+    },
+    {
+      "id": "bridge-container-present",
+      "mode": "container",
+      "input": {
+        "payload": [
+          1,
+          2
+        ]
+      },
+      "plainPayload": [
+        1,
+        2
+      ],
+      "controlledAccepted": false,
+      "controlledError": "payload.custom value conversion has no controlled constructor"
+    },
+    {
+      "id": "controlled-custom-missing",
+      "mode": "controlled",
+      "input": {},
+      "plainPayload": "",
+      "controlledAccepted": true,
+      "controlledError": null
+    },
+    {
+      "id": "controlled-custom-present",
+      "mode": "controlled",
+      "input": {
+        "payload": "雪"
+      },
+      "plainPayload": "雪",
+      "controlledAccepted": true,
+      "controlledError": null
+    }
+  ],
+  "scalarOwnerDefaultInputs": [
+    {
+      "input": {
+        "count": 7
+      },
+      "expected": {
+        "count": 7
+      }
+    },
+    {
+      "input": {},
+      "expected": {
+        "count": 1
+      }
+    }
+  ],
+  "scalarOwnerConstInput": {
+    "items": [
+      7,
+      9
+    ]
+  }
+}

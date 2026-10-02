@@ -16,7 +16,7 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_obj::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::apply_obj_mutation;
 

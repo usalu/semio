@@ -12,7 +12,8 @@
 //! Named "wires" (not "graph") to avoid confusion with the unrelated existing `value`-subset
 //! example already at `✉️base/📚️examples/🕸️graph/`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "wires";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

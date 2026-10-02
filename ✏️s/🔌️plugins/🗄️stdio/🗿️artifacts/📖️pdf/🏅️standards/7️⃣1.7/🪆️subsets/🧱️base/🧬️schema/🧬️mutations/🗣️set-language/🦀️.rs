@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetLanguage {
         vec![PdfMutation::SetLanguage(SetLanguage { language: base.language.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set language", "Sprache setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set language", "Sprache setzen")
     }
 
     fn target(&self) -> Vec<String> {

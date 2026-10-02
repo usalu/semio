@@ -29,7 +29,9 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(dsl::json::from_json_str::<CadDiff>(&row.to_string()).is_err());
     }
-    assert!(crate::cad_model_child_from_uri("model-a", "model-b!s.stdio.semio@v1/model").is_err());
+    let alias=crate::cad_model_child_from_uri("model-a", "model-b!s.stdio.semio@v1/model").unwrap();
+    assert_eq!(alias.child_id,"model-a");
+    assert_eq!(alias.target.artifact_id,"model-b");
     assert!(crate::cad_model_child_from_uri("model-a", "model-a!s.stdio.semio@v1/drawing").is_err());
     assert!(crate::cad_drawing_child_from_uri("drawing-a", "drawing-a!s.stdio.semio@v1/drawing").is_ok());
 }

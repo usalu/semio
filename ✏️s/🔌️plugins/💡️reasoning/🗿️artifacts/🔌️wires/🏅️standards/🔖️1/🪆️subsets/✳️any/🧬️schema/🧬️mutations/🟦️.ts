@@ -10,6 +10,8 @@ import type { DeleteNode } from "./🗑️delete-node/🧬️schema/🟦️.ts";
 import type { SetNodeRoot } from "./🚩set-node-root/🧬️schema/🟦️.ts";
 import type { ConnectNodes } from "./🤝️connect-nodes/🧬️schema/🟦️.ts";
 import type { MoveNode } from "./🧭move-node/🧬️schema/🟦️.ts";
+import type { MoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
+import type { SetNodePositions } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
 
 export type { DisconnectNodes } from "./✂️disconnect-nodes/🧬️schema/🟦️.ts";
 export type { EditNodeText } from "./✏️edit-node-text/🧬️schema/🟦️.ts";
@@ -21,6 +23,10 @@ export type { DeleteNode } from "./🗑️delete-node/🧬️schema/🟦️.ts";
 export type { SetNodeRoot } from "./🚩set-node-root/🧬️schema/🟦️.ts";
 export type { ConnectNodes } from "./🤝️connect-nodes/🧬️schema/🟦️.ts";
 export type { MoveNode } from "./🧭move-node/🧬️schema/🟦️.ts";
+export type { MoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
+export type { SetNodePositions, WiresNodePosition } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
+export { parseMoveNodes } from "./🚚️move-nodes/🧬️schema/🟦️.ts";
+export { parseSetNodePositions } from "./📍️set-node-positions/🧬️schema/🟦️.ts";
 
 export type WiresMutation =
   | DisconnectNodes
@@ -32,4 +38,6 @@ export type WiresMutation =
   | DeleteNode
   | SetNodeRoot
   | ConnectNodes
-  | MoveNode;
+  | MoveNode
+  | MoveNodes
+  | SetNodePositions;

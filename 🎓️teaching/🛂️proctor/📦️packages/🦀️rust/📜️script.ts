@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🛂️ `teaching-proctor` task router: `bun ./📜️script.ts <build [args…]|test [fundamental|quick|long|exhaustive] [args…]|dev|check [catalog]|rebuild>`.
  *
  * `dev`, `check` and `rebuild` build the binary and run a private copy of it (`../../🏗️bootstrap/🟦️.ts`), so a running
@@ -9,7 +10,7 @@
  *
  * @see ../../README.md — the operator guide and every environment variable
  */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 import { buildCargoArtifacts } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { PROCTOR_PACKAGE, proctorCatalog, proctorDevelopmentEnvironment, runProctor } from "../../🏗️bootstrap/🟦️.ts";

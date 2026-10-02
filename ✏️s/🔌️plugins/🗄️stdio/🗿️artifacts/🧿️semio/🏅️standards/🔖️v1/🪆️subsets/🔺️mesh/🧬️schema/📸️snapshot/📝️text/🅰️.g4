@@ -35,9 +35,12 @@ rgba          : '[' NUMBER ',' NUMBER ',' NUMBER ',' NUMBER ']' ;
 indexList     : INT (',' INT)* ;
 topology      : 'P' | 'L' | 'S' | 'T' | 'X' | 'F' ;
 optionHex     : '[' '0' ']' | '[' '1' ',' HEX ']' ;
-NUMBER        : INT | FLOAT ;
+NUMBER        : INT | FLOAT | IEEE ;
 
 HEX   : [0-9a-f]* ;
 INT   : '-'? [0-9]+ ;
 FLOAT : '-'? [0-9]+ '.' [0-9]* ;
 WS    : [ \t\r\n]+ -> skip ;
+
+IEEE : '-'? 'inf' | 'nan64_' WORD WORD WORD WORD | 'nan32_' WORD WORD ;
+fragment WORD : [0-9a-f] [0-9a-f] [0-9a-f] [0-9a-f] ;

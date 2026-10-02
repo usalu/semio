@@ -32,8 +32,9 @@ for (const item of hostile) assert(!validate(item));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/unknown/🦀️.rs"));
 assert(!acceptsLayout("domain/🧬️mutations/🆕️insert-page/🦠️mutation/nested/🦀️.rs"));
 
-const domainFixture = await Bun.file(new URL("../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
-const validateDomains = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityDomainsV1`)!;
+const domainFixture = await Bun.file(new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
+const domainSchema = await Bun.file(new URL("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json", import.meta.url)).json();
+const validateDomains = ajv.compile(domainSchema);
 assert(validateDomains(domainFixture), JSON.stringify(validateDomains.errors));
 const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [domainFixture.mutationRoot]: domainFixture.domains } };
 assert.deepEqual(mutationDomainOwnersProblems(taxonomy.mutationDomainOwners), []);

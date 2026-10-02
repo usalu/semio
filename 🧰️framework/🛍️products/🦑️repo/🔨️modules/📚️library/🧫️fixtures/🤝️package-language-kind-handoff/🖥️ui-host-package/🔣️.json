@@ -163,10 +163,12 @@
     "BundleScript",
     "ScriptRouter",
     "buildBudgetMs",
+    "readCargoTestPolicyV1",
+    "resolve",
     "resolveTestLevel",
-    "runBundleScriptMain",
-    "runCargoTestBudgeted",
-    "runTestBudgeted"
+    "runBudgetedTestCommand",
+    "runCargoTestsV1",
+    "runScriptMain"
   ],
   "nativeCases": [
     {
@@ -267,8 +269,8 @@
       "command": "check",
       "args": [
         "check",
-        "-p",
-        "semio-framework-ui-host",
+        "--manifest-path",
+        "Cargo.toml",
         "--lib"
       ]
     },
@@ -276,8 +278,8 @@
       "command": "check-wasm",
       "args": [
         "check",
-        "-p",
-        "semio-framework-ui-host",
+        "--manifest-path",
+        "Cargo.toml",
         "--lib",
         "--target",
         "wasm32-unknown-unknown"
@@ -430,5 +432,51 @@
     "runtime dependency installation",
     "hardcoded budget override",
     "unsupported wasm32-wasip2 command"
+  ],
+  "moduleImports": [
+    {
+      "module": "node:path",
+      "names": [
+        "resolve"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "names": [
+        "readCargoTestPolicyV1",
+        "runCargoTestsV1"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "names": [
+        "resolveTestLevel"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "names": [
+        "runBudgetedTestCommand"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/⏱️budget/🟦️.ts",
+      "names": [
+        "buildBudgetMs"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧭️routing/🟦️.ts",
+      "names": [
+        "BundleScript",
+        "ScriptRouter"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "names": [
+        "runScriptMain"
+      ]
+    }
   ]
 }

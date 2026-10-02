@@ -18,8 +18,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeReinforcem
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grade", kind: "change-reinforcement-f-yk", record: "ChangedReinforcementFYk" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change strength of grade {}", self.grade_id), &format!("Festigkeit der Sorte {} ändern", self.grade_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change strength of grade {}", self.grade_id), &format!("Festigkeit der Sorte {} ändern", self.grade_id))
     }
     fn target(&self) -> Vec<String> { vec![self.grade_id.clone()] }
 }

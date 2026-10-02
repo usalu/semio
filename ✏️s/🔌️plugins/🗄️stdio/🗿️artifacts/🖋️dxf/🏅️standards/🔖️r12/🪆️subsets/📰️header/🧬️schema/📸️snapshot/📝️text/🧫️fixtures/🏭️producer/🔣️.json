@@ -1,0 +1,44 @@
+{
+  "schema": "semio.stdio.dxf.snapshot-schema-producer/v1",
+  "fields": [
+    {
+      "id": 1,
+      "key": "schema",
+      "shape": "Text",
+      "optional": false
+    },
+    {
+      "id": 2,
+      "key": "headerVars",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 3,
+      "key": "tables",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 4,
+      "key": "otherTables",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 5,
+      "key": "blocks",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 6,
+      "key": "entities",
+      "shape": "Value",
+      "optional": false
+    }
+  ],
+  "maximumBytes": 65536,
+  "tinyMaximumBytes": 1,
+  "cancelAt": 2
+}

@@ -2,7 +2,8 @@
 
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 use flow_extension_sdk::{DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle};
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value};
+use semio_framework_value::ValueType;
 use semio_framework_2d::{DrawingError, Vec2};
 
 // #region 🔖️Helpers

@@ -22,6 +22,11 @@ impl MoveSelection {
     pub fn motion(&self) -> LowpolySelectionMotion {
         LowpolySelectionMotion::Offset(self.offset)
     }
+
+    /// 🧪️ The payload's own invariant, independent of any document: every vertex named once and a finite offset.
+    pub fn invariant_violation(&self) -> Option<String> {
+        crate::mutations::lowpoly_selection_vertex_violation(&self.vertex_ids).or_else(|| (!self.offset.iter().all(|value| value.is_finite())).then(|| "The offset must be finite.".into()))
+    }
 }
 
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for MoveSelection {
@@ -33,7 +38,7 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for MoveSelection 
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         self.motion().label(&self.object_id, self.vertex_ids.len())
     }
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFireInputs
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update fire exposure {}", self.fire_exposure.id),
             &format!("Brandbeanspruchung {} aktualisieren", self.fire_exposure.id),
         )

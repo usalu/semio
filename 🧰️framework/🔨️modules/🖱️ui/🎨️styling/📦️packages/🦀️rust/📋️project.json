@@ -35,20 +35,6 @@
       },
       "outputs": []
     },
-    "check-no-px": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-no-px"
-      }
-    },
-    "check-no-raw-colors": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts check-no-raw-colors"
-      }
-    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -99,7 +85,9 @@
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [],
-      "dependsOn": ["workspace:deps-browsers"],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-relative-sizing"

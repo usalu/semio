@@ -2,14 +2,14 @@
 //! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
 //! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
-//! a second implementation of the rule document and all seven typed mutations, written in Python
+//! a second implementation of the rule document and all fourteen typed mutations, written in Python
 //! from this subset's committed snapshot schema, mutation grammar and specification vectors. This
 //! adapter registers the SUBJECT half only: keeping oracle registrations here would put this
 //! repository's answer on both sides of the comparison.
 //!
 //! A rewrite rule is five members: three whole JSON DOCUMENTS carried as strings — the before-fixture
 //! graph, the left-hand pattern and the right-hand side — plus a map of parameter bindings and a map
-//! of layout points. Seven verbs: three whole-value setters and a set/remove pair over each map.
+//! of layout points. Fourteen verbs: three whole-value setters, a set/remove pair over each map, five relative working-graph edits (node drag, node field patch, node delete with its edges, wire draw, wire cut), a relative rule-node drag and its absolute layout placement.
 //!
 //! **What the two roles each hold.** The cross-language projection is the whole document; this
 //! artifact composes no digest-derived child, so nothing has to be held back. The `.dsl.semio`
@@ -25,7 +25,7 @@ use semio_repo_test_host::Adapter;
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
-const KINDS: &[&str] = &["edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point"];
+const KINDS: &[&str] = &["edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-working-nodes", "patch-working-nodes", "drag-rule-nodes", "set-rule-layout-points", "delete-working-nodes", "connect-working-ports", "disconnect-working-edges"];
 
 //#endregion 🔖️Kinds
 
@@ -80,7 +80,7 @@ mod subject {
     /// document for the member it meant to write while silently rewriting the other two.
     fn touches_one(scenario: &str, kind: &str, before: &RewritingSnapshot, after: &RewritingSnapshot) -> Result<(), String> {
         let written = match kind {
-            "edit-before-fixture" => "beforeFixtureJson",
+            "edit-before-fixture" | "drag-working-nodes" | "patch-working-nodes" | "delete-working-nodes" | "connect-working-ports" | "disconnect-working-edges" => "beforeFixtureJson",
             "edit-lhs" => "lhsJson",
             "edit-rhs" => "rhsJson",
             "change-parameter-binding" | "remove-parameter-binding" => "parameterBindings",
@@ -117,7 +117,7 @@ mod subject {
     }
 
     /// ↩️ Applies one kind to the REAL derived rule and then EVERY step of its OWN computed inverse.
-    /// The projection carries BOTH rules: projecting only the restored one would make all seven rows
+    /// The projection carries BOTH rules: projecting only the restored one would make all fourteen rows
     /// project the same value and the differential would be vacuous.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
@@ -147,7 +147,7 @@ mod subject {
     }
 
     /// 📐️ Replays one committed handcrafted specification vector, read through the plan's declared
-    /// fixtures — the same three files the Python reference reads. All seven are accepting, so each
+    /// fixtures — the same three files the Python reference reads. All fourteen are accepting, so each
     /// must reach the committed after-rule, move it, write exactly one member and invert cleanly.
     pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {

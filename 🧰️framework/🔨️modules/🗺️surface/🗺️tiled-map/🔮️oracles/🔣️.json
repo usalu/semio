@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ The tiled-map module's contribution to the repository test platform. `mercantile` is the published reference implementation of the EPSG:3857 Web-Mercator projection and the OSM/Mapbox XYZ slippy-tile scheme this module's `projection`/`tiles` implement, so it belongs to this owner rather than to the test framework.",
   "oracles": [

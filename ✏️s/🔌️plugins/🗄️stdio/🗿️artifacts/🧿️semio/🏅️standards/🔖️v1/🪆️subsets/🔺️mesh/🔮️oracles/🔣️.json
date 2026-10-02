@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is a cross-language pair — three.js for the geometry it genuinely speaks, and an independent TypeScript implementation of the semio-native carrier and the seventeen verbs for the half no third party speaks.",
   "oracles": [
@@ -7,7 +7,7 @@
       "id": "semio-mesh-typescript-three-independent",
       "kind": "cross-semio-implementation",
       "ecosystem": "javascript",
-      "package": "semio-s-plugin-stdio-test-oracle",
+      "package": "semio-hub-stdio-test-oracle",
       "engine": {
         "family": "semio-mesh-ts-independent",
         "implementation": "hand-written TypeScript reimplementation of the semio v1 mesh carrier, pack frame and 17 mutation verbs",
@@ -1130,6 +1130,33 @@
             "stl",
             "obj",
             "ply"
+          ]
+        },
+        {
+          "id": "set-snapshot",
+          "capability": "semio-v1-mesh-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "three-carrier-reader"
+            },
+            {
+              "capability": "semio-v1-mesh-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "manifold-mesh-measure"
+            }
           ]
         }
       ]
@@ -6714,38 +6741,38 @@
     {
       "id": "mesh-exact",
       "description": "📏️ Analytic primitives (a cube, whose eight vertices and six faces have a closed-form volume/area) tessellated by manifold-3d with no boolean or scale operation applied — the tightest mesh floor this subset uses, admitting only IEEE-754 and triangulation-seam noise.",
-      "absoluteLength": 1e-09,
+      "absoluteLength": 1e-9,
       "relativeLength": 1e-10,
-      "absoluteArea": 1e-08,
-      "relativeArea": 1e-09,
-      "absoluteVolume": 1e-08,
-      "relativeVolume": 1e-09,
-      "normalizedHausdorffMax": 1e-07,
-      "normalizedCentroidDistanceMax": 1e-08,
+      "absoluteArea": 1e-8,
+      "relativeArea": 1e-9,
+      "absoluteVolume": 1e-8,
+      "relativeVolume": 1e-9,
+      "normalizedHausdorffMax": 1e-7,
+      "normalizedCentroidDistanceMax": 1e-8,
       "maxOverrideFactor": 5
     },
     {
       "id": "mesh-tessellated",
       "description": "📏️ The default for this subset's boolean/primitive/topology corpus: ordinary mechanical solids at millimetre scale re-tessellated by manifold-3d after a boolean or topology edit. Measured against this oracle's own baseline (0.000e+00 round-trip noise, 1.073e-01/9.988e-01 for a genuinely different 5mm-vs-6mm bore) so the floor sits comfortably below any real defect while absorbing ordinary re-tessellation seam noise.",
-      "absoluteLength": 1e-06,
-      "relativeLength": 1e-07,
-      "absoluteArea": 1e-05,
-      "relativeArea": 1e-06,
-      "absoluteVolume": 1e-05,
-      "relativeVolume": 1e-06,
+      "absoluteLength": 0.000001,
+      "relativeLength": 1e-7,
+      "absoluteArea": 0.00001,
+      "relativeArea": 0.000001,
+      "absoluteVolume": 0.00001,
+      "relativeVolume": 0.000001,
       "normalizedHausdorffMax": 0.0001,
-      "normalizedCentroidDistanceMax": 1e-05,
+      "normalizedCentroidDistanceMax": 0.00001,
       "maxOverrideFactor": 8
     },
     {
       "id": "mesh-degenerate",
       "description": "📏️ Slivers, hairline grooves, needle cones and tiny bores at or below manifold's own welding tolerance, where the RESULT CLASS (does the feature survive at all) is the assertion this subset's `degenerate-*` family is making and the metric is secondary — the loosest floor here, mirroring `epsilon-degenerate`'s reasoning but sized to manifold-3d's 1e-7 relative welding grid rather than an analytic kernel's.",
-      "absoluteLength": 1e-05,
-      "relativeLength": 1e-06,
+      "absoluteLength": 0.00001,
+      "relativeLength": 0.000001,
       "absoluteArea": 0.0001,
-      "relativeArea": 1e-05,
+      "relativeArea": 0.00001,
       "absoluteVolume": 0.0001,
-      "relativeVolume": 1e-05,
+      "relativeVolume": 0.00001,
       "normalizedHausdorffMax": 0.001,
       "normalizedCentroidDistanceMax": 0.0001,
       "maxOverrideFactor": 4
@@ -6753,15 +6780,16 @@
     {
       "id": "mesh-scale-relative",
       "description": "📏️ The `scale-bore-boss-*`/`scale-torus-*` family, the SAME geometry re-expressed from 1e-3 to 1e6 length units, where a fixed absolute floor sized for one scale would either swallow the whole model at the small end or reject legitimate noise at the large end. Only the relative terms are meaningful here, mirroring `large-coordinate`'s and `micro-scale`'s reasoning combined into one profile because this family spans both directions from unit scale.",
-      "absoluteLength": 1e-09,
-      "relativeLength": 1e-06,
-      "absoluteArea": 1e-09,
-      "relativeArea": 1e-05,
-      "absoluteVolume": 1e-09,
-      "relativeVolume": 1e-05,
-      "normalizedHausdorffMax": 1e-05,
-      "normalizedCentroidDistanceMax": 1e-06,
+      "absoluteLength": 1e-9,
+      "relativeLength": 0.000001,
+      "absoluteArea": 1e-9,
+      "relativeArea": 0.00001,
+      "absoluteVolume": 1e-9,
+      "relativeVolume": 0.00001,
+      "normalizedHausdorffMax": 0.00001,
+      "normalizedCentroidDistanceMax": 0.000001,
       "maxOverrideFactor": 5
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

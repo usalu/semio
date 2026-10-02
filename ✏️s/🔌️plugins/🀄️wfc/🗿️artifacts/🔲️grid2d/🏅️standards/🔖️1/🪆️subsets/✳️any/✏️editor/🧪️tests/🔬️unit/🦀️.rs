@@ -30,9 +30,9 @@ fn the_editor_declares_both_panes_and_a_fifty_fifty_row_layout() {
 fn both_panes_are_localized_en_and_de() {
     let definition = create_grid2d_editor();
     let grid_window = definition.window_kinds.iter().find(|window| window.id == grid::WINDOW_KIND_ID).expect("grid pane");
-    assert_eq!(grid_window.label, semio_framework_plugin::LocalizedLabel::native("Grid", "Raster"));
+    assert_eq!(grid_window.label, semio_framework_ui_locale::LocalizedLabel::native("Grid", "Raster"));
     let preview_window = definition.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("preview pane");
-    assert_eq!(preview_window.label, semio_framework_plugin::LocalizedLabel::native("Preview", "Vorschau"));
+    assert_eq!(preview_window.label, semio_framework_ui_locale::LocalizedLabel::native("Preview", "Vorschau"));
 }
 
 #[test]
@@ -221,7 +221,7 @@ fn both_camera_spellings_decode_to_their_own_command() {
 
 #[test]
 fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select() {
-    let mut view = ViewModel::default();
+    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_SELECT);
     view.active_utility_id = Some(grid::UTILITY_MASK.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_MASK);
@@ -263,13 +263,12 @@ fn the_commit_fill_command_writes_solve_json() {
     let doc = ArtifactView::new(&document, &history);
     let no_config = NoConfig::default();
     let cfg = ConfigView { snapshot: &no_config, window: None };
-    let mut view = ViewModel::default();
+    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.window_id = Some("preview-1".into());
     view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
     let solve_json = protocol::json::to_json_string(&commit);
     let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone() }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
     assert_eq!(emit.window_config_mutations.len(), 1);
-    assert_eq!(emit.description.as_deref(), Some("Commit fill"));
 }
 
 /// ⚖️ LAW: `TOOL_IDS`, the per-tool publication-lane contracts and the `bounded_first_step_tool_proofs!`

@@ -28,8 +28,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReorderSte
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Reihenfolge von Schritt \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Reihenfolge von Schritt \"{}\" ändern", self.id))
     }
 
     fn target(&self) -> Vec<String> {

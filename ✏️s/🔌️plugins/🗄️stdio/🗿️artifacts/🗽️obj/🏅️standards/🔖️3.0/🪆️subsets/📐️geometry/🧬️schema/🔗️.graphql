@@ -1,17 +1,18 @@
-scalar ObjSourceLineUInt64
+scalar ObjIndexUInt32
+scalar ObjSourceUInt64
 
 # 🧬️ ObjArtifact schema facet — mirrors 🦀️.rs field-for-field.
 
 type ObjVertex { x: Float! y: Float! z: Float! w: Float }
 type ObjTexCoord { u: Float! v: Float! w: Float }
 type ObjNormal { x: Float! y: Float! z: Float! }
-type ObjFaceVertex { vertex: Int! texcoord: Int normal: Int }
+type ObjFaceVertex { vertex: ObjIndexUInt32! texcoord: ObjIndexUInt32 normal: ObjIndexUInt32 }
 type ObjFace { vertices: [ObjFaceVertex!]! }
-type ObjGroup { name: String! faces: [Int!]! }
-type ObjObject { name: String! faces: [Int!]! }
-type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
-type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
-type ObjUnknownStatement { lineIndex: ObjSourceLineUInt64! raw: String! }
+type ObjGroup { name: String! faces: [ObjSourceUInt64!]! }
+type ObjObject { name: String! faces: [ObjSourceUInt64!]! }
+type ObjUsemtlRange { faceIndexFrom: ObjSourceUInt64! material: String! }
+type ObjSmoothingRange { faceIndexFrom: ObjSourceUInt64! group: ObjIndexUInt32 }
+type ObjUnknownStatement { lineIndex: ObjSourceUInt64! raw: String! }
 
 type ObjArtifact {
   schema: String!

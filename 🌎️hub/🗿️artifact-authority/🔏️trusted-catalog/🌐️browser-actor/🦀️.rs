@@ -24,7 +24,7 @@ pub enum TrustedBundleBrowserActorV1 {
 
 /// 📏️ Applies the domain's semantic whole-number bound to JSON integer, decimal and exponent tokens.
 fn actor_byte_length<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
-    semio_framework::from_dsl_value::<DocumentBrowserActorByteLengthV1>(semio_framework::DslValue::float(f64::deserialize(deserializer)?)).map(|length| length.get()).map_err(serde::de::Error::custom)
+    <DocumentBrowserActorByteLengthV1 as semio_framework_value::FromValue>::from_value(semio_framework::DslValue::float(f64::deserialize(deserializer)?)).map(|length| length.get()).map_err(serde::de::Error::custom)
 }
 
 impl TrustedBundleBrowserActorV1 {

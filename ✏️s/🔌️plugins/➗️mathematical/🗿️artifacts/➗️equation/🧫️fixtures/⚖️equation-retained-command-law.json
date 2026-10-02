@@ -16,7 +16,8 @@
     "nodeGraphEdit",
     "nodeGraphViewport",
     "setPoints",
-    "setActiveExample"
+    "setActiveExample",
+    "addNode"
   ],
   "hostileCases": [
     {
@@ -61,7 +62,7 @@
     },
     {
       "law": "registrationIdentity",
-      "maximum": 7,
+      "maximum": 8,
       "maximumPlusOneAccepted": false
     },
     {

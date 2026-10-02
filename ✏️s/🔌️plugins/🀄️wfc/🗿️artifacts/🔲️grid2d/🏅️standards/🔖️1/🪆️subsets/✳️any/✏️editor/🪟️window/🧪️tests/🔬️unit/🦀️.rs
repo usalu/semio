@@ -51,7 +51,7 @@ fn a_config_mutation_inverts_to_the_base_it_replaced() {
 
 #[test]
 fn a_config_write_without_a_window_is_refused() {
-    let view = semio_framework_plugin::ViewModel::default();
+    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(addressed_config(&view, Grid2dWindowConfig::default()).is_err(), "an unaddressed config write would land in the wrong pane's store");
     assert_eq!(kind_for_view(&view), None);
 }

@@ -1,7 +1,7 @@
 //! 🩹️ Trinity Rewriting app command — `patch-nodes`.
 
 use semio_s_artifact_trinity_jack::JackWorkingScene;
-use crate::standards::v1::subsets::any::schema::mutations::edit_before_fixture;
+use crate::standards::v1::subsets::any::schema::mutations::patch_working_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
@@ -24,7 +24,7 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
     Graph::from_snapshot(fixture).and_then(|graph| graph.host_snapshot_json()).map_err(|error| error.to_string())
 }
 
-/// 🩹️ Patches `name` or `kind` of the named nodes of the rule's working (before) graph — or, when
+/// 🩹️ ONE `patch-working-nodes` leaf setting `name` or `kind` of the named nodes of the rule's working (before) graph — or, when
 /// `node_ids` is empty, of the nodes selected in the `graph` domain, which is what a rail press means.
 /// Every request that cannot move the document is refused by name instead of answering an empty emit (the
 /// silent empty emit read as an accepted edit that moved nothing, S15 session 11): `app.command.targets-required`
@@ -49,9 +49,6 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], select
     if !missing.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the working graph has no node {}", missing.join(", "))));
     }
-    let patched = patch_fixture_nodes(&state.before_fixture_json, targets, field, value).map_err(|error| invalid(format!("the patched working graph is not a valid graph: {error}")))?;
-    Ok(match patched == state.before_fixture_json {
-        true => Emit::default(),
-        false => Emit::mutations(vec![edit_before_fixture(patched)]),
-    })
+    patch_fixture_nodes(&state.before_fixture_json, targets, field, value).map_err(|error| invalid(format!("the patched working graph is not a valid graph: {error}")))?;
+    Ok(Emit::mutations(vec![patch_working_nodes(targets.to_vec(), field.to_string(), value.to_string())]))
 }

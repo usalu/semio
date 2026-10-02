@@ -144,7 +144,7 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
             app.actions.push(semio_framework::ActionDefinition::new_catalog("setActiveExample", LocalizedLabel::native("Example", "Beispiel"), semio_framework::ActionKind::View));
         }
         let expected: Vec<String> = case["expected"].as_array().expect("fixture expectation").iter().map(|id| id.as_str().expect("fixture example id").to_string()).collect();
-        let rows = shell_example_rows(&examples, &app, None, Terminology::default(), Locale::default());
+        let rows = shell_example_rows(&examples, &app, None, Terminology::Native, Locale::En);
         let control_ids: Vec<String> = rows.iter().map(|row| row.control_id.clone()).collect();
         let expected_control_ids: Vec<String> = expected.iter().map(|id| format!("shell.example.{id}")).collect();
         assert_eq!(control_ids, expected_control_ids, "{}: the picker's rows carry the React `shell.example.<id>` control ids, in manifest order", case["name"]);
@@ -176,7 +176,7 @@ fn viewer_example_offer_matches_declared_action_authority() {
         }
         if !kinds.is_empty() { app.window_kinds = WindowKinds::try_from(kinds).unwrap(); }
         let examples = (0..row["exampleCount"].as_u64().unwrap()).map(|index| ExampleDefinition { id: format!("demo-{index}"), label: LocalizedLabel::native("Demo", "Demo"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: dialect.clone() }).collect::<Vec<_>>();
-        let rows = shell_example_rows(&examples, &app, Some("demo-0"), Terminology::default(), Locale::default());
+        let rows = shell_example_rows(&examples, &app, Some("demo-0"), Terminology::Native, Locale::En);
         assert_eq!(!rows.is_empty(), row["expected"].as_bool().unwrap(), "{}", row["name"]);
         let options = rows.iter().map(|row| row.control_id.trim_start_matches("shell.example.").to_string()).collect::<Vec<_>>();
         assert_eq!(resolve_boot_example_id("demo-0", &options, Some("demo-0")).is_empty(), !row["expected"].as_bool().unwrap(), "{}", row["name"]);
@@ -191,14 +191,14 @@ fn the_example_picker_trigger_shows_the_picked_row_and_the_open_dropdown_is_its_
         ExampleDefinition { id: "hex".into(), label: LocalizedLabel::native("Hexagonal Column", "Sechseckige Säule"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: dialect.clone() },
         ExampleDefinition { id: "box".into(), label: LocalizedLabel::native("Box Shell", "Boxschale"), icon_id: "file".into(), artifact_json: "{}".into(), dialect },
     ];
-    let rows = shell_example_rows(&examples, &app, Some("box"), Terminology::default(), Locale::De);
+    let rows = shell_example_rows(&examples, &app, Some("box"), Terminology::Native, Locale::De);
     assert_eq!(rows.iter().filter(|row| row.selected).map(|row| row.control_id.as_str()).collect::<Vec<_>>(), vec!["shell.example.box"]);
     assert_eq!(rows[0].label, "Sechseckige Säule", "row labels are the example's OWN localized label — no shell dictionary, no default language");
     let control = shell_example_control(&rows, true, true).expect("two examples offer a picker");
     assert_eq!(control.label, "Boxschale", "the trigger shows the picked row, the way a select shows its value");
     assert!(control.active, "an open dropdown is the trigger's pressed state");
     assert!(!shell_example_control(&rows, false, true).expect("picker").active);
-    let empty = shell_example_rows(&[], &app, None, Terminology::default(), Locale::default());
+    let empty = shell_example_rows(&[], &app, None, Terminology::Native, Locale::En);
     assert!(shell_example_control(&empty, false, false).is_none(), "a dialect with no authored example paints no trigger at all");
 }
 
@@ -250,7 +250,7 @@ fn the_roles_group_exists_exactly_when_the_plugin_declares_both_surfaces_of_the_
         let apps = manifest_apps(&fixture, case["manifest"].as_str().expect("fixture manifest id"));
         let dialect = case["dialect"].as_str().map_or_else(dialectless, |key| fixture_dialect(&fixture["dialects"][key]));
         let open = parity_app("open", AppRole::Editor, dialect.clone(), "Editor", "Editor", &["edit"]);
-        let controls = shell_role_controls(&apps, &open, Terminology::default(), Locale::default(), &[]);
+        let controls = shell_role_controls(&apps, &open, Terminology::Native, Locale::En, &[]);
         match case["expected"].as_object() {
             Some(expected) => {
                 assert_eq!(
@@ -293,11 +293,11 @@ fn a_role_switch_resolves_the_app_the_shared_fixture_declares() {
 fn the_mode_group_renders_one_pressed_button_per_declared_mode_and_none_for_a_single_mode_surface() {
     let dialect = ArtifactDialect { artifact_kind: "s.procedural.generation3d".into(), standard: "1".into(), subset: "*".into() };
     let editor = parity_app("s.procedural.generation3d@1/*#editor", AppRole::Editor, dialect.clone(), "Editor", "Editor", &["edit", "generate"]);
-    let controls = shell_mode_controls(&editor, Some("generate"), Terminology::default(), Locale::default());
+    let controls = shell_mode_controls(&editor, Some("generate"), Terminology::Native, Locale::En);
     assert_eq!(controls.iter().map(|control| control.control_id.as_str()).collect::<Vec<_>>(), vec!["playground.navbar.modes.edit", "playground.navbar.modes.generate"]);
     assert_eq!(controls.iter().map(|control| control.active).collect::<Vec<_>>(), vec![false, true]);
     let viewer = parity_app("s.procedural.generation3d@1/*#viewer", AppRole::Viewer, dialect, "Viewer", "Betrachter", &["view"]);
-    assert!(shell_mode_controls(&viewer, Some("view"), Terminology::default(), Locale::default()).is_empty(), "a one-mode surface renders no mode switcher, exactly as React renders none");
+    assert!(shell_mode_controls(&viewer, Some("view"), Terminology::Native, Locale::En).is_empty(), "a one-mode surface renders no mode switcher, exactly as React renders none");
 }
 
 #[test]
@@ -729,10 +729,10 @@ fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
 
 #[test]
 fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let dialect = ArtifactDialect { artifact_kind: "s.procedural.generation3d".into(), standard: "1".into(), subset: "*".into() };
     let app = parity_app("s.procedural.generation3d@1/*#editor", AppRole::Editor, dialect, "Editor", "Editor", &["edit", "generate"]);
-    shell.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     semio_framework_async::block_on(shell.switch_to_session_role(AppRole::Editor)).expect("a no-op switch never fails");
     let session = shell.session.as_ref().expect("the session survives a no-op switch");
     assert_eq!(session.instance_id, 7, "the mounted instance is untouched");

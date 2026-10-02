@@ -294,17 +294,17 @@ async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
 }
 
 /// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
-fn folded(log: &[crate::mutations::LayoutMutation]) -> crate::LayoutSnapshot {
+fn folded(log: &[LayoutMutation]) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
     log.iter().fold(crate::standards::v1::subsets::any::schema::default_document(), |document, mutation| mutation.diff(&document).diff().apply(&document).expect("the leaf applies"))
 }
 
-fn drag_leaf(dx: f64) -> crate::mutations::LayoutMutation {
-    crate::mutations::LayoutMutation::DragFrames(crate::mutations::drag_frames::DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx, dy: 0.0 })
+fn drag_leaf(dx: f64) -> LayoutMutation {
+    LayoutMutation::DragFrames(crate::mutations::drag_frames::DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx, dy: 0.0 })
 }
 
-fn turn_leaf(pivot_x: f64, pivot_y: f64) -> crate::mutations::LayoutMutation {
-    crate::mutations::LayoutMutation::RotateFrames(crate::mutations::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
+fn turn_leaf(pivot_x: f64, pivot_y: f64) -> LayoutMutation {
+    LayoutMutation::RotateFrames(crate::mutations::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
 }
 
 /// ⏪️ Time travel edits the gesture's yielded leaf, never the gesture: the gumball drag's offset and then the downstream
@@ -352,8 +352,8 @@ async fn a_gumball_drag_and_its_downstream_turn_edited_in_time_travel_replay_exa
 /// 🎯️ Selects `ids` in the elements domain, as a canvas click does — interaction verbs keep working during time travel.
 async fn select(app: &mut LayoutApp, ids: &[&str]) {
     let ids: Vec<String> = ids.iter().map(|id| id.to_string()).collect();
-    let args = crate::editor::layout::layout_select_action_args(&ids, "replace");
-    let admitted = app.0.handle_action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(&args), &window_meta(WINDOW)).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
+    let args = layout_select_action_args(&ids, "replace");
+    let admitted = app.0.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &window_meta(WINDOW)).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
     let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
     settle(app, result).await;
 }
@@ -390,5 +390,34 @@ async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_ar
     assert_eq!(app.0.snapshot().expect("head"), committed, "exit leaves zero trace");
     assert_eq!(document_rows(&mut app).await.len(), rows_before + 1, "no row was added or removed");
     artifact_app_laws::close_registered_fixture_app(&mut app.0);
+}
+
+/// 🪧️ The editor's reference chips name a frame by its kind, its content and its page in every locale — what "Use
+/// selection" fills into a frame-target input reads as the frame, never its id (gap N3); other kinds and unknown ids are
+/// left to the framework's generic chip.
+#[test]
+fn reference_chips_name_frames_by_kind_content_and_page() {
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
+    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let frame = ["frame".to_string()];
+    let chip = |kinds: &[String], id: &str, locale| <LayoutPlayApp as ArtifactEditor>::entity_label(&document, kinds, id).map(|label| label.resolve(Terminology::Native, locale).to_string());
+    assert_eq!(chip(&frame, "frame-text-1", Locale::En).as_deref(), Some("Text Frame \u{201c}Hello layout\u{201d} \u{b7} Page 1"));
+    assert_eq!(chip(&frame, "frame-text-1", Locale::De).as_deref(), Some("Textrahmen \u{201e}Hello layout\u{201c} \u{b7} Page 1"));
+    assert_eq!(chip(&frame, "frame-image-1", Locale::En).as_deref(), Some("Image Frame \u{201c}missing.png\u{201d} \u{b7} Page 1"));
+    assert_eq!(chip(&frame, "frame-1", Locale::De).as_deref(), Some("Rechteck \u{b7} Page 1"));
+    assert_eq!(chip(&[], "frame-inherited", Locale::En).as_deref(), Some("Rectangle \u{b7} Master"));
+    assert_eq!(chip(&frame, "frame-missing", Locale::En), None);
+    assert_eq!(chip(&["page".to_string()], "page-1", Locale::En), None, "a page names itself through the generic walk");
+    let mut crowded = document.clone();
+    let twin = crowded.pages[0].frames.iter().find(|candidate| candidate.id() == "frame-1").cloned().map(|mut twin| {
+        if let Frame::Rect { id, .. } = &mut twin {
+            *id = "frame-2".into();
+        }
+        twin
+    });
+    crowded.pages[0].frames.extend(twin);
+    let crowded_chip = |id: &str| layout_entity_label(&crowded, &frame, id).map(|label| label.resolve(Terminology::Native, Locale::En).to_string());
+    assert_eq!((crowded_chip("frame-1").as_deref(), crowded_chip("frame-2").as_deref()), (Some("Rectangle 1 \u{b7} Page 1"), Some("Rectangle 2 \u{b7} Page 1")), "several frames of one kind on a page are numbered");
 }
 //#endregion ⏪️TimeTravel

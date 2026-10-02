@@ -5,7 +5,15 @@ use crate::editor::shooting::modes::edit::windows::icon::options;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::{IconRenderScene, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::IconRenderScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";

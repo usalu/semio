@@ -251,7 +251,7 @@ impl PrimitiveCopy {
                 indices: self.indices.take_partial(),
                 material_id: self.material_id.take(),
             });
-            self.retirement = Some(app_store::retirement::owned_retirement(partial));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(partial));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.positions.take_partial();
@@ -368,7 +368,7 @@ impl MeshCopy {
         }
         if self.output.is_some() || self.id.is_some() || !self.primitives.is_empty() {
             let partial = self.output.take().unwrap_or_else(|| SemioMesh { id: self.id.take().unwrap_or_default(), primitives: std::mem::take(&mut self.primitives) });
-            self.retirement = Some(app_store::retirement::owned_retirement(partial));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(partial));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(app_store::SnapshotRetirementStep::Complete)
@@ -421,7 +421,7 @@ impl MaterialCopy {
             return Ok(step);
         }
         if let Some(value) = self.output.take() {
-            self.retirement = Some(app_store::retirement::owned_retirement(value));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(app_store::SnapshotRetirementStep::Complete)
@@ -516,7 +516,7 @@ impl TextureCopy {
         }
         if self.output.is_some() || self.id.is_some() || self.mime.is_some() {
             let value = self.output.take().unwrap_or_else(|| SemioTexture { id: self.id.take().unwrap_or_default(), mime: self.mime.take().unwrap_or_default(), bytes: self.bytes.take_partial() });
-            self.retirement = Some(app_store::retirement::owned_retirement(value));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(app_store::SnapshotRetirementStep::Complete)
@@ -723,7 +723,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
             return Ok(step);
         }
         if let Some(inverse) = self.orphan_inverse.take() {
-            self.retirement = Some(app_store::retirement::owned_retirement(inverse));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(inverse));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.result.is_some() || self.schema.is_some() || !self.meshes.is_empty() || !self.materials.is_empty() || !self.textures.is_empty() {
@@ -733,7 +733,7 @@ impl StructuralMutationCopy<SemioMeshSnapshot, SemioMeshMutation> for MeshStruct
             } else {
                 SemioMeshSnapshot { schema: self.schema.take().unwrap_or_default(), meshes: std::mem::take(&mut self.meshes), materials: std::mem::take(&mut self.materials), textures: std::mem::take(&mut self.textures) }
             };
-            self.retirement = Some(app_store::retirement::owned_retirement(snapshot));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(snapshot));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(app_store::SnapshotRetirementStep::Complete)

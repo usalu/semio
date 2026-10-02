@@ -1,11 +1,12 @@
-//! 🧪️ Laws of the generation3d gesture leaves (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §5, §13): the
-//! ABSOLUTE `change-slider-value` a scrub commits, and the RELATIVE `drag-`/`rotate-`/`scale-transforms` and `move-nodes`
-//! a gumball or node drag commits. A relative leaf reads its BASE operator, so an edited gesture replays on any base; its
+//! 🧪️ Laws of the generation3d gesture leaves (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §5, §13, §19): the
+//! ABSOLUTE `change-slider-value` a scrub commits and `change-widget-input` an inspector field or a mesh edit commits, and
+//! the RELATIVE `drag-`/`rotate-`/`scale-transforms` and `move-nodes` a gumball or node drag commits. A relative leaf reads its BASE operator, so an edited gesture replays on any base; its
 //! inverse is the absolute base rows, never a negated delta.
 
 use super::*;
 use crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value;
+use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
 use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::drag_transforms;
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::rotate_transforms;
@@ -189,6 +190,8 @@ fn gesture_leaves_label_their_rows_in_english_and_german() {
         (scale_transforms(vec![SCALE.into(), TRANSLATE.into()], [2.0, 2.0, 0.5]), "Scale 2 shape(s) by (2, 2, 0.5)", "2 Form(en) um (2; 2; 0,5) skalieren"),
         (change_slider_value("height", 7.5), "Set slider \\\"height\\\" to 7.5", "Schieberegler \\\"height\\\" auf 7,5 setzen"),
         (move_nodes(vec!["a".into(), "b".into()], 40.0, -12.5), "Move 2 node(s) by (40, -12.5)", "2 Knoten um (40; -12,5) verschieben"),
+        (change_widget_input(SCALE, "center", WidgetInputValue::Point([0.5, -1.0, 2.0])), "Set input \\\"center\\\" of \\\"shape__gumball_scale\\\" to (0.5, -1, 2)", "Eingang \\\"center\\\" von \\\"shape__gumball_scale\\\" auf (0,5; -1; 2) setzen"),
+        (change_widget_input("note", "text", WidgetInputValue::Text("Hi".into())), "Set input \\\"text\\\" of \\\"note\\\" to \\\"Hi\\\"", "Eingang \\\"text\\\" von \\\"note\\\" auf \\\"Hi\\\" setzen"),
     ] {
         let label = label(mutation);
         assert!(label.contains(english) && label.contains(german), "{label}");
@@ -204,8 +207,9 @@ fn every_wire_witness_decodes_and_round_trips_the_binary_codec() {
         include_str!("../../../../🧫️fixtures/🧬️mutations/🔃️rotate-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../../../🧫️fixtures/🧬️mutations/📏️scale-transforms/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-widget-input/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
-    for (witness, kind) in witnesses.iter().zip(["change-slider-value", "drag-transforms", "rotate-transforms", "scale-transforms", "move-nodes"]) {
+    for (witness, kind) in witnesses.iter().zip(["change-slider-value", "drag-transforms", "rotate-transforms", "scale-transforms", "move-nodes", "change-widget-input"]) {
         let mutation: Generation3dMutation = dsl::json::from_json_str(witness).unwrap_or_else(|error| panic!("{kind} witness decodes: {error}"));
         assert_eq!(<Generation3dMutation as protocol::SemanticMutation<Generation3dSnapshot>>::semantics(&mutation).kind, kind);
         let bytes = protocol::OpBinary::encode_op(&mutation).expect("witness encodes");
@@ -214,6 +218,64 @@ fn every_wire_witness_decodes_and_round_trips_the_binary_codec() {
         assert_eq!(<Generation3dMutation as protocol::OpText>::parse_op(&text).expect("witness parses back"), mutation, "{kind} round-trips the text codec: {text}");
     }
 }
+
+//#region 🎛️WidgetInput
+/// 🎛️ A widget input is absolute: every literal type sets the addressed operator param (a text source's `text` sets its
+/// text) whatever it held, and the inverse restores the base widget whole.
+#[test]
+fn a_widget_input_sets_its_typed_literal_and_inverts_to_the_whole_base_widget() {
+    let base = base([0.0; 3]);
+    for (id, channel, input) in [
+        (ROTATE, "angle", WidgetInputValue::Number(0.25)),
+        (TRANSLATE, "offset", WidgetInputValue::Vector([1.5, -2.25, 0.5])),
+        (SCALE, "center", WidgetInputValue::Point([0.5, 1.5, -0.25])),
+        (SCALE, "uniform", WidgetInputValue::Boolean(true)),
+        (TRANSLATE, "label", WidgetInputValue::Text("moved".into())),
+    ] {
+        let applied = applied_and_restored(&change_widget_input(id, channel, input.clone()), &base);
+        assert_eq!(params_of(&applied, id).get(channel).and_then(WidgetInputValue::of_literal), Some(input), "{id}.{channel}");
+        applied.retire_cold();
+    }
+    let applied = applied_and_restored(&change_widget_input("note", "text", WidgetInputValue::Text("Edited".into())), &base);
+    assert!(applied.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { id, text } if id == "note" && text == "Edited")));
+    applied.retire_cold();
+    base.retire_cold();
+}
+
+/// 🎯️ The vocabulary of a widget input: the value it holds is `no-op`; a missing widget `target-missing`; a literal of
+/// another type, a wired input, a slider or a text source off its `text` channel `target-mismatch`; an empty or overlong
+/// address and a non-finite number Fatal `mutation.invariant`.
+#[test]
+fn a_widget_input_reports_its_vocabulary_codes() {
+    use protocol::Severity::{Error, Fatal, Warning};
+    let mut base = base([2.0, 0.0, 0.0]);
+    base.host_snapshot.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "height".into(), to: SCALE.into(), from_port: "number".into(), to_port: "factor".into() });
+    let mismatch = vec![(Error, "mutation.target-mismatch".to_string())];
+    let invariant = vec![(Fatal, "mutation.invariant".to_string())];
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "offset", WidgetInputValue::Vector([2.0, 0.0, 0.0])), &base), vec![(Warning, "mutation.no-op".into())]);
+    assert_eq!(outcome_codes(&change_widget_input("ghost", "offset", WidgetInputValue::Number(1.0)), &base), vec![(Error, "mutation.target-missing".into())]);
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "offset", WidgetInputValue::Number(1.0)), &base), mismatch, "a vector input holds no number");
+    assert_eq!(outcome_codes(&change_widget_input(SCALE, "factor", WidgetInputValue::Vector([1.0; 3])), &base), mismatch, "a wired input");
+    assert_eq!(outcome_codes(&change_widget_input("height", "value", WidgetInputValue::Number(1.0)), &base), mismatch, "a slider has no operator input");
+    assert_eq!(outcome_codes(&change_widget_input("note", "value", WidgetInputValue::Text("x".into())), &base), mismatch, "a text source has only its text");
+    assert_eq!(outcome_codes(&change_widget_input("note", "text", WidgetInputValue::Number(1.0)), &base), mismatch, "a text source holds text");
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "", WidgetInputValue::Number(1.0)), &base), invariant);
+    assert_eq!(outcome_codes(&change_widget_input(TRANSLATE, "x".repeat(257), WidgetInputValue::Number(1.0)), &base), invariant);
+    assert_eq!(outcome_codes(&change_widget_input(ROTATE, "angle", WidgetInputValue::Number(f64::NAN)), &base), invariant);
+    assert_eq!(outcome_codes(&change_widget_input(SCALE, "center", WidgetInputValue::Point([0.0, f64::INFINITY, 0.0])), &base), invariant);
+    base.retire_cold();
+}
+
+/// 🧮️ The typed literal round trip the inspector and the diff share: every type's literal reads back as itself, and a
+/// literal of no known type reads as nothing.
+#[test]
+fn every_widget_input_literal_round_trips() {
+    for input in [WidgetInputValue::Number(-3.5), WidgetInputValue::Text("t".into()), WidgetInputValue::Boolean(false), WidgetInputValue::Point([1.0, 2.0, 3.0]), WidgetInputValue::Vector([0.0, 0.0, 1.0])] {
+        assert_eq!(WidgetInputValue::of_literal(&input.literal()), Some(input.clone()), "{input:?}");
+    }
+    assert_eq!(WidgetInputValue::of_literal(&generation3d_vector_literal("mesh", [0.0; 3])), None);
+}
+//#endregion 🎛️WidgetInput
 
 //#region ⏪️TimeTravel
 /// ⏪️ Folds `log` onto `base` the way a fresh history would — the oracle an edited history's Report replay must equal.
@@ -228,7 +290,7 @@ fn fresh_fold(base: &Generation3dSnapshot, log: &[Generation3dMutation]) -> Gene
 /// ⏪️ Time travel edits ONE gesture leaf of a committed history: the preview base is the state right before it, the
 /// Report replay re-applies every downstream gesture onto the edited one and equals a fresh fold of the edited log, and
 /// overwrite commits exactly that head — for the relative drag (downstream drag composes onto the edited offset), the
-/// absolute slider value and the relative node drag.
+/// absolute slider value, the relative node drag and the absolute widget input (a downstream input overrides it).
 #[semio_framework_async_macros::async_test]
 async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
     use protocol::OpBinary;
@@ -238,8 +300,10 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         drag_transforms(vec![TRANSLATE.into()], [0.0, 2.0, 0.0]),
         move_nodes(vec!["height".into(), "note".into()], 5.0, 5.0),
         move_nodes(vec!["height".into()], -1.0, 0.0),
+        change_widget_input(ROTATE, "angle", WidgetInputValue::Number(0.25)),
+        change_widget_input(ROTATE, "angle", WidgetInputValue::Number(0.75)),
     ];
-    for (edited_at, edited) in [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5))] {
+    for (edited_at, edited) in [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5)), (5, change_widget_input(ROTATE, "angle", WidgetInputValue::Number(1.5)))] {
         {
             let base = base([1.0, 1.0, 1.0]);
             let mut store = crate::store_fixture::document_store(base.clone()).await;
@@ -249,7 +313,11 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
             let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
             let target = ids[edited_at].clone();
             let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
-            let preview = store.state_before(&target, &drafts).expect("the preview base folds").as_ref().clone();
+            let preview_base = store.state_before(&target, &drafts).expect("the preview base folds");
+            let preview = preview_base.as_ref().clone();
+            if let Ok(state) = std::sync::Arc::try_unwrap(preview_base) {
+                state.retire_cold();
+            }
             let before = fresh_fold(&base, &log[..edited_at]);
             assert_eq!(preview, before, "the preview base is the state right before the edited leaf");
             let mut edited_log = log.clone();

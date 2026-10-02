@@ -57,7 +57,11 @@ pub enum ActorReturnControl {
 #[value(crate = "::protocol::value", tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ActorReturnDrive {
     Execute { origin: ActorReturnOrigin },
-    Control { control: ActorReturnControl },
+    Control {
+        #[value(rename = "control")]
+        #[cfg_attr(test, serde(rename = "control"))]
+        signal: ActorReturnControl,
+    },
 }
 
 macro_rules! wire_enum {
@@ -134,7 +138,7 @@ impl ActorReturnDrive {
     pub fn is_valid(self) -> bool {
         match self {
             Self::Execute { origin } => origin.is_valid(),
-            Self::Control { control } => control.is_valid(),
+            Self::Control { signal } => signal.is_valid(),
         }
     }
 
@@ -149,9 +153,9 @@ impl ActorReturnDrive {
                 writer.byte(0);
                 writer.origin(origin);
             }
-            Self::Control { control } => {
+            Self::Control { signal } => {
                 writer.byte(1);
-                writer.control(control);
+                writer.control(signal);
             }
         }
         Ok(writer.offset)
@@ -165,7 +169,7 @@ impl ActorReturnDrive {
         let mut reader = Reader { bytes, offset: 0 };
         let value = match reader.byte()? {
             0 => Self::Execute { origin: reader.origin()? },
-            1 => Self::Control { control: reader.control()? },
+            1 => Self::Control { signal: reader.control()? },
             _ => return Err("actor-return.drive-tag"),
         };
         reader.finish()?;

@@ -82,6 +82,7 @@ function read(row: SqliteRow, index: number, columns: readonly Ieee754Column[], 
   const value = row.values[index];
   const query = width === 64 ? binary64Value({ bits: word }) : binary32Value({ bits: Number(word) });
   if (kind === "nan" ? value !== null : (typeof value !== "number" && typeof value !== "bigint") || Number(value) !== query) throw new Error("query REAL disagrees with native IEEE bits");
+  if (typeof value === "bigint" && (value < -9223372036854775808n || value > 9223372036854775807n || !Number.isInteger(query) || BigInt(query) !== value)) throw new Error("query INTEGER disagrees with exact native IEEE value");
   return word;
 }
 /** 📥️ Restore binary64 identity independently of JavaScript NaN canonicalization. */

@@ -106,7 +106,7 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for MoveSelection {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let phrase = |nouns: [(usize, &str, &str); 2], join: &str| {
             let parts: Vec<String> = nouns.iter().filter(|(count, ..)| *count > 0).map(|(count, one, many)| format!("{count} {}", if *count == 1 { one } else { many })).collect();
             if parts.is_empty() {
@@ -120,10 +120,10 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for MoveSelection {
         let triple = |values: [f64; 3], german: bool| values.map(|value| number(value, german)).join(if german { "; " } else { ", " });
         let (offset, factors) = ([self.dx, self.dy, self.dz], [self.sx, self.sy, self.sz]);
         match (offset != [0.0; 3], self.angle != 0.0, factors != [1.0; 3]) {
-            (true, false, false) => protocol::LocalizedLabel::native(&format!("Move {english} by ({})", triple(offset, false)), &format!("{german} um ({}) verschieben", triple(offset, true))),
-            (false, true, false) => protocol::LocalizedLabel::native(&format!("Rotate {english} by {}°", number(self.angle.to_degrees(), false)), &format!("{german} um {}° drehen", number(self.angle.to_degrees(), true))),
-            (false, false, true) => protocol::LocalizedLabel::native(&format!("Scale {english} by ({})", triple(factors, false)), &format!("{german} um ({}) skalieren", triple(factors, true))),
-            _ => protocol::LocalizedLabel::native(&format!("Transform {english}"), &format!("{german} transformieren")),
+            (true, false, false) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {english} by ({})", triple(offset, false)), &format!("{german} um ({}) verschieben", triple(offset, true))),
+            (false, true, false) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {english} by {}°", number(self.angle.to_degrees(), false)), &format!("{german} um {}° drehen", number(self.angle.to_degrees(), true))),
+            (false, false, true) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {english} by ({})", triple(factors, false)), &format!("{german} um ({}) skalieren", triple(factors, true))),
+            _ => semio_framework_ui_locale::LocalizedLabel::native(&format!("Transform {english}"), &format!("{german} transformieren")),
         }
     }
     fn target(&self) -> Vec<String> {

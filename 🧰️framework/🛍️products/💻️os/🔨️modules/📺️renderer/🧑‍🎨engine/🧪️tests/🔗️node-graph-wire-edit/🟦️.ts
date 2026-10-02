@@ -84,16 +84,13 @@ describe("node graph wire edit", () => {
     expect(replacing?.expectedEdges?.[0]?.source).toBe("alt@out");
   });
 
-  it("dispatches a released gesture's own wire edits, and falls back to the fixture commit only when it made none", () => {
-    // 🩸️ React committed EVERY released gesture as a whole-fixture `setFixture`, so a drawn wire
-    // reached the guest only as a state blob — a different vocabulary from the one wgpu dispatches and
-    // from the one the guest declares. `pointerUpScreen` now answers with what the gesture did.
+  it("dispatches a released gesture's own graph edits and never the whole fixture", () => {
     const source = readFileSync(nodeGraphSource, "utf8");
     const handler = source.slice(source.indexOf("issueFlowGestureStep(session.pointerUpScreen("));
     const body = handler.slice(0, handler.indexOf("handleGesturePointerUp();"));
-    expect(body).toContain("graphGestureAnswer(value)");
+    expect(body).toContain("nodeGraphEditRows(flowJsonText(value))");
     expect(body).toContain("dispatch(nodeGraphActions.edit, { operations })");
-    expect(body).toContain("else if (hostSnapshotChanged) commitFixture()");
+    expect(source).not.toContain("setHostSnapshot");
   });
 
   it("holds the pointer for the whole gesture, so a drag that leaves the canvas still releases on it", () => {
@@ -113,9 +110,9 @@ describe("node graph wire edit", () => {
   it("spells a removal the way the guest reads it, in both renderers", () => {
     // 🩸️ The wgpu renderer wrote `edgeId` — the engine's private numbering's name — while the guest's
     // `disconnect` reads `synapseId`: a well-formed command silently dropped.
-    const guest = readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
+    const guest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs"), "utf8");
     const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
-    const guestField = /action_row_fields\(row, operation, &\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
+    const guestField = /closed\(&\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
     expect(guestField).toBe("synapseId");
     const wgpu = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
     expect(wgpu).toContain(`builder.string(Some("${guestField}"), synapse_id)?`);

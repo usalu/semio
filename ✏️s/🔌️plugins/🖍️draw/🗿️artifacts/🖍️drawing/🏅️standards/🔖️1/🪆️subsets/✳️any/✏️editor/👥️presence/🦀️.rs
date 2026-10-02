@@ -34,14 +34,14 @@ impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
     }
 }
 
-impl store::retirement::RetireOwned for DrawingPresence {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for DrawingPresence {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let store::Viewport2d { x, y, zoom } = self.camera;
-        store::retirement::sequence(vec![
-            store::retirement::RetireOwned::retirement(self.engagement_input),
-            store::retirement::leaf(x),
-            store::retirement::leaf(y),
-            store::retirement::leaf(zoom),
+        semio_framework_value::retirement::sequence(vec![
+            semio_framework_value::retirement::RetireOwned::retirement(self.engagement_input),
+            semio_framework_value::retirement::leaf(x),
+            semio_framework_value::retirement::leaf(y),
+            semio_framework_value::retirement::leaf(zoom),
         ])
     }
 }
@@ -103,10 +103,10 @@ pub enum DrawingPresenceMutation {
     },
 }
 
-impl store::retirement::RetireOwned for DrawingPresenceMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for DrawingPresenceMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { presence } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(presence)]),
+            Self::Snapshot { presence } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(presence)]),
         }
     }
 }
@@ -158,7 +158,7 @@ impl protocol::OpText for DrawingPresenceMutation {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(body, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -168,7 +168,7 @@ impl protocol::OpText for DrawingPresenceMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
+        let body = dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {

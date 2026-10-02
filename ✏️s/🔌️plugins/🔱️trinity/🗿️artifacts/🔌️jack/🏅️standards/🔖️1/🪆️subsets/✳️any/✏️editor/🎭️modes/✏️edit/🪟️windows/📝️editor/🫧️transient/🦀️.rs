@@ -76,14 +76,14 @@ impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTrans
 mod mutations;
 pub use mutations::*;
 
-store::artifact_retire_struct!(JackEditorSelection { start, end });
-store::artifact_retire_struct!(JackEditorWindowTransient { selection });
-store::artifact_retire_struct!(SetEditorSelection { selection });
+semio_framework_value::artifact_retire_struct!(JackEditorSelection { start, end });
+semio_framework_value::artifact_retire_struct!(JackEditorWindowTransient { selection });
+semio_framework_value::artifact_retire_struct!(SetEditorSelection { selection });
 
-impl store::retirement::RetireOwned for JackEditorWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for JackEditorWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::SetEditorSelection(value) => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(value)]),
+            Self::SetEditorSelection(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(value)]),
         }
     }
 }
@@ -105,8 +105,8 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
     type Mutation = JackEditorWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(editor_window_transient_footprint, editor_window_transient_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

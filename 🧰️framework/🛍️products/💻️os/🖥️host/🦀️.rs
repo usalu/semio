@@ -206,11 +206,11 @@ pub mod host {
             serde_json::to_string(&self.contributions()).unwrap_or_else(|_| "[]".into())
         }
 
-        pub fn create_instance(&mut self, app_id: &str, document_json: String) -> Option<u32> {
+        pub fn create_instance(&mut self, app_id: &str, document_json: String, view_state: ViewModel) -> Option<u32> {
             let app = self.registry.find_app(app_id)?;
             let id = self.next_instance_id;
             self.next_instance_id += 1;
-            self.instances.insert(id, OsInstanceState { id, app_id: app.id.clone(), controller_id: app.controller_id.clone(), document_json, view_state: ViewModel::default(), generation: 0 });
+            self.instances.insert(id, OsInstanceState { id, app_id: app.id.clone(), controller_id: app.controller_id.clone(), document_json, view_state, generation: 0 });
             Some(id)
         }
 
@@ -1855,23 +1855,37 @@ pub mod instance {
     //#region 🔖️Materialize
     use std::sync::{Mutex, OnceLock};
 
-    static OS_FIXTURE_JSON: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    static OS_FIXTURE_DOCUMENTS: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
 
-    fn os_fixture_json_registry() -> &'static Mutex<HashMap<String, String>> {
-        OS_FIXTURE_JSON.get_or_init(|| Mutex::new(HashMap::new()))
+    fn os_fixture_document_registry() -> &'static Mutex<HashMap<String, String>> {
+        OS_FIXTURE_DOCUMENTS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    /// 📎️ Registers bundled fixture JSON for `payloadRef` materialization.
-    pub fn register_os_fixture_json(slug: &str, json: &str) {
-        os_fixture_json_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(slug.into(), json.into());
+    /// 📎️ Validates every normalized snapshot before atomically admitting its opaque fixture identity.
+    pub fn register_os_fixture_documents(documents: Vec<(String, String)>) -> Result<(), String> {
+        if documents.is_empty() {
+            return Err("fixture documents are empty".into());
+        }
+        let mut slugs = std::collections::HashSet::new();
+        for (slug, document) in &documents {
+            if slug.trim().is_empty() || !slugs.insert(slug.as_str()) {
+                return Err("fixture slug is empty or repeated".into());
+            }
+            let value: Value = serde_json::from_str(document).map_err(|error| format!("fixture {slug} is invalid: {error}"))?;
+            if !value.as_object().is_some_and(|object| !object.is_empty()) {
+                return Err(format!("fixture {slug} is empty or is not an object"));
+            }
+        }
+        let mut registry = os_fixture_document_registry().lock().map_err(|_| "fixture document registry is poisoned".to_string())?;
+        for (slug, document) in documents {
+            registry.insert(slug, document);
+        }
+        Ok(())
     }
 
-    /// 📎️ Looks up bundled fixture JSON by slug — the seed content for a freshly spawned app
-    /// document. Replaces the old `OsSourceDocument.payloadRef = "fixture:…"` resolution: since app
-    /// content no longer embeds in the os document, seeding now happens once, host-side, at
-    /// {@link OsArtifactRef} creation time (see `ArtifactHost`), not on every materialize/read.
-    pub fn os_fixture_json(slug: &str) -> Option<String> {
-        os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
+    /// 📄️ Resolves a previously admitted normalized snapshot by its opaque fixture identity.
+    pub fn os_fixture_document(slug: &str) -> Option<String> {
+        os_fixture_document_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
     }
 
     /// 🎚️ Default config value seeded from `config_spec.fields[].default` — what a freshly
@@ -2374,7 +2388,7 @@ pub mod workflow {
     #[derive(Clone, Debug, Default)]
     pub struct OsArtifactDescriptor {
         pub kind: String,
-        pub label: semio_framework::LocalizedLabel,
+        pub label: semio_framework_ui_locale::LocalizedLabel,
         pub source_format: String,
         pub component_kind: String,
         pub dimension: String,
@@ -4401,11 +4415,13 @@ pub mod registry {
     use crate::space;
     use crate::workflow;
     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, WindowKindDefinition};
-    use semio_framework::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
-    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
+    use semio_framework_ui_locale::LocalizedLabel;
+    use ui_wgpu::wgpu::SurfaceKind;
 
     pub type OsArtifactKindId = String;
 
@@ -4916,8 +4932,8 @@ pub use host::{
 };
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use instance::{
-    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
-    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
+    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_document,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_documents, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{

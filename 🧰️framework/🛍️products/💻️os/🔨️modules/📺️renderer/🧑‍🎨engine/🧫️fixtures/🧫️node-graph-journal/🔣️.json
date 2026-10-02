@@ -1,0 +1,29 @@
+{
+  "answers": [
+    {
+      "id": "empty-journal",
+      "json": "{\"operations\":[]}",
+      "rows": []
+    },
+    {
+      "id": "not-json",
+      "json": "not json",
+      "rows": []
+    },
+    {
+      "id": "no-operations",
+      "json": "{\"hostSnapshotChanged\":true}",
+      "rows": []
+    },
+    {
+      "id": "rows-kept-junk-dropped",
+      "json": "{\"operations\":[{\"operation\":\"disconnect\",\"synapseId\":\"s1\"},7,null,{\"synapseId\":\"s2\"}]}",
+      "rows": [
+        {
+          "operation": "disconnect",
+          "synapseId": "s1"
+        }
+      ]
+    }
+  ]
+}

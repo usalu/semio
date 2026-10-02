@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-step-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_step_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:ruststep", "semio-s-plugin-stdio-part21-test-oracle/oracles"]
+
+[dependencies]
+"ruststep" = { version = "0.4", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-part21-test-oracle" = { path = "../../../../../🔮️oracles/🔤️part21/📦️packages/🦀️rust", default-features = false }

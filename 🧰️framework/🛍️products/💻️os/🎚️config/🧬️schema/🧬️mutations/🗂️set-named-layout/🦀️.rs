@@ -45,10 +45,10 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetN
     fn inverse(&self, base: &UiPreferences) -> Vec<UiPreferencesConfigMutation> {
         vec![set_named_layout(self.app_id.clone(), self.layout_id.clone(), self.saved(base).cloned())]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.layout {
-            Some(_) => protocol::LocalizedLabel::native(&format!("Save layout {:?}", self.layout_id), &format!("Layout {:?} speichern", self.layout_id)),
-            None => protocol::LocalizedLabel::native(&format!("Remove layout {:?}", self.layout_id), &format!("Layout {:?} entfernen", self.layout_id)),
+            Some(_) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Save layout {:?}", self.layout_id), &format!("Layout {:?} speichern", self.layout_id)),
+            None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove layout {:?}", self.layout_id), &format!("Layout {:?} entfernen", self.layout_id)),
         }
     }
     fn target(&self) -> Vec<String> {

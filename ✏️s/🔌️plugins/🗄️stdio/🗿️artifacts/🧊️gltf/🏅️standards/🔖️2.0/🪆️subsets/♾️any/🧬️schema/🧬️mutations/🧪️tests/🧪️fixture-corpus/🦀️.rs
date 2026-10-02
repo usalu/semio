@@ -191,17 +191,33 @@ fn every_leaf_kind_owns_a_committed_case() {
     assert_eq!(wires, kinds);
 }
 
-/// 🪢️ Every committed case is asserted by exactly its canonical implementation case: `<entity>/<verb>/🧪️tests/<case>/🦀️.rs`,
-/// mounted by the leaf and calling [`assert_case`] with that case, so a new fixture bundle can never go unasserted.
+/// 🪢️ Every committed case has exactly one actual leaf-mounted implementation calling its semantic corpus identity.
 #[test]
 fn every_committed_case_is_mounted_by_its_leaf_implementation_case() {
+    fn implementation_sources(root: &Path, found: &mut Vec<(PathBuf, String)>) {
+        for entry in std::fs::read_dir(root).expect("actual mutation ownership tree") {
+            let path = entry.expect("mutation ownership entry").path();
+            if path.is_dir() { implementation_sources(&path, found); }
+            else if path.file_name().is_some_and(|name| name == "🦀️.rs") && path.parent().and_then(Path::parent).and_then(Path::file_name).is_some_and(|name| name == "🧪️tests") {
+                found.push((path.clone(), read(&path)));
+            }
+        }
+    }
+    let mut implementations = Vec::new();
+    implementation_sources(&subset().join("🧬️schema/🧬️mutations"), &mut implementations);
     for case in cases() {
         let name = case_name(&case);
-        let (leaf, scenario) = name.rsplit_once('/').expect("<entity>/<verb>/<case>");
-        let owner = subset().join("🧬️schema/🧬️mutations").join(leaf);
-        let implementation = read(&owner.join("🧪️tests").join(scenario).join("🦀️.rs"));
-        assert!(read(&owner.join("🦀️.rs")).contains(&format!("#[path = \"🧪️tests/{scenario}/🦀️.rs\"]")), "{name}: the leaf does not mount its implementation case");
-        assert!(implementation.contains(&format!("assert_case(\"{name}\")")), "{name}: the implementation case asserts another case");
+        let mut matches = 0;
+        for (source, implementation) in &implementations {
+            if !implementation.contains(&format!("assert_case(\"{name}\")")) { continue; }
+            let path = source.parent().expect("implementation directory");
+            let owner = path.parent().and_then(Path::parent).expect("actual leaf owner");
+            let declaration = read(&owner.join("🦀️.rs"));
+            let scenario = path.file_name().expect("implementation directory").to_string_lossy();
+            assert!(declaration.contains(&format!("#[path = \"🧪️tests/{scenario}/🦀️.rs\"]")), "{name}: the leaf does not mount its actual implementation case");
+            matches += 1;
+        }
+        assert_eq!(matches, 1, "{name}: exactly one actual implementation must assert this committed case");
     }
 }
 

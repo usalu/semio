@@ -149,3 +149,5 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", DocxEditor, || semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() }, "../..");

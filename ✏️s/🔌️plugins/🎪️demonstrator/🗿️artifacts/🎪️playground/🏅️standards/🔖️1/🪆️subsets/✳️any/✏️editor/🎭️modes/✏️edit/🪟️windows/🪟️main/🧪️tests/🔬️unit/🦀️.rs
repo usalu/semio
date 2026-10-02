@@ -11,7 +11,7 @@ fn definition_declares_an_editable_text_window() {
 #[test]
 fn render_carries_the_schema_field_as_editable_text() {
     let document = PlaygroundSnapshot { schema: "playground.custom".into() };
-    let node = render(&document, semio_framework_plugin::Locale::En).expect("render");
+    let node = render(&document, semio_framework_ui_locale::Locale::En).expect("render");
     let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     assert_eq!(scene.buffer, "playground.custom");
     assert_eq!(scene.language.as_deref(), Some("playground"));

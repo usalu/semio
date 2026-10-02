@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.mathematical.equation`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config): its mutation vocabulary `EquationGraphWindowConfigMutation` over `EquationGraphWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-mathematical-equation-1-any-editor-edit-graph-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],

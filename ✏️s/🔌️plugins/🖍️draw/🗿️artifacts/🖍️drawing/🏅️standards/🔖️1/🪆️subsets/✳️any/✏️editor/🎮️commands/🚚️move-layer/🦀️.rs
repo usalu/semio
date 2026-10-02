@@ -47,7 +47,7 @@ pub fn plan(document: &DrawingSnapshot, payload: &MoveLayer) -> Result<DrawingMu
 }
 
 pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    Ok(Emit::commit(vec![plan(doc.snapshot, payload)?], "Move layer"))
+    Ok(Emit::mutations(vec![plan(doc.snapshot, payload)?]))
 }
 
 #[cfg(test)]

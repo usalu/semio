@@ -19,6 +19,6 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdatePathGeom
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "path", kind: "update-path-geometry", record: "UpdatedPathGeometry" };
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Edit path", "Pfad bearbeiten") }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit path", "Pfad bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }

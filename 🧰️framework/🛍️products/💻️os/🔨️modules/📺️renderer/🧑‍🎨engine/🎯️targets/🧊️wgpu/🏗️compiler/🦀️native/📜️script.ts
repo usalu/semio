@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { buildCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
 /** 📂️ Gives the native producer and its runner one profile-specific artifact directory. */
 export function nativeRendererDirectory(rustPackageRoot: string, profile: string): string {
@@ -12,7 +12,7 @@ export function nativeRendererDirectory(rustPackageRoot: string, profile: string
 /** 🧊️ Publishes only the selected renderer binary from Cargo's private compiler outputs. */
 export async function buildNativeRenderer(rustPackageRoot: string, profile: string, workspace: string): Promise<void> {
   const output = nativeRendererDirectory(rustPackageRoot, profile);
-  await buildCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", "semio-framework-os-renderer-wgpu", "--bin", "semio-wgpu-native", "--features", "native-bin", ...(profile === "release" ? ["--release"] : [])], workspace, { output });
+  await buildRepositoryCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", "semio-framework-os-renderer-wgpu", "--bin", "semio-wgpu-native", "--features", "native-bin", ...(profile === "release" ? ["--release"] : [])], workspace, { output });
 }
 
 /** 🚀️ Selects the executable materialized by the native producer or an Nx cache restoration. */

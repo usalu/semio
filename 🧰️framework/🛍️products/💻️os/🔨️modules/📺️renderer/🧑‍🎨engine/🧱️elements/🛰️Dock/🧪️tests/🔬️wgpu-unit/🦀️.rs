@@ -13,7 +13,7 @@ fn stack_tabs(ids: &[&str], active: &str) -> DockNode {
 
 use crate::shell::ShellState;
 use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
-use ui_wgpu::wgpu::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
 fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
@@ -130,7 +130,7 @@ fn split_axis_extent_uses_row_width_not_canvas_max() {
 
 #[test]
 fn unregistered_world_and_pane_identifiers_cannot_claim_scene_wheel() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let theme = Theme::default();
     for (kind, id) in [(HitKind::ScrollRegion, "panel.left.lowpoly"), (HitKind::World3d, "world-surface"), (HitKind::ScrollRegion, "graph-surface.pane"), (HitKind::ScrollRegion, "map-surface.map")] {
         let mut input = InputState::<ActionDescriptor>::default();
@@ -705,7 +705,7 @@ fn actions_utilities_app() -> AppDefinition {
     let actions = vec![
         ActionDefinition::bounded_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
         ActionDefinition {
-            args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework::to_dsl_value(&true).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
+            args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework_value::ToValue::to_value(&true)), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
             keys: Some("mod+e".into()),
             ..ActionDefinition::bounded_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
         },
@@ -720,7 +720,7 @@ fn actions_utilities_app() -> AppDefinition {
 }
 
 fn shell() -> ShellState {
-    ShellState::new(vec![], "test".into())
+    ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
 }
 
 /// 🗃️ `main` gets its explicit utility.a first, then the orphan utility.b; `aux` only sees the orphan.

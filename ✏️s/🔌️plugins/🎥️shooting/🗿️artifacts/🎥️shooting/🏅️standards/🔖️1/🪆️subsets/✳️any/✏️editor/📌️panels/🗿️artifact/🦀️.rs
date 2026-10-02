@@ -3,7 +3,15 @@
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_ARTIFACT: &str = "shooting.play.artifact";

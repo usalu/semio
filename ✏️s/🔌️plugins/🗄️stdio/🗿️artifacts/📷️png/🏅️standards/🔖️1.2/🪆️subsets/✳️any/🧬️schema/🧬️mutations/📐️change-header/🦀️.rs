@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeHeaderMutation {
         }
         vec![PngMutation::ChangeHeader(ChangeHeaderMutation { width: base.width, height: base.height, bit_depth: base.bit_depth, color_type: base.color_type, interlace: base.interlace })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change header", "Header ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change header", "Header ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-header".into()]
@@ -58,8 +58,8 @@ pub fn contribute(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, co
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-header/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-header payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-header/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

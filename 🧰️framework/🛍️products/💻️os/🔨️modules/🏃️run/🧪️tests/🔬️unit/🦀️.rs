@@ -92,7 +92,7 @@ impl AppChannelHost for FakeHost {
                         // `&dsl::DslValue`, not `&serde_json::Value` — `decode_fingerprint_wire` (this
                         // file) already expects the `DslValue`-transparent-string encoding `to_dsl_value`
                         // produces for a `MediaFingerprint(String)` newtype.
-                        let value = to_dsl_value(&fingerprint).unwrap_or(dsl::DslValue::Null);
+                        let value = semio_framework_value::ToValue::to_value(&fingerprint);
                         frames.push(AppFrame::MediaFingerprint { in_reply_to: seq, port: String::new(), fingerprint: store::pack_rt::encode_wire_value(&value) });
                     }
                     None => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", "no output"), report: Vec::new() }),

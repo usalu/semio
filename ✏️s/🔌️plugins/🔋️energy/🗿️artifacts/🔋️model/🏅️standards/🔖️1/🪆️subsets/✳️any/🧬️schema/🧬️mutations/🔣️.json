@@ -11,13 +11,43 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-model-version/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-site/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-latitude/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-ground-temperature/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-longitude/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-run-period/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-elevation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-time-zone/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-north-axis/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ground-temperature-building-surface/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ground-temperature-shallow/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ground-temperature-deep/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-start-month/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-start-day/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-end-month/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-end-day/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-year/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-airflow-network/schema.json"

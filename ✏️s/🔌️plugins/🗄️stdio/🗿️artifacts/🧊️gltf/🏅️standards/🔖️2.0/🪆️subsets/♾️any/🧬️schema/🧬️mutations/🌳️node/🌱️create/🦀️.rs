@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateNodeMut
         vec![super::GltfMutation::CreateNode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Node", "Knoten erstellen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Node", "Knoten erstellen")
     }
 
     fn target(&self) -> Vec<String> {

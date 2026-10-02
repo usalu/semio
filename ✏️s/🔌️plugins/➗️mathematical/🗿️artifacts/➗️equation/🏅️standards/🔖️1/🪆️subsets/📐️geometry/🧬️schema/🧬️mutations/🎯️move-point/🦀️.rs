@@ -23,8 +23,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for MovePoint {
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move point at {}", self.index), &format!("Punkt an {} verschieben", self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move point at {}", self.index), &format!("Punkt an {} verschieben", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into(), self.index.to_string()]

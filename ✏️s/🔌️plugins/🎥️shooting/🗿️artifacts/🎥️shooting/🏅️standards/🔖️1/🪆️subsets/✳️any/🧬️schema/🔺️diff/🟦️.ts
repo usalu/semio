@@ -164,7 +164,6 @@ export interface ShootingSceneLighting {
   ambient: ShootingAmbient;
   shadow: ShootingShadow;
   material: ShootingMaterial;
-  emblemBase64?: string;
 }
 
 //#region 🚪️Parsers

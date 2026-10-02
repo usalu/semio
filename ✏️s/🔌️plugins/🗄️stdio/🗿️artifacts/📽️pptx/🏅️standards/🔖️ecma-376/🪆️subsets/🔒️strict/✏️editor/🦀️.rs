@@ -8,9 +8,25 @@ use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::wi
 use crate::schema::mutations::{set_shape_text, set_snapshot};
 use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.pptx@ecma-376/strict`. Duplicated (not imported) in the
@@ -135,7 +151,7 @@ impl ArtifactEditor for PptxStrictEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(PptxStrictEditorCommand::SetPage { page, item, revision, text }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
@@ -144,7 +160,7 @@ impl ArtifactEditor for PptxStrictEditor {
         let page = *page as usize;
         let item = *item as usize;
         let Some(mutation) = build_set_page_mutation(doc.snapshot, page, item, revision, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set slide {page} shape {item}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -186,7 +202,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
         let page = *page as usize;
         let item = *item as usize;
         let Some(mutation) = build_set_page_mutation(snapshot, page, item, revision, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set slide {page} shape {item}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
     },
 }
 

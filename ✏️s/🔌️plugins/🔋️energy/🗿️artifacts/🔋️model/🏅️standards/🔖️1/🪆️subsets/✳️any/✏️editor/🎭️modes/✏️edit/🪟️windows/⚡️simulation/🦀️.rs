@@ -9,7 +9,18 @@ use crate::editor::model::config::EnergyModelConfig;
 use crate::editor::model::modes::edit::tools;
 use crate::editor::model::results::ResultField;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, Locale, LocalizedLabel, SurfaceKind, ToolRunView, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_tool_run::{ToolRunAction, ToolRunState};
 
 //#region 🔖️Constants
@@ -58,7 +69,7 @@ pub fn result_field_action() -> ActionDefinition {
 }
 
 /// 📅️ The one DOCUMENT verb this window owns. The run period is model data, so it is an
-/// `ActionKind::Mutation` reduced through the semantic `update-run-period` kind — declared HERE because
+/// `ActionKind::Mutation` reduced through the field-granular `change-run-period-*` kinds — declared HERE because
 /// this window is where it is rendered and edited.
 pub fn run_period_action() -> ActionDefinition {
     let mut action = ActionDefinition::bounded_catalog(crate::editor::model::SET_RUN_PERIOD_ACTION_ID, LocalizedLabel::native("Set run period", "Simulationszeitraum setzen"), ActionKind::Mutation).with_args(vec![
@@ -187,7 +198,7 @@ fn keyboard_node(locale: Locale) -> TreeNodeView {
 /// the run before starting it.
 pub fn render(run: Option<&ToolRunView>, settings: &EnergyModelConfig, model: &crate::model::Model, locale: Locale) -> BuiltNode {
     let roots = vec![run_nodes(run, locale), settings_nodes(settings, model, locale), keyboard_node(locale)];
-    TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Energy simulation UI unavailable")).expect("static label is valid"))
+    TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Energy simulation UI unavailable")).expect("static label is valid"))
 }
 //#endregion 🔖️Render
 

@@ -14,9 +14,28 @@ use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWi
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolRef, ToolRunJob, ToolRunJobRequest};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface
@@ -245,32 +264,32 @@ pub fn grid3d_command_emit(
 ) -> Result<Emit<Grid3dMutation>, Fault> {
     let document = doc.snapshot;
     let window_config = config_from_view(cfg);
-    let (mutation, description) = match command {
-        Grid3dEditorCommand::ChangeSeed { seed } => (change_seed(*seed), format!("Change seed to {seed}")),
-        Grid3dEditorCommand::ResizeGrid { width, height, depth } => (resize_grid(*width, *height, *depth), format!("Resize grid to {width}×{height}×{depth}")),
-        Grid3dEditorCommand::ChangeCellSizes { axis, sizes } => (change_cell_sizes(*axis, sizes.clone()), format!("Change {} cell sizes", axis.label())),
-        Grid3dEditorCommand::ChangePeriodicity { periodic_x, periodic_y, periodic_z } => (change_periodicity(*periodic_x, *periodic_y, *periodic_z), "Change periodicity".to_string()),
+    let mutation = match command {
+        Grid3dEditorCommand::ChangeSeed { seed } => change_seed(*seed),
+        Grid3dEditorCommand::ResizeGrid { width, height, depth } => resize_grid(*width, *height, *depth),
+        Grid3dEditorCommand::ChangeCellSizes { axis, sizes } => change_cell_sizes(*axis, sizes.clone()),
+        Grid3dEditorCommand::ChangePeriodicity { periodic_x, periodic_y, periodic_z } => change_periodicity(*periodic_x, *periodic_y, *periodic_z),
         Grid3dEditorCommand::CreateTile { id, label, weight, r, g, b, a } => {
-            (create_tile(Grid3dTile { id: id.clone(), label: label.clone(), weight: *weight, media: box_media(Grid3dColor { r: *r, g: *g, b: *b, a: *a }) }), format!("Create tile {id}"))
+            create_tile(Grid3dTile { id: id.clone(), label: label.clone(), weight: *weight, media: box_media(Grid3dColor { r: *r, g: *g, b: *b, a: *a }) })
         }
-        Grid3dEditorCommand::DeleteTile { id } => (delete_tile(id.clone()), format!("Delete tile {id}")),
-        Grid3dEditorCommand::ChangeTileWeight { tile_id, weight } => (change_tile_weight(tile_id.clone(), *weight), format!("Change weight of {tile_id}")),
+        Grid3dEditorCommand::DeleteTile { id } => delete_tile(id.clone()),
+        Grid3dEditorCommand::ChangeTileWeight { tile_id, weight } => change_tile_weight(tile_id.clone(), *weight),
         Grid3dEditorCommand::ChangeTileColor { tile_id, r, g, b, a } => {
             let color = Grid3dColor { r: *r, g: *g, b: *b, a: *a };
             let media = match tile_index(document, tile_id).map(|index| &document.tiles[index].media) {
                 Some(Grid3dTileMedia::Mesh { mesh }) => Grid3dTileMedia::Mesh { mesh: Grid3dMesh { positions: mesh.positions.clone(), indices: mesh.indices.clone(), color: Some(color) } },
                 _ => box_media(color),
             };
-            (change_tile_media(tile_id.clone(), media), format!("Change colour of {tile_id}"))
+            change_tile_media(tile_id.clone(), media)
         }
         Grid3dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, direction, allowed } => {
-            (create_rule(Grid3dRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction: *direction, allowed: *allowed }), format!("Create rule {id}"))
+            create_rule(Grid3dRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction: *direction, allowed: *allowed })
         }
-        Grid3dEditorCommand::DeleteRule { id } => (delete_rule(id.clone()), format!("Delete rule {id}")),
-        Grid3dEditorCommand::PinCell { x, y, z, tile_id } => (pin_cell(Grid3dPinnedCell { x: *x, y: *y, z: *z, tile_id: tile_id.clone() }), format!("Pin cell {x}:{y}:{z}")),
-        Grid3dEditorCommand::UnpinCell { x, y, z } => (unpin_cell(*x, *y, *z), format!("Unpin cell {x}:{y}:{z}")),
-        Grid3dEditorCommand::MaskCell { x, y, z } => (mask_cell(Grid3dCell { x: *x, y: *y, z: *z }), format!("Mask cell {x}:{y}:{z}")),
-        Grid3dEditorCommand::UnmaskCell { x, y, z } => (unmask_cell(*x, *y, *z), format!("Unmask cell {x}:{y}:{z}")),
+        Grid3dEditorCommand::DeleteRule { id } => delete_rule(id.clone()),
+        Grid3dEditorCommand::PinCell { x, y, z, tile_id } => pin_cell(Grid3dPinnedCell { x: *x, y: *y, z: *z, tile_id: tile_id.clone() }),
+        Grid3dEditorCommand::UnpinCell { x, y, z } => unpin_cell(*x, *y, *z),
+        Grid3dEditorCommand::MaskCell { x, y, z } => mask_cell(Grid3dCell { x: *x, y: *y, z: *z }),
+        Grid3dEditorCommand::UnmaskCell { x, y, z } => unmask_cell(*x, *y, *z),
         Grid3dEditorCommand::PickCell { cell_id } | Grid3dEditorCommand::WorldSelect { cell_id } => {
             let Some((x, y, z)) = parse_cell_id(cell_id) else {
                 return Err(Fault::from(format!("wfc.grid3d.cell.unknown-cell '{cell_id}'")));
@@ -280,9 +299,9 @@ pub fn grid3d_command_emit(
                     if window_config.active_tile_id.is_empty() {
                         return Err(Fault::from("wfc.grid3d.tile.no-armed-tile"));
                     }
-                    (pin_cell(Grid3dPinnedCell { x, y, z, tile_id: window_config.active_tile_id }), format!("Pin cell {cell_id}"))
+                    pin_cell(Grid3dPinnedCell { x, y, z, tile_id: window_config.active_tile_id })
                 }
-                grid::UTILITY_MASK => (mask_cell(Grid3dCell { x, y, z }), format!("Mask cell {cell_id}")),
+                grid::UTILITY_MASK => mask_cell(Grid3dCell { x, y, z }),
                 _ => return Ok(Emit::default()),
             }
         }
@@ -290,7 +309,7 @@ pub fn grid3d_command_emit(
             let view = view_state.ok_or_else(|| Fault::from("wfc-grid3d-window-required"))?;
             let mut next = window_config;
             next.active_tile_id.clone_from(tile_id);
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], description: Some(format!("Arm tile {tile_id}")), ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
             let view = view_state.ok_or_else(|| Fault::from("wfc-grid3d-window-required"))?;
@@ -302,11 +321,11 @@ pub fn grid3d_command_emit(
             next.target_y = *target_y;
             next.target_z = *target_z;
             next.camera_zoom = *zoom;
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], description: Some("Set camera".into()), ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
         Grid3dEditorCommand::Solve => {
-            return Ok(Emit { effects: vec![fill_tool::start_effect()], description: Some("Solve".to_string()), ..Default::default() });
+            return Ok(Emit::effect(fill_tool::start_effect()));
         }
         Grid3dEditorCommand::SetActiveExample { example_id } => {
             let Some(next_document) = example_snapshot(example_id) else {
@@ -315,10 +334,10 @@ pub fn grid3d_command_emit(
             if &next_document == document {
                 return Ok(Emit::default());
             }
-            return Ok(Emit { effects: vec![reset_document_effect(&next_document)], description: Some(format!("Load example {example_id}")), ..Default::default() });
+            return Ok(Emit::effect(reset_document_effect(&next_document)));
         }
     };
-    Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
+    Ok(Emit::mutations(vec![mutation]))
 }
 //#endregion 🔖️Reducer
 
@@ -738,24 +757,24 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
         .action_destructive("deleteTile")
         .action_destructive("deleteRule")
         .action_destructive(grid::ACTION_SET_ACTIVE_EXAMPLE)
-        .action_describe("changeSeed", semio_framework_plugin::LocalizedLabel::native("Sets the random seed the 3D solve starts from; the same seed, tiles and rules always produce the same block arrangement.", "Legt den Zufallsstartwert des 3D-Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Blockanordnung."))
-        .action_describe("resizeGrid", semio_framework_plugin::LocalizedLabel::native("Sets the 3D grid to the given width, height and depth in cells; refused when a pinned or masked cell would fall outside the new extent.", "Setzt das 3D-Raster auf die angegebene Breite, Höhe und Tiefe in Zellen; wird abgelehnt, wenn eine angeheftete oder ausgeblendete Zelle außerhalb läge."))
-        .action_describe("changeCellSizes", semio_framework_plugin::LocalizedLabel::native("Rewrites the per-cell sizes along one axis, which makes the 3D grid non-uniform; the list must have one size per cell of that axis.", "Schreibt die Zellgrößen entlang einer Achse neu und macht das 3D-Raster damit ungleichmäßig; die Liste braucht genau eine Größe pro Zelle dieser Achse."))
-        .action_describe("changePeriodicity", semio_framework_plugin::LocalizedLabel::native("Sets whether the 3D grid wraps around along x, y and z, so blocks on one face must fit the blocks on the opposite face.", "Legt fest, ob das 3D-Raster entlang x, y und z umläuft, sodass Blöcke an einer Seite zu denen an der gegenüberliegenden Seite passen müssen."))
-        .action_describe("createTile", semio_framework_plugin::LocalizedLabel::native("Adds a new block tile with the given id, label, weight and RGBA colour to the tile set the 3D solve may place.", "Fügt dem Kachelsatz des 3D-Lösers eine neue Blockkachel mit der angegebenen Id, Bezeichnung, Gewichtung und RGBA-Farbe hinzu."))
-        .action_describe("deleteTile", semio_framework_plugin::LocalizedLabel::native("Removes a block tile together with every adjacency rule and every cell pin that names it.", "Entfernt eine Blockkachel samt aller Nachbarschaftsregeln und Zellanheftungen, die sie nennen."))
-        .action_describe("changeTileWeight", semio_framework_plugin::LocalizedLabel::native("Sets how strongly the 3D solve favours one tile when several fit a cell; a higher weight makes it more frequent.", "Legt fest, wie stark der 3D-Löser eine Kachel bevorzugt, wenn mehrere in eine Zelle passen; ein höheres Gewicht macht sie häufiger."))
-        .action_describe("changeTileColor", semio_framework_plugin::LocalizedLabel::native("Recolours one block tile to the given RGBA value, keeping its mesh if it has one; its id, weight and rules stay unchanged.", "Färbt eine Blockkachel auf den angegebenen RGBA-Wert um und behält ein vorhandenes Netz bei; Id, Gewicht und Regeln bleiben unverändert."))
-        .action_describe("createRule", semio_framework_plugin::LocalizedLabel::native("Allows or forbids tile B on one of the six faces of tile A; pairs no rule mentions are forbidden, so the rules are a closed allow-list.", "Erlaubt oder verbietet Kachel B an einer der sechs Seiten von Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also eine geschlossene Positivliste."))
-        .action_describe("deleteRule", semio_framework_plugin::LocalizedLabel::native("Removes one adjacency rule by id; since unmentioned pairs are forbidden, deleting an allowing rule narrows what the solve may place.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; da nicht genannte Paare verboten sind, schränkt das Löschen einer erlaubenden Regel den Löser ein."))
-        .action_describe("pinCell", semio_framework_plugin::LocalizedLabel::native("Fixes the cell at x, y, z to the given tile before solving; refused on a masked cell, and a pin already there is replaced.", "Legt die Zelle an x, y, z vor dem Lösen auf die angegebene Kachel fest; bei einer ausgeblendeten Zelle abgelehnt, eine vorhandene Anheftung wird ersetzt."))
-        .action_describe("unpinCell", semio_framework_plugin::LocalizedLabel::native("Releases the pin on the cell at x, y, z so the 3D solve may place any tile there again.", "Löst die Anheftung der Zelle an x, y, z, sodass der 3D-Löser dort wieder jede Kachel setzen darf."))
-        .action_describe("maskCell", semio_framework_plugin::LocalizedLabel::native("Carves the cell at x, y, z out of the grid so the 3D solve leaves it empty, which shapes non-box volumes; refused on a pinned cell.", "Nimmt die Zelle an x, y, z aus dem Raster, sodass der 3D-Löser sie leer lässt, womit sich Nicht-Quader-Formen bilden; bei einer angehefteten Zelle abgelehnt."))
-        .action_describe("unmaskCell", semio_framework_plugin::LocalizedLabel::native("Puts the carved-out cell at x, y, z back into the grid so the 3D solve fills it again.", "Nimmt die herausgenommene Zelle an x, y, z wieder ins Raster auf, sodass der 3D-Löser sie wieder füllt."))
-        .action_describe("setActiveTile", semio_framework_plugin::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
-        .action_describe("pickCell", semio_framework_plugin::LocalizedLabel::native("Applies the grid window's armed utility to one cell given as x:y:z: Pin fixes the armed tile there, Mask carves the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf eine als x:y:z angegebene Zelle an: Anheften setzt die gewählte Kachel, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
-        .action_describe("setActiveExample", semio_framework_plugin::LocalizedLabel::native("Replaces the whole document (grid, cell sizes, tiles, rules, pins, masks and seed) with one of the plugin's bundled 3D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Zellgrößen, Kacheln, Regeln, Anheftungen, Ausblendungen und Startwert) durch eines der mitgelieferten 3D-Raster-Beispiele, anhand der Beispiel-Id."))
-        .action_describe("solve", semio_framework_plugin::LocalizedLabel::native("Starts the fill tool run that fills the 3D grid from its tiles, rules, pins and masks; the result is a preview in the grid window and does not change the document.", "Startet den Füll-Werkzeuglauf, der das 3D-Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen füllt; das Ergebnis ist eine Vorschau im Rasterfenster und ändert das Dokument nicht."))
+        .action_describe("changeSeed", semio_framework_ui_locale::LocalizedLabel::native("Sets the random seed the 3D solve starts from; the same seed, tiles and rules always produce the same block arrangement.", "Legt den Zufallsstartwert des 3D-Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Blockanordnung."))
+        .action_describe("resizeGrid", semio_framework_ui_locale::LocalizedLabel::native("Sets the 3D grid to the given width, height and depth in cells; refused when a pinned or masked cell would fall outside the new extent.", "Setzt das 3D-Raster auf die angegebene Breite, Höhe und Tiefe in Zellen; wird abgelehnt, wenn eine angeheftete oder ausgeblendete Zelle außerhalb läge."))
+        .action_describe("changeCellSizes", semio_framework_ui_locale::LocalizedLabel::native("Rewrites the per-cell sizes along one axis, which makes the 3D grid non-uniform; the list must have one size per cell of that axis.", "Schreibt die Zellgrößen entlang einer Achse neu und macht das 3D-Raster damit ungleichmäßig; die Liste braucht genau eine Größe pro Zelle dieser Achse."))
+        .action_describe("changePeriodicity", semio_framework_ui_locale::LocalizedLabel::native("Sets whether the 3D grid wraps around along x, y and z, so blocks on one face must fit the blocks on the opposite face.", "Legt fest, ob das 3D-Raster entlang x, y und z umläuft, sodass Blöcke an einer Seite zu denen an der gegenüberliegenden Seite passen müssen."))
+        .action_describe("createTile", semio_framework_ui_locale::LocalizedLabel::native("Adds a new block tile with the given id, label, weight and RGBA colour to the tile set the 3D solve may place.", "Fügt dem Kachelsatz des 3D-Lösers eine neue Blockkachel mit der angegebenen Id, Bezeichnung, Gewichtung und RGBA-Farbe hinzu."))
+        .action_describe("deleteTile", semio_framework_ui_locale::LocalizedLabel::native("Removes a block tile together with every adjacency rule and every cell pin that names it.", "Entfernt eine Blockkachel samt aller Nachbarschaftsregeln und Zellanheftungen, die sie nennen."))
+        .action_describe("changeTileWeight", semio_framework_ui_locale::LocalizedLabel::native("Sets how strongly the 3D solve favours one tile when several fit a cell; a higher weight makes it more frequent.", "Legt fest, wie stark der 3D-Löser eine Kachel bevorzugt, wenn mehrere in eine Zelle passen; ein höheres Gewicht macht sie häufiger."))
+        .action_describe("changeTileColor", semio_framework_ui_locale::LocalizedLabel::native("Recolours one block tile to the given RGBA value, keeping its mesh if it has one; its id, weight and rules stay unchanged.", "Färbt eine Blockkachel auf den angegebenen RGBA-Wert um und behält ein vorhandenes Netz bei; Id, Gewicht und Regeln bleiben unverändert."))
+        .action_describe("createRule", semio_framework_ui_locale::LocalizedLabel::native("Allows or forbids tile B on one of the six faces of tile A; pairs no rule mentions are forbidden, so the rules are a closed allow-list.", "Erlaubt oder verbietet Kachel B an einer der sechs Seiten von Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also eine geschlossene Positivliste."))
+        .action_describe("deleteRule", semio_framework_ui_locale::LocalizedLabel::native("Removes one adjacency rule by id; since unmentioned pairs are forbidden, deleting an allowing rule narrows what the solve may place.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; da nicht genannte Paare verboten sind, schränkt das Löschen einer erlaubenden Regel den Löser ein."))
+        .action_describe("pinCell", semio_framework_ui_locale::LocalizedLabel::native("Fixes the cell at x, y, z to the given tile before solving; refused on a masked cell, and a pin already there is replaced.", "Legt die Zelle an x, y, z vor dem Lösen auf die angegebene Kachel fest; bei einer ausgeblendeten Zelle abgelehnt, eine vorhandene Anheftung wird ersetzt."))
+        .action_describe("unpinCell", semio_framework_ui_locale::LocalizedLabel::native("Releases the pin on the cell at x, y, z so the 3D solve may place any tile there again.", "Löst die Anheftung der Zelle an x, y, z, sodass der 3D-Löser dort wieder jede Kachel setzen darf."))
+        .action_describe("maskCell", semio_framework_ui_locale::LocalizedLabel::native("Carves the cell at x, y, z out of the grid so the 3D solve leaves it empty, which shapes non-box volumes; refused on a pinned cell.", "Nimmt die Zelle an x, y, z aus dem Raster, sodass der 3D-Löser sie leer lässt, womit sich Nicht-Quader-Formen bilden; bei einer angehefteten Zelle abgelehnt."))
+        .action_describe("unmaskCell", semio_framework_ui_locale::LocalizedLabel::native("Puts the carved-out cell at x, y, z back into the grid so the 3D solve fills it again.", "Nimmt die herausgenommene Zelle an x, y, z wieder ins Raster auf, sodass der 3D-Löser sie wieder füllt."))
+        .action_describe("setActiveTile", semio_framework_ui_locale::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
+        .action_describe("pickCell", semio_framework_ui_locale::LocalizedLabel::native("Applies the grid window's armed utility to one cell given as x:y:z: Pin fixes the armed tile there, Mask carves the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf eine als x:y:z angegebene Zelle an: Anheften setzt die gewählte Kachel, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
+        .action_describe("setActiveExample", semio_framework_ui_locale::LocalizedLabel::native("Replaces the whole document (grid, cell sizes, tiles, rules, pins, masks and seed) with one of the plugin's bundled 3D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Zellgrößen, Kacheln, Regeln, Anheftungen, Ausblendungen und Startwert) durch eines der mitgelieferten 3D-Raster-Beispiele, anhand der Beispiel-Id."))
+        .action_describe("solve", semio_framework_ui_locale::LocalizedLabel::native("Starts the fill tool run that fills the 3D grid from its tiles, rules, pins and masks; the result is a preview in the grid window and does not change the document.", "Startet den Füll-Werkzeuglauf, der das 3D-Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen füllt; das Ergebnis ist eine Vorschau im Rasterfenster und ändert das Dokument nicht."))
         .action_audience("worldSelect", semio_framework_plugin::CapabilityAudience::Input)
         .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()

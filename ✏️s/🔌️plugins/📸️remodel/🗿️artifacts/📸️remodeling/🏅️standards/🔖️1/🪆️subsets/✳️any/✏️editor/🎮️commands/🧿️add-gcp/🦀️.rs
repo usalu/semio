@@ -3,7 +3,7 @@
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::create_gcp;
 use crate::op::RemodelingMutation;
-use crate::schema::next_remodeling_id;
+use crate::schema::mint_remodeling_id;
 use crate::{GroundControlPoint, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,8 +17,8 @@ pub struct AddGcp {
     pub world_z: f64,
 }
 
-pub fn handle(payload: &AddGcp, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
-    let id = next_remodeling_id("gcp");
+pub fn handle(payload: &AddGcp, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
+    let id = mint_remodeling_id(doc.operation_optional(), "gcp");
     let gcp = GroundControlPoint { id, name: payload.name.clone(), world_position: [payload.world_x, payload.world_y, payload.world_z], observations: Vec::new() };
     Ok(Emit::mutations(vec![create_gcp(gcp)]))
 }

@@ -35,7 +35,7 @@ import { createSpaceCommandV1 } from "../../../../../🧰️framework/🛍️pro
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   for (let current = start, depth = 0; depth < 32; depth += 1) {
     if (existsSync(join(current, ".mcp.json"))) return current;
     const parent = dirname(current);
@@ -44,7 +44,7 @@ function findRepoRoot(start: string): string {
   }
   throw new Error(`the plugin-coverage sweep could not locate the repository root above ${start}`);
 }
-const repoRoot = findRepoRoot(here);
+const repoRoot = findWorkspaceRoot(here);
 const outDir = process.env.S_OS_MCP_COVERAGE_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/🧩️plugin-coverage");
 const only = new Set((process.env.S_OS_MCP_COVERAGE_PLUGINS ?? "").split(",").filter(Boolean));
 const CALL_MS = 240_000;

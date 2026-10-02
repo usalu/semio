@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RenameVcs {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("VCS in \"{}\" umbenennen", self.new_title))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename vcs to \"{}\"", self.new_title), &format!("VCS in \"{}\" umbenennen", self.new_title))
     }
 }
 //#endregion 🔖️Mutation

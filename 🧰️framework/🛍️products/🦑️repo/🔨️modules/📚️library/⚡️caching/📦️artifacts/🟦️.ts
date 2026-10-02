@@ -1,40 +1,24 @@
-import { existsSync, lstatSync, readFileSync, mkdirSync, writeFileSync, rmSync, mkdtempSync, chmodSync, renameSync } from "node:fs";
-import { copyFile } from "node:fs/promises";
-import { dirname, resolve, join } from "node:path";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { acquireResourceLease, type LeaseWait } from "../🔒️leases/🟦️.ts";
+import { stageArtifacts, type ArtifactPublicationOptions } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
 
-export type ArtifactPublicationOptions = { readonly signal?: AbortSignal; readonly leaseDirectory?: string; readonly onWait?: (progress: LeaseWait) => void };
+function retiredCargoOwner(owner: string, root: string): boolean {
+  const split = owner.indexOf(":browser:");
+  if (split <= 0) return false;
+  const relative = owner.slice(0, split);
+  if (!relative.endsWith("Cargo.toml") || relative.startsWith("/") || relative.split("/").includes("..")) return false;
+  return !existsSync(join(root, relative));
+}
 
-/** 🧱️ Replaces only a previously owned deliverable tree and restores it if publication fails. */
-export async function stageArtifacts(staging: string, owner: string, files: ReadonlyMap<string, string>, options: ArtifactPublicationOptions = {}): Promise<void> {
-  const signal = options.signal ?? new AbortController().signal;
-  const lease = await acquireResourceLease({ directory: options.leaseDirectory ?? join(getWorkspaceRoot(), ".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"), resource: `artifact:${resolve(staging)}`, mode: "exclusive", signal, onWait: options.onWait });
-  let temporary: string | undefined;
-  try {
-    const marker = ".nx-artifact.json";
-    for (let parent = resolve(staging); dirname(parent) !== parent; parent = dirname(parent)) if (existsSync(parent) && lstatSync(parent).isSymbolicLink()) throw new Error(`Symlink artifact destination: ${parent}`);
-    if (existsSync(staging)) {
-      const markerPath = join(staging, marker);
-      if (!existsSync(markerPath)) rmSync(staging, { recursive: true, force: true });
-      else if (JSON.parse(readFileSync(markerPath, "utf8")).owner !== owner) throw new Error(`Unowned artifact directory: ${staging}`);
-    }
-    mkdirSync(dirname(staging), { recursive: true });
-    temporary = mkdtempSync(`${staging}.stage-`);
-    const previous = `${temporary}.previous`;
-    for (const [name, source] of files) {
-      signal.throwIfAborted();
-      if (name.startsWith("/") || name.split(/[\\/]/).includes("..")) throw new Error(`Invalid artifact path ${name}`);
-      const destination = join(temporary, name);
-      mkdirSync(dirname(destination), { recursive: true });
-      await copyFile(source, destination);
-      chmodSync(destination, lstatSync(source).mode & 0o777);
-    }
-    writeFileSync(join(temporary, marker), JSON.stringify({ version: 1, owner, files: [...files.keys()].sort() }) + "\n");
-    signal.throwIfAborted();
-    if (existsSync(staging)) renameSync(staging, previous);
-    try { renameSync(temporary, staging); }
-    catch (error) { if (existsSync(previous)) renameSync(previous, staging); throw error; }
-    rmSync(previous, { recursive: true, force: true });
-  } finally { try { if (temporary) rmSync(temporary, { recursive: true, force: true }); } finally { lease.release(); } }
+/** 📦️ Supplies the Repo publication store and replaces a tree whose Cargo owner manifest is gone. */
+export async function stageRepositoryArtifacts(staging:string,owner:string,files:ReadonlyMap<string,string>,options:Partial<ArtifactPublicationOptions>={}):Promise<void>{
+  const root = getWorkspaceRoot();
+  const marker = join(staging, ".nx-artifact.json");
+  if (existsSync(marker)) {
+    let recorded = "";
+    try { const parsed = JSON.parse(readFileSync(marker, "utf8")).owner; if (typeof parsed === "string") recorded = parsed; } catch { recorded = ""; }
+    if (recorded !== owner && retiredCargoOwner(recorded, root)) rmSync(staging, { recursive: true, force: true });
+  }
+  await stageArtifacts(staging,owner,files,{...options,leaseDirectory:options.leaseDirectory??join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases")});
 }

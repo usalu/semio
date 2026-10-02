@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.reasoning.wires`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config): its mutation vocabulary `WiresCanvasWindowConfigMutation` over `WiresCanvasWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-reasoning-wires-1-any-editor-edit-canvas-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],

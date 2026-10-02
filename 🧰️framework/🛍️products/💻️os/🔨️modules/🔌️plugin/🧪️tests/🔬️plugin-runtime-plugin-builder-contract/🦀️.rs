@@ -5,9 +5,12 @@ mod plugin_builder_contract_tests {
     //! idempotency. `TestCommand` is `TestApp`'s typed `Self::Command`; framework-reserved verbs
     //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
     //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
+    use crate::__semio_dispatch_PluginApp;
     use dsl::DslValue;
     use semio_framework_value_derive::{FromValue, ToValue};
-    use ui_wgpu::wgpu::{Locale, LocalizedLabel, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework_ui_locale::Terminology;
 
     /// 🌐️ One locale cell of a history row's label carrier. Every assertion below names the locale
     /// it reads, so a row that carries only English cannot pass by accident; the carrier's own
@@ -52,7 +55,8 @@ mod plugin_builder_contract_tests {
     use serde_json::json;
     use std::collections::BTreeMap;
     use store::os_io::ArtifactRef;
-    use store::{ArtifactPack, EngineHandles};
+    use semio_framework_2d::compute::EngineHandles;
+    use store::{ArtifactPack, };
     use store::{Backbone, BackboneMessage, MemoryBackbone};
     use store::{MemberFactory, SpaceMember};
     use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
@@ -308,8 +312,8 @@ mod plugin_builder_contract_tests {
         Increment,
         #[dsl(key = "set-label")]
         SetLabel { value: String },
-        #[dsl(key = "amend-label")]
-        AmendLabel { value: String },
+        #[dsl(key = "stream-label")]
+        StreamLabel { value: String, commit: bool },
         #[dsl(key = "commit-label")]
         CommitLabel { value: String },
         #[dsl(key = "bad-view")]
@@ -379,7 +383,7 @@ mod plugin_builder_contract_tests {
                 let probe = format!("{keyword} ");
                 if line == keyword.as_str() || line.starts_with(&probe) {
                     let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                    let record = ::dsl::parse(body, &(spec_fn.ordinary)(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
                     return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
@@ -389,7 +393,7 @@ mod plugin_builder_contract_tests {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+            let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
             if body.is_empty() { keyword } else { format!("{keyword} {body}") }
         }
     }
@@ -418,7 +422,7 @@ mod plugin_builder_contract_tests {
     /// 🪟️ A view of the two-window roster `main-1`/`main-2` targeting `target` under `utility`.
     fn host_event_view(target: &str, utility: Option<&str>) -> ViewModel {
         let roster = vec![ViewWindowInstance { id: "main-1".into(), window_kind_id: "main".into() }, ViewWindowInstance { id: "main-2".into(), window_kind_id: "main".into() }];
-        let view = ViewModel { window_instances: roster, ..ViewModel::default() }.for_window_instance(target).expect("a roster window");
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(target).expect("a roster window");
         ViewModel { active_utility_id: utility.map(str::to_string), ..view }
     }
 
@@ -824,6 +828,9 @@ mod plugin_builder_contract_tests {
     }
     //#endregion 🧹️PublicationLaneFixtureOwners
 
+    /// 🌊️ The one tool transaction every `streamLabel` tick streams into and its `commit: true` tick closes (design §15).
+    const TEST_STREAM_LABEL_TRANSACTION: &str = "tx-00000000000005ab";
+
     /// 🪪️ `TestApp`'s verb for one command variant, as a plain `fn` so the retained
     /// command payload (`ArtifactRetainedCommandPayload::command_id`) and the async
     /// `ArtifactApp::command_id` answer the same id from ONE table.
@@ -834,7 +841,7 @@ mod plugin_builder_contract_tests {
         match command {
             TestCommand::Increment => "increment",
             TestCommand::SetLabel { .. } => "setLabel",
-            TestCommand::AmendLabel { .. } => "amendLabel",
+            TestCommand::StreamLabel { .. } => "streamLabel",
             TestCommand::CommitLabel { .. } => "commitLabel",
             TestCommand::BadView => "badView",
             TestCommand::Select { .. } => "select",
@@ -875,9 +882,13 @@ mod plugin_builder_contract_tests {
                 }
                 Ok(Emit::default())
             }
-            TestCommand::SetLabel { value } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], coalesce_key: Some("label".into()), ..Default::default() }),
+            TestCommand::SetLabel { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })])),
             TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })])),
-            TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "label")),
+            TestCommand::StreamLabel { value, commit } => {
+                let transaction = protocol::TransactionRef { id: TEST_STREAM_LABEL_TRANSACTION.into(), tool: format!("{}#streamLabel", TestApp::<false>::APP_ID) };
+                let mutations = vec![TestMutation::SetLabel(SetLabel { value: value.clone() })];
+                Ok(if *commit { Emit::commit_transaction(transaction, mutations) } else { Emit::stream_transaction(transaction, mutations) })
+            }
             TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "commit label")),
             TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: 99 })])),
             TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: json!({ "utilityId": utility_id.clone() }).into() })),
@@ -1104,7 +1115,7 @@ mod plugin_builder_contract_tests {
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
                 return Ok(ComponentTree { root });
             }
-            built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}", doc.snapshot.count)))
         }
 
         /// 🪟️ One group per live window instance — the reserved `measures` section surface's own payload.
@@ -2218,7 +2229,7 @@ mod plugin_builder_contract_tests {
     fn declare_test_app_verbs(builder: crate::app::AppBuilder) -> crate::app::AppBuilder {
         let builder = resolve_ready(builder.mutation("increment", LocalizedLabel::data("Increment")));
         let builder = resolve_ready(builder.mutation("setLabel", LocalizedLabel::data("Set Label")));
-        let builder = resolve_ready(builder.mutation("amendLabel", LocalizedLabel::data("Amend Label")));
+        let builder = resolve_ready(builder.mutation("streamLabel", LocalizedLabel::data("Stream Label")));
         let builder = resolve_ready(builder.mutation("commitLabel", LocalizedLabel::data("Commit Label")));
         let builder = resolve_ready(builder.mutation("compositeEdit", LocalizedLabel::data("Composite Edit")));
         let builder = resolve_ready(builder.mutation("probeChild", LocalizedLabel::data("Probe Child")));
@@ -2584,7 +2595,7 @@ mod plugin_builder_contract_tests {
             .collect();
         let framework_registered_without_declaration: std::collections::BTreeSet<String> =
             ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
-        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID]
+        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::HOST_EVENT_ACTION_ID]
             .into_iter()
             .chain(semio_framework::HISTORY_EDIT_ACTION_IDS)
             .map(String::from)
@@ -2599,9 +2610,14 @@ mod plugin_builder_contract_tests {
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
             "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"
         );
+        let runtime_source: String = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect();
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifis_time_travel_action_id(action){returnBox::pin(self.dispatch_time_travel_action(action,args,meta)).await;}"),
+            runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta)).await;")),
             "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
+        );
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta)).await;}"),
+            "the only reason `hostEvent` may carry no factory is its host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
@@ -5368,16 +5384,30 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    /// 🪡️ One undo reverts the whole coalesced gesture back to the empty label.
+    /// 🪡️ A streamed tool transaction is ONE edit (design §15): every tick joins the open edit, the commit tick closes it,
+    /// and one undo reverts the whole gesture back to the empty label.
     #[semio_framework_async_macros::async_test]
-    async fn coalesced_operations_amend_a_single_edit() {
+    async fn streamed_ticks_and_their_commit_are_one_undo_step() {
+        let mut app = contract_app().await;
+        for value in ["a", "ab"] {
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit: false }, &meta()).await.expect("streamLabel tick");
+        }
+        app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: true }, &meta()).await.expect("streamLabel commit");
+        assert_eq!(app.test_snapshot().await.label, "abc");
+        reserved_action(&mut app, "undo", None).await;
+        assert_eq!(app.test_snapshot().await.label, "");
+    }
+
+    /// 🧱️ Outside a tool transaction every emission is its own plain edit (design §20.1): nothing coalesces, so one undo
+    /// reverts exactly the last dispatch.
+    #[semio_framework_async_macros::async_test]
+    async fn plain_emissions_never_coalesce() {
         let mut app = contract_app().await;
         for value in ["a", "ab", "abc"] {
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
         }
-        assert_eq!(app.test_snapshot().await.label, "abc");
         reserved_action(&mut app, "undo", None).await;
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.test_snapshot().await.label, "ab");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5441,7 +5471,7 @@ mod plugin_builder_contract_tests {
         let view = ViewModel {
             active_mode_id: Some("edit".into()),
             window_instances: vec![ViewWindowInstance { id: "world-1".into(), window_kind_id: "world".into() }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let invocation = ActionInvocation {
             address: ActionAddress {
@@ -5686,7 +5716,7 @@ mod plugin_builder_contract_tests {
             active_mode_id: Some("edit".into()),
             window_id: Some("puzzle3d-main-perspective".into()),
             window_instances: vec![ViewWindowInstance { id: "puzzle3d-main-perspective".into(), window_kind_id: "puzzle3d-main".into() }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let context_json = serde_json::to_string(&json!({ "actor": "local", "viewState": view })).expect("context json");
         let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json).await.expect("host JSON undo through plugin_handle_action");
@@ -5796,7 +5826,7 @@ mod plugin_builder_contract_tests {
         let effect = Effect::ReplayShellCommand { action_id: wire["actionId"].as_str().expect("actionId").into(), args: Some(dv(wire["args"].clone())) };
         let packed = store::pack_rt::encode_wire_value(&protocol::ToValue::to_value(&effect));
         let value = store::pack_rt::decode_wire_value(&packed).expect("leftover pack decode");
-        let decoded = match dsl::from_dsl_value::<Effect>(value.clone()) {
+        let decoded = match <Effect as semio_framework_value::FromValue>::from_value(value.clone()) {
             Ok(decoded) => decoded,
             Err(_) => {
                 let replay = value.get("replayShellCommand").or_else(|| value.get("ReplayShellCommand")).expect("replayShellCommand leftover key");
@@ -5830,35 +5860,35 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
+    async fn a_streamed_gesture_appends_exactly_one_command_log_entry() {
         let mut app = contract_app().await;
-        for value in ["a", "ab", "abc"] {
-            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).await.expect("setLabel");
+        for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta()).await.expect("streamLabel");
         }
         let history = app.test_history().await;
-        let set_label_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "setLabel").collect();
-        assert_eq!(set_label_entries.len(), 1, "a coalesced gesture must grow one entry's op_lines, not append new entries");
+        let stream_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "streamLabel").collect();
+        assert_eq!(stream_entries.len(), 1, "a streamed gesture must grow one entry's op_lines, not append new entries");
     }
 
-    /// 📜️ LAW (ticket 26/09/23 C12): a coalesced gesture's history row previews only its edit's newest
+    /// 📜️ LAW (ticket 26/09/23 C12): a streamed gesture's history row previews only its edit's newest
     /// `HISTORY_ROW_OPERATION_PREVIEW` operations — the newest one last — however long the gesture runs, so reading the history
-    /// costs the same per key at the end of a long typing run as at its start.
+    /// costs the same per tick at the end of a long gesture as at its start.
     #[semio_framework_async_macros::async_test]
-    async fn a_long_coalesced_gesture_previews_its_newest_operations_only() {
+    async fn a_long_streamed_gesture_previews_its_newest_operations_only() {
         let mut app = contract_app().await;
         let mut value = String::new();
         for key in 0..64u8 {
             value.push(char::from(b'a' + key % 26));
-            app.dispatch_typed(TestCommand::SetLabel { value: value.clone() }, &meta()).await.expect("setLabel");
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.clone(), commit: key == 63 }, &meta()).await.expect("streamLabel");
             let _ = app.test_history().await;
         }
         let history = app.test_history().await;
-        let row = history.commands.iter().find(|entry| entry.action_id == "setLabel").expect("the gesture's row");
+        let row = history.commands.iter().find(|entry| entry.action_id == "streamLabel").expect("the gesture's row");
         assert_eq!(row.op_count, 64, "the row counts every operation of its edit");
         assert_eq!(row.op_lines.len(), HISTORY_ROW_OPERATION_PREVIEW, "the row previews a bounded tail of its operations");
         assert!(row.op_lines.last().is_some_and(|line| line.contains(&value)), "the newest operation closes the preview: {:?}", row.op_lines);
         let exported = app.history_snapshot().await.expect("history snapshot");
-        let exported = exported.upserts.iter().find(|entry| entry.action_id == "setLabel").expect("the gesture's exported row");
+        let exported = exported.upserts.iter().find(|entry| entry.action_id == "streamLabel").expect("the gesture's exported row");
         assert_eq!((exported.op_count, exported.op_lines.len()), (64, HISTORY_ROW_OPERATION_PREVIEW), "the exported row carries the bounded preview and its edit's operation count");
     }
 
@@ -5984,13 +6014,13 @@ mod plugin_builder_contract_tests {
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
         assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
         assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
-        let viewer_panel = ui_history_panel(&history, None, "ctrl", Locale::En, true, &ViewModel::default()).await.expect("viewer history panel");
+        let viewer_panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, true, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("viewer history panel");
         assert_eq!(viewer_panel.children[0].children.len(), 5, "a viewer never gets the check-in row at all \u{2014} React's `canCheckIn` gate removes it rather than disabling it");
         assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
         let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
@@ -6002,12 +6032,12 @@ mod plugin_builder_contract_tests {
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -6042,7 +6072,7 @@ mod plugin_builder_contract_tests {
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -6077,7 +6107,7 @@ mod plugin_builder_contract_tests {
             mutations: Vec::new(),
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -6148,7 +6178,7 @@ mod plugin_builder_contract_tests {
         let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
         let history = history_window_log(rows, false);
 
-        let cold = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("a log of any length must assemble");
+        let cold = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("a log of any length must assemble");
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
         assert_eq!(history_commands_window(&cold), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset: 0 }), "the host sees the whole extent");
@@ -6164,9 +6194,9 @@ mod plugin_builder_contract_tests {
                 offset,
                 rows: requested,
             }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
-        let scrolled = ui_history_panel(&history, None, "ctrl", Locale::En, false, &view).await.expect("a scrolled window must assemble");
+        let scrolled = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &view).await.expect("a scrolled window must assemble");
         assert_eq!(scrolled.children[1].children.len(), requested as usize);
         assert_eq!(scrolled.children[1].children[0].key.as_str(), format!("{prefix}{}", offset + 1), "the slice starts where the host scrolled to");
         assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset }));
@@ -6186,7 +6216,7 @@ mod plugin_builder_contract_tests {
     async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
         let entries = 20usize;
         let history = history_window_log(entries, true);
-        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("revertible entries must assemble without an alias refusal");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;
@@ -6394,9 +6424,9 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
         let mut app = contract_app().await;
-        app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render before");
+        app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render before");
         app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).await.expect("select");
-        let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::default()).await.expect("render after");
+        let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render after");
         assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
         assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
     }
@@ -6502,12 +6532,12 @@ mod plugin_builder_contract_tests {
         let set_label_icon = default_action_icon_id(ActionKind::Mutation).as_str().to_string();
         let increment_icon = default_action_icon_id(ActionKind::Mutation).as_str().to_string();
 
-        let empty_label = app.context_menu(&request, &ViewModel::default()).await;
+        let empty_label = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
         assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), icon: Some(set_label_icon), action: Some("setLabelRequired".into()), ..Default::default() });
 
         app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("set label");
-        let with_label = app.context_menu(&request, &ViewModel::default()).await;
+        let with_label = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
         assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
     }
@@ -6578,7 +6608,7 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).await.expect("set label");
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
-        let organized = app.context_menu(&request, &ViewModel::default()).await;
+        let organized = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
         let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
         assert_eq!(
             ids,
@@ -6597,8 +6627,8 @@ mod plugin_builder_contract_tests {
         let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"},"viewState":{"locale":"de","terminology":"reuse"}}"#).expect("canonical viewState parses");
         let (request, view_state) = wire.into_parts().unwrap();
         assert_eq!(request.menu.id, "window");
-        assert_eq!(view_state.locale, crate::Locale::De);
-        assert_eq!(view_state.terminology, crate::Terminology::Reuse);
+        assert_eq!(view_state.locale, semio_framework_ui_locale::Locale::De);
+        assert_eq!(view_state.terminology, semio_framework_ui_locale::Terminology::Reuse);
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         for surface in fixture["surfaces"].as_array().unwrap() {
             let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":surface["windowId"],"viewState":fixture["view"]})).unwrap();
@@ -7026,14 +7056,13 @@ mod plugin_builder_contract_tests {
         assert_eq!(event.payload, dsl::DslValue::from(json!({ "utilityId": "brush" })));
     }
 
-    /// 🧷️ One undo reverts the whole coalesced amend gesture.
-    ///
-    /// Each commit is its own edit: one undo only reverts the last commit.
+    /// 🧷️ A streamed gesture is one undo step on the typed route too, while each committed label is its own edit: one undo
+    /// only reverts the last commit.
     #[semio_framework_async_macros::async_test]
-    async fn action_emit_amend_coalesces_while_commit_does_not() {
+    async fn a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own() {
         let mut app = contract_app_under_test().await;
-        for value in ["a", "ab", "abc"] {
-            app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta()).await.expect("amendLabel");
+        for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
+            app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta()).await.expect("streamLabel");
         }
         assert_eq!(app.test_snapshot().await.label, "abc");
         reserved_action(&mut app, "undo", None).await;
@@ -7048,18 +7077,18 @@ mod plugin_builder_contract_tests {
     }
 
     /// 🪢️ Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
-    /// coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
+    /// transaction's open edit accumulates every tick's operations (3 after this loop), each dispatch's
     /// `InvocationResult` must report only the operation IT just added — never re-serializing the whole
     /// growing edit into every `KernelMutation`/`UndoGroup` on every single dispatch.
     ///
-    /// The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
+    /// The narrowed per-dispatch reporting must not affect the one-edit/undo semantics of the transaction.
     #[semio_framework_async_macros::async_test]
-    async fn amend_dispatch_reports_only_this_dispatch_new_operations() {
+    async fn a_streamed_tick_reports_only_its_own_new_operation() {
         let mut app = contract_app_under_test().await;
-        app.dispatch_typed(TestCommand::AmendLabel { value: "a".into() }, &meta()).await.expect("amendLabel a");
-        app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).await.expect("amendLabel ab");
-        let result = app.dispatch_typed(TestCommand::AmendLabel { value: "abc".into() }, &meta()).await.expect("amendLabel abc");
-        assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
+        app.dispatch_typed(TestCommand::StreamLabel { value: "a".into(), commit: false }, &meta()).await.expect("streamLabel a");
+        app.dispatch_typed(TestCommand::StreamLabel { value: "ab".into(), commit: false }, &meta()).await.expect("streamLabel ab");
+        let result = app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: false }, &meta()).await.expect("streamLabel abc");
+        assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole open edit");
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
         assert_eq!(
             result.mutations[0].inverse.inverse_diff.payload,
@@ -7069,6 +7098,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(result.inverse_group.mutations.len(), 1);
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
         assert_eq!(app.test_snapshot().await.label, "abc");
+        app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta()).await.expect("streamLabel commit");
         reserved_action(&mut app, "undo", None).await;
         assert_eq!(app.test_snapshot().await.label, "");
     }

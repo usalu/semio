@@ -366,6 +366,7 @@ impl RasterOwnedRetirement {
             ChangeLayerMask(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected.and_then(|mask| mask.image_key), third: payload.mask.and_then(|mask| mask.image_key) },
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
             PaintStroke(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: Some(payload.tool) },
+            FillRegion(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: None },
         }
     }
 
@@ -597,7 +598,11 @@ impl RasterOwnedRetirement {
                         Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
                     }
                 }
-                dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => {
+                dsl::DslValue::Bytes(bytes) if frame.phase == 0 => {
+                    frame.phase = 1;
+                    Ok(RasterRetirementAction::Push(RasterRetirementOwner::Bytes(std::mem::take(bytes))))
+                }
+                dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) | dsl::DslValue::Bytes(_) => {
                     drop(frame.owner.take());
                     Ok(RasterRetirementAction::Pop)
                 }
@@ -1366,6 +1371,7 @@ impl RasterDslValueBoundsAuthority {
             totals.add(1, size_of::<dsl::DslValue>(), 1, size_of::<dsl::DslValue>())?;
             match value {
                 dsl::DslValue::String(value) => totals.string(value)?,
+                dsl::DslValue::Bytes(value) => totals.vector(value)?,
                 dsl::DslValue::Array(values) => totals.vector(values)?,
                 dsl::DslValue::Object(values) => totals.vector(values)?,
                 _ => {}
@@ -1612,6 +1618,7 @@ impl RasterDslValueCloneAuthority {
             dsl::DslValue::Bool(value) => dsl::DslValue::Bool(*value),
             dsl::DslValue::Number(value) => dsl::DslValue::Number(*value),
             dsl::DslValue::String(_) => dsl::DslValue::String(String::new()),
+            dsl::DslValue::Bytes(_) => dsl::DslValue::Bytes(Vec::new()),
             dsl::DslValue::Array(values) => dsl::DslValue::Array(Vec::with_capacity(values.capacity())),
             dsl::DslValue::Object(values) => dsl::DslValue::Object(Vec::with_capacity(values.capacity())),
         }
@@ -1669,6 +1676,15 @@ impl RasterDslValueCloneAuthority {
                         return Ok(false);
                     }
                     *target = raster_clone_owned_string(source)?;
+                }
+                (dsl::DslValue::Bytes(source), dsl::DslValue::Bytes(target)) => {
+                    if source.len() > RASTER_MAXIMUM_NESTED_BYTES {
+                        return Err("raster-store.clone-value-bytes-capacity");
+                    }
+                    if !raster_reserve_unit(cx) {
+                        return Ok(false);
+                    }
+                    target.extend_from_slice(source);
                 }
                 _ if !raster_reserve_unit(cx) => return Ok(false),
                 _ => {}
@@ -2492,6 +2508,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::ChangeLayerTransform(_)=>17,
             RasterMutation::ChangeLayerAdjustmentParameter(_) => 15,
             RasterMutation::PaintStroke(_) => 18,
+            RasterMutation::FillRegion(_) => 19,
         }
     }
 
@@ -2791,6 +2808,30 @@ impl RasterMutationDigestAuthority {
                 }
                 _ => Ok(self.finish(digest, cx)),
             },
+            RasterMutation::FillRegion(value) => match self.phase {
+                1 => string_phase!(&value.layer_id, 2),
+                2 => string_phase!(&value.target, 3),
+                3 => {
+                    let mut fields = Vec::with_capacity(16 + value.color.len() * 8);
+                    for number in [value.seed.x, value.seed.y, value.tolerance, value.color.len() as u32] {
+                        fields.extend_from_slice(&number.to_be_bytes());
+                    }
+                    for channel in &value.color {
+                        fields.extend_from_slice(&channel.to_bits().to_be_bytes());
+                    }
+                    scalar_phase!(&fields, 4)
+                }
+                4 => {
+                    let mut fields = vec![u8::from(value.selection.is_some())];
+                    for span in value.selection.iter().flatten() {
+                        for number in [span.start, span.length, span.coverage] {
+                            fields.extend_from_slice(&number.to_be_bytes());
+                        }
+                    }
+                    scalar_phase!(&fields, 5)
+                }
+                _ => Ok(self.finish(digest, cx)),
+            },
         }
     }
 
@@ -3045,6 +3086,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ChangeLayerAdjustmentParameter(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::PaintStroke(value) => Some(&value.layer_id),
+            RasterMutation::FillRegion(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
     }
@@ -3371,11 +3413,11 @@ impl RasterMutationCandidateAuthority {
                         let (key, child) = removed.take();
                         *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
                     }
-                    RasterMutation::PaintStroke(value) => {
+                    RasterMutation::PaintStroke(_) | RasterMutation::FillRegion(_) => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let outcome = crate::mutations::paint_stroke::diff(value, snapshot);
+                        let outcome = protocol::Mutation::diff(operation, &*snapshot);
                         let refused = outcome.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
                         let (diff, _) = outcome.into_parts();
                         let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::MutationDiff::apply(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };

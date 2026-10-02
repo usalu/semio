@@ -10,8 +10,8 @@
 //! carry what it removed — the top-level members restored from the original document.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
 
 
 //#region 🔖️Spec
@@ -81,7 +81,7 @@ mod subject {
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{bind_default_scene, bind_node_camera, bind_node_child, bind_node_mesh, bind_node_skin, bind_scene_root_node, change_node_extension_data, change_node_extra_data, change_node_morph_weights, change_node_name, change_node_transform, change_scene_extension_data, change_scene_extra_data, change_scene_name, create_node, create_scene, delete_node, delete_scene, move_node, move_node_child, move_node_parent, move_scene, move_scene_root_node, reorder_node_children, reorder_nodes, reorder_scene_root_nodes, reorder_scenes, unbind_default_scene, unbind_node_camera, unbind_node_child, unbind_node_mesh, unbind_node_skin, unbind_scene_root_node};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params
     /// 🔢️ A non-negative integer payload member.

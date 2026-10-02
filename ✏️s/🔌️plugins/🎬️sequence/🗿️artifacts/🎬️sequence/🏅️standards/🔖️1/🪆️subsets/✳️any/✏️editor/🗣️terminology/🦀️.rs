@@ -3,7 +3,7 @@
 //! macro's value is that every locale×terminology combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale×terminology combination compile-checked.
     pub struct SequenceLabels {
         steps: native_en "Steps", native_de "Schritte", reuse_en "Steps", reuse_de "Schritte";

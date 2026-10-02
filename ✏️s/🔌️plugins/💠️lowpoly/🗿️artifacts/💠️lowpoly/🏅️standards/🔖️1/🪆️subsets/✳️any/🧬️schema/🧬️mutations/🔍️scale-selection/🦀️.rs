@@ -23,6 +23,13 @@ impl ScaleSelection {
     pub fn motion(&self) -> LowpolySelectionMotion {
         LowpolySelectionMotion::Stretch { pivot: self.pivot, factor: self.factor }
     }
+
+    /// 🧪️ The payload's own invariant, independent of any document: every vertex named once, a finite pivot and every
+    /// factor positive and finite.
+    pub fn invariant_violation(&self) -> Option<String> {
+        let clean = self.pivot.iter().all(|value| value.is_finite()) && self.factor.iter().all(|value| value.is_finite() && *value > 0.0);
+        crate::mutations::lowpoly_selection_vertex_violation(&self.vertex_ids).or_else(|| (!clean).then(|| "The pivot must be finite and every factor positive and finite.".into()))
+    }
 }
 
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ScaleSelection {
@@ -34,7 +41,7 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ScaleSelection
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         self.motion().label(&self.object_id, self.vertex_ids.len())
     }
     fn target(&self) -> Vec<String> {

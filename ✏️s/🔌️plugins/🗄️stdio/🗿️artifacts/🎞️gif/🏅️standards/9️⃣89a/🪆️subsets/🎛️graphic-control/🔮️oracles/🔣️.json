@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §23 defines the Graphic Control Extension as a self-contained, optional block (block label 0x21 0xF9) carrying exactly four fields -- disposal method, user-input flag, transparent-color flag/delay time, transparent color index -- distinct from the core Image Descriptor/color-table/raster-data structure GIF87a already had. `set-frame-delay`/`set-frame-disposal`/`set-frame-transparency`/`set-frame-user-input` are that block's own four fields, so they are owned here rather than by `🧱️base`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `GifMutation` enum, its diff dispatch and the real binary/text codec they compile into remain in `🧱️base` (the whole-frame-stream reader/writer is one shared, always-co-resident implementation -- moving it would duplicate the codec for a format with no alternate standalone document profile to justify it, the same family-module reuse this repo already uses for svg tiny/basic).",
   "oracles": [],
@@ -225,5 +225,6 @@
         "set-frame-user-input"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

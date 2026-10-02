@@ -66,7 +66,7 @@ pub const AVI_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standar
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.avi".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Avi", "Avi"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Avi", "Avi"),
         source_format: STDIO_AVI_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

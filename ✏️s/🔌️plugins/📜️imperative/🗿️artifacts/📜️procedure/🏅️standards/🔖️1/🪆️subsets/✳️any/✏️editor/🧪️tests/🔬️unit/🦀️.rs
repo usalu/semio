@@ -24,6 +24,8 @@ pub(crate) mod context {
     pub fn imperative_app_manifest_for_tests() -> App {
         App { definition: create_imperative_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("imperative", ImperativePlayApp, imperative_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
@@ -86,7 +88,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
 }
 

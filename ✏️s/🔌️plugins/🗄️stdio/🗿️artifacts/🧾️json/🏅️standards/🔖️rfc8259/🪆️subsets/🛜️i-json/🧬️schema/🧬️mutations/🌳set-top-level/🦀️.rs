@@ -20,8 +20,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetTopLevel {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::SetTopLevel(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set top level", "Wurzelwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

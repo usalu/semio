@@ -1,24 +1,24 @@
 {
   "IntroduceProductSeries": {
-    "index": null,
     "productSeries": {
-      "classId": "class.panel-radiator",
-      "geometryId": null,
       "id": "series-pr-plus",
+      "classId": "class.panel-radiator",
       "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "PR Plus"
+        },
+        "shortName": null,
         "alternatives": [
           {
             "locale": "de",
             "text": "PR Plus"
           }
-        ],
-        "preferred": {
-          "locale": "en",
-          "text": "PR Plus"
-        },
-        "shortName": null
+        ]
       },
-      "sharedPropertyValues": {}
-    }
+      "sharedPropertyValues": {},
+      "geometryId": null
+    },
+    "index": null
   }
 }

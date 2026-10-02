@@ -118,12 +118,12 @@ impl dsl::ToValue for SemioKitSnapshot {
             ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
             ("types".to_string(), dsl::ToValue::to_value(&self.types)),
             ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
-            ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
-            ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
-            ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
+            ("objects".to_string(), semio_framework_value::ToValue::to_value(&self.objects)),
+            ("models".to_string(), semio_framework_value::ToValue::to_value(&self.models)),
+            ("representations".to_string(), semio_framework_value::ToValue::to_value(&self.representations)),
         ];
         if let Some(properties) = &self.properties {
-            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+            entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(properties)));
         }
         dsl::DslValue::object(entries)
     }
@@ -141,10 +141,10 @@ impl dsl::FromValue for SemioKitSnapshot {
             schema: dsl::FromValue::from_value(field("schema")?)?,
             types: get("types").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
             designs: get("designs").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
-            objects: get("objects").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
-            models: get("models").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
-            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            representations: get("representations").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            objects: get("objects").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
+            models: get("models").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
+            properties: get("properties").map(semio_framework_value::FromValue::from_value).transpose()?,
+            representations: get("representations").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
         })
     }
 }
@@ -175,11 +175,13 @@ use crate::standards::v1::subsets::base::schema::triples::{split_top_level, stri
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
+    format!("[{},{},{},{}]",enc_str(&r.artifact_id),enc_str(&r.dialect.artifact_kind),enc_str(&r.dialect.standard),enc_str(&r.dialect.subset))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+    let parts=crate::standards::v1::subsets::base::schema::triples::split_top_level(crate::standards::v1::subsets::base::schema::triples::strip_brackets(s)?,',');
+    let[id,kind,standard,subset]=parts.as_slice()else{return Err("reference requires four literal fields".into())};
+    Ok(store::os_io::ArtifactRef{artifact_id:dec_str(id)?,dialect:store::os_io::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -255,7 +257,8 @@ pub(crate) fn dec_link_list(s: &str) -> Result<Vec<store::ArtifactLink>, String>
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_transform(t: &SemioTransform) -> String {
-    format!("[{},{},{},{},{},{},{},{},{},{}]", t.translation.x, t.translation.y, t.translation.z, t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w, t.scale.x, t.scale.y, t.scale.z,)
+    use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
+    format!("[{},{},{},{},{},{},{},{},{},{}]", NativeF64(t.translation.x), NativeF64(t.translation.y), NativeF64(t.translation.z), NativeF64(t.rotation.x), NativeF64(t.rotation.y), NativeF64(t.rotation.z), NativeF64(t.rotation.w), NativeF64(t.scale.x), NativeF64(t.scale.y), NativeF64(t.scale.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
@@ -263,7 +266,7 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
-    let f = |s: &str| s.trim().parse::<f64>().map_err(|e| e.to_string());
+    let f = crate::standards::v1::subsets::base::schema::geometry::native::parse;
     use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
@@ -403,11 +406,11 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
+    for field in [&r.artifact_id,&r.dialect.artifact_kind,&r.dialect.standard,&r.dialect.subset]{write_str_lp(out,field);}
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+    Ok(store::os_io::ArtifactRef{artifact_id:read_str_lp(reader)?,dialect:store::os_io::ArtifactDialect{artifact_kind:read_str_lp(reader)?,standard:read_str_lp(reader)?,subset:read_str_lp(reader)?}})
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -673,7 +676,7 @@ impl store::ArtifactPack for SemioKitSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let _ = options;
-        decode_kit_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_kit_snapshot_binary(&inner).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -768,3 +771,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path="🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path="🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames-a/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames-a/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🏷️rename/🏷️renames-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("rename-collaboration-record/renames-collaboration-record-a: before snapshot decodes")

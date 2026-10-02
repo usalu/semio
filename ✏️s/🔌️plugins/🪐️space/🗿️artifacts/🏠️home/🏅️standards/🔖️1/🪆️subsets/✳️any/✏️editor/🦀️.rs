@@ -20,9 +20,33 @@ use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::{app_commands, create_tab_stack_layout, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, DraftView, DslValue, Editor, EditorApp, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, PluginAssemblyError, UiAssemblyResult};
+use semio_framework_plugin::app_commands;
+use semio_framework_plugin::create_tab_stack_layout;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
@@ -465,7 +489,7 @@ impl ArtifactEditor for HomeApp {
     /// 🪪️ `s.space.home`'s config+presence schema descriptor (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
     /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 

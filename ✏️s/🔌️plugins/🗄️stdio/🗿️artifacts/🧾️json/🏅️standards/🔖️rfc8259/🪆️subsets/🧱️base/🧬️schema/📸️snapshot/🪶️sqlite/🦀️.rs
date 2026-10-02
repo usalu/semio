@@ -10,16 +10,6 @@ fn integer(value: usize) -> Result<i64, String> { i64::try_from(value).map_err(|
 fn add(value: &mut usize, amount: usize) -> Result<(), String> { *value = value.checked_add(amount).ok_or("JSON relational size overflow")?; Ok(()) }
 fn kind(value: &JsonValue) -> &'static str { match value { JsonValue::Null => "null", JsonValue::Bool { .. } => "boolean", JsonValue::Number { .. } => "number", JsonValue::String { .. } => "string", JsonValue::Array { .. } => "array", JsonValue::Object { .. } => "object" } }
 
-fn digits(bytes:&[u8],cursor:&mut usize,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase,completed:usize,total:usize)->Result<bool,String>{let start=*cursor;while bytes.get(*cursor).is_some_and(u8::is_ascii_digit){*cursor+=1;if *cursor%65536==0{control.checkpoint(phase,completed,total)?;}}Ok(*cursor>start)}
-fn numeric(lexeme:&str,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase,completed:usize,total:usize)->Result<Option<f64>,String>{
- let bytes=lexeme.as_bytes();let mut cursor=0;if bytes.len()>65536{control.checkpoint(phase,completed,total)?;}
- if bytes.get(cursor)==Some(&b'-'){cursor+=1;}
- if bytes.get(cursor)==Some(&b'0'){cursor+=1;}else if bytes.get(cursor).is_some_and(|byte|(b'1'..=b'9').contains(byte)){if !digits(bytes,&mut cursor,control,phase,completed,total)?{return Ok(None)}}else{return Ok(None)}
- if bytes.get(cursor)==Some(&b'.'){cursor+=1;if !digits(bytes,&mut cursor,control,phase,completed,total)?{return Ok(None)}}
- if bytes.get(cursor).is_some_and(|byte|*byte==b'e'||*byte==b'E'){cursor+=1;if bytes.get(cursor).is_some_and(|byte|*byte==b'+'||*byte==b'-'){cursor+=1;}if !digits(bytes,&mut cursor,control,phase,completed,total)?{return Ok(None)}}
- if cursor!=bytes.len(){return Ok(None)}Ok(lexeme.parse::<f64>().ok().filter(|value|value.is_finite()).map(|value|if value==0.0{0.0}else{value}))
-}
-
 fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<usize, String> {
     let mut rows = 1usize; let mut bytes = snapshot.schema.len().checked_add(16).ok_or("JSON document size overflow")?;
     control.check_value_bytes(bytes)?; let mut stack = vec![&snapshot.value]; let mut visited = 0usize;
@@ -40,30 +30,9 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 impl ArtifactSqliteSnapshot for JsonSnapshot {
-    fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
-        use semio_framework_os_kernel::sqlite_snapshot::{artifact::NativeEncodingBound, SnapshotEncoding};
-        let mut bound = NativeEncodingBound::new(control)?; bound.add(1024)?;
-        let mut stack = vec![(&self.value, 0usize)]; let mut rows = 1usize;
-        while let Some((value, depth)) = stack.pop() {
-            let indentation = if encoding == SnapshotEncoding::Text { depth.checked_mul(16).ok_or("JSON native indentation overflow")? } else { 0 };
-            bound.add(indentation.checked_add(64).ok_or("JSON native node size overflow")?)?;
-            match value {
-                JsonValue::Null | JsonValue::Bool { .. } => {},
-                JsonValue::Number { lexeme } => bound.repeated(lexeme.len(), 4)?,
-                JsonValue::String { value } => bound.repeated(value.len(), 24)?,
-                JsonValue::Array { items } => {
-                    rows = rows.checked_add(items.len()).ok_or("JSON native row count overflow")?; bound.check_rows(rows)?;
-                    bound.repeated(items.len(), 32)?; let next = depth.checked_add(1).ok_or("JSON native depth overflow")?;
-                    stack.extend(items.iter().rev().map(|child| (child, next)));
-                },
-                JsonValue::Object { members } => {
-                    rows = rows.checked_add(members.len()).ok_or("JSON native row count overflow")?; bound.check_rows(rows)?;
-                    bound.repeated(members.len(), 32)?; let next = depth.checked_add(1).ok_or("JSON native depth overflow")?;
-                    for member in members.iter().rev() { bound.repeated(member.key.len(), 24)?; stack.push((&member.value, next)); }
-                },
-            }
-        }
-        bound.finish()
+    fn retire_sqlite_snapshot(self) { super::owned_pack::retire(self); }
+    fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+        super::owned_pack::preflight(self, control)
     }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
@@ -71,6 +40,20 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
         let row=database.table("json_document")?.single_row()?;if row.rowid!=1||row.text(1)?!=self.schema{return Err(String::from("JSON owned document identity differs from semantic projection").into());}
         let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"i-json"=>crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance_controlled(self,control)?,"geojson"=>crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance_controlled(self,control)?,_=>return Err(String::from("JSON named subset has no owned semantic validator").into())};
         Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
+    }
+
+    fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+        let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+        let length=match payload{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};
+        if length>limits.max_file_bytes{return Err("JSON native input exceeds file byte limit".into())}
+        let mut progress=|state:protocol::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::DecodeNative,state.completed,state.total).is_ok();
+        let mut native=protocol::native_decoding::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);
+        let spec=<Self as store::ArtifactPack>::record_spec().ok_or("JSON logical record specification missing")?;
+        let record=match payload{
+            store::os_io::IoPayload::Binary(bytes)=>{let body=store::semio_format::unwrap_binary_controlled(bytes,"stdio.json",store::semio_format::Component::Pack,1,&mut native).map_err(|e|e.to_string())?;store::pack_rt::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(|e|e.to_string())?.0},
+            store::os_io::IoPayload::Text(text)=>{let body=store::semio_format::split_text_preamble_controlled(text,"stdio.json",store::semio_format::Component::Dsl,1,&mut native).map_err(|e|e.to_string())?;dsl::schema::parse_exact_controlled(body,&spec,&dsl::ParseOptions{limits:dsl::Limits::default(),mode:dsl::SourceMode::Document},&mut native).map_err(|e|e.message)?}
+        };
+        super::owned_pack::reconstruct_record(&record,&mut native,limits.max_rows)
     }
 
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
@@ -85,7 +68,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
             let id = integer(values.len() + 1)?; let mut boolean = SqliteValue::Null; let mut number = SqliteValue::Null; let mut string = SqliteValue::Null;let mut query_number=SqliteValue::Null;
             match value {
                 JsonValue::Bool { value } => boolean = SqliteValue::Integer(i64::from(*value)),
-                JsonValue::Number { lexeme } => {query_number=numeric(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,1+values.len()+members.len()+elements.len(),total)?.map(SqliteValue::Real).unwrap_or(SqliteValue::Null);number=SqliteValue::Text(lexeme.clone());},
+                JsonValue::Number { lexeme } => {query_number=super::number::meaning(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,1+values.len()+members.len()+elements.len(),total)?.numeric.map(SqliteValue::Real).unwrap_or(SqliteValue::Null);number=SqliteValue::Text(lexeme.clone());},
                 JsonValue::String { value } => string = SqliteValue::Text(value.clone()),
                 JsonValue::Array { items } => for (ordinal, child) in items.iter().enumerate().rev() { stack.push((child, Parent::Element(id, ordinal))); },
                 JsonValue::Object { members } => for (ordinal, member) in members.iter().enumerate().rev() { stack.push((&member.value, Parent::Member(id, ordinal, &member.key))); },
@@ -119,7 +102,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
             match kind {
                 "null" | "array" | "object" if empty(2) && empty(3) && empty(4) && empty(5) => {}
                 "boolean" if empty(3) && empty(4) && empty(5) && matches!(row.integer(2)?, 0 | 1) => {}
-                "number" if empty(2) && empty(4) => {let expected=numeric(row.text(3)?,control,SqliteSnapshotPhase::ReconstructSnapshot,0,total)?;if match expected{None=>!empty(5),Some(value)=>empty(5)||row.real(5)?!=value}{return Err("JSON derived numeric value disagrees with its owned lexeme".into())}},
+                "number" if empty(2) && empty(4) => {let expected=super::number::meaning(row.text(3)?,control,SqliteSnapshotPhase::ReconstructSnapshot,0,total)?.numeric;if match expected{None=>!empty(5),Some(value)=>empty(5)||row.real(5)?!=value}{return Err("JSON derived numeric value disagrees with its owned lexeme".into())}},
                 "string" if empty(2) && empty(3) && empty(5) => { row.text(4)?; }
                 _ => return Err("JSON primitive kind and payload columns disagree".into()),
             }

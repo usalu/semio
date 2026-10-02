@@ -2,17 +2,16 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { repoCacheDirectory } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 // #endregion 🔌️Adapters
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
-const repoRoot = resolve(root, "../../../../..");
 
 export default defineConfig({
   root: testRoot,
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "framework-machine"),
+  cacheDir: testCacheDirectoryV1(process.env, "framework-machine"),
   resolve: {
     alias: {
     },

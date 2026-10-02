@@ -1,5 +1,5 @@
 semio stdio.pdf.dsl v1
 schema=stdio.pdf
 pages {
-  [ width=612 height=792 text="Semio Demo" ]
+  [ { width=612 height=792 text="Semio Demo" } ]
 }

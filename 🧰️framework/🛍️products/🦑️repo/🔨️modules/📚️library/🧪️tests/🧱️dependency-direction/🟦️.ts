@@ -20,6 +20,7 @@ const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json")
 const schema = read("🧬️schema/🧱️dependency-direction/🔣️.json");
 type PolicyOwner = Readonly<{ owner: string; name: string; role?: string }>;
 const policyOwners = (fixture as typeof fixture & { policyOwners: readonly PolicyOwner[] }).policyOwners;
+const policyProviders = ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs", "🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/🟦️bun/🟨️.cjs", "🗂️workspaces/📦️payload/🟦️.ts", "🗂️workspaces/📦️payload/🟨️.cjs"];
 const config = portablePolicy();
 const rules = config.forbidden.filter((rule) => ["framework-no-implementation", "io-renderer-independent", "repo-no-implementation", "s-modules-no-plugins", "plugin-no-extension-or-artifact-📐️cad", "framework-modules-no-products"].includes(rule.name)).map((rule) => {
   const patterns = (value: string | string[]): string[] => typeof value === "string" ? [value] : value;
@@ -27,16 +28,21 @@ const rules = config.forbidden.filter((rule) => ["framework-no-implementation", 
 });
 const matches = (patterns: readonly string[], candidate: string): boolean => patterns.some((pattern) => new RegExp(pattern, "u").test(candidate));
 function write(root: string, path: string, content: string): void { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+function writePolicyAuthority(root: string): void {
+  write(root, "nx.json", "{}");
+  write(root, "📋️project.json", JSON.stringify({ metadata: { semio: { taxonomy: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json" } } }));
+  for (const source of policyProviders) write(root, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+}
 
 /** 🧪️ Loads the actual policy generator over portable owners verified against their current authored manifests. */
-function portablePolicy(): { forbidden: readonly Rule[] } {
+function portablePolicy(): { forbidden: readonly Rule[]; options: { enhancedResolveOptions: { conditionNames: readonly string[] } } } {
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "dependency-policy-")));
   const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   try {
     write(root, boundary, readFileSync(join(repo, boundary), "utf8"));
-    for (const source of ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/📦️payload/🟦️.ts"]) write(root, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+    writePolicyAuthority(root);
     const members = policyOwners.map((row) => row.owner);
     write(root, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
     for (const row of policyOwners) {
@@ -303,7 +309,7 @@ test("portable removability cases agree with actual boundary policy loading", as
       const cwd = join(root, String(index));
       write(cwd, boundary, readFileSync(join(repo, boundary), "utf8"));
       write(cwd, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", readFileSync(join(library, "🔣️taxonomy.json"), "utf8"));
-      for (const source of ["🕸️dependencies/🧭️direction/🟦️.ts", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/📦️payload/🟦️.ts"]) write(cwd, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+      writePolicyAuthority(cwd);
       const members = row.members ?? [owner, "✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript"];
       write(cwd, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
       for (const directory of row.directories) mkdirSync(join(cwd, directory), { recursive: true });

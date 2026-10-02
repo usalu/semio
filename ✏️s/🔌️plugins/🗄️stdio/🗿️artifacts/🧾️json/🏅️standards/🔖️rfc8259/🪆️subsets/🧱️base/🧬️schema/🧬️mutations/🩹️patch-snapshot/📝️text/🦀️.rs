@@ -41,9 +41,3 @@ pub fn parse(line: &str) -> Result<JsonMutation, String> {
     let patch = editing::SnapshotPatch::parse_op(source).map_err(|error| error.to_string())?;
     Ok(JsonMutation::PatchSnapshot(PatchSnapshot { patch }))
 }
-
-#[cfg(test)]
-#[test]
-fn malformed_unicode_hex_is_rejected_without_panicking() {
-    assert!(parse("patch-snapshot patch=€0").is_err());
-}

@@ -4,7 +4,7 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot;
 /// 🧬️ Registers the document schema wav's declaration contributes — the registered contract every snapshot edit validates
 /// against; a fixture editor runs without the plugin assembly that publishes it.
 fn register_document_schema() {
-    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()]).expect("the wav document schema registers");
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()]).expect("the wav document schema registers");
 }
 
 #[semio_framework_async_macros::async_test]

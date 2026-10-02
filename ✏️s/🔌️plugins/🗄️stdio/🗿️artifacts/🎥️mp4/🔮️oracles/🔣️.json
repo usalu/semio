@@ -1,0 +1,14 @@
+{
+  "$schema": "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-mp4-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ]
+}

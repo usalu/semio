@@ -438,7 +438,7 @@ test("registers empty-facet authoring through its closed canonical route", async
       root = packageRoot;
       repoRoot = repoRoot;
     }
-    const router = new Function("BundleScript", "join", "resolve", "mkdirSync", "runTestBudgeted", "resolveTestLevel", javascript)(
+    const router = new Function("BundleScript", "join", "resolve", "mkdirSync", "runRepositoryTestCommand", "resolveTestLevel", javascript)(
       FixtureBundle,
       join,
       resolve,

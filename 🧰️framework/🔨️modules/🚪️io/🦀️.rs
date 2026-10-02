@@ -2210,8 +2210,31 @@ pub mod io_mechanism {
     }
 
     /// 🪪️ Adds the reserved decomposed coordinate metadata to a provider's domain database.
-    pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding) -> Result<(), String> {
+    pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
         if database.tables.iter().any(|table| table.name.eq_ignore_ascii_case("semio_snapshot")) { return Err("domain schema cannot claim reserved snapshot metadata".into()); }
+        let limits = control.limits();
+        if database.tables.len().checked_add(1).ok_or("snapshot table count overflow")? > limits.max_tables || limits.max_columns < 6 { return Err("snapshot metadata exceeds table or column limit".into()); }
+        let mut rows = 1usize;
+        control.check_rows(rows)?;
+        let mut bytes = 16usize.checked_add(dialect.artifact_kind.len()).and_then(|value| value.checked_add(dialect.standard.len())).and_then(|value| value.checked_add(dialect.subset.len())).and_then(|value| value.checked_add(encoding.as_str().len())).ok_or("snapshot metadata byte count overflow")?;
+        control.check_value_bytes(bytes)?;
+        let mut schema_bytes = SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').len().checked_add("semio_snapshot".len()).ok_or("snapshot schema byte count overflow")?;
+        for table in &database.tables {
+            schema_bytes = schema_bytes.checked_add(table.sql.len()).and_then(|value| value.checked_add(table.name.len())).ok_or("snapshot schema byte count overflow")?;
+            if schema_bytes > limits.max_schema_bytes { return Err("snapshot metadata exceeds schema byte limit".into()); }
+            for row in &table.rows {
+                rows = rows.checked_add(1).ok_or("snapshot row count overflow")?;
+                control.check_rows(rows)?;
+                for value in &row.values {
+                    bytes = bytes.checked_add(match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(text) => text.len(), SqliteValue::Blob(blob) => blob.len() }).ok_or("snapshot value byte count overflow")?;
+                    control.check_value_bytes(bytes)?;
+                }
+                if rows % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, 0)?; }
+            }
+        }
+        if schema_bytes > limits.max_schema_bytes { return Err("snapshot metadata exceeds schema byte limit".into()); }
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, rows)?;
         database.tables.push(SqliteTable { name: "semio_snapshot".to_string(), sql: SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').to_string(), rows: vec![SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Text(dialect.artifact_kind.clone()), SqliteValue::Text(dialect.standard.clone()), SqliteValue::Text(dialect.subset.clone()), SqliteValue::Integer(1), SqliteValue::Text(encoding.as_str().to_string())] }] });
         sqlite_snapshot_metadata(database).map(|_| ())
     }
@@ -2417,7 +2440,7 @@ pub mod io_mechanism {
         let mut database = snapshot.to_sqlite_database(&mut control)?;
         validate_snapshot_schema(&database, P::SQLITE_SCHEMA, limits)?;
         let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, &mut control)?;
-        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding)?;
+        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, &mut control)?;
         export_sqlite_database(&database, limits, progress).map(|value| IoOutcome { value, diagnostics }).map_err(|error| IoError::from(error.to_string()))
     }
 
@@ -2452,7 +2475,7 @@ pub mod io_mechanism {
             SqliteSnapshotControl::new(progress, limits).check_database(&database, SqliteSnapshotPhase::ProjectSnapshot).map_err(fail)?;
             let diagnostics = projected.diagnostics;
             let encoding = match payload { IoPayload::Binary(_) => SnapshotEncoding::Binary, IoPayload::Text(_) => SnapshotEncoding::Text };
-            attach_sqlite_snapshot_metadata(&mut database, &hop.from, encoding).map_err(fail)?;
+            attach_sqlite_snapshot_metadata(&mut database, &hop.from, encoding, &mut SqliteSnapshotControl::new(progress, limits)).map_err(fail)?;
             return export_sqlite_database(&database, limits, progress).map(|bytes| IoOutcome { value: IoPayload::Binary(bytes), diagnostics }).map_err(|error| fail(error.to_string()));
         }
         let IoPayload::Binary(bytes) = payload else {

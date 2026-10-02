@@ -1,3 +1,10 @@
-# reasoning.wires.snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+scalar UInt64
+scalar Int64
+scalar Ieee754Word64
+scalar IntrinsicOctets
+enum IntrinsicKind { NULL BOOLEAN UNSIGNED SIGNED FLOAT TEXT BYTES ARRAY OBJECT }
+type Document { fixtureRoot: UInt64! metaRoot: UInt64! content: Child! nodes: [Node!]! }
+type Child { childId: String! target: Target! }
+type Target { artifactId: String! artifactKind: String! standard: String! subset: String! }
+type Member { name: String! value: UInt64! }
+type Node { kind: IntrinsicKind! boolean: Boolean unsigned: UInt64 signed: Int64 floatIeee754Bits: Ieee754Word64 text: String bytes: IntrinsicOctets items: [UInt64!]! members: [Member!]! }

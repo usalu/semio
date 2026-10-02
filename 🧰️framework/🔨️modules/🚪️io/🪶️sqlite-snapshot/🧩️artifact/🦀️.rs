@@ -39,8 +39,25 @@ pub enum Cell<'a> { Null, Integer(i64), Real(f64), Float32(f32), Text(&'a str), 
 
 impl Cell<'_> {
     fn bytes(self) -> usize { match self { Self::Null => 0, Self::Integer(_) | Self::Real(_) | Self::Float32(_) => 8, Self::Text(value) => value.len(), Self::Blob(value) => value.len() } }
-    fn owned(self) -> SqliteValue { match self { Self::Null => SqliteValue::Null, Self::Integer(value) => SqliteValue::Integer(value), Self::Real(value) => SqliteValue::Real(value), Self::Float32(value) => SqliteValue::Real(f64::from(value)), Self::Text(value) => SqliteValue::Text(value.into()), Self::Blob(value) => SqliteValue::Blob(value.into()) } }
+    fn owned(self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue, String> { Ok(match self { Self::Null => SqliteValue::Null, Self::Integer(value) => SqliteValue::Integer(value), Self::Real(value) => SqliteValue::Real(value), Self::Float32(value) => SqliteValue::Real(f64::from(value)), Self::Text(value) => SqliteValue::Text(copy_text(value, control, SqliteSnapshotPhase::ProjectSnapshot)?), Self::Blob(value) => SqliteValue::Blob(copy_blob(value, control, SqliteSnapshotPhase::ProjectSnapshot)?) }) }
 }
+
+fn copy_text(text: &str, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<String, String> {
+    if text.len() > 65536 { control.checkpoint(phase, 0, text.len())?; }
+    let mut output = String::new(); output.try_reserve_exact(text.len()).map_err(|_| "artifact text allocation failed")?;
+    let mut position = 0; while position < text.len() { let mut end = position.saturating_add(65536).min(text.len()); while !text.is_char_boundary(end) { end -= 1; } output.push_str(&text[position..end]); position = end; if text.len() > 65536 { control.checkpoint(phase, position, text.len())?; } }
+    Ok(output)
+}
+
+fn copy_blob(blob: &[u8], control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<Vec<u8>, String> {
+    if blob.len() > 65536 { control.checkpoint(phase, 0, blob.len())?; }
+    let mut output = Vec::new(); output.try_reserve_exact(blob.len()).map_err(|_| "artifact blob allocation failed")?;
+    for chunk in blob.chunks(65536) { output.extend_from_slice(chunk); if blob.len() > 65536 { control.checkpoint(phase, output.len(), blob.len())?; } }
+    Ok(output)
+}
+
+/// 🔤️ Copies an explicitly pre-admitted native projection field in bounded UTF-8 chunks.
+pub fn project_text(control: &mut SqliteSnapshotControl<'_>, text: &str) -> Result<String, String> { control.check_value_bytes(text.len())?; copy_text(text, control, SqliteSnapshotPhase::ProjectSnapshot) }
 
 /// 🏗️ Inserts only the domain rows explicitly supplied by an artifact implementation.
 pub struct Projection<'c, 'p> { database: SqliteDatabase, control: &'c mut SqliteSnapshotControl<'p>, rows: usize, bytes: usize }
@@ -66,12 +83,12 @@ impl<'c, 'p> Projection<'c, 'p> {
     pub fn insert_key(&mut self, table: &str, key: i64, cells: &[Cell<'_>]) -> Result<(), String> {
         self.database.table(table)?;
         let rows = self.rows.checked_add(1).ok_or("artifact row count overflow")?;
-        self.control.check_rows(rows.checked_add(1).ok_or("artifact metadata row count overflow")?)?;
+        self.control.check_rows(rows)?;
         let mut bytes = self.bytes.checked_add(8).ok_or("artifact value byte count overflow")?;
         for cell in cells { bytes = bytes.checked_add(cell.bytes()).ok_or("artifact value byte count overflow")?; self.control.check_value_bytes(bytes)?; if match cell { Cell::Real(value) => value.is_nan(), Cell::Float32(value) => value.is_nan(), _ => false } { return Err("NaN requires an authored IEEE scalar companion".into()); } }
         self.control.check_value_bytes(bytes)?;
         if rows % 256 == 0 || bytes.saturating_sub(self.bytes) > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, rows, 0)?; }
-        let mut values = Vec::with_capacity(cells.len() + 1); values.push(SqliteValue::Integer(key)); values.extend(cells.iter().copied().map(Cell::owned));
+        let mut values = Vec::with_capacity(cells.len() + 1); values.push(SqliteValue::Integer(key)); for cell in cells { values.push(cell.owned(self.control)?); }
         self.database.table_mut(table)?.rows.push(SqliteRow { rowid: key, values });
         self.rows = rows; self.bytes = bytes;
         Ok(())
@@ -80,8 +97,8 @@ impl<'c, 'p> Projection<'c, 'p> {
     /// 📏️ Exposes the caller's declared resource bounds before domain traversal allocation.
     pub fn limits(&self) -> super::SqliteDatabaseLimits { self.control.limits() }
 
-    /// 🔢️ Bounds predicted domain rows and their reserved metadata row before allocation.
-    pub fn check_rows(&self, count: usize) -> Result<(), String> { self.control.check_rows(count.checked_add(1).ok_or("artifact metadata row count overflow")?) }
+    /// 🔢️ Bounds the domain rows this projection actually materializes.
+    pub fn check_rows(&self, count: usize) -> Result<(), String> { self.control.check_rows(count) }
 
     /// 📦️ Bounds predicted aggregate storage-class bytes before allocation.
     pub fn check_value_bytes(&self, count: usize) -> Result<(), String> { self.control.check_value_bytes(count) }
@@ -89,8 +106,43 @@ impl<'c, 'p> Projection<'c, 'p> {
     /// ⏱️ Checks cancellation around domain loops that do not emit a row immediately.
     pub fn checkpoint(&mut self) -> Result<(), String> { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, 0) }
 
-    /// 📤️ Returns the complete domain database after its final control checkpoint.
-    pub fn finish(self) -> Result<SqliteDatabase, String> { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, self.rows)?; Ok(self.database) }
+    /// 🔢️ Reports actual inserted rows against the owner's borrowed preflight count.
+    pub fn checkpoint_total(&mut self, total_rows: usize) -> Result<(), String> { if self.rows > total_rows { return Err("artifact projection exceeded its predicted row count".into()); } self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.rows, total_rows) }
+
+    /// 📤️ Orders physical identities without copying rows and checks cancellation during ordering.
+    pub fn finish(mut self) -> Result<SqliteDatabase, String> {
+        self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0)?;
+        let mut work = RowOrdering { control: self.control, units: 0 };
+        for table in &mut self.database.tables { order_rows(&mut table.rows, &mut work)?; }
+        work.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, work.units, work.units)?;
+        Ok(self.database)
+    }
+}
+
+struct RowOrdering<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, units: usize }
+impl RowOrdering<'_, '_> {
+    fn step(&mut self) -> Result<(), String> { self.units = self.units.checked_add(1).ok_or("artifact row ordering work overflow")?; if self.units % 256 == 0 { self.control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, self.units, 0)?; } Ok(()) }
+}
+fn sift_rows(rows: &mut [SqliteRow], mut root: usize, end: usize, work: &mut RowOrdering<'_, '_>) -> Result<(), String> {
+    while root < end / 2 {
+        work.step()?;
+        let mut child = root * 2 + 1;
+        if child + 1 < end && rows[child].rowid < rows[child + 1].rowid { child += 1; }
+        if rows[root].rowid >= rows[child].rowid { break; }
+        rows.swap(root, child); root = child;
+    }
+    Ok(())
+}
+fn order_rows(rows: &mut [SqliteRow], work: &mut RowOrdering<'_, '_>) -> Result<(), String> {
+    let count = rows.len();
+    let mut ordered = true;
+    for index in 1..count { work.step()?; if rows[index - 1].rowid > rows[index].rowid { ordered = false; } }
+    if !ordered {
+        for root in (0..count / 2).rev() { sift_rows(rows, root, count, work)?; }
+        for end in (1..count).rev() { work.step()?; rows.swap(0, end); sift_rows(rows, 0, end, work)?; }
+    }
+    for index in 1..count { work.step()?; if rows[index - 1].rowid == rows[index].rowid { return Err("artifact row identities must be unique".into()); } }
+    Ok(())
 }
 
 /// 🔢️ An explicitly authored scalar column and its native IEEE width.
@@ -113,7 +165,12 @@ fn float_cell_limit(projection:&Projection<'_,'_>,cells:usize,columns:usize)->Re
 fn float_slot(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<(usize,FloatColumn),String>{let original=row.values.len().checked_sub(columns.len().checked_mul(2).ok_or("IEEE column count overflow")?).ok_or("missing IEEE scalar columns")?;let(slot,column)=columns.iter().copied().enumerate().find(|(_,column)|column.index()==index).ok_or("scalar field has no authored IEEE column")?;if index>=original{return Err("IEEE scalar field is outside authored columns".into());}Ok((original+slot*2,column))}
 /// 🫥️ Distinguishes an absent optional scalar from a present NaN with a NULL query value.
 pub fn ieee754_is_null(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<bool,String>{let(slot,_)=float_slot(row,index,columns)?;Ok(row.values.get(index)==Some(&SqliteValue::Null)&&row.values.get(slot)==Some(&SqliteValue::Null)&&row.values.get(slot+1)==Some(&SqliteValue::Null))}
-fn check_float(row:&SqliteRow,index:usize,slot:usize,value:f64)->Result<(),String>{if row.text(slot+1)?!=numeric_class(value){return Err("IEEE numeric class disagrees with native bits".into());}if value.is_nan(){if row.values.get(index)!=Some(&SqliteValue::Null){return Err("NaN query value must be NULL".into());}}else if row.real(index)?!=value{return Err("query REAL disagrees with native IEEE bits".into());}Ok(())}
+fn check_float(row:&SqliteRow,index:usize,slot:usize,value:f64)->Result<(),String>{
+    if row.text(slot+1)?!=numeric_class(value){return Err("IEEE numeric class disagrees with native bits".into());}
+    if value.is_nan(){if row.values.get(index)!=Some(&SqliteValue::Null){return Err("NaN query value must be NULL".into());}return Ok(())}
+    let exact=match row.values.get(index){Some(SqliteValue::Real(query))=>*query==value,Some(SqliteValue::Integer(query))=>value>=i64::MIN as f64&&value < -(i64::MIN as f64)&&value.fract()==0.0&&value as i64==*query,_=>false};
+    if !exact{return Err("query scalar disagrees with exact native IEEE value".into());}Ok(())
+}
 /// 🧮️ Restores binary64, interpreting signed INTEGER bit storage as its exact unsigned bit pattern.
 pub fn read_binary64(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<f64,String>{let(slot,column)=float_slot(row,index,columns)?;if !matches!(column,FloatColumn::Binary64(_)){return Err("expected an authored binary64 scalar".into());}let value=f64::from_bits(row.integer(slot)? as u64);check_float(row,index,slot,value)?;Ok(value)}
 /// 🔢️ Restores binary32 directly from its own bits without quieting signaling NaNs through a binary64 cast.
@@ -179,9 +236,9 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
         self.control.reconstruction_bytes = bytes; self.control.reconstruction_units = units; self.bytes = bytes; self.units = units; Ok(())
     }
     /// 🔤️ Checks the aggregate native byte bound before copying one borrowed text field.
-    pub fn text(&mut self, text: &str) -> Result<String, String> { self.reserve(text.len())?; Ok(text.into()) }
+    pub fn text(&mut self, text: &str) -> Result<String, String> { self.reserve(text.len())?; copy_text(text, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
     /// 📦️ Checks the aggregate native byte bound before copying one borrowed binary field.
-    pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, String> { self.reserve(blob.len())?; Ok(blob.into()) }
+    pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, String> { self.reserve(blob.len())?; copy_blob(blob, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }
     /// 🔢️ Accounts for one explicitly restored numeric or boolean field.
     pub fn scalar(&mut self) -> Result<(), String> { self.reserve(8) }
     /// ⏱️ Checks cancellation around relationship traversal and prior to returning native ownership.
@@ -258,5 +315,31 @@ mod ieee_tests {
     #[test]
     fn authored_ieee_fields_reject_inconsistent_class_bits_query_and_optional_presence(){let original=fixture();for change in 0..4{let mut db=original.clone();let row=&mut db.table_mut("typed_scalar").unwrap().rows[0];match change{0=>row.values[1]=SqliteValue::Real(1.0),1=>row.values[4]=SqliteValue::Text("nan".into()),2=>row.values[5]=SqliteValue::Integer(i64::MAX),_=>row.values[3]=SqliteValue::Null}assert!(FloatRow::new(row,COLUMNS).is_err());}}
     #[test]
+    fn authored_ieee_integer_queries_reject_rounding_against_independent_sqlite(){
+        use std::io::Write;
+        use std::process::{Command,Stdio};
+        let input=include_str!("../🔢️ieee754/🧫️fixtures/🎯️integer-query.json");
+        let script="import{Database}from'bun:sqlite';const{cases}=await Bun.stdin.json(),db=new Database(':memory:',{safeIntegers:true}),view=new DataView(new ArrayBuffer(8));db.run('CREATE TABLE exact_integer(id INTEGER PRIMARY KEY,value)');for(const[i,c]of cases.entries()){const value=BigInt(c.integer);db.run('INSERT INTO exact_integer VALUES(?,?)',[i+1,value]);if(db.query('SELECT value FROM exact_integer WHERE id=?').get(i+1).value!==value)throw Error('integer identity');view.setBigUint64(0,BigInt('0x'+c.binary64Bits));if((BigInt(view.getFloat64(0))===value)!==c.accept64)throw Error('binary64 oracle');view.setUint32(0,parseInt(c.binary32Bits,16));if((BigInt(view.getFloat32(0))===value)!==c.accept32)throw Error('binary32 oracle');}db.close();await Bun.write(Bun.stdout,String(cases.length));";
+        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+        child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
+        let output=child.wait_with_output().unwrap();
+        assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
+        assert_eq!(String::from_utf8_lossy(&output.stdout).trim(),"8");
+        eprintln!("[DEBUG] Independent SQLite and DataView validated eight exact integer query cases");
+        let fixture:serde_json::Value=serde_json::from_str(input).unwrap();
+        for case in fixture["cases"].as_array().unwrap(){
+            let integer=case["integer"].as_str().unwrap().parse::<i64>().unwrap();
+            let word64=u64::from_str_radix(case["binary64Bits"].as_str().unwrap(),16).unwrap();
+            let word32=u32::from_str_radix(case["binary32Bits"].as_str().unwrap(),16).unwrap();
+            let row=SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(integer),SqliteValue::Integer(integer),SqliteValue::Integer(word64 as i64),SqliteValue::Text("finite".into()),SqliteValue::Integer(i64::from(word32)),SqliteValue::Text("finite".into())]};
+            assert_eq!(read_binary64(&row,1,COLUMNS).is_ok(),case["accept64"].as_bool().unwrap(),"binary64 query {integer}");
+            assert_eq!(read_binary32(&row,2,COLUMNS).is_ok(),case["accept32"].as_bool().unwrap(),"binary32 query {integer}");
+        }
+    }
+    #[test]
     fn authored_ieee_fields_are_independently_queryable_sqlite_scalars(){use std::io::Write;use std::process::{Command,Stdio};let bytes=export_sqlite_database(&fixture(),SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value64_numeric_class='nan' AND value64 IS NULL AND typeof(value64_ieee754_bits)='integer'\").get().n!==2)throw Error('NaN scalar fields');if(db.query(\"SELECT count(*) AS n FROM typed_scalar WHERE value32_numeric_class='finite' AND typeof(value32)='real'\").get().n!==4)throw Error('finite scalars');await Bun.write(Bun.stdout,db.serialize());db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));law(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap());}
 }
+
+#[cfg(test)]
+#[path="🧪️tests/🫳️reconstruction/🦀️.rs"]
+mod reconstruction_copy_tests;

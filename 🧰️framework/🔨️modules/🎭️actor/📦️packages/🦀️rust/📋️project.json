@@ -4,16 +4,16 @@
   "sourceRoot": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.rs",
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
     ]
   },
   "targets": {

@@ -834,7 +834,7 @@ pub const RASTER_DIALECT: semio_framework_plugin::app::Dialect = semio_framework
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.raster".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Raster", "2D-Rasterbild"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Raster", "2D-Rasterbild"),
         source_format: "raster.document".into(),
         component_kind: "raster".into(),
         dimension: "2d".into(),
@@ -1199,9 +1199,12 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🧪️tests/🦀️.rs"]
-                            mod tests;
+                        }
+                        #[path = "."]
+                        pub mod fill_region {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️fill-region/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                         #[path = "."]
                         pub mod remove_layer_asset {
@@ -1540,6 +1543,8 @@ pub mod editor {
             pub mod edit_mask;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint-stroke/🦀️.rs"]
             pub mod paint_stroke;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-region/🦀️.rs"]
+            pub mod fill_region;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🦀️.rs"]
             pub mod flatten_layers;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-png/🦀️.rs"]

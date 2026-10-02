@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎛️ Test-only references of the 🎛️dashboard owner. The dashboard ships no reference-able format: its command tree is a projection of this repository's own nx manifests, its own taxonomy segment rule and its own repo domain, so the only entry here is a recorded no-oracle decision.",
   "oracles": [],

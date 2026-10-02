@@ -55,7 +55,7 @@ impl dsl::ToValue for JackSnapshot {
         }
         entries.push(("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)));
         entries.push(("camera".to_string(), dsl::ToValue::to_value(&self.camera)));
-        entries.push(("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")));
+        entries.push(("content".to_string(), semio_framework_value::ToValue::to_value(&self.content)));
         if let Some(root_node_id) = self.root_node_id.as_ref() {
             entries.push(("rootNodeId".to_string(), dsl::ToValue::to_value(root_node_id)));
         }
@@ -88,7 +88,7 @@ impl dsl::FromValue for JackSnapshot {
                 Some(v) => dsl::FromValue::from_value(v)?,
                 None => Default::default(),
             },
-            content: dsl::from_dsl_value(get("content").ok_or_else(|| dsl::ValueError::new("missing field `content`"))?).map_err(dsl::ValueError::new)?,
+            content: semio_framework_value::FromValue::from_value(get("content").ok_or_else(|| dsl::ValueError::new("missing field `content`"))?)?,
             root_node_id: match get("rootNodeId") {
                 Some(v) => dsl::FromValue::from_value(v)?,
                 None => None,

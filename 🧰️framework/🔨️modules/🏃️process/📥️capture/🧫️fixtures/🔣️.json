@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "id": "nonzero", "source": "process.stdout.write('stdout');process.stderr.write('stderr');process.exitCode=7", "budgetMs": 0, "maximumBytes": 1024, "cancelAfterMs": null, "reason": "exit", "status": 7, "stdout": "stdout", "stderr": "stderr" },
+    { "id": "unicode", "source": "process.stdout.write('Grüße 🧬️');process.stderr.write('東京');", "budgetMs": 0, "maximumBytes": 1024, "cancelAfterMs": null, "reason": "exit", "status": 0, "stdout": "Grüße 🧬️", "stderr": "東京" },
+    { "id": "timeout", "source": "process.stdout.write('ready');setInterval(()=>{},1000)", "budgetMs": 250, "maximumBytes": 1024, "cancelAfterMs": null, "reason": "timeout", "status": null, "stdout": null, "stderr": "" },
+    { "id": "cancelled", "source": "process.stdout.write('ready');setInterval(()=>{},1000)", "budgetMs": 0, "maximumBytes": 1024, "cancelAfterMs": 150, "reason": "cancelled", "status": null, "stdout": null, "stderr": "" },
+    { "id": "output-limit", "source": "process.stdout.write('x'.repeat(16384));setInterval(()=>{},1000)", "budgetMs": 0, "maximumBytes": 1024, "cancelAfterMs": null, "reason": "output-limit", "status": null, "stdout": null, "stderr": "" },
+    { "id": "spawn-error", "source": "", "budgetMs": 0, "maximumBytes": 1024, "cancelAfterMs": null, "reason": "spawn-error", "status": null, "stdout": "", "stderr": null }
+  ]
+}

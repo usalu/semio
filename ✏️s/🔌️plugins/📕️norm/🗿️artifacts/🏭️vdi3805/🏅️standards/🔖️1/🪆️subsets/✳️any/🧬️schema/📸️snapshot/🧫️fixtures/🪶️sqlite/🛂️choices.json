@@ -1,0 +1,38 @@
+{
+  "edition": [
+    "legacy",
+    "current"
+  ],
+  "quantityKind": [
+    "dimensionless",
+    "length",
+    "area",
+    "volume",
+    "mass",
+    "time",
+    "temperature",
+    "force",
+    "pressure",
+    "stress",
+    "moment",
+    "energy",
+    "power",
+    "thermalConductivity",
+    "thermalResistance",
+    "heatTransferCoefficient",
+    "airPermeability",
+    "ventilationRate",
+    "acceleration"
+  ],
+  "unsigned64Words": [
+    "0",
+    "1",
+    "4294967295",
+    "4294967296",
+    "9007199254740991",
+    "9007199254740992",
+    "9223372036854775807",
+    "9223372036854775808",
+    "18446744073709551615"
+  ]
+}

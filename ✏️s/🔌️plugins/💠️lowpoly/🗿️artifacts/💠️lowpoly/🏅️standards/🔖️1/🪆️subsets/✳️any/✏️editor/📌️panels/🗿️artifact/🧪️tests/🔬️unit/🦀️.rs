@@ -46,8 +46,8 @@ fn oversized(objects: usize) -> (LowpolySnapshot, LowpolyConfig, LowpolyDocument
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &LowpolySnapshot, config: &LowpolyConfig, doc: &LowpolyDocument, requests: Vec<TreeWindowRequest>) -> String {
-    let view_state = ViewModel { tree_windows: requests, ..Default::default() };
-    let labels = lowpoly_play_labels(&ViewModel::default());
+    let view_state = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let labels = lowpoly_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(LowpolyView { snapshot, config }, doc, labels, &TreeWindows::for_body(&view_state, LOWPOLY_PLAY_BODY_ARTIFACT)).expect("lowpoly document tree assembly");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("lowpoly document tree projection")
 }

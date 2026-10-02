@@ -18,7 +18,7 @@
 //   bun 📜️script.ts list-mutations s.stdio.semio v1 base
 //
 // @see 🦀️.rs — the binary that reads the dispatch enum
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
 
 //#endregion 🧲️Header
 

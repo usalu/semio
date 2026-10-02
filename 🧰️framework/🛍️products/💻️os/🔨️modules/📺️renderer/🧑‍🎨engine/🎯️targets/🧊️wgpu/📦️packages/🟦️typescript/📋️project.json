@@ -134,6 +134,33 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🫧️transient/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts",
       "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
@@ -160,14 +187,34 @@
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts test quick",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-native": {
       "executor": "nx:run-commands",
@@ -175,7 +222,17 @@
         "command": "bun ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-wgpu-unit": {
       "executor": "nx:run-commands",
@@ -183,7 +240,17 @@
         "command": "bun ./📜️script.ts test-wgpu-unit",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "canonical-architecture": {
       "executor": "nx:run-commands",
@@ -199,7 +266,17 @@
       "options": {
         "command": "bun ./📜️script.ts test-media-slots",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "directory-retained-home-bootstrap-source-check": {
       "executor": "nx:run-commands",
@@ -308,7 +385,13 @@
         "browserBootSources",
         "frameWorkerSources",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*",
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4"
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎬️.mp4",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts test-browser",
@@ -320,14 +403,34 @@
       "options": {
         "command": "bun ./📜️script.ts test-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-preview-generated": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts test-preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "check-browser-worker": {
       "executor": "nx:run-commands",
@@ -445,14 +548,34 @@
       "options": {
         "command": "bun ./📜️script.ts test long",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts test exhaustive",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "check-wasm": {
       "executor": "nx:run-commands",
@@ -748,6 +871,21 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-boot-cache-inputs"
+      }
+    },
+    "test-worker-cell": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test worker-cell"
       }
     }
   },

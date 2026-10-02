@@ -34,8 +34,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectKindC
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" herstellen", self.source, self.target))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect kind compatibility \"{}\" -> \"{}\"", self.source, self.target), &format!("Artkompatibilität \"{}\" -> \"{}\" herstellen", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.source.clone(), self.target.clone()]

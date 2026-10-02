@@ -15,10 +15,10 @@
 //! field content to restore — the identical `delete-skin`/`delete-animation` shape.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{
     oracle_apply_mutation, project_gltf, undo_delete_image, undo_delete_material, undo_delete_sampler, undo_delete_texture,
 };
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
 
 //#region 🔖️Kinds
 const DELETE_KINDS: &[&str] = &["delete-material", "delete-texture", "delete-image", "delete-sampler"];
@@ -134,7 +134,7 @@ mod subject {
         gltf_inverse_restored_document, move_image, move_material, move_sampler, move_texture, reorder_images, reorder_materials, reorder_samplers, reorder_textures,
     };
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAlphaMode, GltfSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params
     fn num(params: &Json, key: &str) -> Result<usize, String> {

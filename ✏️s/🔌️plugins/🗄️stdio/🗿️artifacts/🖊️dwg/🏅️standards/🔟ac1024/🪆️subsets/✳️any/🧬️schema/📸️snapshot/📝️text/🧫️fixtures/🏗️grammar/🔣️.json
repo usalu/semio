@@ -1,0 +1,85 @@
+{
+  "contract": "dwg.snapshot.text.empty-record.v1",
+  "record": {
+    "name": "DwgPlaceholder",
+    "fieldCount": 0,
+    "fieldKey": "placeholder"
+  },
+  "cases": [
+    {
+      "id": "typed-unit",
+      "text": "stdio.dwg\nobjects=[ { body=kind=placeholder placeholder=} ]",
+      "accepted": true
+    },
+    {
+      "id": "empty-unit-root",
+      "text": "stdio.dwg placeholder=",
+      "accepted": true
+    },
+    {
+      "id": "nested-unit",
+      "text": "stdio.dwg object={ body=kind=placeholder placeholder=}",
+      "accepted": true
+    },
+    {
+      "id": "empty-list",
+      "text": "stdio.dwg objects=[]",
+      "accepted": true
+    },
+    {
+      "id": "nonempty-record",
+      "text": "stdio.dwg object={handle=1 name=\"壁\"}",
+      "accepted": true
+    },
+    {
+      "id": "tuple",
+      "text": "stdio.dwg point=-1,2.5,0",
+      "accepted": true
+    },
+    {
+      "id": "boolean",
+      "text": "stdio.dwg visible=true",
+      "accepted": true
+    },
+    {
+      "id": "empty-text",
+      "text": "stdio.dwg name=\"\"",
+      "accepted": true
+    },
+    {
+      "id": "missing-list-close",
+      "text": "stdio.dwg objects=[{placeholder=}",
+      "accepted": false
+    },
+    {
+      "id": "missing-record-close",
+      "text": "stdio.dwg object={placeholder=",
+      "accepted": false
+    },
+    {
+      "id": "missing-key",
+      "text": "stdio.dwg =",
+      "accepted": false
+    },
+    {
+      "id": "stray-close",
+      "text": "stdio.dwg placeholder=}",
+      "accepted": false
+    },
+    {
+      "id": "missing-tuple-item",
+      "text": "stdio.dwg point=1,",
+      "accepted": false
+    },
+    {
+      "id": "missing-tuple-head",
+      "text": "stdio.dwg point=,1",
+      "accepted": false
+    },
+    {
+      "id": "extra-equals",
+      "text": "stdio.dwg placeholder==",
+      "accepted": false
+    }
+  ]
+}

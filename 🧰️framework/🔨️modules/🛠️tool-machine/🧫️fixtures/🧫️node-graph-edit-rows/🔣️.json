@@ -1,0 +1,209 @@
+{
+  "accepted": [
+    {
+      "id": "connect",
+      "row": {
+        "operation": "connect",
+        "sourceNodeId": "slider",
+        "sourcePortId": "number",
+        "targetNodeId": "add",
+        "targetPortId": "b"
+      }
+    },
+    {
+      "id": "disconnect",
+      "row": {
+        "operation": "disconnect",
+        "synapseId": "s1"
+      }
+    },
+    {
+      "id": "move",
+      "row": {
+        "operation": "move",
+        "gestureId": "node-drag:3",
+        "nodeIds": [
+          "add",
+          "slider"
+        ],
+        "dx": 284.5,
+        "dy": -48
+      }
+    },
+    {
+      "id": "set-slider",
+      "row": {
+        "operation": "setSlider",
+        "widgetId": "slider",
+        "value": 6.5
+      }
+    },
+    {
+      "id": "insert-input-port",
+      "row": {
+        "operation": "insertPort",
+        "nodeId": "add",
+        "side": "input",
+        "index": 2
+      }
+    },
+    {
+      "id": "insert-output-port",
+      "row": {
+        "operation": "insertPort",
+        "nodeId": "add",
+        "side": "output",
+        "index": 0
+      }
+    },
+    {
+      "id": "delete-nodes-and-wires",
+      "row": {
+        "operation": "delete",
+        "nodeIds": [
+          "add"
+        ],
+        "synapseIds": [
+          "s1"
+        ]
+      }
+    },
+    {
+      "id": "delete-wires-only",
+      "row": {
+        "operation": "delete",
+        "nodeIds": [],
+        "synapseIds": [
+          "s1",
+          "s2"
+        ]
+      }
+    }
+  ],
+  "refused": [
+    {
+      "id": "whole-fixture",
+      "row": {
+        "operation": "setHostSnapshot",
+        "hostSnapshotJson": "{}"
+      }
+    },
+    {
+      "id": "ambient-selection-delete",
+      "row": {
+        "operation": "deleteSelection"
+      }
+    },
+    {
+      "id": "absolute-move",
+      "row": {
+        "operation": "move",
+        "nodeId": "add",
+        "x": 568,
+        "y": 96
+      }
+    },
+    {
+      "id": "move-without-nodes",
+      "row": {
+        "operation": "move",
+        "gestureId": "node-drag:3",
+        "nodeIds": [],
+        "dx": 1,
+        "dy": 0
+      }
+    },
+    {
+      "id": "move-repeated-node",
+      "row": {
+        "operation": "move",
+        "gestureId": "node-drag:3",
+        "nodeIds": [
+          "add",
+          "add"
+        ],
+        "dx": 1,
+        "dy": 0
+      }
+    },
+    {
+      "id": "connect-extra-field",
+      "row": {
+        "operation": "connect",
+        "sourceNodeId": "slider",
+        "sourcePortId": "number",
+        "targetNodeId": "add",
+        "targetPortId": "b",
+        "kind": "data"
+      }
+    },
+    {
+      "id": "disconnect-empty-id",
+      "row": {
+        "operation": "disconnect",
+        "synapseId": ""
+      }
+    },
+    {
+      "id": "slider-text-value",
+      "row": {
+        "operation": "setSlider",
+        "widgetId": "slider",
+        "value": "6"
+      }
+    },
+    {
+      "id": "port-unknown-side",
+      "row": {
+        "operation": "insertPort",
+        "nodeId": "add",
+        "side": "left",
+        "index": 1
+      }
+    },
+    {
+      "id": "port-fractional-index",
+      "row": {
+        "operation": "insertPort",
+        "nodeId": "add",
+        "side": "input",
+        "index": 1.5
+      }
+    },
+    {
+      "id": "port-negative-index",
+      "row": {
+        "operation": "insertPort",
+        "nodeId": "add",
+        "side": "input",
+        "index": -1
+      }
+    },
+    {
+      "id": "delete-nothing",
+      "row": {
+        "operation": "delete",
+        "nodeIds": [],
+        "synapseIds": []
+      }
+    },
+    {
+      "id": "delete-repeated-node",
+      "row": {
+        "operation": "delete",
+        "nodeIds": [
+          "add",
+          "add"
+        ],
+        "synapseIds": []
+      }
+    },
+    {
+      "id": "unknown-operation",
+      "row": {
+        "operation": "align",
+        "mode": "left"
+      }
+    }
+  ]
+}

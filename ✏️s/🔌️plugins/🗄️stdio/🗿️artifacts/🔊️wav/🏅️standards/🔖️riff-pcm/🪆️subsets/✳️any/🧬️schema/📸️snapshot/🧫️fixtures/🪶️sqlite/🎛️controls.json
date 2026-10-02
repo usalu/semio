@@ -1,0 +1,8 @@
+{
+  "exactFixtureRows": 22,
+  "schemaLimitOffsets": [-1, 0],
+  "rowLimitOffsets": [-1, 0],
+  "largeCharacters": 65537,
+  "maximumOwnedBytes": 200000,
+  "checkpointBytes": 65536
+}

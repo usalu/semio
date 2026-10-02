@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeEraserRadius {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change eraser radius to {:?}", self.new_radius), &format!("Radiererradius auf {:?} ändern", self.new_radius))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::mutations::note_setting_label(("eraser radius", "Radiererradius"), self.new_radius.map(crate::schema::mutations::note_label_number))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

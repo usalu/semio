@@ -26,8 +26,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for CreateStep {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_create_step(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.title), &format!("Schritt \"{}\" erstellen", self.step.title))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.title), &format!("Schritt \"{}\" erstellen", self.step.title))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]

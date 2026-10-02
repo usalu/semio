@@ -1,4 +1,6 @@
 export * from "../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+export{parseIntrinsicValue,parseIntrinsicValueControlled}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+export type{IntrinsicValue,IntrinsicMember}from"../../🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 export { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { SqliteValue, SqliteRow, SqliteTable, SqliteDatabase, SqliteDatabaseOptions, SqliteDatabaseProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { ArtifactSqliteOptions, ArtifactSqliteProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";

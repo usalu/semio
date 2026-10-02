@@ -53,10 +53,10 @@ type CameraTrajectory {
 }
 
 type DenseCloud {
-  positions: String!
-  colors: String
-  confidence: String
-  classification: String
+  positions: Float32Buffer!
+  colors: Octets
+  confidence: Float32Buffer
+  classification: Octets
 }
 
 type DenseParams {
@@ -238,7 +238,7 @@ type RemodelingDurableArtifact {
   mime: String
   width: Int!
   height: Int!
-  chunks: [String!]!
+  chunks: [Octets!]!
 }
 
 type RemodelingDurableArtifactEntry {
@@ -280,8 +280,8 @@ type SfmParams {
 }
 
 type SparseCloud {
-  points: String!
-  colors: String
+  points: Float32Buffer!
+  colors: Octets
 }
 
 enum TrackClass {
@@ -326,3 +326,11 @@ type WatertightReportSnapshot {
   isTwoManifold: Boolean!
   isWatertight: Boolean!
 }
+
+scalar Binary32
+scalar UInt64
+scalar Octets
+
+union Float32Buffer = Float32Inline | Float32Content
+type Float32Inline { values: [Binary32!]! }
+type Float32Content { contentId: String! chunkCount: UInt64! }

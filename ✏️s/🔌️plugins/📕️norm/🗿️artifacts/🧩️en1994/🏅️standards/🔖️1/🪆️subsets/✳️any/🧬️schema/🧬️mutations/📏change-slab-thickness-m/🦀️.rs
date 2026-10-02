@@ -22,8 +22,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeSlabThickn
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change slab thickness", "Deckendicke ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change slab thickness", "Deckendicke ändern")
     }
 }
 //#endregion 🔖️Payload

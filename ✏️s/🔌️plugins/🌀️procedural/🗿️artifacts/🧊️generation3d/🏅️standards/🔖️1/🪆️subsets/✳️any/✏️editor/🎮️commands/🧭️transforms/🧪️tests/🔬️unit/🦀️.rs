@@ -98,3 +98,58 @@ fn the_host_phases_parse_exactly() {
     assert_eq!(GumballPhase::parse(Some("abort"), Some("sideways")), None);
     assert_eq!(GumballPhase::parse(Some("drag"), None), None);
 }
+
+/// 🎚️ One streamed (or released) gumball tick of `extrude` in window `preview-1`, as the live `World3dHost` sends it.
+fn streamed(phase: GumballPhase, offset: [f64; 3]) -> GumballDispatch<'static> {
+    GumballDispatch { verb: "translateSelection", window: "preview-1", ids: vec!["extrude".into()], motion: GumballMotion::Translate(offset), phase, authoring_seed: "seed", base_revision: [0; 32] }
+}
+
+/// ⚖️ LAW (live consumer): while the first grab of a shape streams, the previews paint exactly what its release commits —
+/// the overlay splices the transform operator in place of the shape with the NET offset, the marks follow the selection
+/// onto that operator, the committed snapshot stays untouched — and a host abort leaves nothing to paint.
+#[test]
+fn an_open_gesture_previews_exactly_what_its_release_commits() {
+    use crate::standards::v1::subsets::any::schema::{example_snapshot, mutations::apply_generation3d_mutation, PROCEDURAL_EXAMPLE_HEX_COLUMN};
+    let committed = example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("the hexagonal column example");
+    let operator = "extrude__gumball_translate";
+    let marks = super::super::PreviewInteractionMarks { selected: ["extrude".to_string()].into(), ..Default::default() };
+    let mut gestures = GumballGestures::default();
+    for offset in [[1.0, 0.0, 0.0], [0.5, 2.0, 0.0]] {
+        assert!(gestures.dispatch(streamed(GumballPhase::Stream, offset), &committed.host_snapshot).expect("a tick streams").artifact_mutations.is_empty(), "a tick is provisional");
+    }
+    let (overlay, following) = super::super::generation3d_gumball_preview(&committed, &marks, &gestures).expect("an open gesture paints");
+    let previews = |snapshot: &crate::Generation3dSnapshot, id: &str| snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).map(|widget| matches!(widget, Widget::Neuron { preview: true, .. }));
+    assert_eq!((previews(&overlay, operator), previews(&overlay, "extrude")), (Some(true), Some(false)), "the operator is painted in place of the shape");
+    assert_eq!(previews(&committed, operator), None, "the committed snapshot never sees the open gesture");
+    assert_eq!(following.selected, [operator.to_string()].into(), "the marks follow the selection onto the operator");
+    let released = gestures.dispatch(streamed(GumballPhase::Commit, [0.0; 3]), &committed.host_snapshot).expect("the release commits");
+    assert!(released.transaction.is_some(), "the release is ONE tool transaction");
+    let mut landed = committed.clone();
+    for row in released.artifact_mutations {
+        apply_generation3d_mutation(&mut landed, &row).expect("the committed rows apply");
+        row.retire_cold();
+    }
+    assert_eq!(landed, overlay, "the preview painted exactly what the release committed");
+    assert!(super::super::generation3d_gumball_preview(&committed, &marks, &gestures).is_none(), "a released gesture paints nothing more");
+    gestures.dispatch(streamed(GumballPhase::Stream, [1.0, 0.0, 0.0]), &committed.host_snapshot).expect("a second gesture opens");
+    assert!(gestures.abort("preview-1", ToolAbortReason::Blur));
+    assert!(super::super::generation3d_gumball_preview(&committed, &marks, &gestures).is_none(), "an aborted gesture leaves nothing to paint");
+    for snapshot in [landed, overlay, committed] {
+        snapshot.retire_cold();
+    }
+}
+
+/// ⚖️ LAW (design §19.1): every gumball tool declares exactly the kind of the relative leaf its motion yields as its intent,
+/// so a first grab's history row (the operator splice, then the leaf) is labelled by that leaf; other tools declare none.
+#[test]
+fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
+    use semio_framework_plugin::ArtifactEditor;
+    type Editor = crate::editor::generation3d::Generation3dPlayApp;
+    for (verb, motion) in [("translateSelection", GumballMotion::Translate([1.0, 0.0, 0.0])), ("rotateSelection", GumballMotion::Rotate(AxisAngle { axis: [0.0, 0.0, 1.0], angle: 0.5 })), ("scaleSelection", GumballMotion::Scale([2.0, 1.0, 1.0]))] {
+        let tool = format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID);
+        let leaf = motion.leaf(vec!["t".into()]);
+        let kind = <Generation3dMutation as protocol::SemanticMutation<crate::Generation3dSnapshot>>::semantics(&leaf).kind;
+        assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&tool), &[kind], "{tool}");
+    }
+    assert!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID)).is_empty());
+}

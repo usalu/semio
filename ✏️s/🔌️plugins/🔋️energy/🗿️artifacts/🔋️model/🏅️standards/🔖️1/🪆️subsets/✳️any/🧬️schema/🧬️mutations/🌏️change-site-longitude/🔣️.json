@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌏️change-site-longitude",
+  "semanticKind": "change-site-longitude",
+  "displayName": "Change Site Longitude",
+  "emoji": "🌏️",
+  "aggregateVariant": "ChangeSiteLongitude",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-site-longitude",
+  "binaryTag": 288,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

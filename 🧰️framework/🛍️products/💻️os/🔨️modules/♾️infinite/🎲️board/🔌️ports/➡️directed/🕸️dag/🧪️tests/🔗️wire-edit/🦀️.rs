@@ -63,17 +63,10 @@ fn draw_wire(host: &mut DagHost, gesture: &Value) {
     host.pointer_up_screen(to_x, to_y, false, false, false);
 }
 
+/// 🔗️ The rows the journal encoder writes for `edits` — the very `nodeGraphEdit` operations every renderer dispatches.
 fn edit_rows(edits: &[DagGraphEdit]) -> Vec<Value> {
-    edits
-        .iter()
-        .map(|edit| match edit {
-            DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                serde_json::json!({ "operation": "connect", "sourceNodeId": source_node_id, "sourcePortId": source_port_id, "targetNodeId": target_node_id, "targetPortId": target_port_id })
-            }
-            DagGraphEdit::Disconnect { synapse_id } => serde_json::json!({ "operation": "disconnect", "synapseId": synapse_id }),
-            DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => serde_json::json!({ "operation": "move", "gestureId": gesture_id, "nodeIds": node_ids, "dx": dx, "dy": dy }),
-        })
-        .collect()
+    let rows: Value = serde_json::from_str(&dag_graph_edit_rows_json(edits.to_vec())).expect("journal rows json");
+    rows["operations"].as_array().expect("journal operations").clone()
 }
 
 /// 📐️ The port rect the host itself PUBLISHES for an endpoint, in viewport pixels — the one geometry

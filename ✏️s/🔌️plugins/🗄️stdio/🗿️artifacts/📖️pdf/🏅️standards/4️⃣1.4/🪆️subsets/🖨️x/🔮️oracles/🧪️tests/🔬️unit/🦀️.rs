@@ -5,15 +5,15 @@ use super::*;
 fn every_real_document_feature_row_is_observable_and_invertible() {
     let base = include_bytes!("../../../../🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
     let feature = include_str!("../../../🧪️tests/🖨️mutate-pdf-1-4-x/🥒️.feature");
-    let rows = crate::law::feature_rows(feature);
+    let rows = semio_repo_test_host::law::feature_rows(feature);
     assert_eq!(rows.len(), KINDS.len());
     for (kind, params) in rows {
         assert!(KINDS.contains(&kind.as_str()));
         let forward = Json::Object(vec![("kind".into(), Json::String(kind.clone())), ("params".into(), params)]);
         let mutated = oracle_apply_mutation(&base, &forward).unwrap();
-        crate::law::mutation_is_observable_within(&kind, &project_conformance(&mutated).unwrap(), &project_conformance(&base).unwrap(), &[], &[], 0.001).unwrap();
+        semio_repo_test_host::law::mutation_is_observable_within(&kind, &project_conformance(&mutated).unwrap(), &project_conformance(&base).unwrap(), &[], &[], 0.001).unwrap();
         let restored = oracle_apply_mutation(&mutated, &oracle_inverse_spec(&base, &forward).unwrap()).unwrap();
-        crate::law::inverse_restores_within(&kind, &project_conformance(&restored).unwrap(), &project_conformance(&base).unwrap(), &[], 0.001).unwrap();
+        semio_repo_test_host::law::inverse_restores_within(&kind, &project_conformance(&restored).unwrap(), &project_conformance(&base).unwrap(), &[], 0.001).unwrap();
     }
     let rewritten = oracle_round_trip(&base).unwrap();
     assert_ne!(rewritten, base);
@@ -22,10 +22,10 @@ fn every_real_document_feature_row_is_observable_and_invertible() {
 
 #[test]
 fn language_neutral_direct_vectors_match_independent_lopdf() {
-    use crate::artifacts::pdf::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
+    use crate::standards::v1_4::subsets::base::{OraclePage, build_document, independent_pages};
     use semio_repo_test_host::parse_json;
     let vectors =
-        [include_str!("../../../🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round/🔣️.json"), include_str!("../../../🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round/🔣️.json")];
+        [include_str!("../../../🧫️fixtures/🧬️mutations/📐️set-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json"), include_str!("../../../🧫️fixtures/🧬️mutations/📉️collapse-page-size/🔄️round-trips-the-concrete-inverse/🔣️.json")];
     for text in vectors {
         let fixture = parse_json(text).unwrap();
         let to_page = |p: &Json| OraclePage {

@@ -6,9 +6,6 @@
   "additionalProperties": false,
   "required": [
     "selectedNodeIds",
-    "engagementInput",
-    "engagementStep",
-    "engagementPreviewGeneration",
     "contributionsJson"
   ],
   "properties": {
@@ -21,14 +18,6 @@
       "type": "string",
       "x-semio-state": "config"
     },
-    "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementStep": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "activeExampleId": {
       "type": "string",
       "x-semio-state": "config"
@@ -38,29 +27,6 @@
       "x-semio-state": "config"
     },
     "selectedReferenceId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementPane": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementSessionJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "engagementPreviewOperationJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "engagementPreviewGeneration": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 2147483647,
-      "x-semio-state": "config"
-    },
-    "lastFinalizedInteractionId": {
       "type": "string",
       "x-semio-state": "config"
     },

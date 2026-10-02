@@ -49,5 +49,5 @@ export const blockBlock5dSnapshotTextGuardConstant = <T extends string | number 
 //#endregion 🚪️Parsers
 
 export function parseBlock5dSnapshotText(value: unknown, at = "$"): Block5dSnapshotText {
-  return blockBlock5dSnapshotTextGuardObject(value, `${at}`);
+  return blockBlock5dSnapshotTextGuardString(value, at);
 }

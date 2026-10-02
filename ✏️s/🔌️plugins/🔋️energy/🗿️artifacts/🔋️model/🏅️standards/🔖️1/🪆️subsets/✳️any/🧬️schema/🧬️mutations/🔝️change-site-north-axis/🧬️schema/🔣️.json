@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-north-axis/schema.json",
+  "title": "ChangeSiteNorthAxis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newNorthAxisDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteNorthAxis"
+    },
+    "newNorthAxisDeg": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "North axis",
+          "de": "Nordachse"
+        },
+        "description": {
+          "en": "Angle from true north to the building's north axis, clockwise.",
+          "de": "Winkel von geografisch Nord zur Nordachse des Gebäudes, im Uhrzeigersinn."
+        },
+        "unit": "deg",
+        "step": 1,
+        "precision": 1,
+        "softMin": 0,
+        "softMax": 360,
+        "snaps": [
+          0,
+          90,
+          180,
+          270,
+          360
+        ],
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

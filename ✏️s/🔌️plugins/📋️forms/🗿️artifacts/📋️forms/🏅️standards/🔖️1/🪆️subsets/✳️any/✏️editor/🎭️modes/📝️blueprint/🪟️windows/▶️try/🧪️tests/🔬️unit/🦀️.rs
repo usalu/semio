@@ -14,7 +14,7 @@ async fn renders_try_wizard() {
 #[semio_framework_async_macros::async_test]
 async fn image_question_with_url_src_emits_image_node() {
     let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::editor::forms::questions::question_shell("q-image".into(), "Picture".into(), "image".into()) };
-    let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default()), &semio_framework_plugin::ViewModel::default());
+    let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains(r#""type":"image""#));
     assert!(json.contains("https://example.com/picture.png"));
@@ -25,7 +25,7 @@ async fn extension_question_emits_external_slot_when_contribution_registered() {
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("fill-extension".into()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "fill-extension".into(), window_kind_id: FORMS_PLAY_WINDOW_TRY.into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let node = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), Some("Required"), crate::editor::forms::terminology::forms_play_labels(&view), &view);
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
@@ -42,7 +42,7 @@ async fn extension_question_falls_back_without_contribution() {
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("fill-extension".into()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "fill-extension".into(), window_kind_id: FORMS_PLAY_WINDOW_TRY.into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let node = render_try_question(&building_component_question(), &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&view), &view);
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
@@ -58,7 +58,7 @@ async fn definition_declares_the_canvas2d_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_answer_controls_require_a_live_fill_window() {
-    let view = semio_framework_plugin::ViewModel::default();
+    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let result = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&view), &view);
     assert!(result.is_err());
 }

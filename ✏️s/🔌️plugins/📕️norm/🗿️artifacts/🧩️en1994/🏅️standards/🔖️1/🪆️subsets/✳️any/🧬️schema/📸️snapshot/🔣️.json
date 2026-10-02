@@ -17,7 +17,7 @@
   ],
   "properties": {
     "annex": {
-      "type": "string",
+      "$ref": "#/$defs/AnnexChoice",
       "x-semio-state": "artifact"
     },
     "structureKind": {
@@ -480,7 +480,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "spacingM": {
           "type": "number",
@@ -508,7 +509,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [

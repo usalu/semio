@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "default-test",
+      "argv": [
+        "test"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "tui-terminal,wgpu"
+          ],
+          "level": "fundamental",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "quick-test-forwarding",
+      "argv": [
+        "test",
+        "quick",
+        "--exact",
+        "owned_law"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "tui-terminal,wgpu",
+            "--exact",
+            "owned_law"
+          ],
+          "level": "quick",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "quick",
+      "coverage": false
+    },
+    {
+      "id": "long-test",
+      "argv": [
+        "test",
+        "long"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "tui-terminal,wgpu"
+          ],
+          "level": "long",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "long",
+      "coverage": false
+    },
+    {
+      "id": "exhaustive-test",
+      "argv": [
+        "test",
+        "exhaustive"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "tui-terminal,wgpu"
+          ],
+          "level": "exhaustive",
+          "coverage": true
+        }
+      ],
+      "rejected": false,
+      "level": "exhaustive",
+      "coverage": true
+    },
+    {
+      "id": "inherited-test-level",
+      "argv": [
+        "test"
+      ],
+      "inheritedLevel": "long",
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "tui-terminal,wgpu"
+          ],
+          "level": "long",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "long",
+      "coverage": false
+    },
+    {
+      "id": "wgpu-engine-library",
+      "argv": [
+        "test",
+        "wgpu-engine"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "wgpu-engine",
+            "--lib"
+          ],
+          "level": "fundamental",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "wgpu-engine-quick-forwarding",
+      "argv": [
+        "test",
+        "wgpu-engine",
+        "quick",
+        "--exact",
+        "retained_law"
+      ],
+      "calls": [
+        {
+          "kind": "test",
+          "args": [
+            "--features",
+            "wgpu-engine",
+            "--lib",
+            "--exact",
+            "retained_law"
+          ],
+          "level": "quick",
+          "coverage": false
+        }
+      ],
+      "rejected": false,
+      "level": "quick",
+      "coverage": false
+    },
+    {
+      "id": "check-default-axes",
+      "argv": [
+        "check"
+      ],
+      "calls": [
+        {
+          "kind": "axes",
+          "args": []
+        }
+      ],
+      "rejected": false,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "check-wasm-feature-cohorts",
+      "argv": [
+        "check",
+        "wasm"
+      ],
+      "calls": [
+        {
+          "kind": "check",
+          "args": [
+            "--target",
+            "wasm32-unknown-unknown",
+            "--features",
+            "tui"
+          ],
+          "budgetMs": 4242
+        },
+        {
+          "kind": "check",
+          "args": [
+            "--target",
+            "wasm32-unknown-unknown",
+            "--features",
+            "tui-bindgen"
+          ],
+          "budgetMs": 4242
+        },
+        {
+          "kind": "check",
+          "args": [
+            "--target",
+            "wasm32-wasip2",
+            "--features",
+            "wgpu"
+          ],
+          "budgetMs": 4242
+        }
+      ],
+      "rejected": false,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "check-wgpu-engine-wasm",
+      "argv": [
+        "check",
+        "wgpu-engine",
+        "wasm"
+      ],
+      "calls": [
+        {
+          "kind": "check",
+          "args": [
+            "--target",
+            "wasm32-unknown-unknown",
+            "--features",
+            "wgpu-engine"
+          ],
+          "budgetMs": 4242
+        }
+      ],
+      "rejected": false,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "refuse-test-wgpu-engine",
+      "argv": [
+        "test-wgpu-engine"
+      ],
+      "calls": [],
+      "rejected": true,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "refuse-check-wasm",
+      "argv": [
+        "check-wasm"
+      ],
+      "calls": [],
+      "rejected": true,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "refuse-check-wgpu-engine-wasm",
+      "argv": [
+        "check-wgpu-engine-wasm"
+      ],
+      "calls": [],
+      "rejected": true,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "refuse-incomplete-wgpu-check",
+      "argv": [
+        "check",
+        "wgpu-engine"
+      ],
+      "calls": [],
+      "rejected": true,
+      "level": "fundamental",
+      "coverage": false
+    },
+    {
+      "id": "refuse-unknown-check",
+      "argv": [
+        "check",
+        "unknown"
+      ],
+      "calls": [],
+      "rejected": true,
+      "level": "fundamental",
+      "coverage": false
+    }
+  ]
+}

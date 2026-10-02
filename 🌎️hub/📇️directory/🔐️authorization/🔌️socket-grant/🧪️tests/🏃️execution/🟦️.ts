@@ -1,13 +1,13 @@
 import { join } from "node:path";
 import { BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../../../../🏗️build/🛂staging-environment/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../🧾️fixture-verification/🟦️.ts";
 import { assertSocketGrantNativeLawSources, socketGrantNativeLawPlan, type SocketGrantNativeStage } from "../📋️native-law-plan/🟦️.ts";
 
 export type SocketGrantNativeRunner = (stage: SocketGrantNativeStage, packageRoot: string, env: NodeJS.ProcessEnv) => Promise<void>;
 
-const runNativeStage: SocketGrantNativeRunner = (stage, packageRoot, env) => runOwnedCommand("cargo", [...stage.args], packageRoot, `socket-grant:${stage.id}`, 600_000, { env });
+const runNativeStage: SocketGrantNativeRunner = (stage, packageRoot, env) => runRepositoryCommand("cargo", [...stage.args], packageRoot, `socket-grant:${stage.id}`, 600_000, { env });
 
 /** 🏃️ Verifies the portable oracle and optionally executes the exact native law sequence. */
 export async function runSocketGrantCheck(repoRoot: string, packageRoot: string, segments: readonly string[], runner: SocketGrantNativeRunner = runNativeStage): Promise<void> {

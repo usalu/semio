@@ -101,15 +101,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "trinity-jack-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -121,15 +113,7 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "trinity-jack-graph-wire"
-          ]
-        }
-      }
+      "outputs": []
     }
   }
 }

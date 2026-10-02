@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableColumn {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Spalte in Tabelle \"{}\" einfügen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert column into table \"{}\"", self.id), &format!("Spalte in Tabelle \"{}\" einfügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

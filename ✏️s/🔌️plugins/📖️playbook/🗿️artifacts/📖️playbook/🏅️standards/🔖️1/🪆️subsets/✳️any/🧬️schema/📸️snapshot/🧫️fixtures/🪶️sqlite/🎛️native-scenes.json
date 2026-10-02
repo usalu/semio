@@ -1,0 +1,22 @@
+{
+  "schema": "playbook.sqlite-native-controls/v1",
+  "steps": [{
+    "id": "step_日本_β",
+    "title": "Ordered Local Scene",
+    "description": "line\nsecond\t\"quoted\" 🌍",
+    "blocks": [{
+      "id": "input_λ",
+      "label": "Auswahl 日本",
+      "kind": "select",
+      "required": true,
+      "default": {"z": 42, "a": {"second": 1.25, "first": null}},
+      "options": [{"value": "owned_β", "label": "Choice 日本"}],
+      "params": {"zeta": "🌍", "alpha": [true, false, null, -42, 1.25]},
+      "condition": {"kind": "and", "items": [{"kind": "var", "name": "enabled"}, {"kind": "const", "value": true}]}
+    }]
+  }],
+  "duplicateKeyText": "{\"z\":1,\"a\":2,\"z\":3}",
+  "invalidTexts": ["[1,]", "{\"a\":}", "\"\\uD800\"", "01", "1e9999", "true false"],
+  "ownedByteLimit": 16,
+  "largeUtf8Repeats": 40000
+}

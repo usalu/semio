@@ -118,15 +118,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "trinity-rewriting-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -138,15 +130,7 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "trinity-rewriting-graph-wire"
-          ]
-        }
-      }
+      "outputs": []
     }
   }
 }

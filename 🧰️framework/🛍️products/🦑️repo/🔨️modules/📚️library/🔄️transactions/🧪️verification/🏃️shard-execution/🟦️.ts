@@ -1,4 +1,5 @@
-import { terminateOwnedProcessTree } from "../../../🏃️process/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";

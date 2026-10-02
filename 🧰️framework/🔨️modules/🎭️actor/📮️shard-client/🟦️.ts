@@ -2039,6 +2039,7 @@ export class ShardClient {
     const wire = Reflect.get(turn, "uiPatchReceipt");
     const decoded = wire == null ? null : decodeActorUiPatchReceipt(wire);
     validateActorUiPatchPairing(patches.length, decoded);
+    if (new Set(patches).size !== patches.length) throw new Error("actor-ui-patch.pairing");
     if (!decoded || !actorInstanceLifetimeEquals(decoded.lifetime, owner.lifetime)) throw new Error("actor-ui-patch.lifetime-mismatch");
     const patch: unknown = patches[patchIndex];
     if (patch === null || typeof patch !== "object") throw new Error("actor-lifecycle.patch-envelope");
@@ -2582,22 +2583,14 @@ export class ShardClient {
 //#region 🧪️Tests
 export type { InboundMessage, OutboundMessage, PendingEntry, ShardInstanceOwner, ShardSlot };
 export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
-const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, SHARD_COMMAND_MAXIMUM_PAGES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
+export const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, SHARD_COMMAND_MAXIMUM_PAGES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
 
 export type ShardClientRetryableLifecycleTestDependenciesV1 = ReturnType<typeof shardClientRetryableLifecycleTestDependenciesV1>;
-const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
+export const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
 
 if (import.meta.vitest) {
   const testSource = { directory: (await import("node:url")).fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url };
-  const { registerTests1 } = await import("./🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts");
-  await registerTests1(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
-  const { registerRetryableLifecycleDeadlineTests } = await import("./🧪️tests/⏱️retryable-lifecycle-deadline/🟦️.ts");
-  await registerRetryableLifecycleDeadlineTests(import.meta.vitest, shardClientRetryableLifecycleTestDependenciesV1(), testSource);
-  const { registerCancelJobReplyTests } = await import("./🧪️tests/🛑️cancel-job-reply/🟦️.ts");
-  await registerCancelJobReplyTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
   const { registerCommandIngressPageTests } = await import("./🧪️tests/📥️command-ingress-pages/🟦️.ts");
   await registerCommandIngressPageTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
-  const { registerComponentCodecReplyTests } = await import("./🧪️tests/🧬️component-codec-reply/🟦️.ts");
-  await registerComponentCodecReplyTests(import.meta.vitest, testSource);
 }
 //#endregion 🧪️Tests

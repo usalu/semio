@@ -21,8 +21,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RemoveArrayElem
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::RemoveArrayElement(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove array element", "Array-Element entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove array element", "Array-Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

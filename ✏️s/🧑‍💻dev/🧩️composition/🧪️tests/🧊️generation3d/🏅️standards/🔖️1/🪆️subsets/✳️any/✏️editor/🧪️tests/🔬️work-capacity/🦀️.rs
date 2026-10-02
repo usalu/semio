@@ -58,7 +58,7 @@ async fn an_unaddressed_flow_eval_tick_is_refused_not_over_capacity() {
     let mut app = app_with_registry().await;
     let main = ViewModel {
         window_instances: vec![ViewWindowInstance { id: "procedural-main".into(), window_kind_id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
     .for_window_instance("procedural-main")
     .expect("flow window instance");

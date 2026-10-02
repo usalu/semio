@@ -1,19 +1,19 @@
 {
+  "mutation": "insertMember",
   "index": 1,
   "item": {
-    "deflectionLimitRatio": 250.0,
-    "deflectionW": 0.018,
     "id": "beam-B2",
-    "labelDe": "Büroträger B2",
     "labelEn": "Office beam B2",
-    "rdEquDestab": 180000.0,
-    "rdEquStab": 200000.0,
-    "rdFat": 0.0,
-    "rdGeo": 250000.0,
+    "labelDe": "Büroträger B2",
     "rdStr": 250000.0,
+    "rdGeo": 250000.0,
+    "rdEquStab": 200000.0,
+    "rdEquDestab": 180000.0,
+    "rdFat": 0.0,
     "span": 7.5,
+    "deflectionW": 0.018,
+    "deflectionLimitRatio": 250.0,
     "vibrationFrequency": 5.5,
     "vibrationFrequencyMin": 3.0
-  },
-  "mutation": "insertMember"
+  }
 }

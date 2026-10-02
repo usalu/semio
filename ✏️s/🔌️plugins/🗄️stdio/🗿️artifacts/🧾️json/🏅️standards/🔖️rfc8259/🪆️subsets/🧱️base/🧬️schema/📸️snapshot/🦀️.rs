@@ -3,6 +3,9 @@
 //! the ORIGINAL NUMBER LEXEME verbatim (rfc8259 allows arbitrary precision — never round-tripped
 //! through `f64`). No `serde_json::Value` anywhere in this file.
 
+#[path="🔢️number/🦀️.rs"]
+pub(crate) mod number;
+
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 use dsl::TextSpan;
 use framework_schema::ArtifactSchema;
@@ -606,52 +609,8 @@ impl JsonSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for JsonSnapshot {
-    const EXTENSION: &'static str = "json";
-    fn envelope_id() -> &'static str {
-        "stdio.json"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let value = parse_json_text(body.trim())?;
-        Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
-    }
-    fn print_dsl(&self) -> String {
-        let body = write_json_pretty(&self.value);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for JsonSnapshot {
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = write_json_text(&self.value).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let value = parse_json_text(text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
-    }
-}
-//#endregion 🔖️HandcraftedArtifactCodecs
+#[path = "📦️pack/🦀️.rs"]
+mod owned_pack;
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of the former `⚙️engine` (ticket

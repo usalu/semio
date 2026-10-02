@@ -5,14 +5,14 @@
 //! Leaves that are already stored byte for byte ⇒ Warning `mutation.no-op`, so an identical reconstruction
 //! re-lands on the same content-addressed entry without rewriting it.
 use crate::diff::RemodelingDiff;
-use crate::{decode_remodeling_durable_chunk, RemodelingDurableArtifact, RemodelingSnapshot};
+use crate::{remodeling_durable_chunk, RemodelingDurableArtifact, RemodelingSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     let target = [payload.content_id.clone()];
     let mut appended_bytes = 0usize;
     for chunk in &payload.chunks {
-        match decode_remodeling_durable_chunk(chunk) {
+        match remodeling_durable_chunk(chunk) {
             Some(bytes) => appended_bytes += bytes.len(),
             None => return protocol::MutationOutcome::fatal("mutation.invariant", "A content leaf is not base64 or exceeds the 4 KiB leaf envelope.", target),
         }
@@ -38,7 +38,7 @@ pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protoc
     if overlap == payload.chunks.len() {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Content \"{}\" already stores these leaves.", payload.content_id));
     }
-    let stored_bytes: usize = stored[..first + overlap].iter().filter_map(|chunk| decode_remodeling_durable_chunk(chunk)).map(|bytes| bytes.len()).sum();
+    let stored_bytes: usize = stored[..first + overlap].iter().filter_map(|chunk| remodeling_durable_chunk(chunk)).map(|bytes| bytes.len()).sum();
     let total_chunks = first + payload.chunks.len();
     if total_chunks > payload.kind.max_chunks() || stored_bytes + appended_bytes > payload.kind.max_bytes() {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Content \"{}\" would exceed its {} envelope.", payload.content_id, payload.kind.wire()), target);

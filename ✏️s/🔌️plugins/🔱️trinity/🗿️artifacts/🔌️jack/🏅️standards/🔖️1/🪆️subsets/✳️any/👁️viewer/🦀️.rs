@@ -8,8 +8,21 @@ use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMut
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
 use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

@@ -19,6 +19,6 @@ async fn unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let doc = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let node = WriterViewer::render("writer.view.nope", &doc, &cfg, &semio_framework_plugin::ViewModel::default());
+    let node = WriterViewer::render("writer.view.nope", &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     assert!(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node.expect("viewer render")).unwrap().contains("Unknown body"));
 }

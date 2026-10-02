@@ -66,7 +66,7 @@ pub const MP4_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standar
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.mp4".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Mp4", "Mp4"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Mp4", "Mp4"),
         source_format: STDIO_MP4_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

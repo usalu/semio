@@ -562,7 +562,7 @@ pub const PUZZLE2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.puzzle".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Puzzle", "2D-Puzzle"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Puzzle", "2D-Puzzle"),
         source_format: "puzzle.2d".into(),
         component_kind: "puzzle2d".into(),
         dimension: "2d".into(),

@@ -172,38 +172,13 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `grammar_conformance_law`: the snapshot grammar models the real TEXT syntax of the
-    /// XML parts a docx OPC package carries (`📸️snapshot/📝️text/📖️.grammar.semio`'s
-    /// own doc comment explains why -- this artifact's `ArtifactDsl::print_dsl` hex-dumps the
-    /// WHOLE binary OPC package, matching this facet's SIBLING binary protocol, not this text
-    /// grammar; the two facets describe different LAYERS of the same real artifact, same as
-    /// every OPC-family member's own container/contained-parts split). So, UNLIKE a
-    /// binary-native pilot's `grammar_conformance_law` (which feeds `print_dsl` output
-    /// straight to the recognizer), this law decodes the REAL zip entries `encode_docx`
-    /// genuinely produces (via `zip::engine::decode_zip`, the same real codec `opc::decode_opc`
-    /// itself delegates to) and recognizes EACH real part's own text against the grammar --
-    /// direct proof the grammar matches this artifact's own real per-part XML bytes, not an
-    /// invented approximation.
+    /// 🧾️ The native Text grammar recognizes the complete owned logical document.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
-        let recognizer = dsl::Recognizer::compile(&grammar);
-
-        let demo = demo_docx_snapshot().await;
-        let bytes = encode_docx(&demo).expect("encode demo docx");
-        let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
-
-        let modeled_parts = ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml"];
-        let mut checked = 0;
-        for entry in &zip.entries {
-            if !modeled_parts.contains(&entry.name.as_str()) {
-                continue;
-            }
-            let text = String::from_utf8(entry.data.clone()).unwrap_or_else(|e| panic!("part {:?}: not valid utf-8: {e}", entry.name));
-            assert!(recognizer.recognize(&text).unwrap_or(false), "grammar did not recognize real part {:?}:\n{text}", entry.name);
-            checked += 1;
-        }
-        assert_eq!(checked, modeled_parts.len(), "not every modeled part was present in the real zip entries");
+        let grammar=dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
+        let text=store::ArtifactDsl::print_dsl(&demo_docx_snapshot().await);
+        let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();
+        assert!(dsl::Recognizer::compile(&grammar).recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
@@ -230,15 +205,7 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets --
-    /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
-    /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
-    /// mutation's `encode_op`, and every demo diff's `encode_diff`. The snapshot protocol
-    /// declares `backward`/`jump` (restated from zip's own real ZIP layout), so `walk_protocol`
-    /// correctly does NOT require landing on exactly `bytes.len()` (M2's own documented
-    /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
-    /// instead, same as zip's own `protocol_walk_law` does; the op/diff protocols have no such
-    /// exception and must consume every byte.
+    /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
@@ -246,7 +213,7 @@ mod conformance_laws {
         let packed = store::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
-        assert!(trace.consumed > 0 && trace.consumed <= inner.len(), "pack walk consumed an out-of-range span");
+        assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
         let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
@@ -287,19 +254,7 @@ mod conformance_laws {
         assert_eq!(native.as_slice(), include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
     }
 
-    /// 🖊️ The ONLY way the three shipped assets are ever refreshed: real `encode_docx`/`print_dsl`/
-    /// `encode_pack` output of the demo, never a hand edit (`fixture_honesty_law` above is what that
-    /// honesty means). Run it deliberately after a codec change — `cargo test -p
-    /// semio-s-artifact-stdio-docx --lib -- --ignored zzz_write` — then re-run the law.
-    #[semio_framework_async_macros::async_test]
-    #[ignore]
-    async fn zzz_write_native_docx_fixture() {
-        let demo = demo_docx_snapshot().await;
-        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
-        std::fs::write(assets.join("📜️example.docx"), encode_docx(&demo).expect("encode")).expect("write 📜️example.docx");
-        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
-        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
-    }
+
 }
 //#endregion 🔖️ConformanceLaws
 

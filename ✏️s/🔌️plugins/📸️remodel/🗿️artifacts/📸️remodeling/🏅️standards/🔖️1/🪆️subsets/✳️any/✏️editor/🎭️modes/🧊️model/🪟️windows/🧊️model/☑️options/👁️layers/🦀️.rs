@@ -6,7 +6,8 @@
 use crate::editor::remodeling::modes::model::windows::model::config::RemodelingLayerVisibility;
 use crate::editor::remodeling::remodeling_window_action;
 use crate::editor::remodeling::terminology::RemodelingLabels;
-use semio_framework_plugin::{LabelText, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(layers: &RemodelingLayerVisibility, labels: &RemodelingLabels) -> WindowMeasure {

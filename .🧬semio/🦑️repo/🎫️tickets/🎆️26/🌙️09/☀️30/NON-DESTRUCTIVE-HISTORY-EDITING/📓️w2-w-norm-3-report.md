@@ -222,3 +222,185 @@ The norm plugin schema `🧬️schema/🔣️.json` pinned `NormMutationLeafTaxo
   - `🧪️w2-w-norm-3-en1998-remove-leaves.py`, `🧪️w2-w-norm-3-en1998-vectors.py` (`stage|settle|surface`);
   - `🧪️w2-w-norm-3-oracle-probe.py`.
 - **Scratch:** `🗑️generated/w2w-norm3/`: dumps, census, test, harness and taxonomy logs, and the HEAD engine copy used for the regression check.
+
+## Session 2 — 2026-10-01
+
+Executor S2-NORM (WP-1 NORM-CLOSE + WP-6 NORM-TS-TWINS, `📓️resume-evidence.md` §5), successor of norm-3. This section
+covers EN 1992–1995, EN 1997–1999, ISO 16757, VDI 3805 and the results config, and holds the norm-wide closure table.
+Scratch: `🗑️generated/s2-norm/`.
+
+Status: IN PROGRESS (started 17:43; usage cuts ~18:00–21:30 and ~23:00–02:30; cargo hold from 02:45, fleet rule 26). Session-1 work not recorded above (en1995 conversion 07:23–07:55, en1992
+`change-action-vk/nk` renames, option B) is reconstructed in `📓️resume-evidence.md` §2.8.
+
+### S2.0 Closure table (WP-1 + WP-6)
+
+| # | item | state | evidence |
+|---|---|---|---|
+| 1 | din4108 outcome vectors + class reconciliation | **done** 22:03 | 16 vectors (59), crate 168/168, oracle 103/103, lints 0; `📓️w2-w-norm-2-report.md` S2.1 |
+| 2 | en1992 `change-anchor-a-s` identity | **done** 22:15 (crate test in item 3) | S2.2 below |
+| 3 | `cargo test --lib` 15 crates + contract; wasm32 check | din4108 green (168/168); rest **blocked** (gate ≥ 8 rustc 22:05–22:50, then cut, then cargo hold) | S2.3 |
+| 4 | oracle/subject/parity exhaustive, 15 cases | **oracle 15/15 cases, 1197/1197**; subject/parity blocked (kernel red) | S2.6 |
+| 5 | bridge inventory refresh + contract phase | pending | |
+| 6 | binary-protocol-drift en1992/en1999/en1996/din18599 | pending | |
+| 7 | scoped `verify taxonomy report` per artifact | din4108 run (28 errors, 0 from this WP); en1992 cut at budget by load | S2.6 |
+| 8 | `oracle-source` suite | 4/6 (was 3/6); 2 left: vdi3805 compliance script in an adapter slot, launch row (coordinator) | S2.6 |
+| 9 | WP-6 TS twins (245 parser-missing + 13 incomplete), witness test, strict tsc | **done** 03:40: 690 twins, `--check` 0 drift, strict tsc 0 (970 files), witness **1901/1901**, census 246 → 30 (all framework `surface-schema`) + 1 catalog-stale | S2.4, S2.5 |
+
+### S2.2 en1992 anchor identity and the broken norm composition script
+
+- **Identity.** The kind `change-anchor-as` is the wire identity (variant `ChangeAnchorAs`, schema `$id`, binary tag 27);
+  only the directory spelled it `a-s`. Moved `🧷change-anchor-a-s` → `🧷change-anchor-as` (leaf and fixture mirror) and
+  rewrote every path naming it: lib-root `#[path]` ×3, catalog ×2, feature tables ×2 (alignment kept), case adapters
+  (`🦀️.rs` `include_str!` ×4, `🐍️.py` ×1), vector-suite mount, canonical test (`include_str!` ×5), descriptor `owner`;
+  `displayName` became `Change Anchor A_s` (the standard's notation). Hot files by hand on unique anchors:
+  `📚️library/🔣️schema-catalog.json` (path) and `📓️schema-catalog.md` (row). Script: `🧪️s2-norm-en1992-anchor-identity.py`
+  (`--check` → 0 pending moves, 0 stale files). No reference to `change-anchor-a-s` remains in norm.
+- **Composition script was broken by the layout move.** `🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/📜️script.ts`
+  resolved `🗿️artifacts`, `🧬️schema`, `🧫️fixtures`, `🪟️results/🎚️config` and `🖥️app-surface/🦀️.rs` as `../../<x>` from
+  the hub package, where none of them exists any more, so `mutation-leaf-taxonomy-generate|check`,
+  `results-window-config` and `surface-render` all threw. Fixed with one `PLUGIN_OWNER = "✏️s/🔌️plugins/📕️norm"`
+  resolved from `repoRoot` (the stdio composition's pattern); hub-owned paths (`🦀️.rs`, `🖥️app-surface/🧫️fixtures`,
+  `Cargo.toml`) stay package-relative; the app-surface source is read from `📇️registry/🧬️contract/🖥️app-surface/🦀️.rs`.
+  The generate target's declared `outputs` in `📋️project.json` now names the real fixture path.
+- **Taxonomy fixture.** `mutation-leaf-taxonomy-check` passed before the rename (554), the regenerated fixture differs in
+  exactly the anchor's `module` and `source`, and the check passes after (554 payloads, AJV + hostile vectors).
+
+### S2.3 Crate tests (item 3) — state at the cargo hold
+
+- din4108: **168/168** (S2.1 in the norm-2 report).
+- Batch A (`-p en1992 -p en1990 -p en1991 -p semio-s-artifact-norm-contract --lib`, `-j 4`, private target): the gate
+  (`pgrep -x rustc` < 8) did not open between 22:05 and 22:50 (9–22 peer rustc). The one run that started (22:31) spent its
+  540 s budget rebuilding peer-changed framework crates (`semio-framework-os-kernel-dsl-derive` …) and was interrupted
+  cleanly at the budget (process group SIGINT, no orphans); its compiled units stay in the shared build-dir. No norm test
+  binary ran. Owed after the hold: batch A, then en1993–en1999 + iso16757 + vdi3805 + din16798/din18599/en1996, then
+  `--target wasm32-wasip2` for the norm component.
+
+### S2.4 WP-6 — norm TypeScript twins, generator-first
+
+**Generator** `T/🧪️s2-norm-ts-twins.ts` (`bun ./🧪️s2-norm-ts-twins.ts [--check] [--only <artifact>]`), schema-first on the
+pattern of `🧪️w3-gltf-twins.ts`. Per artifact subset it writes, from the committed JSON Schemas:
+
+- snapshot, diff, artifact and inference twins — the root and every `$defs`/`definitions` record, each `export interface|type
+  <Name>` plus `export const parse<Name>: NormWireReader<Name>`; `/** @state … */` from `x-semio-state` is kept;
+- the four text twins (`📸️snapshot|🔺️diff|🧬️mutations|💡️inferences/📝️text`): `type <X>Text = string` + `parse<X>Text`;
+- one wire twin per mutation leaf (`<leaf>/🧬️schema/🟦️.ts`, 554 leaves) and the aggregate `<A>Mutation` twin, externally
+  tagged (`{ "<Variant>": payload }`, 10 artifacts) or internally tagged (`{ "mutation": "<const>", … }`, en1990, din18599,
+  en1997, en1998, en1999) exactly as `🧬️mutations/🔣️.json` spells it;
+- for iso16757's 29 split-layout leaves, `<leaf>/🦠️mutation/🟦️.ts` becomes a one-line re-export of the generated leaf twin
+  (its hand-written payload interfaces were restated copies; each exported exactly the schema title).
+
+Readers live once in the **norm wire contract, TypeScript half** `✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🟦️.ts` (new,
+sibling of the Rust codec all 15 artifacts share): `NormWireRefusal`, `NormWireReader<T>`, typed member tables
+(`NormWireMembers<T>` proves every interface member has a reader with matching optionality), object/tagged/external/any/
+nullable/array/map/literal/json readers. Readers judge structure (types, closed members, tags, enumerations, item counts);
+value bounds stay the schema's, judged by Ajv. Cross-module `$ref`s resolve through `$id` (norm facets) or the central catalog
+(`os/store/child` → framework `parseArtifactChild`).
+
+**Naming.** A `$defs` record the schema withholds from TypeScript (`x-semio-formats` without `🟦️typescript`) is emitted as
+`<Prefix><Key>` (`Din4108ThermalZone`), so no twin declares an export its contract withholds. Names the peer's `🪶️sqlite`
+companions already import are pinned in a small table (`PUBLISHED`: din16798 `ZoneDocument → Din16798Zone`, en1997's bare
+record names, vdi3805 `VdiUnit`) plus two aliases resolved from a schema pointer, never hand-typed (en1992 `DuctilityClass`,
+en1990 `ImportanceClass`). The generator fails (`broken`) when a companion imports a name a regenerated twin no longer exports.
+
+**Schema debt fixed on the way (schema-first, wire unchanged).**
+
+1. en1997 snapshot: every collection was `items: {type: object}` although `$defs` existed for three of them and the Rust
+   structs, GraphQL types and protobuf messages existed for all six. Items now `$ref` `SoilLayer`, `SpreadFoundation`, `Pile`,
+   and the new closed `$defs` `RetainingWall`, `Slope`, `UpliftCase` (Rust field order and types). Script:
+   `T/🧪️s2-norm-schema-records.py` (`--check` → 0).
+2. en1995 `🔺️diff/📝️text/🔣️.json` was a copy of the diff schema — same `$id` as `🔺️diff/🔣️.json` (a duplicate `$id` in one
+   Ajv instance), title `En1995Diff`. Restored to the canonical text facet every sibling declares
+   (`…/en1995/diff/text.json`, `En1995DiffText`, `type: string`). The catalog still maps `En1995Diff` to the text file until
+   the central `schema generate` (coordinator).
+
+**Consumers repaired (precise types exposed real defects).**
+
+- en1998 `🪶️sqlite`: `en_ground_type`/`en_spectrum_type` are `TEXT NOT NULL`, but Rust skips them when empty
+  (`skip_serializing_if = "String::is_empty"`) and all 76 committed en1998 snapshots omit them: the companion wrote
+  `undefined`. Now writes `?? ""` and reads an empty column back as an absent member, mirroring Rust.
+- vdi3805 `🪶️sqlite`: the `generic` sheet variant's `entries` is optional in the schema; iterated as `a.entries ?? []`.
+- en1990 `🪶️sqlite`: `kind` read from TEXT is typed to `PermanentAction["kind"]`; its test now reads the JSON fixture through
+  `parseEn1990Snapshot` instead of spreading a widened JSON import.
+- `⚖️en1990/…/🧬️schema/🧪parse-en1990-artifact.bun.ts` (run by the Rust io unit test, which checks its stdout) used the
+  hand twin's `En1990ParseError`; it now asserts `NormWireRefusal` positions (`$.consequenceClass`) and reasons. Ran:
+  `parse-en1990-artifact:ok`.
+
+**Verification so far (run).**
+
+- `bun ./🧪️s2-norm-ts-twins.ts --check` → `subsets=15 twins=689 stale=0 broken=0`.
+- Strict tsc (`🗑️generated/s2-norm/tsconfig-twins.json`: contract, every `🧬️schema/**/🟦️.ts`, sqlite `🗄️.d.ts`, snapshot
+  tests, `🧪*.bun.ts`; `strict`, bundler resolution): **64 errors → 1** (`tsc-twins-{1..5}.txt`). The 59 pre-existing errors
+  were the hand text twins returning an object for a `string` type and din16798's inference twin; the generated twins
+  themselves compiled clean from the first run.
+- Census replica of the lint (`T/🧪️s2-norm-ts-twin-census.py`, same predicates as `schemaExportCompletenessDiagnostics`) over
+  the committed catalog: 246 parser-missing / 6 incomplete before, **30 / 1** after (S2.5).
+
+### S2.5 WP-6 — witness test, wire order, final twin numbers (02:45–03:45, cargo hold)
+
+**Readers refuse what the schema refuses.** The sqlite peer's tests use `parse<A>Snapshot` as the exact validator
+("refuses every unsigned32 counterexample / unknown native choice"), so the contract readers now also enforce numeric bounds
+(`normWireRange`: `minimum`/`maximum`/`exclusive*`), and an absent optional nullable member reads as `null` (`normWireDefault`),
+mirroring Rust `Option` + `#[value(default)]` (vdi3805 `GenericAttribute.unit`). All 15 sqlite companion suites pass on the
+generated twins: **330 pass, 0 fail** (`bun test ./…/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts` per artifact; one en1998 case once hit
+the 5 s timeout under load and passed 3/3 on rerun).
+
+**Witness test** `✏️s/🔌️plugins/📕️norm/🧪️tests/🧪️wire-twins/🟦️.ts` (`bun test ./…`): for every committed `🦠️mutation` and
+`📸️snapshot/{⬅️before,➡️after}` of all 15 artifacts — the strict Ajv oracle (`semioSchemaAjvV1`, every leaf, the aggregate,
+snapshot/diff/artifact and foreign `$ref` documents resolved through the catalog) and the twin agree on admission (negative
+witnesses are refused by both); an admitted wire decodes and re-encodes **byte-equal** in the committed spelling (two-space
+JSON, Python float repr at `number` positions, integers at `integer` positions); a member spliced into the closed payload is
+refused by both; an unknown tag is refused by both. **1901 tests, 1901 pass, 8256 assertions, 3.1 s.**
+Negative control: swapping two members in the generated din4108 snapshot reader fails 118 tests and `--check` reports the
+twin stale; regenerating restores 1901/1901.
+
+**Wire order made canonical** (`T/🧪️s2-norm-wire-order.py`, census + `--apply`). The Rust law compares `serde_json::Value`s,
+so member order was pinned nowhere: en1990 and en1991 vectors had been written key-sorted, en1992/en1999 schemas listed some
+members in another order than the Rust structs. Rule now: schema property order = Rust struct field order (the `ToValue`
+wire order), and every committed mutation/snapshot is stored in schema order.
+
+- 8 schema records reordered to their Rust structs where the member sets agree (en1990 2, en1991 4 — via its records, en1992
+  `ReinforcementGrade` + 1, vdi3805 2); `required` follows.
+- 307 fixtures rewritten value- and spelling-preserving (en1990 112, en1991 165, iso16757 5, en1993 2, en1994 3, en1995 20).
+- en1999 snapshot collections restated their records inline although `$defs` existed with the same members: items now `$ref`
+  `AluminiumMaterial`, `AluminiumSection`, `AluminiumMember`, `AluminiumConnection`, `FireScenario`, `FatigueDetail`,
+  `ColdFormedSheet`, `AluminiumShell` (`T/🧪️s2-norm-schema-records.py`).
+- Backups: `🗑️generated/s2-norm/{json-before-order.tar,twins-before.tar}`.
+
+**Model gaps reported by the order census (not in the witness scope, not changed):** vdi3805 `🔺️diff` schema lacks the
+Rust diff field `limits`; en1999 `🔣️.json` (artifact) lacks `coldFormed` and `shells`; iso16757 diff schema carries
+`selectedCheckIndex`, which the Rust diff does not have; en1991 and en1996 snapshot schemas are not in canonical JSON layout
+(skipped by the reorder, their order already equals Rust).
+
+**Lint census after** (`🧪️s2-norm-ts-twin-census.py`): parser-missing **246 → 30**, incomplete **6 → 1**. The 30 are
+`NoConfig`/`NoPresence` under `✏️editor/{🎚️config,👥️presence}`, emitted by the framework `surface-schema` projection
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️surface-schema/🟦️.ts` emits interfaces only): a framework
+fix + `surface-schema` re-run, not norm. The 1 is en1995 `En1995Diff` still catalogued at the diff-text file: clears with the
+central `schema generate`.
+
+### S2.6 Cases, oracle-source, taxonomy, cargo (02:45–03:35)
+
+- **Oracle phase through the harness** (`🧪️test`: `bun ./📜️script.ts oracle exhaustive --case <case>`, needs no cargo): all
+  15 cases green, **1197/1197** (en1990 72, en1991 161, en1992 59, en1993 115, en1994 51, en1995 135, en1996 121, en1997 44,
+  en1998 68, en1999 38, din16798 89, din18599 43, din4108 103, iso16757 59, vdi3805 39). In-process probe identical.
+- **iso16757 identity regression (peer) repaired in the shared engine.** A staged peer change (20:13) re-printed the
+  committed demo carrier with lists of records as `[ { … } ]`; the shared Python carrier reader
+  (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`) refused the bare `{` token (58/59). The reader now keeps the record and
+  list delimiters `{ } [ ]` of a field line as written (`BRACKETS`), and the printer re-emits them: carrier bytes, no grammar
+  inferred. Back to 59/59; the other 14 probes unchanged.
+- **`oracle-source`** (`📦️packages/🟦️typescript`: `bun ./📜️script.ts oracle-source`): **4 pass / 2 fail** (session 1: 3/3;
+  the en1997 `adapter()` failure is gone). Left: (1) `🏭️vdi3805/…/🧪️tests/⚖️compliance-vdi3805-1/🐍️.py` is a crate-hosted
+  compliance oracle script (run by its `🦀️.rs` via `python3 <snapshot>`) sitting in the repo-test adapter slot without a
+  feature, so the source-ownership enumeration counts a sixteenth adapter — owner decision: make it a feature-backed
+  compliance case, or move the script out of `🧪️tests/<case>/🐍️.py`; (2) `.vscode/launch.json` and `🧩️launch.seed.jsonc` lack
+  `bun nx run @semio-tech/norm-js:test-oracle-source` (coordinator).
+- **Witness registration:** `bun ./📜️script.ts wire-twins` (norm TS package) and nx target `@semio-tech/norm-js:test-wire-twins`
+  (1901/1901 through the package). Launch row owed (coordinator): `bun nx run @semio-tech/norm-js:test-wire-twins`.
+- **Taxonomy** (`bun ./📜️script.ts verify taxonomy report --scope <artifact>`, ~5.5 min each at low load): din4108 → 28 errors,
+  none on a path this WP created (the 16 new vector directories resolve; 0 `path-too-long`): 20 `directory-kind-unresolved`
+  (case and `🔬️*` test dirs, the sqlite peer's `🪶️sqlite` dirs), 4 `path-emoji-presentation` (legacy `🌡`/`🏷` leaf names
+  without U+FE0F), 2 `projection-member-unresolved` (`💾️binary`, `📝️text`), 2 sqlite peer files. en1992 was cut by its 570 s
+  budget in the last phase (`plan/references 1/510`) under 11 peer rustc; the other 13 are owed.
+- **Cargo after the hold:** batch A (`-p en1992 -p en1990 -p en1991 -p norm-contract --lib`) fails in the os-kernel, not in
+  norm: `🗣️dsl/🦀️.rs`, `🗣️dsl/🪟️viewport/🦀️.rs`, `🗣️dsl/🧬️schema/🦀️.rs`, `🏪️store/🦀️.rs` — `E0618 expected function, found
+  RecordSpecProducer` / `E0308` (a peer's in-progress dsl refactor, as the coordinator warned). Every norm crate depends on
+  the kernel, so items 3, 4 (subject/parity), 5 (bridge) and 6 (contract phase) wait for it.

@@ -6,19 +6,19 @@
 
 use super::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
 
-#[path = "⚙️set/🦀️.rs"]
+#[path = "⚙️set-snapshot/🦀️.rs"]
 mod set_snapshot;
-#[path = "🔬️set-lod/🦀️.rs"]
+#[path = "🔬️set-lod-mode/🦀️.rs"]
 mod set_lod_mode;
 #[path = "👁️set-show-mode/🦀️.rs"]
 mod set_show_mode;
-#[path = "🕸️set/🦀️.rs"]
+#[path = "🕸️set-camera/🦀️.rs"]
 mod set_camera;
 #[path = "📷️set-preview-camera/🦀️.rs"]
 mod set_preview_camera;
 #[path = "🌞️set-sun/🦀️.rs"]
 mod set_sun;
-#[path = "🧬️set-selected-generation/🦀️.rs"]
+#[path = "🧬️set-selected/🦀️.rs"]
 mod set_selected_generation;
 
 pub use set_camera::SetCamera;
@@ -59,7 +59,7 @@ impl protocol::OpText for Generation3dConfigMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -69,7 +69,7 @@ impl protocol::OpText for Generation3dConfigMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

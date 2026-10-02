@@ -159,6 +159,32 @@ impl dsl::DslField for Puzzle5dScale {
     fn shape() -> dsl::Shape {
         dsl::Shape::List(Box::new(dsl::Shape::Float))
     }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{
+        <Vec<f64> as dsl::DslField>::shape_controlled(control)
+    }
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{
+        let axes=match self{Self::Uniform(value)=>std::slice::from_ref(value),Self::Vec3(axes)=>axes.as_slice()};
+        control.scoped_stage(|control|{
+            control.begin_stage(axes.len())?;
+            let mut values=control.allocate_vec::<dsl::FieldValue>(axes.len())?;
+            for axis in axes{values.push(<f64 as dsl::DslField>::to_value_controlled(axis,control)?);}
+            Ok(dsl::FieldValue::List(values))
+        })
+    }
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.checkpoint()?;
+        let dsl::FieldValue::List(items)=value else{return Err("expected a 1- or 3-item List".into())};
+        if items.len()!=1&&items.len()!=3{return Err("expected a 1- or 3-item List".into())}
+        control.scoped_stage(|control|{
+            control.begin_stage(items.len())?;
+            control.charge(std::mem::size_of::<Self>())?;
+            let x=<f64 as dsl::DslField>::from_value_controlled(&items[0],control)?;
+            if items.len()==1{return Ok(Self::Uniform(x))}
+            let y=<f64 as dsl::DslField>::from_value_controlled(&items[1],control)?;
+            let z=<f64 as dsl::DslField>::from_value_controlled(&items[2],control)?;
+            Ok(Self::Vec3([x,y,z]))
+        })
+    }
     fn to_value(&self) -> dsl::FieldValue {
         match self {
             Puzzle5dScale::Uniform(scale) => dsl::FieldValue::List(vec![dsl::FieldValue::Float(*scale)]),
@@ -1083,7 +1109,7 @@ pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>,
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "5d.puzzle".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("5D Puzzle", "5D-Puzzle"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("5D Puzzle", "5D-Puzzle"),
         source_format: "puzzle.5d".into(),
         component_kind: "puzzle5d".into(),
         dimension: "5d".into(),

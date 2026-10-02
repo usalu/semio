@@ -5,8 +5,9 @@ pub(crate) mod fixture {
     // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
     // imports instead, for exactly what this fixture needs from `app`.
     use super::super::super::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
+    use semio_framework_2d::compute::EngineHandles;
     use super::super::{
-        AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, LocalizedLabel,
+        AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, IconName, InteractionView, LocalizedLabel,
         artifact_app_laws, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiAssemblyResult, ViewEmit, Viewer, ViewModel,
     };
     use super::*;
@@ -29,13 +30,13 @@ pub(crate) mod fixture {
     /// authored `.grammar.semio`/`.protocol.semio`) — `NativeCodecs.snapshot/diff/mutations`
     /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
     macro_rules! fixture_channel {
-        ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
+        ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $dialect:expr, $schema:literal) => {
             #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
             pub(crate) struct $snapshot {
                 pub value: i32,
             }
-            impl semio_framework_schema::ArtifactCompositionFields for $snapshot {
-                fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+            impl semio_framework_schema_composition::ArtifactCompositionFields for $snapshot {
+                fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
                     Ok(())
                 }
             }
@@ -153,63 +154,156 @@ pub(crate) mod fixture {
                 }
             }
 
-            #[derive(Default)]
-            pub(crate) struct $editor;
-            impl ArtifactEditor for $editor {
-                const DIALECT: Dialect = $dialect;
-                const DOCUMENT_SCHEMA: &'static str = $schema;
-                type Snapshot = $snapshot;
-                type Mutation = $mutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Draft = NoDraft;
-                type DraftMutation = NoDraftMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = $command;
-                fn initial_snapshot() -> $snapshot {
-                    $snapshot::default()
-                }
-                fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<$mutation> {
-                    Ok(Emit { artifact_mutations: vec![$mutation::SetValue($leaf_owner::SetValue { value: doc.snapshot.value })], ..Default::default() })
-                }
-                fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("value={}", doc.snapshot.value)))
-                }
-            }
-
-            #[derive(Default)]
-            pub(crate) struct $viewer;
-            impl ArtifactViewer for $viewer {
-                const DIALECT: Dialect = $dialect;
-                const DOCUMENT_SCHEMA: &'static str = $schema;
-                type Snapshot = $snapshot;
-                type Mutation = $mutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = $command;
-                fn initial_snapshot() -> $snapshot {
-                    $snapshot::default()
-                }
-                fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
-                    Ok(ViewEmit::default())
-                }
-                fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("value={}", doc.snapshot.value)))
-                }
-            }
         };
     }
 
-    fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, std1_any_mutations, Std1AnyCommand, Std1AnyEditor, Std1AnyViewer, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
-    fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, std1_strict_mutations, Std1StrictCommand, Std1StrictEditor, Std1StrictViewer, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
-    fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, Std2AnyEditor, Std2AnyViewer, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
+    fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, std1_any_mutations, Std1AnyCommand, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
+    fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, std1_strict_mutations, Std1StrictCommand, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
+    fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
+
+    #[derive(Default)]
+    pub(crate) struct Std1AnyEditor;
+    impl ArtifactEditor for Std1AnyEditor {
+        const DIALECT: Dialect = STD1_ANY_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-any/v1";
+        type Snapshot = Std1AnySnapshot;
+        type Mutation = Std1AnyMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Draft = NoDraft;
+        type DraftMutation = NoDraftMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std1AnyCommand;
+        fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
+        fn handle(_command: &Std1AnyCommand, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1AnyMutation> {
+            Ok(Emit { artifact_mutations: vec![Std1AnyMutation::SetValue(std1_any_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
+
+    #[derive(Default)]
+    pub(crate) struct Std1AnyViewer;
+    impl ArtifactViewer for Std1AnyViewer {
+        const DIALECT: Dialect = STD1_ANY_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-any/v1";
+        type Snapshot = Std1AnySnapshot;
+        type Mutation = Std1AnyMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std1AnyCommand;
+        fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
+        fn handle(_command: &Std1AnyCommand, _doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+            Ok(ViewEmit::default())
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
+
+    #[derive(Default)]
+    pub(crate) struct Std1StrictEditor;
+    impl ArtifactEditor for Std1StrictEditor {
+        const DIALECT: Dialect = STD1_STRICT_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-strict/v1";
+        type Snapshot = Std1StrictSnapshot;
+        type Mutation = Std1StrictMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Draft = NoDraft;
+        type DraftMutation = NoDraftMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std1StrictCommand;
+        fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
+        fn handle(_command: &Std1StrictCommand, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1StrictMutation> {
+            Ok(Emit { artifact_mutations: vec![Std1StrictMutation::SetValue(std1_strict_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
+
+    #[derive(Default)]
+    pub(crate) struct Std1StrictViewer;
+    impl ArtifactViewer for Std1StrictViewer {
+        const DIALECT: Dialect = STD1_STRICT_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-strict/v1";
+        type Snapshot = Std1StrictSnapshot;
+        type Mutation = Std1StrictMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std1StrictCommand;
+        fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
+        fn handle(_command: &Std1StrictCommand, _doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+            Ok(ViewEmit::default())
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
+
+    #[derive(Default)]
+    pub(crate) struct Std2AnyEditor;
+    impl ArtifactEditor for Std2AnyEditor {
+        const DIALECT: Dialect = STD2_ANY_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std2-any/v1";
+        type Snapshot = Std2AnySnapshot;
+        type Mutation = Std2AnyMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Draft = NoDraft;
+        type DraftMutation = NoDraftMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std2AnyCommand;
+        fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
+        fn handle(_command: &Std2AnyCommand, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std2AnyMutation> {
+            Ok(Emit { artifact_mutations: vec![Std2AnyMutation::SetValue(std2_any_mutations::SetValue { value: doc.snapshot.value })], ..Default::default() })
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
+
+    #[derive(Default)]
+    pub(crate) struct Std2AnyViewer;
+    impl ArtifactViewer for Std2AnyViewer {
+        const DIALECT: Dialect = STD2_ANY_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std2-any/v1";
+        type Snapshot = Std2AnySnapshot;
+        type Mutation = Std2AnyMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = crate::app::NoTransient;
+        type TransientMutation = crate::app::NoTransientMutation;
+        type Command = Std2AnyCommand;
+        fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
+        fn handle(_command: &Std2AnyCommand, _doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+            Ok(ViewEmit::default())
+        }
+        fn render(_body_key: &str, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("value={}", doc.snapshot.value)))
+        }
+    }
     //#endregion 🔖️FixtureChannel
 
     //#region 🔖️ProfileHop
@@ -259,9 +353,9 @@ pub(crate) mod fixture {
     //#endregion 🔖️ProfileHop
 
     //#region 🔖️Builders
-    fn schema_descriptor(id: &'static str) -> ::semio_framework_schema::ArtifactSchemaDescriptor {
-        let leaves = ::semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
-        ::semio_framework_schema::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
+    fn schema_descriptor(id: &'static str) -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+        let leaves = ::semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
+        ::semio_framework_schema_registry::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
     }
 
     fn native_codecs<S, M>(schema: &str) -> NativeCodecs

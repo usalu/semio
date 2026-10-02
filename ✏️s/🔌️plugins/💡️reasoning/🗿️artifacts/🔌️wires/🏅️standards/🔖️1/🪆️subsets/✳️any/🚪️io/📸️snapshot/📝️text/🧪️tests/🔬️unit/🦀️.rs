@@ -3,7 +3,7 @@ use crate::{empty_wires_snapshot, wires_working_board};
 
 fn populated() -> WiresSnapshot {
     let mut snapshot = empty_wires_snapshot();
-    let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
+    let node = semio_framework_value::ToValue::to_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] }));
     snapshot = store::apply_mutation(&snapshot, &crate::mutations::create_node(node)).expect("valid mutation").0;
     snapshot
 }

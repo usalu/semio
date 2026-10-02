@@ -1,37 +1,19 @@
-/** 🧬️ EN 1999 diff schema — sparse field delta over the aluminium-structure subject. */
-
-import type { En1999Artifact } from "../🟦️.ts";
-import type {
-  AluminiumConnection,
-  AluminiumMaterial,
-  AluminiumMember,
-  AluminiumSection,
-  AluminiumShell,
-  AnnexChoice,
-  ColdFormedSheet,
-  FatigueDetail,
-  FireScenario,
-} from "../📸️snapshot/🟦️.ts";
+/** 🔺️ `En1999Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormJson, normWireArray, normWireJson, normWireMap, normWireObject, normWireOptional, type NormWireReader, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
 export interface En1999Diff {
-  /** @state artifact */
-  artifact?: En1999Artifact;
-  /** @state artifact */
-  annex?: AnnexChoice | string;
-  /** @state artifact */
-  materials?: AluminiumMaterial[];
-  /** @state artifact */
-  sections?: AluminiumSection[];
-  /** @state artifact */
-  members?: AluminiumMember[];
-  /** @state artifact */
-  connections?: AluminiumConnection[];
-  /** @state artifact */
-  fireScenarios?: FireScenario[];
-  /** @state artifact */
-  fatigueDetails?: FatigueDetail[];
-  /** @state artifact */
-  coldFormed?: ColdFormedSheet[];
-  /** @state artifact */
-  shells?: AluminiumShell[];
+  artifact?: { [key: string]: NormJson };
+  annex?: string;
+  materials?: NormJson[];
+  sections?: NormJson[];
+  members?: NormJson[];
+  connections?: NormJson[];
+  fireScenarios?: NormJson[];
+  fatigueDetails?: NormJson[];
+  coldFormed?: NormJson[];
+  shells?: NormJson[];
 }
+
+export const parseEn1999Diff: NormWireReader<En1999Diff> = normWireObject<En1999Diff>({ artifact: normWireOptional(normWireMap(normWireJson)), annex: normWireOptional(normWireString), materials: normWireOptional(normWireArray(normWireJson)), sections: normWireOptional(normWireArray(normWireJson)), members: normWireOptional(normWireArray(normWireJson)), connections: normWireOptional(normWireArray(normWireJson)), fireScenarios: normWireOptional(normWireArray(normWireJson)), fatigueDetails: normWireOptional(normWireArray(normWireJson)), coldFormed: normWireOptional(normWireArray(normWireJson)), shells: normWireOptional(normWireArray(normWireJson)) });

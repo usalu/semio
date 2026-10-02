@@ -21,13 +21,45 @@ use crate::editor::wfc3d::transient::{SetSolve, Wfc3dTransient, Wfc3dTransientMu
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
 use crate::schema::snapshot::{canonical_edge_index, canonical_insertion_index, canonical_rule_index, canonical_slot_index, canonical_tile_index, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d};
 use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{Effect, RequestId, ToolRef, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunView, 
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, SelectionMethod, SelectionMode, SelectionSpec,
-};
-use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::RequestId;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Wfc3dMutation` kind a UI can
@@ -79,7 +111,7 @@ pub enum Wfc3dEditorCommand {
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
     /// 🕹️ The NodeGraph canvas' OWN gesture channel: a released node drag (the node-graph gesture record), a
-    /// completed or cut wire and a whole-graph `setHostSnapshot` all arrive as `nodeGraphEdit` rows, never as
+    /// completed, cut or deleted wire and a deleted node all arrive as `nodeGraphEdit` rows, never as
     /// `move-slot`/`connect-slots` directly. One release is ONE drag-tool transaction of relative `drag-slots` leaves.
     #[dsl(key = "node-graph-edit")]
     NodeGraphEdit { operations_json: String },
@@ -140,14 +172,9 @@ pub const WFC_3D_DEFAULT_RELATION: &str = "adjacent";
 /// metres, so a document authored at `width: 1.0` would paint a one-pixel node at viewport zoom 1 and
 /// three slots a metre apart would overlap inside the canvas' own minimum node size — the pane was
 /// legible only as a smudge. The scale is the caller's, never the shared window's: the window file
-/// stays byte-identical to `wfc2d`'s, and its inverse ([`slot_coordinate`]) is what turns a released
-/// drag back into a `move-slot` in document units.
+/// stays byte-identical to `wfc2d`'s, and dividing a released drag's canvas offset by it is what turns the drag back
+/// into a relative `drag-slots` in document units.
 pub const WFC_3D_GRAPH_UNIT: f64 = 120.0;
-
-/// 📐️ The document coordinate one canvas coordinate means — [`WFC_3D_GRAPH_UNIT`]'s exact inverse.
-pub fn slot_coordinate(canvas: f64) -> f64 {
-    canvas / WFC_3D_GRAPH_UNIT
-}
 
 /// 🕹️ The interaction domain the graph canvas selects and hovers in. Declaring ONE domain is what
 /// makes the framework inject `interactionSelect`/`interactionHover`/`clearSelection` onto every
@@ -664,78 +691,66 @@ impl ArtifactEditor for Wfc3dEditor {
 /// `authoring_seed` (the admission's; empty for a view without command authority, which publishes plainly).
 pub fn command_emit(command: &Wfc3dEditorCommand, document: &Wfc3dSnapshot, config: &Wfc3dConfig, authoring_seed: &str) -> Result<Emit<Wfc3dMutation, Wfc3dConfigMutation>, Fault> {
     {
-        let (mutation, description) = match command {
+        let mutation = match command {
             Wfc3dEditorCommand::ChangeCamera { x, y, zoom } => {
                 let emitted = vec![Wfc3dConfigMutation::ChangeCamera(crate::editor::wfc3d::config::ChangeCamera { x: *x, y: *y, zoom: *zoom })];
-                return Ok(Emit { config_mutations: emitted, description: Some("Change camera".into()), ..Default::default() });
+                return Ok(Emit::config(emitted));
             }
             Wfc3dEditorCommand::NodeGraphViewport { x, y, zoom } => {
                 let emitted = vec![Wfc3dConfigMutation::ChangeCamera(crate::editor::wfc3d::config::ChangeCamera { x: *x, y: *y, zoom: if *zoom > 0.0 { *zoom } else { 1.0 } })];
-                return Ok(Emit { config_mutations: emitted, description: Some("Change camera".into()), ..Default::default() });
+                return Ok(Emit::config(emitted));
             }
             Wfc3dEditorCommand::ChangeActiveTile { tile_id } => {
                 let emitted = vec![Wfc3dConfigMutation::ChangeActiveTile(crate::editor::wfc3d::config::ChangeActiveTile { tile_id: tile_id.clone() })];
-                return Ok(Emit { config_mutations: emitted, description: Some("Arm tile".into()), ..Default::default() });
+                return Ok(Emit::config(emitted));
             }
             Wfc3dEditorCommand::Solve => {
-                return Ok(Emit { effects: fill::start_fill_effects(), description: Some("Solve".into()), ..Default::default() });
+                return Ok(Emit { effects: fill::start_fill_effects(), ..Default::default() });
             }
             Wfc3dEditorCommand::CommitFill { .. } => {
-                return Ok(Emit { description: Some("Commit fill".into()), ..Default::default() });
+                return Ok(Emit::default());
             }
             Wfc3dEditorCommand::SetActiveExample { example_id } => {
                 let next = example_snapshot(example_id)?;
-                return Ok(Emit { effects: vec![load_document_effect(&next)], description: Some(format!("Set active example {example_id}")), ..Default::default() });
+                return Ok(Emit::effect(load_document_effect(&next)));
             }
             Wfc3dEditorCommand::NodeGraphEdit { operations_json } => {
                 let gesture = graph_edit_gesture(document, operations_json)?;
-                return Ok(drag::wfc3d_drag_tool_emit(WFC_3D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_3D_GRAPH_UNIT, gesture.description));
+                return Ok(drag::wfc3d_drag_tool_emit(WFC_3D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_3D_GRAPH_UNIT));
             }
-            Wfc3dEditorCommand::ChangeSeed { seed } => (change_seed(*seed), format!("Change seed to {seed}")),
-            Wfc3dEditorCommand::CreateSlot { id, x, y, z, width, height, depth } => (
-                create_slot(
-                    canonical_slot_index(document, id),
-                    Slot3d { id: id.clone(), x: *x, y: *y, z: *z, width: positive_or(*width), height: positive_or(*height), depth: positive_or(*depth), pinned_tile_id: None },
-                ),
-                format!("Create slot {id}"),
+            Wfc3dEditorCommand::ChangeSeed { seed } => change_seed(*seed),
+            Wfc3dEditorCommand::CreateSlot { id, x, y, z, width, height, depth } => create_slot(
+                canonical_slot_index(document, id),
+                Slot3d { id: id.clone(), x: *x, y: *y, z: *z, width: positive_or(*width), height: positive_or(*height), depth: positive_or(*depth), pinned_tile_id: None },
             ),
-            Wfc3dEditorCommand::DeleteSlot { id } => (delete_slot(id.clone()), format!("Delete slot {id}")),
+            Wfc3dEditorCommand::DeleteSlot { id } => delete_slot(id.clone()),
             Wfc3dEditorCommand::MoveSlot { id, x, y, z } => {
                 let authored = document.slots.iter().find(|slot| &slot.id == id).map(|slot| slot.z).unwrap_or_default();
-                (move_slot(id.clone(), *x, *y, z.unwrap_or(authored)), format!("Move slot {id}"))
+                move_slot(id.clone(), *x, *y, z.unwrap_or(authored))
             }
             Wfc3dEditorCommand::ResizeSlot { id, width, height, depth } => {
                 let authored = document.slots.iter().find(|slot| &slot.id == id).map_or(1.0, |slot| slot.depth);
-                (resize_slot(id.clone(), positive_or(*width), positive_or(*height), positive_or(depth.unwrap_or(authored))), format!("Resize slot {id}"))
+                resize_slot(id.clone(), positive_or(*width), positive_or(*height), positive_or(depth.unwrap_or(authored)))
             }
-            Wfc3dEditorCommand::ConnectSlots { id, from_slot_id, to_slot_id, relation } => (
-                connect_slots(
-                    canonical_edge_index(document, id),
-                    SlotEdge { id: id.clone(), from_slot_id: from_slot_id.clone(), to_slot_id: to_slot_id.clone(), relation: if relation.is_empty() { WFC_3D_DEFAULT_RELATION.into() } else { relation.clone() } },
-                ),
-                format!("Connect {from_slot_id} to {to_slot_id}"),
+            Wfc3dEditorCommand::ConnectSlots { id, from_slot_id, to_slot_id, relation } => connect_slots(
+                canonical_edge_index(document, id),
+                SlotEdge { id: id.clone(), from_slot_id: from_slot_id.clone(), to_slot_id: to_slot_id.clone(), relation: if relation.is_empty() { WFC_3D_DEFAULT_RELATION.into() } else { relation.clone() } },
             ),
-            Wfc3dEditorCommand::DisconnectSlots { id } => (disconnect_slots(id.clone()), format!("Disconnect {id}")),
+            Wfc3dEditorCommand::DisconnectSlots { id } => disconnect_slots(id.clone()),
             Wfc3dEditorCommand::PinSlot { id, tile_id } => {
                 let tile = if tile_id.is_empty() { wfc3d_active_tile_id(config, document) } else { Some(tile_id.clone()) };
                 let Some(tile) = tile else { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.tile.unknown-pin"), "No tile is armed and the document declares none.")) };
-                (pin_slot(id.clone(), tile.clone()), format!("Pin {id} to {tile}"))
+                pin_slot(id.clone(), tile.clone())
             }
-            Wfc3dEditorCommand::UnpinSlot { id } => (unpin_slot(id.clone()), format!("Unpin slot {id}")),
-            Wfc3dEditorCommand::CreateTile { id, label, weight } => (
-                create_tile(canonical_tile_index(document, id), Tile { id: id.clone(), label: label.clone(), weight: positive_or(*weight), media: TileMedia3d::default() }),
-                format!("Create tile {id}"),
-            ),
-            Wfc3dEditorCommand::DeleteTile { id } => (delete_tile(id.clone()), format!("Delete tile {id}")),
-            Wfc3dEditorCommand::ChangeTileWeight { tile_id, weight } => (change_tile_weight(tile_id.clone(), positive_or(*weight)), format!("Change weight of {tile_id}")),
-            Wfc3dEditorCommand::ChangeTileMedia { tile_id } => (change_tile_media(tile_id.clone(), crate::unit_box_media(None)), format!("Reset media of {tile_id}")),
-            Wfc3dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, relation, allowed } => (
-                create_rule(canonical_rule_index(document, id), GraphRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), relation: relation.clone(), allowed: *allowed }),
-                format!("Create rule {id}"),
-            ),
-            Wfc3dEditorCommand::DeleteRule { id } => (delete_rule(id.clone()), format!("Delete rule {id}")),
+            Wfc3dEditorCommand::UnpinSlot { id } => unpin_slot(id.clone()),
+            Wfc3dEditorCommand::CreateTile { id, label, weight } => create_tile(canonical_tile_index(document, id), Tile { id: id.clone(), label: label.clone(), weight: positive_or(*weight), media: TileMedia3d::default() }),
+            Wfc3dEditorCommand::DeleteTile { id } => delete_tile(id.clone()),
+            Wfc3dEditorCommand::ChangeTileWeight { tile_id, weight } => change_tile_weight(tile_id.clone(), positive_or(*weight)),
+            Wfc3dEditorCommand::ChangeTileMedia { tile_id } => change_tile_media(tile_id.clone(), crate::unit_box_media(None)),
+            Wfc3dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, relation, allowed } => create_rule(canonical_rule_index(document, id), GraphRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), relation: relation.clone(), allowed: *allowed }),
+            Wfc3dEditorCommand::DeleteRule { id } => delete_rule(id.clone()),
         };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
+        Ok(Emit::mutations(vec![mutation]))
     }
 }
 
@@ -806,81 +821,73 @@ pub fn graph_operations_json(args: Option<&dsl::DslValue>) -> String {
     args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |operations| serde_json::Value::from(operations).to_string())
 }
 
-/// 🕹️ What ONE `nodeGraphEdit` batch asks for: the wire edits the gesture drew or cut (`prepared`), the node-drag
-/// records of the slots it moved (canvas units), and the description of the edit.
+/// 🕹️ What ONE `nodeGraphEdit` batch asks for: the wire and slot edits the gesture drew, cut or deleted (`prepared`), and
+/// the node-drag records of the slots it moved (canvas units).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Wfc3dGraphGesture {
     pub prepared: Vec<Wfc3dMutation>,
     pub records: Vec<NodeDragRecord>,
-    pub description: String,
 }
 
-/// 🆔️ The press a `setHostSnapshot` release names: that host carries no gesture id, so the batch is the press.
-pub const WFC_3D_HOST_SNAPSHOT_GESTURE: &str = "nodeGraphEdit:setHostSnapshot";
-
-/// 🕸️ Reads one released gesture — ONE `Emit`, so a drag is ONE undoable edit rather than one per pointer tick.
+/// 🕸️ Reads one released gesture of the closed node-graph record vocabulary (design §13.3, schema
+/// `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`) — ONE `Emit`, so a drag is ONE undoable edit rather than one
+/// per pointer tick.
 ///
-/// - `move` is the node-graph gesture record of a released drag (design §13.3), refused by name when malformed; it
-///   becomes a relative `drag-slots` in document units with `dz = 0` — the graph canvas is a plan and never saw the
-///   third axis, so a drag cannot flatten a stack.
-/// - `connect` mints a deterministic edge id from its endpoints and is a no-op when that adjacency already exists,
+/// - `move` is the drag record; it becomes a relative `drag-slots` in document units with `dz = 0` — the graph canvas
+///   is a plan and never saw the third axis, so a drag cannot flatten a stack.
+/// - `connect` mints a deterministic edge id from its endpoints and leaves nothing when that adjacency already exists,
 ///   because a duplicate id is a fatal mutation invariant, not a second edge.
-/// - `disconnect` addresses an existing edge by id and is a no-op when it is already gone.
-/// - `setHostSnapshot` is the wasm surface's whole graph, read by [`host_snapshot_gesture`].
+/// - `disconnect` addresses an existing edge by id and leaves nothing when it is already gone.
+/// - `delete` cuts the named adjacencies and deletes the named slots (each cascading its own wires).
+/// - A malformed row refuses the whole batch by name; so do `setSlider` and `insertPort`, because a wfc slot graph has
+///   no inline sliders and no variadic ports.
 pub fn graph_edit_gesture(document: &Wfc3dSnapshot, operations_json: &str) -> Result<Wfc3dGraphGesture, Fault> {
     let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
-    let parsed: dsl::DslValue = dsl::json::from_json_str(operations_json).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
-    let rows = parsed.as_array().ok_or_else(|| refuse("the operations are an array".into()))?;
+    let args: dsl::DslValue = dsl::json::from_json_str(&format!("{{\"operations\":{operations_json}}}")).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
+    let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut edge_ids: Vec<String> = document.edges.iter().map(|edge| edge.id.clone()).collect();
     let mut gesture = Wfc3dGraphGesture::default();
     for row in rows {
-        let string = |key: &str| row.get(key).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
-        match row.get("operation").and_then(dsl::DslValue::as_str).unwrap_or_default() {
-            NODE_DRAG_OPERATION => {
-                let record = NodeDragRecord::from_row(row).map_err(refuse)?;
-                gesture.description = format!("Drag {}", record.node_ids.join(", "));
-                gesture.records.push(record);
-            }
-            "connect" => {
-                let (from, to) = (string("sourceNodeId"), string("targetNodeId"));
-                if let Some(connect) = new_wire(document, &mut edge_ids, &from, &to) {
+        match row {
+            NodeGraphEditRow::Move(record) => gesture.records.push(record),
+            NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => {
+                if let Some(connect) = new_wire(document, &mut edge_ids, &source_node_id, &target_node_id) {
                     gesture.prepared.push(connect);
-                    gesture.description = format!("Connect {from} to {to}");
                 }
             }
-            "disconnect" => {
-                let id = string("synapseId");
-                if !edge_ids.contains(&id) {
-                    continue;
+            NodeGraphEditRow::Disconnect { synapse_id } => cut_wire(&mut edge_ids, &mut gesture.prepared, synapse_id),
+            NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                for synapse_id in synapse_ids {
+                    cut_wire(&mut edge_ids, &mut gesture.prepared, synapse_id);
                 }
-                gesture.prepared.push(disconnect_slots(id.clone()));
-                edge_ids.retain(|edge| edge != &id);
-                gesture.description = format!("Disconnect {id}");
-            }
-            "setHostSnapshot" => {
-                let snapshot = string("hostSnapshotJson");
-                let read = host_snapshot_gesture(document, &snapshot, &mut edge_ids);
-                gesture.prepared.extend(read.prepared);
-                gesture.records.extend(read.records);
-                if !read.description.is_empty() {
-                    gesture.description = read.description;
+                for node_id in node_ids {
+                    if document.slots.iter().any(|slot| slot.id == node_id) && !gesture.prepared.iter().any(|leaf| matches!(leaf, Wfc3dMutation::DeleteSlot(gone) if gone.id == node_id)) {
+                        edge_ids.retain(|id| document.edges.iter().find(|edge| edge.id == *id).is_none_or(|edge| edge.from_slot_id != node_id && edge.to_slot_id != node_id));
+                        gesture.prepared.push(delete_slot(node_id));
+                    }
                 }
             }
-            _ => continue,
+            NodeGraphEditRow::SetSlider { widget_id, .. } => return Err(refuse(format!("the wfc slot graph has no inline slider {widget_id:?}"))),
+            NodeGraphEditRow::InsertPort { node_id, .. } => return Err(refuse(format!("wfc slot {node_id:?} has fixed ports"))),
         }
-    }
-    if gesture.description.is_empty() {
-        gesture.description = "Edit graph".into();
     }
     Ok(gesture)
 }
 
-/// 🧮️ The leaves one gesture means on `document` without a transaction — the wires first, then the drags.
-pub fn graph_edit_mutations(document: &Wfc3dSnapshot, operations_json: &str) -> Result<(Vec<Wfc3dMutation>, String), Fault> {
+/// ✂️ Cuts the adjacency `id` names, once per gesture, when the gesture still holds it.
+fn cut_wire(edge_ids: &mut Vec<String>, prepared: &mut Vec<Wfc3dMutation>, id: String) {
+    if edge_ids.contains(&id) {
+        edge_ids.retain(|edge| edge != &id);
+        prepared.push(disconnect_slots(id));
+    }
+}
+
+/// 🧮️ The leaves one gesture means on `document` without a transaction — the wires and deletions first, then the drags.
+pub fn graph_edit_mutations(document: &Wfc3dSnapshot, operations_json: &str) -> Result<Vec<Wfc3dMutation>, Fault> {
     let gesture = graph_edit_gesture(document, operations_json)?;
     let mut leaves = gesture.prepared;
     leaves.extend(drag::wfc3d_drag_leaves(document, &gesture.records, WFC_3D_GRAPH_UNIT));
-    Ok((leaves, gesture.description))
+    Ok(leaves)
 }
 
 /// 🔗 The `connect-slots` a wire from `from` to `to` adds, minting `edge-{from}-{to}` at its canonical index, or `None`
@@ -905,82 +912,6 @@ fn new_wire(document: &Wfc3dSnapshot, edge_ids: &mut Vec<String>, from: &str, to
     Some(connect)
 }
 
-/// 🕸️ The WHOLE-graph commit the wasm node-graph surface answers a released gesture with
-/// (`{"operation":"setHostSnapshot","hostSnapshotJson":…}`). That surface does not journal the narrow
-/// `move`/`connect` vocabulary the React Flow fallback and the wgpu renderer do — it hands back its own laid-out
-/// graph — so this diffs that graph against the document and reads ONLY what genuinely changed: every displaced node
-/// joins the node-drag record of its exact canvas offset (a multi-node drag is ONE record, an align one record per
-/// offset), a new wire is a `connect-slots`, a dropped wire a `disconnect-slots`.
-///
-/// The node/edge shape is the host's own (`{nodes:[{id,x,y}],edges:[{id,source,target}]}`), the very fields
-/// `graphEditSignature` in `🕸️NodeGraph/🟦️.tsx` reads to decide a commit is owed at all.
-/// ✂️ A removal is keyed on the ENDPOINT PAIR, never on the edge id. The canvas mints its own wire ids (`wire-1`, …)
-/// rather than echoing the document's, so an id-keyed rule read every authored edge as deleted and one wire gesture
-/// silently disconnected the whole graph — measured live: drawing `room-a→room-b` dropped `corridor→room-b` and the
-/// solve quietly re-coloured around the hole. The pair is unordered, because a wire drawn the other way round is the
-/// same adjacency.
-fn host_snapshot_gesture(document: &Wfc3dSnapshot, host_snapshot_json: &str, edge_ids: &mut Vec<String>) -> Wfc3dGraphGesture {
-    let mut gesture = Wfc3dGraphGesture::default();
-    let Ok(snapshot) = dsl::json::from_json_str::<dsl::DslValue>(host_snapshot_json) else {
-        return gesture;
-    };
-    for node in snapshot.get("nodes").and_then(dsl::DslValue::as_array).unwrap_or(&[]) {
-        let (Some(id), Some(x), Some(y)) = (node.get("id").and_then(dsl::DslValue::as_str), node.get("x").and_then(dsl::DslValue::as_f64), node.get("y").and_then(dsl::DslValue::as_f64)) else {
-            continue;
-        };
-        let Some(slot) = document.slots.iter().find(|slot| slot.id == id) else { continue };
-        if (slot_coordinate(x) - slot.x).abs() < WFC_3D_GRAPH_EPSILON && (slot_coordinate(y) - slot.y).abs() < WFC_3D_GRAPH_EPSILON {
-            continue;
-        }
-        let (dx, dy) = (x - slot.x * WFC_3D_GRAPH_UNIT, y - slot.y * WFC_3D_GRAPH_UNIT);
-        match gesture.records.iter_mut().find(|record| (record.dx - dx).abs() <= WFC_3D_GRAPH_EPSILON * WFC_3D_GRAPH_UNIT && (record.dy - dy).abs() <= WFC_3D_GRAPH_EPSILON * WFC_3D_GRAPH_UNIT) {
-            Some(record) => record.node_ids.push(id.to_string()),
-            None => gesture.records.push(NodeDragRecord { gesture_id: WFC_3D_HOST_SNAPSHOT_GESTURE.into(), node_ids: vec![id.to_string()], dx, dy }),
-        }
-        gesture.description = format!("Drag {id}");
-    }
-    let host_edges: Vec<(String, String, String)> = snapshot
-        .get("edges")
-        .and_then(dsl::DslValue::as_array)
-        .unwrap_or(&[])
-        .iter()
-        .filter_map(|edge| Some((edge.get("id").and_then(dsl::DslValue::as_str)?.to_string(), edge.get("source").and_then(dsl::DslValue::as_str)?.to_string(), edge.get("target").and_then(dsl::DslValue::as_str)?.to_string())))
-        .collect();
-    for (id, source, target) in &host_edges {
-        let (from, to) = (graph_node_of(source), graph_node_of(target));
-        if edge_ids.iter().any(|edge| edge == id) {
-            continue;
-        }
-        if let Some(connect) = new_wire(document, edge_ids, &from, &to) {
-            gesture.prepared.push(connect);
-            gesture.description = format!("Connect {from} to {to}");
-        }
-    }
-    for edge in &document.edges {
-        let present = host_edges.iter().any(|(_, source, target)| {
-            let (from, to) = (graph_node_of(source), graph_node_of(target));
-            (from == edge.from_slot_id && to == edge.to_slot_id) || (from == edge.to_slot_id && to == edge.from_slot_id)
-        });
-        if present {
-            continue;
-        }
-        gesture.prepared.push(disconnect_slots(edge.id.clone()));
-        edge_ids.retain(|id| id != &edge.id);
-        gesture.description = format!("Disconnect {}", edge.id);
-    }
-    gesture
-}
-
-/// 📏️ How far a node may drift in DOCUMENT units before the commit counts it as a move. The canvas
-/// round-trips through f32 pixels, so an untouched node comes back a hair off its authored position;
-/// without this floor every gesture anywhere in the pane would mint a move for every slot.
-const WFC_3D_GRAPH_EPSILON: f64 = 1e-6;
-
-/// 🔌️ The node id inside a canvas endpoint: the surface addresses ports as `{node}@{port}`, so an
-/// endpoint that already names a bare node passes through unchanged.
-fn graph_node_of(endpoint: &str) -> String {
-    endpoint.split('@').next().unwrap_or_default().to_string()
-}
 //#endregion 🔖️GraphEdit
 
 /// 📐️ A slot extent or tile weight the UI left at zero still has to be positive, or the mutation's

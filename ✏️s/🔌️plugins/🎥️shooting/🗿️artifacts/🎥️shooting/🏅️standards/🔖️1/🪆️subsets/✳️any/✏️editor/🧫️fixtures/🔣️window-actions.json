@@ -15,7 +15,6 @@
     "setActiveShotFormat",
     "setActiveShotShape"
   ],
-  "sceneChange": "setCameraDraftLabel",
   "sceneSubmit": "saveCamera",
   "iconChange": "setActiveShotLabel"
 }

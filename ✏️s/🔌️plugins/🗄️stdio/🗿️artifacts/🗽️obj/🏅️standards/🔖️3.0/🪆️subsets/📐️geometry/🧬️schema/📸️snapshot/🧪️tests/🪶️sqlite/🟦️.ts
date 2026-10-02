@@ -4,16 +4,60 @@ import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import ieee from "../../🧫️fixtures/🪶️sqlite/🔢️ieee754/🔣️.json";
+import sourceIndices from "../../🧫️fixtures/🪶️sqlite/🔗️source-indices.json";
+import surrogateIndices from "../../🧫️fixtures/🪶️sqlite/🔗️surrogate-indices.json";
 import {objSnapshotValidateSqliteSubset}from"../../🪶️sqlite/🟦️.ts";
 import integerFixture from "../../🧫️fixtures/🪶️sqlite/🧮️int64/🔣️.json";
 import { objSnapshotToSqliteDatabase, objSnapshotFromSqliteDatabase, OBJ_SQLITE_SCHEMA } from "../../🪶️sqlite/🟦️.ts";
 import type { ObjSnapshot } from "../../🟦️.ts";
-import { parseObjUnknownStatement as parseArtifactStatement } from "../../../🟦️.ts";
+import { parseObjArtifact,parseObjGroup,parseObjObject,parseObjUsemtlRange,parseObjSmoothingRange,parseObjFaceVertex,parseObjUnknownStatement as parseArtifactStatement } from "../../../🟦️.ts";
 import { parseObjUnknownStatement as parseDiffStatement } from "../../../🔺️diff/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 
-const input: ObjSnapshot = { ...fixture, vertices:fixture.vertices.map(v=>({...v,x:binary64(v.x),y:binary64(v.y),z:binary64(v.z),w:"w" in v?binary64(v.w as number):undefined})),texcoords:fixture.texcoords.map(v=>({...v,u:binary64(v.u),v:binary64(v.v),w:"w" in v?binary64(v.w as number):undefined})),normals:fixture.normals.map(v=>({x:binary64(v.x),y:binary64(v.y),z:binary64(v.z)})), unknownStatements: fixture.unknownStatements.map(statement => ({ ...statement, lineIndex: BigInt(statement.lineIndex) })) };
+const input: ObjSnapshot = { ...fixture, groups:fixture.groups.map(value=>({...value,faces:value.faces.map(BigInt)})),objects:fixture.objects.map(value=>({...value,faces:value.faces.map(BigInt)})),usemtl:fixture.usemtl.map(value=>({...value,faceIndexFrom:BigInt(value.faceIndexFrom)})),smoothingGroups:fixture.smoothingGroups.map(value=>({...value,faceIndexFrom:BigInt(value.faceIndexFrom)})), vertices:fixture.vertices.map(v=>({...v,x:binary64(v.x),y:binary64(v.y),z:binary64(v.z),w:"w" in v?binary64(v.w as number):undefined})),texcoords:fixture.texcoords.map(v=>({...v,u:binary64(v.u),v:binary64(v.v),w:"w" in v?binary64(v.w as number):undefined})),normals:fixture.normals.map(v=>({x:binary64(v.x),y:binary64(v.y),z:binary64(v.z)})), unknownStatements: fixture.unknownStatements.map(statement => ({ ...statement, lineIndex: BigInt(statement.lineIndex) })) };
 
+test("OBJ canonical membership and range indices own full unsigned64 words",()=>{
+  for(const value of sourceIndices.unsigned64Indices.map(BigInt)){
+    for(const parse of[parseObjGroup,parseObjObject])expect<unknown>(parse({name:"exact",faces:[value]}).faces).toEqual([value]);
+    expect<unknown>(parseObjUsemtlRange({faceIndexFrom:value,material:"exact"}).faceIndexFrom).toBe(value);
+    expect<unknown>(parseObjSmoothingRange({faceIndexFrom:value}).faceIndexFrom).toBe(value);
+  }
+  for(const value of[0,"0",-1n,18446744073709551616n]){
+    for(const parse of[parseObjGroup,parseObjObject])expect(()=>parse({name:"exact",faces:[value]})).toThrow("unsigned 64-bit");
+    expect(()=>parseObjUsemtlRange({faceIndexFrom:value,material:"exact"})).toThrow("unsigned 64-bit");
+    expect(()=>parseObjSmoothingRange({faceIndexFrom:value})).toThrow("unsigned 64-bit");
+  }
+  expect(parseObjFaceVertex({vertex:4294967295,texcoord:4294967295,normal:4294967295})).toEqual({vertex:4294967295,texcoord:4294967295,normal:4294967295});
+  for(const vertex of[-1,4294967296,1.5])expect(()=>parseObjFaceVertex({vertex})).toThrow();
+});
+
+test("OBJ independently persisted unresolved source indices and short faces remain complete semantic states",async()=>{
+  const value:ObjSnapshot={schema:sourceIndices.schema,vertices:[],texcoords:[],normals:[],faces:sourceIndices.faces,groups:sourceIndices.groups.map(value=>({...value,faces:value.faces.map(BigInt)})),objects:sourceIndices.objects.map(value=>({...value,faces:value.faces.map(BigInt)})),usemtl:sourceIndices.usemtl.map(value=>({...value,faceIndexFrom:BigInt(value.faceIndexFrom)})),smoothingGroups:sourceIndices.smoothingGroups.map(value=>({...value,faceIndexFrom:BigInt(value.faceIndexFrom)})),unknownStatements:[]};
+  expect(parseObjArtifact(value)).toMatchObject(value);
+  const database=await objSnapshotToSqliteDatabase(value);
+  const sqlite=Database.deserialize(await exportSqliteDatabase(database));
+  try{
+    expect(sqlite.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
+    expect(sqlite.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(await objSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(sqlite.serialize())))).toEqual(value);
+  }finally{sqlite.close();}
+});
+
+test("OBJ unsigned64 source words and optional resolved relationships survive independent SQL edits",async()=>{
+ const indices=sourceIndices.unsigned64Indices.map(BigInt),snapshot:ObjSnapshot={...input,groups:[{name:"indices",faces:indices}],objects:[{name:"indices",faces:indices}],usemtl:indices.map(faceIndexFrom=>({faceIndexFrom,material:"indices"})),smoothingGroups:indices.map(faceIndexFrom=>({faceIndexFrom}))};
+ const database=await objSnapshotToSqliteDatabase(snapshot),sqlite=Database.deserialize(await exportSqliteDatabase(database));
+ try{
+  expect(sqlite.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(sqlite.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  const expected=indices.map(index=>({high:Number(index>>32n),low:Number(index&4294967295n)}));
+  for(const table of["obj_group_face","obj_object_face"])expect(sqlite.query(`SELECT face_source_index_high AS high,face_source_index_low AS low FROM ${table} ORDER BY ordinal`).all()).toEqual(expected);
+  for(const table of["obj_material_range","obj_smoothing_range"])expect(sqlite.query(`SELECT first_face_source_index_high AS high,first_face_source_index_low AS low FROM ${table} ORDER BY ordinal`).all()).toEqual(expected);
+  sqlite.run("UPDATE obj_group_face SET face_id=NULL WHERE ordinal=0");sqlite.run("UPDATE obj_material_range SET first_boundary_id=NULL WHERE ordinal=0");
+  expect(await objSnapshotFromSqliteDatabase(await importSqliteDatabase(sqlite.serialize()))).toEqual(snapshot);
+  sqlite.run("UPDATE obj_group_face SET face_source_index_high=4294967295,face_source_index_low=4294967294,face_id=NULL WHERE ordinal=1");
+  const edited=await objSnapshotFromSqliteDatabase(await importSqliteDatabase(sqlite.serialize()));expect(edited.groups[0]!.faces[1]).toBe(18446744073709551614n);
+  sqlite.run("UPDATE obj_face_vertex SET vertex_id=2 WHERE vertex_source_index=0");await expect(objSnapshotFromSqliteDatabase(await importSqliteDatabase(sqlite.serialize()))).rejects.toThrow("source index");
+ }finally{sqlite.close();}
+});
 
 test("OBJ typed boundaries require owned unsigned64 BigInts without compatibility unions", () => {
   for (const parse of [parseArtifactStatement, parseDiffStatement]) {
@@ -58,7 +102,7 @@ test("OBJ native geometry and ordered memberships expose shared handcrafted rela
     expect(db.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
     expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);
     expect(db.query("SELECT f.ordinal AS face,c.ordinal AS corner,v.ordinal AS vertex,t.ordinal AS texcoord,n.ordinal AS normal FROM obj_face f JOIN obj_face_vertex c ON c.face_id=f.id JOIN obj_vertex v ON v.id=c.vertex_id LEFT JOIN obj_texcoord t ON t.id=c.texcoord_id LEFT JOIN obj_normal n ON n.id=c.normal_id ORDER BY f.ordinal,c.ordinal").all()).toEqual(input.faces.flatMap((face, faceOrdinal) => face.vertices.map((vertex, corner) => ({ face: faceOrdinal, corner, vertex: vertex.vertex, texcoord: vertex.texcoord ?? null, normal: vertex.normal ?? null }))));
-    expect(db.query("SELECT b.ordinal AS face_from,r.material FROM obj_material_range r JOIN obj_face_boundary b ON b.id=r.first_boundary_id ORDER BY r.ordinal").all()).toEqual(input.usemtl.map(range => ({ face_from: range.faceIndexFrom, material: range.material })));
+    expect(db.query("SELECT b.ordinal AS face_from,r.material FROM obj_material_range r JOIN obj_face_boundary b ON b.id=r.first_boundary_id ORDER BY r.ordinal").all()).toEqual(input.usemtl.map(range => ({ face_from: Number(range.faceIndexFrom), material: range.material })));
     expect(db.query("SELECT source_line_ordinal_high AS high,source_line_ordinal_low AS low,raw FROM obj_unknown_statement ORDER BY ordinal").all()).toEqual(input.unknownStatements.map(statement => ({ high: Number(statement.lineIndex >> 32n), low: Number(statement.lineIndex & 4294967295n), raw: statement.raw })));
     db.run("UPDATE obj_vertex SET x=6.125,x_ieee754_bits=4618582155356798976 WHERE ordinal=1");
     db.run("UPDATE obj_group SET name='SQL Gruppe 🌠' WHERE ordinal=0");
@@ -76,7 +120,6 @@ test("OBJ independently edited dangling geometry, ownership, boundaries and ordi
     "UPDATE obj_face_vertex SET texcoord_id=999 WHERE id=1",
     "UPDATE obj_face_vertex SET face_id=999 WHERE id=1",
     "UPDATE obj_face_vertex SET ordinal=99 WHERE id=1",
-    "DELETE FROM obj_face_vertex WHERE face_id=2 AND ordinal=2",
     "UPDATE obj_face_boundary SET face_id=1 WHERE ordinal=2",
     "UPDATE obj_material_range SET first_boundary_id=999 WHERE id=1",
     "UPDATE obj_group_face SET face_id=999 WHERE id=1",
@@ -91,8 +134,8 @@ test("OBJ independently edited dangling geometry, ownership, boundaries and ordi
 test("OBJ numeric, source-position and aggregate resource constraints apply before projection", async () => {
   for (const snapshot of [
     { ...input, vertices: [{ x: NaN, y: 0, z: 0 }] },
-    { ...input, usemtl: [{ faceIndexFrom: input.faces.length + 1, material: "bad" }] },
-    { ...input, smoothingGroups: [{ faceIndexFrom: 0, group: 4294967296 }] },
+    { ...input, usemtl: [{ faceIndexFrom: -1n, material: "bad" }] },
+    { ...input, smoothingGroups: [{ faceIndexFrom: 0n, group: 4294967296 }] },
     { ...input, unknownStatements: [{ lineIndex: -1n, raw: "bad" }] },
   ]) await expect(objSnapshotToSqliteDatabase(snapshot as unknown as ObjSnapshot)).rejects.toThrow();
   const database = await objSnapshotToSqliteDatabase(input);
@@ -112,8 +155,7 @@ test("OBJ counting scans and reconstruction observe cancellation", async () => {
   const reconstruct = new AbortController();
   await expect(objSnapshotFromSqliteDatabase(database, { signal: reconstruct.signal, onProgress: () => reconstruct.abort() })).rejects.toMatchObject({ name: "AbortError" });
 });
-test("OBJ exact scalar words survive independent SQLite affinity, edits and malformed companions", async () => {
-  for(const [index,hex] of ieee.binary64Bits.entries()){
+for(const [index,hex] of ieee.binary64Bits.entries())test(`OBJ scalar word ${hex} survives independent SQLite edits and companion validation`, async () => {
     const bits=BigInt("0x"+hex);
     const scalar={bits};const snapshot:ObjSnapshot={...input,vertices:input.vertices.map(v=>({...v,x:scalar,y:scalar,z:scalar,w:scalar})),texcoords:[{u:scalar,v:scalar,w:undefined},{u:scalar,v:scalar,w:scalar}],normals:input.normals.map(()=>({x:scalar,y:scalar,z:scalar}))};
     const db=Database.deserialize(await exportSqliteDatabase(await objSnapshotToSqliteDatabase(snapshot)));
@@ -130,13 +172,29 @@ test("OBJ exact scalar words survive independent SQLite affinity, edits and malf
       db.run("UPDATE obj_vertex SET x=NULL,x_numeric_class='nan' WHERE id=1");
       await expect(objSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();
     }finally{db.close();}
-  }
-  console.log("[DEBUG] OBJ exact binary words and independent SQLite identity laws");
 });
-test("OBJ exact owned dialect, document identity and cancellation laws", async()=>{
+test("OBJ exact owned dialect retains the complete independent snapshot", async()=>{
   const database=await objSnapshotToSqliteDatabase(input);
   await objSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database);
+});
+test("OBJ consistently renumbered signed surrogate identities preserve the same logical snapshot",async()=>{
+ const sqlite=Database.deserialize(await exportSqliteDatabase(await objSnapshotToSqliteDatabase(input)));
+ try{
+  sqlite.run("PRAGMA foreign_keys=OFF");
+  for(const statement of surrogateIndices.statements)sqlite.run(statement);
+  expect(sqlite.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});
+  expect(sqlite.query("PRAGMA foreign_key_check").all()).toEqual([]);
+  const database=await importSqliteDatabase(sqlite.serialize());
+  expect(await objSnapshotFromSqliteDatabase(database)).toEqual(input);
+  await objSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database);
+ }finally{sqlite.close();}
+});
+test("OBJ invalid dialect coordinates refuse before materialization",async()=>{
+  const database=await objSnapshotToSqliteDatabase(input);
   for(const dialect of ieee.invalidSqliteDialects)await expect(objSnapshotValidateSqliteSubset(input,dialect,database)).rejects.toThrow("dialect");
+});
+test("OBJ complete state mismatch and cancellation refuse",async()=>{
+  const database=await objSnapshotToSqliteDatabase(input);
   await expect(objSnapshotValidateSqliteSubset({...input,schema:"different"},ieee.sqliteDialect,database)).rejects.toThrow("identity");
   const controller=new AbortController();controller.abort();
   await expect(objSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,database,{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});

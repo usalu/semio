@@ -43,6 +43,28 @@ pub fn remove_node_field(board: &mut DslValue, node_id: &str, key: &str) {
         entries.retain(|(entry_key, _)| entry_key.as_str() != key);
     }
 }
+
+/// 📐️ The position of the node `node_id` on an already materialized `board`, or nothing when the board lacks it — the
+/// one-board lookup the multi-node leaves share instead of re-materializing the board per node.
+pub fn board_node_position(board: &DslValue, node_id: &str) -> Option<(f64, f64)> {
+    board.get("nodes").and_then(DslValue::as_array).into_iter().flatten().find(|node| entity_id(node, "id") == Some(node_id)).map(crate::schema::node_position)
+}
+
+/// 🧷️ A multi-node leaf names at least one non-empty node and each node once (`x-semio-invariant: unique-node-ids`).
+pub fn wires_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() || targets.iter().any(String::is_empty) {
+        return Err("a multi-node leaf names at least one non-empty node");
+    }
+    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
+        return Err("a multi-node leaf names each node once");
+    }
+    Ok(())
+}
+
+/// 🩹️ The `mutation.partial` warning of the nodes a multi-node leaf skipped because the board lacks them, or nothing.
+pub fn wires_partial(skipped: Vec<String>, total: usize) -> Option<protocol::MutationMessage> {
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} node(s) skipped (no such node): {}", skipped.len(), skipped.join(", "))).at(skipped))
+}
 //#endregion 🔖️NodeFieldHelpers
 
 //#region 🔖️Mutations
@@ -65,6 +87,8 @@ pub enum WiresMutation {
     SetNodeRoot(SetNodeRoot),
     ConnectNodes(ConnectNodes),
     DisconnectNodes(DisconnectNodes),
+    MoveNodes(MoveNodes),
+    SetNodePositions(SetNodePositions),
 }
 //#endregion 🔖️Mutations
 
@@ -77,7 +101,9 @@ pub use super::delete_node::{delete_node, DeleteNode};
 pub use super::disconnect_nodes::{disconnect_nodes, DisconnectNodes};
 pub use super::edit_node_text::{edit_node_text, EditNodeText};
 pub use super::move_node::{move_node, MoveNode};
+pub use super::move_nodes::{move_nodes, MoveNodes};
 pub use super::resize_node::{resize_node, ResizeNode};
+pub use super::set_node_positions::{set_node_positions, SetNodePositions, WiresNodePosition};
 pub use super::set_node_root::{set_node_root, SetNodeRoot};
 //#endregion 🔖️Builders
 
@@ -90,7 +116,7 @@ pub use super::set_node_root::{set_node_root, SetNodeRoot};
 /// replace reaches the store through `ArtifactStore::reset` instead.
 /// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
 /// framework never parses Rust.
-pub const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes"];
+pub const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes", "move-nodes", "set-node-positions"];
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload

@@ -3,7 +3,7 @@
 //! value is that every locale combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
     pub struct FormsLabels {
         extension_unavailable: native_en "Extension unavailable", native_de "Erweiterung nicht verfügbar", reuse_en "Extension unavailable", reuse_de "Erweiterung nicht verfügbar";

@@ -1,6 +1,12 @@
 {
   "schema": "stdio.semio.audio",
   "sampleRate": 4294967295,
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32,
+    "sampleWord": 2139095041
+  },
   "format": "f64",
   "channels": [
     [
@@ -49,5 +55,6 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeOutputBytes": 100000
 }

@@ -4,10 +4,26 @@ use crate::editor::zip::base::modes::edit;
 use crate::editor::zip::base::modes::edit::windows::main;
 use crate::schema::mutations::set_snapshot;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-};
-use store::EngineHandles;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_2d::compute::EngineHandles;
 
 #[path = "📬️preparation/🦀️.rs"]
 mod preparation;
@@ -39,7 +55,7 @@ impl protocol::OpText for ZipEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -49,7 +65,7 @@ impl protocol::OpText for ZipEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -59,7 +75,7 @@ impl protocol::OpBinary for ZipEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -77,7 +93,7 @@ impl protocol::OpBinary for ZipEditorCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })

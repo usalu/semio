@@ -10,7 +10,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parsePresentationArtifact } from "../../🟦️.ts";
 import { parsePresentationSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parsePresentationDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 /** 🪆️ Compares first-party parsers with Ajv and every committed Presentation mutation document. */
 export function testPresentationDocumentContractOracle(): void {

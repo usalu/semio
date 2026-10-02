@@ -21,4 +21,11 @@ path = "🦀️.rs"
 name = "schema-registry-catalog"
 path = "../../🧪️tests/📇️catalog/🦀️.rs"
 
+[[test]]
+name = "schema-registry-neutrality"
+path = "../../🧪️tests/🧱️neutrality/🦀️.rs"
+
 [dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-test` router: `bun ./📜️script.ts <lint|test [level]>`. */
 import { join } from "node:path";
 import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
-import { resolveTestLevel, runBunx, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -17,11 +18,11 @@ class TestScript extends BundleScript {
     if (segments[0] === "discovery-boundaries") {
       if (segments.length !== 1) throw new Error("Expected test discovery-boundaries");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "discovery-boundaries"), budgetMs: 30_000 });
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "discovery-boundaries"), budgetMs: 30_000 });
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "../../🧪️tests/🧪️test-platform/🟦️.ts", "../../🧪️tests/🧬️schema-invariants/🟦️.ts", "../../🧪️tests/📐️test-layout/🟦️.ts", "../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
+    await runRepositoryTestCommand(process.execPath, ["test", "../../🧪️tests/🚷️discovery-boundaries/🟦️.ts", "../../🧪️tests/🧪️test-platform/🟦️.ts", "../../🧪️tests/🧬️schema-invariants/🟦️.ts", "../../🧪️tests/📐️test-layout/🟦️.ts", "../../🧪️tests/🧭️fixture-resolution/🟦️.ts", "../../🧪️tests/🧬️mutation-fixtures/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

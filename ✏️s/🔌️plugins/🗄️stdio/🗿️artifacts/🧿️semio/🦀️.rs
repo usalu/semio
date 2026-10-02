@@ -92,7 +92,7 @@ pub(crate) fn semio_written(table: &'static [semio_framework_plugin::ComposerEnt
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.semio".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Semio", "Semio"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Semio", "Semio"),
         source_format: STDIO_SEMIO_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -176,8 +176,8 @@ use crate::standards::v1::subsets;
 //#region 🧹️SnapshotRetirement
 use std::{marker::PhantomData, sync::Arc};
 
-use dsl::os_store::retirement::{owned_retirement, shared_retirement, RetireOwned, RetirementCursor};
-use dsl::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
+use semio_framework_value::retirement::{owned_retirement, shared_retirement, RetireOwned, RetirementCursor};
+use semio_framework_value::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 use subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform, SemioUv};
 use subsets::{
@@ -1278,6 +1278,9 @@ pub mod io_registry {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🛬️native/🦀️.rs"]
+mod sqlite_snapshot_controlled_owners;
 //#endregion 🧪️Tests
 
 #[path = "."]

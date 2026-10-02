@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetRelat
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
         agg_inverse(&XlsxTransitionalMutation::SetRelationshipsNamespace(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set relationships namespace", "Beziehungsnamensraum setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set relationships namespace", "Beziehungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

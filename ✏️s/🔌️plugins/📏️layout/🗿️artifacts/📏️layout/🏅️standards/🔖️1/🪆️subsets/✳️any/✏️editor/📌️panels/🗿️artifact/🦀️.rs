@@ -17,10 +17,23 @@ use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindow
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_APP_ID};
 use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, InteractionTarget, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedList, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_BODY_ARTIFACT: &str = "layout.play.artifact";

@@ -95,10 +95,10 @@ impl ArtifactInferrer for WiresInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.reasoning.wires.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `wires_artifact_schema_descriptor`'s registration.
-pub fn wires_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn wires_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.reasoning.wires.inference",
-        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

@@ -8,7 +8,22 @@
 use crate::viewer::pptx::standards::v_ecma_376::subsets::strict::modes::view;
 use crate::viewer::pptx::standards::v_ecma_376::subsets::strict::modes::view::windows::main;
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.pptx@ecma-376/strict`. Duplicated (not imported) from the
@@ -64,7 +79,7 @@ impl ArtifactViewer for PptxStrictViewer {
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }

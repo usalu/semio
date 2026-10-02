@@ -140,7 +140,7 @@ pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.document".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Text Document", "Textdokument"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Text Document", "Textdokument"),
         source_format: WRITER_DOCUMENT_SCHEMA.into(),
         component_kind: "writer".into(),
         dimension: "text".into(),

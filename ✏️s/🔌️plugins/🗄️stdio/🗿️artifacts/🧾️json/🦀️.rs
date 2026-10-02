@@ -40,7 +40,6 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA);
     codec.extension = "json";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
@@ -58,7 +57,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.json".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Json", "Json"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Json", "Json"),
         source_format: STDIO_JSON_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

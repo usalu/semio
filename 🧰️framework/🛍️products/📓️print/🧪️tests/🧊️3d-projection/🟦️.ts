@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { glMatrix, mat4, vec3 } from "gl-matrix";
-import { defineTestAdapter, type AdapterContext } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 glMatrix.setMatrixArrayType(Array);

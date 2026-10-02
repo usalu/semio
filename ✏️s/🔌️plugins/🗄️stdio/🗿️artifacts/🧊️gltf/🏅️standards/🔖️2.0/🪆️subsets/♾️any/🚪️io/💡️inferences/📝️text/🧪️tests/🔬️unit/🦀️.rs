@@ -11,7 +11,6 @@ fn canonical_json_bytes_matches_the_portable_byte_array_contract() {
         assert_eq!(actual, expected, "{}", row["id"]);
         assert_eq!(actual, serde_json::to_string(&bytes).unwrap());
     }
-    eprintln!("[DEBUG] GLTF canonical byte arrays matched four portable and serde_json cases");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -7,7 +7,9 @@ use crate::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_
 use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
 use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
 use crate::editor::puzzle2d::{puzzle2d_action, Puzzle2dScene};
-use semio_framework_plugin::{LocalizedLabel, ToolDefinition, WindowMeasure};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
 
 //#region 🔖️Constants

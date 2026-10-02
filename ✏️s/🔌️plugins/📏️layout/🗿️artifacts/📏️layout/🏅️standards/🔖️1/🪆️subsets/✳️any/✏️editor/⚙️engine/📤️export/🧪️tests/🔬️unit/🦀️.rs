@@ -218,7 +218,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
     const INSTANCE: u32 = 1;
     let mut app = crate::editor::layout::unit_tests::context::layout_app_with_registry().await;
     app.bind_instance_id(INSTANCE).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     let result = app.dispatch_typed(crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }), &meta).await.expect("exportPdf dispatch");
     assert!(result.mutations.is_empty(), "an export never mutates the document");

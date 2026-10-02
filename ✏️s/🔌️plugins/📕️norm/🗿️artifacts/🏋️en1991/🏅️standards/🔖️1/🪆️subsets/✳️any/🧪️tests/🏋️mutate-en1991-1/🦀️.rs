@@ -5,7 +5,7 @@
 //! whole `En1991Mutation` vocabulary — every kind the aggregate's own `KINDS` declares, one committed vector each.
 //!
 //! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the subject handlers as well
-//! as being compared against the oracle's answer, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! as being compared against the oracle's answer, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module (`law::mutation_is_observable`, `law::inverse_restores`, `law::round_trip_preserves`,
 //! `law::carrier_is_exact`), reached through the `oracleHostPackages` entry this plugin declares.
 //!
@@ -25,7 +25,7 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::mutations::{apply_en1991_mutation, decode_en1991_mutation_json, inverse_en1991_mutation};
     use semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::snapshot::{decode_en1991_dsl, decode_en1991_pack, decode_en1991_snapshot_json, encode_en1991_dsl, encode_en1991_pack, encode_en1991_snapshot_json, En1991Snapshot};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     /// 🗣️ The real committed EN 1991 document the identity scenario declares.
     const DSL_ASSET: &str = "asset://🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio";

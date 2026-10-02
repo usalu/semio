@@ -1,6 +1,6 @@
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
-import { acquireResourceLease } from "../../🔒️leases/🟦️.ts";
+import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
 import { deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";

@@ -16,7 +16,7 @@ fn fixture() -> Vec<u8> {
 /// own conformant `\X2\000A\X0\` and the oracle's raw newline read as different VALUES.
 #[test]
 fn every_control_directive_decodes_to_the_value_it_denotes() {
-    let decode = |lexeme: &str| part21::decode_string_literal(lexeme).unwrap_or_else(|error| panic!("decode {lexeme:?}: {error}"));
+    let decode = |lexeme: &str| semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(lexeme).unwrap_or_else(|error| panic!("decode {lexeme:?}: {error}"));
     assert_eq!(decode("plain text"), "plain text");
     assert_eq!(decode("\n"), "\n", "a raw line break passes through — it is what ST-Developer actually wrote");
     assert_eq!(decode(r"\X2\000A\X0\"), "\n", "and the conformant spelling of the same character decodes to the same value");
@@ -34,10 +34,10 @@ fn every_control_directive_decodes_to_the_value_it_denotes() {
 /// subject that emitted a broken escape has to FAIL the comparison, not slip past it.
 #[test]
 fn a_malformed_or_unmappable_directive_is_refused() {
-    assert!(part21::decode_string_literal(r"\Q").is_err(), "an unknown directive is not passed through");
-    assert!(part21::decode_string_literal(r"\X\ZZ").is_err(), "non-hex digits are not passed through");
-    assert!(part21::decode_string_literal(r"\X2\4E2D").is_err(), "an unterminated \\X2\\ run is not passed through");
-    let page = part21::decode_string_literal(r"\PB\\S\A").expect_err("ISO 8859-2 must not be guessed");
+    assert!(semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(r"\Q").is_err(), "an unknown directive is not passed through");
+    assert!(semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(r"\X\ZZ").is_err(), "non-hex digits are not passed through");
+    assert!(semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(r"\X2\4E2D").is_err(), "an unterminated \\X2\\ run is not passed through");
+    let page = semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(r"\PB\\S\A").expect_err("ISO 8859-2 must not be guessed");
     assert!(page.contains("ISO 8859 page B"), "the error must name the page it refused: {page}");
 }
 
@@ -116,7 +116,7 @@ fn clearing_the_product_identity_is_what_turns_the_soft_diagnostic_on() {
 /// checked here rather than asserted in prose four times.
 #[test]
 fn the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place() {
-    use crate::artifacts::step::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
+    use crate::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
 
     for (class, rung, kinds) in [("cc2", cc2::MAX_RUNG, cc2::KINDS), ("cc3", cc3::MAX_RUNG, cc3::KINDS), ("cc4", cc4::MAX_RUNG, cc4::KINDS), ("cc5", cc5::MAX_RUNG, cc5::KINDS)] {
         assert!(ladder::ceiling_type_of(rung).is_some(), "{class} sits inside the ladder, so it has a ceiling type to write and to demote onto");

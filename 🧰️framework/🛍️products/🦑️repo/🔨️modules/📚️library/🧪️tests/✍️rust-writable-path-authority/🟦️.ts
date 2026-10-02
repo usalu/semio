@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
@@ -7,12 +8,12 @@ import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/✍️rust-writable-path-authority/🔣️.json"), "utf8"));
 const priorPath = join(root, vector.semantics.preservedFiniteCheckpoint.path), prior = readFileSync(priorPath, "utf8"), priorSyntax = ts.createSourceFile(priorPath, prior, ts.ScriptTarget.Latest, true);
-const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 type Row = { id: string; source: string; targets: string[]; affected: string[]; condition: string; expected: string };
 type Token = { start: number; end: number; value: string; rewriteKind?: string; physicalTargets?: string[]; physicalInterpretation?: string; unsupportedReason?: string };
 const compilers = [
@@ -35,7 +36,7 @@ function harness(compiler: typeof compilers[number], inspectors: Partial<{ inspe
     createHash, existsSync, lstatSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync,
     readFileSync: (...args: Parameters<typeof readFileSync>) => { reads.push(String(args[0])); return (readFileSync as any)(...args); },
     basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep, parseToml, oracleJoin, oracleNormalize,
-    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, ...inspectors };
+    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, ...inspectors };
   const actual = new Function(...Object.keys(dependencies), compiler.compile(helpers) + "\nreturn { fixture, implementation, cargoOracle, leafSpan };")(...Object.values(dependencies));
   return { ...actual, reads };
 }
@@ -48,7 +49,7 @@ test("exact writable route, package, and both launch registrations preserve the 
   visit(router);
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(router)).toContain(JSON.stringify(registration.testPath));
-  expect(branches[0]!.thenStatement.getText(router)).toContain('runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
+  expect(branches[0]!.thenStatement.getText(router)).toContain('runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
   const manifest = JSON.parse(readFileSync(join(root, registration.packagePath), "utf8"));
   expect(manifest.name).toBe("@semio-tech/repo-lib");
   expect(manifest.scripts[registration.target]).toBe(registration.packageCommand);

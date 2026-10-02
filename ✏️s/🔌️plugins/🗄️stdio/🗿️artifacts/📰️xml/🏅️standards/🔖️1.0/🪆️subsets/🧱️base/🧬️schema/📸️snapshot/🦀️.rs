@@ -70,8 +70,8 @@ pub struct XmlDocument {
 #[value(rename_all = "camelCase")]
 pub struct XmlDoctype {
     /// 🧭 Number of logical prolog nodes preceding this declaration.
-    #[value(default, skip_serializing_if = "is_zero")]
-    pub prolog_position: usize,
+    #[value(default, skip_serializing_if = "is_zero", serialize_with="position::to_value", deserialize_with="position::from_value", serialize_controlled_with="position::to_value_controlled", deserialize_controlled_with="position::from_value_controlled", retire_with="std::mem::drop")]
+    pub prolog_position: u64,
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub external_id: Option<XmlExternalId>,
@@ -79,7 +79,7 @@ pub struct XmlDoctype {
     pub declarations: Vec<XmlDtdDeclaration>,
 }
 
-fn is_zero(value: &usize) -> bool {
+fn is_zero(value: &u64) -> bool {
     *value == 0
 }
 
@@ -347,14 +347,14 @@ pub fn xml_document_to_text_checked(doc: &XmlDocument) -> Result<String, String>
         out.push_str("?>\n");
     }
     for (index, node) in doc.prolog.iter().enumerate() {
-        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index) {
+        if doc.doctype.as_ref().is_some_and(|doctype| doctype.prolog_position == index as u64) {
             xml_doctype_to_text(doc.doctype.as_ref().expect("checked doctype"), &mut out);
             out.push('\n');
         }
         xml_node_to_text(node, 0, &mut out);
         out.push('\n');
     }
-    if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len()) {
+    if let Some(doctype) = doc.doctype.as_ref().filter(|doctype| doctype.prolog_position == doc.prolog.len() as u64) {
         xml_doctype_to_text(doctype, &mut out);
         out.push('\n');
     }
@@ -400,7 +400,7 @@ pub fn validate_xml_document_boundaries(doc: &XmlDocument) -> Result<(), String>
         }
     }
     if let Some(doctype) = &doc.doctype {
-        if doctype.prolog_position > doc.prolog.len() {
+        if doctype.prolog_position > doc.prolog.len() as u64 {
             return Err(format!("DOCTYPE prolog position {} exceeds prolog length {}", doctype.prolog_position, doc.prolog.len()));
         }
     }
@@ -644,7 +644,7 @@ fn parse_misc(s: &str, pos: &mut usize, allow_doctype: bool) -> Result<(Option<X
                 *pos += 1;
             }
             let mut parsed = parse_doctype(&s[start..*pos])?;
-            parsed.prolog_position = nodes.len();
+            parsed.prolog_position = nodes.len() as u64;
             doctype = Some(parsed);
             continue;
         }
@@ -937,6 +937,12 @@ impl store::ArtifactPack for XmlSnapshot {
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 
+#[path = "🛫️native/🦀️.rs"]
+mod native_encoding;
+
+#[path = "🛬️native/🦀️.rs"]
+mod native_decoding;
+
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
@@ -945,3 +951,10 @@ mod sqlite_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[path="🧭️position/🦀️.rs"]
+mod position;
+
+/// 🧩️ Typed XML components for enclosing owned native documents.
+pub use native_encoding::{XmlNativeEmission,emit_xml_native_document,emit_xml_native_node};
+pub use native_decoding::{XmlNativeInput,read_xml_native_document,read_xml_native_node};

@@ -3,13 +3,13 @@ import { parseBinary64, type Binary64 } from "../../../../../../../../../../../�
  * diff: four index-keyed recursive triples (vertices/texcoords/normals/faces), two name-keyed
  * triples (groups/objects), a tri-state scalar (mtllib), and three whole-vec-replace scalars
  * (usemtl/smoothingGroups/unknownStatements). No full-replace `snapshot` slot anywhere. */
-import { parseObjVertex, parseObjTexCoord, parseObjNormal, parseObjFace, parseObjGroup, parseObjObject } from "../🟦️.ts";
+import { parseObjSourceIndex,parseObjVertex, parseObjTexCoord, parseObjNormal, parseObjFace, parseObjGroup, parseObjObject } from "../🟦️.ts";
 
 export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: number; }
-export interface ObjGroup { name: string; faces: number[]; }
-export interface ObjObject { name: string; faces: number[]; }
-export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
-export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
+export interface ObjGroup { name: string; faces: bigint[]; }
+export interface ObjObject { name: string; faces: bigint[]; }
+export interface ObjUsemtlRange { faceIndexFrom: bigint; material: string; }
+export interface ObjSmoothingRange { faceIndexFrom: bigint; group?: number; }
 export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
 export interface ObjVertexDiff { x?: Binary64; y?: Binary64; z?: Binary64; w?: Binary64 | null; }
@@ -34,7 +34,7 @@ export interface ObjFaceAdded { index: number; face: { vertices: ObjFaceVertex[]
 export interface ObjFacesDiff { removed: number[]; modified: ObjFaceModified[]; added: ObjFaceAdded[]; }
 
 /** `faces` is a whole-list-replace weak value (membership set) on both groups and objects. */
-export interface ObjGroupDiff { faces?: number[]; }
+export interface ObjGroupDiff { faces?: bigint[]; }
 export interface ObjGroupModified { name: string; diff: ObjGroupDiff; }
 export interface ObjGroupAdded { index: number; group: ObjGroup; }
 export interface ObjGroupsDiff { removed: string[]; modified: ObjGroupModified[]; added: ObjGroupAdded[]; }
@@ -107,16 +107,16 @@ export const stdioObj30GeometryDiffGuardConstant = <T extends string | number | 
 export function parseObjFaceVertex(value: unknown, at = "$"): ObjFaceVertex {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    vertex: stdioObj30GeometryDiffGuardInteger(row["vertex"], `${at}.vertex`),
-    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["texcoord"], `${at}.texcoord`),
-    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["normal"], `${at}.normal`),
+    vertex: stdioObj30GeometryDiffGuardInteger(row["vertex"], `${at}.vertex`, {minimum:0,maximum:4294967295}),
+    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["texcoord"], `${at}.texcoord`, {minimum:0,maximum:4294967295}),
+    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["normal"], `${at}.normal`, {minimum:0,maximum:4294967295}),
   };
 }
 
 export function parseObjUsemtlRange(value: unknown, at = "$"): ObjUsemtlRange {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    faceIndexFrom: stdioObj30GeometryDiffGuardInteger(row["faceIndexFrom"], `${at}.faceIndexFrom`),
+    faceIndexFrom: parseObjSourceIndex(row["faceIndexFrom"], `${at}.faceIndexFrom`),
     material: stdioObj30GeometryDiffGuardString(row["material"], `${at}.material`),
   };
 }
@@ -124,8 +124,8 @@ export function parseObjUsemtlRange(value: unknown, at = "$"): ObjUsemtlRange {
 export function parseObjSmoothingRange(value: unknown, at = "$"): ObjSmoothingRange {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    faceIndexFrom: stdioObj30GeometryDiffGuardInteger(row["faceIndexFrom"], `${at}.faceIndexFrom`),
-    group: row["group"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["group"], `${at}.group`),
+    faceIndexFrom: parseObjSourceIndex(row["faceIndexFrom"], `${at}.faceIndexFrom`),
+    group: row["group"] === undefined ? undefined : stdioObj30GeometryDiffGuardInteger(row["group"], `${at}.group`, {minimum:0,maximum:4294967295}),
   };
 }
 
@@ -258,7 +258,7 @@ export function parseObjFacesDiff(value: unknown, at = "$"): ObjFacesDiff {
 export function parseObjGroupDiff(value: unknown, at = "$"): ObjGroupDiff {
   const row = stdioObj30GeometryDiffGuardObject(value, at);
   return {
-    faces: row["faces"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["faces"], `${at}.faces`).map((item, index) => stdioObj30GeometryDiffGuardInteger(item, `${at}.faces[${index}]`)),
+    faces: row["faces"] === undefined ? undefined : stdioObj30GeometryDiffGuardArray(row["faces"], `${at}.faces`).map((item, index) => parseObjSourceIndex(item, `${at}.faces[${index}]`)),
   };
 }
 

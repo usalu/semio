@@ -30,6 +30,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

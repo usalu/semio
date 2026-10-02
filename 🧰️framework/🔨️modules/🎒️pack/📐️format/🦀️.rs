@@ -13,6 +13,97 @@
 
 use crate::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource};
 use std::mem::size_of;
+use protocol::value::native_decoding::NativeDecodeControl;
+
+#[path="🛫️encoding/🦀️.rs"]
+mod controlled_encoding;
+pub use controlled_encoding::ControlledPackWriter;
+
+fn check_controlled_allocation(control:&NativeDecodeControl<'_>,limits:&PackLimits,bytes:usize)->Result<(),PackError>{
+    let next=control.owned_bytes().checked_add(bytes).ok_or(PackError::LimitExceeded("controlled allocation overflow"))?;
+    if next>control.maximum_bytes()||next as u64>limits.max_total_alloc{return Err(PackError::LimitExceeded("controlled allocation exceeds caller limits"));}
+    Ok(())
+}
+
+fn controlled_vec<T>(control:&mut NativeDecodeControl<'_>,limits:&PackLimits,count:usize)->Result<Vec<T>,PackError>{
+    check_controlled_allocation(control,limits,count.checked_mul(size_of::<T>()).ok_or(PackError::LimitExceeded("controlled collection size overflow"))?)?;
+    control.allocate_vec(count).map_err(PackError::Schema)
+}
+
+#[cfg(feature="deflate")]
+struct OwnedControlledInflater(crate::codec::DeflateRetainedCursor);
+#[cfg(feature="deflate")]
+impl Drop for OwnedControlledInflater{fn drop(&mut self){while self.0.close_step(256,65536)!=crate::codec::RetainedInflateCloseStep::Complete{}}}
+
+async fn controlled_crc<S:PackSource>(source:&S,offset:u64,length:u64,control:&mut NativeDecodeControl<'_>)->Result<u32,PackError>{
+    let total=usize::try_from(length).map_err(|_|PackError::LimitExceeded("controlled CRC range exceeds address space"))?;
+    control.begin_stage(total).map_err(PackError::Schema)?;
+    let mut crc=crate::codec::Crc32cCursor::new();let mut page=[0;4096];let mut position=0;
+    while position<total{let count=(total-position).min(page.len());source.read_exact_at(offset+position as u64,&mut page[..count]).await?;crc.update_page(&page[..count]);position+=count;control.advance(count).map_err(PackError::Schema)?;}
+    Ok(crc.finish())
+}
+
+async fn append_controlled_payload<S:PackSource>(source:&S,offset:u64,stored_len:u64,raw_len:u64,codec:CodecId,output:&mut Vec<u8>,limits:&PackLimits,control:&mut NativeDecodeControl<'_>)->Result<(),PackError>{
+    let expected=usize::try_from(raw_len).map_err(|_|PackError::LimitExceeded("controlled payload exceeds address space"))?;
+    if expected>output.capacity()-output.len(){return Err(PackError::LimitExceeded("controlled payload exceeds admitted capacity"));}
+    control.begin_stage(expected).map_err(PackError::Schema)?;
+    let mut page=[0;4096];let start=output.len();
+    match codec.0{
+        0=>{
+            if stored_len!=raw_len{return Err(PackError::Malformed{what:"identity",offset,detail:"stored and decoded lengths differ".into()});}
+            let mut position=0;while position<expected{let count=(expected-position).min(page.len());source.read_exact_at(offset+position as u64,&mut page[..count]).await?;output.extend_from_slice(&page[..count]);position+=count;control.advance(count).map_err(PackError::Schema)?;}
+        },
+        1=>{
+            #[cfg(feature="deflate")]
+            {
+                let workload=expected.checked_add(usize::try_from(stored_len).map_err(|_|PackError::LimitExceeded("compressed input exceeds address space"))?).ok_or(PackError::LimitExceeded("inflation work overflow"))?;
+                control.begin_stage(workload).map_err(PackError::Schema)?;
+                let maximum=control.maximum_bytes().min(usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX)).checked_sub(control.owned_bytes()).ok_or(PackError::LimitExceeded("controlled inflater allowance exhausted"))?;
+                let mut inflater=OwnedControlledInflater(crate::codec::DeflateRetainedCursor::try_new(raw_len,limits.max_segment_len,maximum)?);
+                let mut stored_position=0;let mut page_position=0;let mut page_len=0;
+                loop{
+                    if let Some(bytes)=inflater.0.next_allocation_bytes(){check_controlled_allocation(control,limits,bytes)?;control.charge(bytes).map_err(PackError::Schema)?;inflater.0.reserve_allocation(bytes).map_err(|_|PackError::LimitExceeded("controlled inflater allocation failed"))?;continue;}
+                    match inflater.0.grant(stored_position==stored_len)?{
+                        crate::codec::DeflateRetainedStep::Byte(byte)=>{output.push(byte);control.step().map_err(PackError::Schema)?;},
+                        crate::codec::DeflateRetainedStep::NeedInput=>{
+                            if inflater.0.next_allocation_bytes().is_some(){continue;}
+                            if !inflater.0.can_admit(){control.checkpoint().map_err(PackError::Schema)?;continue;}
+                            if stored_position==stored_len{return Err(PackError::Truncated(offset+stored_position));}
+                            if page_position==page_len{page_len=usize::try_from((stored_len-stored_position).min(page.len() as u64)).map_err(|_|PackError::LimitExceeded("controlled inflater page length"))?;source.read_exact_at(offset+stored_position,&mut page[..page_len]).await?;page_position=0;}
+                            inflater.0.admit_byte(page[page_position]).map_err(|_|PackError::Malformed{what:"deflate",offset:offset+stored_position,detail:"inflater rejected available input".into()})?;page_position+=1;stored_position+=1;control.step().map_err(PackError::Schema)?;
+                        },
+                        crate::codec::DeflateRetainedStep::Complete=>{if stored_position!=stored_len{return Err(PackError::Malformed{what:"deflate",offset:offset+stored_position,detail:"trailing compressed input".into()});}break;},
+                    }
+                }
+            }
+            #[cfg(not(feature="deflate"))]
+            return Err(PackError::UnsupportedCodec(1));
+        },
+        other=>return Err(PackError::UnsupportedCodec(other)),
+    }
+    if output.len()-start!=expected{return Err(PackError::Malformed{what:"payload",offset,detail:"decoded payload length mismatch".into()});}
+    Ok(())
+}
+
+async fn append_controlled_segment<S:PackSource>(source:&S,offset:u64,output:&mut Vec<u8>,maximum_output:Option<usize>,limits:&PackLimits,verification:VerificationLevel,control:&mut NativeDecodeControl<'_>)->Result<(u8,u64),PackError>{
+    control.checkpoint().map_err(PackError::Schema)?;
+    let total=source.len().await;let kind=read_u8_at(source,offset).await?;let flags=read_u8_at(source,offset.checked_add(1).ok_or(PackError::LimitExceeded("segment offset overflow"))?).await?;
+    let (stored_len,n1)=read_varint_u64_at(source,offset.checked_add(2).ok_or(PackError::LimitExceeded("segment offset overflow"))?).await?;
+    let mut payload_offset=offset.checked_add(2+n1).ok_or(PackError::LimitExceeded("segment header overflow"))?;
+    let raw_len=if flags&1!=0{let(length,n2)=read_varint_u64_at(source,payload_offset).await?;payload_offset=payload_offset.checked_add(n2).ok_or(PackError::LimitExceeded("segment header overflow"))?;length}else{stored_len};
+    if stored_len>limits.max_segment_len||raw_len>limits.max_segment_len{return Err(PackError::LimitExceeded("controlled segment exceeds max_segment_len"));}
+    let crc_offset=payload_offset.checked_add(stored_len).ok_or(PackError::LimitExceeded("segment range overflow"))?;let end=crc_offset.checked_add(4).filter(|end|*end<=total).ok_or(PackError::Truncated(crc_offset))?;
+    let length=usize::try_from(raw_len).map_err(|_|PackError::LimitExceeded("segment exceeds address space"))?;
+    if let Some(maximum)=maximum_output{if output.len().checked_add(length).filter(|length|*length<=maximum).is_none(){return Err(PackError::LimitExceeded("segment exceeds declared output allocation"));}}
+    if length>output.capacity()-output.len(){
+        check_controlled_allocation(control,limits,output.len().checked_add(length).ok_or(PackError::LimitExceeded("segment allocation overflow"))?)?;
+        control.charge(output.len()+length).map_err(PackError::Schema)?;output.try_reserve_exact(length).map_err(|_|PackError::LimitExceeded("controlled segment allocation failed"))?;
+    }
+    if verification.checks_crc(){let mut bytes=[0;4];source.read_exact_at(crc_offset,&mut bytes).await?;if controlled_crc(source,offset,crc_offset-offset,control).await?!=u32::from_le_bytes(bytes){return Err(PackError::ChecksumMismatch{segment:"segment",offset:crc_offset});}}
+    let codec=if flags&1!=0{CodecId((flags>>1)&7)}else{CodecId(0)};
+    append_controlled_payload(source,payload_offset,stored_len,raw_len,codec,output,limits,control).await?;
+    Ok((kind,end-offset))
+}
 
 //#region 🔖️Header
 /// 🧲️ The 8-byte magic every `.spk` pack file begins with.
@@ -58,6 +149,10 @@ impl Header {
     // ("if every consumer can become async, make it async instead") applies, not R9 rule 2 — see
     // 📓️terra-pack-finish-report.md §"pure-computation-made-async: the recipe".
     async fn write_bytes(&self) -> [u8; HEADER_SIZE] {
+        self.write_bytes_sync()
+    }
+
+    fn write_bytes_sync(&self)->[u8;HEADER_SIZE]{
         let mut buf = [0u8; HEADER_SIZE];
         buf[0..8].copy_from_slice(&MAGIC);
         buf[8..10].copy_from_slice(&self.version_major.to_le_bytes());
@@ -311,8 +406,12 @@ async fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &Pack
     if payload_end > total_len {
         return Err(PackError::Truncated(payload_offset));
     }
-    let header_len = (payload_offset - offset) as usize;
-    let mut frame = vec![0u8; header_len + stored_len as usize];
+    let frame_len=(payload_offset-offset).checked_add(stored_len).ok_or(PackError::LimitExceeded("frame allocation overflow"))?;
+    let allocation=frame_len.checked_add(raw_len).ok_or(PackError::LimitExceeded("decoded frame allocation overflow"))?;
+    if allocation>limits.max_total_alloc{return Err(PackError::LimitExceeded("decoded frame exceeds max_total_alloc"));}
+    let header_len = usize::try_from(payload_offset-offset).map_err(|_|PackError::LimitExceeded("frame header exceeds address space"))?;
+    let frame_len=usize::try_from(frame_len).map_err(|_|PackError::LimitExceeded("frame exceeds address space"))?;
+    let mut frame=Vec::new();frame.try_reserve_exact(frame_len).map_err(|_|PackError::LimitExceeded("frame allocation failed"))?;frame.resize(frame_len,0);
     source.read_exact_at(offset, &mut frame).await?;
     let crc_offset = payload_end;
     if crc_offset + 4 > total_len {
@@ -357,14 +456,26 @@ async fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<Strin
     if count > limits.max_symbols as u64 {
         return Err(PackError::LimitExceeded("symbol count exceeds max_symbols"));
     }
-    let mut out = Vec::with_capacity(count as usize);
+    let slots = count.checked_mul(size_of::<String>() as u64).ok_or(PackError::LimitExceeded("symbol allocation overflow"))?;
+    if slots > limits.max_total_alloc || count > payload.len() as u64 {
+        return Err(PackError::LimitExceeded("symbol storage exceeds max_total_alloc"));
+    }
+    let mut owned_bytes = slots;
+    let mut out = Vec::new();
+    out.try_reserve_exact(usize::try_from(count).map_err(|_| PackError::LimitExceeded("symbol count exceeds address space"))?).map_err(|_| PackError::LimitExceeded("symbol allocation"))?;
     for _ in 0..count {
-        let len = read_varint_u64(payload, &mut pos)? as usize;
-        if pos + len > payload.len() {
+        let len = read_varint_u64(payload, &mut pos)?;
+        owned_bytes = owned_bytes.checked_add(len).filter(|bytes| *bytes <= limits.max_total_alloc).ok_or(PackError::LimitExceeded("symbol storage exceeds max_total_alloc"))?;
+        let len = usize::try_from(len).map_err(|_| PackError::LimitExceeded("symbol length exceeds address space"))?;
+        let end = pos.checked_add(len).ok_or(PackError::LimitExceeded("symbol length overflow"))?;
+        if end > payload.len() {
             return Err(PackError::Truncated(pos as u64));
         }
-        let text = std::str::from_utf8(&payload[pos..pos + len]).map_err(|_| PackError::Malformed { what: "symbol", offset: pos as u64, detail: "invalid utf8".to_string() })?.to_string();
-        pos += len;
+        let borrowed = std::str::from_utf8(&payload[pos..end]).map_err(|_| PackError::Malformed { what: "symbol", offset: pos as u64, detail: "invalid utf8".to_string() })?;
+        let mut text = String::new();
+        text.try_reserve_exact(len).map_err(|_| PackError::LimitExceeded("symbol text allocation"))?;
+        text.push_str(borrowed);
+        pos = end;
         out.push(text);
     }
     Ok(out)
@@ -393,7 +504,12 @@ async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<C
     if count > limits.max_items {
         return Err(PackError::LimitExceeded("chunk_table count exceeds max_items"));
     }
-    let mut out = Vec::with_capacity(count as usize);
+    let slots = count.checked_mul(size_of::<ChunkTableEntry>() as u64).ok_or(PackError::LimitExceeded("chunk table allocation overflow"))?;
+    if slots > limits.max_total_alloc || count > payload.len() as u64 / 39 {
+        return Err(PackError::LimitExceeded("chunk table storage exceeds max_total_alloc"));
+    }
+    let mut out = Vec::new();
+    out.try_reserve_exact(usize::try_from(count).map_err(|_| PackError::LimitExceeded("chunk count exceeds address space"))?).map_err(|_| PackError::LimitExceeded("chunk table allocation"))?;
     for _ in 0..count {
         let offset = read_varint_u64(payload, &mut pos)?;
         let stored_len = read_varint_u64(payload, &mut pos)?;
@@ -917,10 +1033,75 @@ impl<'file, S: PackSource> PackIdentityChunkCursor<'file, S> {
 }
 
 impl<S: PackSource> PackFile<S> {
+    /// 🛬️ Reads owned manifest/catalog state with interior source, checksum, inflation and copy control.
+    pub async fn open_manifest_controlled(source:S,limits:&PackLimits,verification:VerificationLevel,control:&mut NativeDecodeControl<'_>)->Result<Self,PackError>{
+        control.checkpoint().map_err(PackError::Schema)?;let len=source.len().await;
+        if len>limits.max_file_len{return Err(PackError::LimitExceeded("source length exceeds max_file_len"));}
+        if len<(HEADER_SIZE+FOOTER_SIZE) as u64{return Err(PackError::Truncated(len));}
+        let mut header_bytes=[0;HEADER_SIZE];let mut footer_bytes=[0;FOOTER_SIZE];source.read_exact_at(0,&mut header_bytes).await?;source.read_exact_at(len-FOOTER_SIZE as u64,&mut footer_bytes).await?;
+        let header=Header::parse(&header_bytes).await?;let footer=Footer::parse(&footer_bytes).await?;
+        if footer.file_len!=len{return Err(PackError::Malformed{what:"footer",offset:len-FOOTER_SIZE as u64,detail:"file_len differs from source".into()});}
+        let mut this=Self{source,limits:limits.clone(),superblock:Superblock{header,footer},manifest:None,symbols:Vec::new(),chunk_table:Vec::new()};
+        let mut manifest_bytes=Vec::new();let(kind,consumed)=append_controlled_segment(&this.source,this.superblock.footer.manifest_offset,&mut manifest_bytes,None,limits,verification,control).await?;
+        if kind!=crate::KIND_MANIFEST||consumed!=this.superblock.footer.manifest_len{return Err(PackError::Malformed{what:"manifest",offset:this.superblock.footer.manifest_offset,detail:"manifest framing differs from footer".into()});}
+        let raw=parse_raw_manifest(&manifest_bytes).await?;
+        if raw.symbols_span.len>0{
+            let mut bytes=Vec::new();let(kind,consumed)=append_controlled_segment(&this.source,raw.symbols_span.offset,&mut bytes,None,limits,verification,control).await?;
+            if kind!=crate::KIND_SYMBOLS||consumed!=raw.symbols_span.len{return Err(PackError::Malformed{what:"symbols",offset:raw.symbols_span.offset,detail:"symbol framing differs from manifest".into()});}
+            let mut position=0;let count=read_varint_u64(&bytes,&mut position)?;
+            if count>u64::from(limits.max_symbols)||count>bytes.len() as u64{return Err(PackError::LimitExceeded("controlled symbol count exceeds source/limits"));}
+            this.symbols=controlled_vec(control,limits,usize::try_from(count).map_err(|_|PackError::LimitExceeded("symbol count exceeds address space"))?)?;control.begin_stage(count as usize).map_err(PackError::Schema)?;
+            for _ in 0..count{
+                control.step().map_err(PackError::Schema)?;let length=usize::try_from(read_varint_u64(&bytes,&mut position)?).map_err(|_|PackError::LimitExceeded("symbol length exceeds address space"))?;
+                let end=position.checked_add(length).filter(|end|*end<=bytes.len()).ok_or(PackError::Truncated(position as u64))?;check_controlled_allocation(control,limits,length)?;
+                let text=control.borrow_text(&bytes[position..end]).map_err(PackError::Schema)?;this.symbols.push(control.copy_text(text).map_err(PackError::Schema)?);position=end;
+            }
+            if position!=bytes.len(){return Err(PackError::Malformed{what:"symbols",offset:position as u64,detail:"trailing symbol data".into()});}
+        }
+        if raw.chunk_table_span.len>0{
+            let mut bytes=Vec::new();let(kind,consumed)=append_controlled_segment(&this.source,raw.chunk_table_span.offset,&mut bytes,None,limits,verification,control).await?;
+            if kind!=crate::KIND_CHUNK_TABLE||consumed!=raw.chunk_table_span.len{return Err(PackError::Malformed{what:"chunk_table",offset:raw.chunk_table_span.offset,detail:"chunk framing differs from manifest".into()});}
+            let mut position=0;let count=read_varint_u64(&bytes,&mut position)?;
+            if count>limits.max_items||count>bytes.len() as u64/39{return Err(PackError::LimitExceeded("controlled chunk table exceeds source/limits"));}
+            this.chunk_table=controlled_vec(control,limits,usize::try_from(count).map_err(|_|PackError::LimitExceeded("chunk count exceeds address space"))?)?;control.begin_stage(count as usize).map_err(PackError::Schema)?;
+            for _ in 0..count{
+                control.step().map_err(PackError::Schema)?;let offset=read_varint_u64(&bytes,&mut position)?;let stored_len=read_varint_u64(&bytes,&mut position)?;let raw_len=read_varint_u64(&bytes,&mut position)?;
+                if stored_len>limits.max_segment_len||raw_len>limits.max_segment_len{return Err(PackError::LimitExceeded("controlled chunk length exceeds max_segment_len"));}
+                let end=position.checked_add(36).filter(|end|*end<=bytes.len()).ok_or(PackError::Truncated(position as u64))?;let crc32=u32::from_le_bytes(bytes[position..position+4].try_into().unwrap());let mut blake3=[0;32];blake3.copy_from_slice(&bytes[position+4..end]);position=end;
+                this.chunk_table.push(ChunkTableEntry{offset,stored_len,raw_len,crc32,blake3});
+            }
+            if position!=bytes.len(){return Err(PackError::Malformed{what:"chunk_table",offset:position as u64,detail:"trailing chunk data".into()});}
+        }
+        if raw.symbol_count!=this.symbols.len() as u64||raw.chunk_count!=this.chunk_table.len() as u64{return Err(PackError::Malformed{what:"manifest",offset:0,detail:"declared catalog counts differ from contents".into()});}
+        let mut manifest=Manifest{schema_name:String::new(),schema_hash:raw.schema_hash,doc_span:raw.doc_span,doc_frame_count:raw.doc_frame_count,symbols_span:raw.symbols_span,chunk_table_span:raw.chunk_table_span,field_index_span:raw.field_index_span,uncompressed_body_len:raw.uncompressed_body_len,field_count:raw.field_count,chunk_count:raw.chunk_count,symbol_count:raw.symbol_count};
+        if !this.symbols.is_empty(){let index=usize::try_from(raw.schema_symref).map_err(|_|PackError::LimitExceeded("schema symbol exceeds address space"))?;let text=this.symbols.get(index).ok_or(PackError::Malformed{what:"manifest",offset:0,detail:"schema symbol out of range".into()})?;check_controlled_allocation(control,limits,text.len())?;manifest.schema_name=control.copy_text(text).map_err(PackError::Schema)?;}
+        else if raw.schema_symref!=0{return Err(PackError::Malformed{what:"manifest",offset:0,detail:"schema symbol out of range".into()});}
+        this.manifest=Some(manifest);Ok(this)
+    }
+
+    /// 📄️ Concatenates directly into one admitted document allocation and controls each frame interior.
+    pub async fn body_bytes_controlled(&self,verification:VerificationLevel,control:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,PackError>{
+        let manifest=self.manifest.as_ref().ok_or(PackError::Schema("controlled manifest not loaded".into()))?;
+        let length=usize::try_from(manifest.uncompressed_body_len).map_err(|_|PackError::LimitExceeded("document exceeds address space"))?;
+        let mut output=controlled_vec::<u8>(control,&self.limits,length)?;
+        if manifest.doc_span.len>0{
+            let frames=manifest.doc_frame_count.max(1);if frames>self.limits.max_items||frames>manifest.doc_span.len/7{return Err(PackError::LimitExceeded("document frame count exceeds source/limits"));}
+            let mut offset=manifest.doc_span.offset;let end=offset.checked_add(manifest.doc_span.len).ok_or(PackError::LimitExceeded("document span overflow"))?;
+            for _ in 0..frames{let(kind,consumed)=append_controlled_segment(&self.source,offset,&mut output,Some(length),&self.limits,verification,control).await?;if kind!=crate::KIND_DOCUMENT{return Err(PackError::Malformed{what:"document",offset,detail:"unexpected document segment".into()});}offset=offset.checked_add(consumed).filter(|offset|*offset<=end).ok_or(PackError::LimitExceeded("document frame exceeds manifest span"))?;}
+            if offset!=end{return Err(PackError::Malformed{what:"document",offset,detail:"document frames differ from declared span".into()});}
+        }
+        if output.len()!=length{return Err(PackError::Malformed{what:"document",offset:manifest.doc_span.offset,detail:"decoded document differs from declared length".into()});}
+        if verification.checks_content_hash(){control.begin_stage(output.len()).map_err(PackError::Schema)?;let mut hash=semio_framework_hash::Hasher::new();for page in output.chunks(4096){hash.update(page);control.advance(page.len()).map_err(PackError::Schema)?;}if hash.finalize().as_bytes()!=&self.superblock.footer.content_hash.0{return Err(PackError::ContentHashMismatch);}}
+        Ok(output)
+    }
+
     /// 1⃣ Level 1: parses and CRC-validates the header and footer only, and cross-checks
     /// the footer's `file_len` against the actual source length.
     pub async fn open_superblock(source: S, limits: &PackLimits) -> Result<Self, PackError> {
         let len = source.len().await;
+        if len > limits.max_file_len {
+            return Err(PackError::LimitExceeded("source length exceeds max_file_len"));
+        }
         if len < FOOTER_SIZE as u64 {
             return Err(PackError::Truncated(len));
         }
@@ -982,6 +1163,20 @@ impl<S: PackSource> PackFile<S> {
         self.manifest.as_ref()
     }
 
+    /// 🧮️ Counts retained catalog slots and UTF-8 bytes before constructing document values.
+    pub fn owned_catalog_bytes(&self) -> Result<u64, PackError> {
+        let symbol_slots = (self.symbols.capacity() as u64).checked_mul(size_of::<String>() as u64).ok_or(PackError::LimitExceeded("catalog symbol allocation overflow"))?;
+        let chunk_slots = (self.chunk_table.capacity() as u64).checked_mul(size_of::<ChunkTableEntry>() as u64).ok_or(PackError::LimitExceeded("catalog chunk allocation overflow"))?;
+        let mut bytes = symbol_slots.checked_add(chunk_slots).ok_or(PackError::LimitExceeded("catalog allocation overflow"))?;
+        for symbol in &self.symbols {
+            bytes = bytes.checked_add(symbol.capacity() as u64).ok_or(PackError::LimitExceeded("catalog text allocation overflow"))?;
+        }
+        if let Some(manifest) = &self.manifest {
+            bytes = bytes.checked_add(manifest.schema_name.capacity() as u64).ok_or(PackError::LimitExceeded("catalog schema allocation overflow"))?;
+        }
+        Ok(bytes)
+    }
+
     /// 🔤️ Resolves a symref (index into the symbol table loaded by `open_manifest`).
     pub fn symbol(&self, symref: u64) -> Result<&str, PackError> {
         self.symbols.get(symref as usize).map(String::as_str).ok_or(PackError::Malformed { what: "symref", offset: symref, detail: "symref out of range".to_string() })
@@ -1010,6 +1205,16 @@ impl<S: PackSource> PackFile<S> {
             return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));
         }
         Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: crate::codec::Crc32cCursor::new(), hash: semio_framework_hash::Hasher::new(), terminal: false })
+    }
+
+    /// 🧩️ Appends one verified chunk into a previously admitted output buffer with interior source and inflation control.
+    pub async fn append_chunk_controlled(&self,id:ChunkId,verification:VerificationLevel,output:&mut Vec<u8>,control:&mut NativeDecodeControl<'_>)->Result<(),PackError>{
+        control.checkpoint().map_err(PackError::Schema)?;let entry=self.chunk_table.get(id.0 as usize).ok_or(PackError::Malformed{what:"chunk_id",offset:id.0 as u64,detail:"unknown chunk id".into()})?;
+        if entry.stored_len>self.limits.max_segment_len||entry.raw_len>self.limits.max_segment_len{return Err(PackError::LimitExceeded("controlled chunk exceeds max_segment_len"));}let end=entry.offset.checked_add(entry.stored_len).filter(|end|*end<=self.superblock.footer.file_len).ok_or(PackError::Truncated(entry.offset))?;if end>self.source.len().await{return Err(PackError::Truncated(entry.offset));}
+        if verification.checks_crc()&&controlled_crc(&self.source,entry.offset,entry.stored_len,control).await?!=entry.crc32{return Err(PackError::ChecksumMismatch{segment:"chunk",offset:entry.offset});}
+        let start=output.len();let codec=if entry.stored_len==entry.raw_len{CodecId(0)}else if self.superblock.header.required_flags&REQUIRED_COMPRESSED!=0{CodecId(1)}else{CodecId(0)};append_controlled_payload(&self.source,entry.offset,entry.stored_len,entry.raw_len,codec,output,&self.limits,control).await?;
+        if verification.checks_content_hash(){let bytes=&output[start..];control.begin_stage(bytes.len()).map_err(PackError::Schema)?;let mut hash=semio_framework_hash::Hasher::new();for page in bytes.chunks(4096){hash.update(page);control.advance(page.len()).map_err(PackError::Schema)?;}if hash.finalize().as_bytes()!=&entry.blake3{return Err(PackError::ContentHashMismatch);}}
+        Ok(())
     }
 
     /// 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
@@ -1052,19 +1257,27 @@ impl<S: PackSource> PackFile<S> {
     /// hash against the footer's `content_hash`.
     pub async fn body_bytes(&self, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
         let manifest = self.manifest.as_ref().ok_or_else(|| PackError::Schema("manifest not loaded; call open_manifest first".to_string()))?;
+        let catalog=self.owned_catalog_bytes()?;
+        let remaining=self.limits.max_total_alloc.checked_sub(catalog).ok_or(PackError::LimitExceeded("catalog exceeds max_total_alloc"))?;
+        if manifest.uncompressed_body_len>remaining{return Err(PackError::LimitExceeded("document body exceeds max_total_alloc"));}
+        let body_len=usize::try_from(manifest.uncompressed_body_len).map_err(|_|PackError::LimitExceeded("document body exceeds address space"))?;
         let mut out = Vec::new();
+        out.try_reserve_exact(body_len).map_err(|_|PackError::LimitExceeded("document body allocation failed"))?;
+        let mut frame_limits=self.limits.clone();frame_limits.max_total_alloc=remaining-manifest.uncompressed_body_len;
         if manifest.doc_span.len > 0 {
             let mut offset = manifest.doc_span.offset;
             let frames = manifest.doc_frame_count.max(1);
             for _ in 0..frames {
-                let seg = decode_segment_at(&self.source, offset, &self.limits, verification.checks_crc()).await?;
+                let seg = decode_segment_at(&self.source, offset, &frame_limits, verification.checks_crc()).await?;
                 if seg.kind != crate::KIND_DOCUMENT {
                     return Err(PackError::Malformed { what: "document", offset, detail: "expected KIND_DOCUMENT segment".to_string() });
                 }
+                if seg.payload.len()>body_len-out.len(){return Err(PackError::LimitExceeded("document frames exceed declared body length"));}
                 out.extend_from_slice(&seg.payload);
-                offset += seg.consumed;
+                offset=offset.checked_add(seg.consumed).ok_or(PackError::LimitExceeded("document frame offset overflow"))?;
             }
         }
+        if out.len()!=body_len{return Err(PackError::Malformed{what:"document",offset:manifest.doc_span.offset,detail:"decoded body length differs from manifest".into()});}
         if verification.checks_content_hash() {
             let hash = semio_framework_hash::hash(&out);
             if hash.as_bytes() != &self.superblock.footer.content_hash.0 {

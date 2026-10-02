@@ -1,6 +1,8 @@
 import { oracleHostPython } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { type Implementation, discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script, runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type Implementation } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { join, relative, sep } from "node:path";
 
 /** 🕸️ Emits the per-case Nx project graph the plugin generates, for inspection and for CI. */

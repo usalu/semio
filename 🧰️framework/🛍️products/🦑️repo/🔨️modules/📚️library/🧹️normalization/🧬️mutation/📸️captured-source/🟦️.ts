@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { fileKindIdForSourcePath, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
-import { inventoryTaxonomySources, type TaxonomySourceInventory } from "../../🟦️.ts";
+import { loadTaxonomy, fileKindIdForSourcePath, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
+import { inventoryTaxonomySources, type TaxonomySourceInventory } from "../../🚪️source-admission/📁️io/🟦️.ts";
 import { POLICY_MUTATIONS_FACET } from "../🪪️identity/🟦️.ts";
 
 export interface MutationTaxonomyAssignmentRow { readonly mutationRootPath: string; readonly targetMutationDirectoryName: string; readonly lunaAuditor: string; readonly terraExecutor: string; readonly rootIntegrator: string }

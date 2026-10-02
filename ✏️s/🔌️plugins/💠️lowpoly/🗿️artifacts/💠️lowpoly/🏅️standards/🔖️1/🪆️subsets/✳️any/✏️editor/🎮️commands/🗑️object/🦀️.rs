@@ -23,14 +23,14 @@ pub mod delete_selection {
     #[dsl(keyword = "delete-selection")]
     pub struct DeleteSelection {}
 
+    /// 🗿️ Object granularity removes every selected object still in the document (a selection may name one a previous
+    /// delete removed), else the active one — never the last object — as ONE edit labelled by its `delete-object` leaves;
+    /// component granularity rebuilds the active mesh.
     pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (projection, config) = (doc.snapshot, cfg.snapshot);
         let selection = ctx.current_selection().clone();
         let component_level = matches!(selection.mode.as_str(), "vertex" | "edge" | "face") && !selection.ids.is_empty();
         if !component_level {
-            // 🗿️ Object granularity: every selected object, else the active one — never the last object.
-            // 🗿️ Object granularity: every selected object still in the document (a selection may name an
-            // object a previous delete already removed), else the active one.
             let mut ids: Vec<String> = ctx.selected_object_ids().iter().filter(|id| projection.objects.iter().any(|object| &&object.id == id)).cloned().collect();
             if ids.is_empty() {
                 ids.push(ctx.selection_object_id().filter(|id| projection.objects.iter().any(|object| object.id == *id)).map_or_else(|| resolve_active_object_id(projection, config), str::to_string));
@@ -43,7 +43,7 @@ pub mod delete_selection {
                 return Err(Fault::from("lowpoly delete: a document keeps at least one object"));
             }
             let mutations = ids.into_iter().map(|id| LowpolyMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { id })).collect();
-            return Ok(Emit::commit(mutations, "Delete objects"));
+            return Ok(Emit::mutations(mutations));
         }
         let ids = selection.ids;
         let mode = selection.mode;

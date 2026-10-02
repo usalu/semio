@@ -38,8 +38,8 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for CollapsePageSize {
         vec![PdfX1Mutation::SetPageSize(super::SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Collapse page width to zero", "Seitenbreite auf null setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Collapse page width to zero", "Seitenbreite auf null setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,7 +1,14 @@
 //! 🧬️ Puzzle2d snapshot schema — artifact-lane fields only.
 
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTargetRegion, PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle2d document snapshot (persistent fields of the artifact).
@@ -77,6 +84,7 @@ impl store::ArtifactDsl for Puzzle2dSnapshot {
 }
 
 impl store::ArtifactPack for Puzzle2dSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;

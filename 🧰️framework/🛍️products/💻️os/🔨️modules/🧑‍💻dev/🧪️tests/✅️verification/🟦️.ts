@@ -1,8 +1,10 @@
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic verification execution owner. */
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -35,6 +37,8 @@ import { runInteractionLatencyCli } from "../⏱️interaction-latency/🟦️.t
 
 import { runBootBudgetCli } from "../🥾️boot-budget/🟦️.ts";
 
+import { runTimeTravelCli } from "../🧪️time-travel/🟦️.ts";
+
 import { PluginCapabilityLintScript } from "../🧹️capability-policy/🟦️.ts";
 
 
@@ -60,6 +64,10 @@ class VerifyScript extends BundleScript {
     }
     if (segments[0] === "two-human") {
       await runTwoHumanCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "time-travel") {
+      await runTimeTravelCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🧪️time-travel"), segments.slice(1));
       return;
     }
     if (segments[0] === "latency") {

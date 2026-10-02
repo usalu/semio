@@ -18,5 +18,5 @@ if (segments[0] === "playbook-document-contract") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-playbook-playbook", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-playbook-playbook", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
 

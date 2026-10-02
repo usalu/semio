@@ -172,7 +172,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.zip".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Zip", "Zip"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Zip", "Zip"),
         source_format: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

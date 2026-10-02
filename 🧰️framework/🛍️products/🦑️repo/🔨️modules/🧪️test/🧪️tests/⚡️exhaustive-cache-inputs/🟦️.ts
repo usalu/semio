@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { repoRootFromHere, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -35,6 +35,11 @@ function oracleContributionPaths(workspaceRoot: string, ownerRel: string): strin
 describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency closure", () => {
   const workspaceRoot = repoRootFromHere();
 
+  beforeAll(async () => {
+    const { default: plugin } = await import("../../🟨️.mjs");
+    await plugin.createNodesV2[1](["🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🥒️.feature"], {}, { workspaceRoot });
+  });
+
   test("rustSutCratePath finds a crate rooted well above a deeply nested owner, agreeing with an independent walk", async () => {
     const { internals } = await import("../../🟨️.mjs");
     const owner = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit";
@@ -52,15 +57,17 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     expect(oracleRustSutCratePath(workspaceRoot, owner)).toBeNull();
   });
 
-  test("oracleContributionPaths resolves every ancestor's path-based oracle host package, agreeing with an independent walk", async () => {
+  test("oracleContributionPaths agrees with an independent walk for law-only and oracle owners", async () => {
     const { internals } = await import("../../🟨️.mjs");
     const vocabulary = internals.taxonomy(workspaceRoot);
     for (const owner of ["✏️s/🔌️plugins/🌍️gis", "✏️s/🔌️plugins/📕️norm", "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6"]) {
       const observed = internals.oracleContributionPaths(workspaceRoot, vocabulary, owner);
       expect([...observed].sort()).toEqual([...oracleContributionPaths(workspaceRoot, owner)].sort());
-      expect(observed.length).toBeGreaterThan(0);
       for (const path of observed) expect(existsSync(join(workspaceRoot, path))).toBe(true);
     }
+    const stdioOwner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6";
+    expect(internals.oracleContributionPaths(workspaceRoot, vocabulary, stdioOwner)).toContain("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust");
+    expect(internals.oracleContributionPaths(workspaceRoot, vocabulary, "✏️s/🔌️plugins/🌍️gis")).toEqual([]);
   });
 
   test("oracleContributionPaths returns nothing for an owner with no ancestor contribution", async () => {
@@ -69,14 +76,14 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     expect(internals.oracleContributionPaths(workspaceRoot, vocabulary, "🧰️framework/🔨️modules/🎠️kernel")).toEqual([]);
   });
 
-  test("inputsFor threads both the crate root and the oracle contribution paths into a real case's cache inputs", async () => {
+  test("inputsFor includes the subject and neutral law host roots for a real law-only case", async () => {
     const { internals } = await import("../../🟨️.mjs");
     const vocabulary = internals.taxonomy(workspaceRoot);
     const owner = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain";
     const caseRel = `${owner}/🧪️tests/🏔️mutate-gisterrain-1`;
     const inputs: string[] = internals.inputsFor(workspaceRoot, vocabulary, owner, caseRel, [`${caseRel}/🦀️.rs`]);
     expect(inputs).toContain(`{workspaceRoot}/${owner}/📦️packages/🦀️rust/**/*`);
-    expect(inputs).toContain(`{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/**/*`);
+    expect(inputs).toContain(`{workspaceRoot}/${vocabulary.testDomainPath}/**/*`);
   });
 
   test("inputsFor adds no rust crate root when the case has no rust adapter", async () => {

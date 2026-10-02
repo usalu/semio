@@ -92,6 +92,23 @@ fn every_replacement_lowers_through_native_documents_only() {
     }
 }
 
+/// ⚖️ LAW: an Apply that keeps the line ending and terminator is ONE edit of exactly the net line leaves — one changed line is ONE
+/// `set-line`, an added line ONE `insert-line`, a dropped line ONE `remove-line` — with no static description, so its history row
+/// is labelled from its leaves; every replacement of the corpus above still lands exactly.
+#[test]
+fn an_applied_text_is_its_net_line_leaves() {
+    let snapshot = TxtSnapshot::from_body("alpha\nbeta\ngamma\n");
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+    let emit = |text: &str| txt_emit(&TxtEditorCommand::ReplaceText { revision: revision.clone(), text: text.into() }, &snapshot, None).expect("a native replacement");
+    let changed = emit("alpha\nBETA\ngamma\n");
+    assert!(matches!(changed.artifact_mutations.as_slice(), [TxtMutation::SetLine(set)] if (set.index, set.text.as_str()) == (1, "BETA")), "{:?}", changed.artifact_mutations);
+    assert!(changed.description.is_none(), "the history row is labelled from its leaf");
+    let added = emit("alpha\nbeta\ndelta\ngamma\n");
+    assert!(matches!(added.artifact_mutations.as_slice(), [TxtMutation::InsertLine(insert)] if (insert.index, insert.text.as_str()) == (2, "delta")), "{:?}", added.artifact_mutations);
+    let dropped = emit("alpha\ngamma\n");
+    assert!(matches!(dropped.artifact_mutations.as_slice(), [TxtMutation::RemoveLine(remove)] if remove.index == 1), "{:?}", dropped.artifact_mutations);
+}
+
 /// ⚖️ LAW: an invariant refusal is FATAL (the store's contract for `mutation.invariant`), so the bounded preparation refuses the
 /// whole edit instead of journaling the leaf's empty diff.
 #[test]
@@ -192,3 +209,44 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
+
+//#region 🧮️NetLeafLaws
+const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
+
+/// 🧾️ A line leaf as the net-leaves corpus names it: kind, index and the line it writes.
+fn net_leaf_summary(leaf: &TxtMutation) -> serde_json::Value {
+    match leaf {
+        TxtMutation::SetLine(set) => serde_json::json!({ "kind": "set-line", "index": set.index, "text": set.text }),
+        TxtMutation::InsertLine(insert) => serde_json::json!({ "kind": "insert-line", "index": insert.index, "text": insert.text }),
+        TxtMutation::RemoveLine(remove) => serde_json::json!({ "kind": "remove-line", "index": remove.index }),
+        other => serde_json::json!({ "kind": format!("{other:?}") }),
+    }
+}
+
+/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`, oracle `🧪️tests/🧪️net-leaves/🟦️.ts`): an Apply that keeps the line ending and
+/// terminator is exactly the corpus's net line leaves; one that changes either (`null`) is the whole-buffer lowering; every
+/// leaf applies without a message and the edit lands exactly on the applied text.
+#[test]
+fn an_applied_text_is_exactly_the_corpus_net_line_leaves() {
+    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let (id, after) = (case["id"].as_str().expect("id"), case["after"].as_str().expect("after"));
+        let snapshot = TxtSnapshot::from_body(case["before"].as_str().expect("before"));
+        let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
+        let emit = txt_emit(&TxtEditorCommand::ReplaceText { revision, text: after.into() }, &snapshot, None).expect("a native replacement");
+        let mut next = snapshot.clone();
+        for mutation in &emit.artifact_mutations {
+            let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
+            assert!(outcome.messages().is_empty(), "{id}: {mutation:?} refused: {:?}", outcome.messages());
+            next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
+        }
+        assert_eq!(next.to_body(), after, "{id}: the edit lands on the applied text");
+        match case["leaves"].as_array() {
+            Some(expected) => assert_eq!(emit.artifact_mutations.iter().map(net_leaf_summary).collect::<Vec<_>>(), *expected, "{id}: the net leaves"),
+            None => assert!(txt_net_mutations(&snapshot, &next).is_none() && !emit.artifact_mutations.is_empty(), "{id}: a change of shape is the whole-buffer lowering"),
+        }
+    }
+}
+//#endregion 🧮️NetLeafLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", TxtEditor, || semio_framework_plugin::App { definition: create_txt_editor(), examples: Vec::new() }, "../..");

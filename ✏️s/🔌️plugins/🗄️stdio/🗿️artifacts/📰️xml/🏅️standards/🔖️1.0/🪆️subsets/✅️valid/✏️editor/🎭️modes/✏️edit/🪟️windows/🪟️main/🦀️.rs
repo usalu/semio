@@ -7,7 +7,14 @@
 use crate::schema::snapshot::{xml_document_to_text_checked, XmlNode};
 use crate::XmlSnapshot;
 use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;

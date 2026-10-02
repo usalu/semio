@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeTimestampMutatio
         }
         vec![PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: base.time })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change timestamp", "Zeitstempel ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change timestamp", "Zeitstempel ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-timestamp".into()]
@@ -47,8 +47,8 @@ pub fn contribute(base: &PngSnapshot, time: Option<PngTimestamp>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-timestamp payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-timestamp payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

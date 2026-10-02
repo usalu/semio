@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Shw System Schedule of service hot water system {}", self.id.0), &format!("Zeitplan von Trinkwarmwasseranlage {} ändern", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Shw System Schedule of service hot water system {}", self.id.0), &format!("Zeitplan von Trinkwarmwasseranlage {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

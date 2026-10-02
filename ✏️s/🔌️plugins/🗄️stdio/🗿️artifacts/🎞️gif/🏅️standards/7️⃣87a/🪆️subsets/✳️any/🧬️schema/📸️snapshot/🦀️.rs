@@ -111,52 +111,31 @@ impl store::ArtifactDsl for GifSnapshot {
         "stdio.gif"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        crate::standards::v87a::engine::decode_gif(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_dsl(text:&str)->Result<Self,store::TextError>{
+        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|store::TextError::new(error.to_string(),dsl::TextSpan::at(1,1)))?;
+        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(store::TextError::new("GIF owned Text envelope mismatch",dsl::TextSpan::at(1,1)));}
+        Self::__dsl_from_record(&dsl::schema::parse_exact(body,&Self::__dsl_spec(),&dsl::ParseOptions::default())?)
     }
-
-    fn print_dsl(&self) -> String {
-        let bytes = crate::standards::v87a::engine::encode_gif(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
+    fn print_dsl(&self)->String{
+        let body=dsl::schema::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
+        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared GIF envelope");store::semio_format::wrap_text(&envelope,&body)
     }
 }
 
 impl store::ArtifactPack for GifSnapshot {
+    fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::standards::v87a::engine::encode_gif(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+    fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
+        let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
+        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::Schema(error.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
     }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::standards::v87a::engine::decode_gif(&inner).map_err(store::PackError::Schema)
+    fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
+        let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::Schema(error.to_string()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("GIF owned Pack envelope mismatch".into()));}
+        Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(|error|store::PackError::Schema(error.to_string()))
     }
 }
 //#endregion HandcraftedArtifactCodecs

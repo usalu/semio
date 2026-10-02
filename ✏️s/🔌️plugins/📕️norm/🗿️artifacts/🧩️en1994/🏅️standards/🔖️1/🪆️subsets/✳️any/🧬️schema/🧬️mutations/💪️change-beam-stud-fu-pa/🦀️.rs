@@ -22,8 +22,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeBeamStudFU
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change ultimate tensile strength fu of the studs", "Zugfestigkeit fu der Kopfbolzendübel ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change ultimate tensile strength fu of the studs", "Zugfestigkeit fu der Kopfbolzendübel ändern")
     }
 }
 //#endregion 🔖️Payload

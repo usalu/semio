@@ -202,15 +202,3 @@ export const remodelRemodelingDiffGuardConstant = <T extends string | number | b
   value === expected ? expected : remodelRemodelingDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export interface RemodelingArtifact {
-  readonly schema: string;
-  readonly id: string;
-  readonly streams: readonly MediaStream[];
-  readonly assets: Readonly<Record<string, unknown>>;
-  readonly durableArtifacts: Readonly<Record<string, unknown>>;
-  readonly calibration: CalibrationState;
-  readonly params: ReconstructionParams;
-  readonly gcps: readonly GroundControlPoint[];
-  readonly results: ReconstructionResults;
-
-}

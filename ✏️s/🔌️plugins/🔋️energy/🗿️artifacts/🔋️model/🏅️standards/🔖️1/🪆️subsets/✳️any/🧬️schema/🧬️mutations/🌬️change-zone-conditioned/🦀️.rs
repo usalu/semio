@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change zone {} conditioned to {}", self.id.0, self.new_conditioned), &format!("Konditionierung von Zone {} auf {} ändern", self.id.0, self.new_conditioned))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change zone {} conditioned to {}", self.id.0, self.new_conditioned), &format!("Konditionierung von Zone {} auf {} ändern", self.id.0, self.new_conditioned))
     }
 
     fn target(&self) -> Vec<String> {

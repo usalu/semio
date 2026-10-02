@@ -58,7 +58,7 @@ pub(crate) fn identify_created_layer(document: &DrawingSnapshot, layer: &mut cra
 pub fn handle(payload: &AddLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let layer = build_layer(doc.snapshot, &payload.kind, doc.operation_optional())?;
     let id=crate::schema::layer_id(&layer).to_string();
-    let mut emit=Emit::commit(vec![crate::mutations::create_layer(None, Some(doc.snapshot.layers.len()), layer)], "Add layer");
+    let mut emit=Emit::mutations(vec![crate::mutations::create_layer(None, Some(doc.snapshot.layers.len()), layer)]);
     emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&[id],"replace"));
     Ok(emit)
 }

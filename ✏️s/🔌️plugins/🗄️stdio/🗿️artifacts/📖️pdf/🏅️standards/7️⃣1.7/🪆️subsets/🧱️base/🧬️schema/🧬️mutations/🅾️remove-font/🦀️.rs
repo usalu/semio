@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveFont {
         base.fonts.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetFont(super::set_font::SetFont { font: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove font {}", self.id), &format!("Schrift {} entfernen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove font {}", self.id), &format!("Schrift {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

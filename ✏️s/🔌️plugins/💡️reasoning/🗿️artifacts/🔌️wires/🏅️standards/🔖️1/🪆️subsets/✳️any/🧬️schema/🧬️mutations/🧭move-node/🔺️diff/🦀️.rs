@@ -20,8 +20,8 @@ pub fn diff(payload: &super::MoveNode, base: &WiresSnapshot) -> protocol::Mutati
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" is already at ({}, {}).", payload.node_id, payload.new_x, payload.new_y));
     }
     let mut board = crate::wires_working_board(base);
-    set_node_field(&mut board, &payload.node_id, "x", dsl::to_dsl_value(&payload.new_x).unwrap_or(DslValue::Null));
-    set_node_field(&mut board, &payload.node_id, "y", dsl::to_dsl_value(&payload.new_y).unwrap_or(DslValue::Null));
+    set_node_field(&mut board, &payload.node_id, "x", semio_framework_value::ToValue::to_value(&payload.new_x));
+    set_node_field(&mut board, &payload.node_id, "y", semio_framework_value::ToValue::to_value(&payload.new_y));
     protocol::MutationOutcome::new(diff_board_fixture(&board))
 }
 //#endregion 🔖️Diff

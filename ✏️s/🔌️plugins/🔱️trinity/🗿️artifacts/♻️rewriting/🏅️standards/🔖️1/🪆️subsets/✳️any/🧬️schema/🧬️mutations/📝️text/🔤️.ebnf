@@ -16,7 +16,10 @@ line = edit before fixture
      | drag working nodes
      | patch working nodes
      | drag rule nodes
-     | set rule layout points ;
+     | set rule layout points
+     | delete working nodes
+     | connect working ports
+     | disconnect working edges ;
 edit before fixture = 'edit-before-fixture', space, text ;
 edit lhs = 'edit-lhs', space, text ;
 edit rhs = 'edit-rhs', space, text ;
@@ -28,6 +31,9 @@ drag working nodes = 'drag-working-nodes', space, targets, space, number, space,
 patch working nodes = 'patch-working-nodes', space, targets, space, key, space, value ;
 drag rule nodes = 'drag-rule-nodes', space, targets, space, number, space, number ;
 set rule layout points = 'set-rule-layout-points', space, placement table, space, targets ;
+delete working nodes = 'delete-working-nodes', space, targets ;
+connect working ports = 'connect-working-ports', space, key, space, key, space, key ;
+disconnect working edges = 'disconnect-working-edges', space, targets ;
 point block = '{', newline, number, space, number, '}' ;
 placement table = '{', { newline, key, space, number, space, number }, '}' ;
 targets = '[', { key, [ space ] }, ']' ;

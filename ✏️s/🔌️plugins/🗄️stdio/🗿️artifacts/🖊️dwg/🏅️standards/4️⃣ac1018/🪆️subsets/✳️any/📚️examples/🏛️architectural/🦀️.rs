@@ -3,7 +3,8 @@
 //! The DWG codec projects the real fixture into standard logical drawing and metadata concepts.
 
 use crate::schema::snapshot::decode_dwg;
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "architectural";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

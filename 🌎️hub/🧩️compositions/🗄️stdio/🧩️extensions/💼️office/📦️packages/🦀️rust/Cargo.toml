@@ -95,6 +95,7 @@ semio-s-artifact-stdio-docx = { workspace = true, features = ["component-app-ass
 semio-s-artifact-stdio-pptx = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-xlsx = { workspace = true, features = ["component-app-assembly"] }
 # /🧩️ Composition Dependencies
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

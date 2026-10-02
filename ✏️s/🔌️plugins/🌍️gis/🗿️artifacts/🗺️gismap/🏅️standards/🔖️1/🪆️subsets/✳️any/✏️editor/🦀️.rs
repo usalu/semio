@@ -21,15 +21,57 @@ use crate::{artifact_kind, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    tree_item, tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::Menu;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
@@ -133,8 +175,8 @@ pub fn gis2d_window_action(action: &str, args: Option<semio_framework::DslValue>
 }
 
 /// 🏷️ Admits resolved app text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -178,7 +220,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// non-selection click that toggles layer visibility in an unbound tree).
 pub fn gis2d_layer_tree_item(
     id: impl AsRef<str>,
-    label: semio_framework_plugin::plugin_app_close_prelude::Label,
+    label: semio_framework_ui_locale::Label,
     description: Option<String>,
     icon_id: &str,
     action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,

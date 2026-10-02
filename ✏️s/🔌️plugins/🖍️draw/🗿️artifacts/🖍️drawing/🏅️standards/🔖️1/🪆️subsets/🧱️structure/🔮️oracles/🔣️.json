@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "s.draw.drawing@1/🧱️structure -- Layer existence and ordering -- create, delete, duplicate, reorder. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../../✳️any/🔮️oracles/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🔮️oracles contribution repo-wide, so none of that needs restating here). The `mutate-drawing-1` cross-language differential test still exhaustively claims the original `drawing-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
   "oracles": [],

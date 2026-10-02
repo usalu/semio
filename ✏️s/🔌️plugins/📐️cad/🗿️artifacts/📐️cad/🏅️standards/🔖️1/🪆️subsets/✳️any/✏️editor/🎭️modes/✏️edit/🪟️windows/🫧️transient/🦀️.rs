@@ -6,7 +6,7 @@
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 
 /// 🫧️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CadWorldWindowTransient {
     pub engagement_input: String,
@@ -22,7 +22,7 @@ impl Default for CadWorldWindowTransient {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum CadWorldWindowTransientMutation {
     Snapshot { transient: CadWorldWindowTransient },
@@ -76,12 +76,10 @@ impl store::ArtifactDsl for CadWorldWindowTransient {
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let json: serde_json::Value = serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_string_pretty(&value).expect("CAD world-window transient JSON");
+        let body = dsl::json::to_json_string(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid CAD world-window transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -89,8 +87,7 @@ impl store::ArtifactDsl for CadWorldWindowTransient {
 
 impl store::ArtifactPack for CadWorldWindowTransient {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_vec(&value).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let body = dsl::json::to_json_string(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
@@ -99,8 +96,8 @@ impl store::ArtifactPack for CadWorldWindowTransient {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema("CAD world-window transient pack envelope mismatch".into()));
         }
-        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+        let text = std::str::from_utf8(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        dsl::json::from_json_str(text).map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         None
@@ -126,12 +123,12 @@ impl protocol::OpBinary for CadWorldWindowTransientMutation {
     }
 }
 
-store::artifact_retire_struct!(CadWorldWindowTransient { engagement_input, engagement_step, engagement_pane, engagement_session_json, last_finalized_interaction_id });
+semio_framework_value::artifact_retire_struct!(CadWorldWindowTransient { engagement_input, engagement_step, engagement_pane, engagement_session_json, last_finalized_interaction_id });
 
-impl store::retirement::RetireOwned for CadWorldWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for CadWorldWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
         }
     }
 }
@@ -171,8 +168,8 @@ pub(crate) use cad_world_window_transient_owner;
 
 /// 🧰️ The exact retirement and ephemeral-transfer owners every CAD world window's transient lane is built from.
 pub fn owner_bundle() -> semio_framework_plugin::WindowTransientOwnerBundle<CadWorldWindowTransient, CadWorldWindowTransientMutation> {
-    let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<CadWorldWindowTransient>::default());
-    let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<CadWorldWindowTransientMutation>::default());
+    let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<CadWorldWindowTransient>::default());
+    let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<CadWorldWindowTransientMutation>::default());
     let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
     semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
 }
@@ -218,5 +215,5 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, transient: CadWorldWi
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️schema/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -82,10 +82,10 @@ fn the_historical_fullscreen_probe_chord_is_inert() {
 
 /// 🧪️ A session whose app declares `keybindings`, so the app-keybinding rung has something to match.
 fn shell_with_keybindings(keybindings: Vec<Keybinding>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = keybindings;
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -237,7 +237,7 @@ fn the_example_picker_publishes_reacts_trigger_and_row_control_ids() {
 /// can journal the app's plain `engagementAbort` instead.
 #[test]
 fn escape_closes_the_open_example_dropdown() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     shell.overlay_state = OverlayState::Dropdown("example".into());
     shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);

@@ -1,6 +1,6 @@
 //! 🪟️ OS text and Pack binding for the actual renderer-neutral viewport records.
 
-use super::{DslField, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+use super::{DslField, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape, NativeSchemaControl, RecordSpecProducer};
 use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
 fn planar_spec() -> RecordSpec {
@@ -11,6 +11,11 @@ fn orbit_spec() -> RecordSpec {
     let vector = || Shape::Tuple(Box::new(Shape::Float), Some(3));
     RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "position", vector()), FieldSpec::new(2, "target", vector()), FieldSpec::new(3, "zoom", Shape::Float), FieldSpec::new(4, "up", vector()).optional()])
 }
+
+fn planar_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(3)?;let mut fields=control.allocate_vec(3)?;for(id,key)in[(1,"x"),(2,"y"),(3,"zoom")]{fields.push(crate::os_dsl::schema::producer::field(id,key,Shape::Float,control)?);control.step()?;}crate::os_dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
+fn planar_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:planar_spec,decoding:|control|planar_spec_controlled(control),encoding:|control|planar_spec_controlled(control)}}
+fn orbit_spec_controlled<C:NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key)in[(1,"position"),(2,"target"),(3,"zoom"),(4,"up")]{let shape=if id==3{Shape::Float}else{Shape::Tuple(crate::os_dsl::schema::producer::boxed(Shape::Float,control)?,Some(3))};let mut field=crate::os_dsl::schema::producer::field(id,key,shape,control)?;if id==4{field.optional=true;}fields.push(field);control.step()?;}crate::os_dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
+fn orbit_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:orbit_spec,decoding:|control|orbit_spec_controlled(control),encoding:|control|orbit_spec_controlled(control)}}
 
 fn record(value: &FieldValue, maximum: u16) -> Result<&RecordValue, String> {
     let FieldValue::Record(record) = value else { return Err("expected viewport record".into()); };
@@ -32,7 +37,8 @@ fn vector(record: &RecordValue, id: u16) -> Result<[f64; 3], String> {
 fn vector_value(value: &[f64; 3]) -> FieldValue { FieldValue::Tuple(value.iter().map(|value| FieldValue::Float(*value)).collect()) }
 
 impl DslField for Viewport2d {
-    fn shape() -> Shape { Shape::Record(planar_spec) }
+    fn shape() -> Shape { Shape::Record(planar_producer()) }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Record(planar_producer()))}
     fn to_value(&self) -> FieldValue {
         FieldValue::Record(RecordValue { fields: [(1, FieldValue::Float(self.x)), (2, FieldValue::Float(self.y)), (3, FieldValue::Float(self.zoom))].into_iter().collect() })
     }
@@ -45,7 +51,8 @@ impl DslField for Viewport2d {
 }
 
 impl DslField for Viewport3dOrbit {
-    fn shape() -> Shape { Shape::Record(orbit_spec) }
+    fn shape() -> Shape { Shape::Record(orbit_producer()) }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Record(orbit_producer()))}
     fn to_value(&self) -> FieldValue {
         let mut fields = [(1, vector_value(&self.position)), (2, vector_value(&self.target)), (3, FieldValue::Float(self.zoom))].into_iter().collect::<std::collections::HashMap<_, _>>();
         if let Some(up) = &self.up { fields.insert(4, vector_value(up)); }

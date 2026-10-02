@@ -62,13 +62,14 @@ fn input_ui(id: &str, value: &str) -> UiNode {
         on_repeat_last: None,
         presence: UiPresence::default(),
         menu: None,
+        ..Default::default()
     })
 }
 
 fn number_stepper_ui(value: f64, min: f64, max: f64, step: f64, uniform: bool, delta_binding: bool) -> UiNode {
     let absolute = ActionDescriptor { controller_id: "ctrl".into(), action: "absolute".into(), args: None };
     let delta = ActionDescriptor { controller_id: "ctrl".into(), action: if delta_binding { "delta" } else { "" }.into(), args: None };
-    UiNode::NumberStepper(UiNumberStepperNode { id: "stepper".into(), value, step, uniform, min: Some(min), max: Some(max), precision: None, on_absolute: absolute, on_delta: delta, presence: UiPresence::default(), menu: None })
+    UiNode::NumberStepper(UiNumberStepperNode { id: "stepper".into(), value, step, uniform, min: Some(min), max: Some(max), precision: None, on_absolute: absolute, on_delta: delta, presence: UiPresence::default(), menu: None, ..Default::default() })
 }
 
 fn stack_ui() -> UiNode {
@@ -783,6 +784,11 @@ fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
     let expected = number(&fixture["validEdit"]["expectedValue"]);
     assert_eq!(app_payloads(&edited), vec![(Trigger::Change, scalar("value", expected))]);
     assert_eq!(tree.node(stepper).unwrap().state.edit.as_ref().unwrap().text, fixture["validEdit"]["expectedDisplay"].as_str().unwrap());
+    router.dispatch(&mut tree, root, &select_all);
+    let refused = router.dispatch(&mut tree, root, &UiEvent::Paste { text: fixture["refusedEdit"]["input"].as_str().unwrap().into() });
+    assert!(app_payloads(&refused).is_empty(), "a typed value beyond the hard bound is refused, never clamped");
+    let state = &tree.node(stepper).unwrap().state;
+    assert_eq!((state.edit.as_ref().unwrap().text.as_str(), state.number_refusal.as_deref()), (fixture["refusedEdit"]["expectedDisplay"].as_str().unwrap(), Some("")), "the refused draft is kept with its refusal");
 
     router.dispatch(&mut tree, root, &select_all);
     assert!(app_payloads(&router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Start))).is_empty());
@@ -1344,7 +1350,7 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
 // withholds) a command.
 
 fn slider_ui(id: &str, value: f64) -> UiNode {
-    UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Slider(UiSliderNode { id: id.into(), value, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None, ..Default::default() })
 }
 
 #[test]
@@ -1547,10 +1553,11 @@ fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
 #[test]
 fn slider_key_values_answer_the_shared_keyboard_law_rows() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
-    for row in fixture["keys"].as_array().expect("key rows").iter().filter(|row| !row["min"].is_null() && !row["max"].is_null()) {
+    for row in fixture["keys"].as_array().expect("key rows").iter().filter(|row| !row["min"].is_null() && !row["max"].is_null() && row["step"].as_f64().is_some_and(|step| step > 0.0)) {
         let number = |field: &str| row[field].as_f64().expect("fixture number");
         let UiNode::Slider(mut slider) = slider_ui("s", number("current")) else { unreachable!() };
         (slider.min, slider.max, slider.step) = (number("min"), number("max"), number("step"));
+        (slider.precision, slider.display_factor) = (row["precision"].as_u64().map(|precision| precision as u16), row["factor"].as_f64());
         slider.snaps = row["snaps"].as_array().expect("snaps").iter().map(|snap| snap.as_f64().expect("snap")).collect();
         let pressed = match row["key"].as_str().expect("key") {
             "increment" => "ArrowRight",
@@ -1660,7 +1667,12 @@ fn slider_readout_editing_matches_the_neutral_react_contract() {
             key_name => rejected_router.dispatch(&mut rejected_tree, rejected_root, &key(key_name)),
         };
         assert_eq!(payloads(&commands).len(), rejected["actionCount"].as_u64().unwrap() as usize, "{}", rejected["id"]);
-        assert!(rejected_tree.node(rejected_slider).unwrap().state.edit.is_none(), "{} exits editing", rejected["id"]);
+        let state = &rejected_tree.node(rejected_slider).unwrap().state;
+        if rejected["editing"].as_bool().unwrap() {
+            assert_eq!((state.edit.as_ref().map(|edit| edit.text.as_str()), state.number_refusal.as_deref()), (rejected["expectedDisplay"].as_str(), Some("")), "{} keeps its refused draft", rejected["id"]);
+        } else {
+            assert!(state.edit.is_none(), "{} exits editing", rejected["id"]);
+        }
         assert_eq!(rejected_tree.node(rejected_slider).unwrap().state.slider_draft_value, None, "{} preserves the declared value", rejected["id"]);
     }
 
@@ -1754,7 +1766,7 @@ async fn an_rtl_window_swaps_the_horizontal_arrow_pair_and_leaves_every_other_ke
 
 #[semio_framework_async_macros::async_test]
 async fn an_rtl_slider_moves_the_other_way_for_the_same_arrow_key() {
-    let slider = UiSliderNode { id: "s".into(), value: 5.0, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None };
+    let slider = UiSliderNode { id: "s".into(), value: 5.0, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None, ..Default::default() };
     let mut router = EventRouter::new("w");
     let ltr_right = slider_key_value(&slider, router.mirrored_inline_key("ArrowRight"), false);
     router.set_flow(UiFlow { inline: FlowInline::Rtl, block: ui_contract::FlowBlock::Down });
@@ -1817,6 +1829,7 @@ fn search_line_ui(id: &str, value: &str, repeat_last: bool) -> UiNode {
         on_repeat_last: repeat_last.then(|| verb("engagementRepeatLast")),
         presence: UiPresence::default(),
         menu: None,
+        ..Default::default()
     })
 }
 

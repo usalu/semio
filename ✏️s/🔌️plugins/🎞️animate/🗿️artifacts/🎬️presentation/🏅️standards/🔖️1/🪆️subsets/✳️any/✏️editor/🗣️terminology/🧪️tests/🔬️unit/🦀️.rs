@@ -20,7 +20,7 @@ async fn animate_presentation_labels_translate_panels_in_german() {
     use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_ARTIFACT};
     // 🌍️ The locale lives on the `ViewModel` the render is given; the default one resolves NATIVE
     // English, so this law has to hand the app a German view model rather than the default.
-    let german = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str("de"), ..Default::default() };
+    let german = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
     let mut app = presentation_app().await;
     let catalogue_json = render_with_view(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE, &german).await;
     assert!(catalogue_json.contains("Kachelvorlagen"));

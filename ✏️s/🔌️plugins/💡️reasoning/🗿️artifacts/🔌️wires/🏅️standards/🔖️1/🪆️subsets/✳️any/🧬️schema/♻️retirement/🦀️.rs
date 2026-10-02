@@ -3,9 +3,10 @@
 use crate::op::WiresMutation;
 use crate::{WiresSnapshot, WiresWorkingScene};
 use std::{mem::ManuallyDrop, sync::Arc};
-use store::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, RetirementStep, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, RetirementStep, SharedValueRetirementFactory};
 
-store::artifact_retire_struct!(WiresWorkingScene { nodes, edges });
+semio_framework_value::artifact_retire_struct!(WiresWorkingScene { nodes, edges });
+semio_framework_value::artifact_retire_struct!(crate::mutations::WiresNodePosition { node_id, x, y });
 
 struct SceneRoot(ManuallyDrop<Option<Arc<WiresWorkingScene>>>);
 impl RetirementCursor for SceneRoot {
@@ -33,7 +34,7 @@ impl RetirementCursor for SnapshotRetirement {
             Err(_) => return RetirementStep::BudgetExhausted,
         };
         let WiresSnapshot { wires_fixture, content, meta } = self.0.take().expect("exact Wires snapshot remains owned");
-        RetirementStep::Child(store::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement(), Box::new(SceneRoot(ManuallyDrop::new(scene)))]))
+        RetirementStep::Child(semio_framework_value::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement(), Box::new(SceneRoot(ManuallyDrop::new(scene)))]))
     }
     fn terminal_is_empty(&self) -> bool {
         self.0.is_none()
@@ -56,13 +57,15 @@ impl RetireOwned for WiresMutation {
             Self::CreateNode(value) => value.node.retirement(),
             Self::DeleteNode(value) => value.node_id.retirement(),
             Self::MoveNode(value) => (value.node_id, value.new_x, value.new_y).retirement(),
-            Self::ResizeNode(value) => store::artifact_retirement_sequence![value.node_id, value.new_radius, value.new_width, value.new_height],
+            Self::ResizeNode(value) => semio_framework_value::artifact_retirement_sequence![value.node_id, value.new_radius, value.new_width, value.new_height],
             Self::ChangeNodeKind(value) => (value.node_id, value.new_node_kind).retirement(),
             Self::ChangeNodeShape(value) => (value.node_id, value.new_shape).retirement(),
             Self::EditNodeText(value) => (value.node_id, value.new_text).retirement(),
             Self::SetNodeRoot(value) => (value.node_id, value.new_root).retirement(),
             Self::ConnectNodes(value) => (value.edge, value.relationship).retirement(),
             Self::DisconnectNodes(value) => value.edge_id.retirement(),
+            Self::MoveNodes(value) => (value.node_ids, value.dx, value.dy).retirement(),
+            Self::SetNodePositions(value) => value.positions.retirement(),
         }
     }
 }

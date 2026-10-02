@@ -12,10 +12,16 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
+/// 🗑️ Deletes every selected wire, then every selected widget (with the wires it still holds), as the id-keyed leaves of the
+/// graph left behind; a selected id the graph no longer holds is skipped.
 fn delete_selected(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let operations = with_host(host_snapshot, |host| {
-        for id in selected {
-            let _ = host.remove_widget(id);
+        let (wires, widgets): (Vec<&String>, Vec<&String>) = selected.iter().partition(|id| host_snapshot.synapses.iter().any(|synapse| synapse.id == **id));
+        for id in wires {
+            let _skipped_when_gone = host.disconnect(id);
+        }
+        for id in widgets {
+            let _skipped_when_gone = host.remove_widget(id);
         }
         commit_host_snapshot(host_snapshot, &host.host_snapshot)
     });

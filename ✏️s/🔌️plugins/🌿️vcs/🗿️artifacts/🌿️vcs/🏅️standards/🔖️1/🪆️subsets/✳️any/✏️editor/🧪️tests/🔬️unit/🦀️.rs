@@ -40,6 +40,8 @@ pub(crate) mod context {
     fn vcs_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("vcs", VcsPlayApp, vcs_app_manifest_for_tests, "../..");
     
     /// 🧪️ A pre-seeded app instance. It carries the real `AppActionRegistry`, exactly like
     /// `app_with_registry()`: since the framework joins `EditorApp<VcsPlayApp>`'s
@@ -125,7 +127,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(instance.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(instance.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
     
     /// 📦️ A parsed document envelope that hands its owners back on the way out. `ArtifactEnvelope`'s
@@ -643,7 +645,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     dispatch(&mut instance, VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "notes".into(), value: run.initial.clone() })).await;
     let start = instance.snapshot().expect("snapshot");
     assert_eq!(start.notes, run.initial);
-    let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..Default::default() };
+    let window = semio_framework_plugin::ViewModel { window_id: Some("vcs-editor-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "vcs-editor-main".into(), window_kind_id: editor::VCS_PLAY_WINDOW_EDITOR.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let typing_meta = semio_framework_plugin::ActionMeta { view_state: Some(window), ..meta("local") };
     let buffer = (semio_framework_plugin::TYPING_BUFFER_ARG.to_string(), dsl::DslValue::String("vcs.editor".into()));
     let edits = instance.edit_transactions().len();

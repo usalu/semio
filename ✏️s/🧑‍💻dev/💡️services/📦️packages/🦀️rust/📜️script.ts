@@ -1,23 +1,23 @@
 #!/usr/bin/env bun
-import { runExactCargoLaws, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { buildRepositoryCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { NativeScript } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
 class BuildScript extends BundleScript {
   async run([kind,profile,...args]:string[]):Promise<void> {
     if(args.length || !["native","mcp"].includes(kind) || !["dev","release"].includes(profile))throw new Error("Service build requires an exact executable and profile");
     const binary=`semio-s-services-${kind}`;
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-services","--bin",binary,"--features",kind==="native"?"native-renderer":"mcp-service",...(profile==="release"?["--release"]:[])],this.repoRoot,{output:`dist/${kind}-${profile}`,sourcesRecord:`${binary}.sources.json`});
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-services","--bin",binary,"--features",kind==="native"?"native-renderer":"mcp-service",...(profile==="release"?["--release"]:[])],this.repoRoot,{output:`dist/${kind}-${profile}`,sourcesRecord:`${binary}.sources.json`});
   }
 }
 class SourceScript extends BundleScript { async run():Promise<void> {nativeServiceCompositionLaws(this.repoRoot);} }
 class TestScript extends BundleScript {
   async run():Promise<void> {
     nativeServiceCompositionLaws(this.repoRoot);
-    const laws=await runExactCargoLaws({cwd:this.repoRoot,env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"},nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-s-dev-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}],progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`)});
+    const laws=await runRepositoryExactCargoLaws({cwd:this.repoRoot,env:{...process.env,CARGO_BUILD_JOBS:"1",RUST_MIN_STACK:"33554432"},nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-s-dev-services",target:{kind:"lib"},laws:["tests::native_composition_installs_the_real_owner_and_matches_the_portable_oracle","tests::installed_owner_cannot_execute_without_a_verified_document_lease"]}],progress:event=>console.log(`native-service ${event.stage} ${event.package} ${event.law??""}`)});
     console.log(`native-service-runtime: exact=${laws.length} passed`);
   }
 }
@@ -39,56 +39,56 @@ function harnessEnvironment(verb: string, segments: string[], accepted: readonly
 class OsMcpLiveAgentLoopScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("live-agent-loop-check", segments, ["--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000, { env });
   }
 }
 
 class OsMcpHubAgentParticipantScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("hub-agent-participant-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000, { env });
   }
 }
 
 class OsMcpPluginCoverageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("plugin-coverage-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000, { env });
   }
 }
 
 class OsMcpUserPathScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("user-path-check", segments, ["--hub", "--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000, { env });
   }
 }
 
 class OsMcpInferenceQuartetScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("inference-quartet-check", segments, ["--hub"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000, { env });
   }
 }
 
 class OsMcpSecurityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("security-check", segments, ["--hub", "--hub-admin-capability"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000, { env });
   }
 }
 
 class OsMcpHubEditDurabilityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", 1_800_000);
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", 1_800_000);
   }
 }
 
 class OsMcpAgentReplyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
-    await runOwnedCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000, { env });
+    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/💡️services/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000, { env });
   }
 }
 
@@ -104,14 +104,14 @@ class McpCompositionSourceScript extends BundleScript {
 }
 class FixtureOwnershipCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runOwnedCommand(process.execPath, ["nx", "run", target, "--skip-nx-cache"], this.repoRoot, "fixture-owner:" + target, 3_600_000);
+    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(process.execPath, ["nx", "run", target, "--skip-nx-cache"], this.repoRoot, "fixture-owner:" + target, 3_600_000);
   }
 }
 
 class CanonicalPairCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    await runOwnedCommand(process.execPath, ["nx", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"], this.repoRoot, "canonical-pair-neutral", 3_600_000);
-    await runOwnedCommand("cargo", ["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"], this.repoRoot, "canonical-pair-peer", 3_600_000);
+    await runRepositoryCommand(process.execPath, ["nx", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"], this.repoRoot, "canonical-pair-neutral", 3_600_000);
+    await runRepositoryCommand("cargo", ["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"], this.repoRoot, "canonical-pair-peer", 3_600_000);
   }
 }
 

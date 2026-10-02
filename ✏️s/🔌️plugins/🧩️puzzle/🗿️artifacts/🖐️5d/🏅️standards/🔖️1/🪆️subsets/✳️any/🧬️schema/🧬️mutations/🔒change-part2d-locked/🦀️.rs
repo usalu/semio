@@ -25,8 +25,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2d
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change part \"{}\" 2d locked", self.id), &format!("2D-Sperre von Bauteil \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change part \"{}\" 2d locked", self.id), &format!("2D-Sperre von Bauteil \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

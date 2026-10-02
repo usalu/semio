@@ -14,7 +14,7 @@ import {
   readResults,
   readRuntimeInventory,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 
 /** 🔬️ Lists and qualifies the external measurement probes the comparison pipeline invokes. */

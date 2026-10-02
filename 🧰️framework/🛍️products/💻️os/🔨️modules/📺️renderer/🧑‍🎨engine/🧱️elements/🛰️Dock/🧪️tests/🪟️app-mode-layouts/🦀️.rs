@@ -9,7 +9,9 @@
 use super::*;
 use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, Modes, WindowKindDefinition, WindowKinds};
 use serde_json::Value;
-use ui_wgpu::wgpu::{LocalizedLabel, NamedLayout, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use ui_wgpu::wgpu::NamedLayout;
+use ui_wgpu::wgpu::WindowOptions;
 
 //#region 🧫️FixtureModel
 #[derive(serde::Deserialize)]

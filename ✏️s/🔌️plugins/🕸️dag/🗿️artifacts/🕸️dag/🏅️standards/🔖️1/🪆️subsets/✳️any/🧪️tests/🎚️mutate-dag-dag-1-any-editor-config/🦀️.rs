@@ -1,13 +1,13 @@
 //! 🎚️ `s.dag.dag` ✏️editor/🎚️config state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `dag-dag-1-any-editor-config-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
-//! the subject handlers through `semio_s_plugin_stdio_test_oracle::law::vector` over the report of this crate's
+//! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
 //! production bridge `dag_config_mutation_report_json`. The oracle handlers answer with the committed after- and before-snapshots read
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
+use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎚️config/🧫️fixtures`.
@@ -52,7 +52,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
     use semio_s_artifact_dag_dag::editor::dag::config::mutations::dag_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {

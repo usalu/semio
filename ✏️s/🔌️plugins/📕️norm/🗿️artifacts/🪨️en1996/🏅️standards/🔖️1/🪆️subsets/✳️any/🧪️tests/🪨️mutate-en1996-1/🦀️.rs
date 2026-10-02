@@ -3,7 +3,7 @@
 //! `en1996-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
 //! `En1996Mutation` vocabulary — a masonry building: walls with their openings, load cases and concentrated loads, addressed by wall, load-case and member position.
 //!
-//! ⚖️ Every law is asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module, reached
+//! ⚖️ Every law is asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module, reached
 //! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
 //! the SAME committed bytes: the feature is the single place a vector path is written down, and each handler resolves
 //! exactly the `(before, mutation, after, outcome)` URIs its own scenario's steps name.
@@ -16,7 +16,7 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_en1996::standards::v1::subsets::any::schema::mutations::{apply_en1996_mutation, decode_en1996_mutation_json, inverse_en1996_mutation, En1996Mutation};
     use semio_s_artifact_norm_en1996::standards::v1::subsets::any::schema::snapshot::{decode_en1996_dsl, decode_en1996_pack, decode_en1996_snapshot_json, encode_en1996_dsl, encode_en1996_pack, encode_en1996_snapshot_json, En1996Snapshot};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     /// 🗣️ The real committed EN 1996 document, read where the domain already keeps it.
     const DSL_ASSET: &str = "asset://🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio";

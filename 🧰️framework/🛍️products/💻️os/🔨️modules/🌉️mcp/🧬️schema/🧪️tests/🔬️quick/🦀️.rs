@@ -159,7 +159,7 @@ fn the_scope_export_declaration_matches_the_registry() {
     assert_eq!(declared, registered, "the ScopeSchemaExports declaration drifted from schemas()");
     register_scope_exports();
     for id in scope_export_ids() {
-        assert!(semio_framework_schema::resolve_schema_export("os.mcp", id, semio_framework_schema::SchemaFormat::JsonSchema).is_ok(), "{id} does not resolve");
+        assert!(semio_framework_schema_registry::resolve_schema_export("os.mcp", id, semio_framework_schema_registry::SchemaFormat::JsonSchema).is_ok(), "{id} does not resolve");
     }
 }
 

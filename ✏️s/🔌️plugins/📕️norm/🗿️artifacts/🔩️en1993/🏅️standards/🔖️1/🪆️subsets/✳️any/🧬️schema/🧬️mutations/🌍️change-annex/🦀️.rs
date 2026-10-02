@@ -22,8 +22,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for ChangeAnnex {
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change national annex to {:?}", self.new_annex), &format!("Nationalen Anhang auf {:?} ändern", self.new_annex))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change national annex to {:?}", self.new_annex), &format!("Nationalen Anhang auf {:?} ändern", self.new_annex))
     }
 }
 //#endregion 🔖️Payload

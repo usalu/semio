@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeLinearTemp
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change linear temperature difference", "Linearen Temperaturunterschied ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change linear temperature difference", "Linearen Temperaturunterschied ändern")
     }
 }
 //#endregion 🔖️Payload

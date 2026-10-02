@@ -4,8 +4,16 @@ use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, with_live_host_snapshot, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
 use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::FlowSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_contract::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 /// 🏷️ Converts document-tree titles into the panel builder's `Label`.
 fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<Label> {
@@ -50,7 +58,7 @@ fn render_live(live: &semio_framework_artifact_flow_flow::FlowHostSnapshot, labe
             Some(ui_label(labels.widgets.as_str())?),
             true,
             &live.widgets,
-            |widget| pick_item(flow_graph_node_target_id(widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()), "node"),
+            |widget| pick_item(flow_graph_node_target_id(widget_id(widget)), ui_label(widget_tree_label(widget))?, Some(widget_kind_label(widget).into()), "node"),
             labels.none_placeholder.as_str(),
         )?
         .window_section_or_placeholder(
@@ -59,7 +67,7 @@ fn render_live(live: &semio_framework_artifact_flow_flow::FlowHostSnapshot, labe
             Some(ui_label(labels.synapses.as_str())?),
             false,
             &live.synapses,
-            |synapse| pick_item(flow_graph_edge_target_id(&synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)), "edge"),
+            |synapse| pick_item(flow_graph_edge_target_id(&synapse.id), ui_label(format!("{} → {}", synapse.from, synapse.to))?, Some(format!("{} → {}", synapse.from_port, synapse.to_port)), "edge"),
             labels.none_placeholder.as_str(),
         )?
         .interaction_domain(FLOW_PLAY_APP_ID, FLOW_INTERACTION_GRAPH)?

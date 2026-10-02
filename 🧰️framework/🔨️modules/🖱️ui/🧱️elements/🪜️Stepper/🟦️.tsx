@@ -12,7 +12,7 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { PropertyValueColumnContext } from "../🌳️Tree/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
 import { roundUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
-import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberKeyValue, uiNumberTypedValue } from "../../🧬️contract/🧩️component/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
 import type { UiNumberLimits } from "@semio-tech/framework";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
@@ -48,7 +48,7 @@ interface StepperProps extends ElementProps {
   showLabel?: boolean;
   /** 🏷️ The element naming the value field when an enclosing form owns the label (a staged dialog field). */
   "aria-labelledby"?: string;
-  /** 🏷️ The value field's own name when no label element names it (an interpreted node's `accessibility.label`). */
+  /** 🪧️ The value field's own name when no label element names it (an interpreted node's `accessibility.label`). */
   "aria-label"?: string;
   disabled?: boolean;
   /** 📍️ Detents (`NumberStepperProps.snaps`): the page keys stop on the first they reach (the shared keyboard law). */
@@ -74,7 +74,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const borderClass = borderNormalClass;
   const [internalValue, setInternalValue] = reactHostPort.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
-  const [draft, setDraft] = reactHostPort.useState("");
+  const [draft, setDraft] = reactHostPort.useState<string | null>(null);
   const [refusal, setRefusal] = reactHostPort.useState<{ readonly message: string | null } | null>(null);
   const snaps = reactHostPort.useMemo(() => snapValues ?? [], [snapValues]);
   const shownText = reactHostPort.useCallback((shown: number): string => (precision === undefined && displayFactor == null ? formatNumber(shown) : uiNumberDisplayText(shown, displayFactor, precision)), [displayFactor, precision]);
@@ -176,15 +176,16 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     onChange?.(stored);
   };
 
-  /** 🎹️ Arrows and page keys through the shared keyboard law (page keys stop on the first detent they reach); a relative stepper
-   * reports the move as a delta. */
-  const handleKey = (key: "increment" | "decrement" | "pageUp" | "pageDown", large: boolean) => {
-    const next = uiNumberKeyValue(internalValue, min ?? null, max ?? null, step, snaps, key, large);
-    if (next === internalValue) return;
+  /** 🎹️ Arrows, page keys and Home/End through the shared keyboard law (`uiNumberFieldKey`: page keys jump to the next detent,
+   * Home/End reach a bound the stepper has); every press reports — an absolute stepper the law's value (its bound again at the
+   * bound), a relative one its step as a delta (an arrow) or the move (a page key, Home, End), so a mixed selection keeps
+   * nudging past a bound it shows. */
+  const handleKey = (key: SliderKey, large: boolean) => {
+    const next = uiNumberKeyValue(internalValue, min ?? null, max ?? null, step, precision ?? null, displayFactor, snaps, key, large);
     setRefusal(null);
-    setDraft(shownText(next));
+    setDraft(null);
     setInternalValue(next);
-    if (onDelta) onDelta(next - internalValue);
+    if (onDelta) onDelta(key === "increment" || key === "decrement" ? (key === "increment" ? 1 : -1) * step * (large ? 10 : 1) : next - internalValue);
     else onChange?.(next);
   };
 
@@ -203,6 +204,8 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       if (!isEditing) {
         setIsEditing(true);
       }
+      setDraft(null);
+      setRefusal(null);
       onPointerDown?.();
       if (increment > 0) {
         handleStepUp();
@@ -267,13 +270,12 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         data-stepper-input="true"
         data-mixed={mixed ? "true" : undefined}
         placeholder={mixed && !hasBeenEdited ? mixedLabel || "—" : undefined}
-        value={mixed && !hasBeenEdited ? "" : isEditing || refusal ? draft : shownText(displayedValue)}
+        value={mixed && !hasBeenEdited ? "" : (draft ?? shownText(displayedValue))}
         onChange={handleInputChange}
         onFocus={() => {
           if (!hasBeenEdited) setHasBeenEdited(true);
           if (!isEditing) {
             setIsEditing(true);
-            if (!refusal) setDraft(shownText(displayedValue));
           }
           onPointerDown?.();
         }}
@@ -281,17 +283,20 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
           if (isEditing) {
             setIsEditing(false);
           }
+          if (!refusal) setDraft(null);
           onPointerUp?.();
         }}
         onKeyDown={(e) => {
-          if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "PageUp" || e.key === "PageDown") {
+          const lawKey = uiNumberFieldKey(e.key, e.shiftKey, min, max);
+          if (lawKey !== null) {
             e.preventDefault();
             if (!isEditing) {
               setIsEditing(true);
             }
-            handleKey(e.key === "ArrowUp" ? "increment" : e.key === "ArrowDown" ? "decrement" : e.key === "PageUp" ? "pageUp" : "pageDown", e.shiftKey);
+            handleKey(lawKey.key, lawKey.large);
           } else if (e.key === "Escape") {
             setRefusal(null);
+            setDraft(null);
             if (isEditing) {
               setIsEditing(false);
               setInternalValue(value ?? defaultValue);
@@ -313,7 +318,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         aria-valuetext={ariaValueText}
         aria-invalid={refusal ? true : undefined}
         aria-describedby={refusal?.message ? refusalId : undefined}
-        aria-labelledby={labelledBy ?? (ariaLabel === undefined ? labelElementId : undefined)}
+        aria-labelledby={labelledBy ?? (showLabel && ariaLabel === undefined ? labelElementId : undefined)}
         id={id}
         inputMode="decimal"
         {...uiFormControlBrowserDefaultProps}
@@ -339,15 +344,15 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       </button>
     </div>
   );
-  const stepperElement = refusal?.message ? (
-    <div data-slot="stepper-field" className="flex w-full min-w-0 flex-col">
+  const stepperElement = (
+    <>
       {stepperGroup}
-      <span id={refusalId} role="alert" data-slot="stepper-refusal" className="text-destructive text-xs leading-tight">
-        {refusal.message}
-      </span>
-    </div>
-  ) : (
-    stepperGroup
+      {refusal?.message ? (
+        <span id={refusalId} role="alert" data-slot="stepper-refusal" className="text-destructive block w-full text-xs leading-tight">
+          {refusal.message}
+        </span>
+      ) : null}
+    </>
   );
 
   if (showLabel && id) {

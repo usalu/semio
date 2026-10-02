@@ -72,7 +72,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut Generation3dViewerHarness, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
     
     //#region ⏱️FlowEvalChain
@@ -86,7 +86,7 @@ pub(crate) mod context {
     /// same law the sibling surface runs with a flow window in front of it.
     pub fn view_shell_view(preview: &str) -> ViewModel {
         let roster = vec![ViewWindowInstance { id: preview.into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
-        ViewModel { window_instances: roster, ..Default::default() }.for_window_instance(preview).expect("viewer preview window instance")
+        ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(preview).expect("viewer preview window instance")
     }
     
     /// 🏛️ Redispatches one armed `Effect::DispatchAction` exactly the way `makeEffectDispatchOne`
@@ -189,7 +189,9 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::document_io;
-    use semio_framework_plugin::{ArgSchema, Locale, Terminology};
+    use semio_framework_plugin::ArgSchema;
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let definition = create_generation3d_viewer();
     let window = definition.window_kinds.iter().find(|window| window.id == preview::WINDOW_KIND_ID).expect("the viewer declares its preview window kind");
     let dispatchable = semio_framework::window_kind_actions(&definition, window);

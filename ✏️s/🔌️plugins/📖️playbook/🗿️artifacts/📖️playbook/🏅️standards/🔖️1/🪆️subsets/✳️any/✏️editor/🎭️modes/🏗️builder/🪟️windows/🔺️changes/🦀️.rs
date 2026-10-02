@@ -1,7 +1,10 @@
 //! 🔺️ Playbook changes window — a real DiffView surface comparing the empty authored baseline with the live playbook.
 
 use crate::PlaybookSnapshot;
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_scene::DiffViewScene;
 
 pub const PLAYBOOK_PLAY_WINDOW_CHANGES: &str = "playbook-changes";

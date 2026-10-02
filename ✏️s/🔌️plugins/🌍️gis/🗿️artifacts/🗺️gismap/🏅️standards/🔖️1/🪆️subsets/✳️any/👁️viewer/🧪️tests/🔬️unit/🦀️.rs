@@ -14,7 +14,7 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 
 //#region 🧭️ViewerCamera
 fn map_view(window_kind_id: &str) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { window_id: Some("map-1".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "map-1".into(), window_kind_id: window_kind_id.into() }], ..Default::default() }
+    semio_framework_plugin::ViewModel { window_id: Some("map-1".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "map-1".into(), window_kind_id: window_kind_id.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW: the read-only surface declares and owns the host's camera verb — undeclared, the shell
@@ -57,7 +57,6 @@ async fn a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_e
     assert!(emit.artifact_mutations.is_empty(), "a viewer NEVER emits a document mutation");
     assert!(emit.config_mutations.is_empty());
     assert!(emit.effects.is_empty());
-    assert_eq!(emit.coalesce_key.as_deref(), Some("gis.map.viewer.camera:map-1"), "a burst of debounced pan ticks collapses per window instance");
 }
 
 #[semio_framework_async_macros::async_test]

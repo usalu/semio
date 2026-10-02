@@ -30,6 +30,7 @@ default = []
 typegen = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 # 🌱️ `protocol::value::{DslValue, ToValue, FromValue, ValueError}` — additive `#[derive(ToValue,

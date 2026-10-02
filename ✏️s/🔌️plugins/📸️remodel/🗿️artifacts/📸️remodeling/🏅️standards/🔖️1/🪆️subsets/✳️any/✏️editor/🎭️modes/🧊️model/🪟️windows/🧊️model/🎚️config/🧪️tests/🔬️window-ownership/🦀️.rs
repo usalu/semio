@@ -32,7 +32,7 @@ where
 
 #[test]
 fn remodel_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let model_base: RemodelingModelWindowConfig = dsl::json::from_json_str(&fixture["base"]["model"].to_string()).unwrap();
     let frames_base: RemodelingFramesWindowConfig = dsl::json::from_json_str(&fixture["base"]["frames"].to_string()).unwrap();
     let report_base: RemodelingReportWindowConfig = dsl::json::from_json_str(&fixture["base"]["report"].to_string()).unwrap();
@@ -92,7 +92,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 ViewWindowInstance { id: "remodel-report-right".into(), window_kind_id: RemodelingReportWindowConfigOwner::WINDOW_KIND_ID.into() },
                 ViewWindowInstance { id: "remodel-other".into(), window_kind_id: "other-window".into() },
             ];
-            let view = ViewModel { window_instances: roster, ..Default::default() };
+            let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
             let model_left = view.for_window_instance("remodel-model-left").unwrap();
             let model_right = view.for_window_instance("remodel-model-right").unwrap();
             let frames_left = view.for_window_instance("remodel-frames-left").unwrap();
@@ -103,7 +103,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             app.bind_instance_id(88).await;
             let outcome: Result<(), String> = async {
                 let payload = import_frame_payload::checker_data_url(8, 8, 2).await;
-                dispatch(&mut app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: "left.png".into(), index: 0 }), &frames_left).await?;
+                dispatch(&mut app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: "left.png".into(), index: 0, total: 1 }), &frames_left).await?;
                 let stream_id = app.snapshot().map_err(|error| format!("{error:?}"))?.streams.first().ok_or("Remodel fixture stream was not admitted")?.id.clone();
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 let publications =
@@ -161,7 +161,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if reopened_model_left != left_model || reopened_model_right != right_model || reopened_frames_left != left_frames || reopened_frames_right != right_frames || reopened_report_left != left_report || reopened_report_right != right_report {
                     return Err("Remodel exact window configuration changed during reopen".into());
                 }
-                let stale = ViewModel { window_id: Some("remodel-missing".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                let stale = ViewModel { window_id: Some("remodel-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 if addressed(&stale, RemodelingModelWindowConfig::default()).is_ok() { return Err("Remodel Model owner accepted stale window identity".into()); }
                 if frames_config::addressed(&report_left, RemodelingFramesWindowConfig::default()).is_ok() { return Err("Remodel Frames owner accepted Report window identity".into()); }
                 if report_config::addressed(&model_left, RemodelingReportWindowConfig::default()).is_ok() { return Err("Remodel Report owner accepted Model window identity".into()); }

@@ -967,7 +967,7 @@ impl ActionAdapter {
         handle:&semio_framework_os_kernel::DslValue,
         now_ms: u64,
     ) -> Result<String, GatewayError> {
-        semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
+        semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(handle,16*1024).map_err(|_|GatewayError::new(GatewayErrorCode::InputInvalid,"invalid owner history value"))?;
         if hub_origin.is_empty() || hub_origin.len()>2048 || !crate::inference::is_hub_inference_route(route) || !matches!(handle,semio_framework_os_kernel::DslValue::Object(_)) || semio_framework_os_kernel::os_pack::json::to_json_string(handle).len()>16*1024 {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid,"invalid durable owner history locator"));
         }

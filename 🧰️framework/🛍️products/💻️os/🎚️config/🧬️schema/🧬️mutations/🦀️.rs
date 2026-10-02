@@ -116,11 +116,11 @@ pub enum LocalFoldersConfigMutation {
 //#region 🔖️Registry
 /// 🪪️ Registers every OS config mutation descriptor through the derive-generated registries.
 pub fn register_os_config_mutation_descriptors() -> Result<(), semio_framework_os_kernel::MutationDescriptorError> {
-    register_opening_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_ui_preferences_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_merge_policy_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_identity_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_local_catalog_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
-    register_local_folders_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
+    register_opening_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)?;
+    register_ui_preferences_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)?;
+    register_merge_policy_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)?;
+    register_identity_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)?;
+    register_local_catalog_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)?;
+    register_local_folders_config_mutation_descriptors(semio_framework_schema_state::StateClass::Config)
 }
 //#endregion 🔖️Registry

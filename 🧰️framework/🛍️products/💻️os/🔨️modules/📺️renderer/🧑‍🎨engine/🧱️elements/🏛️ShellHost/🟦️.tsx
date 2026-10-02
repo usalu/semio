@@ -713,7 +713,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { scheduleTimeTravelFocusV1, TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import { TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator, useTimeTravelRevealV1 } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, localFolderNameV1, LocalFolderReconnectBand, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "./📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { retireSkippedWindowBodies } from "./🪟️mounted-window-refresh/🟦️.ts";
@@ -11863,38 +11863,9 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
   }, [toolRunPanelNode, dock]);
 
-  /** ⏪️ Opens the History panel on its own anchor (on mobile, the merged panel) — what the edge into a history-edit
-   * session asks for, whoever began it. Read through a ref so the session effect below never re-runs on a dock change. */
-  const revealHistoryPanelRef = useRef<() => void>(() => undefined);
-  revealHistoryPanelRef.current = () => {
-    if (mobile) {
-      const resolved = findPanelTabPath(mobilePanelTabs, FRAMEWORK_PANEL_TAB_HISTORY_ID);
-      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
-      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
-      return;
-    }
-    const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_HISTORY_ID);
-    if (!located) return;
-    const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_HISTORY_ID);
-    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
-    dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
-  };
-  /** ⏪️ Each change of the focused program's session: the edge into one reveals the History panel, a draft that starts
-   * focuses its first input, a replay or a review the band, the finalize prompt its first control
-   * ({@link timeTravelTransitionV1}); a focus still waiting for its target to mount yields only to a newer focus or to the
-   * session closing, never to a progress step. */
-  const timeTravelSeenRef = useRef<typeof focusedTimeTravel>(null);
-  const timeTravelFocusCancelRef = useRef<(() => void) | null>(null);
-  useEffect(() => {
-    const transition = timeTravelTransitionV1(timeTravelSeenRef.current, focusedTimeTravel);
-    timeTravelSeenRef.current = focusedTimeTravel;
-    if (transition.reveal) revealHistoryPanelRef.current();
-    if (transition.focus === null && focusedTimeTravel !== null) return;
-    timeTravelFocusCancelRef.current?.();
-    const root = scope.rootRef.current;
-    timeTravelFocusCancelRef.current = transition.focus === null || root === null ? null : scheduleTimeTravelFocusV1(root, transition.focus, 120);
-  }, [focusedTimeTravel, scope]);
-  useEffect(() => () => timeTravelFocusCancelRef.current?.(), []);
+  /** ⏪️ Each change of the focused program's session reveals the History panel on the edge into a session and moves focus
+   * where the session continues ({@link useTimeTravelRevealV1}). */
+  useTimeTravelRevealV1(focusedTimeTravel, { mobile, dock, mobilePanelTabs, dispatch, root: scope.rootRef.current });
 
   /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
    * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the

@@ -78,7 +78,7 @@ fn operation_defaults_are_stable() {
     assert_eq!(op.author_id(), None);
     assert_eq!(op.timestamp(), None);
     assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
-    assert_eq!(op.state_class(), crate::os_spr::StateClass::Artifact);
+    assert_eq!(op.state_class(), semio_framework_schema_state::StateClass::Artifact);
     assert!(op.foreign_steps(&0).is_empty());
 }
 //#endregion 🧪️MutationLaws
@@ -345,7 +345,7 @@ fn space_history_verbs_match_the_language_neutral_contract() {
 fn mutation_descriptor_semantics_participate_in_immutable_identity() {
     use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
     let semantics = <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS;
-    let construct = |semantics| MutationDescriptor::new(crate::os_spr::SchemaId("mini.doc#rename-mini".into()), crate::os_spr::SchemaVersion(1), crate::os_spr::StateClass::Artifact, RenameMini::DESCRIPTOR, semantics).unwrap();
+    let construct = |semantics| MutationDescriptor::new(crate::os_spr::SchemaId("mini.doc#rename-mini".into()), crate::os_spr::SchemaVersion(1), semio_framework_schema_state::StateClass::Artifact, RenameMini::DESCRIPTOR, semantics).unwrap();
     let base = construct(semantics);
     let changed = construct(SemanticDescriptor { record: "RenamedMiniLabel", ..semantics });
     assert_ne!(base.fingerprint(), changed.fingerprint());
@@ -374,14 +374,14 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     assert_eq!(mutation.semantics().record, "RenamedMini");
     assert_eq!(mutation.label(), crate::LocalizedLabel::native("Rename mini to \"b\"", "Mini in \"b\" umbenennen"));
     assert!(mutation.target().is_empty());
-    register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();
-    register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();
+    register_mini_mutation_descriptors(semio_framework_schema_state::StateClass::Artifact).unwrap();
+    register_mini_mutation_descriptors(semio_framework_schema_state::StateClass::Artifact).unwrap();
     let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
     assert_eq!(descriptor.semantics(), mutation.semantics());
     assert_eq!(descriptor.leaf(), mutation.descriptor());
     let declared: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
     assert_eq!(json_oracle(descriptor.leaf()), declared);
-    assert!(register_mini_mutation_descriptors(crate::os_spr::StateClass::Config).is_err());
+    assert!(register_mini_mutation_descriptors(semio_framework_schema_state::StateClass::Config).is_err());
     assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));
 }
 //#endregion 🧪️MutationsDeriveLaws
@@ -391,9 +391,9 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
 fn descriptor_registry_rejects_conflicts_without_partial_publication() {
     use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
     let build = |id: &str, state| MutationDescriptor::new(crate::os_spr::SchemaId(id.into()), crate::os_spr::SchemaVersion(1), state, RenameMini::DESCRIPTOR, <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS).unwrap();
-    let first = build("mini.first", crate::os_spr::StateClass::Artifact);
-    let conflict = build("mini.first", crate::os_spr::StateClass::Config);
-    let second = build("mini.second", crate::os_spr::StateClass::Artifact);
+    let first = build("mini.first", semio_framework_schema_state::StateClass::Artifact);
+    let conflict = build("mini.first", semio_framework_schema_state::StateClass::Config);
+    let second = build("mini.second", semio_framework_schema_state::StateClass::Artifact);
     assert_ne!(first.fingerprint(), conflict.fingerprint());
     let mut registry = MutationDescriptorRegistry::new();
     assert!(registry.register_all([first.clone(), conflict.clone()]).is_err());
@@ -839,7 +839,7 @@ fn command_outcome_default_is_empty() {
 fn operation_event_serde_round_trip() {
     let event = MutationEvent {
         mutation_id: crate::os_spr::ids::MutationId("op-1".into()),
-        state_class: crate::os_spr::StateClass::Transient,
+        state_class: semio_framework_schema_state::StateClass::Transient,
         payload: protocol::value::DslValue::object([("kind".to_string(), protocol::value::DslValue::String("toast".to_string())), ("text".to_string(), protocol::value::DslValue::String("saved".to_string()))]),
     };
     let json = crate::os_pack::json::to_json_string(&event);

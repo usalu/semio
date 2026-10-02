@@ -1,6 +1,52 @@
 {
   "dialect": "s.flow.flow@1/*",
-  "snapshot": {"schema": "retained flow schema 日本\u0000", "content": {"childId": "owned child 日本", "target": {"artifactId": "separate target", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow"}}}},
+  "snapshot": {
+    "schema": "retained flow schema 日本\u0000",
+    "content": {
+      "childId": "owned child 日本",
+      "target": {
+        "artifactId": "separate target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "flow"
+        }
+      }
+    }
+  },
+  "textCarriers": {
+    "accepted": ["", "semio flow.flow.dsl v1\nschema=retained 日本\u0000\n"],
+    "rejected": [null, {}, [], 0, true]
+  },
   "independentEdit": "independent child 日本",
-  "expectedTables": 2
+  "expectedTables": 2,
+  "literalIdentities": [
+    {
+      "childId": "",
+      "artifactId": "!@/",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow"
+    },
+    {
+      "childId": "alias 日本\u0000",
+      "artifactId": "separate 🧬\u0000!@/",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow"
+    },
+    {
+      "childId": "local reference",
+      "artifactId": "",
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow"
+    }
+  ],
+  "controlledAdmission": {
+    "token": "日本🧬",
+    "repeat": 32768,
+    "cancelAfterBytes": 65536,
+    "smallValueBudget": 1024
+  }
 }

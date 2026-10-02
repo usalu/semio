@@ -1,32 +1,32 @@
 //! 👥️ `s.procedural.generation3d` 👁️viewer/👥️presence state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `procedural-generation3d-1-any-viewer-presence-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
-//! the subject handlers through `semio_s_plugin_stdio_test_oracle::law::vector` over the report of this crate's
+//! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
 //! production bridge `generation3d_view_presence_mutation_report_json`. The oracle handlers answer with the committed after- and before-snapshots read
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
+use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
 /// 🧫️ The committed applied vector of one kind, read literally from `👁️viewer/👥️presence/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-show-mode" => Vector {
-            before: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set-show-mode/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set-show-mode/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set-show-mode/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set-show-mode/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set-show-mode/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/👁️set/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-preview-camera" => Vector {
-            before: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set-preview-camera/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set-preview-camera/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set-preview-camera/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set-preview-camera/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set-preview-camera/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/👥️presence/🧫️fixtures/📷️set/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -52,7 +52,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
     use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::generation3d_view_presence_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {

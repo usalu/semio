@@ -6,7 +6,8 @@
 //! [`REMODELING_EXAMPLES`]. Nothing else in the crate needs touching — the manifest action, the
 //! command bridge and the boot document all read this array.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Registry
 /// 📚️ One registered example: the id the `setActiveExample` action carries, the committed text, and the

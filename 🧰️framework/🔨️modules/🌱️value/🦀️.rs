@@ -11,6 +11,8 @@
 pub mod ordered;
 #[path = "📋️list/🦀️.rs"]
 pub mod list;
+#[path = "📦️paged/🦀️.rs"]
+pub mod paged;
 //#endregion 🗂️OrderedOwnership
 
 #[path = "🧬️bytes/🦀️.rs"]
@@ -19,10 +21,18 @@ pub mod bytes;
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
 
+#[path = "🛬️decode/🦀️.rs"]
+pub mod native_decoding;
+pub use native_decoding::NativeDecodeControl;
+
+#[path = "🛫️encode/🦀️.rs"]
+pub mod native_encoding;
+pub use native_encoding::NativeEncodeControl;
+
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{edit_through_value, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+pub use codec::{edit_through_value, ControlledValueHasher, DecodedValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 //#endregion 🔁️Codec
 
 //#region 🔖️Number
@@ -324,20 +334,14 @@ impl From<serde_json::Value> for DslValue {
     }
 }
 
-/// 🌉️ Lets a type that still derives `serde` hold a `DslValue` field — the transitional state the
-/// serde-elimination sweep leaves behind (e.g. `ActionDescriptor.args: Option<DslValue>` in
-/// `🖱️ui/🎯️targets/🧊️wgpu`). Delegating through the `From` conversions directly above rather than
-/// hand-rolling a visitor makes the encoding identical to `serde_json::Value`'s BY CONSTRUCTION,
-/// which is the property that matters: both encodings share a wire, so a `DslValue` must serialize
-/// to exactly the JSON its own `to_value`/`json` path would produce. Remove once no serde-deriving
-/// type holds a `DslValue`.
+/// 🌉️ Serializes an owned value through the explicitly exposed Serde boundary.
 impl serde::Serialize for DslValue {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serde::Serialize::serialize(&serde_json::Value::from(self), serializer)
     }
 }
 
-/// 🌉️ Mirror of the `Serialize` bridge directly above — see its note.
+/// 🌉️ Deserializes a Serde JSON boundary into an owned value tree.
 impl<'de> serde::Deserialize<'de> for DslValue {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         serde_json::Value::deserialize(deserializer).map(DslValue::from)
@@ -417,23 +421,7 @@ macro_rules! dsl_value {
 }
 //#endregion 🔖️Literal
 
-//#region 🔖️SerDe
-/// 🔀️ Materializes a `ToValue` value into a `DslValue` tree — first-party analog of the
-/// former `serde::Serialize`-bound bridge, kept as `Result` for source compatibility with every
-/// existing `?`/`.map_err(...)`/`.unwrap_or(...)` call site even though `ToValue::to_value` itself
-/// is infallible. See
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/📓️dsl-value-bridge-conversion.md`.
-pub fn to_dsl_value<T: ToValue + ?Sized>(value: &T) -> Result<DslValue, String> {
-    Ok(value.to_value())
-}
 
-/// 🔀️ Hydrates a `FromValue` value from a `DslValue` tree — first-party analog of the
-/// former `serde::de::DeserializeOwned`-bound bridge.
-pub fn from_dsl_value<T: FromValue>(value: DslValue) -> Result<T, String> {
-    T::from_value(value).map_err(|error| error.to_string())
-}
-//#endregion 🔖️SerDe
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

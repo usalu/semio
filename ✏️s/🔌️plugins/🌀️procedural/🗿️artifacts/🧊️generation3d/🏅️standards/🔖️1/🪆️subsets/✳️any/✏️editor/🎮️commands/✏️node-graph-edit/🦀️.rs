@@ -5,12 +5,12 @@ use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_framework_tool_machine::{node_drag_commit, NodeDragRecord, NODE_DRAG_OPERATION};
+use semio_framework_tool_machine::{node_drag_commit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -19,78 +19,77 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-/// 🌉️ `operations_json` is a locally-defined array of sub-operation descriptors (not a framework
-/// boundary type) — parsed generically via `pack::json`'s raw tree, not `serde_json`.
-fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
-    dsl::json::parse(text).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default()
+/// 🧾️ The rows of one `nodeGraphEdit` batch through the ONE shared closed decoder (`🛠️tool-machine`
+/// [`node_graph_edit_rows`], design §13.3): a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute
+/// move, an unknown operation or any malformed row refuses the whole batch before anything is authored.
+pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
+    let operations = dsl::json::parse(&payload.operations_json).map_err(|error| Fault::from(format!("nodeGraphEdit operations are not JSON: {error}")))?;
+    node_graph_edit_rows(&dsl::DslValue::object([("operations".to_string(), dsl::json::to_dsl_value(&operations))])).map_err(Fault::from)
 }
 
-/// 🧾️ The sub-operations the node-graph surfaces dispatch, and the leaf each one yields:
-/// - `setSlider {widgetId, value}` — the inline slider overlay's value: the ABSOLUTE `change-slider-value` leaf, nothing else.
-///   A dragged knob carries the press as the dispatch's own top-level `gesture`/`commit`, so the framework scrub machine
-///   (design §13.1) keeps every tick provisional and commits the release as ONE edit; this handler never reads a gesture.
+/// 🧾️ The leaves one decoded batch yields:
+/// - `setSlider {widgetId, value}` — the inline slider overlay's value: the ABSOLUTE `change-slider-value` leaf. A dragged
+///   knob carries the press as the dispatch's own top-level `gesture`/`commit`, so the framework scrub machine (design
+///   §13.1) keeps every tick provisional and commits the release as ONE edit; this handler never reads a gesture.
 /// - `move {gestureId, nodeIds, dx, dy}` — the node-graph gesture record of a released node drag (design §13.3): the
 ///   relative `move-nodes` leaf, committed through the ONE node-drag machine as ONE tool transaction.
-/// - `setHostSnapshot`, `connect`, `disconnect`, `deleteSelection` — one-shot structural edits, authored as the host diff
-///   of the graph they leave behind.
-fn apply_operations(doc: &ArtifactView<'_, Generation3dSnapshot>, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+/// - `connect`, `disconnect`, `insertPort`, `delete {nodeIds, synapseIds}` — structural edits by the ids they name, authored
+///   as the id-keyed leaves (wires, widgets, ports) of the graph they leave behind; a refused host edit refuses the batch.
+fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEditRow]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
-    let operation = |row: &dsl::json::Value| row.get("operation").and_then(|value| value.as_str()).unwrap_or("").to_string();
-    let structural: Vec<&dsl::json::Value> = sub_operations.iter().filter(|row| matches!(operation(row).as_str(), "setHostSnapshot" | "deleteSelection" | "connect" | "disconnect")).collect();
-    let mut leaves = if structural.is_empty() {
-        Vec::new()
-    } else {
+    let structural = rows.iter().any(|row| matches!(row, NodeGraphEditRow::Connect { .. } | NodeGraphEditRow::Disconnect { .. } | NodeGraphEditRow::InsertPort { .. } | NodeGraphEditRow::Delete { .. }));
+    let mut leaves = if structural {
         with_host(host_snapshot, |host| {
-            for row in &structural {
-                match operation(row).as_str() {
-                    "setHostSnapshot" => {
-                        if let Some(new_fixture) = row.get("hostSnapshotJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostSnapshot>(json).ok()) {
-                            host.replace_host_snapshot(new_fixture);
+            for row in rows {
+                let refused = |error| Fault::from(format!("nodeGraphEdit refusal: {error}"));
+                match row {
+                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(refused)?,
+                    NodeGraphEditRow::Disconnect { synapse_id } => host.disconnect(synapse_id).map_err(refused)?,
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => host.add_input_port(node_id, *index as usize).map_err(refused)?,
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => host.add_output_port(node_id, *index as usize).map_err(refused)?,
+                    NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                        let held: Vec<&String> = synapse_ids.iter().filter(|id| host.host_snapshot.synapses.iter().any(|synapse| synapse.id == **id)).collect();
+                        for synapse_id in held {
+                            host.disconnect(synapse_id).map_err(refused)?;
+                        }
+                        for node_id in node_ids {
+                            host.remove_widget(node_id).map_err(refused)?;
                         }
                     }
-                    "deleteSelection" => {
-                        for id in selected {
-                            let _ = host.remove_widget(id);
-                        }
-                    }
-                    "connect" => {
-                        let text = |key: &str| row.get(key).and_then(|value| value.as_str());
-                        if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (text("sourceNodeId"), text("sourcePortId"), text("targetNodeId"), text("targetPortId")) {
-                            let _ = host.connect_ports(from, from_port, to, to_port);
-                        }
-                    }
-                    _ => {
-                        if let Some(synapse_id) = row.get("synapseId").and_then(|value| value.as_str()) {
-                            let _ = host.disconnect(synapse_id);
-                        }
-                    }
+                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } => {}
                 }
             }
-            commit_host_snapshot(host_snapshot, &host.host_snapshot)
-        })
+            Ok::<_, Fault>(commit_host_snapshot(host_snapshot, &host.host_snapshot))
+        })?
+    } else {
+        Vec::new()
     };
-    leaves.extend(sub_operations.iter().filter(|row| operation(row) == "setSlider").filter_map(|row| slider_leaf(host_snapshot, row)));
-    let records: Vec<NodeDragRecord> = sub_operations.iter().filter(|row| operation(row) == NODE_DRAG_OPERATION).filter_map(|row| NodeDragRecord::from_row(&dsl::json::to_dsl_value(row)).ok()).collect();
-    let sliders_only = !sub_operations.is_empty() && sub_operations.iter().all(|row| operation(row) == "setSlider");
+    leaves.extend(rows.iter().filter_map(|row| match row {
+        NodeGraphEditRow::SetSlider { widget_id, value } => slider_leaf(host_snapshot, widget_id, *value),
+        _ => None,
+    }));
+    let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| match row {
+        NodeGraphEditRow::Move(record) => Some(record.clone()),
+        _ => None,
+    }).collect();
+    let sliders_only = !rows.is_empty() && rows.iter().all(|row| matches!(row, NodeGraphEditRow::SetSlider { .. }));
     let ui_scope = if sliders_only { slider_gesture_ui_scope() } else { UiDirtyScope::default() };
     if records.is_empty() {
-        return Emit { artifact_mutations: leaves, ui_scope, ..Default::default() };
+        return Ok(Emit { artifact_mutations: leaves, ui_scope, ..Default::default() });
     }
     leaves.extend(generation3d_node_drag_leaves(host_snapshot, &records));
     let authoring_seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     let gesture = records.first().map_or("nodeGraphEdit", |record| record.gesture_id.as_str());
-    match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, generation3d_gesture_clock()) {
+    Ok(match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, generation3d_gesture_clock()) {
         Some((transaction, leaves)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
         Some((_, leaves)) => Emit::mutations(leaves),
         None => Emit::default(),
-    }
+    })
 }
 
-/// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a malformed row, a widget that is no
-/// slider, or the value the slider already holds.
-pub(crate) fn slider_leaf(host_snapshot: &FlowHostSnapshot, row: &dsl::json::Value) -> Option<Generation3dMutation> {
-    let widget_id = row.get("widgetId").and_then(|value| value.as_str())?;
-    let value = row.get("value").and_then(dsl::json::Value::as_f64).filter(|value| value.is_finite())?;
+/// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a widget that is no slider or the
+/// value the slider already holds.
+pub(crate) fn slider_leaf(host_snapshot: &FlowHostSnapshot, widget_id: &str, value: f64) -> Option<Generation3dMutation> {
     host_snapshot
         .widgets
         .iter()
@@ -139,39 +138,11 @@ pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
     }
 }
 
-/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
-/// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
-/// reachable only through that macro-generated path (`Generation3dPlayApp::handle` always routes this
-/// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
-/// the selection as empty.
+/// 🕹️ The one entry every route takes — `app_commands!`'s generated dispatch and the retained reducer alike: the decoded
+/// rows name every entity they edit, so no route reads an ambient selection.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(doc, &sub_operations, &[]))
+    apply_rows(doc, &rows(payload)?)
 }
-
-/// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
-/// field — no config mutation needed afterwards, the framework auto-prunes the deleted ids out of
-/// `graph`'s selection.
-pub fn apply(
-    payload: &NodeGraphEdit,
-    doc: &ArtifactView<'_, Generation3dSnapshot>,
-    _cfg: &ConfigView<'_, Generation3dConfig>,
-    interaction: &InteractionView<'_>,
-    _session: &mut FlowEvalSession,
-) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(doc, &sub_operations, &interaction.selection("graph").ids))
-}
-
-/// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
-/// behavior as `apply` above, but callable without an `app::InteractionView` (which plugin code cannot
-/// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
-/// `protocol::InteractionState` by the caller.
-pub(crate) fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let sub_operations = parse_sub_operations(&payload.operations_json);
-    apply_operations(doc, &sub_operations, selected)
-}
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -10,10 +10,19 @@
 
 use crate::editor::layout::terminology::{catalogue_kind_label, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
-use semio_framework_plugin::{
-    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiFixedMap;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub(crate) const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";

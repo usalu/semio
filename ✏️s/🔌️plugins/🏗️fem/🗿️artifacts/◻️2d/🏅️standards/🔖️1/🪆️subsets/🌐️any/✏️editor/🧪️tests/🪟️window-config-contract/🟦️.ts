@@ -3,8 +3,8 @@ import Ajv from "ajv";
 import documentAdmission from "../../../🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
 import fem2dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem2dArtifact } from "../../../🧬️schema/🟦️.ts";
-import { testFem2dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document/🟦️.ts";
-import { testFem2dResultsWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧪️tests/🪪️document/🟦️.ts";
+import { testFem2dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";
+import { testFem2dResultsWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";
 
 export function testFem2dWindowConfigContract(): void {
   testFemDocumentAdmission();

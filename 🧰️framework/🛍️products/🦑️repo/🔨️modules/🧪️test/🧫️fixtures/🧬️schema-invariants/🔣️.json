@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schema": "semio.repository-test.schema-invariant-cases/v4",
   "checkOnlyDiagnosticCodes": [
     "schema-export-id-duplicate",
@@ -115,7 +115,7 @@
     },
     {
       "id": "unclassified-directory",
-      "path": "♻️mit-bestand/🧺️demonstrator",
+      "path": "♻️mit-bestand/🧺️demonstrator/🧩️runtime",
       "eligible": false,
       "level": null
     },
@@ -510,7 +510,7 @@
       "invariant": "owner-eligibility",
       "files": [
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+          "path": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "$id": "https://json.schemas.assets.semio-tech.com/repo/test/protocol.json",

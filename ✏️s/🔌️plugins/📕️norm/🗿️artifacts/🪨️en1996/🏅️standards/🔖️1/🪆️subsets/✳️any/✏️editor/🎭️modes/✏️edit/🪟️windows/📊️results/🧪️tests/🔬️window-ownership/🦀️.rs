@@ -105,7 +105,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
             }
 
             fn panel_view(roster: &[ViewWindowInstance], focused_window_id: &str) -> ViewModel {
-                ViewModel { window_id: None, focused_window_id: Some(focused_window_id.into()), window_instances: roster.to_vec(), ..Default::default() }
+                ViewModel { window_id: None, focused_window_id: Some(focused_window_id.into()), window_instances: roster.to_vec(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
             }
 
             let manifest = || App { definition: create_en1996_app(), examples: Vec::new() };
@@ -114,7 +114,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 ViewWindowInstance { id: "norm-results-right".into(), window_kind_id: ResultsWindowConfigOwner::WINDOW_KIND_ID.into() },
                 ViewWindowInstance { id: "norm-inputs".into(), window_kind_id: inputs::WINDOW_INPUTS.into() },
             ];
-            let all = ViewModel { window_instances: roster.clone(), ..Default::default() };
+            let all = ViewModel { window_instances: roster.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
             let left = all.for_window_instance("norm-results-left").expect("left Results window");
             let right = all.for_window_instance("norm-results-right").expect("right Results window");
             let left_panel = panel_view(&roster, "norm-results-left");
@@ -180,9 +180,9 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 drop(reopened);
                 let (reopened_left, reopened_right) = reopened_outcome?;
                 if reopened_left.selected_check_index != Some(3) || reopened_right != right_config { return Err("Norm edit after reload lost same-kind instance isolation".into()); }
-                let stale = ViewModel { window_id: Some("norm-results-missing".into()), window_instances: roster.clone(), ..Default::default() };
+                let stale = ViewModel { window_id: Some("norm-results-missing".into()), window_instances: roster.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let wrong = all.for_window_instance("norm-inputs").expect("Inputs window");
-                let absent = ViewModel { window_instances: roster, ..Default::default() };
+                let absent = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let mutation = || NormResultsWindowConfigMutation::ChangeSelectedCheckIndex(ChangeSelectedCheckIndex { index: Some(4) });
                 if addressed::<ResultsWindowConfigOwner>(&stale, mutation()).is_ok() || addressed::<ResultsWindowConfigOwner>(&wrong, mutation()).is_ok() || addressed::<ResultsWindowConfigOwner>(&absent, mutation()).is_ok() {
                     return Err("Norm Results-window address admitted stale, wrong-kind, or absent identity".into());

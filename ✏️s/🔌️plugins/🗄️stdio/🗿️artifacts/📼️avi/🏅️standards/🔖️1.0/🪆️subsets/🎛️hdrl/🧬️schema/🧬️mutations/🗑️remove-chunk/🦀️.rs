@@ -22,8 +22,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveChunk {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::RemoveChunk(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove chunk", "Chunk entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove chunk", "Chunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

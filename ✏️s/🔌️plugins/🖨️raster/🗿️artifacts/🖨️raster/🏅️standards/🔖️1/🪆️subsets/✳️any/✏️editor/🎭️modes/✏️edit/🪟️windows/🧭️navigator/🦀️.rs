@@ -4,7 +4,13 @@ use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::raster_scene;
 use crate::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_WINDOW_NAVIGATOR: &str = "raster-navigator";

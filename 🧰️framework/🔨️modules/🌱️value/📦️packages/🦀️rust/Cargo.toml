@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Neutral typed value conversion, ordered ownership, bounded retained cloning and explicit retirement."
+
+[package.metadata.semio]
+role = "framework"
+id = "value"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value"
+path = "🦀️.rs"
+
+[features]
+default = []
+ordered-set-serde = []
+
+[dependencies]
+semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

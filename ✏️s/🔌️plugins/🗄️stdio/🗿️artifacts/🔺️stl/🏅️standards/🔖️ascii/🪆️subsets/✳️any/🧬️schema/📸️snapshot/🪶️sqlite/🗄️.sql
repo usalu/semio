@@ -1,5 +1,5 @@
 CREATE TABLE stl_solid (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
+  id INTEGER PRIMARY KEY,
   schema TEXT NOT NULL,
   name TEXT NOT NULL
 );

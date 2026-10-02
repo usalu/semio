@@ -138,7 +138,7 @@ pub struct Block5dGripTemplate {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Part Kind", "Bauteiltyp"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Part Kind", "Bauteiltyp"),
         source_format: BLOCK_5D_SCHEMA.into(),
         component_kind: "block5d".into(),
         dimension: "5d".into(),
@@ -440,7 +440,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️update-part2d/🧪️tests/🧪️circle/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️update-part2d/🧪️tests/🧪️circle-to-rectangle/🦀️.rs"]
                                     mod tests_circle_to_rectangle;
                                 }
                                 #[path = "."]

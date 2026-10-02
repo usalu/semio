@@ -1,2 +1,10 @@
 semio stdio.gif.dsl v1
-47494638376102000200800000000000ffffff2c0000000002000200000203440205002c0000000002000200a00a141ec8643202030c1005003b
+schema=stdio.gif width=2 height=2 background-color-index=0 pixel-aspect-ratio=0
+gct {
+  sorted=false colors=[ { r=0 g=0 b=0 } { r=255 g=255 b=255 } ]
+}
+images=[ { left=0 top=0 width=2 height=2 interlace=false indices="AAEBAA==" } { left=0 top=0 width=2 height=2 interlace=false indices="AQAAAQ=="
+lct {
+  sorted=true colors=[ { r=10 g=20 b=30 } { r=200 g=100 b=50 } ]
+}
+} ]

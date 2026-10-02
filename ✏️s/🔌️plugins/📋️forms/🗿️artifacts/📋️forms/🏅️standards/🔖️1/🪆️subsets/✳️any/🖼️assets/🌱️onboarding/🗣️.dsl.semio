@@ -1,45 +1,42 @@
 semio forms.form.dsl v1
 schema=forms.form id=onboarding version="1" title="Product Onboarding"
-definition=steps=[
-  id=profile title=Profile description="Tell us about yourself." blocks=[
-    id=full-name label="Full name" kind=text required=true
-    condition {}
-    id=bio label=Bio kind=longText placeholder="Short introduction"
-    condition {}
-    id=age label=Age kind=number min=13 max=120
-    condition {}
-    id=avatar label=Avatar kind=image src=""
-    condition {}
-    id=resume label=Resume kind=file accept=".pdf,.doc,.docx"
-    condition {}
-  ]
-  id=preferences title=Preferences description="Customize your experience." blocks=[
-    id=theme-color label="Accent color" kind=color default="#336699"
-    condition {}
-    id=start-date label="Start date" kind=date
-    condition {}
-    id=notifications label="Enable notifications" kind=boolean default=true
-    condition {}
-    id=volume label="Notification volume" kind=slider min=0 max=100 step=5 unit="%" default=60
-    condition {}
-    id=plan label=Plan kind=single required=true options=[ value=free label=Free value=pro label=Pro value=team label=Team ]
-    condition {}
-    id=features label=Features kind=multi options=[ value=analytics label=Analytics value=automation label=Automation value=collab label=Collaboration ]
-    condition {}
-    id=offset label="Workspace offset" kind=vector step=0.5 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
-    condition {}
-    id=welcome-note label=Welcome kind=note text="Review your answers before saving."
-    condition {}
-  ]
-  id=advanced title=Advanced blocks=[
-    id=show-team-size label="Specify team size" kind=boolean default=false
-    condition {}
-    id=team-size label="Team size" kind=slider min=1 max=50 step=1 default=5
-    condition { truthy expr { var name=show-team-size } }
-    id=team-role label="Primary role" kind=single options=[ value=design label=Design value=engineering label=Engineering value=product label=Product ]
-    condition { truthy expr { var name=show-team-size } }
-  ]
+structure=child_id=onboarding-structure target=artifact-id=onboarding-structure artifact-kind=s.stdio.semio standard=v1 subset=value
+results=child_id=onboarding-results target=artifact-id=onboarding-results artifact-kind=s.stdio.semio standard=v1 subset=table
+steps=[
+ { id=profile title=Profile description="Tell us about yourself." questions=[
+  { id=full-name label="Full name" kind=text required=true }
+  { id=bio label=Bio kind=longText placeholder="Short introduction" }
+  { id=age label=Age kind=number min=13 max=120 }
+  { id=avatar label=Avatar kind=image src="" }
+  { id=resume label=Resume kind=file accept=".pdf,.doc,.docx" }
+ ] }
+ { id=preferences title=Preferences description="Customize your experience." questions=[
+  { id=theme-color label="Accent color" kind=color default=0 }
+  { id=start-date label="Start date" kind=date }
+  { id=notifications label="Enable notifications" kind=boolean default=1 }
+  { id=volume label="Notification volume" kind=slider default=2 min=0 max=100 step=5 unit="%" }
+  { id=plan label=Plan kind=single required=true options=[ { value=free label=Free } { value=pro label=Pro } { value=team label=Team } ] }
+  { id=features label=Features kind=multi options=[ { value=analytics label=Analytics } { value=automation label=Automation } { value=collab label=Collaboration } ] }
+  { id=offset label="Workspace offset" kind=vector step=0.5 fields=[ { key=x label=X value=0 } { key=y label=Y value=0 } { key=z label=Z value=0 } ] schema=vec3 }
+  { id=welcome-note label=Welcome kind=note text="Review your answers before saving." }
+ ] }
+ { id=advanced title=Advanced questions=[
+  { id=show-team-size label="Specify team size" kind=boolean default=3 }
+  { id=team-size label="Team size" kind=slider default=4 min=1 max=50 step=1 condition=0 }
+  { id=team-role label="Primary role" kind=single options=[ { value=design label=Design } { value=engineering label=Engineering } { value=product label=Product } ] condition=1 }
+ ] }
 ]
 responses=[]
-structure=child_id=onboarding-structure target="onboarding-structure!s.stdio.semio@v1/value"
-results=child_id=onboarding-results target="onboarding-results!s.stdio.semio@v1/table"
+values=[
+ { kind=text text="#336699" items=[] members=[] }
+ { kind=boolean boolean=true items=[] members=[] }
+ { kind=unsigned unsigned=60 items=[] members=[] }
+ { kind=boolean boolean=false items=[] members=[] }
+ { kind=unsigned unsigned=5 items=[] members=[] }
+]
+conditions=[
+ { kind=truthy expression=2 items=[] }
+ { kind=truthy expression=3 items=[] }
+ { kind=var name=show-team-size items=[] }
+ { kind=var name=show-team-size items=[] }
+]

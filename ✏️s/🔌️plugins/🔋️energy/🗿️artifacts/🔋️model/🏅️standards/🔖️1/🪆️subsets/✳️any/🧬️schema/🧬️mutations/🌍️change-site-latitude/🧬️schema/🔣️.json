@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-latitude/schema.json",
+  "title": "ChangeSiteLatitude",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newLatitudeDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteLatitude"
+    },
+    "newLatitudeDeg": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Latitude",
+          "de": "Breitengrad"
+        },
+        "description": {
+          "en": "North positive, -90 to 90.",
+          "de": "Nord positiv, -90 bis 90."
+        },
+        "unit": "deg",
+        "step": 0.001,
+        "precision": 3,
+        "softMin": -90,
+        "softMax": 90,
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

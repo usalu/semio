@@ -26,6 +26,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-architect-program = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
@@ -49,7 +50,7 @@ serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 zip = { version = "6", default-features = false, features = ["deflate"] }
-# 🚫️ NOT a path dev-dependency on `semio-s-plugin-stdio-test-oracle`. That crate declares its own
+# 🚫️ NOT a path dev-dependency on `semio-s-artifact-stdio-xlsx-test-oracle`. That crate declares its own
 # `[workspace]` on purpose ("linked by generated cache-local test hosts by path and must not join
 # the repository workspace"), so a direct path dep from a workspace member makes cargo fail with
 # "multiple workspace roots found in the same workspace" — which breaks EVERY cargo command

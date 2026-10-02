@@ -30,12 +30,42 @@ use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use dsl::DslValue as Value;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp,
-    Emit, Fault, GranularityDefinition, HierarchyProvider, HistoryView, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError,
-};
-use store::EngineHandles;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const ARCHITECT_APP_ID: &str = "s.architect.program@1/*#editor";
@@ -1631,7 +1661,7 @@ impl ArtifactEditor for ArchitectPlayApp {
         Ok(Some(semio_framework_plugin::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::architect::config::schema::app_schema_descriptor())
     }
 
@@ -1697,7 +1727,7 @@ impl ArtifactEditor for ArchitectPlayApp {
             // Only a PRESENT but malformed viewport is rejected.
             "nodeGraphViewport" => {
                 let viewport = match args.and_then(|value| value.get("viewport")).cloned() {
-                    Some(value) => dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
+                    Some(value) => <semio_framework_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
                     None => graph_window::config::ArchitectGraphWindowConfig::default().viewport,
                 };
                 Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))

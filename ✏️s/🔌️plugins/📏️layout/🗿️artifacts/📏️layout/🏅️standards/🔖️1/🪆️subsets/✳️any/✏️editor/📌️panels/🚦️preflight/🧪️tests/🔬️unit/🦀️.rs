@@ -1,10 +1,10 @@
 use super::*;
 use crate::editor::layout::unit_tests::context::{layout_app, render as render_body};
-use semio_framework_plugin::AppLabels;
+use semio_framework_ui_locale::AppLabels;
 
 #[semio_framework_async_macros::async_test]
 async fn preflight_finds_missing_asset() {
-    let issues = run_layout_preflight(&crate::standards::v1::subsets::any::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
+    let issues = run_layout_preflight(&crate::standards::v1::subsets::any::schema::default_document(), LayoutLabels::labels(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
     let mut app = layout_app().await;
     let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT).await;
@@ -58,7 +58,7 @@ async fn preflight_reports_all_expected_issue_codes() {
     if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
         story.content = "a".repeat(450);
     }
-    let issues = run_layout_preflight(&doc, LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
+    let issues = run_layout_preflight(&doc, LayoutLabels::labels(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
     for expected in ["object.out_of_bounds", "asset.missing", "asset.modified", "asset.low_resolution", "image.empty_frame", "text.missing_story", "text.below_minimum_size", "font.missing", "text.overset", "asset.rgb_in_print"] {
         assert!(codes.contains(&expected), "missing preflight code: {expected}");

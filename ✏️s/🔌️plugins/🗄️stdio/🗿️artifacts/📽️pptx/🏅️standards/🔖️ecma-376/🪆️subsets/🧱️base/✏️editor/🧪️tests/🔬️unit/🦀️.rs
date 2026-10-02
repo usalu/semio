@@ -95,3 +95,5 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     assert_eq!(app.snapshot().unwrap(), expected, "a refused draft must preserve the persisted presentation");
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", PptxEditor, || semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() }, "../..");

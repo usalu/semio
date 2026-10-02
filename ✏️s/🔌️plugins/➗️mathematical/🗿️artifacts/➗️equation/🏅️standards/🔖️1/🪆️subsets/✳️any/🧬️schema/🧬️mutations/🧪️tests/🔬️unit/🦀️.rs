@@ -120,7 +120,7 @@ async fn delete_nodes_plural_cascades_like_the_singular_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(EquationMutation::kinds().len(), 15);
+    assert_eq!(EquationMutation::kinds().len(), 17);
     let mutation = EquationMutation::ChangeGraphDirected(change_graph_directed::ChangeGraphDirected { new_directed: false });
     assert_eq!(mutation.semantics().kind, "change-graph-directed");
     assert_eq!(mutation.semantics().record, "ChangedGraphDirected");
@@ -291,3 +291,47 @@ async fn change_coefficient_zero_denominator_fatal_never_applies() {
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region 🔖️GestureLeaves
+/// ⚖️ LAW: `move-nodes` moves every addressed node by the offset from its BASE position, inverts to ONE absolute
+/// `set-node-positions` row (the equation store's one-item fold contract), and that row restores the graph.
+#[semio_framework_async_macros::async_test]
+async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
+    let base = EquationSnapshot::default();
+    let mutation = EquationMutation::MoveNodes(move_nodes::MoveNodes { ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
+    let moved = mutation.diff(&base).diff().apply(&base).expect("valid drag");
+    for id in ["a", "b"] {
+        let (was, is) = (equation_graph(&base).nodes.into_iter().find(|node| node.id == id).expect("base"), equation_graph(&moved).nodes.into_iter().find(|node| node.id == id).expect("moved"));
+        assert_eq!((is.x, is.y), (was.x + 40.0, was.y - 12.5));
+    }
+    let undo = mutation.inverse(&base);
+    assert!(matches!(undo.as_slice(), [EquationMutation::SetNodePositions(payload)] if payload.ids() == ["a", "b"]), "{undo:?}");
+    assert_eq!(equation_graph(&undo_tail_first(moved, &undo)), equation_graph(&base));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+}
+
+/// ⚖️ LAW: the outcome vocabulary of `move-nodes` and `set-node-positions` — partial Warning, target-missing Error, no-op
+/// Warning, Fatal invariant that never applies.
+#[semio_framework_async_macros::async_test]
+async fn gesture_leaves_follow_the_outcome_vocabulary() {
+    let base = EquationSnapshot::default();
+    let code = |mutation: EquationMutation| mutation.diff(&base).messages().first().map(|message| message.code.0.clone());
+    let drag = |ids: &[&str], dx: f64| EquationMutation::MoveNodes(move_nodes::MoveNodes { ids: ids.iter().map(|id| id.to_string()).collect(), dx, dy: 0.0 });
+    assert_eq!(code(drag(&["a", "ghost"], 1.0)).as_deref(), Some("mutation.partial"));
+    assert_eq!(code(drag(&["ghost"], 1.0)).as_deref(), Some("mutation.target-missing"));
+    assert_eq!(code(drag(&["a"], 0.0)).as_deref(), Some("mutation.no-op"));
+    for fatal in [drag(&[], 1.0), drag(&["a", "a"], 1.0), drag(&["a"], f64::NAN)] {
+        let outcome = fatal.diff(&base);
+        protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
+        assert_eq!(outcome.messages()[0].code.0, "mutation.invariant");
+    }
+    let place = |positions: Vec<(&str, f64, f64)>| EquationMutation::SetNodePositions(set_node_positions::SetNodePositions { positions: positions.into_iter().map(|(id, x, y)| set_node_positions::EquationNodePosition { id: id.into(), x, y }).collect() });
+    let a = equation_graph(&base).nodes.into_iter().find(|node| node.id == "a").expect("node a");
+    assert_eq!(code(place(vec![("a", a.x, a.y)])).as_deref(), Some("mutation.no-op"));
+    assert_eq!(code(place(vec![("ghost", 1.0, 1.0)])).as_deref(), Some("mutation.target-missing"));
+    assert_eq!(code(place(vec![("a", 1.0, 1.0), ("a", 2.0, 2.0)])).as_deref(), Some("mutation.invariant"));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &place(vec![("a", 7.0, 8.0)])).await;
+    let label = <EquationMutation as SemanticMutation<EquationSnapshot>>::label(&drag(&["a", "b"], 40.0));
+    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Knoten um (40; 0) verschieben");
+}
+//#endregion 🔖️GestureLeaves

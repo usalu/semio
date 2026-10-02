@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
@@ -16,7 +17,7 @@ import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } 
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { COMMAND_INGRESS_KINDS } from "../🧵️child/🧬️schema/🟦️.ts";
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
-import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";

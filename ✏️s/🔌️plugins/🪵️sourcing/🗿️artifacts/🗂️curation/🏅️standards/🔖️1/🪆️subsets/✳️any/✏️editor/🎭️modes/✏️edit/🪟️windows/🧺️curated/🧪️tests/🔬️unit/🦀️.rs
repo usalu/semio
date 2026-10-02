@@ -16,7 +16,7 @@ fn curated_document() -> CurationSnapshot {
 }
 
 fn labels() -> &'static SourcingLabels {
-    crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())
+    crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 #[semio_framework_async_macros::async_test]

@@ -22,17 +22,13 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintFill", "fillBuc
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::schema::default_snapshot();
-    let config = LowpolyConfig::default();
-    let labels = semio_framework_plugin::resolve_labels::<LowpolyLabels>(&semio_framework_plugin::ViewModel::default());
-    let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_UV.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("UV", "UV"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("UV", "UV"),
         body_key: LOWPOLY_PLAY_BODY_UV.into(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "layout-grid".into(),
-        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the UV window paints textures —
@@ -111,7 +107,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_c
         Some(loaded) => {
             scene_surface(LOWPOLY_PLAY_SURFACE_UV, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: None, camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
         }
-        None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
+        None => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Failed to load UV canvas")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly uv window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

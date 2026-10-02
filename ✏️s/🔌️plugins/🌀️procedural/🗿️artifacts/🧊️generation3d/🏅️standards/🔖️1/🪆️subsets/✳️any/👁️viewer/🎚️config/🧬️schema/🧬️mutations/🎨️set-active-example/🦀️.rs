@@ -32,8 +32,8 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
         vec![Self { value: base.active_example_id.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Active Example", "Aktives Beispiel setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Active Example", "Aktives Beispiel setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -2,30 +2,44 @@
 /** 🏃️ Runs neutral process ownership and execution contracts. */
 import { resolve } from "node:path";
 import { mkdirSync } from "node:fs";
-import { spawn } from "node:child_process";
+import { runOwnedCommand } from "./🎛️owned-execution/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "./🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "./🧭️routing/🟦️.ts";
 import { runScriptMain } from "./🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1) throw Error("Expected test routing or artifact-files");
-    const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? resolve(this.root, "🗑️generated"));
+    if (segments.length !== 1) throw Error("Expected one process contract suite");
+    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("Process contract tests require explicit SEMIO_TEST_ARTIFACT_DIR");
+    const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR);
     mkdirSync(output, { recursive: true });
+    if(segments[0]==="resource-leases"){
+      await runOwnedCommand(process.execPath,["-e","const {testResourceLeases}=await import(process.argv[1]);await testResourceLeases(process.argv[2]);",resolve(this.root,"🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts"),output],this.repoRoot,"process:resource-leases",TEST_LEVEL_BUDGET_MS.fundamental);return;
+    }
+    if(segments[0]==="artifact-publication"){await (await import("./📦️artifacts/📤️publication/🧪️tests/🟦️.ts")).testArtifactPublication(output);return;}
     if (segments[0] === "artifact-files") {
       const { testArtifactFiles } = await import("./📦️artifacts/🗂️files/🧪️tests/🟦️.ts");
       await testArtifactFiles(output);
       return;
     }
-    if (segments[0] === "test-budget") {
-      const child = spawn(process.execPath, ["test", resolve(this.root, "🧪️testing/🎚️budget/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, stdio: "inherit" });
-      const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
-      if (status) throw Error(`test budget contract exited with status ${status}`);
-      return;
-    }
-    if (segments[0] !== "routing") throw Error("Expected test routing or artifact-files");
-    const child = spawn(process.execPath, ["test", resolve(this.root, "🧭️routing/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, stdio: "inherit" });
-    const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
-    if (status) throw Error(`routing contract exited with status ${status}`);
+    const suites: Readonly<Record<string, { source: string; budgetMs: number }>> = {
+      capture: { source: "📥️capture/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "wasm-build": { source: "📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "native-artifacts": { source: "📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "exact-cargo-laws": { source: "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "owner-context": { source: "📋️context/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "vitest-driver": { source: "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "cargo-driver": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "test-command": { source: "🧪️testing/🎛️execution/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      routing: { source: "🧭️routing/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "execution-budget": { source: "⏱️budget/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      budget: { source: "🧪️testing/🎚️budget/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "owned-execution": { source: "🎛️owned-execution/🧪️tests/🟦️.ts", budgetMs: 120_000 },
+      "process-tree-termination": { source: "🪓️termination/🧪️tests/🟦️.ts", budgetMs: 120_000 },
+    };
+    const suite = suites[segments[0]!];
+    if (!suite) throw Error(`Unknown process contract suite: ${segments[0]}`);
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, suite.source)], this.repoRoot, `process:${segments[0]}`, suite.budgetMs, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output } });
   }
 }
 

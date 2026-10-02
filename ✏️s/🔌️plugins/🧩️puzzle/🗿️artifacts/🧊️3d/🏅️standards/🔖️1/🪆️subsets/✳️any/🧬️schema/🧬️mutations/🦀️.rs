@@ -852,6 +852,7 @@ impl Mutation<Value> for Puzzle3dMutation {
     /// and forwards here too, same as every other method in this impl.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
     const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
+    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
 
     fn input_schema(&self) -> Option<&'static str> {
         Mutation::<Puzzle3dSnapshot>::input_schema(self)
@@ -1014,15 +1015,15 @@ impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
 
 /// 🧒️ Composition view of the play snapshot: a puzzle document owns no child artifacts, so the
 /// typed snapshot's own (empty) composition is the whole answer.
-impl semio_framework_schema::ArtifactCompositionFields for Puzzle3dPlaySnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
-        semio_framework_schema::ArtifactCompositionFields::visit_child_refs(self.typed.as_ref(), visitor)
+impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle3dPlaySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        semio_framework_schema_composition::ArtifactCompositionFields::visit_child_refs(self.typed.as_ref(), visitor)
     }
-    fn child_slots() -> &'static [semio_framework_schema::ChildSlotSpec] {
-        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::child_slots()
+    fn child_slots() -> &'static [semio_framework_schema_composition::ChildSlotSpec] {
+        <Puzzle3dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots()
     }
-    fn link_slots() -> &'static [semio_framework_schema::LinkSlotSpec] {
-        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::link_slots()
+    fn link_slots() -> &'static [semio_framework_schema_composition::LinkSlotSpec] {
+        <Puzzle3dSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::link_slots()
     }
 }
 
@@ -1059,6 +1060,7 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     /// there too.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle3dSnapshot>>::DESCRIPTORS;
     const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMAS;
+    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle3dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
 
     fn input_schema(&self) -> Option<&'static str> {
         Mutation::<Puzzle3dSnapshot>::input_schema(self)
@@ -1107,7 +1109,7 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {

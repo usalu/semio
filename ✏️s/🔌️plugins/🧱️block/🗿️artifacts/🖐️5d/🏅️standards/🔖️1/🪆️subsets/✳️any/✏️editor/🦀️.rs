@@ -22,12 +22,34 @@ use crate::editor::block5d::terminology::block5d_labels;
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
 use dsl::os_pack::json::Value;
 use std::collections::BTreeMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const BLOCK5D_PLAY_APP_ID: &str = "block5d-play";
@@ -50,8 +72,8 @@ pub fn block5d_action(action: &str, args: Option<semio_framework_plugin::UiValue
 
 /// 🏷️ Admits one fixed UI contract label — the type every contract node builder takes, distinct from
 /// the SDK's retained authoring `Label`.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -473,7 +495,7 @@ impl ArtifactEditor for Block5dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::block5d::config::schema::app_schema_descriptor())
     }
 

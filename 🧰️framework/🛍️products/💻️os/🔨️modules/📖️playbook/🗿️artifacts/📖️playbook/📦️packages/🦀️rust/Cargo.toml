@@ -17,6 +17,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 ui_wgpu = { package = "semio-framework-ui", path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu"] }

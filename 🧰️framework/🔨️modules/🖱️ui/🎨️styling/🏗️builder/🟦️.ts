@@ -1,6 +1,8 @@
+import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs, resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { readdirSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
-import { resolveTestLevel, runTestBudgeted } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 
 const stylingOwnerRoot = resolve(import.meta.dir, "..");
@@ -22,7 +24,7 @@ export class StylingPythonTestScript extends BundleScript {
     resolveTestLevel(segments);
     const sourceAssertion = "from importlib import import_module; styling = import_module('🔤️tokens.🐍️'); assert styling.BOARD_LIGHT; assert styling.STYLING_TOKENS['primary']; print('styling Python source import resolved')";
     const packageAssertion = "from importlib import import_module; styling = import_module('🎨️styling.🐍️'); assert styling.BOARD_LIGHT; assert styling.STYLING_TOKENS['primary']; print('styling Python wheel import resolved')";
-    await runTestBudgeted("uv", ["run", "--locked", "--no-sync", "python", "-c", sourceAssertion], { cwd: this.root, env: { ...process.env, PYTHONPATH: [stylingOwnerRoot, process.env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter) } });
-    await runTestBudgeted("uv", ["run", "--locked", "--no-sync", "python", "-c", `import sys; sys.path.insert(0, sys.argv[1]); ${packageAssertion}`, pythonWheelPath(this.root)], { cwd: this.root });
+    await runBudgetedTestCommand("uv", ["run", "--locked", "--no-sync", "python", "-c", sourceAssertion], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: { ...process.env, PYTHONPATH: [stylingOwnerRoot, process.env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter) } });
+    await runBudgetedTestCommand("uv", ["run", "--locked", "--no-sync", "python", "-c", `import sys; sys.path.insert(0, sys.argv[1]); ${packageAssertion}`, pythonWheelPath(this.root)], { cwd: this.root , budgetMs: testLevelBudgetMs()});
   }
 }

@@ -1,4 +1,4 @@
-import { GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
 
 /** 🧭 Admits one encoded document execution-target asset route. */
 export function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | "browser-actor" | undefined {

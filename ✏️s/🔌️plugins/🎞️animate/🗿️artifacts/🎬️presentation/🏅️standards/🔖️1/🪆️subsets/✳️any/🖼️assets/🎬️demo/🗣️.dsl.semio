@@ -3,64 +3,64 @@ schema=animate.presentation source=src="/🖼️assets/🖼️images/🏙️arch
 frame {
   x=0.127 y=0.1 width=0.746 height=0.75
 }
-tiles=[ id=tile-r0-c0 name=tile-r0-c0
+tiles=[ { id=tile-r0-c0 name=tile-r0-c0
 crop {
   x=0.127 y=0.1 width=0.1492 height=0.25
-}
-id=tile-r0-c1 name=tile-r0-c1
+} }
+{ id=tile-r0-c1 name=tile-r0-c1
 crop {
   x=0.2762 y=0.1 width=0.1492 height=0.25
-}
-id=tile-r0-c2 name=tile-r0-c2
+} }
+{ id=tile-r0-c2 name=tile-r0-c2
 crop {
   x=0.4254 y=0.1 width=0.1492 height=0.25
-}
-id=tile-r0-c3 name=tile-r0-c3
+} }
+{ id=tile-r0-c3 name=tile-r0-c3
 crop {
   x=0.5746 y=0.1 width=0.1492 height=0.25
-}
-id=tile-r0-c4 name=tile-r0-c4
+} }
+{ id=tile-r0-c4 name=tile-r0-c4
 crop {
   x=0.7238 y=0.1 width=0.1492 height=0.25
-}
-id=tile-r1-c0 name=tile-r1-c0
+} }
+{ id=tile-r1-c0 name=tile-r1-c0
 crop {
   x=0.127 y=0.35 width=0.1492 height=0.25
-}
-id=tile-r1-c1 name=tile-r1-c1
+} }
+{ id=tile-r1-c1 name=tile-r1-c1
 crop {
   x=0.2762 y=0.35 width=0.1492 height=0.25
-}
-id=tile-r1-c2 name=tile-r1-c2
+} }
+{ id=tile-r1-c2 name=tile-r1-c2
 crop {
   x=0.4254 y=0.35 width=0.1492 height=0.25
-}
-id=tile-r1-c3 name=tile-r1-c3
+} }
+{ id=tile-r1-c3 name=tile-r1-c3
 crop {
   x=0.5746 y=0.35 width=0.1492 height=0.25
-}
-id=tile-r1-c4 name=tile-r1-c4
+} }
+{ id=tile-r1-c4 name=tile-r1-c4
 crop {
   x=0.7238 y=0.35 width=0.1492 height=0.25
-}
-id=tile-r2-c0 name=tile-r2-c0
+} }
+{ id=tile-r2-c0 name=tile-r2-c0
 crop {
   x=0.127 y=0.6 width=0.1492 height=0.25
-}
-id=tile-r2-c1 name=tile-r2-c1
+} }
+{ id=tile-r2-c1 name=tile-r2-c1
 crop {
   x=0.2762 y=0.6 width=0.1492 height=0.25
-}
-id=tile-r2-c2 name=tile-r2-c2
+} }
+{ id=tile-r2-c2 name=tile-r2-c2
 crop {
   x=0.4254 y=0.6 width=0.1492 height=0.25
-}
-id=tile-r2-c3 name=tile-r2-c3
+} }
+{ id=tile-r2-c3 name=tile-r2-c3
 crop {
   x=0.5746 y=0.6 width=0.1492 height=0.25
-}
-id=tile-r2-c4 name=tile-r2-c4
+} }
+{ id=tile-r2-c4 name=tile-r2-c4
 crop {
   x=0.7238 y=0.6 width=0.1492 height=0.25
-}
+} }
 ] presentation=child_id=presentation-a764f59aa463eed1 target="presentation-a764f59aa463eed1!s.stdio.semio@v1/presentation" animation=child_id=animation-00526326d773a674 target="animation-00526326d773a674!s.stdio.semio@v1/animation"

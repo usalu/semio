@@ -9,7 +9,16 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, tree_window_item, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, TreeWindows, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::HasBase;
 
 //#region 🔖️Constants

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ⚛️ `@semio-tech/quiz-react` router: `bun ./📜️script.ts <test [quick|long|exhaustive] | typecheck>`. */
 import { join } from "node:path";
-import { resolveTestLevel, runCmd, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

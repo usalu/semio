@@ -36,10 +36,10 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ScaleSelecti
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (factor_en, factor_de) = puzzle2d_selection_number(self.factor);
         let (en, de) = puzzle2d_selection_items(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Scale {en} by a factor of {factor_en}"), &format!("{de} um den Faktor {factor_de} skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by a factor of {factor_en}"), &format!("{de} um den Faktor {factor_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

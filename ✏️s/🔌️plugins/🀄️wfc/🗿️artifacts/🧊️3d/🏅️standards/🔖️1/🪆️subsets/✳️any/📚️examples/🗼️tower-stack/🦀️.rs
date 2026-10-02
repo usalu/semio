@@ -10,7 +10,8 @@
 //! instance.
 
 use crate::schema::snapshot::{Color, GraphRule, Slot3d, SlotEdge, Tile, Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "tower-stack";
 pub const ICON: &str = "building";

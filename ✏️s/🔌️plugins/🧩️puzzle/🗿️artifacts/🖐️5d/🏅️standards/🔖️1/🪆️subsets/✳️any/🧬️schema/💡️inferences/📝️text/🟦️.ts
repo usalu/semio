@@ -49,5 +49,5 @@ export const puzzlePuzzle5dInferenceTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parsePuzzle5dInferenceText(value: unknown, at = "$"): Puzzle5dInferenceText {
-  return puzzlePuzzle5dInferenceTextGuardObject(value, `${at}`);
+  return puzzlePuzzle5dInferenceTextGuardString(value, `${at}`);
 }

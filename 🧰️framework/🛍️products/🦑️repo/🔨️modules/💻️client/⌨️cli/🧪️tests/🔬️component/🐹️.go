@@ -7549,8 +7549,11 @@ func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
 		t.Fatalf("failed to read the framework entity-kind catalog at %s: %v", catalogPath, err)
 	}
 	var catalog []struct {
-		ID    string `json:"id"`
-		Emoji string `json:"emoji"`
+		ID         string `json:"id"`
+		Emoji      string `json:"emoji"`
+		IconID     string `json:"iconId"`
+		Label      string `json:"label"`
+		Filterable bool   `json:"filterable"`
 	}
 	if err := json.Unmarshal(raw, &catalog); err != nil {
 		t.Fatalf("failed to decode the framework entity-kind catalog: %v", err)
@@ -7559,7 +7562,7 @@ func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
 		t.Fatalf("generated Go projection is stale: catalog has %d kinds, EntityKindCatalog has %d", len(catalog), len(EntityKindCatalog))
 	}
 	for index, kind := range catalog {
-		if EntityKindCatalog[index].ID != kind.ID || EntityKindCatalog[index].Emoji != kind.Emoji {
+		if EntityKindCatalog[index].ID != kind.ID || EntityKindCatalog[index].Emoji != kind.Emoji || EntityKindCatalog[index].IconID != kind.IconID || EntityKindCatalog[index].Label != kind.Label || EntityKindCatalog[index].Filterable != kind.Filterable {
 			t.Fatalf("generated Go projection is stale at %d: catalog %q/%q, projection %q/%q", index, kind.ID, kind.Emoji, EntityKindCatalog[index].ID, EntityKindCatalog[index].Emoji)
 		}
 	}
@@ -7591,6 +7594,11 @@ func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
 	if kind, found := EntityKindByEmoji(EmojiTechnologyMono); !found || kind.ID != "technology-mono" {
 		t.Errorf("first-wins index: expected technology-mono for the shared seedling emoji, got %q (found=%v)", kind.ID, found)
 	}
+	if kind, found := EntityKindByEmoji("📝️"); !found || kind.ID != "draft" {
+		t.Errorf("first-wins index: expected draft for the shared note emoji, got %q (found=%v)", kind.ID, found)
+	}
+	t.Logf("[DEBUG] Repo CLI Go entity projection observed: %d complete source rows and FIRST-WINS emoji lookups", len(catalog))
+
 }
 
 func TestArtifactKinds(t *testing.T) {

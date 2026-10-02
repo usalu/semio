@@ -127,3 +127,4 @@ export interface Fem3dSnapshot {
   analysis: FemAnalysisSettings;
 }
 
+export {fem3dSnapshotToSqliteDatabase,fem3dSnapshotFromSqliteDatabase,FEM3D_SQLITE_SCHEMA,type Fem3dSqliteSnapshot} from "./🪶️sqlite/🟦️.ts";

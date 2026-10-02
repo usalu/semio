@@ -25,7 +25,7 @@ const TEST_APP_COMMAND_WORK_ITEMS: usize = 1;
 const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
     "increment",
     "setLabel",
-    "amendLabel",
+    "streamLabel",
     "commitLabel",
     "badView",
     "select",
@@ -52,7 +52,7 @@ const TEST_APP_COMMAND_TOOL_IDS: &[&str] = &[
 const TEST_APP_COMMAND_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "increment", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "setLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "amendLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "streamLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "commitLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "badView", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "select", lanes: &[ArtifactToolPublicationLane::Config] },

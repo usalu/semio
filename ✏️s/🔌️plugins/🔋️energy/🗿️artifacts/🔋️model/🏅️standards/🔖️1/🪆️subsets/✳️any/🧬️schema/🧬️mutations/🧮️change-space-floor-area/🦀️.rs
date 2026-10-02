@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change space {} floor area to {} m²", self.id.0, self.new_floor_area_m2), &format!("Geschossfläche von Raum {} auf {} m² ändern", self.id.0, self.new_floor_area_m2))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change space {} floor area to {} m²", self.id.0, self.new_floor_area_m2), &format!("Geschossfläche von Raum {} auf {} m² ändern", self.id.0, self.new_floor_area_m2))
     }
 
     fn target(&self) -> Vec<String> {

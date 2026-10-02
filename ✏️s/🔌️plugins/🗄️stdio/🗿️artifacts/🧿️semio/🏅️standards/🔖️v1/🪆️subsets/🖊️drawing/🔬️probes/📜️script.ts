@@ -36,7 +36,7 @@
 //   bun 📜️script.ts gate-inputs    --out <dir>
 //
 // @see 📖️reader/🦀️.rs — the readers themselves
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/📜️script.ts — the
 //      spawn/offline/agent-scoped-target pattern this file mirrors
 

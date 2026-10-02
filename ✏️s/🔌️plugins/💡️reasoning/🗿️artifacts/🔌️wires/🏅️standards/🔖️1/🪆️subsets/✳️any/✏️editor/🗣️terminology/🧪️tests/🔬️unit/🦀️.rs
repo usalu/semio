@@ -1,5 +1,7 @@
 use super::*;
-use semio_framework_plugin::{AppLabels, Locale, Terminology};
+use semio_framework_ui_locale::AppLabels;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 #[semio_framework_async_macros::async_test]
 async fn relationship_kind_display_name_resolves_labels() {

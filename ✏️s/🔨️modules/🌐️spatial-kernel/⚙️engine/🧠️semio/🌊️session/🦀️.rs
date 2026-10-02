@@ -1,6 +1,7 @@
 //! 🌐️ First-party Semio geometry session with explicit instance ownership.
 use semio_framework_os_flow::mesh::*;
-use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
+use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
+use semio_framework_value::ValueType;
 use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use semio_framework_3d::brep::queries::tessellation::{TessellationJob, TessellationStep};
 use std::collections::{BTreeMap, BTreeSet, HashSet};

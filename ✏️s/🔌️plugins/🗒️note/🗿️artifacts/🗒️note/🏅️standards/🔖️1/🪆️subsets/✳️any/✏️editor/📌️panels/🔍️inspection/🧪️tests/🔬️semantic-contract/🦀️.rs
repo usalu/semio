@@ -5,7 +5,7 @@ fn note_semantic_panels_match_the_json_oracle() {
     let mut snapshot = crate::schema::empty_note_snapshot();
     snapshot.snap_enabled = Some(false);
     for row in fixture["cases"].as_array().expect("locale cases") {
-        let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() };
+        let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
         let labels = crate::editor::note::terminology::note_play_labels(&view_state);
         let inspector = render(&snapshot, fixture["utility"].as_str().expect("utility"), labels).expect("inspector");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(inspector)).expect("project and retire inspector");

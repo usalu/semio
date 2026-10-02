@@ -6,7 +6,7 @@
 use crate::editor::grid3d as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::grid3d as viewer;
-use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
+use crate::WFC_GRID3D_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
@@ -15,8 +15,8 @@ fn examples() -> &'static [ExampleSource] {
     crate::examples::example_source_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::grid3d_artifact_inference_descriptor()]).as_slice()
 }
 
@@ -32,7 +32,7 @@ pub fn io() -> IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: Some(&languages[1]), binary: Some(&languages[3]) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<Grid3dSnapshot, Grid3dMutation>(WFC_GRID3D_DOCUMENT_SCHEMA.to_string()),
+            codec: crate::standards::v1::subsets::any::io::native_snapshot_codec(),
         },
         entries: &[],
     }

@@ -26,8 +26,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create drawing child {}", self.child_id), &format!("Zeichnungs-Kind {} erstellen", self.child_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create drawing child {}", self.child_id), &format!("Zeichnungs-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]

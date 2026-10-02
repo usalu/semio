@@ -109,6 +109,8 @@ default = []
 cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en1993/cross-fem"]
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-s-artifact-norm-din4108 = { workspace = true }

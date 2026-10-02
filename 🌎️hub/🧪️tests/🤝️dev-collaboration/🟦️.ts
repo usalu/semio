@@ -1,3 +1,5 @@
+import { resolveTestLevel, atTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { devHubCatalogBootstrapPublisherV1 } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
@@ -14,7 +16,7 @@ import { tmpdir } from "node:os";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

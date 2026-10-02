@@ -1,0 +1,726 @@
+{
+  "schema": "semio.native-decoding-stage/v1",
+  "cases": [
+    {
+      "id": "completed-child-restores-parent",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            },
+            {
+              "kind": "advance",
+              "units": 3
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 12
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "inherited-stage-progress-is-retained",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "advance",
+              "units": 1
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 4
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "rejected-child-retains-admitted-bytes",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            },
+            {
+              "kind": "reject"
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 12
+        },
+        "errors": [
+          "rejected"
+        ]
+      }
+    },
+    {
+      "id": "child-canceled-before-admission",
+      "maximumBytes": 64,
+      "cancel": {
+        "total": 3,
+        "at": 0
+      },
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            },
+            {
+              "kind": "advance",
+              "units": 3
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 4
+        },
+        "errors": [
+          "canceled"
+        ]
+      }
+    },
+    {
+      "id": "child-canceled-after-admission",
+      "maximumBytes": 64,
+      "cancel": {
+        "total": 3,
+        "at": 3
+      },
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            },
+            {
+              "kind": "advance",
+              "units": 3
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 12
+        },
+        "errors": [
+          "canceled"
+        ]
+      }
+    },
+    {
+      "id": "child-overrun-restores-parent",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "advance",
+              "units": 4
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 4
+        },
+        "errors": [
+          "overrun"
+        ]
+      }
+    },
+    {
+      "id": "nested-ownership-cannot-reset-limit",
+      "maximumBytes": 16,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 13
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 4
+        },
+        "errors": [
+          "limit"
+        ]
+      }
+    },
+    {
+      "id": "parent-overrun-remains-visible",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 3
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            },
+            {
+              "kind": "advance",
+              "units": 3
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 2
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 3,
+          "total": 2,
+          "ownedBytes": 12
+        },
+        "errors": [
+          "overrun"
+        ]
+      }
+    },
+    {
+      "id": "grandchild-restores-both-workloads",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 3
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 2
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 2
+            },
+            {
+              "kind": "advance",
+              "units": 1
+            },
+            {
+              "kind": "charge",
+              "units": 3
+            },
+            {
+              "kind": "scope",
+              "operations": [
+                {
+                  "kind": "begin",
+                  "units": 4
+                },
+                {
+                  "kind": "advance",
+                  "units": 4
+                },
+                {
+                  "kind": "charge",
+                  "units": 5
+                }
+              ]
+            },
+            {
+              "kind": "advance",
+              "units": 1
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 2
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 3,
+          "total": 3,
+          "ownedBytes": 10
+        },
+        "errors": []
+      }
+    },
+    {
+      "id": "zero-work-child-restores-parent",
+      "maximumBytes": 64,
+      "cancel": null,
+      "operations": [
+        {
+          "kind": "begin",
+          "units": 2
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        },
+        {
+          "kind": "charge",
+          "units": 4
+        },
+        {
+          "kind": "scope",
+          "operations": [
+            {
+              "kind": "begin",
+              "units": 0
+            },
+            {
+              "kind": "charge",
+              "units": 8
+            }
+          ]
+        },
+        {
+          "kind": "advance",
+          "units": 1
+        }
+      ],
+      "expected": {
+        "progress": {
+          "completed": 2,
+          "total": 2,
+          "ownedBytes": 12
+        },
+        "errors": []
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "unknown-stage-operation",
+      "value": {
+        "id": "completed-child-restores-parent",
+        "maximumBytes": 64,
+        "cancel": null,
+        "operations": [
+          {
+            "kind": "begin",
+            "units": 2
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "charge",
+            "units": 4
+          },
+          {
+            "kind": "scope",
+            "operations": [
+              {
+                "kind": "begin",
+                "units": 3
+              },
+              {
+                "kind": "charge",
+                "units": 8
+              },
+              {
+                "kind": "advance",
+                "units": 3
+              }
+            ]
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "reset",
+            "units": 0
+          }
+        ],
+        "expected": {
+          "progress": {
+            "completed": 2,
+            "total": 2,
+            "ownedBytes": 12
+          },
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "missing-work-units",
+      "value": {
+        "id": "completed-child-restores-parent",
+        "maximumBytes": 64,
+        "cancel": null,
+        "operations": [
+          {
+            "kind": "begin",
+            "units": 2
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "charge",
+            "units": 4
+          },
+          {
+            "kind": "scope",
+            "operations": [
+              {
+                "kind": "begin",
+                "units": 3
+              },
+              {
+                "kind": "charge",
+                "units": 8
+              },
+              {
+                "kind": "advance",
+                "units": 3
+              }
+            ]
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "advance"
+          }
+        ],
+        "expected": {
+          "progress": {
+            "completed": 2,
+            "total": 2,
+            "ownedBytes": 12
+          },
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "negative-child-work",
+      "value": {
+        "id": "completed-child-restores-parent",
+        "maximumBytes": 64,
+        "cancel": null,
+        "operations": [
+          {
+            "kind": "begin",
+            "units": 2
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "charge",
+            "units": 4
+          },
+          {
+            "kind": "scope",
+            "operations": [
+              {
+                "kind": "begin",
+                "units": 3
+              },
+              {
+                "kind": "charge",
+                "units": 8
+              },
+              {
+                "kind": "advance",
+                "units": 3
+              }
+            ]
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "scope",
+            "operations": [
+              {
+                "kind": "advance",
+                "units": -1
+              }
+            ]
+          }
+        ],
+        "expected": {
+          "progress": {
+            "completed": 2,
+            "total": 2,
+            "ownedBytes": 12
+          },
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "undeclared-allocation-reset",
+      "value": {
+        "id": "completed-child-restores-parent",
+        "maximumBytes": 64,
+        "cancel": null,
+        "operations": [
+          {
+            "kind": "begin",
+            "units": 2
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "charge",
+            "units": 4
+          },
+          {
+            "kind": "scope",
+            "operations": [
+              {
+                "kind": "begin",
+                "units": 3
+              },
+              {
+                "kind": "charge",
+                "units": 8
+              },
+              {
+                "kind": "advance",
+                "units": 3
+              }
+            ]
+          },
+          {
+            "kind": "advance",
+            "units": 1
+          },
+          {
+            "kind": "charge",
+            "units": 8,
+            "resetOwned": true
+          }
+        ],
+        "expected": {
+          "progress": {
+            "completed": 2,
+            "total": 2,
+            "ownedBytes": 12
+          },
+          "errors": []
+        }
+      }
+    }
+  ]
+}

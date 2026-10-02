@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/schema-validator-ts",
+  "targets": {
+    "test-shape": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test shape",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

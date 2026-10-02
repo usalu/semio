@@ -67,10 +67,10 @@ message CameraTrajectory {
 }
 
 message DenseCloud {
-  string positions = 1;
-  optional string colors = 2;
-  optional string confidence = 3;
-  optional string classification = 4;
+  Float32Buffer positions = 1;
+  optional ByteBuffer colors = 2;
+  optional Float32Buffer confidence = 3;
+  optional ByteBuffer classification = 4;
 }
 
 message DenseParams {
@@ -247,7 +247,7 @@ message RemodelingDurableArtifact {
   optional string mime = 2;
   uint32 width = 3;
   uint32 height = 4;
-  repeated string chunks = 5;
+  repeated ByteBuffer chunks = 5;
 }
 
 message RemodelingMesh {
@@ -284,8 +284,8 @@ message SfmParams {
 }
 
 message SparseCloud {
-  string points = 1;
-  optional string colors = 2;
+  Float32Buffer points = 1;
+  optional ByteBuffer colors = 2;
 }
 
 enum TrackClass {
@@ -362,3 +362,8 @@ message TrackClass {
 message VideoCodec {
   string value = 1;
 }
+
+message Float32Inline { repeated fixed32 sample_bits = 1; }
+message Float32Content { string content_id = 1; uint64 chunk_count = 2; }
+message Float32Buffer { oneof storage { Float32Inline inline = 1; Float32Content content = 2; } }
+message ByteBuffer { bytes values = 1; }

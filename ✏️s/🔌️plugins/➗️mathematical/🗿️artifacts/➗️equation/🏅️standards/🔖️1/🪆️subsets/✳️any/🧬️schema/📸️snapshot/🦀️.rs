@@ -2,7 +2,7 @@
 
 use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Snapshot
@@ -55,9 +55,9 @@ pub struct EquationFixture {
 impl ToValue for EquationSnapshot {
     fn to_value(&self) -> DslValue {
         DslValue::object([
-            ("notation".to_string(), to_dsl_value(&self.notation).unwrap_or(DslValue::Null)),
-            ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
-            ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
+            ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
+            ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
+            ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
             ("equation".to_string(), self.equation.to_value()),
         ])
     }
@@ -67,9 +67,9 @@ impl FromValue for EquationSnapshot {
         let entries = DslValue::into_object(value)?;
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
-            notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
-            results: from_dsl_value(field("results")).map_err(ValueError::new)?,
-            computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
+            notation: semio_framework_value::FromValue::from_value(field("notation"))?,
+            results: semio_framework_value::FromValue::from_value(field("results"))?,
+            computed: semio_framework_value::FromValue::from_value(field("computed"))?,
             equation: EquationExprSnapshot::from_value(field("equation"))?,
         })
     }
@@ -294,3 +294,9 @@ pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
     Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

@@ -1,4 +1,8 @@
 use super::*;
+macro_rules! ordinary_fixture_spec {
+    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+}
+
 use crate::os_pack::json::Value;
 
 #[semio_framework_async_macros::async_test]
@@ -75,7 +79,7 @@ fn nested_point_spec() -> RecordSpec {
 
 #[semio_framework_async_macros::async_test]
 async fn record_shape_recurses_via_record_spec_json_schema() {
-    let spec = RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))]);
+    let spec = RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(ordinary_fixture_spec!(nested_point_spec)))]);
     let schema = record_spec_json_schema(&spec);
     assert_eq!(schema["properties"]["at"]["type"], Value::from("object"));
     assert_eq!(schema["properties"]["at"]["properties"]["x"]["type"], Value::from("number"));
@@ -83,7 +87,7 @@ async fn record_shape_recurses_via_record_spec_json_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn flatten_splices_nested_fields_into_the_same_properties_map() {
-    let spec = RecordSpec::new(Some("shape"), RecordLayout::Inline, vec![FieldSpec::new(0, "origin", Shape::Record(nested_point_spec)).flatten(), FieldSpec::new(1, "label", Shape::Text)]);
+    let spec = RecordSpec::new(Some("shape"), RecordLayout::Inline, vec![FieldSpec::new(0, "origin", Shape::Record(ordinary_fixture_spec!(nested_point_spec))).flatten(), FieldSpec::new(1, "label", Shape::Text)]);
     let schema = record_spec_json_schema(&spec);
     let properties = schema["properties"].as_object().unwrap();
     assert!(properties.contains_key("x") && properties.contains_key("y"), "flatten must splice into the parent's properties, not nest");

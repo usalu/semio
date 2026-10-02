@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestBudgeted, resolveTestLevel } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🛂️ Checks the actual Hub credential provider. */
 class CheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Credential provider check accepts no arguments");
-    await runOwnedCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")], this.repoRoot, "hub-auth-client:check");
+    await runRepositoryCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")], this.repoRoot, "hub-auth-client:check");
   }
 }
 
@@ -17,7 +18,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { rest } = resolveTestLevel(args);
-    await runCargoTestBudgeted(["semio-hub-auth-client"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-auth-client"], this.repoRoot, rest);
   }
 }
 

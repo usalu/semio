@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::SetStyleBasedOn(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set style based on", "Basis des Stils setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set style based on", "Basis des Stils setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

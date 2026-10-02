@@ -27,8 +27,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateLayer {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_layer(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update layer \"{}\"", self.name), &format!("Ebene \"{}\" aktualisieren", self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update layer \"{}\"", self.name), &format!("Ebene \"{}\" aktualisieren", self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.layer_id.clone()]

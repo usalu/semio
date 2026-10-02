@@ -123,7 +123,7 @@ impl OpText for BinaryMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
-            let spec = spec_fn();
+            let spec = (spec_fn.ordinary)();
             let wire_keyword = spec.keyword.as_deref().unwrap_or(keyword);
             let probe = format!("{} ", wire_keyword);
             if line == wire_keyword || line.starts_with(&probe) {
@@ -137,7 +137,7 @@ impl OpText for BinaryMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

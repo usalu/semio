@@ -1,5 +1,7 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+use semio_framework_ui_locale::{Label, LabelText, Locale, LocalizedLabel, Terminology};
+
 /// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
 /// — the same `extern crate semio_framework_os_kernel as dsl;` every technology crate declares.
 /// Without it the plugin-owned `world-3d` records (`WorldSunConfig`, `WorldProjectionConfig`) could
@@ -30,6 +32,10 @@ pub mod ui_action_laws;
 #[cfg(test)]
 #[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
 mod declaration_fixture_mutations;
+
+#[cfg(test)]
+#[path = "🧪️tests/🤝️cooperative-pump/🦀️.rs"]
+mod cooperative_pump_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🌲️fixture-projection/🦀️.rs"]
@@ -343,7 +349,6 @@ pub(crate) mod contributed_mutation_wire;
 mod segmented_download_contract;
 
 #[path = "."]
-#[cfg_attr(test, macro_use)]
 pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
@@ -354,25 +359,14 @@ pub mod app {
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigSnapshot,
     };
     pub use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
-    use dsl::{to_dsl_value, DslValue};
+    use dsl::{DslValue};
     use protocol::{OpBinary, OpText};
     use semio_framework::kernel::{FixedCommandPage, UiDirtyScope};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
     pub use semio_framework::AppDefinition;
-    use semio_framework::{
-        clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
-        kernel::{
-            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, Effect, HistoryEntry, HistoryPatch, HybridLogicalTimestamp, InverseMutation, InvocationId,
-            InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
-        },
-        note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode,
-        FaultFrom, FaultOrigin, IconName, InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup,
-        PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef, ToolRunTraceCursor, TreeWindowRequest, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID,
-        INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
-        SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
-    };
+    use semio_framework::{clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id, kernel::{
+            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, Effect, HistoryEntry, HistoryPatch, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy, }, note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition, start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName, InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef, ToolRunTraceCursor, TreeWindowRequest, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID, };
     /// 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` closes `PluginApp`
     /// over each fleet plugin's own per-plugin enum via `dyn_enum_close!`, cross-crate (see
     /// 📓️terra-dyn-enum-macro-report.md's recipe §5) — replacing `Box<dyn PluginApp>` everywhere.
@@ -409,8 +403,9 @@ pub mod app {
     /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
+    use semio_framework_2d::compute::EngineHandles;
     use store::{
-        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn,
+        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, GroupMeta, HistoryColumn,
         HistoryLane, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
     };
 
@@ -430,10 +425,20 @@ pub mod app {
     /// flow. The node schema moved to the contract, but these never did — they are separate concerns
     /// that happen to share a home crate, and a second glob here would silently shadow the contract's
     /// own types with the old ones, quietly undoing the migration.
-    use ui_wgpu::wgpu::{
-        collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions,
-        FRAMEWORK_HISTORY_BODY_KEY,
-    };
+    use ui_wgpu::wgpu::collect_window_kind_ids_from_layout;
+    use ui_wgpu::wgpu::ContextMenuItemSpec;
+    use ui_wgpu::wgpu::ContextMenuRequest;
+    use ui_wgpu::wgpu::ContextMenuSurfaceTarget;
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::LocalizedLabel;
+    use ui_wgpu::wgpu::NamedLayout;
+    use semio_framework_ui_locale::Terminology;
+    use ui_wgpu::wgpu::WindowEngagement;
+    use ui_wgpu::wgpu::WindowEngagementSlot;
+    use ui_wgpu::wgpu::WindowLayout;
+    use ui_wgpu::wgpu::WindowMeasure;
+    use ui_wgpu::wgpu::WindowOptions;
+    use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
 
     //#region 🔖️TreeConvert
     /// 🌉️ Transfers the contract builder's fixed node owner to the runtime tree without a recursive
@@ -557,7 +562,7 @@ pub mod app {
     }
 
     /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
-    pub fn built_text_node(label: ui_wgpu::wgpu::Label) -> Result<BuiltNode, ui_wgpu::wgpu::Label> {
+    pub fn built_text_node(label: semio_framework_ui_locale::Label) -> Result<BuiltNode, semio_framework_ui_locale::Label> {
         let value = label.to_string();
         let Ok(value) = Label::try_from(value) else { return Err(label) };
         text(value).try_build().map_err(|_| label)
@@ -565,7 +570,7 @@ pub mod app {
 
     /// 🧩️ Admits a dynamic text root into the fixed-capacity UI tree and preserves admission
     /// failure at the plugin assembly boundary.
-    pub fn built_text_to_component_tree(label: ui_wgpu::wgpu::Label) -> UiAssemblyResult<ComponentTree> {
+    pub fn built_text_to_component_tree(label: semio_framework_ui_locale::Label) -> UiAssemblyResult<ComponentTree> {
         built_text_node(label).map(built_to_component_tree).map_err(|_| ui_assembly_error("built-text-root"))
     }
 
@@ -936,11 +941,7 @@ pub mod app {
     /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
-    pub use semio_framework::{
-        io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose,
-        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource,
-        IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
-    };
+    pub use semio_framework::{io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose, wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource, IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact, };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
     /// struct per `🚪️io/📤️export/🧵️serializers/…` leaf.
@@ -1198,7 +1199,7 @@ pub mod app {
     /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5): schema-owned child-composition hook —
     /// the derived analogue of `ArtifactComposition` for an artifact whose snapshot is assembled
     /// from OTHER artifacts' packs via declared `#[child(kind = "…")]` slots
-    /// (`semio_framework_schema::ArtifactCompositionFields`), rather than only foreign-dialect IO
+    /// (`semio_framework_schema_composition::ArtifactCompositionFields`), rather than only foreign-dialect IO
     /// sources. `Snapshot` deliberately repeats `DerivedArtifactSpec::Snapshot` instead of being
     /// read off it — a bare `type Children: ArtifactChildren` on `DerivedArtifactSpec` cannot itself
     /// constrain `Children::Snapshot == Self::Snapshot` without a where-clause at every use site, so
@@ -1207,7 +1208,7 @@ pub mod app {
         type Snapshot;
         /// 🪆️ This artifact's declared child slots — `&[]` for a leaf with no `#[child(...)]`
         /// fields (see `NoChildren`).
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec];
+        fn slots() -> &'static [::semio_framework_schema_composition::ChildSlotSpec];
         /// 🏗️ Assembles `Self::Snapshot` from resolver-supplied child packs, one `(dialect, pack
         /// bytes)` pair per slot instance (`many` slots contribute more than one pair for the SAME
         /// `ChildSlotSpec.kind`) — the composition-side counterpart to `decompose_to_children`.
@@ -1228,7 +1229,7 @@ pub mod app {
     impl<S> ArtifactChildren for NoChildren<S> {
         type Snapshot = S;
 
-        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+        fn slots() -> &'static [::semio_framework_schema_composition::ChildSlotSpec] {
             &[]
         }
 
@@ -3005,8 +3006,8 @@ pub mod app {
     /// only the transactional assembly plan ever walks it.
     pub struct ArtifactDeclaration {
         kind: String,
-        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
-        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         composers: Vec<&'static ComposerEntry>,
         formats: Vec<semio_framework::FormatDescriptor>,
@@ -3014,7 +3015,7 @@ pub mod app {
         languages: Vec<&'static dsl::LanguageSpec>,
         document_codecs: Vec<DocumentCodecSpec>,
         migrations: Vec<store::DialectMigration>,
-        schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
+        schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
         /// 🧒️🔗️ Pulled from `<Snapshot as ArtifactCompositionFields>::{child_slots,link_slots}` via
         /// `.composition::<Snapshot>()` — never settable directly (UCAS review, 2026-08-12): the
         /// derive-emitted trait impl IS the truth, so a hand-written list would be unwritable rather
@@ -3023,9 +3024,9 @@ pub mod app {
         /// are captured here so the declaration is a complete, single-source manifest of the
         /// artifact's shape, not because `register_all` calls anything with them today.
         #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
-        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+        child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
         #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
-        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+        link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
         capabilities: Vec<CapabilityRequirement>,
         definition: ArtifactDefinition,
         definition_error: Option<ArtifactDefinitionError>,
@@ -3064,8 +3065,8 @@ pub mod app {
     /// missing-mandatory-field-is-a-compile-error shape.
     pub struct ArtifactDeclarationBuilder<State> {
         kind: String,
-        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
-        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         composers: Vec<&'static ComposerEntry>,
         formats: Vec<semio_framework::FormatDescriptor>,
@@ -3073,9 +3074,9 @@ pub mod app {
         languages: Vec<&'static dsl::LanguageSpec>,
         document_codecs: Vec<DocumentCodecSpec>,
         migrations: Vec<store::DialectMigration>,
-        schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
-        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
-        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+        schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+        child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
+        link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
         capabilities: Vec<CapabilityRequirement>,
         definition: ArtifactDefinition,
         definition_error: Option<ArtifactDefinitionError>,
@@ -3111,11 +3112,11 @@ pub mod app {
     impl ArtifactDeclarationBuilder<NeedsSchema> {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
-        pub fn schema(self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+        pub fn schema(self, descriptor: ::semio_framework_schema_registry::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
             resolve_ready(self.schema_async(descriptor))
         }
 
-        async fn schema_async(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+        async fn schema_async(mut self, descriptor: ::semio_framework_schema_registry::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
             require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), descriptor.id).map(|claim| vec![claim]));
             ArtifactDeclarationBuilder {
                 kind: self.kind,
@@ -3157,11 +3158,11 @@ pub mod app {
         }
 
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
-        pub fn schemas(self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+        pub fn schemas(self, items: impl IntoIterator<Item = ::semio_framework_schema_registry::ArtifactSchemaDescriptor>) -> Self {
             resolve_ready(self.schemas_async(items))
         }
 
-        async fn schemas_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+        async fn schemas_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema_registry::ArtifactSchemaDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.schemas.push(item);
@@ -3170,11 +3171,11 @@ pub mod app {
         }
 
         /// 💡️ Appends inference descriptors for transactional registration. Repeatable.
-        pub fn inferences(self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+        pub fn inferences(self, items: impl IntoIterator<Item = ::semio_framework_schema_registry::ArtifactInferenceDescriptor>) -> Self {
             resolve_ready(self.inferences_async(items))
         }
 
-        async fn inferences_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+        async fn inferences_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema_registry::ArtifactInferenceDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::inference(), ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), item.id).map(|claim| vec![claim]));
                 self.inferences.push(item);
@@ -3356,11 +3357,11 @@ pub mod app {
         /// and the four fixed facets cannot carry — committed into the OS-wide export registry with the other catalogs, so
         /// every contract referencing them resolves. One `schema` capability row per export, claiming it as
         /// [`ArtifactIdentityClaim::schema_export`].
-        pub fn schema_documents(self, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
+        pub fn schema_documents(self, documents: ::semio_framework_schema_registry::ScopeSchemaExports) -> Self {
             resolve_ready(self.schema_documents_async(documents))
         }
 
-        async fn schema_documents_async(mut self, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
+        async fn schema_documents_async(mut self, documents: ::semio_framework_schema_registry::ScopeSchemaExports) -> Self {
             for export in documents.exports {
                 require_declared_capability_or_record(&self.definition, &mut self.definition_error, &ArtifactCapabilityKind::schema(), ArtifactIdentityClaim::schema_export(documents.scope, export.id).map(|claim| vec![claim]));
             }
@@ -3378,7 +3379,7 @@ pub mod app {
         /// ONLY way to set them (UCAS review, 2026-08-12: a hand-written list could silently disagree
         /// with the `#[derive(ArtifactSchema)]`-emitted impl the composition runtime actually reads,
         /// so there is deliberately no other setter).
-        pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
+        pub fn composition<Snapshot: ::semio_framework_schema_composition::ArtifactCompositionFields>(mut self) -> Self {
             self.child_slots = Snapshot::child_slots();
             self.link_slots = Snapshot::link_slots();
             self
@@ -3504,15 +3505,15 @@ pub mod app {
     /// 🧾️ Borrowed runtime declarations inspected for exact capability requirements.
     #[derive(Clone, Copy)]
     struct ArtifactCapabilitySources<'a> {
-        schemas: &'a [::semio_framework_schema::ArtifactSchemaDescriptor],
-        inferences: &'a [::semio_framework_schema::ArtifactInferenceDescriptor],
+        schemas: &'a [::semio_framework_schema_registry::ArtifactSchemaDescriptor],
+        inferences: &'a [::semio_framework_schema_registry::ArtifactInferenceDescriptor],
         inference_services: &'a [ArtifactInferenceService],
         composers: &'a [&'static ComposerEntry],
         formats: &'a [semio_framework::FormatDescriptor],
         subset_validators: &'a [&'static SubsetValidatorEntry],
         languages: &'a [&'static dsl::LanguageSpec],
         document_codecs: &'a [DocumentCodecSpec],
-        schema_documents: &'a [::semio_framework_schema::ScopeSchemaExports],
+        schema_documents: &'a [::semio_framework_schema_registry::ScopeSchemaExports],
     }
 
     impl ArtifactCapabilitySources<'_> {
@@ -4144,8 +4145,8 @@ pub mod app {
 
     /// 🧭️ One immutable plugin runtime catalogue assembled before any shared registry commit.
     pub(crate) struct ArtifactRegistrationPlan {
-        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
-        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+        schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
         formats: Vec<semio_framework::FormatDescriptor>,
@@ -4155,8 +4156,8 @@ pub mod app {
         document_codecs: Vec<store::ArtifactCodec>,
         native_snapshots: Vec<semio_framework::io::io_mechanism::NativeSnapshotRegistration>,
         migrations: Vec<store::DialectMigration>,
-        schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
-        app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+        schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+        app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
         owner: String,
         host_media_handlers: Vec<HostMediaHandlerDeclaration>,
         flow_extensions: Vec<FlowExtensionDeclaration>,
@@ -4168,7 +4169,7 @@ pub mod app {
         pub(crate) fn from_declarations(
             declarations: &[ArtifactDeclaration],
             hosted: &[ArtifactDeclaration],
-            app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+            app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
             foreign_document_codecs: &[DocumentCodecSpec],
             owner: impl Into<String>,
             host_media_handlers: Vec<HostMediaHandlerDeclaration>,
@@ -4252,9 +4253,9 @@ pub mod app {
     /// 🧬️ Authoritative per-plugin runtime declarations. It is complete before global IO/store rows mutate.
     pub(crate) struct PluginRuntimeRegistry {
         definitions: ArtifactDefinitionRegistry,
-        schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
-        inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
-        schema_documents: Vec<::semio_framework_schema::ScopeSchemaExports>,
+        schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+        inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+        schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
         inference_services: ArtifactInferenceServiceRegistry,
         routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
         /// 🕳️ Collected at `into_runtime` time and never consumed. Languages: plugin inits also register grammars one by one
@@ -4263,7 +4264,7 @@ pub mod app {
         #[allow(dead_code, reason = "captured but unwired — see comment above")]
         languages: Vec<dsl::LanguageSpec>,
         #[allow(dead_code, reason = "captured but unwired — see comment above")]
-        app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+        app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
         host_media_handlers: HostMediaHandlerRegistry,
         flow_extensions: FlowExtensionRegistry,
         owner_mutations: BTreeMap<String, WireMutationRosterEntry>,
@@ -4303,7 +4304,7 @@ pub mod app {
 
         /// 📚️ Adds the plugin-level shared schema documents (`PluginBuilder::schema_documents`) to the ones
         /// [`Self::publish_declared_catalogs`] commits.
-        pub(crate) fn share_schema_documents(&mut self, documents: Vec<::semio_framework_schema::ScopeSchemaExports>) {
+        pub(crate) fn share_schema_documents(&mut self, documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>) {
             self.schema_documents.extend(documents);
         }
 
@@ -4314,14 +4315,14 @@ pub mod app {
         /// resolves an editor's document schema there; unpublished, every stdio editor edit was refused
         /// `snapshot-edit.schema-unregistered`.
         pub(crate) fn publish_declared_catalogs(&self) -> Result<(), PluginAssemblyError> {
-            let documents_error = |error: ::semio_framework_schema::SchemaExportRegistryError| PluginAssemblyError::new("plugin-assembly.declaration-schema-documents", error.to_string());
+            let documents_error = |error: ::semio_framework_schema_registry::SchemaExportRegistryError| PluginAssemblyError::new("plugin-assembly.declaration-schema-documents", error.to_string());
             store::register_store_schema_exports().map_err(documents_error)?;
             store::io_schema::register_io_schema_exports().map_err(documents_error)?;
             for documents in &self.schema_documents {
-                ::semio_framework_schema::register_scope_schema_exports(*documents).map_err(documents_error)?;
+                ::semio_framework_schema_registry::register_scope_schema_exports(*documents).map_err(documents_error)?;
             }
-            ::semio_framework_schema::register_artifact_schema_descriptors(self.schemas.clone()).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
-            ::semio_framework_schema::register_artifact_inference_descriptors(self.inferences.clone()).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))
+            ::semio_framework_schema_registry::register_artifact_schema_descriptors(self.schemas.clone()).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
+            ::semio_framework_schema_registry::register_artifact_inference_descriptors(self.inferences.clone()).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))
         }
 
         pub(crate) fn extend_contributions(
@@ -6872,7 +6873,7 @@ pub mod app {
     // adding a locale or terminology to `🖱️ui/🎚️axes/🔣️.json` breaks every invocation until it supplies that
     // cell. See ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
 
-    pub use ui_wgpu::wgpu::AppLabels;
+    use semio_framework_ui_locale::{AppLabels, app_labels};
 
     /// 🗣️ Anything `resolve_labels` can resolve a label set from.
     pub trait LabelAxes {
@@ -6891,117 +6892,10 @@ pub mod app {
         }
     }
 
-    /// 🗣️ Region-tolerant `"de"`/`"de-DE"` → `Locale::De` parse, `_` → `Locale::En` — the shared body
-    /// of every hand-rolled per-app `is_de_locale`/`fn locale(cfg) -> Locale` this replaces.
-    pub fn locale_from_str(locale: &str) -> Locale {
-        if locale.starts_with("de") {
-            Locale::De
-        } else {
-            Locale::En
-        }
-    }
-
     /// 🗣️ Resolves the active label set for the shell-provided locale/terminology axes.
     pub fn resolve_labels<L: AppLabels>(axes: &impl LabelAxes) -> &'static L {
         L::labels(axes.locale(), axes.terminology())
     }
-
-    /// 🗣️ Config-driven counterpart of `resolve_labels` for the B1 apps whose `Config` type lives
-    /// outside their `_ui` crate (the orphan rule blocks `impl LabelAxes for` a foreign `Config` from
-    /// `_ui`) — call as `resolve_labels_for_locale::<XLabels>(&cfg.locale)`. Always resolves
-    /// `Terminology::Native`, matching every one of those apps' pre-existing behavior.
-    pub fn resolve_labels_for_locale<L: AppLabels>(locale: &str) -> &'static L {
-        L::labels(locale_from_str(locale), Terminology::Native)
-    }
-
-    /// 🗣️ Declares a two-axis label struct plus its four `NATIVE_EN`/`NATIVE_DE`/`REUSE_EN`/`REUSE_DE`
-    /// consts and `AppLabels` impl in one compact block — resolve the active set with
-    /// `resolve_labels::<XLabels>(view_state)`. Every field requires all four cells explicitly (no
-    /// implicit "reuse falls back to native") so a plugin's terminology coverage is always visible at
-    /// the declaration site, not inferred.
-    ///
-    /// ```ignore
-    /// semio_framework_plugin::app_labels! {
-    ///     struct Puzzle3dLabels {
-    ///         object: native_en "Object", native_de "Objekt", reuse_en "Component", reuse_de "Bestandskomponente";
-    ///         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
-    ///     }
-    /// }
-    /// ```
-    #[macro_export]
-    macro_rules! app_labels {
-    (
-        $(#[$meta:meta])*
-        $vis:vis struct $Name:ident {
-            $( $field:ident: native_en $nen:expr, native_de $nde:expr, reuse_en $ren:expr, reuse_de $rde:expr );+ $(;)?
-        }
-    ) => {
-        $(#[$meta])*
-        $vis struct $Name {
-            $( $vis $field: $crate::LabelText ),+ ,
-            locale: $crate::Locale,
-        }
-
-        impl $Name {
-            // 🌐️ PROCESS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: these carry the
-            // struct's own `$vis` (was hardcoded private) — once a plugin's taxonomy splits its
-            // `app_labels!` struct into its own `🦀️terminology.rs`, sibling `🎮️commands/*`/
-            // `🪟️windows/*` test modules need `Labels::NATIVE_EN` etc. directly (mirrors how flow's
-            // pilot never hit this because it never referenced the const cross-module). Additive:
-            // only widens visibility, never narrows it, so every existing `app_labels!` caller is
-            // unaffected.
-            $vis const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ , locale: $crate::Locale::En };
-            $vis const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ , locale: $crate::Locale::De };
-            $vis const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ , locale: $crate::Locale::En };
-            $vis const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ , locale: $crate::Locale::De };
-
-            /// 🗣️ Every label field's own name, in declaration order.
-            ///
-            /// The macro already makes a MISSING locale a compile error — all four spellings are
-            /// required to name a field at all. What it cannot see is a locale that is PRESENT but
-            /// wrong: English pasted into `native_de`, or an empty string. Naming the fields here is
-            /// what lets an app write that as a law over its whole label set instead of one
-            /// hand-written assertion per field, which is the only version that still holds when the
-            /// next label is added. Paired with [`Self::for_each_label`].
-            $vis const FIELD_NAMES: &'static [&'static str] = &[ $( stringify!($field) ),+ ];
-
-            /// 🗣️ Visits every label of THIS resolved set in [`Self::FIELD_NAMES`] order, allocation-free
-            /// so a guest can run the same walk a native test does.
-            $vis fn for_each_label(&self, mut visit: impl FnMut(&'static str, &$crate::LabelText)) {
-                $( visit(stringify!($field), &self.$field); )+
-            }
-
-            /// 🗣️ The locale THIS resolved set was resolved for.
-            ///
-            /// A resolved label set is the only locale-bearing thing most render paths hold: window
-            /// chrome built by shared framework helpers (`world3d_sun_measures`, the show-mode and
-            /// LOD pickers) sits far below the `ViewModel` and would otherwise have to thread a
-            /// `Locale` through every `window_measures` signature in every app to say "Sonne" instead
-            /// of "Sun". Those helpers were hardcoded English for exactly that reason
-            /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-            /// `📓️window-coverage-audit-2026-09-14.md` §4).
-            $vis fn locale(&self) -> $crate::Locale {
-                self.locale
-            }
-
-            /// 🇩🇪️ [`Self::locale`] as the `is_de` flag every chrome helper in this codebase takes.
-            $vis fn is_de(&self) -> bool {
-                matches!(self.locale, $crate::Locale::De)
-            }
-        }
-
-        impl $crate::AppLabels for $Name {
-            fn labels(locale: $crate::Locale, terminology: $crate::Terminology) -> &'static Self {
-                match (terminology, locale) {
-                    ($crate::Terminology::Native, $crate::Locale::En) => &Self::NATIVE_EN,
-                    ($crate::Terminology::Native, $crate::Locale::De) => &Self::NATIVE_DE,
-                    ($crate::Terminology::Reuse, $crate::Locale::En) => &Self::REUSE_EN,
-                    ($crate::Terminology::Reuse, $crate::Locale::De) => &Self::REUSE_DE,
-                }
-            }
-        }
-    };
-}
 
     #[cfg(test)]
     include!("🧪️tests/🔬️app-terminology/🦀️.rs");
@@ -7269,7 +7163,7 @@ pub mod app {
 
     #[path = "⏪️time-travel/🦀️.rs"]
     pub mod time_travel;
-    pub use time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
+    pub use time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HistoryMutationPage, HistoryMutationPages, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 
     #[cfg(test)]
     #[path = "🧪️tests/🧪️time-travel/🦀️.rs"]
@@ -7287,9 +7181,18 @@ pub mod app {
     #[path = "🧪️tests/🧪️history-label-reload/🦀️.rs"]
     mod history_label_reload_tests;
 
+    /// ⏪️ The cross-plugin history-edit acceptance law every plugin crate runs through `history_edit_acceptance_law!`.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    #[path = "🧪️tests/🧪️history-edit-acceptance/🦀️.rs"]
+    pub mod history_edit_acceptance;
+
     #[cfg(test)]
     #[path = "🧪️tests/🧪️composed-child-history/🦀️.rs"]
     mod composed_child_history_tests;
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️node-graph-delete-row/🦀️.rs"]
+    mod node_graph_delete_row_tests;
 
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -7385,7 +7288,7 @@ pub mod app {
         /// a test binary, so it hands the value to `ManuallyDrop` rather than trip the retirement assert.
         fn genesis_children_declared<S, M>(snapshot: S, derives: impl Fn(&S, &str, &str) -> bool) -> Result<usize, super::Fault>
         where
-            S: semio_framework_schema::ArtifactCompositionFields,
+            S: semio_framework_schema_composition::ArtifactCompositionFields,
             M: store::MemberFactory,
         {
             let snapshot = std::mem::ManuallyDrop::new(snapshot);
@@ -7465,16 +7368,16 @@ pub mod app {
         }
 
         /// ⌨️ The input commit-mode lint (audit F-4, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every field of a
-        /// projected body that would publish one document edit per keystroke — an `Input` of any kind but `number` (a
-        /// continuous control, the framework scrub) and `file`, bound through `change` to a verb `is_document_verb` names,
-        /// without the blur commit policy. Answers `"<node key> → <verb>"` per offender, sorted. Fixture
-        /// `🔌️plugin/🧫️fixtures/🧫️input-commit-lint/🔣️.json`.
+        /// projected body that would publish one document edit per keystroke — an `Input` of any kind but `number` and
+        /// `color` (continuous controls, the framework scrub, in both hosts) and `file`, bound through `change` to a verb
+        /// `is_document_verb` names, without the blur commit policy. Answers `"<node key> → <verb>"` per offender, sorted.
+        /// Fixture `🔌️plugin/🧫️fixtures/🧫️input-commit-lint/🔣️.json`.
         pub fn document_input_commit_findings(projection: &serde_json::Value, is_document_verb: &dyn Fn(&str) -> bool) -> Vec<String> {
             let mut findings = Vec::new();
             let mut stack = vec![projection];
             while let Some(node) = stack.pop() {
                 let component = &node["component"];
-                if component["type"] == "input" && !matches!(component["kind"].as_str(), Some("number" | "file")) && component["commit"].as_str() != Some("blur") {
+                if component["type"] == "input" && !matches!(component["kind"].as_str(), Some("number" | "color" | "file")) && component["commit"].as_str() != Some("blur") {
                     for binding in node["bindings"].as_array().into_iter().flatten().filter(|binding| binding["trigger"] == "change") {
                         if let Some(verb) = binding["action"]["name"].as_str().filter(|verb| is_document_verb(verb)) {
                             findings.push(format!("{} → {verb}", node["key"].as_str().unwrap_or_default()));
@@ -7979,7 +7882,7 @@ pub mod app {
                     ArgSchema::String { options, .. } if options.len() == 1 => vec![DslValue::String(options[0].value.clone())],
                     _ => declared_argument_alternatives(argument).map(|(first, second)| vec![first, second]).unwrap_or_default(),
                 };
-                let schema = argument.json_schema(crate::Terminology::Native, crate::Locale::En);
+                let schema = argument.json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
                 let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(&dsl::json::to_json_string(&schema))
                     .map_err(|error| format!("required argument {} schema cannot be validated: {error}", argument.id))?;
                 let value = candidates.into_iter().find(|candidate| validator.validate_json(&dsl::json::to_json_string(candidate)).is_ok())
@@ -8579,7 +8482,7 @@ pub mod app {
                 active_window_kind_id: Some(definition.window_kinds[index].id.clone()),
                 window_id: Some(instances[index].id.clone()),
                 window_instances: instances.clone(),
-                ..Default::default()
+                ..super::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
             let examples: serde_json::Value = examples.map(|text| serde_json::from_str(text).expect("declared-verb examples are JSON")).unwrap_or(serde_json::Value::Null);
             let staged_of = |action: &semio_framework::ActionDefinition| {
@@ -9056,7 +8959,7 @@ pub mod app {
                 cfg: &super::ConfigView<'_, Self::Config>,
                 interaction: &super::InteractionView<'_>,
                 view_state: Option<&super::ViewModel>,
-                engines: &store::EngineHandles,
+                engines: &semio_framework_2d::compute::EngineHandles,
             ) -> Result<super::ViewEmit<Self::ConfigMutation>, super::Fault> {
                 V::handle(command, doc, cfg, interaction, view_state, engines)
             }
@@ -9153,7 +9056,7 @@ pub mod app {
                 V::context_menu_with_request_context(request, doc, cfg, view_state, interaction, registry)
             }
 
-            fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
                 V::app_schema()
             }
 
@@ -9193,7 +9096,7 @@ pub mod app {
                 &super::InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: super::empty_draft_references() },
                 None,
                 &super::DraftView { snapshot: &draft },
-                &store::EngineHandles::empty(),
+                &semio_framework_2d::compute::EngineHandles::empty(),
             )
         }
 
@@ -9224,7 +9127,7 @@ pub mod app {
                 let hover = InteractionHoverState::new();
                 let peers = PeerPresenceRoot::empty();
                 let interaction = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: super::empty_draft_references() };
-                ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &store::EngineHandles::empty()).await.map(|emit| (emit.artifact_mutations.is_empty(), emit.draft_mutations.is_empty()))
+                ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &semio_framework_2d::compute::EngineHandles::empty()).await.map(|emit| (emit.artifact_mutations.is_empty(), emit.draft_mutations.is_empty()))
             };
             close_registered_fixture_app(&mut app);
             if let Ok((artifact_is_empty, draft_is_empty)) = result {
@@ -9280,7 +9183,7 @@ pub mod app {
             let plugin = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
 
             for id in &expected_schema_ids {
-                assert!(::semio_framework_schema::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
+                assert!(::semio_framework_schema_registry::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
             }
             let live_io_entries = semio_framework::io::io_mechanism::io_entries();
             for (from, into) in &expected_io_pairs {
@@ -9304,11 +9207,11 @@ pub mod app {
         /// byte-for-byte unchanged after the rejection: a preflight-failing declaration leaves ZERO
         /// rows behind (Task 4, law 2/3).
         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
-            let schema_count_before = ::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len());
+            let schema_count_before = ::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len());
             let io_count_before = semio_framework::io::io_mechanism::io_entries().len();
             let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
             assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
-            assert_eq!(::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
+            assert_eq!(::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
             assert_eq!(semio_framework::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
         }
 
@@ -9994,7 +9897,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(request) = self.request.as_mut() {
-                return match request.close_step(1, maximum_bytes).map_err(plugin_sdk_fault)? {
+                return match request.close_step(1, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     store::SnapshotRetirementStep::Pending { .. } => Err(plugin_sdk_fault("member ingress request exceeded its close grant")),
                     store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "member ingress request retirement is blocked" }),
@@ -10145,7 +10048,7 @@ pub mod app {
 
     impl<P, M> store::OwnedDocumentClosureSource for DocumentClosureSourceView<'_, P, M>
     where
-        P: semio_framework_schema::ArtifactCompositionFields,
+        P: semio_framework_schema_composition::ArtifactCompositionFields,
         M: SpaceMember,
     {
         fn generation(&self) -> u64 {
@@ -10410,7 +10313,7 @@ pub mod app {
 
         async fn capture_member_admitted<M: SpaceMember>(&self, index: usize, slot: &str, child_id: &str, dialect: &ArtifactDialect, member: &M) -> Result<Self, Fault> {
             let revision = member.content_revision().await;
-            let snapshot = member.snapshot_read_erased().await.map_err(plugin_sdk_fault)?;
+            let snapshot = member.snapshot_read_erased().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             Ok(self.insert_entry_admitted(index, ChildContentEntry { slot: slot.to_string(), child_id: child_id.to_string(), dialect: dialect.clone(), revision, snapshot }))
         }
 
@@ -10575,7 +10478,7 @@ pub mod app {
                 let Some(member) = child_snapshot_owner(children, retiring, slot, child_id) else {
                     return Ok(PluginCloseStep::Blocked { reason: "final child snapshot lease verification lost its exact live member owner" });
                 };
-                if let Some(owner) = member.take_returned_snapshot_read_retirement().map_err(plugin_sdk_fault)? {
+                if let Some(owner) = member.take_returned_snapshot_read_retirement().map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     *self.active = Some(owner);
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
@@ -10642,7 +10545,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(active) = self.active.as_mut() {
-                return match active.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                return match active.close_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.snapshot-read-return-over-budget"), "returned snapshot-read disposer exceeded its exact item or byte grant")),
                     store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "returned snapshot-read disposer is waiting on external ownership" }),
@@ -10717,7 +10620,7 @@ pub mod app {
             }
             let Some(entry) = self.entry.as_mut() else { return Ok(PluginCloseStep::Complete) };
             let member = &mut entry.member;
-            match member.close_owned_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+            match member.close_owned_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-close-over-budget"), "child member disposer exceeded its exact item or byte grant")),
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "child member is waiting for its required domain-owned bounded disposer" }),
@@ -11162,7 +11065,7 @@ pub mod app {
             match self.stage {
                 PeerRosterPublicationStage::DecodeMetadata => {
                     if self.raw.terminal_is_empty() {
-                        *self.typed = Some(presence_store.begin_peer_publication().map_err(plugin_sdk_fault)?);
+                        *self.typed = Some(presence_store.begin_peer_publication().map_err(|error| plugin_sdk_fault(error.to_string()))?);
                         self.stage = PeerRosterPublicationStage::PruneTyped;
                         return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                     }
@@ -11218,7 +11121,7 @@ pub mod app {
                         .as_mut()
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was not initialized"))?
                         .prune_one(|actor| root.contains_key(actor))
-                        .map_err(plugin_sdk_fault)?;
+                        .map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if !progressed {
                         self.stage = PeerRosterPublicationStage::DecodeTyped;
                     }
@@ -11305,7 +11208,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(rejected) = self.rejected.as_mut() {
-                return match rejected.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                return match rejected.close_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-rejected-over-budget"), "rejected app-typed presence disposer exceeded its exact grant")),
                     store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "rejected app-typed presence remains externally owned" }),
@@ -11339,7 +11242,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(typed) = self.typed.as_mut() {
-                let step = typed.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?;
+                let step = typed.close_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 if step != store::SnapshotRetirementStep::Complete {
                     return Ok(match step {
                         store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => PluginCloseStep::Pending { released_items, released_bytes },
@@ -11538,8 +11441,8 @@ pub mod app {
     #[value(rename_all = "camelCase", deny_unknown_fields)]
     pub struct NoConfig {}
 
-    impl semio_framework_schema::ArtifactCompositionFields for NoConfig {
-        fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+    impl semio_framework_schema_composition::ArtifactCompositionFields for NoConfig {
+        fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
             Ok(())
         }
     }
@@ -11562,7 +11465,7 @@ pub mod app {
             fn spec() -> store::mounted_pack_rt::RecordSpec {
                 store::mounted_pack_rt::RecordSpec::new(None, store::mounted_pack_rt::RecordLayout::Lines, Vec::new())
             }
-            store::mounted_pack_rt::Shape::Record(spec)
+            store::mounted_pack_rt::Shape::Record(store::mounted_pack_rt::RecordSpecProducer{ordinary:spec,decoding:|control|{control.checkpoint()?;Ok(store::mounted_pack_rt::RecordSpec::new(None,store::mounted_pack_rt::RecordLayout::Lines,control.allocate_vec(0)?))},encoding:|control|{control.checkpoint()?;Ok(store::mounted_pack_rt::RecordSpec::new(None,store::mounted_pack_rt::RecordLayout::Lines,control.allocate_vec(0)?))}})
         }
         fn to_value(&self) -> store::mounted_pack_rt::FieldValue {
             store::mounted_pack_rt::FieldValue::Record(store::mounted_pack_rt::RecordValue::default())
@@ -12066,6 +11969,31 @@ pub mod app {
         })
     }
 
+    /// 📚️ The framework's catalogue route: `setActiveExample` of an app that declares no such action loads the app's
+    /// catalogue document ([`ArtifactApp::catalogue_example_document`]).
+    pub const CATALOGUE_EXAMPLE_ACTION_ID: &str = "setActiveExample";
+
+    /// 🏷️ The framework's own label, in every shell locale, of a runtime verb no app declares (design §20.6): a history row
+    /// the runtime records for it never reads a hand-written description. `None` for every other verb.
+    // 🚫️async: a pure label lookup.
+    pub fn runtime_verb_label(verb: &str) -> Option<LocalizedLabel> {
+        match verb {
+            CATALOGUE_EXAMPLE_ACTION_ID => Some(LocalizedLabel::native("Load example", "Beispiel laden")),
+            _ => None,
+        }
+    }
+
+    /// 🎯️ The leaf label of a tool transaction's history row (design §19.1): the first of the edit's applied `ops` whose kind
+    /// the authoring `tool` declares as its intent ([`ArtifactApp::tool_intent_kinds`]), read from its mutation row in
+    /// `mutations` (its effective input) or labelled afresh when that row is windowed out; `None` when the tool declares no
+    /// kind any operation has, so the first leaf labels the row as before.
+    // 🚫️async: a pure lookup over the projected operations.
+    pub fn history_intent_label<A: ArtifactApp>(tool: &str, ops: &[&store::AppliedMutation<'_, A::Mutation>], mutations: &[MutationView]) -> Option<LocalizedLabel> {
+        let intents = A::tool_intent_kinds(tool);
+        let intent = ops.iter().take(if intents.is_empty() { 0 } else { ops.len() }).find(|op| intents.contains(&protocol::SemanticMutation::<A::Snapshot>::semantics(op.operation).kind))?;
+        Some(mutations.iter().find(|row| row.mutation_id == intent.mutation_id.0).map_or_else(|| time_travel::time_travel_mutation_label::<A>(intent.operation), |row| row.label.clone()))
+    }
+
     /// 🙈️ Whether a dispatch of `kind` is a history row: never an interaction verb, and a `View` only when it edited a
     /// store (`edited`) or carries an inverse — a pure view verb changes no history and undo cannot reach it.
     // 🚫️async: a pure total predicate over the dispatch's own facts.
@@ -12230,11 +12158,13 @@ pub mod app {
     /// host routes an `undo` to a remote (inference) history it owns, which this guest cannot see, and an undo with
     /// nothing to undo is a benign no-op; `can_undo` therefore never disables it here.
     ///
-    /// ✏️ A row with applied mutations expands to one child per mutation (the flagged ones first, at most
-    /// [`HISTORY_PANEL_MUTATION_ROWS`]): its label, a description naming its state and severity in words (colour is
-    /// never the only carrier), tone and icon by severity, and an Edit row action (`historyEditBegin{mutationId}`,
-    /// also the row's activation) when it is editable and this is not a viewer.
-    pub async fn ui_history_panel(history: &HistoryView, time_travel: Option<&TimeTravelPanel>, controller_id: &str, locale: Locale, read_only: bool, view: &ViewModel) -> UiAssemblyResult<BuiltNode> {
+    /// ✏️ A row with applied mutations is a tree window over ALL of them (gap N1): its projected ones first (the flagged
+    /// ones leading), then every other operation of its edit in op order, read from `pages` for the slice a host window
+    /// opened past the projection ([`time_travel::history_row_mutation_extent`]). Each child carries its label, a
+    /// description naming its state and severity in words (colour is never the only carrier), tone and icon by severity,
+    /// and an Edit row action (`historyEditBegin{mutationId}`, also the row's activation) when it is editable and this is
+    /// not a viewer — disabled, naming why, wherever the session would refuse `Begin` (gap N15).
+    pub async fn ui_history_panel(history: &HistoryView, time_travel: Option<&TimeTravelPanel>, remote_replay: Option<&semio_framework::kernel::HistoryRemoteReplay>, pages: &HistoryMutationPages, controller_id: &str, locale: Locale, read_only: bool, view: &ViewModel) -> UiAssemblyResult<BuiltNode> {
         let frozen = time_travel.is_some();
         let text_of = |text: time_travel::HistoryPanelText| text.text(locale);
         let action_item = |id: &str, icon_id: IconName, label: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
@@ -12277,10 +12207,10 @@ pub mod app {
             })
             .collect();
         let windows = TreeWindows::for_body(view, FRAMEWORK_HISTORY_BODY_KEY);
-        let commands_section = tree_window_section(&windows, "framework.history.commands", ui_label(text_of(time_travel::HistoryPanelText::Commands), "history-panel.commands-label")?, true, &command_rows, |entry| {
+        let commands_section = tree_window_section(&windows, time_travel::HISTORY_COMMANDS_SECTION_KEY, ui_label(text_of(time_travel::HistoryPanelText::Commands), "history-panel.commands-label")?, true, &command_rows, |entry| {
             let entry_label = entry.label.resolve(Terminology::Native, locale);
             let label = if entry.count > 1 { UiText::clipped(&format!("{entry_label} x{}", entry.count)) } else { UiText::clipped(entry_label) };
-            let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
+            let id = UiText::try_format(format_args!("{}{}", time_travel::HISTORY_ROW_KEY_PREFIX, entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
             let mutations: Vec<semio_framework::kernel::HistoryMutationEntry> = entry.mutations.iter().map(|mutation| history_mutation_entry(mutation, time_travel)).collect();
             let worst = mutations.iter().filter_map(|mutation| mutation.worst).max();
             let mut builder = ui::tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
@@ -12308,10 +12238,23 @@ pub mod app {
             }
             let mut shown: Vec<&semio_framework::kernel::HistoryMutationEntry> = mutations.iter().filter(|mutation| mutation.worst.is_some() || mutation.edited || mutation.superseded).collect();
             shown.extend(mutations.iter().filter(|mutation| mutation.worst.is_none() && !mutation.edited && !mutation.superseded));
-            for mutation in shown.into_iter().take(HISTORY_PANEL_MUTATION_ROWS) {
-                builder = builder.try_child(history_panel_mutation_row(mutation, controller_id, locale, read_only)?).map_err(|_| ui_assembly_error("history-panel.mutation-rows"))?;
+            let (projected, total) = time_travel::history_row_mutation_extent(entry);
+            if total == 0 {
+                return builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"));
             }
-            builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))
+            let (page, begin_refusal) = (pages.get(&entry.seq), time_travel.and_then(|panel| panel.begin_refusal));
+            tree_window_indexed_item(&windows, builder, id.as_str(), time_travel::history_row_opens_by_default(&mutations), total, |index| {
+                let paged;
+                let mutation = match shown.get(index) {
+                    Some(mutation) => *mutation,
+                    None => {
+                        let view = page.and_then(|page| page.rows.get(index.checked_sub(projected + page.from)?)).ok_or_else(|| ui_assembly_error("history-panel.mutation-page"))?;
+                        paged = history_mutation_entry(view, time_travel);
+                        &paged
+                    }
+                };
+                history_panel_mutation_row(mutation, controller_id, locale, read_only, begin_refusal)
+            })
         })?;
 
         let checkin_item = if read_only {
@@ -12353,25 +12296,25 @@ pub mod app {
             Some(tree_window_section(&windows, "framework.history.alternatives", ui_label(text_of(time_travel::HistoryPanelText::Alternatives), "history-panel.alternatives-label")?, true, &history.alternatives, |alternative| history_panel_alternative_row(alternative, controller_id, locale, mutable))?)
         };
         let mut sections = BuiltChildren::default();
+        let remote_section = match remote_replay {
+            Some(remote) => Some(time_travel::time_travel_remote_section(remote, time_travel.is_none() && !read_only, controller_id, locale)?),
+            None => None,
+        };
         let ordered: Vec<BuiltNode> = match time_travel {
             Some(panel) => {
                 let mut session = vec![time_travel::time_travel_band_section(panel, controller_id, locale)?];
                 if let Some(editor) = panel.editor.as_ref().filter(|_| !read_only) {
-                    session.extend(time_travel::time_travel_editor_sections(panel, editor, controller_id, locale)?);
+                    session.extend(time_travel::time_travel_editor_sections(panel, editor, &windows, controller_id, locale)?);
                 }
-                session.into_iter().chain(alternatives_section).chain([actions_section, commands_section]).collect()
+                session.into_iter().chain(remote_section).chain(alternatives_section).chain([actions_section, commands_section]).collect()
             }
-            None => std::iter::once(actions_section).chain(alternatives_section).chain([commands_section]).collect(),
+            None => remote_section.into_iter().chain([actions_section]).chain(alternatives_section).chain([commands_section]).collect(),
         };
         for section in ordered {
             sections.try_push(section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         }
         tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
     }
-
-    /// ✏️ Mutation children one history row shows at most (flagged ones first); the wire carries up to
-    /// [`HISTORY_ROW_MUTATION_ROWS`].
-    pub const HISTORY_PANEL_MUTATION_ROWS: usize = 8;
 
     /// 🌿️ One alternative row: its name (the trunk's empty one reads "Main line"), a check icon and "Current" when it is the
     /// current one, who branched it and when,
@@ -12409,8 +12352,10 @@ pub mod app {
 
     /// ✏️ One mutation child of a history row: label, state-and-severity description in words, tone and icon by
     /// severity, and Edit (`historyEditBegin{mutationId, store?}`, also its activation) when editable and not a viewer —
-    /// `store` names the composed member store a child mutation lives in (design §12).
-    fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool) -> UiAssemblyResult<BuiltNode> {
+    /// `store` names the composed member store a child mutation lives in (design §12). While the session would refuse
+    /// `Begin` (`begin_refusal`: replaying, choosing, finalizing, or a changed draft still open) the Edit action is disabled,
+    /// its label names the reason, and the row's activation fires nothing (gap N15).
+    fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool, begin_refusal: Option<semio_framework_time_travel::TimeTravelRefusal>) -> UiAssemblyResult<BuiltNode> {
         let (tone, icon) = time_travel::history_severity_tone(mutation.worst);
         let icon = if mutation.pending { "clock" } else if mutation.edited { "edit" } else { icon };
         let id = UiText::try_format(format_args!("framework.history.mutation.{}", mutation.mutation_id)).ok_or_else(|| ui_assembly_error("history-panel.mutation-id"))?;
@@ -12429,8 +12374,15 @@ pub mod app {
             if let Some(store) = mutation.store.as_deref() {
                 args.push(semio_framework::HISTORY_EDIT_ARG_STORE.to_owned(), UiValue::Text(UiText::clipped(store))).map_err(|_| ui_assembly_error("history-panel.mutation-args"))?;
             }
-            let edit = row_action(IconName::Edit.as_str(), time_travel::HistoryPanelText::Edit.text(locale), semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, RowActionPlacement::Row)?;
-            builder = builder.try_row_action(edit).map_err(|_| ui_assembly_error("history-panel.mutation-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), Some(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID))?);
+            let edit_text = time_travel::HistoryPanelText::Edit.text(locale);
+            let (edit, activation) = match begin_refusal {
+                None => (row_action(IconName::Edit.as_str(), edit_text, semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, RowActionPlacement::Row)?, Some(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID)),
+                Some(refusal) => {
+                    let reason = refusal.label().localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string();
+                    (row_action(IconName::Edit.as_str(), &format!("{edit_text}: {reason}"), semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, RowActionPlacement::Row)?.disabled(true), None)
+                }
+            };
+            builder = builder.try_row_action(edit).map_err(|_| ui_assembly_error("history-panel.mutation-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), activation)?);
         }
         builder.try_build().map_err(|_| ui_assembly_error("history-panel.mutation-build"))
     }
@@ -12865,16 +12817,8 @@ pub mod app {
             Self { artifact_mutations, ..Default::default() }
         }
 
-        /// 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
-        /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
-        /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
-        pub fn amend(artifact_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
-            Self { artifact_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
-        }
-
-        /// 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
-        /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
-        /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
+        /// 📌️ One described DOCUMENT edit outside a tool transaction. A gesture never streams through it: it is a tool
+        /// machine whose commit publishes [`Self::commit_transaction`]. See `🔖️ToolContract`.
         pub fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
             Self { artifact_mutations, description: Some(description.into()), ..Default::default() }
         }
@@ -13118,7 +13062,7 @@ pub mod app {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
                             body,
-                            &spec_fn(),
+                            &(spec_fn.ordinary)(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
                         return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
@@ -13130,7 +13074,7 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -13192,7 +13136,7 @@ pub mod app {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
                             body,
-                            &spec_fn(),
+                            &(spec_fn.ordinary)(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
                         return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
@@ -13204,7 +13148,7 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -13267,7 +13211,7 @@ pub mod app {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
                             body,
-                            &spec_fn(),
+                            &(spec_fn.ordinary)(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
                         return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
@@ -13279,7 +13223,7 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -13350,7 +13294,7 @@ pub mod app {
                         let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
                         let record = ::dsl::parse(
                             body,
-                            &spec_fn(),
+                            &(spec_fn.ordinary)(),
                             &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline },
                         )?;
                         return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
@@ -13362,7 +13306,7 @@ pub mod app {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+                let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
                 if body.is_empty() {
                     keyword
                 } else {
@@ -13434,7 +13378,7 @@ pub mod app {
     /// operations flow through a persistent `ArtifactStore` owned by {@link VcsArtifactApp}. Ephemeral
     /// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
     ///
-    /// # 🔖️UtilityPreviewContract
+    /// # 🔖️ToolContract
     /// The formalized actions-vs-utilities contract:
     /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
     ///   renderer, and execute once. `Mutation`-kind actions emit operations; `View`/`🐚️Shell`-kind actions must
@@ -13444,14 +13388,12 @@ pub mod app {
     ///   the active utility arrives via `view_state.active_utility_id` and is **never** stored in the document
     ///   nor emitted as an operation. Switching utilities dispatches the framework `setActiveUtility` View action; on a
     ///   switch the app must clear any in-progress preview scratch.
-    /// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
-    ///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
-    ///      edit (one undo per gesture); use for cheap operations (camera/opacity drags).
-    ///   2. scratch + commit — hold a draft in app-runtime state, render it as an overlay, and on gesture
-    ///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
-    ///      amending is O(N²) (draw drafts, lowpoly strokes).
-    /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
-    ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
+    /// - **Gestures are tool machines** (design §5, §15): a press-drag-release drives a persisted `ToolMachineRunner`
+    ///   through the host's `phase` (`stream` / `commit` / `abort` + `reason`; none = one-shot), previews from a
+    ///   local-only transient and yields its relative leaves as ONE transaction through
+    ///   {@link ActionEmit::commit_transaction}; an abort leaves zero trace. No gesture bracket verb exists.
+    /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`) are internal action ids
+    ///   driving the above.
     pub trait ArtifactApp: Default + Send + 'static {
         /// 🪪️ Exact author-owned coordinate stamped into every document envelope.
         const DIALECT: Dialect;
@@ -13729,7 +13671,7 @@ pub mod app {
         /// keeps its existing full-mutation behavior untouched; `EditorApp<E>`/`ViewerApp<V>` override
         /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
         const ROLE: AppRole = AppRole::Editor;
-        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
         /// three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
         /// owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
@@ -13801,6 +13743,20 @@ pub mod app {
         /// in `snapshot` — what a history-edit reference chip reads instead of the raw id. `None` shows the id as data.
         fn entity_label(_snapshot: &Self::Snapshot, _kinds: &[String], _id: &str) -> Option<LocalizedLabel> {
             None
+        }
+        /// 🖱️ The entity id one selected row `row` of a reference input's interaction domain names for an input of entity
+        /// `kinds` — what a history edit's "Use selection" drafts (design §16.4). `None` drops a row the input cannot name.
+        /// The default is the row id itself (the domain's rows ARE the entity ids); an app whose rows are composite (an
+        /// owner prefix, a component path) answers the bare entity id.
+        fn selection_reference_id(_kinds: &[String], row: &str) -> Option<String> {
+            Some(row.to_string())
+        }
+        /// 🎯️ The leaf kinds (`SemanticDescriptor::kind`, e.g. `"drag-selection"`) that state the intent of a transaction the
+        /// tool `tool` (the stamped `TransactionRef.tool`, `<appId>#<toolId>`) commits (design §19.1): its history row is
+        /// labelled by the first of its operations of one of these kinds instead of its first operation, so a gesture whose
+        /// support leaves come first still reads as what the user did. Empty (the default): the first operation labels it.
+        fn tool_intent_kinds(_tool: &str) -> &'static [&'static str] {
+            &[]
         }
         async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
@@ -14048,7 +14004,7 @@ pub mod app {
         /// builder call that already names `Self` is the correct place to register it, not a plugin-root
         /// side callback). `None` (the default) means this app has no schema of its own — a plugin
         /// library with zero document apps, or a document app whose config truly has no dedicated facet.
-        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             None
         }
 
@@ -15248,22 +15204,25 @@ pub mod app {
     pub enum NodeGraphDeleteDispatch {
         /// `deleteSelection` view action (flow and similar).
         Direct,
-        /// `nodeGraphEdit` with a `deleteSelection` operation (dag, sequence, procedural).
+        /// `nodeGraphEdit` with ONE `delete` row naming the selection's node and edge ids (design §13.3; dag, sequence,
+        /// procedural, trinity).
         ViaNodeGraphEdit,
     }
 
-    /// 🗑️ Delete-selection row with a localized count phrase — omitted when the selection is empty.
-    pub fn node_graph_delete_selection_spec(delete_label: &str, is_de: bool, node_count: usize, edge_count: usize, dispatch: NodeGraphDeleteDispatch) -> Option<ContextMenuItemSpec> {
-        if node_count == 0 && edge_count == 0 {
+    /// 🗑️ Delete-selection row with a localized count phrase over the selection `node_ids` / `edge_ids` resolved when the menu
+    /// opens — omitted when the selection is empty, so no row ever dispatches an empty or ambient delete. Via `nodeGraphEdit`
+    /// it carries those ids as the `delete {nodeIds, synapseIds}` row (`🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
+    pub fn node_graph_delete_selection_spec(delete_label: &str, is_de: bool, node_ids: &[String], edge_ids: &[String], dispatch: NodeGraphDeleteDispatch) -> Option<ContextMenuItemSpec> {
+        if node_ids.is_empty() && edge_ids.is_empty() {
             return None;
         }
-        let phrase = selection_count_phrase(is_de, &[(node_count, if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edge_count, if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
+        let phrase = selection_count_phrase(is_de, &[(node_ids.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edge_ids.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
         if phrase.is_empty() {
             return None;
         }
         let (action, args) = match dispatch {
             NodeGraphDeleteDispatch::Direct => ("deleteSelection".into(), None),
-            NodeGraphDeleteDispatch::ViaNodeGraphEdit => ("nodeGraphEdit".into(), Some(DslValue::from(&serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })))),
+            NodeGraphDeleteDispatch::ViaNodeGraphEdit => ("nodeGraphEdit".into(), Some(DslValue::from(&serde_json::json!({ "operations": [{ "operation": "delete", "nodeIds": node_ids, "synapseIds": edge_ids }] })))),
         };
         Some(ContextMenuItemSpec { id: "delete-selection".into(), label: Some(format!("{delete_label} ({phrase})")), icon: Some("trash".into()), destructive: Some(true), action: Some(action), args, ..Default::default() })
     }
@@ -16720,6 +16679,8 @@ pub mod app {
         pub payload_schema_id: String,
         pub contract: semio_framework::ToolExecutionContract,
         pub app_instance_id: u32,
+        /// 🌐️ Caller-selected ephemeral presentation axes, when a host context is present.
+        pub ui_axes: Option<(semio_framework_ui_locale::Locale, semio_framework_ui_locale::Terminology)>,
         pub parent_document_id: String,
         pub canonical_base_revision: [u8; 32],
         pub snapshot: std::sync::Arc<A::Snapshot>,
@@ -17563,7 +17524,7 @@ pub mod app {
         Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         fn close_step(&mut self, owner: &mut ArtifactStore<P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            match owner.close_owned_store_step(maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+            match owner.close_owned_store_step(maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.document-store-close-over-budget"), "document store close exceeded its exact one-owner grant")),
                 store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }),
@@ -20447,13 +20408,13 @@ pub mod app {
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, Fault> {
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: maximum_items.min(1), maximum_bytes };
             match self {
-                Self::Artifact(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::Config(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::Draft(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::Presence(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::Transient(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::WindowConfig(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
-                Self::WindowTransient(publication) => publication.close_step(grant).map_err(plugin_sdk_fault),
+                Self::Artifact(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::Config(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::Draft(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::Presence(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::Transient(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::WindowConfig(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
+                Self::WindowTransient(publication) => publication.close_step(grant).map_err(|error| plugin_sdk_fault(error.to_string())),
             }
         }
 
@@ -21952,7 +21913,7 @@ pub mod app {
                 };
             }
             if let Some(rejected) = self.rejected.as_mut() {
-                let step = rejected.close_step(maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)?;
+                let step = rejected.close_step(maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return match step {
                     store::SnapshotRetirementStep::Complete if rejected.terminal_is_empty() => {
                         drop(self.rejected.take());
@@ -22477,7 +22438,7 @@ pub mod app {
 
     pub(crate) struct ActiveArtifactStoreReplacement<P, Mutation, M>
     where
-        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
         M: SpaceMember + MemberFactory,
     {
@@ -22517,7 +22478,7 @@ pub mod app {
 
     impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
     where
-        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
         M: SpaceMember + MemberFactory,
     {
@@ -22846,7 +22807,7 @@ pub mod app {
         fn drive_rejected_members(&mut self, current_content: &ChildContentView, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             self.closure = None;
             if let Some(open) = self.active_member_open.as_mut() {
-                return match store::MemberOpenOperation::close_step(open, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+                return match store::MemberOpenOperation::close_step(open, maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     store::SnapshotRetirementStep::Pending { .. } => Err(plugin_sdk_fault("rejected member open exceeded its exact close grant")),
                     store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "rejected member open is blocked" }),
@@ -23115,7 +23076,7 @@ pub mod app {
 
     impl<P, Mutation, M> Drop for ActiveArtifactStoreReplacement<P, Mutation, M>
     where
-        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
         M: SpaceMember + MemberFactory,
     {
@@ -23526,7 +23487,7 @@ pub mod app {
                     }
                     drop(decoder);
                 }
-                self.retained = Some(store::retirement::owned_retirement((history, auxiliary)));
+                self.retained = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             let Some(archive) = self.archive.as_mut() else { return PluginCloseStep::Complete };
@@ -23905,7 +23866,7 @@ pub mod app {
         pub(crate) time_travel: TimeTravelLedger<A>,
         /// 🎚️ Every window's open continuous-control press (design §13.1): provisional leaves overlaid on every render,
         /// published as ONE transaction on the release, zero trace on any host abort.
-        pub(crate) tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation>,
+        pub(crate) tool_machines: ToolMachineRuntime<A::Snapshot, A::Mutation, A::Config, A::ConfigMutation>,
         /// ✏️ Every `Supersede` transition of the store's event log, classified per author (history edit, its undo, its
         /// redo) — derived from the transitions, so the history rows and undo of history edits survive reload.
         pub(crate) supersedes: SupersedeLedger,
@@ -24123,15 +24084,13 @@ pub mod app {
 
     /// 🛠️ A committed tool transaction is one plain edit per touched member (the parent and every owned child it carries,
     /// all stamped with the same ref — design §12); a streamed one is one open edit of the app's own document that its ticks
-    /// grow (design §15). Refused instead of silently losing a stamp or a trace: a transaction riding a coalesced amend, a
-    /// stream or abort naming no transaction, a stream or abort across owned children, a stream carrying operations with
-    /// foreign steps, and an abort carrying operations.
-    #[allow(clippy::too_many_arguments)]
-    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, phase: TransactionPhase, coalesced: bool, children: bool, carried: bool, foreign: bool) -> Option<Fault> {
+    /// grow (design §15). Refused instead of silently losing a stamp or a trace: a stream or abort naming no transaction, a
+    /// stream or abort across owned children, a stream carrying operations with foreign steps, and an abort carrying
+    /// operations.
+    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, phase: TransactionPhase, children: bool, carried: bool, foreign: bool) -> Option<Fault> {
         let refuse = |detail: String| Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), detail));
         let streamed = matches!(phase, TransactionPhase::Stream | TransactionPhase::Abort);
         match transaction {
-            Some(transaction) if coalesced => refuse(format!("verb {verb:?} published tool transaction {:?} with a coalesced amend; a transaction is one plain edit per member or one open edit its ticks grow", transaction.id)),
             None if streamed => refuse(format!("verb {verb:?} streamed or aborted no tool transaction")),
             Some(transaction) if streamed && children => refuse(format!("verb {verb:?} streamed or aborted tool transaction {:?} across owned children; a streamed transaction grows the app's own document", transaction.id)),
             Some(transaction) if phase == TransactionPhase::Stream && foreign => refuse(format!("verb {verb:?} streamed operations with foreign steps into tool transaction {:?}; a streamed transaction grows the app's own document", transaction.id)),
@@ -24143,8 +24102,8 @@ pub mod app {
     /// 🎞️ The document-store commands an emission's artifact lane dispatches (design §15): a streamed tick appends to its
     /// transaction's open edit (opening it), a commit closes the open edit of its transaction (appending its last operations
     /// first) or, with none open, records its operations as one edit carrying the ref, an abort reverts the open edit, and an
-    /// emission outside a transaction applies or coalesces. An empty list publishes nothing.
-    fn artifact_lane_commands<M>(mutations: Vec<M>, description: Option<String>, coalesce_key: Option<String>, transaction: Option<protocol::TransactionRef>, phase: TransactionPhase, open: Option<&store::OpenToolTransaction>) -> Vec<ArtifactCommand<M>> {
+    /// emission outside a transaction applies as one plain edit. An empty list publishes nothing.
+    fn artifact_lane_commands<M>(mutations: Vec<M>, description: Option<String>, transaction: Option<protocol::TransactionRef>, phase: TransactionPhase, open: Option<&store::OpenToolTransaction>) -> Vec<ArtifactCommand<M>> {
         let open = open.zip(transaction.as_ref()).is_some_and(|(open, transaction)| open.transaction.id == transaction.id);
         let append = |mutations: Vec<M>, transaction: protocol::TransactionRef| (!mutations.is_empty()).then(|| ArtifactCommand::AppendTransaction { mutations, transaction });
         match (transaction, phase) {
@@ -24155,10 +24114,7 @@ pub mod app {
             }
             (Some(transaction), TransactionPhase::Abort) => open.then(|| ArtifactCommand::AbortTransaction { transaction_id: transaction.id }).into_iter().collect(),
             (_, _) if mutations.is_empty() => Vec::new(),
-            (transaction, _) => vec![match coalesce_key {
-                Some(key) => ArtifactCommand::AmendLast { mutations, coalesce_key: Some(key) },
-                None => ArtifactCommand::Apply { mutations, description, transaction },
-            }],
+            (transaction, _) => vec![ArtifactCommand::Apply { mutations, description, transaction }],
         }
     }
 
@@ -24758,6 +24714,9 @@ pub mod app {
         /// 🫂️ Activates an app controller against Platform's injected shared production registry.
         pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus) -> Self {
             let app_id = app.instance_id().await.to_string();
+            for documents in <A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMA_DOCUMENTS {
+                semio_framework_schema_registry::register_referenced_schema_documents(documents);
+            }
             let snapshot = Self::isolate_artifact_app_initial_snapshot().await;
             let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None);
             envelope.dialect = Some(A::DIALECT.into());
@@ -24769,6 +24728,7 @@ pub mod app {
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
             store.enable_convergence_early_exit();
+            store.defer_remote_replays(Some(time_travel::TIME_TRAVEL_REMOTE_REPLAY_OPERATIONS));
             if let Some(owners) = A::build_document_store_owners() {
                 store.install_document_store_owners_exact(owners);
             }
@@ -25191,7 +25151,7 @@ pub mod app {
             }
             match self.local_interaction_query.as_mut() {
                 None => Ok(PluginCloseStep::Complete),
-                Some(query) => query.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes }).map_err(plugin_sdk_fault).map(|step| match step {
+                Some(query) => query.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes }).map_err(|error| plugin_sdk_fault(error.to_string())).map(|step| match step {
                     crate::local_interaction::live::LocalInteractionLiveStep::Complete => PluginCloseStep::Complete,
                     crate::local_interaction::live::LocalInteractionLiveStep::Blocked => PluginCloseStep::Blocked { reason: "local interaction query awaits admission, ACK, or exact root return" },
                     crate::local_interaction::live::LocalInteractionLiveStep::Advanced { emitted_bytes, retired_bytes, released_items } => {
@@ -25779,6 +25739,7 @@ pub mod app {
                     Err(_) => unreachable!("prevalidated publication cannot reject inside its non-suspending commit boundary"),
                 };
                 self.store.enable_convergence_early_exit();
+                self.store.defer_remote_replays(Some(time_travel::TIME_TRAVEL_REMOTE_REPLAY_OPERATIONS));
                 let displaced_children = std::mem::replace(&mut self.children, candidate_children);
                 let displaced_content = std::mem::replace(&mut *self.child_content_root, candidate_content);
                 let displaced_content_retirements = std::mem::replace(&mut self.child_content_retirements, replacement_content_retirements);
@@ -25992,7 +25953,7 @@ pub mod app {
                             if active.decoded_history.is_none() {
                                 return Err(plugin_sdk_fault("ready recursive document archive history retained no decoded owner"));
                             }
-                            active.retained = Some(store::retirement::owned_retirement(decoder.take_auxiliary_owners()));
+                            active.retained = Some(semio_framework_value::retirement::owned_retirement(decoder.take_auxiliary_owners()));
                             let decoder = active.history.take().ok_or_else(|| plugin_sdk_fault("ready recursive document archive history decoder changed before terminal transfer"))?;
                             if !decoder.terminal_is_empty() {
                                 active.history = Some(decoder);
@@ -26065,7 +26026,7 @@ pub mod app {
                     if !store::ErasedSnapshotRetirement::terminal_is_empty(&hydration) {
                         active.hydration = Some(hydration);
                         let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
-                        active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(plugin_sdk_fault)?);
+                        active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(|error| plugin_sdk_fault(error.to_string()))?);
                         return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership"));
                     }
                     drop(hydration);
@@ -26077,7 +26038,7 @@ pub mod app {
                         }
                         Err((fault, envelope)) => {
                             let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
-                            active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(plugin_sdk_fault)?);
+                            active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(|error| plugin_sdk_fault(error.to_string()))?);
                             return Err(fault);
                         }
                     }
@@ -26461,7 +26422,7 @@ pub mod app {
             }
             let generation = self.admit_child_content_publication()?;
             let parent_id = self.store.envelope().id.clone();
-            let graph = self.composition.graph_mut().await.admit_owns(&parent_id, &slot, &child_id).await.map_err(plugin_sdk_fault)?;
+            let graph = self.composition.graph_mut().await.admit_owns(&parent_id, &slot, &child_id).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             let expected = ArtifactRef { artifact_id: child_id.clone(), dialect };
             let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: parent_id, dialect: parent_dialect }, slot: slot.clone(), child_id: child_id.clone() };
             let key = (slot, child_id);
@@ -26607,7 +26568,7 @@ pub mod app {
         async fn deliver_host_event(&mut self, event: HostEvent, meta: &ActionMeta) -> Result<(), Fault> {
             let Some(command) = A::host_event(&event) else { return Ok(()) };
             let window_id = event.window_id();
-            let view = meta.view_state.as_ref().and_then(|view| view.for_window_instance(window_id)).or_else(|| ViewModel { window_instances: self.host_event_roster.clone(), ..ViewModel::default() }.for_window_instance(window_id));
+            let view = meta.view_state.as_ref().and_then(|view| view.for_window_instance(window_id)).or_else(|| ViewModel { window_instances: self.host_event_roster.clone(), ..meta.view_state.as_ref()?.clone() }.for_window_instance(window_id));
             let Some(view) = view else { return Ok(()) };
             let window_meta = ActionMeta { view_state: Some(view), ..meta.clone() };
             let verb = A::command_id(&command).await;
@@ -27257,7 +27218,7 @@ pub mod app {
         /// 🏷️ The registry label (every locale) of the action or command `verb` names — how a persisted
         /// [`protocol::Edit::verb`] becomes a history label at projection time; `None` for a verb this app does not declare.
         fn verb_label(&self, verb: &str) -> Option<LocalizedLabel> {
-            self.registry.get(verb).map(|definition| definition.label.clone()).or_else(|| self.registry.get_command(verb).map(|definition| definition.label.clone()))
+            self.registry.get(verb).map(|definition| definition.label.clone()).or_else(|| self.registry.get_command(verb).map(|definition| definition.label.clone())).or_else(|| runtime_verb_label(verb))
         }
 
         /// 🏷️ The label a row authored by `verb` records: the verb's registry label in every locale, else the app's
@@ -27549,7 +27510,11 @@ pub mod app {
                 let verb_label = edit.and_then(|edit| edit.verb.as_deref()).and_then(|verb| self.verb_label(verb));
                 let label = match (edit, mutations.first()) {
                     (Some(edit), _) if edit.description.is_none() && tool_run_label.is_some() => tool_run_label.expect("tool run label checked above"),
-                    (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => history_leaf_row_label(&first.label, op_count),
+                    (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => {
+                        let ops = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).map_or(&[][..], Vec::as_slice);
+                        let intent = transaction.as_ref().and_then(|transaction| history_intent_label::<A>(&transaction.tool, ops, &mutations));
+                        history_leaf_row_label(intent.as_ref().unwrap_or(&first.label), op_count)
+                    }
                     (Some(edit), _) if edit.description.is_none() && op_count == 1 && leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
                     (Some(edit), _) if verb_label.is_some() || edit.description.is_some() => verb_label.unwrap_or_else(|| LocalizedLabel::data(edit.description.clone().unwrap_or_default())),
                     (Some(_), _) if leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
@@ -27658,6 +27623,7 @@ pub mod app {
                 }
                 .into(),
                 time_travel: time_travel.map(|panel| panel.status),
+                remote_replay: self.remote_replay_status(),
             })
         }
 
@@ -28027,7 +27993,7 @@ pub mod app {
         async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
             let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, transaction, transaction_phase, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
-            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), transaction_phase, coalesce_key.is_some(), !child_emits.is_empty(), !artifact_mutations.is_empty(), artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
+            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), transaction_phase, !child_emits.is_empty(), !artifact_mutations.is_empty(), artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
                 return Err(fault);
             }
             let effects = self.stamp_load_document_effects(effects)?;
@@ -28145,7 +28111,7 @@ pub mod app {
 
             let in_transaction = transaction.is_some();
             let log_label = self.authored_row_label(verb, description.as_deref());
-            let vcs_commands = artifact_lane_commands(artifact_mutations, description, coalesce_key, transaction, transaction_phase, self.store.open_transaction());
+            let vcs_commands = artifact_lane_commands(artifact_mutations, description, transaction, transaction_phase, self.store.open_transaction());
             if vcs_commands.is_empty() {
                 let kind = match self.invocation_kind {
                     Some(kind) => kind,
@@ -28206,9 +28172,10 @@ pub mod app {
 
         /// 🎗️ The store half of a migrated emission that closes a streamed tool transaction without new operations (design
         /// §15): an abort reverts the transaction's open edit and retires its history row, a commit with no last operations
-        /// closes the edit. Either is consumed, so the publication continues with the emission's other lanes; a closing commit
-        /// with operations and every stream are left to the batched route.
-        async fn close_streamed_transaction_unit(&mut self, verb: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
+        /// closes the edit (its announcement leaves with the run's next flush). Either is consumed without suspending, so the
+        /// one-page publication continues with the emission's other lanes; a closing commit with operations and every stream
+        /// are left to the batched route.
+        fn close_streamed_transaction_unit(&mut self, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
             let Some(transaction) = emit.transaction.as_ref() else { return Ok(()) };
             let abort = emit.transaction_phase == TransactionPhase::Abort;
             if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {
@@ -28221,13 +28188,11 @@ pub mod app {
             if !open {
                 return Ok(());
             }
-            let command = if abort { ArtifactCommand::AbortTransaction { transaction_id } } else { ArtifactCommand::CommitTransaction { transaction_id } };
-            self.store.set_authoring_verb(Some(verb.to_string()));
-            let dispatched = self.store.dispatch(command).await;
-            self.store.set_authoring_verb(None);
-            dispatched.map_err(|error| error.into_fault())?;
             if abort {
+                self.store.abort_open_transaction(&transaction_id).map_err(|error| error.into_fault())?;
                 self.retire_displaced_document_rows();
+            } else {
+                self.store.commit_open_transaction(&transaction_id).map_err(|error| error.into_fault())?;
             }
             Ok(())
         }
@@ -28625,7 +28590,7 @@ pub mod app {
         {
             let snapshot = self.store.snapshot().map_err(|error| error.into_fault())?;
             let parent_id = self.store.envelope().id.clone();
-            self.composition.graph_mut().await.sync_member(&parent_id, &snapshot).await.map_err(plugin_sdk_fault)
+            self.composition.graph_mut().await.sync_member(&parent_id, &snapshot).await.map_err(|error| plugin_sdk_fault(error.to_string()))
         }
 
         /// ↩️ Task 4: group-aware undo/redo. Routes through
@@ -29355,6 +29320,7 @@ pub mod app {
                 payload_schema_id: self.qualified_tool_proof(action)?.schema_id(),
                 contract: self.qualified_tool_proof(action)?.contract(),
                 app_instance_id: meta.instance_id,
+                ui_axes: meta.view_state.as_ref().map(|view| (view.locale, view.terminology)),
                 parent_document_id,
                 canonical_base_revision,
                 snapshot,
@@ -29379,6 +29345,7 @@ pub mod app {
                 payload_schema_id: self.qualified_tool_proof(action)?.schema_id(),
                 contract: self.qualified_tool_proof(action)?.contract(),
                 app_instance_id: meta.instance_id,
+                ui_axes: meta.view_state.as_ref().map(|view| (view.locale, view.terminology)),
                 parent_document_id: self.store.envelope().id.clone(),
                 canonical_base_revision: self.store.content_revision(),
                 snapshot,
@@ -30192,7 +30159,6 @@ pub mod app {
                 Emit {
                     effects: vec![Effect::LoadDocument { pack, spr }],
                     ui_scope: UiDirtyScope::Full,
-                    description: Some("Set Active Example".to_string()),
                     ..Emit::default()
                 },
                 meta,
@@ -30223,7 +30189,7 @@ pub mod app {
             if is_framework_reserved_action_id(action) {
                 return self.dispatch_framework_reserved_action(action, args, meta).await;
             }
-            if action == "setActiveExample" && self.registry.get(action).is_none() {
+            if action == CATALOGUE_EXAMPLE_ACTION_ID && self.registry.get(action).is_none() {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(DslValue::as_str).unwrap_or("");
                 if let Some(document) = A::catalogue_example_document(example_id) {
                     let body = document?;
@@ -30251,8 +30217,15 @@ pub mod app {
                 if encoded.len() > admission.proof.contract().max_output_bytes {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.host-configuration-output"), format!("host configuration action '{action}' exceeds its exact output cap")));
                 }
+                let mut emit = Emit::config(vec![config_mutation]);
+                if let Some(ToolTag::Scrub(tag)) = &tool {
+                    if !self.settle_press_config(tag, &mut emit) {
+                        self.follow_tool_machines(true);
+                        return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::Full).await);
+                    }
+                }
                 let previous_kind = self.invocation_kind.replace(definition_kind);
-                let result = self.dispatch_emit(action, Emit::config(vec![config_mutation]), meta).await;
+                let result = self.dispatch_emit(action, emit, meta).await;
                 self.invocation_kind = previous_kind;
                 result
             } else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {
@@ -30320,23 +30293,6 @@ pub mod app {
             let result = self.dispatch_typed_command_inner(Box::new(command), admission, meta).await;
             self.invocation_kind = previous_kind;
             result
-        }
-
-        /// 🪟️ The ONE window a headless caller addresses, derived from the address it already sent —
-        /// never invented. `ActionAddress` names the window instance, its kind and the mode; the
-        /// shell's own roster (`sessionWindowInstances`) mints a base instance whose id IS the window
-        /// kind id, so an agent that addresses `{kind, kind}` is addressing exactly the pane a fresh
-        /// shell would open. Built only when the reactor supplied none: the `AppCommand::Command`
-        /// lane always carries the human's real `ViewModel` and that one is used unchanged.
-        fn addressed_preview_view(address: &semio_framework::manifest::ActionAddress) -> ViewModel {
-            ViewModel {
-                active_mode_id: Some(address.mode_id.clone()),
-                active_window_kind_id: Some(address.window_kind_id.clone()),
-                window_id: Some(address.window_instance_id.clone()),
-                focused_window_id: Some(address.window_instance_id.clone()),
-                window_instances: vec![semio_framework::ViewWindowInstance { id: address.window_instance_id.clone(), window_kind_id: address.window_kind_id.clone() }],
-                ..ViewModel::default()
-            }
         }
 
         /// 🔐️ The agent lane's revision fill (ticket 26/09/23, G12 session 14c): a declared
@@ -30427,7 +30383,8 @@ pub mod app {
             if address.window_kind_id != "*" && reserved_kind.is_none() && self.registry.window_action(&address.window_kind_id, &address.action_id).await.is_none() {
                 return Err(plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)));
             }
-            let view = crate::plugin_runtime::admit_addressed_action_view(&meta.view_state.clone().unwrap_or_else(|| Self::addressed_preview_view(address)), invocation)?;
+            let context = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("addressed action requires the caller's explicit language and terminology context"))?;
+            let view = crate::plugin_runtime::admit_addressed_action_view(context, invocation)?;
             let definition = self
                 .registry
                 .get(&address.action_id)
@@ -30962,6 +30919,7 @@ pub mod app {
                 } else {
                     self.publish_mounted_typed_operation_unit(mounted).await?;
                     if self.store.backbone_ref().is_some() {
+                        self.store.flush_announcements().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                         if let Some(PendingArtifactStorePublication::Artifact(publication)) = mounted.pending_artifact_publication.as_mut() {
                             self.store.flush_published_apply_batch(publication).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                         }
@@ -31538,8 +31496,8 @@ pub mod app {
                     PendingArtifactStorePublication::Artifact(publication) => self.store.advance_apply_batch(publication, grant).map_err(store_publication_fault)?,
                     PendingArtifactStorePublication::Config(publication) => self.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                     PendingArtifactStorePublication::Draft(publication) => self.draft_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                    PendingArtifactStorePublication::Presence(publication) => self.presence_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?,
-                    PendingArtifactStorePublication::Transient(publication) => self.transient_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?,
+                    PendingArtifactStorePublication::Presence(publication) => self.presence_store.advance_publish_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                    PendingArtifactStorePublication::Transient(publication) => self.transient_store.advance_publish_one(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                     PendingArtifactStorePublication::WindowConfig(publication) => self.window_config_store.advance(publication.as_mut(), grant)?,
                     PendingArtifactStorePublication::WindowTransient(publication) => self.window_transient_store.advance(publication.as_mut(), grant)?,
                 };
@@ -31703,13 +31661,13 @@ pub mod app {
                             }
                         }
                     }
-                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.transaction_phase, emit.coalesce_key.is_some(), !emit.child_emits.is_empty(), !emit.artifact_mutations.is_empty(), emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
+                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.transaction_phase, !emit.child_emits.is_empty(), !emit.artifact_mutations.is_empty(), emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
                         return Err(fault);
                     }
                     if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
                         return Err(time_travel_frozen_fault(&mounted.verb));
                     }
-                    self.close_streamed_transaction_unit(&mounted.verb, emit).await?;
+                    self.close_streamed_transaction_unit(emit)?;
                     if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                         if let Some(fault) = self.open_transaction_admission_fault(emit.transaction.as_ref()) {
                             return Err(fault);
@@ -31735,7 +31693,6 @@ pub mod app {
                         };
                         match publication_result {
                             Ok(mut publication) => {
-                                publication.set_coalesce_key(emit.coalesce_key.take());
                                 publication.set_transaction_open(streams);
                                 publication.set_verb(Some(mounted.verb.clone()));
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
@@ -32409,7 +32366,7 @@ pub mod app {
                     .envelope_field_decoder_retirements
                     .get_mut(id)
                     .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "returned envelope field decoder changed during one bounded maintenance step"))?;
-                let step = store::ErasedSnapshotRetirement::close_step(retirement, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)?;
+                let step = store::ErasedSnapshotRetirement::close_step(retirement, maximum_items.min(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 match step {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_items <= maximum_items && released_bytes <= maximum_bytes => {
                         *cursor = index;
@@ -32470,7 +32427,7 @@ pub mod app {
                     .envelope_completed_record_retirements
                     .get_mut(id)
                     .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-authority"), "completed envelope changed during one bounded maintenance step"))?;
-                match retirement.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)? {
+                match retirement.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_items <= maximum_items && released_bytes <= maximum_bytes => {
                         *cursor = index;
                         return Ok(PluginCloseStep::Pending { released_items, released_bytes });
@@ -32968,7 +32925,7 @@ pub mod app {
         /// 🧹️ One displaced-owner step of the document store — the body of stage
         /// [`MAINTENANCE_DOCUMENT_DISPLACED_STAGE`], also run out of turn under pressure.
         fn maintenance_document_displaced_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            Ok(match self.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+            Ok(match self.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))? {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                 store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "artifact store displaced owner remains externally shared" },
                 store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
@@ -32984,9 +32941,9 @@ pub mod app {
         /// saturated`.
         fn maintenance_config_lane_displaced_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             let step = if !self.config_store.maintenance_retirements_terminal_is_empty() {
-                self.config_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?
+                self.config_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?
             } else if !self.draft_store.maintenance_retirements_terminal_is_empty() {
-                self.draft_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?
+                self.draft_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?
             } else {
                 self.window_config_store.maintenance_retirements_step(maximum_items, maximum_bytes)?
             };
@@ -33252,7 +33209,7 @@ pub mod app {
                         .get_mut(generation)
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "live app-typed presence retirement authority changed during one fixed step"))?
                         .close_step(maximum_items, maximum_bytes)
-                        .map_err(plugin_sdk_fault)?;
+                        .map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     match step {
                         store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
                             self.maintenance_presence_peer_cursor = index;
@@ -33810,7 +33767,7 @@ pub mod app {
                     .get_mut(generation)
                     .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-authority"), "app-typed presence retirement authority changed during one fixed close step"))?
                     .close_step(maximum_items, maximum_bytes)
-                    .map_err(plugin_sdk_fault)?;
+                    .map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 match step {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
                         self.close_presence_peer_cursor = index;
@@ -34814,7 +34771,7 @@ pub mod app {
             archive.members.reverse();
             let limits =
                 protocol::RetainedSprLimits { file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64, frame_body_bytes: store::OWNED_SCHEMA_DECODE_PAGE_BYTES as u64 * 256, records: protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 * 8 };
-            let history = protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(), limits).map_err(plugin_sdk_fault)?;
+            let history = protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(), limits).map_err(|error| plugin_sdk_fault(error.to_string()))?;
             self.document_archive_loads.insert_admitted(operation, ActiveDocumentArchiveLoad::new(operation, archive, history));
             Ok(())
         }
@@ -35034,7 +34991,9 @@ pub mod app {
                     self.resolve_time_travel_snaps(panel, view_state);
                     self.resolve_time_travel_reference_labels(panel);
                 }
-                let root = ui_history_panel(history, time_travel.as_ref(), &self.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let remote_replay = self.remote_replay_status();
+                let pages = self.history_mutation_pages(history, time_travel.as_ref(), view_state);
+                let root = ui_history_panel(history, time_travel.as_ref(), remote_replay.as_ref(), &pages, &self.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
@@ -35077,7 +35036,7 @@ pub mod app {
                     .await
                     .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
                     .with_operations(&operation_progress);
-                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+                let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
                 A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
@@ -35117,7 +35076,7 @@ pub mod app {
                     Ok(snapshot) => snapshot,
                     Err(_) => continue,
                 };
-                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+                let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
                 let transient_root = transient_store.current_root();
                 let transient = TransientView { snapshot: transient_root.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
                 let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient, &interaction).await;
@@ -35151,7 +35110,7 @@ pub mod app {
                     Ok(snapshot) => snapshot,
                     Err(_) => continue,
                 };
-                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+                let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
                 let mut projected = A::window_measures_with_request_context(&doc, &cfg, &window_view_state, &interaction).await;
                 if let Some(window_measures) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
                     measures.insert(window.id.clone(), window_measures);
@@ -35175,7 +35134,7 @@ pub mod app {
             let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(time_travel.render_children_or(child_content_root)), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
-            let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
+            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
             A::tool_measures(&doc, &cfg, view_state).await
         }
 
@@ -35530,11 +35489,11 @@ pub mod app {
         }
 
         pub(crate) fn wire_list_artifact_mutations(&self) -> Vec<u8> {
-            store::pack_rt::encode_wire_value(&to_dsl_value(&self.runtime.mutation_roster_entries()).unwrap_or(DslValue::Null))
+            store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&self.runtime.mutation_roster_entries()))
         }
 
         pub(crate) fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
-            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
+            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| semio_framework_value::FromValue::from_value(value).map_err(|error| plugin_sdk_fault(error.to_string())))?;
             if request.mutation_id.trim().is_empty() {
                 return Err(plugin_sdk_fault("artifact-mutation-plan requires a non-empty mutation_id"));
             }
@@ -35548,7 +35507,7 @@ pub mod app {
                 label: output.label,
                 foreign: output.foreign,
             };
-            Ok(store::pack_rt::encode_wire_value(&to_dsl_value(&result).map_err(plugin_sdk_fault)?))
+            Ok(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&result)))
         }
 
         /// 🎛️ Declares a plugin-owned command and its program-level handler.
@@ -36915,7 +36874,7 @@ pub mod app {
         fn examples() -> Vec<ExampleSource> {
             Vec::new()
         }
-        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
         type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
@@ -36970,6 +36929,16 @@ pub mod app {
         /// `ArtifactApp::entity_label` by `EditorApp<Self>`, where the contract lives.
         fn entity_label(_snapshot: &Self::Snapshot, _kinds: &[String], _id: &str) -> Option<LocalizedLabel> {
             None
+        }
+        /// 🧲️ This editor's selection-row → entity-id map for a history edit's "Use selection" — forwarded verbatim to
+        /// `ArtifactApp::selection_reference_id` by `EditorApp<Self>`, where the contract lives.
+        fn selection_reference_id(_kinds: &[String], row: &str) -> Option<String> {
+            Some(row.to_string())
+        }
+        /// 🧭️ This editor's intent leaf kinds per tool — forwarded verbatim to `ArtifactApp::tool_intent_kinds` by
+        /// `EditorApp<Self>`, where the contract lives (default: none, the first operation labels a transaction row).
+        fn tool_intent_kinds(_tool: &str) -> &'static [&'static str] {
+            &[]
         }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
@@ -37292,7 +37261,7 @@ pub mod app {
         fn genesis() -> Vec<Self::Mutation> {
             Vec::new()
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             None
         }
         fn io() -> Option<AppIo> {
@@ -37637,7 +37606,7 @@ pub mod app {
             None
         }
         const DOCUMENT_SCHEMA: &'static str;
-        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
         /// past edits made by an `ArtifactEditor` sharing this dialect, and labels them in every locale like it.
         type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
@@ -37864,7 +37833,7 @@ pub mod app {
             let _ = interaction;
             Self::context_menu(request, doc, cfg, view_state, registry)
         }
-        fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             None
         }
         fn io() -> Option<AppIo> {
@@ -38148,6 +38117,12 @@ pub mod app {
         fn entity_label(snapshot: &Self::Snapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
             E::entity_label(snapshot, kinds, id)
         }
+        fn selection_reference_id(kinds: &[String], row: &str) -> Option<String> {
+            E::selection_reference_id(kinds, row)
+        }
+        fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
+            E::tool_intent_kinds(tool)
+        }
         async fn initial_draft() -> Self::Draft {
             E::initial_draft()
         }
@@ -38261,7 +38236,7 @@ pub mod app {
         async fn genesis() -> Vec<Self::Mutation> {
             E::genesis()
         }
-        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             E::app_schema()
         }
         async fn io() -> Option<AppIo> {
@@ -38545,7 +38520,7 @@ pub mod app {
         ) -> Vec<ContextMenuItemSpec> {
             V::context_menu_with_request_context(request, doc, cfg, view_state, interaction, registry)
         }
-        async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        async fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             V::app_schema()
         }
         async fn io() -> Option<AppIo> {
@@ -38826,8 +38801,8 @@ pub mod app {
         /// native inference services — sourcing what old `ArtifactDeclarationBuilder::schema(s)`/
         /// `.inferences(...)`/`.inference_services(...)` used to.
         pub struct SchemaDeclaration {
-            pub descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor,
-            pub inferences: &'static [::semio_framework_schema::ArtifactInferenceDescriptor],
+            pub descriptor: ::semio_framework_schema_registry::ArtifactSchemaDescriptor,
+            pub inferences: &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor],
             pub inference_services: Vec<ArtifactInferenceService>,
         }
         //#endregion 🔖️SchemaDeclaration
@@ -38851,7 +38826,7 @@ pub mod app {
             /// 🚫️async: E4 fn-pointer slot
             pub factory: fn(&AppDefinition) -> PA,
             /// 🚫️async: E4 fn-pointer slot
-            pub app_schema: fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>,
+            pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
             pub document_schema: &'static str,
             pub codec: super::ArtifactCodecTableV1,
             pub mutation_roster: Option<OwnerMutationRoster>,
@@ -38875,7 +38850,7 @@ pub mod app {
             fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
             }
-            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
                 E::app_schema()
             }
             if def.io.artifact_schema.is_empty() {
@@ -38895,7 +38870,7 @@ pub mod app {
             fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
             }
-            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
                 V::app_schema()
             }
             if def.io.artifact_schema.is_empty() {
@@ -38987,7 +38962,7 @@ pub mod app {
         /// `app_schema_descriptors`/`capabilities` vectors once a declared tree commits.
         pub(crate) struct DeclaredRegistration<PA: PluginApp = NoPluginApp> {
             pub app_defs: Vec<(App, AppFactory<PA>)>,
-            pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
+            pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
             pub capabilities: Vec<CapabilityRequirement>,
         }
 
@@ -39085,8 +39060,8 @@ pub mod app {
                 }
             }
             semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
-            ::semio_framework_schema::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
-            ::semio_framework_schema::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
+            ::semio_framework_schema_registry::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
+            ::semio_framework_schema_registry::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             preflight_artifact_inference_services(&inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
             dsl::preflight_languages(&languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
@@ -39183,8 +39158,8 @@ pub mod app {
 
             semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
             register_boot_scope_schema_exports();
-            ::semio_framework_schema::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
-            ::semio_framework_schema::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
+            ::semio_framework_schema_registry::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
+            ::semio_framework_schema_registry::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             register_artifact_inference_services(inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
             dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
@@ -39310,12 +39285,9 @@ pub mod plugin_runtime {
         PluginProgram, PresenceRosterAdmission, TransactionProposalDraft, TypedOperationLeftover, TypedOperationResultPage, TypedOperationResultToken,
     };
     use crate::{ArtifactApp, WindowConfigPack};
-    use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
+    use dsl::{DslValue, FromValue, ToValue};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandAddress as ManifestCommandAddress, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
-    use semio_framework::{
-        kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, MessageEndpoint, QuotaSchema},
-        AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
-    };
+    use semio_framework::{kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, MessageEndpoint, QuotaSchema}, AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel, };
     /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
     /// `plugin_dispatch_intents`/`plugin_render_surface` — this module (a sibling of `pub mod app`, not
     /// nested inside it) has no glob import of the contract crate the way `mod app` does.
@@ -40194,9 +40166,9 @@ pub mod plugin_runtime {
     /// same wire contract as guest `describe()` and never introduces a serde-shaped adapter.
     pub fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
         let value = store::pack_rt::decode_wire_value(bytes).ok()?;
-        let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
+        let mut descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(value).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
-        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?))
+        Some(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -46020,7 +45992,7 @@ pub use app::artifact_app_laws;
 pub use app::tool_run::{
     is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunLedger, ToolRunRetargetableJob, ToolRunTickReceipt, ToolRunTraceKeys, ToolRunView, FRAMEWORK_TOOL_RUN_BODY_KEY,
 };
-pub use app::time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
+pub use app::time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HistoryMutationPage, HistoryMutationPages, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 pub use app::ActionFactory;
 pub use semio_framework_tool_machine::{TypingCommit, TypingFold, TYPING_BUFFER_ARG, TYPING_COMMIT_ARG, TYPING_IDLE_MS};
 pub use app::{
@@ -46260,7 +46232,7 @@ pub use app::{
     CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
     MAINTENANCE_STAGES,
 };
-pub use app::{activation_target, locale_from_str, resolve_labels, resolve_labels_for_locale, row_action, row_target, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
+pub use app::{activation_target, resolve_labels, row_action, row_target, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use app::{
     take_arena_unbuilt_rows, tree_window_indexed_item, tree_window_indexed_section, tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_DEFAULT_ROWS,
     TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR,

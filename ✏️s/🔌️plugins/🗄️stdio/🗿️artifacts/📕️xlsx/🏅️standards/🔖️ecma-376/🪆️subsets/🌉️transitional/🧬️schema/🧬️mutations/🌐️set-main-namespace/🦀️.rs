@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetMainN
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
         agg_inverse(&XlsxTransitionalMutation::SetMainNamespace(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set main namespace", "Hauptnamensraum setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set main namespace", "Hauptnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

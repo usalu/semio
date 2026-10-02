@@ -16,7 +16,7 @@ use super::*;
 #[dsl(keyword = "set-group")]
 pub struct SetGroup {
     pub name: String,
-    pub faces: Vec<usize>,
+    pub faces: Vec<u64>,
 }
 
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
@@ -28,8 +28,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetGroup(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set group", "Gruppe setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set group", "Gruppe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

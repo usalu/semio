@@ -1,4 +1,4 @@
-import { compileDocumentJsonSchemaV1 } from "../../../../../🔨️modules/🧬️schema/🌐️document-http/🟦️.ts";
+import { compileDocumentJsonSchemaV1 } from "../../📇️directory/🔌️client/🌐️document-http/🟦️.ts";
 
 export const DOCUMENT_SERVICE_TOPIC_V1 = "semio.os.document-http-port/v1";
 export const SERVICE_PAYLOAD_MAX_BYTES_V1 = 16 * 1024;

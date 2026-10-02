@@ -31,9 +31,9 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNodes {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(dag_label_number);
-        protocol::LocalizedLabel::native(&format!("Move {} node(s) by ({x_en}, {y_en})", self.ids.len()), &format!("{} Knoten um ({x_de}; {y_de}) verschieben", self.ids.len()))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} node(s) by ({x_en}, {y_en})", self.ids.len()), &format!("{} Knoten um ({x_de}; {y_de}) verschieben", self.ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

@@ -103,7 +103,7 @@ function walkProductFiles(visit: (path: string) => void): void {
  * 🩸️ Loaded by plain `import()`, not `vite.loadConfigFromFile`. Both yield the same object — Vite's
  * loader esbuild-bundles the file and evaluates it, and `defineConfig` is the identity function, so the
  * module's default export *is* the user config — but the bundle step costs seconds per owner and,
- * across 46 owners under fleet load, pushed this gate past the 120 s `runTestBudgeted` ceiling while
+ * across 46 owners under fleet load, pushed this gate past the 120 s `runRepositoryTestCommand` ceiling while
  * proving nothing the import does not. An owner exporting a config *function* is called with the same
  * `test`-mode environment Vitest passes. */
 async function ownerConfiguration(ownerPath: string): Promise<Record<string, any>> {

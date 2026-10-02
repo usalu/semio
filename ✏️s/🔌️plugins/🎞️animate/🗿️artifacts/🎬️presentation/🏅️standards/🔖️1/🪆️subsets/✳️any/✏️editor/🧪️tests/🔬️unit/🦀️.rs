@@ -53,6 +53,8 @@ pub(crate) mod context {
     fn animate_presentation_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_animate_presentation_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("animate", AnimatePresentationPlayApp, animate_presentation_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn presentation_app_with_registry() -> PresentationApp {
@@ -106,7 +108,7 @@ pub(crate) mod context {
     /// still did. `project_and_retire_fixture_tree` is the framework's own projection (and it RETIRES
     /// the rendered tree, which the `Debug` route leaked).
     pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::default()).await
+        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
     }
 
     /// 🌍️ [`render`] under an explicit `ViewModel` — the locale lives there, so a label law that wants
@@ -196,7 +198,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 async fn render_unknown_body_key_reports_it_by_name() {
     use semio_framework_plugin::ViewModel;
     let mut app = presentation_app().await;
-    let node = app.render("some.unknown.body", None, &ViewModel::default()).await.expect("render unknown");
+    let node = app.render("some.unknown.body", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render unknown");
     // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
     // "DslValue-free exception"), so this reads the message back off `Debug` instead of JSON.
     let debug_str = format!("{node:?}");

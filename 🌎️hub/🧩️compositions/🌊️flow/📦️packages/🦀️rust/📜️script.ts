@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-plugin` router: `bun ./📜️script.ts test`. */
 
 
 
-import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -42,7 +43,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-hub-flow"], this.repoRoot, rest, { ...process.env, RUST_TEST_THREADS: "1" });
+    await runRepositoryCargoTests(["semio-hub-flow"], this.repoRoot, rest, { ...process.env, RUST_TEST_THREADS: "1" });
   }
 }
 

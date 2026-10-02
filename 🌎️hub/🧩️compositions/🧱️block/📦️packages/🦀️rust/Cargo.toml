@@ -60,6 +60,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-s-artifact-block-2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-block-3d = { workspace = true, features = ["component-app-assembly"] }

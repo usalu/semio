@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/framework-value",
+  "targets": {
+    "test-neutral-owner": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test neutral-owner",
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🔨️modules/🌱️value"
+      },
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": [],
+      "dependsOn": []
+    },
+    "test-controlled-construction-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test controlled-construction",
+        "forwardAllArgs": true,
+        "cwd": "🧰️framework/🔨️modules/🌱️value"
+      },
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": [],
+      "dependsOn": []
+    }
+  }
+}

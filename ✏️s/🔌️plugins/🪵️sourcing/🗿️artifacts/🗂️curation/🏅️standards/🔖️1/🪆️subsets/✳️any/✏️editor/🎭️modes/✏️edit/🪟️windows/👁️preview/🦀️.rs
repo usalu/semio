@@ -5,7 +5,20 @@ use crate::GeometryRecipe;
 use crate::ObjectKind;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use semio_framework_plugin::{scene_surface, world3d_default_camera, world3d_scene, world3d_selection_json, BuiltNode, Label, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig, World3dScene};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::world3d_default_camera;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::WorldSunConfig;
+use semio_framework_plugin::World3dScene;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_PREVIEW: &str = "sourcing-preview";

@@ -5,13 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "trailingNewline"
   ],
   "properties": {
     "mutation": {
       "const": "setTrailingNewline",
-      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+      "description": "Aggregate discriminator checked when this payload is embedded in TsvMutation."
     },
     "trailingNewline": {
       "type": "boolean",

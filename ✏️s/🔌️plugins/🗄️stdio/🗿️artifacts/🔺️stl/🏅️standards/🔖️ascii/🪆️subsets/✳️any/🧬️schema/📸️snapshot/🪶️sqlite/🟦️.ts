@@ -5,7 +5,7 @@ import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocumen
 import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 /** 🏛️ Handcrafted SQL kept byte-equal to the adjacent schema asset. */
-export const STL_SQLITE_SCHEMA = "CREATE TABLE stl_solid (\n  id INTEGER PRIMARY KEY CHECK (id = 1),\n  schema TEXT NOT NULL,\n  name TEXT NOT NULL\n);\nCREATE TABLE stl_facet (\n  id INTEGER PRIMARY KEY,\n  solid_id INTEGER NOT NULL REFERENCES stl_solid(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),\n  normal_x REAL,\n  normal_y REAL,\n  normal_z REAL,\n  normal_x_ieee754_bits INTEGER NOT NULL,\n  normal_x_numeric_class TEXT NOT NULL CHECK(normal_x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_y_ieee754_bits INTEGER NOT NULL,\n  normal_y_numeric_class TEXT NOT NULL CHECK(normal_y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_z_ieee754_bits INTEGER NOT NULL,\n  normal_z_numeric_class TEXT NOT NULL CHECK(normal_z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\nCREATE TABLE stl_vertex (\n  id INTEGER PRIMARY KEY,\n  facet_id INTEGER NOT NULL REFERENCES stl_facet(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal BETWEEN 0 AND 2),\n  x REAL,\n  y REAL,\n  z REAL,\n  x_ieee754_bits INTEGER NOT NULL,\n  x_numeric_class TEXT NOT NULL CHECK(x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  y_ieee754_bits INTEGER NOT NULL,\n  y_numeric_class TEXT NOT NULL CHECK(y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  z_ieee754_bits INTEGER NOT NULL,\n  z_numeric_class TEXT NOT NULL CHECK(z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\n";
+export const STL_SQLITE_SCHEMA = "CREATE TABLE stl_solid (\n  id INTEGER PRIMARY KEY,\n  schema TEXT NOT NULL,\n  name TEXT NOT NULL\n);\nCREATE TABLE stl_facet (\n  id INTEGER PRIMARY KEY,\n  solid_id INTEGER NOT NULL REFERENCES stl_solid(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),\n  normal_x REAL,\n  normal_y REAL,\n  normal_z REAL,\n  normal_x_ieee754_bits INTEGER NOT NULL,\n  normal_x_numeric_class TEXT NOT NULL CHECK(normal_x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_y_ieee754_bits INTEGER NOT NULL,\n  normal_y_numeric_class TEXT NOT NULL CHECK(normal_y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_z_ieee754_bits INTEGER NOT NULL,\n  normal_z_numeric_class TEXT NOT NULL CHECK(normal_z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\nCREATE TABLE stl_vertex (\n  id INTEGER PRIMARY KEY,\n  facet_id INTEGER NOT NULL REFERENCES stl_facet(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal BETWEEN 0 AND 2),\n  x REAL,\n  y REAL,\n  z REAL,\n  x_ieee754_bits INTEGER NOT NULL,\n  x_numeric_class TEXT NOT NULL CHECK(x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  y_ieee754_bits INTEGER NOT NULL,\n  y_numeric_class TEXT NOT NULL CHECK(y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  z_ieee754_bits INTEGER NOT NULL,\n  z_numeric_class TEXT NOT NULL CHECK(z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\n";
 
 const COORDINATES = [{index:3,width:64},{index:4,width:64},{index:5,width:64}] as const;
 function vector(value: readonly Binary64[]): void {
@@ -53,11 +53,10 @@ export async function stlSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   const total = database.tables.filter(table => table.name.toLowerCase() !== "stl_solid").reduce((sum, table) => sum + table.rows.length, 0);
   await artifactSqliteCheckpoint(options, "reconstructSnapshot", 0, total);
   const [solids, facets, vertexRows] = await artifactSqliteTables(database, STL_SQLITE_SCHEMA, options);
-  const solid = artifactSqliteDocument(solids!);
+  if(solids!.length!==1)throw new Error("STL solid must be a singleton");const solid=solids![0]!;
   const ids = new Set<bigint>();
   for (let ordinal = 0; ordinal < facets!.length; ordinal++) {
     const row = facets![ordinal]!;
-    if (row.rowid < 1n) throw new Error("STL facet identities must be positive");
     ids.add(row.rowid);
     if ((ordinal + 1) % 256 === 0) await artifactSqliteCheckpoint(options, "reconstructSnapshot", 0, total);
   }
@@ -73,7 +72,7 @@ export async function stlSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   }
   const triangles: StlTriangle[] = [];
   for (const facet of artifactSqliteOrderedRows(facets!, 2)) {
-    artifactSqliteDocumentReference(facet, 1);
+    if(artifactSqliteInteger(facet,1)!==solid.rowid)throw new Error("STL facet has an unknown solid");
     const owned = vertices.get(facet.rowid) ?? [];
     if (owned.length !== 3) throw new Error("STL facets must own exactly three vertices");
     const ordered = artifactSqliteOrderedRows(owned, 2);
@@ -87,7 +86,6 @@ export async function stlSnapshotFromSqliteDatabase(database: SqliteDatabase, op
 export async function stlSnapshotValidateSqliteSubset(snapshot:StlSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
   await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
   if(dialect.artifactKind!=="s.stdio.stl"||dialect.standard!=="ascii"||dialect.subset!=="*")throw new Error("geometry owned SQLite dialect differs");
-  const table=database.tables.find(table=>table.name.toLowerCase()==="stl_solid");
-  const row=table?artifactSqliteDocument(table.rows):undefined;
-  if(!row||artifactSqliteText(row,1)!==snapshot.schema)throw new Error("geometry document identity differs from its semantic projection");
+  const expected=await stlSnapshotToSqliteDatabase(snapshot,options),candidate=await stlSnapshotFromSqliteDatabase(database,options),actual=await stlSnapshotToSqliteDatabase(candidate,options);
+  for(let table=0;table<expected.tables.length;table++){const left=expected.tables[table]!.rows,right=actual.tables[table]!.rows;if(left.length!==right.length)throw new Error("STL document identity differs");for(let row=0;row<left.length;row++){await artifactSqliteCheckpoint(options,"projectSnapshot",row,left.length);const a=left[row]!.values,b=right[row]!.values;if(a.length!==b.length||a.some((value,index)=>typeof value==="number"?!Object.is(value,b[index]):value!==b[index]))throw new Error("STL document identity differs");}}
 }

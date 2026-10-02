@@ -4,7 +4,15 @@ use crate::editor::animate::terminology::AnimatePresentationLabels;
 use crate::editor::animate::ui_label;
 use crate::editor::animate::{PRESENTATION_INTERACTION_DOMAIN, PRESENTATION_INTERACTION_GRANULARITY, PRESENTATION_PLAY_APP_ID};
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract::BuiltNode;
 
 //#region 🔖️Constants

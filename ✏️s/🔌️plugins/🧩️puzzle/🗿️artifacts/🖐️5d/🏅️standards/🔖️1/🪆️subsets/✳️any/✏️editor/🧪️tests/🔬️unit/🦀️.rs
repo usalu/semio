@@ -19,6 +19,8 @@ pub(crate) mod context {
     pub fn puzzle5d_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_puzzle5d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle5dPlayApp, puzzle5d_app_manifest_for_tests, "../..");
     
     /// 🧰️ The registry-backed app every test drives: the tool proof catalog joins the migrated declarations to live
     /// factories only with a manifest, so kind discipline and the utility contract are enforced exactly as in
@@ -98,7 +100,7 @@ pub(crate) mod context {
         if !window_instances.iter().any(|window| window.id == id) {
             window_instances.push(ViewWindowInstance { id: id.into(), window_kind_id: kind.into() });
         }
-        ViewModel { window_instances, ..Default::default() }.for_window_instance(id).expect("puzzle5d test window roster")
+        ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(id).expect("puzzle5d test window roster")
     }
     
     fn action_meta(action: &str, args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
@@ -282,7 +284,7 @@ pub(crate) mod context {
     
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        render_body_with_view(app, body_key, &ViewModel::default())
+        render_body_with_view(app, body_key, &ViewModel::new(protocol::Locale::En, protocol::Terminology::Native))
     }
 
     pub fn render_body_with_view(app: &mut Puzzle5dApp, body_key: &str, view_state: &ViewModel) -> String {
@@ -1098,7 +1100,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 /// `WindowEngagementControl` on the HUD and never a window rail group — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
 async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_controls() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
     // 🪣️ Fill TOOL: the count entry and the distribution trees live in the tool options rail, NOT in either
     // window's measures and NOT on the engagement HUD.
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
@@ -1127,7 +1129,7 @@ async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_cont
 /// pin must not come back anywhere on the path from runtime default to rendered tool measure.
 #[semio_framework_async_macros::async_test]
 async fn fill_count_entry_is_unbounded_and_defaults_to_one_hundred() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
     assert_eq!(PUZZLE5D_DEFAULT_FILL_COUNT, 100);
     assert_eq!(Puzzle5dRuntime::default().fill_count, 100);
     assert_eq!(Puzzle5dConfig::default().fill_count, 100);
@@ -1164,7 +1166,7 @@ async fn fill_is_registered_as_a_mode_tool_and_no_longer_as_a_utility() {
 /// verb no arm implements is a dead promise (the defect 3d still carries with `pick`/`rectangle`/`lasso`).
 #[semio_framework_async_macros::async_test]
 async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "select".into(), interaction: Default::default() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         let hud = edit::puzzle5d_engagement(&scene, window, labels, None);
@@ -1837,7 +1839,7 @@ async fn transform_gumball_flags_publish_the_window_config() {
     dispatch(&mut app, "setTransformGumballFlag", Some(&dsl::json!({ "flag": "scale", "pressed": false })), Some(world)).expect("an unknown flag is a no-op, never a fault");
 
     let runtime = Puzzle5dRuntime { transform_move: false, transform_rotate: false, ..Puzzle5dRuntime::default() };
-    let marked = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new() };
+    let marked = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new(), referenced: Vec::new() };
     assert!(!puzzle5d_gumball_active(&runtime, world3d::utilities::transform::UTILITY_ID, &marked), "an all-off gumball never renders");
     close_app(&mut app);
 }
@@ -1875,7 +1877,7 @@ fn one_interaction_snapshot_paints_both_panes() {
     )
     .expect("projection");
     let part_id = "teil-ä";
-    let interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec![part_id.into()], hovered: vec![part_id.into()] };
+    let interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec![part_id.into()], hovered: vec![part_id.into()], referenced: Vec::new() };
     let envelope = scene_from_projection_with_interaction(&projection, Puzzle5dRuntime::default(), "select", interaction);
     assert_eq!(envelope.document.parts.len(), 1, "the fixture projection materialized its one part");
 
@@ -2714,3 +2716,25 @@ async fn shipped_part_kinds_are_the_two_named_examples_own_catalog_rows() {
     assert_eq!(authored, derived, "PUZZLE5D_SHIPPED_PART_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
 }
 //#endregion 🔖️Pz2ShippedKindCatalog
+
+//#region 🔖️HistoryEditReferences
+/// 🪧️ N3 (design §16.4): a history-edit reference chip names a puzzle 5d entity as the outliner does — a part by its
+/// volume label, else its flat text, else its kind; a grip as `<part> · <grip kind>`; a fastener as `<part> → <part>` —
+/// and leaves target volumes, undeclared kinds and unknown ids to the framework's generic `<Kind> <short id>`.
+#[test]
+fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
+    let mut snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::puzzle5d::concrete_forest::DSL_TEXT).expect("the example parses");
+    let part = snapshot.parts[0].id.clone();
+    let grip = puzzle5d_grip_full_id(&part, &snapshot.parts[0].grips[0].id);
+    let grip_kind = snapshot.parts[0].grips[0].grip_kind.clone().expect("the example names its grip kinds");
+    snapshot.parts[0].part_3d.label = None;
+    snapshot.parts[0].part_2d.text = Some("Forest Left".into());
+    snapshot.fasteners.push(crate::Puzzle5dFastener { id: "fastener-chip".into(), source: grip.clone(), target: grip.clone(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    let chip = |kinds: &[&str], id: &str| puzzle5d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string());
+    assert_eq!(chip(&[PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME], &part).as_deref(), Some("Forest Left"), "a part without a volume label reads its flat text");
+    assert_eq!(chip(&[PUZZLE5D_GRANULARITY_GRIP], &grip), Some(format!("Forest Left \u{b7} {grip_kind}")), "a grip reads its part and its kind");
+    assert_eq!(chip(&[PUZZLE5D_GRANULARITY_FASTENER], "fastener-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "a fastener reads its two parts");
+    assert_eq!(chip(&[PUZZLE5D_GRANULARITY_TARGET_VOLUME], &part), None, "an id outside the reference's declared kinds keeps the generic label");
+    assert_eq!(chip(&[], "ghost"), None, "an unknown id keeps the generic label");
+}
+//#endregion 🔖️HistoryEditReferences

@@ -2,7 +2,8 @@
 use super::*;
 use crate::catalog::compile;
 use crate::source_builders;
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 fn test_catalog() -> Catalog {
     compile(&source_builders::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")

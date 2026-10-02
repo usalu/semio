@@ -18,8 +18,8 @@ export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
   const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const path of ["../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document/🔣️.json");
-  const childIdentity = (value: any): boolean => ["brep", "mesh", "properties"].every((field) => !value[field] || ajv.compile({ const: value[field].target.artifactId })(value[field].childId));
+  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
+  const childIdentity = (value: any): boolean => [["brep","brep"],["mesh","mesh"],["properties","value"]].every(([field,subset]) => !value[field!] || ajv.compile({const:{artifactKind:"s.stdio.semio",standard:"v1",subset}})(value[field!].target.dialect));
   const a = ajv.compile(read("../../🔣️.json"));
   const s = ajv.compile(read("../../📸️snapshot/🔣️.json"));
   const d = ajv.compile(read("../../🔺️diff/🔣️.json"));
@@ -62,7 +62,7 @@ export function testSemioObjectDocumentContract(): void {
     } else if (file.includes("/🦠️mutation/")) {
       assert(mutationSchema(value), file + ": mutation schema oracle");
       const payload = Object.values(value as Record<string, { target?: { artifactId: string }; child_id?: unknown }>)[0]!;
-      if (payload.target) assert(ajv.compile({ const: payload.target.artifactId })(payload.child_id), file + ": mutation child identity");
+      if (payload.target) assert(typeof payload.child_id === "string", file + ": independent local child identifier");
       mutations++;
     }
   }

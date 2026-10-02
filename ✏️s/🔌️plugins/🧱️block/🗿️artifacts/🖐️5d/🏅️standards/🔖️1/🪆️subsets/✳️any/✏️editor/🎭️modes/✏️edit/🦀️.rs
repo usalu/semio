@@ -1,7 +1,10 @@
 //! ✏️ Block 5D play app — the `edit` mode: the two-window (board + world) authoring layout.
 
 use crate::editor::block5d::modes::edit::windows::{board, world};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const BLOCK5D_PLAY_MODE_EDIT: &str = "edit";
 

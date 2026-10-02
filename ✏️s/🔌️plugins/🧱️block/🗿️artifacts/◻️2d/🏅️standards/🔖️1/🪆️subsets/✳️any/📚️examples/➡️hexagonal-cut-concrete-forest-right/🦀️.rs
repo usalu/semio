@@ -1,6 +1,7 @@
 //! 📚️ Example `hexagonal-cut-concrete-forest-right`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "hexagonal-cut-concrete-forest-right";
 pub fn label() -> LocalizedLabel {

@@ -1,24 +1,69 @@
-/** 🧬️ En1997Mutation — mirrors Rust enum (semantic verbs). */
-import type { AnnexChoice, SoilLayer, SpreadFoundation, Pile } from "../🟦️.ts";
+/** 🧺️ `En1997Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormWireReader, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type ChangeFootingWidth, parseChangeFootingWidth } from "./↔️change-footing-width/🧬️schema/🟦️.ts";
+import { type ChangeSlopeAngle, parseChangeSlopeAngle } from "./⛰️change-slope-angle/🧬️schema/🟦️.ts";
+import { type InsertFooting, parseInsertFooting } from "./➕insert-footing/🧬️schema/🟦️.ts";
+import { type InsertLayer, parseInsertLayer } from "./➕️insert-layer/🧬️schema/🟦️.ts";
+import { parseRemoveFooting, type RemoveFooting } from "./➖remove-footing/🧬️schema/🟦️.ts";
+import { parseRemoveLayer, type RemoveLayer } from "./➖️remove-layer/🧬️schema/🟦️.ts";
+import { type ChangeFootingEmbedment, parseChangeFootingEmbedment } from "./⬇️change-footing-embedment/🧬️schema/🟦️.ts";
+import { type ChangeLayerOedometricModulus, parseChangeLayerOedometricModulus } from "./🌀️change-layer-oedometric-modulus/🧬️schema/🟦️.ts";
+import { type ChangeAnnex, parseChangeAnnex } from "./🌍️change-annex/🧬️schema/🟦️.ts";
+import { type ChangeGroundwaterLevel, parseChangeGroundwaterLevel } from "./💧change-groundwater-level/🧬️schema/🟦️.ts";
+import { type ChangeDesignSituation, parseChangeDesignSituation } from "./📅️change-design-situation/🧬️schema/🟦️.ts";
+import { type ChangePileLength, parseChangePileLength } from "./📏️change-pile-length/🧬️schema/🟦️.ts";
+import { type ChangeLayerPhiPrime, parseChangeLayerPhiPrime } from "./📐️change-layer-phi-prime/🧬️schema/🟦️.ts";
+import { parseRemovePile, type RemovePile } from "./📤remove-pile/🧬️schema/🟦️.ts";
+import { type InsertPile, parseInsertPile } from "./📥insert-pile/🧬️schema/🟦️.ts";
+import { type ChangeInvestigationDepth, parseChangeInvestigationDepth } from "./🔎️change-investigation-depth/🧬️schema/🟦️.ts";
+import { type ChangePileCount, parseChangePileCount } from "./🔢change-pile-count/🧬️schema/🟦️.ts";
+import { type ChangeGeotechnicalCategory, parseChangeGeotechnicalCategory } from "./🗂️change-geotechnical-category/🧬️schema/🟦️.ts";
+import { type ChangeDesignApproach, parseChangeDesignApproach } from "./🧭️change-design-approach/🧬️schema/🟦️.ts";
+import { type ChangeWallBaseWidth, parseChangeWallBaseWidth } from "./🧱change-wall-base-width/🧬️schema/🟦️.ts";
 
 export type En1997Mutation =
-  | { mutation: "changeAnnex"; newAnnex: AnnexChoice }
-  | { mutation: "changeGeotechnicalCategory"; newGeotechnicalCategory: number }
-  | { mutation: "changeDesignSituation"; newDesignSituation: string }
-  | { mutation: "changeDesignApproach"; newDesignApproach: string }
-  | { mutation: "changeGroundwaterLevel"; newGroundwaterLevel: number }
-  | { mutation: "changeInvestigationDepth"; newInvestigationDepth: number }
-  | { mutation: "changeFootingWidth"; id: string; newWidth: number }
-  | { mutation: "changeFootingEmbedment"; id: string; newEmbedment: number }
-  | { mutation: "changePileLength"; id: string; newLength: number }
-  | { mutation: "changePileCount"; id: string; newCount: number }
-  | { mutation: "changeWallBaseWidth"; id: string; newBaseWidth: number }
-  | { mutation: "changeSlopeAngle"; id: string; newAngleDeg: number }
-  | { mutation: "changeLayerPhiPrime"; id: string; newPhiPrimeDeg: number }
-  | { mutation: "changeLayerOedometricModulus"; id: string; newOedometricModulus: number }
-  | { mutation: "insertLayer"; index: number; layer: SoilLayer }
-  | { mutation: "removeLayer"; index: number }
-  | { mutation: "insertFooting"; index: number; footing: SpreadFoundation }
-  | { mutation: "removeFooting"; index: number }
-  | { mutation: "insertPile"; index: number; pile: Pile }
-  | { mutation: "removePile"; index: number };
+  | ChangeAnnex
+  | ChangeGeotechnicalCategory
+  | ChangeDesignSituation
+  | ChangeDesignApproach
+  | ChangeGroundwaterLevel
+  | ChangeInvestigationDepth
+  | ChangeFootingWidth
+  | ChangeFootingEmbedment
+  | ChangePileLength
+  | ChangePileCount
+  | ChangeWallBaseWidth
+  | ChangeSlopeAngle
+  | ChangeLayerPhiPrime
+  | ChangeLayerOedometricModulus
+  | InsertLayer
+  | RemoveLayer
+  | InsertFooting
+  | RemoveFooting
+  | InsertPile
+  | RemovePile;
+
+export const parseEn1997Mutation: NormWireReader<En1997Mutation> = normWireTagged<En1997Mutation, "mutation">("mutation", {
+  changeAnnex: parseChangeAnnex,
+  changeGeotechnicalCategory: parseChangeGeotechnicalCategory,
+  changeDesignSituation: parseChangeDesignSituation,
+  changeDesignApproach: parseChangeDesignApproach,
+  changeGroundwaterLevel: parseChangeGroundwaterLevel,
+  changeInvestigationDepth: parseChangeInvestigationDepth,
+  changeFootingWidth: parseChangeFootingWidth,
+  changeFootingEmbedment: parseChangeFootingEmbedment,
+  changePileLength: parseChangePileLength,
+  changePileCount: parseChangePileCount,
+  changeWallBaseWidth: parseChangeWallBaseWidth,
+  changeSlopeAngle: parseChangeSlopeAngle,
+  changeLayerPhiPrime: parseChangeLayerPhiPrime,
+  changeLayerOedometricModulus: parseChangeLayerOedometricModulus,
+  insertLayer: parseInsertLayer,
+  removeLayer: parseRemoveLayer,
+  insertFooting: parseInsertFooting,
+  removeFooting: parseRemoveFooting,
+  insertPile: parseInsertPile,
+  removePile: parseRemovePile,
+});

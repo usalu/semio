@@ -12,6 +12,9 @@ fn write_collection<T>(out:&mut Projection<'_,'_>,table:&str,values:&[T],write:i
 fn read_collection<T>(reader:&mut Reader<'_,'_,'_>,table:&'static str,read:impl Fn(&mut Reader<'_,'_,'_>,i64)->Result<T,String>)->Result<Vec<T>,String>{let mut values=Vec::new();for child in reader.children(table,1,2,1)?{let child=reader.take(table,child.rowid,4)?;values.push(read(reader,child.integer(3)?)?);}Ok(values)}
 
 impl store::ArtifactSqliteSnapshot for PdfSnapshot{
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,String>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),snapshot_text::from_record_controlled,control)}
+    fn retire_sqlite_snapshot(self){<Self as pack::value::FromValue>::retire_decoded(self)}
     const SQLITE_SCHEMA:&'static str=include_str!("../🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<(),String>{
         control.checkpoint(Phase::EncodeNative,0,0)?;
@@ -70,29 +73,36 @@ impl store::ArtifactSqliteSnapshot for PdfSnapshot{
     }
     fn to_sqlite_database(&self,control:&mut Control<'_>)->Result<Db,String>{
         let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;
-        let acro=self.acro_form.as_ref().map(|value|form::write_acro(&mut out,value)).transpose()?;let optional=self.optional_content.as_ref().map(|value|form::write_optional(&mut out,value)).transpose()?;let preferences=self.viewer_preferences.as_ref().map(|value|metadata::write_preferences(&mut out,value)).transpose()?;let open=self.open_action.as_ref().map(|value|navigation::write_open_action(&mut out,value)).transpose()?;let mark=self.mark_info.as_ref().map(|value|metadata::write_mark(&mut out,value)).transpose()?;let encryption=self.encryption.as_ref().map(|value|metadata::write_encryption(&mut out,value)).transpose()?;let info=metadata::write_info(&mut out,&self.info)?;let catalog=cos::write_dictionary(&mut out,&self.catalog_extra)?;let trailer=cos::write_dictionary(&mut out,&self.trailer)?;
-        let ids=self.document_id.as_ref().map_or([C::Null;2],|value|[C::Blob(&value[0]),C::Blob(&value[1])]);
-        out.insert_key("pdf_document",1,&[C::Text(&self.schema),C::Text(&self.declared_version),acro.map_or(C::Null,C::Integer),optional.map_or(C::Null,C::Integer),self.page_layout.map_or(C::Null,|value|C::Text(metadata::page_layout(value))),self.page_mode.map_or(C::Null,|value|C::Text(metadata::page_mode(value))),preferences.map_or(C::Null,C::Integer),open.map_or(C::Null,C::Integer),text_cell(&self.language),mark.map_or(C::Null,C::Integer),text_cell(&self.metadata),ids[0],ids[1],encryption.map_or(C::Null,C::Integer),C::Integer(info),C::Integer(catalog),C::Integer(trailer)])?;
-        write_collection(&mut out,"pdf_document_page",&self.pages,write_page)?;
-        write_collection(&mut out,"pdf_document_font",&self.fonts,font::write_font)?;
-        write_collection(&mut out,"pdf_document_image",&self.images,resource::write_image)?;
-        write_collection(&mut out,"pdf_document_form",&self.forms,resource::write_form)?;
-        write_collection(&mut out,"pdf_document_state",&self.ext_g_states,resource::write_state)?;
-        write_collection(&mut out,"pdf_document_shading",&self.shadings,resource::write_shading)?;
-        write_collection(&mut out,"pdf_document_pattern",&self.patterns,resource::write_pattern)?;
-        write_collection(&mut out,"pdf_document_color",&self.color_spaces,write_colors)?;
-        write_collection(&mut out,"pdf_document_properties",&self.properties,write_properties)?;
-        write_collection(&mut out,"pdf_document_outline",&self.outlines,|out,value|navigation::write_outline(out,value))?;
-        write_collection(&mut out,"pdf_document_destination",&self.named_destinations,navigation::write_named_destination)?;
-        write_collection(&mut out,"pdf_document_label",&self.page_labels,navigation::write_label)?;
-        write_collection(&mut out,"pdf_document_file",&self.embedded_files,metadata::write_file)?;
-        write_collection(&mut out,"pdf_document_intent",&self.output_intents,metadata::write_intent)?;
-        write_collection(&mut out,"pdf_document_object",&self.objects,write_indirect)?;
+        self.write_sqlite_rows(&mut out)?;
         out.finish()
     }
     fn from_sqlite_database(db:&Db,control:&mut Control<'_>)->Result<Self,String>{
         sqlite_snapshot::validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits()).map_err(|error|error.to_string())?;let mut reader=Reader::new(db,control)?;let row=reader.take("pdf_document",1,18)?;
         let document_id=match(&row.values[12],&row.values[13]){(V::Null,V::Null)=>None,(V::Blob(first),V::Blob(second))=>Some([reader.copy_blob(first)?,reader.copy_blob(second)?]),_=>return Err("PDF document identifier requires both intrinsic byte strings".into())};
         let value=Self{schema:reader.text(row,1)?,declared_version:reader.text(row,2)?,pages:read_collection(&mut reader,"pdf_document_page",read_page)?,fonts:read_collection(&mut reader,"pdf_document_font",font::read_font)?,images:read_collection(&mut reader,"pdf_document_image",resource::read_image)?,forms:read_collection(&mut reader,"pdf_document_form",resource::read_form)?,ext_g_states:read_collection(&mut reader,"pdf_document_state",resource::read_state)?,shadings:read_collection(&mut reader,"pdf_document_shading",resource::read_shading)?,patterns:read_collection(&mut reader,"pdf_document_pattern",resource::read_pattern)?,color_spaces:read_collection(&mut reader,"pdf_document_color",read_colors)?,properties:read_collection(&mut reader,"pdf_document_properties",read_properties)?,outlines:read_collection(&mut reader,"pdf_document_outline",|reader,key|navigation::read_outline(reader,key))?,named_destinations:read_collection(&mut reader,"pdf_document_destination",navigation::read_named_destination)?,page_labels:read_collection(&mut reader,"pdf_document_label",navigation::read_label)?,embedded_files:read_collection(&mut reader,"pdf_document_file",metadata::read_file)?,output_intents:read_collection(&mut reader,"pdf_document_intent",metadata::read_intent)?,acro_form:optional_integer(row,3)?.map(|key|form::read_acro(&mut reader,key)).transpose()?,optional_content:optional_integer(row,4)?.map(|key|form::read_optional(&mut reader,key)).transpose()?,page_layout:row.optional_text(5)?.map(metadata::read_page_layout).transpose()?,page_mode:row.optional_text(6)?.map(metadata::read_page_mode).transpose()?,viewer_preferences:optional_integer(row,7)?.map(|key|metadata::read_preferences(&mut reader,key)).transpose()?,open_action:optional_integer(row,8)?.map(|key|navigation::read_open_action(&mut reader,key)).transpose()?,language:reader.optional_text(row,9)?,mark_info:optional_integer(row,10)?.map(|key|metadata::read_mark(&mut reader,key)).transpose()?,metadata:reader.optional_text(row,11)?,document_id,encryption:optional_integer(row,14)?.map(|key|metadata::read_encryption(&mut reader,key)).transpose()?,info:metadata::read_info(&mut reader,row.integer(15)?)?,catalog_extra:cos::read_dictionary(&mut reader,row.integer(16)?)?,objects:read_collection(&mut reader,"pdf_document_object",read_indirect)?,trailer:cos::read_dictionary(&mut reader,row.integer(17)?)?};reader.finish()?;Ok(value)
+    }
+}
+
+impl PdfSnapshot{
+    fn write_sqlite_rows(&self,out:&mut Projection<'_,'_>)->Result<(),String>{
+        let acro=self.acro_form.as_ref().map(|value|form::write_acro(out,value)).transpose()?;let optional=self.optional_content.as_ref().map(|value|form::write_optional(out,value)).transpose()?;let preferences=self.viewer_preferences.as_ref().map(|value|metadata::write_preferences(out,value)).transpose()?;let open=self.open_action.as_ref().map(|value|navigation::write_open_action(out,value)).transpose()?;let mark=self.mark_info.as_ref().map(|value|metadata::write_mark(out,value)).transpose()?;let encryption=self.encryption.as_ref().map(|value|metadata::write_encryption(out,value)).transpose()?;let info=metadata::write_info(out,&self.info)?;let catalog=cos::write_dictionary(out,&self.catalog_extra)?;let trailer=cos::write_dictionary(out,&self.trailer)?;
+        let ids=self.document_id.as_ref().map_or([C::Null;2],|value|[C::Blob(&value[0]),C::Blob(&value[1])]);
+        out.insert_key("pdf_document",1,&[C::Text(&self.schema),C::Text(&self.declared_version),acro.map_or(C::Null,C::Integer),optional.map_or(C::Null,C::Integer),self.page_layout.map_or(C::Null,|value|C::Text(metadata::page_layout(value))),self.page_mode.map_or(C::Null,|value|C::Text(metadata::page_mode(value))),preferences.map_or(C::Null,C::Integer),open.map_or(C::Null,C::Integer),text_cell(&self.language),mark.map_or(C::Null,C::Integer),text_cell(&self.metadata),ids[0],ids[1],encryption.map_or(C::Null,C::Integer),C::Integer(info),C::Integer(catalog),C::Integer(trailer)])?;
+        write_collection(out,"pdf_document_page",&self.pages,write_page)?;
+        write_collection(out,"pdf_document_font",&self.fonts,font::write_font)?;
+        write_collection(out,"pdf_document_image",&self.images,resource::write_image)?;
+        write_collection(out,"pdf_document_form",&self.forms,resource::write_form)?;
+        write_collection(out,"pdf_document_state",&self.ext_g_states,resource::write_state)?;
+        write_collection(out,"pdf_document_shading",&self.shadings,resource::write_shading)?;
+        write_collection(out,"pdf_document_pattern",&self.patterns,resource::write_pattern)?;
+        write_collection(out,"pdf_document_color",&self.color_spaces,write_colors)?;
+        write_collection(out,"pdf_document_properties",&self.properties,write_properties)?;
+        write_collection(out,"pdf_document_outline",&self.outlines,|out,value|navigation::write_outline(out,value))?;
+        write_collection(out,"pdf_document_destination",&self.named_destinations,navigation::write_named_destination)?;
+        write_collection(out,"pdf_document_label",&self.page_labels,navigation::write_label)?;
+        write_collection(out,"pdf_document_file",&self.embedded_files,metadata::write_file)?;
+        write_collection(out,"pdf_document_intent",&self.output_intents,metadata::write_intent)?;
+        write_collection(out,"pdf_document_object",&self.objects,write_indirect)?;
+        Ok(())
     }
 }

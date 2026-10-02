@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{
-        artifact::{reconstruct_text, Cell, NativeEncodingBound, Projection},
+        artifact::{reconstruct_text, Cell, Projection},
         validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue,
     },
     ArtifactSqliteSnapshot,
@@ -108,7 +108,9 @@ fn read_float(row: &SqliteRow) -> Result<f32, String> {
         return Err("WAV sample numeric class disagrees with its IEEE754 bits".into());
     }
     if sample.is_finite() {
-        if row.real(5)? != f64::from(sample) {
+        let value=f64::from(sample);
+        let exact=match row.values.get(5){Some(SqliteValue::Real(query))=>*query==value,Some(SqliteValue::Integer(query))=>value>=i64::MIN as f64&&value < -(i64::MIN as f64)&&value.fract()==0.0&&value as i64==*query,_=>false};
+        if !exact {
             return Err("WAV query sample disagrees with its IEEE754 bits".into());
         }
     } else if !matches!(row.values.get(5), Some(SqliteValue::Null)) {
@@ -117,31 +119,38 @@ fn read_float(row: &SqliteRow) -> Result<f32, String> {
     Ok(sample)
 }
 
+fn add_rows(total:usize,count:usize)->Result<usize,String>{total.checked_add(count).ok_or_else(||"WAV semantic row count overflow".into())}
+fn admit_schema(control:&SqliteSnapshotControl<'_>)->Result<(),String>{if WavSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{Err("WAV authored SQLite schema exceeds schema byte limit".into())}else{Ok(())}}
+fn forecast(snapshot:&WavSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,String>{
+    admit_schema(control)?;control.checkpoint(phase,0,snapshot.other_chunks.len())?;
+    let samples=match &snapshot.data{WavData::Pcm16(values)=>values.len(),WavData::Pcm8(values)|WavData::Raw(values)=>values.len(),WavData::Float32(values)=>values.len()};
+    let mut count=add_rows(add_rows(add_rows(3,samples)?,snapshot.other_chunks.len())?,snapshot.chunk_order.len())?;
+    if let Some(extension)=&snapshot.fmt.ext{count=add_rows(add_rows(count,1)?,extension.len())?;}control.check_rows(count)?;
+    for(position,chunk)in snapshot.other_chunks.iter().enumerate(){count=add_rows(count,chunk.data.len())?;control.check_rows(count)?;if(position+1)%256==0{control.checkpoint(phase,position+1,snapshot.other_chunks.len())?;}}
+    control.checkpoint(phase,snapshot.other_chunks.len(),snapshot.other_chunks.len())?;Ok(count)
+}
+fn native_list(value:Option<&dsl::FieldValue>)->Result<&[dsl::FieldValue],String>{match value{Some(dsl::FieldValue::List(values))=>Ok(values),None|Some(dsl::FieldValue::Absent)=>Ok(&[]),_=>Err("WAV native collection requires a literal list".into())}}
+fn native_record(value:Option<&dsl::FieldValue>)->Result<&dsl::RecordValue,String>{match value{Some(dsl::FieldValue::Record(record))=>Ok(record),_=>Err("WAV native entity requires its literal record".into())}}
+fn admit_native_rows(record:&dsl::RecordValue,maximum:usize,native:&mut dsl::NativeDecodeControl<'_>)->Result<(),dsl::TextError>{
+    native.scoped_stage(|native|->Result<_,String>{
+        let format=native_record(record.get(1))?;let data=native_record(record.get(2))?;
+        let Some(dsl::FieldValue::Enum(kind))=data.get(1)else{return Err("WAV samples require a declared kind".into());};
+        let id=kind.checked_add(2).filter(|id|*id<=5).ok_or("WAV sample kind is undeclared")?as u16;
+        let chunks=native_list(record.get(5))?;let mut count=add_rows(add_rows(add_rows(3,native_list(data.get(id))?.len())?,chunks.len())?,native_list(record.get(6))?.len())?;
+        if let Some(value)=format.get(6).filter(|value|!matches!(value,dsl::FieldValue::Absent)){count=add_rows(add_rows(count,1)?,native_list(Some(value))?.len())?;}
+        if count>maximum{return Err("WAV native snapshot exceeds semantic row limit".into());}
+        native.begin_stage(chunks.len())?;
+        for chunk in chunks{let chunk=native_record(Some(chunk))?;let size=match chunk.get(1){Some(dsl::FieldValue::Bytes64(bytes))=>bytes.len(),None|Some(dsl::FieldValue::Absent)=>0,_=>return Err("WAV chunk requires literal octets".into())};count=add_rows(count,size)?;if count>maximum{return Err("WAV native snapshot exceeds semantic row limit".into());}native.step()?;}
+        Ok(())
+    }).map_err(dsl::__rt::field_error)
+}
+
 impl ArtifactSqliteSnapshot for WavSnapshot {
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{admit_schema(control)?;control.check_rows(3)?;let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{admit_native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,String>{forecast(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
-        let mut bound = NativeEncodingBound::new(control)?;
-        bound.add(32768)?;
-        bound.repeated(self.schema.len(), 24)?;
-        let scalar = std::mem::size_of::<dsl::FieldValue>() * 2 + 64;
-        if let Some(ext) = &self.fmt.ext {
-            bound.add(512)?;
-            bound.repeated(ext.len(), scalar)?;
-        }
-        match &self.data {
-            WavData::Pcm16(values) => bound.repeated(values.len(), scalar)?,
-            WavData::Pcm8(values) | WavData::Raw(values) => bound.repeated(values.len(), scalar)?,
-            WavData::Float32(values) => bound.repeated(values.len(), scalar)?,
-        }
-        for chunk in &self.other_chunks {
-            bound.add(1024)?;
-            bound.repeated(chunk.fourcc.len(), 24)?;
-            bound.repeated(chunk.data.len(), 16)?;
-        }
-        bound.repeated(self.chunk_order.len(), 1024)?;
-        bound.finish()
-    }
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, String> {
+        forecast(self,control,SqliteSnapshotPhase::ProjectSnapshot)?;
         let mut out = Projection::new(Self::SQLITE_SCHEMA, control)?;
         out.insert("wav_document", &[Cell::Text(&self.schema)])?;
         out.insert(

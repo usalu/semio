@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for AddAppExtension {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::AddAppExtension(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Add app extension", "Anwendungserweiterung hinzufügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add app extension", "Anwendungserweiterung hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

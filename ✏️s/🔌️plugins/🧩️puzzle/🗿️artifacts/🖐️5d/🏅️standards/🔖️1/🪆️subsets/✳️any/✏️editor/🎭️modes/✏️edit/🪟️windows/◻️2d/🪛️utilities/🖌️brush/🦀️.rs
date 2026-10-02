@@ -10,7 +10,8 @@
 //! this utility's id.
 
 use crate::editor::puzzle5d::terminology::{puzzle5d_brush_suggestions_run_counters, puzzle5d_brush_suggestions_run_reasons, puzzle5d_brush_suggestions_run_stages, puzzle5d_brush_suggestions_run_unit};
-use semio_framework_plugin::{LocalizedLabel, UtilityDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind};
 
 pub const UTILITY_ID: &str = "brush";

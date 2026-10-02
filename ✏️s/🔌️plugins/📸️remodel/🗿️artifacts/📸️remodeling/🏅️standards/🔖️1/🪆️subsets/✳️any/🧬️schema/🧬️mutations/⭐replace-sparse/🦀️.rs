@@ -35,8 +35,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceS
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace sparse", "Dünne Punktwolke ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace sparse", "Dünne Punktwolke ersetzen")
     }
 }
 //#endregion 🔖️Mutation

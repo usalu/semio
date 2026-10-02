@@ -4,11 +4,90 @@ extension gltf
 start document
 comment none
 
-document = "stdio.gltf" field*
-field = IDENT field-value?
-field-value = "=" value
-value = scalar value-tail? | list | record
-scalar = field | TEXT | INT | FLOAT
-value-tail = "," value
-list = "[" value* "]"
-record = "{" field* "}"
+document = envelope? snapshot
+envelope = "semio" "stdio.gltf.dsl" "v1"
+snapshot = snapshot-field+
+snapshot-field = "schema" "=" text | "source-form" "=" source-form | "document" "=" gltf-document | "buffers" "=" "[" resolved-buffer* "]"
+source-form = "json" | "glb"
+resolved-buffer = "{" "bytes" "=" integers "}"
+gltf-document = gltf-document-field+
+gltf-document-field = "asset" "=" asset | "scene" "=" INT | "scenes" "=" "[" scene* "]" | "nodes" "=" "[" node* "]" | "meshes" "=" "[" mesh* "]" | "accessors" "=" "[" accessor* "]" | "buffer-views" "=" "[" buffer-view* "]" | "buffers" "=" "[" buffer* "]" | "materials" "=" "[" material* "]" | "textures" "=" "[" texture* "]" | "images" "=" "[" image* "]" | "samplers" "=" "[" sampler* "]" | "skins" "=" "[" skin* "]" | "animations" "=" "[" animation* "]" | "cameras" "=" "[" camera* "]" | "extensions-used" "=" texts | "extensions-required" "=" texts | extension-field
+asset = asset-field+
+asset-field = "version" "=" text | "generator" "=" text | "copyright" "=" text | "min-version" "=" text | extension-field
+scene = "{" scene-field+ "}"
+scene-field = "nodes" "=" integers | name-field | extension-field
+node = "{" node-field+ "}"
+node-field = "children" "=" integers | "mesh" "=" INT | "camera" "=" INT | "skin" "=" INT | "matrix" "=" tuple16 | "translation" "=" tuple3 | "rotation" "=" tuple4 | "scale" "=" tuple3 | "weights" "=" numbers | name-field | extension-field
+mesh = "{" mesh-field+ "}"
+mesh-field = "primitives" "=" "[" primitive* "]" | "weights" "=" numbers | name-field | extension-field
+primitive = "{" primitive-field+ "}"
+primitive-field = "attributes" "=" "[" attribute* "]" | "indices" "=" INT | "material" "=" INT | "mode" "=" INT | "targets" "=" "[" morph-target* "]" | extension-field
+attribute = "{" "semantic" "=" text "accessor" "=" INT "}"
+morph-target = "{" "attributes" "=" "[" attribute* "]" "}"
+accessor = "{" accessor-field+ "}"
+accessor-field = "buffer-view" "=" INT | "byte-offset" "=" INT | "component-type" "=" component-type | "normalized" "=" boolean | "count" "=" INT | "kind" "=" accessor-kind | "max" "=" numbers | "min" "=" numbers | "sparse" "=" sparse-accessor | name-field | extension-field
+component-type = "byte" | "unsigned-byte" | "short" | "unsigned-short" | "unsigned-int" | "float"
+accessor-kind = "scalar" | "vec2" | "vec3" | "vec4" | "mat2" | "mat3" | "mat4"
+sparse-accessor = "count" "=" INT "indices" "=" sparse-indices "values" "=" sparse-values
+sparse-indices = sparse-indices-field+
+sparse-indices-field = "buffer-view" "=" INT | "byte-offset" "=" INT | "component-type" "=" component-type
+sparse-values = sparse-values-field+
+sparse-values-field = "buffer-view" "=" INT | "byte-offset" "=" INT
+buffer-view = "{" buffer-view-field+ "}"
+buffer-view-field = "buffer" "=" INT | "byte-offset" "=" INT | "byte-length" "=" INT | "byte-stride" "=" INT | "target" "=" INT | name-field | extension-field
+buffer = "{" buffer-field+ "}"
+buffer-field = "byte-length" "=" INT | "uri" "=" text | name-field | extension-field
+material = "{" material-field+ "}"
+material-field = name-field | "pbr-metallic-roughness" "=" pbr | "normal-texture" "=" normal-texture | "occlusion-texture" "=" occlusion-texture | "emissive-texture" "=" texture-info | "emissive-factor" "=" tuple3 | "alpha-mode" "=" alpha-mode | "alpha-cutoff" "=" number | "double-sided" "=" boolean | extension-field
+alpha-mode = "opaque" | "mask" | "blend"
+pbr = pbr-field+
+pbr-field = "base-color-factor" "=" tuple4 | "base-color-texture" "=" texture-info | "metallic-factor" "=" number | "roughness-factor" "=" number | "metallic-roughness-texture" "=" texture-info | extension-field
+texture-info = texture-info-field+
+texture-info-field = "index" "=" INT | "tex-coord" "=" INT | extension-field
+normal-texture = normal-texture-field+
+normal-texture-field = "index" "=" INT | "tex-coord" "=" INT | "scale" "=" number | extension-field
+occlusion-texture = occlusion-texture-field+
+occlusion-texture-field = "index" "=" INT | "tex-coord" "=" INT | "strength" "=" number | extension-field
+texture = "{" "kind" "=" "texture" texture-field* "}"
+texture-field = "sampler" "=" INT | "source" "=" INT | name-field | extension-field
+image = "{" "kind" "=" "image" image-field* "}"
+image-field = "uri" "=" text | "mime-type" "=" text | "buffer-view" "=" INT | name-field | extension-field
+sampler = "{" sampler-field+ "}"
+sampler-field = "mag-filter" "=" INT | "min-filter" "=" INT | "wrap-s" "=" INT | "wrap-t" "=" INT | name-field | extension-field
+skin = "{" skin-field+ "}"
+skin-field = "inverse-bind-matrices" "=" INT | "skeleton" "=" INT | "joints" "=" integers | name-field | extension-field
+animation = "{" animation-field+ "}"
+animation-field = "channels" "=" "[" animation-channel* "]" | "samplers" "=" "[" animation-sampler* "]" | name-field | extension-field
+animation-channel = "{" animation-channel-field+ "}"
+animation-channel-field = "sampler" "=" INT | "target" "=" animation-target | extension-field
+animation-target = animation-target-field+
+animation-target-field = "node" "=" INT | "path" "=" animation-path | extension-field
+animation-path = "translation" | "rotation" | "scale" | "weights"
+animation-sampler = "{" animation-sampler-field+ "}"
+animation-sampler-field = "input" "=" INT | "interpolation" "=" interpolation | "output" "=" INT | extension-field
+interpolation = "linear" | "step" | "cubic-spline"
+camera = "{" camera-field+ "}"
+camera-field = "projection" "=" projection | name-field | extension-field
+projection = "kind" "=" projection-kind projection-field*
+projection-kind = "perspective" | "orthographic"
+projection-field = "perspective" "=" perspective | "orthographic" "=" orthographic
+perspective = perspective-field+
+perspective-field = "aspect-ratio" "=" number | "yfov" "=" number | "zfar" "=" number | "znear" "=" number | extension-field
+orthographic = orthographic-field+
+orthographic-field = "xmag" "=" number | "ymag" "=" number | "zfar" "=" number | "znear" "=" number | extension-field
+name-field = "name" "=" text
+extension-field = "extensions" "=" json | "extras" "=" json
+json = "nodes" "=" "[" json-node* "]"
+json-node = "{" "kind" "=" json-kind json-node-field* "}"
+json-kind = "null" | "boolean" | "number" | "string" | "array" | "object"
+json-node-field = "boolean" "=" boolean | "number" "=" number | "text" "=" text | "items" "=" integers | "members" "=" "[" json-member* "]"
+json-member = "{" "name" "=" text "value" "=" INT "}"
+texts = "[" text* "]"
+integers = "[" INT* "]"
+numbers = "[" number* "]"
+tuple3 = number "," number "," number
+tuple4 = number "," number "," number "," number
+tuple16 = number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number "," number
+number = INT | FLOAT | IDENT | "-" IDENT
+boolean = "true" | "false"
+text = IDENT | TEXT

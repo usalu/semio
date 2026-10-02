@@ -5,7 +5,8 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
 import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
-import { canonicalJson, frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
 const historical = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));

@@ -7,10 +7,10 @@
 //! The subject half is gated behind the generated host's `sut` feature, so the oracle-only run never
 //! compiles the local implementation.
 
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::oracle_identity_round_trip;
+use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -92,11 +92,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tiff::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::apply_tiff_mutation;
     use semio_s_artifact_stdio_tiff::TiffMutation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
+    use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::project_tiff;
 
     //#region 🔖️SpecParsing
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
@@ -151,7 +151,7 @@ mod subject {
         let input = mutable_input(ctx)?;
         let snapshot = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
-        semio_s_plugin_stdio_test_oracle::law::carrier_is_exact(&output, &input)?;
+        semio_repo_test_host::law::carrier_is_exact(&output, &input)?;
         let projection = project_tiff(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }

@@ -14,7 +14,8 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+/// 📚️ Every example this subset bundles, in declaration order.
+pub(crate) fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
@@ -22,8 +23,8 @@ fn examples() -> &'static [ExampleSource] {
 /// 💡️ `::schema::` (leading `::`, the extern crate `semio_framework_schema`) vs the bare `schema`
 /// local import (this subset's own schema module) — the two share a name, only the leading `::`
 /// disambiguates (recipe-subset.md §4a's own documented pattern).
-fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::dag_artifact_inference_descriptor()]).as_slice()
 }
 

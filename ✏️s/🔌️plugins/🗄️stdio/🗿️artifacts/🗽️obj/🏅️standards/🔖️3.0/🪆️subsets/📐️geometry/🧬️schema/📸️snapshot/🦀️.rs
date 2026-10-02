@@ -81,7 +81,7 @@ pub struct ObjFace {
 pub struct ObjGroup {
     pub name: String,
     #[value(default)]
-    pub faces: Vec<usize>,
+    pub faces: Vec<u64>,
 }
 
 /// 🏷️ A named `o` object — exactly one object is ever active at a time (unlike groups), so
@@ -91,7 +91,7 @@ pub struct ObjGroup {
 pub struct ObjObject {
     pub name: String,
     #[value(default)]
-    pub faces: Vec<usize>,
+    pub faces: Vec<u64>,
 }
 
 /// 🎨 One `usemtl` transition: `material` is active for every face from `face_index_from`
@@ -100,7 +100,7 @@ pub struct ObjObject {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ObjUsemtlRange {
-    pub face_index_from: usize,
+    pub face_index_from: u64,
     pub material: String,
 }
 
@@ -109,7 +109,7 @@ pub struct ObjUsemtlRange {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ObjSmoothingRange {
-    pub face_index_from: usize,
+    pub face_index_from: u64,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub group: Option<u32>,
 }

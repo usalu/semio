@@ -33,6 +33,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { leadingEmojiIdentity } from "../../../../../../../../../../🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import * as THREE from "three";
@@ -1320,10 +1321,11 @@ export function realRowOutputPath(manifests: readonly { id: string; files: reado
 
 //#region 🚀️Entry
 /** 🧭️ Resolves exact fixture roles from the current catalog, preserving authored physical names. */
-export function gltfFixtureOutputPaths(manifests: readonly { id: string; files: readonly { role: string; path: string }[] }[], id: string, catalogDir: string, outRoot?: string): { before: string; after: string } {
+export function gltfFixtureOutputPaths(manifests: readonly { id: string; files: readonly { role: string; path: string }[] }[], id: string, catalogDir: string, contextualOperations: readonly string[], outRoot?: string): { before: string; after: string } {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) throw new Error("Invalid glTF fixture identity.");
   const records = manifests.filter((record) => record.id === id);
   if (records.length !== 1 || records[0]!.files.length !== 2) throw new Error(`Expected one exact glTF fixture pair: ${id}`);
+  if (!contextualOperations.length || contextualOperations.some((operation) => !/^[a-z]+$/u.test(operation))) throw new Error("Invalid declared mutation-operation vocabulary.");
   const subsetsRoot = resolve(catalogDir, "../..");
   const select = (role: string): string => {
     const files = records[0]!.files.filter((file) => file.role === role);
@@ -1332,6 +1334,7 @@ export function gltfFixtureOutputPaths(manifests: readonly { id: string; files: 
     if (!path || path !== path.normalize("NFC") || isAbsolute(path) || /^[a-z]:/iu.test(path) || path.includes("\\") || /[\x00-\x1f]/u.test(path)) throw new Error(`Invalid fixture path: ${path}`);
     const target = resolve(catalogDir, path), owner = relative(subsetsRoot, target).split(/[\\/]/u);
     if (relative(catalogDir, target).replaceAll("\\", "/") !== path || (owner.length !== 4 && owner.length !== 5) || owner.some((part) => !part || part === "." || part === "..") || owner[1] !== "🧫️fixtures" || !owner.at(-1)!.endsWith(".gltf")) throw new Error(`Fixture path escapes its declared collection: ${path}`);
+    if (owner.length === 4 && contextualOperations.includes(leadingEmojiIdentity(owner.at(-2)!).rest)) throw new Error(`Contextual mutation operation requires its physical domain: ${path}`);
     return target;
   };
   const before = select("expected-before-gltf"), after = select("expected-after-gltf");
@@ -1365,9 +1368,10 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(`[generator] no recipe matches --only ${JSON.stringify(only)} — known: ${[...RECIPES.map((r) => `${r.mutationId}-applied`), ...REAL_ROWS.map((row) => row.id)].join(", ")}`);
     return 1;
   }
+  const contextualOperations = [...new Set(RECIPES.map((row) => row.mutationId.split("-")[0]!))];
   const destinations = selected.map((recipe) => {
     const id = `${recipe.mutationId}-applied`;
-    return gltfFixtureOutputPaths(catalog.fixtureManifests, id, catalogDir, outRoot);
+    return gltfFixtureOutputPaths(catalog.fixtureManifests, id, catalogDir, contextualOperations, outRoot);
   });
   const realDestinations = realSelected.map((row) => realRowOutputPath(catalog.fixtureManifests, row.id, catalogDir, outRoot));
   let count = 0;

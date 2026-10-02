@@ -5,7 +5,13 @@ use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
 use crate::editor::block2d::ui_label;
 use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasBase, HasChildren};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const BLOCK2D_WINDOW_BOARD: &str = "block2d-board";

@@ -3,13 +3,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_snapshot_builds_clean() {
-        let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").expect("parses").build().expect("conforming construction must build");
+        let snapshot = JsonIJsonBuilderConstruction::from_text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::schema::snapshot::parse_json_text("{\"a\":1}").unwrap()})).expect("parses").build().expect("conforming construction must build");
         assert!(matches!(snapshot.value, crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonValue::Object { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn duplicate_member_name_fails_build() {
-        let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").expect("parses").build().expect_err("a duplicate member name must fail build()");
+        let err = JsonIJsonBuilderConstruction::from_text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::schema::snapshot::parse_json_text("{\"a\":1,\"a\":2}").unwrap()})).expect("parses").build().expect_err("a duplicate member name must fail build()");
         assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name"));
     }
 

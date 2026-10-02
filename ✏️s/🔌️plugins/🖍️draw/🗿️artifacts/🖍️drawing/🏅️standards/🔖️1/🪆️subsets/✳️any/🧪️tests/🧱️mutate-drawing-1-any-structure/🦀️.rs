@@ -12,10 +12,10 @@
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none —
 //! so every law this case claims is asserted INSIDE the subject handler, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_repo_test_host::law;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🧱️structure/🧬️schema/🧬️mutations/🦀️.rs` — duplicated,
@@ -35,24 +35,24 @@ const UNOBSERVABLE: &[&str] = &["duplicate-layer"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "create-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/➡️after/🔣️.json"),
         ),
         "duplicate-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json"),
         ),
         "reorder-layer" => (
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🦠️mutation/🔣️.json"),
+            include_str!("../../../🧱️structure/🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-structure: {other:?} is not a declared kind of this subset"),
     }
@@ -100,7 +100,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_draw_drawing::standards::v1::subsets::any::schema::mutations::{apply_drawing_mutation_json, undo_drawing_mutation_json};
 
     /// 📥️ Splits a bridge answer into the resulting document and the diagnostic codes it raised.

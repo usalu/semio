@@ -1,5 +1,5 @@
 use super::*;
-use dsl::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 
 #[semio_framework_async_macros::async_test]
 async fn round_trips_through_to_value_and_from_value() {
@@ -12,5 +12,5 @@ async fn round_trips_through_to_value_and_from_value() {
 #[semio_framework_async_macros::async_test]
 async fn to_value_matches_the_existing_serde_wire_string() {
     let icon = IconName::AlertCircle;
-    assert_eq!(icon.to_value(), dsl::DslValue::String("alert-circle".to_string()));
+    assert_eq!(icon.to_value(), semio_framework_value::DslValue::String("alert-circle".to_string()));
 }

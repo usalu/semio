@@ -32,7 +32,7 @@ export type LowpolyMutation =
   | { ChangePaintLayerOpacity: { objectId: string; index: number; newOpacity: number } }
   | { ChangePaintLayerBlendMode: { objectId: string; index: number; newBlendMode: string } }
   | { EditPaintLayer: { objectId: string; layerIndex: number; runs: PixelRun[] } }
-  | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } }
+  | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } }
   | { MoveSelection: { objectId: string; vertexIds: number[]; offset: [number, number, number] } }
   | { RotateSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; axis: [number, number, number]; angle: number } }
   | { ScaleSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; factor: [number, number, number] } };

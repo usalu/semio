@@ -274,7 +274,7 @@ where
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(description) = self.description.take() {
-            self.external_retirement = Some(app_store::retirement::owned_retirement(description));
+            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {

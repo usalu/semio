@@ -29,7 +29,7 @@ fn oversized_snapshot(shots: usize, assets: usize) -> ShootingSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &ShootingSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render(snapshot, &ShootingLabels::NATIVE_EN, &TreeWindows::for_body(&view, SHOOTING_PLAY_BODY_ARTIFACT)).expect("render the shooting document tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the shooting document tree")
 }

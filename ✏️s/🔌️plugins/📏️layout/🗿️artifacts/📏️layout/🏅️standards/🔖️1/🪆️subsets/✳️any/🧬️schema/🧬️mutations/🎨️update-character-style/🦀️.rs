@@ -26,7 +26,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateCharacterStyle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "character-style", kind: "update-character-style", record: "UpdatedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_character_style(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_update_character_style(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Update character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" aktualisieren", self.id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" aktualisieren", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

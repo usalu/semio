@@ -302,6 +302,32 @@ pub struct UpdateCursor<V> { state: ManuallyDrop<UpdateState<V>> }
 impl<V> UpdateCursor<V> {
     fn new(base: OrderedMap<V>, key: Arc<String>, value: Option<Arc<V>>) -> Self { Self { state: ManuallyDrop::new(UpdateState::new(base, key, value)) } }
     pub fn advance(&mut self, grant: Grant) -> Step { self.state.advance(grant) }
+    /// 🛬️ Admits an insert's concrete node and path allocations before one byte-bounded update step.
+    pub fn advance_insert_controlled(&mut self, grant: Grant, control: &mut crate::NativeDecodeControl<'_>) -> Result<Step, String> {
+        if self.state.closing || grant.maximum_items == 0 || grant.maximum_bytes == 0 { return Ok(Step::Blocked); }
+        if self.state.value.is_none() { return Err("controlled native ordered update requires an insert".into()); }
+        let shared = 2 * std::mem::size_of::<usize>();
+        let node_bytes = shared + std::mem::size_of::<Node<V>>();
+        let balanced_bytes = |left: &Root<V>, right: &Root<V>| {
+            let nodes = if height(left) > height(right) + 1 { if height(&left.as_ref().unwrap().left) >= height(&left.as_ref().unwrap().right) { 2 } else { 3 } }
+                else if height(right) > height(left) + 1 { if height(&right.as_ref().unwrap().right) >= height(&right.as_ref().unwrap().left) { 2 } else { 3 } } else { 1 };
+            nodes * node_bytes
+        };
+        let bytes = match self.state.phase {
+            Phase::Search if self.state.current.is_none() => shared + std::mem::size_of::<Entry<V>>() + node_bytes,
+            Phase::Search => match self.state.ordering {
+                Some(Ordering::Equal) => shared + std::mem::size_of::<Entry<V>>() + node_bytes,
+                Some(_) => 2 * std::mem::size_of::<usize>() + std::mem::size_of::<Parent<V>>(),
+                None => 0,
+            },
+            Phase::Rebuild => self.state.path.front().map_or(0, |parent| if parent.left { balanced_bytes(&self.state.replacement, &parent.node.right) } else { balanced_bytes(&parent.node.left, &self.state.replacement) }),
+            Phase::Complete => 0,
+            _ => return Err("controlled native insert reached a removal phase".into()),
+        };
+        control.checkpoint()?;
+        control.charge(bytes)?;
+        Ok(self.advance(grant))
+    }
     pub fn is_complete(&self) -> bool { self.state.is_complete() }
     pub fn take_result(&mut self) -> Option<OrderedMap<V>> { self.state.take_result() }
     /// 📤️ Explicit shared-value handoff; the recipient owns its eventual domain retirement.

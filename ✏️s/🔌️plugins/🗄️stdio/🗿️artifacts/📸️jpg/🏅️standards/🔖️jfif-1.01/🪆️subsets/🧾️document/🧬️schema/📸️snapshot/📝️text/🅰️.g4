@@ -1,13 +1,21 @@
 grammar Stdio_jpg_snapshot;
-// 🅰️ TEXT envelope: a semio preamble line, then the real JFIF byte stream hex-encoded
-// (ITU-T T.81/ISO 10918-1) -- what `store::ArtifactDsl::parse_dsl`/`print_dsl` actually
-// round-trip, not a placeholder octet blob.
-
-document   : preamble NEWLINE payload EOF ;
-preamble   : 'semio' WS 'dsl' WS INT WS 'stdio.jpg' ;
-payload    : HEXBYTE* ;                 // hex-decodes to a real jpeg-stream, see the
-                                          // 📖 grammar.semio leaf for the marker-segment shape
-HEXBYTE    : [0-9a-fA-F] [0-9a-fA-F] ;
-INT        : [0-9]+ ;
-WS         : [ \t]+ ;
-NEWLINE    : '\r'? '\n' ;
+document : 'semio' 'stdio.jpg.dsl' 'v1' snapshot EOF;
+snapshot : 'schema' '=' TEXT 'width' '=' UINT 'height' '=' UINT 'pixels' '=' TEXT
+ 'jfifXDensity' '=' UINT 'jfifYDensity' '=' UINT 'sofMarker' '=' UINT 'arithmetic' '=' boolean
+ 'reEncodeQuality' '=' optionalUint 'jfifVersion' '=' '[' UINT UINT ']'
+ 'jfifDensityUnits' '=' TEXT 'jfifThumbnail' '=' thumbnail 'frame' '=' frame
+ 'quantTables' '=' '[' quantization* ']' 'huffmanTables' '=' '[' huffman* ']'
+ 'restartInterval' '=' optionalUint 'otherSegments' '=' '[' segment* ']';
+optionalUint : 'null' | UINT;
+octets : 'bytes64' '(' TEXT ')';
+thumbnail : 'null' | '{' 'height' '=' UINT 'rgbData' '=' octets 'width' '=' UINT '}';
+frame : 'null' | '{' 'components' '=' '[' component* ']' 'height' '=' UINT 'precision' '=' UINT 'width' '=' UINT '}';
+component : '{' 'hSampling' '=' UINT 'id' '=' UINT 'quantTableId' '=' UINT 'vSampling' '=' UINT '}';
+quantization : '{' 'id' '=' UINT 'precision' '=' UINT 'values' '=' '[' UINT* ']' '}';
+huffman : '{' 'bits' '=' '[' UINT* ']' 'class' '=' TEXT 'id' '=' UINT 'values' '=' octets '}';
+segment : '{' 'data' '=' octets 'marker' '=' UINT '}';
+boolean : 'true' | 'false';
+UINT : [0-9]+;
+TEXT : '"' ('\\' . | ~["\\])* '"';
+WS : [ \t\r\n]+ -> skip;
+COMMENT : '#' ~[\r\n]* -> skip;

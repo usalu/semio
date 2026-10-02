@@ -1,6 +1,12 @@
 //! 📚️ EN 1995 play app panel — examples plus EN 338 / EN 14080 strength classes, k_mod, fastener types and member roles.
 
-use semio_framework_plugin::{LocalizedLabel, Locale, PanelGroup, PanelTabDefinition, Terminology, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
 use crate::artifact_schema::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};

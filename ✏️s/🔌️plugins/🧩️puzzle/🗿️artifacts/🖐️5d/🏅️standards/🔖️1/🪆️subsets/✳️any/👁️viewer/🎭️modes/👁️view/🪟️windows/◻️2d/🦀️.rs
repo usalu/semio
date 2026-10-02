@@ -11,7 +11,12 @@
 //! with its fixed camera.
 
 use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
-use semio_framework_plugin::{Board2dScene, LocalizedLabel, SurfaceKind, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::Board2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 

@@ -1,7 +1,16 @@
 //! 🛍️ Writer play app panel — the language catalogue (currently a single static jack description).
 
 use crate::editor::writer::terminology::WriterPlayLabels;
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_CATALOGUE: &str = "writer.play.catalogue";

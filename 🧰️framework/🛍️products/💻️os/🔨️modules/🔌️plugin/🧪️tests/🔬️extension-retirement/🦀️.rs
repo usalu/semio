@@ -4,7 +4,7 @@ mod extension_retirement_tests {
 
     struct Resource {
         value: Option<String>,
-        close: store::os_store::retained_clone::RetainedCloneClose,
+        close: semio_framework_value::retained_clone::RetainedCloneClose,
         sealed: Arc<AtomicBool>,
         terminal: Arc<AtomicBool>,
         expected_bytes: usize,

@@ -12,10 +12,21 @@ use crate::standards::v1::subsets::any::schema::layer_name;
 use crate::standards::v1::subsets::any::schema::{layer_visible,layer_protection,layer_node_id};
 use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{
-    tree_item_with_action, tree_window_item, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

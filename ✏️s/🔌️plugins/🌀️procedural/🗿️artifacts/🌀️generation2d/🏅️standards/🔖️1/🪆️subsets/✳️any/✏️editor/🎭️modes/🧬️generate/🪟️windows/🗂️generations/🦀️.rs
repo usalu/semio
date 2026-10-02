@@ -2,7 +2,14 @@
 
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, SurfaceKind, Terminology, TreeWindows, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_WINDOW_GENERATIONS: &str = "generation2d-generations";

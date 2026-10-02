@@ -20,8 +20,8 @@ mod subject {
     use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
     use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{encode_jpg_baseline_projection_json, jpg_baseline_conformance_codes};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
+    use semio_repo_test_host::law;
 
     /// 🖼️ The real scan, decoded into the snapshot the whole case reasons about. The decode is
     /// required to have retained a frame header: `check_baseline_conformance` reports

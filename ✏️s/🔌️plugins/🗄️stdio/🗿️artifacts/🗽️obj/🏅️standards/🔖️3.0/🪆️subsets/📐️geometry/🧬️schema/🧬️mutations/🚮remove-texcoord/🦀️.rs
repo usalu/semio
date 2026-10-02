@@ -27,8 +27,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveTexcoord {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::RemoveTexcoord(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove texcoord", "Texturkoordinate entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

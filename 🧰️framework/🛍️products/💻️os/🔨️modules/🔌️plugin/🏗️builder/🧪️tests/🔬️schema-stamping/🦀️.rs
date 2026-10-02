@@ -1,11 +1,12 @@
 use super::*;
+use crate::__semio_dispatch_PluginApp;
 use crate::app::{
     ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer,
 };
 use crate::ViewModel;
 use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
-use store::EngineHandles;
-use ui_wgpu::wgpu::LocalizedLabel;
+use semio_framework_2d::compute::EngineHandles;
+use semio_framework_ui_locale::LocalizedLabel;
 
 const EDITOR_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-editor", standard: StandardId("1"), subset: SubsetId::ANY };
 const VIEWER_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-viewer", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -49,7 +50,7 @@ impl ArtifactEditor for SchemaStampEditorFixture {
     }
 
     fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-editor"))
+        built_text_to_component_tree(semio_framework_ui_locale::Label::data("schema-stamp-editor"))
     }
 }
 
@@ -85,7 +86,7 @@ impl ArtifactViewer for SchemaStampViewerFixture {
     }
 
     fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-viewer"))
+        built_text_to_component_tree(semio_framework_ui_locale::Label::data("schema-stamp-viewer"))
     }
 }
 

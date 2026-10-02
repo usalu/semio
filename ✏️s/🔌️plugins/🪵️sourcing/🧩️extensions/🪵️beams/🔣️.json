@@ -33,7 +33,7 @@
   },
   "execution": "declarative",
   "executionProtocol": {
-    "appChannelVersion": 19
+    "appChannelVersion": 20
   },
   "quotas": {},
   "contributions": {

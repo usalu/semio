@@ -451,7 +451,33 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     manifest.artifact_kinds = semio_hub_stdio::catalog::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
     manifest.topic_contributions.push(semio_hub_stdio::catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
-    assert_eq!(manifest.artifact_kinds.len(), receipts.len(), "every descriptor artifact kind has one executable owner receipt");
+    let receipt_pairs = receipts.iter().map(|receipt| (receipt.artifact_kind.clone(), receipt.schema.clone())).collect::<std::collections::BTreeSet<_>>();
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json")).expect("schema-qualified factory roster");
+    let expected_pairs = authored["receipts"].as_array().unwrap().iter().map(|receipt| (receipt["artifact_kind"].as_str().unwrap().to_owned(), receipt["artifact_schema"].as_str().unwrap().to_owned())).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(receipt_pairs.len(), receipts.len(), "every executable owner receipt has one unique kind/schema pair");
+    assert_eq!(receipt_pairs, expected_pairs, "every descriptor kind/schema pair has its exact executable owner receipt");
+    assert_eq!(manifest.artifact_kinds.iter().map(|kind| kind.id.as_str()).collect::<std::collections::BTreeSet<_>>(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect(), "every descriptor artifact kind has executable owner coverage");
+    assert_eq!(manifest.artifact_kinds.len(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect::<std::collections::BTreeSet<_>>().len(), "descriptor artifact kinds are unique");
+    let pair_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).expect("neutral receipt pair corpus");
+    let expected = pair_fixture["pairs"].as_array().unwrap().iter().map(|pair| (pair[0].as_str().unwrap().to_owned(), pair[1].as_str().unwrap().to_owned())).collect::<std::collections::BTreeSet<_>>();
+    let kinds = pair_fixture["kinds"].as_array().unwrap().iter().map(|kind| kind.as_str().unwrap().to_owned()).collect::<std::collections::BTreeSet<_>>();
+    for row in pair_fixture["cases"].as_array().unwrap() {
+        let mut pairs = pair_fixture["pairs"].as_array().unwrap().iter().map(|pair| (pair[0].as_str().unwrap().to_owned(), pair[1].as_str().unwrap().to_owned())).collect::<Vec<_>>();
+        match row["mutation"].as_str().unwrap() {
+            "none" => {}
+            "reverse" => pairs.reverse(),
+            "missing-schema" => { pairs.remove(1); }
+            "missing-kind" => { pairs.pop(); }
+            "duplicate" => pairs[1] = pairs[0].clone(),
+            "foreign-schema" => pairs[1].1 = "foreign.schema".into(),
+            "foreign-kind" => pairs[1].0 = "foreign.artifact".into(),
+            "extra" => pairs.push(("s.stdio.pdf".into(), "foreign.schema".into())),
+            mutation => panic!("unknown receipt pair mutation {mutation}"),
+        }
+        let actual = pairs.iter().cloned().collect::<std::collections::BTreeSet<_>>();
+        let actual_kinds = pairs.iter().map(|pair| pair.0.clone()).collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(actual.len() == pairs.len() && actual == expected && actual_kinds == kinds, row["accepted"].as_bool().unwrap(), "neutral receipt pair {}", row["id"]);
+    }
     assert_eq!(viewer.id, "s.stdio.json@rfc8259/*#viewer", "the synthetic viewer opens the manifest-declared kind its own dialect names");
     let viewer_id = viewer.id.clone();
     let window_id = viewer.window_kinds.iter().find(|window| window.id == "framework.window.tree").expect("descriptor-owned JSON viewer window").id.clone();
@@ -470,7 +496,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         assets: Vec::new(),
         hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: "22".repeat(32), descriptor_sha256: "33".repeat(32) },
     };
-    let descriptor_bytes = directory::os_store::pack_rt::encode_wire_value(&semio_framework::to_dsl_value(&descriptor).expect("project stdio descriptor"));
+    let descriptor_bytes = directory::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let descriptor_sha256 = os_directory::hex_lower(&Sha256::digest(&descriptor_bytes));
     let json = receipts.iter().find(|receipt| receipt.factory_id == "stdio.native.json.v1").expect("JSON receipt");
     let native_codecs = receipts
@@ -1232,7 +1258,7 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -8259,6 +8285,8 @@ fn a_vigilant_hub_refuses_a_same_target_write_authored_without_observing_the_oth
                 inverse: protocol::InverseMutation { schema: protocol::SchemaId("test.v1".into()), payload: Vec::new() },
                 timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
                 transaction: None,
+                verb: None,
+                line: None,
             };
             let mut outcomes = Vec::new();
             for (author, batch, envelope) in [(0usize, 1u64, write("base", &alice_actor, None)), (1, 1, write("first", &bob_actor, Some("base"))), (0, 2, write("second", &alice_actor, row["secondObserves"].as_str()))] {
@@ -8988,7 +9016,12 @@ mod quick {
         let providers = NativeCodecProviderSetV1::linked();
         let root = native_openable_stdio_bundle();
         let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
-        assert_eq!(configured.catalog.codec_count(), 29);
+        assert_eq!(configured.catalog.artifact_kind_count(), 29);
+        let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().expect("actual stdio schema-qualified receipts");
+        let pairs = receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(pairs.len(), receipts.len(), "every current executable codec has one exact kind/schema identity");
+        assert_eq!(pairs.len(), 30, "both original PDF standards retain their executable authority");
+        assert_eq!(configured.catalog.codec_count(), pairs.len(), "all current executable kind/schema identities activate atomically");
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
         ready.openable_catalog = Some(configured.catalog.clone());

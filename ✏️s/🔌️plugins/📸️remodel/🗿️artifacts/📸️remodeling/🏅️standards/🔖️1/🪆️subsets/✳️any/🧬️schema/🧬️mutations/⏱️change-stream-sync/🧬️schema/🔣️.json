@@ -34,8 +34,7 @@
       }
     },
     "newSyncOffsetMs": {
-      "type": "number",
-      "format": "double",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Binary64Transport",
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",

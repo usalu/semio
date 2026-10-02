@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The presence state lane of `s.dag.dag`'s editor (✏️editor/👥️presence): its mutation vocabulary `DagPresenceMutation` over `DagPresence`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/👥️mutate-dag-dag-1-any-editor-presence` and backed by one committed vector per declared outcome class.",
   "oracles": [],

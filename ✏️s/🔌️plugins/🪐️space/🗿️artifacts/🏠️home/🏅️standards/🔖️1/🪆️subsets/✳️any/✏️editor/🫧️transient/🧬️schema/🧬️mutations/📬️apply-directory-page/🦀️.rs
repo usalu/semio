@@ -31,8 +31,8 @@ impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirec
     fn inverse(&self, _base: &HomeTransient) -> Vec<HomeTransientMutation> {
         Vec::new()
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Apply Directory Page", "Verzeichnisseite anwenden")
     }
     fn target(&self) -> Vec<String> {
         vec!["directory".into()]

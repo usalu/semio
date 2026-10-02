@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.energy.model`'s editor (✏️editor/🎚️config): its mutation vocabulary `EnergyModelConfigMutation` over `EnergyModelConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-energy-model-1-any-editor-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],

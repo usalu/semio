@@ -10,7 +10,7 @@ fn direct_wire_records_preserve_keyword_fields_and_tag_order() {
     for (index, ((keyword, spec), (expected_keyword, expected_fields))) in variants.iter().zip(expected.iter()).enumerate() {
         assert_eq!(keyword.as_str(), *expected_keyword);
         assert_eq!(BINARY_TAG_REGISTRY[index], (*expected_keyword, index as u8));
-        let fields: Vec<_> = spec().fields.into_iter().map(|field| field.key).collect();
+        let fields: Vec<_> = (spec.ordinary)().fields.into_iter().map(|field| field.key).collect();
         assert_eq!(fields, expected_fields.iter().map(|field| (*field).to_owned()).collect::<Vec<_>>());
     }
 }

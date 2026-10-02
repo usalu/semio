@@ -1,46 +1,41 @@
 semio forms.form.dsl v1
-schema=forms.form id=building-component version="1" title="Building Component" definition=steps=[ id=identity title=Identity description="Basic component metadata and material selection." blocks=[ id=name label="Component Name" kind=text required=true placeholder="Column A" default="Column A"
-condition {
-}
-id=description label=Description kind=longText placeholder="Describe the component role" default="Primary structural column"
-condition {
-}
-id=material label=Material kind=single required=true default="concrete" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]
-condition {
-}
-id=tags label=Tags kind=multi default=[ "structural" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]
-condition {
-}
-id=prefab label=Prefab kind=boolean default=true
-condition {
-}
-id=install-date label="Install Date" kind=date
-condition {
-}
-id=accent-color label="Accent Color" kind=color default="#336699"
-condition {
-}
-] id=geometry title=Geometry description="Parametric geometry and dimensional controls." blocks=[ id=info-note label=Note kind=note text="Adjust the procedural column parameters below."
-condition {
-}
-id=count label="Instance Count" kind=number min=1 max=20 step=1 default=4
-condition {
-}
-id=height-factor label="Height Factor" kind=slider min=0 max=10 step=0.5 unit=m default=6
-condition {
-}
-id=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
-condition {
-}
-id=geometry label="Hexagonal Column" kind=buildingComponent description="Parametric column geometry from procedural flow." required=true fixture-slug=hexagonal-mushroom-column params={
-  height=6 radius=0.5 sides=6
-}
-condition {
-}
-id=reference-image label=Reference kind=image src=""
-condition {
-}
-id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg"
-condition {
-}
-] ] responses=[ ] structure=child_id=building-component-structure target="building-component-structure!s.stdio.semio@v1/value" results=child_id=building-component-results target="building-component-results!s.stdio.semio@v1/table"
+schema=forms.form id=building-component version="1" title="Building Component"
+structure=child_id=building-component-structure target=artifact-id=building-component-structure artifact-kind=s.stdio.semio standard=v1 subset=value
+results=child_id=building-component-results target=artifact-id=building-component-results artifact-kind=s.stdio.semio standard=v1 subset=table
+steps=[
+ { id=identity title=Identity description="Basic component metadata and material selection." questions=[
+  { id=name label="Component Name" kind=text required=true placeholder="Column A" default=0 }
+  { id=description label=Description kind=longText placeholder="Describe the component role" default=1 }
+  { id=material label=Material kind=single required=true default=2 options=[ { value=concrete label=Concrete } { value=steel label=Steel } { value=timber label=Timber } ] }
+  { id=tags label=Tags kind=multi default=3 options=[ { value=structural label=Structural } { value=facade label=Facade } { value=prefab label=Prefab } ] }
+  { id=prefab label=Prefab kind=boolean default=4 }
+  { id=install-date label="Install Date" kind=date }
+  { id=accent-color label="Accent Color" kind=color default=5 }
+ ] }
+ { id=geometry title=Geometry description="Parametric geometry and dimensional controls." questions=[
+  { id=info-note label=Note kind=note text="Adjust the procedural column parameters below." }
+  { id=count label="Instance Count" kind=number default=6 min=1 max=20 step=1 }
+  { id=height-factor label="Height Factor" kind=slider default=7 min=0 max=10 step=0.5 unit=m }
+  { id=offset label=Offset kind=vector step=0.1 fields=[ { key=x label=X value=0 } { key=y label=Y value=0 } { key=z label=Z value=0 } ] schema=vec3 }
+  { id=geometry label="Hexagonal Column" kind=buildingComponent description="Parametric column geometry from procedural flow." required=true fixture-slug=hexagonal-mushroom-column params=8 }
+  { id=reference-image label=Reference kind=image src="" }
+  { id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg" }
+ ] }
+]
+responses=[]
+values=[
+ { kind=text text="Column A" items=[] members=[] }
+ { kind=text text="Primary structural column" items=[] members=[] }
+ { kind=text text=concrete items=[] members=[] }
+ { kind=array items=[9] members=[] }
+ { kind=boolean boolean=true items=[] members=[] }
+ { kind=text text="#336699" items=[] members=[] }
+ { kind=unsigned unsigned=4 items=[] members=[] }
+ { kind=unsigned unsigned=6 items=[] members=[] }
+ { kind=object items=[] members=[ { name=height value=10 } { name=radius value=11 } { name=sides value=12 } ] }
+ { kind=text text=structural items=[] members=[] }
+ { kind=unsigned unsigned=6 items=[] members=[] }
+ { kind=float float-bits=4602678819172646912 items=[] members=[] }
+ { kind=unsigned unsigned=6 items=[] members=[] }
+]
+conditions=[]

@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeAltitudeM 
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change site altitude", "Geländehöhe ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change site altitude", "Geländehöhe ändern")
     }
 }
 //#endregion 🔖️Payload

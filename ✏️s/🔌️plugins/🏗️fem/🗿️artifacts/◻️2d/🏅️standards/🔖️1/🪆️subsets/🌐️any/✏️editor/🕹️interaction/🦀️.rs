@@ -8,7 +8,19 @@ use crate::{element_id, Fem2dSnapshot, FemDof, FemLoad, Viewport2d};
 use model_window::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ConfigView, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LocalizedLabel, MergeMode, NoConfig, SelectionMethod, SelectionMode, SelectionSpec, ViewModel};
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Constants
 pub const FEM2D_INTERACTION_DOMAIN: &str = "fem2d";

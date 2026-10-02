@@ -3,7 +3,19 @@
 use crate::editor::wav::edit_audio;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 use semio_framework_plugin::app::{editable_table_window_row, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{ActionId, Buildable, BuiltNode, HasBase, HasChildren, Locale, LocalizedLabel, PluginAssemblyError, RowActionPlacement, TreeWindows, Trigger, UiValue, WindowKindDefinition};
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_ui_contract::{self as ui, Label as UiLabel};
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

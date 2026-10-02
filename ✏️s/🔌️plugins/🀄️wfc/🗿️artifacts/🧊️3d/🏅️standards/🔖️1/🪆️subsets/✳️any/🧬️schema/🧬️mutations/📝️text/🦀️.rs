@@ -125,7 +125,7 @@ pub fn operation_to_dsl(operation: &Wfc3dMutation) -> Wfc3dOperationDsl {
         Wfc3dMutation::CreateTile(CreateTile { index, tile }) => Wfc3dOperationDsl::CreateTile { index: *index, tile: tile_to_dsl(tile) },
         Wfc3dMutation::DeleteTile(DeleteTile { id }) => Wfc3dOperationDsl::DeleteTile { id: id.clone() },
         Wfc3dMutation::ChangeTileWeight(ChangeTileWeight { id, weight }) => Wfc3dOperationDsl::ChangeTileWeight { id: id.clone(), weight: *weight },
-        Wfc3dMutation::ChangeTileMedia(ChangeTileMedia { id, media }) => Wfc3dOperationDsl::ChangeTileMedia { id: id.clone(), media: dsl::to_dsl_value(media).unwrap_or(dsl::DslValue::Null) },
+        Wfc3dMutation::ChangeTileMedia(ChangeTileMedia { id, media }) => Wfc3dOperationDsl::ChangeTileMedia { id: id.clone(), media: semio_framework_value::ToValue::to_value(media) },
         Wfc3dMutation::CreateRule(CreateRule { index, rule }) => Wfc3dOperationDsl::CreateRule { index: *index, rule: rule_to_dsl(rule) },
         Wfc3dMutation::DeleteRule(DeleteRule { id }) => Wfc3dOperationDsl::DeleteRule { id: id.clone() },
         Wfc3dMutation::ChangeSeed(ChangeSeed { seed }) => Wfc3dOperationDsl::ChangeSeed { seed: *seed },
@@ -155,7 +155,7 @@ pub fn operation_from_dsl(operation: Wfc3dOperationDsl) -> Result<Wfc3dMutation,
         Wfc3dOperationDsl::ChangeTileMedia { id, media } => {
             let media: TileMedia3d = match media {
                 dsl::DslValue::Null => TileMedia3d::default(),
-                other => dsl::from_dsl_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+                other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
             };
             Wfc3dMutation::ChangeTileMedia(ChangeTileMedia { id, media })
         }
@@ -182,7 +182,7 @@ impl protocol::OpText for Wfc3dOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -192,7 +192,7 @@ impl protocol::OpText for Wfc3dOperationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

@@ -8,6 +8,9 @@
     "family:animate"
   ],
   "targets": {
+    "test-snapshot-sqlite": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
+    "test-snapshot-sqlite-native": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
+    "test-snapshot-sqlite-source": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
     "build": {
       "executor": "nx:run-commands",
       "cache": true,

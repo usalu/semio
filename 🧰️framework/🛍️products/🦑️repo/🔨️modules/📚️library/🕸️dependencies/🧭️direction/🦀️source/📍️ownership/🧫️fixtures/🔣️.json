@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "direct",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "block-before-import",
+      "source": "fn take(){let _:Option<EngineKey>=None; use semio_framework_2d::compute::EngineKey;} ",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "nested-block-inherits",
+      "source": "fn take(){use semio_framework_2d::compute::EngineKey; {let _:Option<EngineKey>=None;}}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "sibling-glob",
+      "source": "mod good{use semio_framework_2d::compute::EngineKey;} mod bad{use other::*; fn take(_:EngineKey){}}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "module-barrier",
+      "source": "use semio_framework_2d::compute::EngineKey; mod child{fn take(_:EngineKey){}}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0425"
+    },
+    {
+      "id": "renamed-symbol",
+      "source": "use semio_framework_2d::compute::EngineKey as Renamed; fn take(_:Renamed){}",
+      "expectedCodes": [
+        "family-alias"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "renamed-module",
+      "source": "use semio_framework_2d::compute as renamed; fn take(_:renamed::EngineKey){}",
+      "expectedCodes": [
+        "family-alias",
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "renamed-extern",
+      "source": "use semio_framework_2d as renamed; fn take(_:renamed::compute::EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "forwarding",
+      "source": "pub use semio_framework_2d::compute::EngineKey;",
+      "expectedCodes": [
+        "family-alias"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "legacy-path",
+      "source": "fn take(_:store::EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0433"
+    },
+    {
+      "id": "raw-symbol",
+      "source": "use semio_framework_2d::compute::r#EngineKey; fn take(_:r#EngineKey){}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "local-reserved",
+      "source": "struct EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "declaration-origin",
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "generic-shadow",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take<EngineKey>(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "unrelated-engine",
+      "source": "struct Engine; impl Engine{fn take(){}}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "qualified-direct",
+      "source": "fn take(_:semio_framework_2d::compute::EngineKey){}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "qualified-other",
+      "source": "fn take(_:other::EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "missing-provider",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-provider"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0433"
+    },
+    {
+      "id": "dependency-alias",
+      "source": "fn take(_:renamed::compute::EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-binding",
+        "unproven-family-provider"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "linked-provider",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-provider"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "unmounted",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-context"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "foreign-mount",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "declaration-origin",
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "return-unbound",
+      "source": "fn take()->EngineKey{panic!()}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0425"
+    },
+    {
+      "id": "return-direct",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take()->EngineKey{panic!()}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "qualified-root-shadow",
+      "source": "use semio_framework_2d::compute::EngineKey; mod semio_framework_2d{pub mod compute{pub struct EngineKey;}} fn take(_:semio_framework_2d::compute::EngineKey){}",
+      "expectedCodes": [
+        "declaration-origin",
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "sibling-canonical-unbound",
+      "source": "mod good{use semio_framework_2d::compute::EngineKey;} mod bad{fn take(_:EngineKey){}}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0425"
+    },
+    {
+      "id": "function-import-isolated",
+      "source": "fn good(){use semio_framework_2d::compute::EngineKey;let _:Option<EngineKey>=None;} fn bad(){let _:Option<EngineKey>=None;}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0425"
+    },
+    {
+      "id": "trait-direct",
+      "source": "use semio_framework_2d::compute::Engine; struct Host; impl Engine for Host{const ENGINE_ID:&'static str=\"host\";}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "trait-glob",
+      "source": "use other::*; struct Host; impl Engine for Host{const ENGINE_ID:&'static str=\"host\";}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "optional-provider",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-provider"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "conditional-provider",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",
+      "expectedCodes": [
+        "unproven-family-provider"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "trait-method-local-decoy",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){} trait Engine { fn run() { const ENGINE_ID:&str=\"x\"; } }",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "foreign-constructor-first",
+      "source": "use other::*; fn take(){EngineKey([0u8;32]);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "foreign-constructor-after-statement",
+      "source": "use other::*; fn take(){let _=0; EngineKey([0u8;32]);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "foreign-return-constructor",
+      "source": "use other::*; fn take()->impl Sized{return EngineKey([0u8;32]);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-constructor-first",
+      "source": "use semio_framework_2d::compute::EngineKey; fn take(){EngineKey([0u8;32]);}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "unrelated-local-enum-variant",
+      "source": "enum Other{EngineKey} fn take()->Other{Other::EngineKey}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-root-local",
+      "source": "pub fn take()->EngineKey{EngineKey::new()}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-parent-local",
+      "source": "use super::*; fn take()->EngineKey{EngineKey::new()}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-expression-macro",
+      "source": "use super::*; fn take(){assert_eq!(core::mem::size_of::<EngineKey>(),32);}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-shadowed-expression-macro",
+      "source": "use super::*; macro_rules! assert_eq{($t:ty)=>{}} fn take(){assert_eq!(EngineKey);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-foreign-expression-macro",
+      "source": "use super::*; use other::*; fn take(){assert_eq!(core::mem::size_of::<semio_framework_2d::compute::EngineKey>(),32);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0659"
+    },
+    {
+      "id": "canonical-nested-shadow-macro",
+      "source": "use super::*; fn take(){macro_rules! assert_eq{($t:ty)=>{}} assert_eq!(EngineKey);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "foreign-qualified-with-canonical-import",
+      "source": "use semio_framework_2d::compute::EngineCache; use other as foreign; fn take(){foreign::EngineCache::new();}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-root-foreign-qualified",
+      "source": "pub fn take(){other::EngineCache::new();}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-root-block-shadow",
+      "source": "pub fn take(){struct EngineKey; let _=EngineKey;}",
+      "expectedCodes": [
+        "declaration-origin",
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-parent-foreign-glob",
+      "source": "use super::*; use other::*; fn take()->EngineKey{EngineKey::new()}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0659"
+    },
+    {
+      "id": "canonical-unrelated-sibling-macro",
+      "source": "use super::*; mod decoy{macro_rules! assert_eq{($t:ty)=>{}}} fn take(){assert_eq!(core::mem::size_of::<EngineKey>(),32);}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "underscore-import-has-no-named-binding",
+      "source": "use semio_framework_2d::compute::EngineKey as _; fn take(){let _=EngineKey([0;32]);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0425"
+    },
+    {
+      "id": "underscore-trait-import-occurrence",
+      "source": "use semio_framework_2d::compute::Engine as _; struct Example; impl semio_framework_2d::compute::Engine for Example{const ENGINE_ID:&'static str=\"example\";}",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-foreign-macro-argument",
+      "source": "use super::*; fn take(){assert_eq!(other::EngineKey([0;32]),other::EngineKey([0;32]));}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-parent-imported-macro",
+      "source": "use super::*; fn take(){assert_eq!(core::mem::size_of::<EngineKey>(),32);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": false,
+      "expectedDiagnostic": "E0659"
+    },
+    {
+      "id": "canonical-nested-opaque-macro",
+      "source": "use super::*; use other::foreign; fn take(){assert_eq!(foreign!(EngineKey),0);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-foreign-named-expression-macro",
+      "source": "use super::*; use other::assert_eq; fn take(){assert_eq!(core::mem::size_of::<EngineKey>(),32);}",
+      "expectedCodes": [
+        "unproven-family-binding"
+      ],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "local-enum-beats-foreign-glob",
+      "source": "use other::*; enum Other { EngineKey } fn f(){ let _=Other::EngineKey; }",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    },
+    {
+      "id": "canonical-ancestor-glob-not-imported",
+      "source": "use super::*; fn f(){ assert_eq!(EngineKey([0;32]).0, EngineKey([0;32]).0); }",
+      "expectedCodes": [],
+      "nativeCompiles": true,
+      "expectedDiagnostic": "none"
+    }
+  ],
+  "ownerSource": "pub struct EngineKey(pub [u8;32]); pub struct EngineHandle; pub struct EngineFault; pub struct EngineHandles; pub struct EngineCache; pub struct EngineRep; pub trait Engine{const ENGINE_ID:&'static str;} impl EngineKey{pub fn new()->Self{Self([0;32])}}",
+  "activationCases": [
+    {
+      "id": "absent-no-family",
+      "sources": {
+        "orphan.rs": "pub struct Local;"
+      },
+      "active": false
+    },
+    {
+      "id": "decoy-only",
+      "sources": {
+        "orphan.rs": "// EngineKey\nconst TEXT:&str=r#\"EngineCache\"#; fn borrow<'EngineHandle>(){}"
+      },
+      "active": false
+    },
+    {
+      "id": "unrelated-engine",
+      "sources": {
+        "orphan.rs": "struct Engine; impl Engine{const ENGINE_ID:&'static str=\"other\";}"
+      },
+      "active": false
+    },
+    {
+      "id": "absent-real-family",
+      "sources": {
+        "orphan.rs": "fn take(_:semio_framework_2d::compute::EngineKey){}"
+      },
+      "active": true
+    },
+    {
+      "id": "present-malformed-contract",
+      "sources": {
+        "contract": "{"
+      },
+      "active": true
+    },
+    {
+      "id": "present-empty-owner",
+      "sources": {
+        "owner": ""
+      },
+      "active": true
+    },
+    {
+      "id": "trait-family",
+      "sources": {
+        "orphan.rs": "trait Engine{const ENGINE_ID:&'static str;}"
+      },
+      "active": true
+    },
+    {
+      "id": "trait-method-local-decoy",
+      "sources": {
+        "orphan.rs": "trait Engine { fn run() { const ENGINE_ID:&str=\"x\"; } }"
+      },
+      "active": false
+    },
+    {
+      "id": "qualified-trait-bound",
+      "sources": {
+        "orphan.rs": "fn take<T:semio_framework_2d::compute::Engine>(){}"
+      },
+      "active": true
+    },
+    {
+      "id": "imported-trait-bound",
+      "sources": {
+        "orphan.rs": "use semio_framework_2d::compute::Engine; fn take<T:Engine>(){}"
+      },
+      "active": true
+    },
+    {
+      "id": "captured-cargo-extern-alias",
+      "sources": {
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[dependencies]\ne={package=\"semio-framework-2d\",path=\"../provider\"}",
+        "consumer/lib.rs": "use e::compute::Engine; fn take<T:Engine>(){}"
+      },
+      "active": true,
+      "nativeAliases": {
+        "e": "provider"
+      }
+    },
+    {
+      "id": "unrelated-cargo-extern-alias",
+      "sources": {
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[dependencies]\ne={package=\"unrelated\",path=\"../provider\"}",
+        "consumer/lib.rs": "use e::Engine; fn take<T:Engine>(){}"
+      },
+      "active": false,
+      "nativeAliases": {
+        "e": "other"
+      }
+    },
+    {
+      "id": "unrelated-local-enum-variant",
+      "sources": {
+        "orphan.rs": "enum Other{EngineKey} fn take()->Other{Other::EngineKey}"
+      },
+      "active": false
+    },
+    {
+      "id": "workspace-canonical-alias",
+      "sources": {
+        "Cargo.toml": "[workspace]\n[workspace.dependencies]\ne={package=\"semio-framework-2d\",path=\"../provider\"}",
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[dependencies]\ne={workspace=true}",
+        "consumer/lib.rs": "use e::compute::Engine; fn take<T:Engine>(){}"
+      },
+      "active": true,
+      "nativeAliases": {
+        "e": "provider"
+      }
+    },
+    {
+      "id": "workspace-unrelated-alias",
+      "sources": {
+        "Cargo.toml": "[workspace]\n[workspace.dependencies]\ne={package=\"unrelated\",path=\"../provider\"}",
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[dependencies]\ne={workspace=true}",
+        "consumer/lib.rs": "use e::Engine; fn take<T:Engine>(){}"
+      },
+      "active": false,
+      "nativeAliases": {
+        "e": "other"
+      }
+    },
+    {
+      "id": "explicit-workspace-canonical-alias",
+      "sources": {
+        "authority/Cargo.toml": "[workspace]\n[workspace.dependencies]\ne={package=\"semio-framework-2d\",path=\"../provider\"}",
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\nedition=\"2021\"\nworkspace=\"../authority\"\n[lib]\npath=\"lib.rs\"\n[dependencies]\ne={workspace=true}",
+        "consumer/lib.rs": "use e::compute::Engine; fn take<T:Engine>(){}"
+      },
+      "active": true,
+      "nativeAliases": {
+        "e": "provider"
+      }
+    },
+    {
+      "id": "sibling-enum-name-collision",
+      "sources": {
+        "orphan.rs": "mod decoy { enum Other { EngineKey } } mod consumer { use foreign::Other; fn take(){ Other::EngineKey; } }"
+      },
+      "active": true,
+      "nativeAliases": {
+        "foreign": "other"
+      }
+    }
+  ]
+}

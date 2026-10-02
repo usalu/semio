@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎬️ ✳️any owns no mutation any more: the eight direct semantic vocabulary entries (six step-node kinds, two dependency-edge kinds) moved to 🪜️step and 🔗️dependency (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION) so each has a real, non-wildcard owner. This contribution keeps the shared io codecs, the whole-document schema/snapshot/diff/editor/viewer surface, and the two carrier oracles below — `csv-rfc4180-reader` for the four row kinds and `serde-json-sequence-carrier-reader` for the four kinds only the JSON export carries — which apply registry-wide by capability, not by subset, so neither moves with the mutations that reference them.",
   "oracles": [

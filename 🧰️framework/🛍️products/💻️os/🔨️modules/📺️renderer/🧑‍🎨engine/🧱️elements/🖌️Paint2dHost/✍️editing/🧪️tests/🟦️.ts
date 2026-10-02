@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import sharp from "sharp";
 import { editSelection, maskLayers, pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
-import fixtures from "../🧫️fixtures/🔣️.json";
+import fixtures from "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json";
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
   const [layer]=pixelLayers(JSON.stringify(fixture.document),JSON.stringify(fixture.assets));

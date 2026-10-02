@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/sqlite-laws.json",
+  "title": "Shooting Owned SQLite Snapshot Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "binary64Words",
+    "malformedSql",
+    "control"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/snapshot.json"
+    },
+    "binary64Words": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "malformedSql": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectionLength",
+        "largeTextBytes",
+        "maxOwnedBytes",
+        "tinyFileBytes"
+      ],
+      "properties": {
+        "collectionLength": {
+          "const": 2048
+        },
+        "largeTextBytes": {
+          "const": 131073
+        },
+        "maxOwnedBytes": {
+          "const": 65536
+        },
+        "tinyFileBytes": {
+          "const": 1024
+        }
+      }
+    }
+  }
+}

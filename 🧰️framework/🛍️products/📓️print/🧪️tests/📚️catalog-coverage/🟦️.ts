@@ -10,7 +10,7 @@ import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import MarkdownIt from "markdown-it";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { loadVizCatalog, loadVizSchema, marksItselfGenerated, registeredVizFamilies, vizCoverageReport, vizGeneratedFiles, vizImplementedFamilyKeys } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import type { LocalizedText } from "../../🧬️schema/🟦️.ts";
 import { vizOptionList } from "../../🧬️schema/🟦️.ts";

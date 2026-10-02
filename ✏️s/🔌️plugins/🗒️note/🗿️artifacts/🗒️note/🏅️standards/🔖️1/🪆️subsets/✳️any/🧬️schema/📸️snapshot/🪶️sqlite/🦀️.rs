@@ -47,13 +47,13 @@ impl ProjectionBudget<'_, '_> {
     }
     fn rows(&mut self, count: usize) -> Result<(), String> {
         self.rows = self.rows.checked_add(count).ok_or("note row count overflow")?;
-        self.control.check_rows(self.rows.checked_add(1).ok_or("note row count overflow")?)?;
+        self.control.check_rows(self.rows)?;
         self.control.checkpoint(Phase::ProjectSnapshot, self.rows, 0)
     }
 }
 
-fn preflight(snapshot: &NoteSnapshot, control: &mut Control<'_>) -> Result<usize, String> {
-    control.check_rows(snapshot.blocks.len().checked_add(snapshot.assets.len()).and_then(|count| count.checked_add(2)).ok_or("note row count overflow")?)?;
+fn preflight(snapshot: &NoteSnapshot, control: &mut Control<'_>) -> Result<(usize,usize), String> {
+    control.check_rows(snapshot.blocks.len().checked_add(snapshot.assets.len()).and_then(|count| count.checked_add(1 + usize::from(snapshot.linked_artifact.is_some()))).ok_or("note row count overflow")?)?;
     let mut budget = ProjectionBudget { control, rows: 1, bytes: 0, work: 0 };
     budget.scalars(1 + [snapshot.grid_visible.is_some(), snapshot.grid_spacing.is_some(), snapshot.grid_subdivisions.is_some(), snapshot.grid_opacity.is_some(), snapshot.snap_enabled.is_some(), snapshot.snap_grid_spacing.is_some(), snapshot.pencil_width.is_some(), snapshot.eraser_radius.is_some()].into_iter().filter(|present| *present).count())?;
     budget.text(&snapshot.schema)?; budget.text(&snapshot.id)?; if let Some(title) = &snapshot.title { budget.text(title)?; }
@@ -78,26 +78,42 @@ fn preflight(snapshot: &NoteSnapshot, control: &mut Control<'_>) -> Result<usize
             NoteBlockNode::Table { columns, rows, .. } => { budget.rows(columns.len().checked_add(rows.len()).ok_or("note row count overflow")?)?; budget.scalars(columns.len().checked_add(rows.len()).and_then(|count| count.checked_mul(3)).ok_or("note scalar count overflow")?)?; for column in columns { budget.text(column)?; } for row in rows { budget.rows(row.len())?; for cell in row { budget.scalars(3)?; budget.text(&cell.content)?; } } }
             NoteBlockNode::Math { tex, .. } => { budget.rows(1)?; budget.scalars(2)?; budget.text(tex)?; }
             NoteBlockNode::Ink { points, .. } => { budget.rows(1usize.checked_add(points.len()).ok_or("note row count overflow")?)?; budget.scalars(points.len().checked_mul(5).and_then(|count| count.checked_add(6)).ok_or("note scalar count overflow")?)?; }
-            NoteBlockNode::Group { children, .. } => { budget.control.check_rows(budget.rows.checked_add(stack.len()).and_then(|count| count.checked_add(children.len())).and_then(|count| count.checked_add(1)).ok_or("note row count overflow")?)?; stack.extend(children.iter().map(|child| (child, depth + 1))); }
+            NoteBlockNode::Group { children, .. } => { budget.control.check_rows(budget.rows.checked_add(stack.len()).and_then(|count| count.checked_add(children.len())).ok_or("note row count overflow")?)?; stack.extend(children.iter().map(|child| (child, depth + 1))); }
         }
     }
-    Ok(budget.rows)
+    Ok((budget.rows,budget.bytes))
+}
+
+fn encoding_rows(snapshot:&NoteSnapshot,maximum:usize,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
+    fn add(rows:&mut usize,count:usize,maximum:usize)->Result<(),String>{*rows=rows.checked_add(count).filter(|rows|*rows<=maximum).ok_or("note owned encoding exceeds row limit")?;Ok(())}
+    fn block(value:&NoteBlockNode,rows:&mut usize,maximum:usize,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
+        control.scoped_depth(64,|control|->Result<(),String>{
+            add(rows,1,maximum)?;control.step()?;
+            match value{
+                NoteBlockNode::Text{content,..}=>{add(rows,1,maximum)?;add(rows,content.paragraphs.len(),maximum)?;for paragraph in &content.paragraphs{add(rows,paragraph.runs.len(),maximum)?;control.step()?;}}
+                NoteBlockNode::Image{..}|NoteBlockNode::Math{..}=>add(rows,1,maximum)?,
+                NoteBlockNode::Table{columns,rows:table,..}=>{add(rows,columns.len(),maximum)?;add(rows,table.len(),maximum)?;for row in table{add(rows,row.len(),maximum)?;control.step()?;}}
+                NoteBlockNode::Ink{points,..}=>{add(rows,1,maximum)?;add(rows,points.len(),maximum)?;}
+                NoteBlockNode::Group{children,..}=>{rows.checked_add(children.len()).filter(|rows|*rows<=maximum).ok_or("note owned encoding exceeds row limit")?;for child in children{block(child,rows,maximum,control)?;}}
+            }
+            Ok(())
+        })
+    }
+    control.scoped_stage(|control|->Result<(),String>{control.begin_stage(0)?;let mut rows=1;add(&mut rows,snapshot.assets.len(),maximum)?;add(&mut rows,usize::from(snapshot.linked_artifact.is_some()),maximum)?;rows.checked_add(snapshot.blocks.len()).filter(|rows|*rows<=maximum).ok_or("note owned encoding exceeds row limit")?;for value in &snapshot.blocks{block(value,&mut rows,maximum,control)?;}Ok(())})
 }
 
 impl store::ArtifactSqliteSnapshot for NoteSnapshot {
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,String>{
+        let maximum=control.limits().max_rows;
+        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native).map_err(|message|store::TextError::new(message,dsl::TextSpan::at(1,1)))?;self.__dsl_to_record_controlled(native)},control)
+    }
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),Self::__dsl_from_record_controlled,control)}
+    fn retire_sqlite_snapshot(mut self){let mut pending=std::mem::take(&mut self.blocks);while let Some(block)=pending.pop(){if let NoteBlockNode::Group{mut children,..}=block{pending.append(&mut children);}}}
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(), String> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;
-        let database = self.to_sqlite_database(control)?;
+        let (rows,bytes)=preflight(self,control)?;
         let mut bound = sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
-        bound.add(16_384)?;
-        for table in &database.tables { for row in &table.rows {
-            bound.add(4096)?;
-            for value in &row.values { match value {
-                V::Text(value) => { bound.repeated(value.len(), 16)?; bound.add(256)?; },
-                V::Blob(value) => { bound.repeated(value.len(), 64)?; bound.add(256)?; },
-                V::Integer(_) | V::Real(_) | V::Null => bound.add(2048)?,
-            } }
-        } }
+        bound.add(32768)?;bound.repeated(rows,16384)?;bound.repeated(bytes,32)?;
         bound.finish()
     }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&Db,control:&mut Control<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
@@ -169,7 +185,7 @@ const TABLES: [&str; 14] = ["note_document", "note_asset", "note_link", "note_bl
 impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
     fn new(db: &'a Db, control: &'c mut Control<'p>) -> Result<Self, String> {
         let total = db.tables.iter().try_fold(0usize, |count, table| count.checked_add(table.rows.len()).ok_or("note row count overflow"))?;
-        control.check_rows(total.checked_add(1).ok_or("note row count overflow")?)?;
+        control.check_rows(total)?;
         let mut reader = Self { rows: BTreeMap::new(), children: BTreeMap::new(), used: BTreeSet::new(), control, total };
         let mut bytes = 0usize;
         for name in TABLES {
@@ -278,6 +294,31 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn sqlite_snapshot_note_controlled_output_preserves_literal_fields_and_stops_inside_text(){
+        let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🚦️control.json")).unwrap();let mut snapshot=fixture();snapshot.schema="owned Note 世界\0".into();snapshot.title=Some("x".repeat(plan["longTextBytes"].as_u64().unwrap()as usize));let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,limits)).unwrap();assert_eq!(NoteSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);let mut reached=false;let mut callback=|event:sqlite_snapshot::SqliteSnapshotProgress|if event.phase==Phase::EncodeNative&&event.total==plan["longTextBytes"].as_u64().unwrap()as usize&&event.completed>=plan["cancelAt"].as_u64().unwrap()as usize&&event.completed<event.total{reached=true;false}else{true};assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut callback,limits)).is_err());assert!(reached);let mut tiny=limits;tiny.max_value_bytes=plan["nativeValueBudget"].as_u64().unwrap()as usize;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,tiny)).is_err());let mut rows=limits;rows.max_rows=plan["directRows"].as_u64().unwrap()as usize;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,rows)).is_err());}
+    }
+
+    #[test]
+    fn sqlite_snapshot_note_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
+        use store::{ArtifactDsl,ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🚦️control.json")).unwrap();let mut snapshot=fixture();snapshot.schema="owned Note 世界\0".into();snapshot.title=Some("x".repeat(plan["longTextBytes"].as_u64().unwrap()as usize));
+        let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
+            assert_eq!(NoteSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+            let mut reached=false;let result=NoteSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |event|{if event.phase==sqlite_snapshot::SqliteSnapshotPhase::DecodeNative&&event.completed>=plan["cancelAt"].as_u64().unwrap()as usize&&event.completed<event.total{reached=true;false}else{true}},limits));assert!(result.is_err());assert!(reached,"cancel inside long native text");
+            let mut small=limits;small.max_value_bytes=plan["nativeValueBudget"].as_u64().unwrap()as usize;assert!(NoteSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,small)).is_err());
+            assert!(NoteSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|false,limits)).is_err());
+        }
+    }
+
+    #[test]
+    fn sqlite_snapshot_note_direct_domain_rows_do_not_reserve_file_metadata(){
+        let mut snapshot=fixture();snapshot.blocks.clear();snapshot.assets.clear();snapshot.linked_artifact=None;let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🚦️control.json")).unwrap();let limits=sqlite_snapshot::SqliteDatabaseLimits{max_rows:plan["directRows"].as_u64().unwrap()as usize,..Default::default()};
+        let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();assert_eq!(database.tables.iter().map(|table|table.rows.len()).sum::<usize>(),1);assert_eq!(NoteSnapshot::from_sqlite_database(&database,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+    }
+
     #[test]
     fn sqlite_snapshot_note_owned_guard_checks_exact_identity_and_projection(){
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("note_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());

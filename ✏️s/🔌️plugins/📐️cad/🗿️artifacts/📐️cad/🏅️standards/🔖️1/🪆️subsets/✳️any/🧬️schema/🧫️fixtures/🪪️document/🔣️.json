@@ -73,7 +73,6 @@
     { "kind": "field", "field": "objects", "value": [] },
     { "kind": "field", "field": "shapeGeometry", "value": {} },
     { "kind": "field", "field": "activeModelDefinitionId", "value": "spatial.shape" },
-    { "kind": "shapeChildId", "value": "foreign-id" },
     { "kind": "shapeSubset", "value": "drawing" },
     { "kind": "drawingSubset", "value": "model" }
   ],

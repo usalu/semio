@@ -17,7 +17,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(
-        <Vdi3805Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_framework_plugin::ViewModel::default()).expect("viewer assembly"),
+        <Vdi3805Viewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default(), window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("viewer assembly"),
     )
     .expect("json");
     assert!(json.contains("Unknown body"));

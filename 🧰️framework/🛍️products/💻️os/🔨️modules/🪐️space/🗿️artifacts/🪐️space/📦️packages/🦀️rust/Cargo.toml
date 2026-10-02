@@ -17,6 +17,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }

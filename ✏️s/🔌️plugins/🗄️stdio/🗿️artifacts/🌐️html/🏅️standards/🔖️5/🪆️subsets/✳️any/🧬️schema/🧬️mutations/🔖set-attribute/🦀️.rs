@@ -23,8 +23,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetAttribute(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set attribute", "Attribut setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,21 +1,18 @@
 //! 🧬️ Shooting configuration mutation collection.
 
 use super::*;
-#[path = "📸️replace/🦀️.rs"]
+#[path = "📸️replace-config/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "☑️set-shot/🦀️.rs"]
+#[path = "☑️set-shot-selection/🦀️.rs"]
 mod set_shot_selection;
 pub use set_shot_selection::SetShotSelection;
-#[path = "🎯️set-center/🦀️.rs"]
+#[path = "🎯️set-center-model/🦀️.rs"]
 mod set_center_model;
 pub use set_center_model::SetCenterModel;
-#[path = "🔢️set-fit/🦀️.rs"]
+#[path = "🔢️set-fit-revision/🦀️.rs"]
 mod set_fit_revision;
 pub use set_fit_revision::SetFitRevision;
-#[path = "🏷️set-camera/🦀️.rs"]
-mod set_camera_draft_label;
-pub use set_camera_draft_label::SetCameraDraftLabel;
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
@@ -34,8 +31,6 @@ pub enum ShootingConfigMutation {
     SetCenterModel(SetCenterModel),
     #[dsl(key = "set-fit-revision")]
     SetFitRevision(SetFitRevision),
-    #[dsl(key = "set-camera-draft-label")]
-    SetCameraDraftLabel(SetCameraDraftLabel),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
     #[dsl(key = "set-defaults")]
@@ -46,7 +41,7 @@ impl protocol::OpText for ShootingConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         for (keyword, spec_fn) in <Self as dsl::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(&keyword, &record);
             }
         }
@@ -55,7 +50,7 @@ impl protocol::OpText for ShootingConfigMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec = variants.iter().find(|(key, _)| key == &keyword).expect("declared variant").1();
+        let spec = (variants.iter().find(|(key, _)| key == &keyword).expect("declared variant").1.ordinary)();
         dsl::print(&record, &spec, dsl::JoinMode::Inline)
     }
 }

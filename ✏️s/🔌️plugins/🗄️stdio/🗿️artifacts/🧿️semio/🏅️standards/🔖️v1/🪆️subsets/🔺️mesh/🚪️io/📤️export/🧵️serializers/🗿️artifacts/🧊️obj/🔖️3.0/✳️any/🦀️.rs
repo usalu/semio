@@ -37,7 +37,7 @@ impl ArtifactSerializer for SemioMeshToObj {
         let mut objects: Vec<ObjObject> = Vec::new();
 
         for mesh in &from.meshes {
-            let face_range_start = faces.len();
+            let face_range_start = u64::try_from(faces.len()).map_err(|_| store::PackError::Schema("SemioMeshToObj: face range exceeds schema word".into()))?;
             for prim in &mesh.primitives {
                 if prim.topology != SemioTopology::Triangles {
                     return Err(store::PackError::Schema(format!("SemioMeshToObj: primitive {:?} has topology {:?}; this codec only exports Triangles", prim.id, prim.topology)));
@@ -82,7 +82,7 @@ impl ArtifactSerializer for SemioMeshToObj {
                     faces.push(ObjFace { vertices: face_vertices });
                 }
             }
-            let face_range_end = faces.len();
+            let face_range_end = u64::try_from(faces.len()).map_err(|_| store::PackError::Schema("SemioMeshToObj: face range exceeds schema word".into()))?;
             objects.push(ObjObject { name: mesh.id.clone(), faces: (face_range_start..face_range_end).collect() });
         }
 

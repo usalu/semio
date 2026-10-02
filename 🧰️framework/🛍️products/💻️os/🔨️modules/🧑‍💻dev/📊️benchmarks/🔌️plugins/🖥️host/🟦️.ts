@@ -1,8 +1,9 @@
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic benchmark host owner. */
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildBudgetMs, runCmdStatus } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmdStatus } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { WGPU_SCRIPT_PATH } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
 const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";

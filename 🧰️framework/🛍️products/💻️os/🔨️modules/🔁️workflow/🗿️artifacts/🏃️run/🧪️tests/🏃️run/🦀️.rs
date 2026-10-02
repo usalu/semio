@@ -1,6 +1,43 @@
 //! 🧪️ Run package serialization, admission, and replay laws.
 use crate::*;
+use dsl::DslField as _;
+fn assert_run_manual_binding<T:dsl::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
+ let expected=T::to_value(value);let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=value.to_value_controlled(&mut control).expect("owned run field projection");let exact=control.owned_bytes();assert_eq!(encoded,expected);assert!(exact>0);assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
+ let mut admitted=|_|true;let mut control=dsl::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned run field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
+ let dsl::FieldValue::Record(record)=&encoded else{panic!("explicit run record")};assert_eq!(value.to_record_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
+ let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+}
+#[test]
+fn sqlite_snapshot_run_trigger_binds_literal_values_and_cancels_owned_utf8(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ for expected in fixture["triggers"].as_array().unwrap(){let value:RunTrigger=dsl::os_pack::json::from_json_str(&serde_json::to_string(expected).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*expected);assert_run_manual_binding(&value,maximum,tiny);}
+ let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=RunTrigger::Automation{automation_ref:text.clone(),event_fingerprint:text.clone()};let raw=<RunTrigger as dsl::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<RunTrigger as dsl::DslField>::from_value_controlled(&raw,&mut dsl::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+}
 use protocol::MutationDiff;
+fn assert_run_native_status<T:dsl::DslField+PartialEq+std::fmt::Debug>(value:&T,index:u32,invalid:u32){
+ let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(0,&mut admitted);let native=value.to_value_controlled(&mut encoding).expect("owned declared status ordinal");assert_eq!(native,dsl::FieldValue::Enum(index));assert_eq!(encoding.owned_bytes(),0);
+ let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(0,&mut admitted);assert_eq!(&T::from_value_controlled(&native,&mut decoding).unwrap(),value);assert_eq!(decoding.owned_bytes(),0);assert!(T::from_value_controlled(&dsl::FieldValue::Enum(invalid),&mut dsl::NativeDecodeControl::new(0,&mut |_|true)).is_err());assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(0,&mut |_|false)).is_err());assert!(T::from_value_controlled(&native,&mut dsl::NativeDecodeControl::new(0,&mut |_|false)).is_err());
+}
+#[test]
+fn sqlite_snapshot_run_status_binds_every_declared_ordinal_without_allocation(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["statuses"].as_array().unwrap().iter().enumerate(){let value:RunStatus=dsl::os_pack::json::from_json_str(&serde_json::to_string(word).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
+}
+#[test]
+fn sqlite_snapshot_run_node_status_binds_every_declared_ordinal_without_allocation(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let invalid=fixture["invalidOrdinal"].as_u64().unwrap()as u32;for(index,word)in fixture["nodeStatuses"].as_array().unwrap().iter().enumerate(){let value:RunNodeStatus=dsl::os_pack::json::from_json_str(&serde_json::to_string(word).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*word);assert_run_native_status(&value,index as u32,invalid);}
+}
+#[test]
+fn sqlite_snapshot_run_manual_metadata_preserves_neutral_trigger_fields_and_statuses(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;let dsl::Shape::Record(producer)=<RunTrigger as dsl::DslField>::shape()else{panic!("declared trigger record")};
+ let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["fields"]);}
+ assert!(exact>0);assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+ for index in 0..2{
+  let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.unwrap();let dsl::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);
+  let mut admitted=|_|true;let mut control=dsl::NativeDecodeControl::new(maximum,&mut admitted);let shape=if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.unwrap();let dsl::Shape::Enum(labels)=shape else{panic!("declared status labels")};assert_eq!(serde_json::json!(labels),fixture["statuses"][index]);let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(if index==0{<RunStatus as dsl::DslField>::shape_controlled(&mut control)}else{<RunNodeStatus as dsl::DslField>::shape_controlled(&mut control)}.is_err());assert_eq!(control.owned_bytes(),0);
+ }
+}
 
 /// 🧾️ Every committed wire witness decodes through `RunMutation`'s `FromValue` and re-encodes to exactly the committed JSON.
 #[test]

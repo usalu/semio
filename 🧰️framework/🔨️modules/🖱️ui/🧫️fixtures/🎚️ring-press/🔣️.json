@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "id": "release",
+      "values": [
+        0.25,
+        0.5
+      ],
+      "terminal": "pointerup",
+      "expected": [
+        [
+          0.25,
+          "live"
+        ],
+        [
+          0.5,
+          "live"
+        ],
+        [
+          0.5,
+          "commit"
+        ]
+      ]
+    },
+    {
+      "id": "cancel",
+      "values": [
+        0.25
+      ],
+      "terminal": "pointercancel",
+      "expected": [
+        [
+          0.25,
+          "live"
+        ],
+        [
+          "captureLost",
+          "abort"
+        ]
+      ]
+    },
+    {
+      "id": "idle-release",
+      "values": [],
+      "terminal": "pointerup",
+      "expected": []
+    }
+  ]
+}

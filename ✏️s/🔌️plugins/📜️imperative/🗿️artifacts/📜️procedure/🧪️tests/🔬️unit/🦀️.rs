@@ -56,5 +56,5 @@ async fn working_content_is_owned_by_each_exact_child() {
 fn the_child_restore_projection_names_every_declared_child_slot() {
     let snapshot = crate::schema::default_snapshot();
     let projection = crate::procedure_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
-    assert_eq!(projection.len(), <crate::ProcedureSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+    assert_eq!(projection.len(), <crate::ProcedureSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

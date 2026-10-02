@@ -66,8 +66,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindMorphTarg
         vec![super::GltfMutation::BindMorphTargetAttribute(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Bind Morph Target Attribute", "Morphzielattribut binden")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Bind Morph Target Attribute", "Morphzielattribut binden")
     }
 
     fn target(&self) -> Vec<String> {

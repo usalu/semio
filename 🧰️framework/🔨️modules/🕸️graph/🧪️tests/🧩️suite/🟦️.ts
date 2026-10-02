@@ -1,17 +1,35 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { findManifestFiles, readGraphManifestDocuments } from "../../🛂️manifest/📥️admission/🟦️.ts";
 import { parseGraphOutputCatalog } from "../../🛂️manifest/📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../../🛂️manifest/📽️projection/🟦️.ts";
 import { writeGraphArtifacts } from "../../🛂️manifest/📤️publication/🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️outputs.json";
 import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
+function testArtifactRoot(): string {
+  const root = process.env.SEMIO_TEST_ARTIFACTS_DIR;
+  if (!root) throw new Error("Graph contract requires caller-owned SEMIO_TEST_ARTIFACTS_DIR");
+  mkdirSync(root, { recursive: true });
+  return root;
+}
+
 import current from "../../🛂️manifest/📇️outputs.json";
 import consumption from "../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json";
 import consumptionSchema from "../../🛂️manifest/🧬️schema/🧩️consumption/🔣️.json";
+
+test("graph admission and projection run with every product physically unavailable to an independent Node loader", async () => {
+  const { build } = await import("esbuild");
+  const framework = resolve(import.meta.dir, "../../../..");
+  const refused = resolve(framework, "🛍️products").replaceAll("\\", "/") + "/";
+  const program = "import {parseGraphOutputCatalog} from " + JSON.stringify(resolve(import.meta.dir, "../../🛂️manifest/📇️catalog/🟦️.ts")) + ";import {renderGraphArtifacts} from " + JSON.stringify(resolve(import.meta.dir, "../../🛂️manifest/📽️projection/🟦️.ts")) + ";const fixture=" + JSON.stringify(fixture) + ";const parsed=parseGraphOutputCatalog(fixture.catalog,fixture.manifestIds);const rendered=renderGraphArtifacts(" + JSON.stringify(import.meta.dir) + "," + JSON.stringify(resolve(import.meta.dir, "unwritten-output")) + ",fixture.empty,false);console.log(JSON.stringify({paths:[...Object.values(parsed.shared),...parsed.manifests.flatMap(row=>[row.rust,row.typescript])],manifestCount:rendered.manifestCount,outputs:rendered.artifacts.length}));";
+  const result = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "removed-graph-products", setup(builder) { builder.onLoad({ filter: /.*/ }, input => input.path.replaceAll("\\", "/").startsWith(refused) ? { errors: [{ text: "General graph loads a removed product: " + input.path }] } : undefined); } }] });
+  const native = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(result.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
+  expect(native.exitCode, Buffer.from(native.stderr).toString()).toBe(0);
+  const actual = JSON.parse(Buffer.from(native.stdout).toString());
+  expect(actual).toEqual({ paths: fixture.expectedPaths, manifestCount: 0, outputs: 3 });
+}, 15_000);
 
 test("explicit graph manifest consumption follows independent schema ownership", () => {
   const ajv = new Ajv({ strict: true }).addSchema(schema);
@@ -50,7 +68,7 @@ test("explicit output identities preserve independent manifest IDs and reject am
 }, 15_000);
 
 test("the producer writes exactly declared nested paths and refuses symlink traversal", () => {
-  const sandbox = mkdtempSync(join(tmpdir(), "graph-output-"));
+  const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-output-"));
   try {
     const outDir = join(sandbox, "output");
     const first = join(outDir, "🕰️clock/🦀️.rs");
@@ -76,48 +94,66 @@ test("the producer writes exactly declared nested paths and refuses symlink trav
 }, 15_000);
 
 test("manifest admission refuses linked inputs instead of following or silently omitting them", () => {
-  const sandbox = mkdtempSync(join(tmpdir(), "graph-input-"));
+  const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-input-"));
   try {
     const area = "plugins";
     mkdirSync(join(sandbox, area, "real"), { recursive: true });
     writeFileSync(join(sandbox, area, "real", "fixture.manifest.json"), JSON.stringify({ schema: "manifest", id: "fixture" }));
     symlinkSync(join(sandbox, area, "real"), join(sandbox, area, "linked-directory"));
-    expect(() => findManifestFiles(sandbox, [area])).toThrow(/symbolic link/u);
+    expect(() => findManifestFiles(sandbox, [area], [])).toThrow(/symbolic link/u);
     rmSync(join(sandbox, area, "linked-directory"));
     symlinkSync(join(sandbox, area, "missing.manifest.json"), join(sandbox, area, "linked.manifest.json"));
-    expect(() => findManifestFiles(sandbox, [area])).toThrow(/symbolic link/u);
+    expect(() => findManifestFiles(sandbox, [area], [])).toThrow(/symbolic link/u);
     rmSync(join(sandbox, area, "linked.manifest.json"));
     const rootAlias = `${sandbox}-alias`;
     symlinkSync(sandbox, rootAlias);
-    expect(() => findManifestFiles(rootAlias, [area])).toThrow(/ancestor is a symbolic link/u);
+    expect(() => findManifestFiles(rootAlias, [area], [])).toThrow(/ancestor is a symbolic link/u);
     rmSync(rootAlias);
     const ancestorTarget = join(sandbox, "ancestor-target");
     mkdirSync(join(ancestorTarget, area), { recursive: true });
     symlinkSync(ancestorTarget, join(sandbox, "linked-ancestor"));
-    expect(() => findManifestFiles(sandbox, [`linked-ancestor/${area}`])).toThrow(/ancestor is a symbolic link/u);
-    expect(() => readGraphManifestDocuments(sandbox, false, [area], () => { throw new Error("denied"); })).toThrow(/cannot read admitted graph manifest plugins\/real\/fixture\.manifest\.json/u);
+    expect(() => findManifestFiles(sandbox, [`linked-ancestor/${area}`], [])).toThrow(/ancestor is a symbolic link/u);
+    expect(() => readGraphManifestDocuments(sandbox, false, [area], [], () => { throw new Error("denied"); })).toThrow(/cannot read admitted graph manifest plugins\/real\/fixture\.manifest\.json/u);
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
   }
 }, 15_000);
 
 test("an unreadable admitted directory reports its exact admission boundary", () => {
-  const sandbox = mkdtempSync(join(tmpdir(), "graph-unreadable-"));
+  const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-unreadable-"));
   const blocked = join(sandbox, "plugins", "blocked");
   try {
     mkdirSync(blocked, { recursive: true });
     chmodSync(blocked, 0);
     let hostEnforcesMode = false;
     try { readdirSync(blocked); } catch { hostEnforcesMode = true; }
-    if (hostEnforcesMode) expect(() => findManifestFiles(sandbox, ["plugins"])).toThrow(/cannot read admitted graph manifest directory plugins\/blocked/u);
+    if (hostEnforcesMode) expect(() => findManifestFiles(sandbox, ["plugins"], [])).toThrow(/cannot read admitted graph manifest directory plugins\/blocked/u);
   } finally {
     chmodSync(blocked, 0o700);
     rmSync(sandbox, { recursive: true, force: true });
   }
 }, 15_000);
 
+test("manifest exclusions belong to the declared owner and apply before filesystem admission", () => {
+  const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-owner-policy-"));
+  try {
+    for (const row of fixture.admission.files) {
+      const path = join(sandbox, row.path);
+      mkdirSync(join(path, ".."), { recursive: true });
+      if (row.linked) symlinkSync(join(sandbox, "missing"), path);
+      else writeFileSync(path, JSON.stringify({ schema: "manifest", id: row.id }));
+    }
+    const docs = readGraphManifestDocuments(sandbox, false, fixture.admission.inputAreas, fixture.admission.excludedInputPaths);
+    expect(docs.map(doc => doc.id)).toEqual(fixture.admission.expectedIds);
+    expect(() => findManifestFiles(sandbox, fixture.admission.inputAreas, [])).toThrow(/symbolic link/u);
+    expect(findManifestFiles(sandbox, ["owners/hidden"], fixture.admission.excludedInputPaths)).toEqual([]);
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
+}, 15_000);
+
 test("manifest parse and catalog failures never produce a partial artifact plan", () => {
-  const sandbox = mkdtempSync(join(tmpdir(), "graph-plan-"));
+  const sandbox = mkdtempSync(join(testArtifactRoot(), "graph-plan-"));
   try {
     const area = "plugins";
     const outDir = join(sandbox, "output");
@@ -166,10 +202,13 @@ test("cached graph routes hash every direct owner, oracle and source-data input"
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
     "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+    "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
   ];
   for (const input of required) expect(project.namedInputs.generatorSources).toContain(input);
   const router = readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
@@ -179,7 +218,7 @@ test("cached graph routes hash every direct owner, oracle and source-data input"
 
 
 test("owner profiles emit exact independent manifest values and first-party enum codecs", () => {
-  const sandbox=mkdtempSync(join(tmpdir(),"graph-owned-profile-"));
+  const sandbox=mkdtempSync(join(testArtifactRoot(),"graph-owned-profile-"));
   try {
     mkdirSync(join(sandbox,"owners"),{recursive:true});
     mkdirSync(join(sandbox,"foreign"),{recursive:true});

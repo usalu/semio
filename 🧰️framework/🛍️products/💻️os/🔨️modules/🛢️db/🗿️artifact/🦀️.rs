@@ -232,8 +232,8 @@ where
 {
     let diff = op.diff(base);
     let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
-    let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
-    let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
+    let forward = DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(&post))]);
+    let backward = DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(base))]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
         mutation_id: op.mutation_id().unwrap_or(default_mutation_id),

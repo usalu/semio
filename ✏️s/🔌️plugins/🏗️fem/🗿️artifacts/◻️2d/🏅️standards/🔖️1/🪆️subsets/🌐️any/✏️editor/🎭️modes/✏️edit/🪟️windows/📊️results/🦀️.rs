@@ -3,6 +3,8 @@
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
 
 /// 🌈️ Triangle coordinates and scalar stress values at its vertices.
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
@@ -12,7 +14,10 @@ use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_lay
 use crate::model::ElementResult;
 use crate::{element_id, Fem2dSnapshot, Viewport2d};
 use dsl::json::Value;
-use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
+use semio_framework_plugin::built_text_node;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::Label;
 use std::collections::HashMap;
 
 //#region 🔖️Constants

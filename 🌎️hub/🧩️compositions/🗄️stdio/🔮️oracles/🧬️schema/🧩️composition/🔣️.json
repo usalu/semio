@@ -1,0 +1,613 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/stdio/oracles/composition/schema.json",
+  "$ref": "#/$defs/StdioOracleComposition",
+  "$defs": {
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Names": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "Package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementation",
+        "package",
+        "path",
+        "library",
+        "features"
+      ],
+      "properties": {
+        "implementation": {
+          "const": "rust"
+        },
+        "package": {
+          "type": "string",
+          "pattern": "^semio-(?:hub-stdio|s-(?:plugin-stdio-[a-z0-9]+|artifact-[a-z0-9-]+))-test-oracle$"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "library": {
+          "type": "string",
+          "pattern": "^semio_(?:hub_stdio|s_(?:plugin_stdio_[a-z0-9]+|artifact_[a-z0-9_]+))_test_oracle$"
+        },
+        "features": {
+          "const": [
+            "oracles"
+          ]
+        }
+      }
+    },
+    "Retired": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "package",
+        "library"
+      ],
+      "properties": {
+        "owner": {
+          "const": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles"
+        },
+        "package": {
+          "const": "semio-s-plugin-stdio-test-oracle"
+        },
+        "library": {
+          "const": "semio_s_plugin_stdio_test_oracle"
+        }
+      }
+    },
+    "Rewrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previous",
+        "current",
+        "package"
+      ],
+      "properties": {
+        "previous": {
+          "type": "string",
+          "minLength": 1
+        },
+        "current": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Rewrites": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Rewrite"
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "destination",
+        "sha256",
+        "rewrites"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "destination": {
+          "$ref": "#/$defs/Path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Digest"
+        },
+        "rewrites": {
+          "$ref": "#/$defs/Rewrites"
+        },
+        "tokenSha256": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Mount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "source",
+        "sha256"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "pattern": "^standards(?:::[a-z0-9_]+)*$"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "Caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "owner",
+        "sha256",
+        "rewrites"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "owner": {
+          "$ref": "#/$defs/Path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Digest"
+        },
+        "rewrites": {
+          "$ref": "#/$defs/Rewrites"
+        }
+      }
+    },
+    "Family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "module",
+        "source",
+        "package",
+        "sources",
+        "dependencies"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "pattern": "^✏️s/🔌️plugins/🗄️stdio/🔮️oracles/[^/]+$"
+        },
+        "module": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "package": {
+          "$ref": "#/$defs/Package"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        },
+        "dependencies": {
+          "$ref": "#/$defs/Names"
+        }
+      }
+    },
+    "Provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "namespace",
+        "source",
+        "package",
+        "mounts",
+        "dependencies"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "pattern": "^✏️s/🔌️plugins/[^/]+/🗿️artifacts/[^/]+$"
+        },
+        "namespace": {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9_]+::)?artifacts::[a-z0-9_]+$"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "package": {
+          "$ref": "#/$defs/Package"
+        },
+        "mounts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Mount"
+          }
+        },
+        "dependencies": {
+          "$ref": "#/$defs/Names"
+        }
+      }
+    },
+    "Grammar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "source",
+        "function",
+        "originalSource",
+        "package",
+        "bodySha256"
+      ],
+      "properties": {
+        "owner": {
+          "const": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "function": {
+          "const": "decode_string_literal"
+        },
+        "originalSource": {
+          "$ref": "#/$defs/Path"
+        },
+        "package": {
+          "$ref": "#/$defs/Package"
+        },
+        "bodySha256": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "ArtifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "packages"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "pattern": "^✏️s/🔌️plugins/[^/]+/🗿️artifacts/[^/]+$"
+        },
+        "packages": {
+          "$ref": "#/$defs/Names"
+        }
+      }
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementation",
+        "package"
+      ],
+      "properties": {
+        "implementation": {
+          "enum": [
+            "rust",
+            "python"
+          ]
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "version": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "features": {
+          "$ref": "#/$defs/Names"
+        },
+        "rationale": {
+          "type": "string"
+        }
+      }
+    },
+    "Contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "fields",
+        "hosts"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Digest"
+          }
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Host"
+          }
+        }
+      }
+    },
+    "InternalModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "module"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "module": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        }
+      }
+    },
+    "Dependency": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "optional": {
+              "type": "boolean"
+            },
+            "default-features": {
+              "type": "boolean"
+            },
+            "features": {
+              "$ref": "#/$defs/Names"
+            }
+          }
+        }
+      ]
+    },
+    "NeutralLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "package",
+        "library",
+        "source",
+        "module"
+      ],
+      "properties": {
+        "owner": {
+          "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law"
+        },
+        "package": {
+          "const": "semio-repo-test-host"
+        },
+        "library": {
+          "const": "semio_repo_test_host"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "module": {
+          "const": "law"
+        }
+      }
+    },
+    "StdioOracleComposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "owner",
+        "package",
+        "retired",
+        "neutralLaw",
+        "families",
+        "grammar",
+        "providers",
+        "sources",
+        "mounts",
+        "callers",
+        "dependencies",
+        "features",
+        "artifactBindings",
+        "contributions",
+        "internalModules",
+        "internalFunctions"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "owner": {
+          "const": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles"
+        },
+        "package": {
+          "$ref": "#/$defs/Package"
+        },
+        "retired": {
+          "$ref": "#/$defs/Retired"
+        },
+        "neutralLaw": {
+          "$ref": "#/$defs/NeutralLaw"
+        },
+        "families": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Family"
+          }
+        },
+        "grammar": {
+          "$ref": "#/$defs/Grammar"
+        },
+        "providers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Provider"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Source"
+          }
+        },
+        "mounts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/MountedSource"
+          }
+        },
+        "callers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Caller"
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Names"
+          }
+        },
+        "artifactBindings": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ArtifactBinding"
+          }
+        },
+        "contributions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Contribution"
+          }
+        },
+        "internalModules": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/InternalModule"
+          }
+        },
+        "internalFunctions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/InternalFunction"
+          }
+        }
+      }
+    },
+    "MountedSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "destination",
+        "sha256",
+        "rewrites",
+        "tokenSha256"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "destination": {
+          "$ref": "#/$defs/Path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Digest"
+        },
+        "rewrites": {
+          "$ref": "#/$defs/Rewrites"
+        },
+        "tokenSha256": {
+          "$ref": "#/$defs/Digest"
+        }
+      }
+    },
+    "InternalFunction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "function"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "function": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        }
+      }
+    }
+  }
+}

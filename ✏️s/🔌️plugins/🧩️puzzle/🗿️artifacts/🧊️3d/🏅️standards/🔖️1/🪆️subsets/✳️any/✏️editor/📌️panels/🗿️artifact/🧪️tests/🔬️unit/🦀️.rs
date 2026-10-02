@@ -6,7 +6,7 @@ use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
 
 fn native() -> &'static Puzzle3dLabels {
-    puzzle3d_labels(&ViewModel { terminology: semio_framework_plugin::Terminology::Native, ..Default::default() }).expect("admitted host axis")
+    puzzle3d_labels(&ViewModel { terminology: semio_framework_ui_locale::Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).expect("admitted host axis")
 }
 
 /// ♻️ Stands in for the reactor's own one-page-per-turn retirement pump, which no unit test has: a
@@ -32,7 +32,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn section_key(suffix: &str) -> String {

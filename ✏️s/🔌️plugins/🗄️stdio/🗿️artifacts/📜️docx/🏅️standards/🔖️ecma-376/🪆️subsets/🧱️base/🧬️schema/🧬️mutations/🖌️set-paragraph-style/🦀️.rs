@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
         agg_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set paragraph style", "Absatzformat setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set paragraph style", "Absatzformat setzen")
     }
 
     fn target(&self) -> Vec<String> {

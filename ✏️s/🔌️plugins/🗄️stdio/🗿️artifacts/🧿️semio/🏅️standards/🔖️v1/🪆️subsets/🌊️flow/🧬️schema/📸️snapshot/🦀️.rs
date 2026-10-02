@@ -120,10 +120,11 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_f64(v: f64) -> String {
-    format!("{v}")
+    if v.is_nan(){format!("nan64_{:016x}",v.to_bits())}else{v.to_string()}
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_f64(s: &str) -> Result<f64, String> {
+    if let Some(word)=s.strip_prefix("nan64_"){if word.len()!=16||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid Flow binary64 NaN word".into())}let bits=u64::from_str_radix(word,16).map_err(|error|error.to_string())?;let value=f64::from_bits(bits);if !value.is_nan(){return Err("Flow binary64 NaN word has a non-NaN class".into())}return Ok(value)}
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -451,3 +452,8 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

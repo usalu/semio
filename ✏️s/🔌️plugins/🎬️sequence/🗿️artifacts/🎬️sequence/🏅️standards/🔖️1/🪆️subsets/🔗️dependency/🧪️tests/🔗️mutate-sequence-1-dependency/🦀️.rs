@@ -7,7 +7,7 @@
 //! (`../../../✳️any/🔮️oracles/🔣️.json`): `s.sequence.sequence` is a semio-NATIVE artifact with no
 //! third-party reader or writer in any ecosystem, so this adapter registers NO oracle handler at
 //! all. All evidence lives in the SUBJECT role below, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role.
@@ -36,7 +36,7 @@ mod subject {
     use semio_s_artifact_sequence_sequence::document_dsl::parse_dsl;
     use semio_s_artifact_sequence_sequence::mutations::{apply_sequence_mutation, decode_sequence_mutation_json, decode_sequence_scene_json, encode_sequence_projection_json, inverse_sequence_mutation, SequenceMutation};
     use semio_s_artifact_sequence_sequence::{sequence_content_child_with_owner, SequenceSnapshot};
-    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable};
+    use semio_repo_test_host::law::{inverse_restores, mutation_is_observable};
 
     //#region 🔖️CommittedInput
     fn base(ctx: &Context) -> Result<SequenceSnapshot, String> {

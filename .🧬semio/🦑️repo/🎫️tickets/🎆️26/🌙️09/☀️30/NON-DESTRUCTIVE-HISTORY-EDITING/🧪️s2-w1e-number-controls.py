@@ -79,9 +79,10 @@ def round_half_away(value):
     return math.floor(value + 0.5) if value >= 0 else -math.floor(-value + 0.5)
 
 
-def key(current, low, high, step, snaps, name, large):
-    step = step if step > 0 else 1.0
+def key(current, low, high, step, snaps, name, large, precision=None, factor=None):
     origin = low if low is not None else 0.0
+    if not (step and step > 0):
+        step = round_fixed(10 ** -precision, precision) / (factor or 1) if precision is not None else 1.0
     digits = min(12, max(decimals(origin), decimals(step)))
 
     def clamp(value):
@@ -91,24 +92,36 @@ def key(current, low, high, step, snaps, name, large):
             value = min(value, high)
         return value
 
-    def walk(rungs, forward):
-        position = (current - origin) / step
-        nearest = round_half_away(position)
-        base = nearest if abs(position - nearest) <= 1e-9 * max(1, abs(nearest)) else (math.floor(position) if forward else math.ceil(position))
-        return clamp(round_fixed(origin + ((base + rungs) if forward else (base - rungs)) * step, digits))
-
     def settle(value):
         for snap in snaps:
             if abs(value - snap) <= 1e-9 * step * max(1, abs((snap - origin) / step)):
                 return snap
         return value
 
-    def page(forward):
-        target = walk(10, forward)
-        reached = [snap for snap in snaps if (current < snap <= target if forward else target <= snap < current)]
-        return (min(reached) if forward else max(reached)) if reached else settle(target)
+    def shown(value):
+        if precision is None:
+            return value
+        rounded = round_fixed(value * factor if factor is not None else value, precision)
+        return rounded / factor if factor is not None else rounded
 
-    return {"increment": lambda: settle(walk(10 if large else 1, True)), "decrement": lambda: settle(walk(10 if large else 1, False)), "pageUp": lambda: page(True), "pageDown": lambda: page(False)}[name]()
+    def walk(steps, forward):
+        position = (current - origin) / step
+        nearest = round_half_away(position)
+        base = nearest if abs(position - nearest) <= 1e-9 * max(1, abs(nearest)) else (math.floor(position) if forward else math.ceil(position))
+        return settle(clamp(shown(round_fixed(origin + ((base + steps) if forward else (base - steps)) * step, digits))))
+
+    def page(forward):
+        ahead = [snap for snap in snaps if (snap > current if forward else snap < current)]
+        return clamp(min(ahead) if forward else max(ahead)) if ahead else walk(10, forward)
+
+    return {
+        "increment": lambda: walk(10 if large else 1, True),
+        "decrement": lambda: walk(10 if large else 1, False),
+        "pageUp": lambda: page(True),
+        "pageDown": lambda: page(False),
+        "home": lambda: low if low is not None else current,
+        "end": lambda: high if high is not None else current,
+    }[name]()
 
 
 def display_text(stored, factor, precision):
@@ -167,12 +180,21 @@ def rows():
         ("dial-arrow-steps-one-degree", 0, -PI, PI, STEP_DEG, DIAL_SNAPS, "increment", False),
         ("dial-arrow-settles-onto-a-detent", rung(89), -PI, PI, STEP_DEG, DIAL_SNAPS, "increment", False),
         ("dial-arrow-leaves-a-detent", PI / 2, -PI, PI, STEP_DEG, DIAL_SNAPS, "increment", False),
-        ("dial-page-walks-ten-rungs-before-a-far-detent", 0, -PI, PI, STEP_DEG, DIAL_SNAPS, "pageUp", False),
-        ("dial-page-stops-on-the-detent-it-reaches", rung(85), -PI, PI, STEP_DEG, DIAL_SNAPS, "pageUp", False),
-        ("log-page-stops-on-a-detent", 0.45, 0.1, 10, 0.01, LOG_SNAPS, "pageUp", False),
-        ("stepper-page-stops-on-a-detent", 2, None, None, 1, [0, 5, 10], "pageUp", False),
-        ("stepper-page-down-stops-on-a-detent", 7, None, None, 1, [0, 5, 10], "pageDown", False),
+        ("dial-page-jumps-to-the-next-detent", 0, -PI, PI, STEP_DEG, DIAL_SNAPS, "pageUp", False),
+        ("dial-page-from-near-a-detent", rung(85), -PI, PI, STEP_DEG, DIAL_SNAPS, "pageUp", False),
+        ("log-page-jumps-to-the-next-detent", 0.45, 0.1, 10, 0.01, LOG_SNAPS, "pageUp", False),
+        ("stepper-page-jumps-to-the-next-detent", 2, None, None, 1, [0, 5, 10], "pageUp", False),
+        ("stepper-page-down-jumps-to-the-previous-detent", 7, None, None, 1, [0, 5, 10], "pageDown", False),
+        ("vector-page-to-the-next-detent", 0.25, -3, 3, 0, [-1.5, 0, 1.5], "pageUp", False, 1, 10),
+        ("vector-page-down-to-the-previous-detent", 0.25, -3, 3, 0, [-1.5, 0, 1.5], "pageDown", False, 1, 10),
+        ("page-without-snaps-walks-ten-steps", 0.25, -3, 3, 0, [], "pageUp", False, 1, 10),
+        ("arrow-step-from-precision-and-display-factor", 0.25, -3, 3, 0, [], "increment", False, 1, 10),
+        ("half-away-rounding-in-display-units", 0, -1, 1, 0.025, [], "increment", False, 1, 10),
+        ("negative-half-away-rounding-in-display-units", 0, -1, 1, 0.025, [], "decrement", False, 1, 10),
+        ("home-reaches-the-hard-minimum", 0.25, -3, 3, 0, [-1.5, 0, 1.5], "home", False, 1, 10),
+        ("end-reaches-the-hard-maximum", 0.25, -3, 3, 0, [-1.5, 0, 1.5], "end", False, 1, 10),
     ]
+    retired = {"dial-page-walks-ten-rungs-before-a-far-detent", "dial-page-stops-on-the-detent-it-reaches", "log-page-stops-on-a-detent", "stepper-page-stops-on-a-detent", "stepper-page-down-stops-on-a-detent"}
     dial_rows = [
         ("centre-points-at-three-oclock", 0.5),
         ("right-angle-points-up", 0.75),
@@ -226,7 +248,7 @@ def rows():
     out = {
         "axis": [{"case": c, "value": v, "min": lo, "max": hi, "scale": sc, "position": axis_position(v, lo, hi, sc)} for c, v, lo, hi, sc in axis],
         "pointer": [{"case": c, "value": v, "min": lo, "max": hi, "step": st, "snaps": sn, "scale": sc, "expected": pointer(v, lo, hi, st, sn, sc)} for c, v, lo, hi, st, sn, sc in pointer_rows],
-        "keys": [{"case": c, "current": cur, "min": lo, "max": hi, "step": st, "snaps": sn, "key": k, "large": lg, "expected": key(cur, lo, hi, st, sn, k, lg)} for c, cur, lo, hi, st, sn, k, lg in key_rows],
+        "keys": [{"case": c, "current": cur, "min": lo, "max": hi, "step": st, "snaps": sn, "key": k, "large": lg, **({"precision": rest[0], "factor": rest[1]} if rest else {}), "expected": key(cur, lo, hi, st, sn, k, lg, *rest)} for c, cur, lo, hi, st, sn, k, lg, *rest in key_rows],
         "dial": [{"case": c, "position": p, "angle": dial_angle(p), "back": dial_position(dial_angle(p))} for c, p in dial_rows],
         "display": [{"case": c, "stored": v, "factor": f, "precision": p, "text": display_text(v, f, p)} for c, v, f, p in display_rows],
         "typed": [{"case": c, "typed": v, "factor": f, "precision": p, "candidates": cand, "expected": typed(v, f, p, cand)} for c, v, f, p, cand in typed_rows],
@@ -234,6 +256,7 @@ def rows():
         "valueTexts": [{"case": c, "component": comp, "valueText": text, "valueNow": now, "valueMin": lo, "valueMax": hi} for c, comp, text, now, lo, hi in value_texts],
         "documents": [{"case": c, "component": {k: v for k, v in comp.items() if v is not None}, "violation": vio} for c, comp, vio in documents],
     }
+    out["retired"] = retired
     return out
 
 
@@ -251,18 +274,21 @@ def main():
     path = f"{ROOT}/🔣️.json"
     with open(path, encoding="utf-8") as handle:
         fixture = json.load(handle)
-    for section, generated in rows().items():
-        existing = fixture.setdefault(section, [])
+    generated_rows = rows()
+    retired = generated_rows.pop("retired")
+    for section, generated in generated_rows.items():
+        existing = [row for row in fixture.setdefault(section, []) if row["case"] not in retired]
         names = {row["case"] for row in generated}
         fixture[section] = [row for row in existing if row["case"] not in names] + generated
     fixture["note"] = (
         "🎚️ The number-control laws every renderer shares: the slider detent law (`snaps` finite, strictly ascending, inside min..=max), "
         "the axis law (a value's position on a linear or log axis and back, `min`/`max` exactly at the ends), the dial law (a position's needle angle counter-clockwise from three o'clock, the travel's centre at 0, and back, the seam at nine o'clock), the pointer law (clamp, quantize onto the step ladder from min "
         "cleaned to its decimals, then pull onto the nearest snap within 3 % of the axis — the log axis for `log` —, first snap wins a tie), the keyboard law of sliders, steppers "
-        "and number fields (arrows walk one rung of the step ladder from min — from 0 without one —, a large arrow ten rungs, and never stop on a detent off their path; "
-        "from an off-ladder detent the first rung beyond it is one rung; page keys walk ten rungs and stop on the first detent they reach; a key landing within ladder "
-        "tolerance of a detent lands on it exactly; Home and End reach the bounds and keep the value without one; an invalid step walks rungs of one; results clamp to "
-        "the bounds and clean to the decimals of min and step), the display law (shown = stored × displayFactor at the precision or in the twelve-digit format; a typed "
+        "and number fields (the step is `step`, else 10^-precision display units divided back by the display factor, else one; arrows walk one step of the ladder "
+        "from min — from 0 without one —, a large arrow ten, and never stop on a detent off their path; from an off-ladder detent the first rung beyond it is one step; "
+        "page keys jump to the next/previous detent, else walk ten steps; Home and End reach the bounds and keep the value without one; a walked value is cleaned to the "
+        "decimals of min and step, rounded half away from zero at the precision in display units and divided back, clamped, and lands exactly on a detent within ladder "
+        "tolerance), the display law (shown = stored × displayFactor at the precision or in the twelve-digit format; a typed "
         "number whose display text equals a candidate's keeps that exact stored value, any other is rounded to the precision and divided back), the hard-bound law "
         "(the limit a typed value crosses, the lower first, an excluded limit refusing itself, the inclusive min/max without declared limits), the fixed-precision law "
         "(exactly `precision` fraction digits, ties away from zero as JavaScript's toFixed at every magnitude, unsigned zero, precision capped at 15, magnitudes from "
@@ -298,6 +324,8 @@ def main():
     props["axis"] = {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["case", "value", "min", "max", "scale", "position"], "properties": {"case": case, "value": {"type": "number"}, "min": {"type": "number"}, "max": {"type": "number"}, "scale": {"$ref": "#/$defs/scale"}, "position": {"type": "number", "minimum": 0, "maximum": 1}}}}
     props["dial"] = {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["case", "position", "angle", "back"], "properties": {"case": case, "position": {"type": "number", "minimum": 0, "maximum": 1}, "angle": {"type": "number"}, "back": {"type": "number", "minimum": 0, "maximum": 1}}}}
     props["pointer"]["items"]["properties"]["scale"] = {"$ref": "#/$defs/scale"}
+    props["keys"]["items"]["properties"]["precision"] = {"type": ["integer", "null"], "minimum": 0, "maximum": 15}
+    props["keys"]["items"]["properties"]["factor"] = {"type": ["number", "null"], "exclusiveMinimum": 0}
     props["display"] = {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["case", "stored", "factor", "precision", "text"], "properties": {"case": case, "stored": {"type": "number"}, "factor": nullable, "precision": {"type": ["integer", "null"], "minimum": 0, "maximum": 15}, "text": {"type": "string"}}}}
     props["typed"] = {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["case", "typed", "factor", "precision", "candidates", "expected"], "properties": {"case": case, "typed": {"type": "number"}, "factor": nullable, "precision": {"type": ["integer", "null"], "minimum": 0, "maximum": 15}, "candidates": {"$ref": "#/$defs/snaps"}, "expected": {"type": "number"}}}}
     props["limits"] = {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": False, "required": ["case", "value", "min", "max", "limits", "crossed"], "properties": {"case": case, "value": {"type": "number"}, "min": nullable, "max": nullable, "limits": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/limits"}]}, "crossed": {"enum": [None, "min", "max"]}}}}

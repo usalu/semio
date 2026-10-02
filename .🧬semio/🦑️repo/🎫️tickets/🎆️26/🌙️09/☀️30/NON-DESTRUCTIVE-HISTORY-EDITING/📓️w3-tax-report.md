@@ -293,13 +293,194 @@ pattern; the same pattern also changed `"../../../../../../../"` to `"…/.."` i
 
 ## Session 2 — 2026-10-01
 
-Successor (S2-TAX), started 11:53. Scratch: `🗑️generated/s2-tax/`. Section in progress — the taxonomy report sweep (d)
-is running; this section is rewritten in place at the end of the session.
+Successor S2-TAX (11:53–13:45 and 16:35–18:00, both cut by the usage limit; resumed 21:37 — all engine, taxonomy and test edits re-verified intact, taxonomy valid, 49/49 seals). Scratch: `🗑️generated/s2-tax/`. Ticket-root
+scripts: `🧪️s2-tax-cad-live-bindings.ts`, `🧪️s2-tax-draw-command-bundle.ts`, `🧪️s2-tax-scope-report.ts`.
+Status legend: DONE (ran, saw it pass), WRITTEN BUT UNVERIFIED (reason), OPEN (whose).
 
-### S2.1 Repair status (rule 21)
+### S2.1 (a) Structural leaf identity — DONE (repair only)
 
-- Structural leaf identity (follow-up 1, §8) landed intact in auto-commit `4e36b2b5012`: `provenMutationLeafOwners` +
-  `canonicalDirectory(…, mutationLeaves)` in `🧹️normalization/🟦️.ts`; `members-of-schema` 44 names, `members-of-fixtures`
-  240, `plugin-test-mutations` / `store-fixture-mutations` gone, `mutation-wire-witness.parentKindIds = [fixtures,
-  members-of-schema]`. No peer re-added leaf names. `validateTaxonomy(loadTaxonomy())` = `[]`.
-- `test-mutation-leaf-identity` 8/0, `test-mutation-wire-witness` 11/0 (both run 12:00, `bun test`).
+- Follow-up 1 (§8) landed intact in auto-commit `4e36b2b5012`: `provenMutationLeafOwners` + `canonicalDirectory(…,
+  mutationLeaves)` in `📚️library/🧹️normalization/🟦️.ts`; `members-of-schema` 44 names (no leaf names re-added by
+  peers), `members-of-fixtures` 240, `plugin-test-mutations`/`store-fixture-mutations` gone. The identity authority is
+  each leaf's own canonical descriptor (`mutationPayloadSchemaAuthority`: `schemaVersion 1`, self-naming `owner`,
+  non-empty `semanticKind`) — the per-leaf entry of the mutation catalog; no name list remains.
+- `bun test 🧪️tests/🧪️mutation-leaf-identity` **8/0**, `🧪️tests/🧪️mutation-wire-witness` **11/0** (12:00).
+  `validateTaxonomy(loadTaxonomy())` = `[]` (12:15 and again after every edit below).
+
+### S2.2 (b) Sealed evidence — DONE
+
+- `📽️nested-cargo-package-projection/🔣️.json` already equals HEAD; sha `9445dea9…` = pinned `authorityCatalogSha256`.
+- A full seal probe (every non-retired `frozenCoordinateEvidenceContracts`, every
+  `frozenMarkdownCoordinateEvidenceContracts`, `semanticPackageProjectionContracts`, catalog-pinned
+  `semanticOwnedFileProjectionContracts`) found 2 more drifted sealed documents, both rewritten by codemods and landed
+  in `4e36b2b5012`; restored to their sealed bytes (`4e36b2b5012~1`), now 49/49 match:
+  - `🧫️fixtures/🔖️readme-current-source-revision/🔣️.json` (02:45 relative-path codemod: `../🔖️…/🔣️.json` → `./🔣️.json`);
+  - `🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json` (hub restructure codemod rewrote sealed history
+    `✏️s/🔌️plugins/<p>/📦️packages` → `🌎️hub/🧩️compositions/…`, `semio-s-plugin-*` → `semio-hub-*`; third hit).
+- New guard (the session-1 recommendation): `🕰️historical-json-source-encoding` gains "every live sealed document still
+  matches its registered whole-document digest" over the four seal families. `bun test` **23/0** (was 21/1).
+
+### S2.3 (c) Package-move coverage re-targeted onto a synthetic sealed fixture workspace — DONE (authority layer) /
+WRITTEN BUT UNVERIFIED (normalization layer, peer blocker)
+
+Design: the live Draw command is now exactly `🦀️.rs` (W3-T-DRAW, 2-node `draw-editor-command-bundle-v1`). The
+package-move coverage (a projected command that carries two declaration-only nested Cargo packages, moving workspace
+members, dependency users, project cwds, Nx globs, `#[path]` and stale markers) stays on the authored, sealed scenario:
+- **Scenario owns its bundle authority.** `🧫️fixtures/🖍️draw-source-scenario/🔣️.json` gains `commandBundle`
+  (`directoryKinds.fsm` + the 16-node declaration-only package bundle, recovered from the pre-cut taxonomy
+  `48d881aa7ab~1`; script `🧪️s2-tax-draw-command-bundle.ts`), schema `🧬️schema/🖍️draw-source-scenario/🔣️.json`
+  (strict, three node shapes). The live taxonomy keeps the 2-node contract; tests overlay the scenario authority
+  (`drawScenarioTaxonomy`, `projectionTaxonomy`) wherever the authored scenario is planned: in-process authority calls
+  and the normalization fixture's taxonomy copy (now for both reference and non-reference fixtures).
+- **Engine: structural, not instance-pinned.** `🔍️discovery/🟦️.ts` `validateTaxonomy`: `draw-editor-command-bundle-v1`
+  = one root `🦀️.rs` rust-source declaration plus only declaration-only nested Rust packages (each owner: `🦀️.rs`
+  source + `📦️packages/🦀️rust/{Cargo.toml, 📋️project.json, 📜️script.ts}` with their exact fixed contracts, every
+  directory realized). `🧹️normalization/🟦️.ts` loader: every rust-source node is source-named and exactly one sits at
+  the bundle root (was: exactly one). Both the 2-node live and the 16-node scenario bundle validate.
+- **Sealed golden re-sealed via the library seal helpers.** `🧫️fixtures/📐️cad-draw-path-projection/🔣️.json` CAD
+  `liveBindings[*].live` rebound to the REPO-PATH-BUDGET renames (43 carriers; sealed coordinates untouched; script
+  `🧪️s2-tax-cad-live-bindings.ts`); seal `9264c9de…` → `8bfd3766…` in `taxonomy.json`
+  (`frozenCoordinateEvidenceContracts.cad-draw-projection-vectors-v1`) and the mirror
+  `🧫️fixtures/❄️frozen-coordinate-evidence/🔣️.json`; `🕰️…/🧬️energy-source-coordinates` `originalContracts`
+  re-pinned with `frozenCoordinateEvidenceSeal` (38 → 40 contracts, `e78713c8…`; it was stale since 09-25).
+- **Live parity re-targeted, not cut.** "artifact-editor-command-projection preserves the strict fixed-file union, the
+  sealed scenario package bundle, and live command parity": scenario authority = golden (mappings, digest, counts, 2
+  package manifests); the live 2-node contract refuses the scenario bundle; the live destination (`🦀️.rs` only) is
+  exactly the live contract and is refused by the scenario contract; a nested package without `📜️script.ts` fails
+  validation. The schema-boundary normalization test now also proves the overlay is accepted and a nested source
+  without `sourceFilename` is refused at the normalization boundary.
+- Also fixed in the same files: codemod damage restored (`"." + stem` → `"./" + stem` ×2, `startsWith(".")` →
+  `startsWith("./")` ×3, `.git` → `.git/`, `#[path]` `../../../📏measure` → `../../../../🔨️modules/📏measure`), a
+  triplicated guard line;
+  `🏺️historical-package-owner-identity` scoped Draw transaction now plans under the scenario authority, writes the
+  authored root scripts, and asserts moves = the projection's mappings (stale `11` since 09-25);
+  `📍️draw-destination-observation` fixture authority paths restored to the schema consts (codemod).
+- Runs: `SEMIO_TEST_LEVEL=long bun test 🔬️workspace-contract -t "artifact path projection authority"` **20/22** (was
+  12/22); the 2 failures are the peer plugin-registry restructure (below). `-t "taxonomy normalization .*(CAD|Draw|…)"`
+  **6/10**: the schema-boundary test with the new overlay assertions passes; the 4 CAD+Draw fixture tests fail before
+  planning, in `artifactProjectionPrepareProducer` (peer, below). tsc over discovery + normalization + both tests: 0
+  errors in these files (50 errors, all in `📕️norm/…/🪨️en1996/…/🧬️mutations/🟦️.ts`, norm-2's).
+- OPEN, peer (plugin-registry restructure, 08:48): `🔌️plugin/📇️registry/📜️script.ts` now `registerLazy(… await
+  import("./📽️projection/🟦️.ts") …)`; the `plugin-registry` registry-catalog input discovery follows static imports
+  only, so the generator closure misses `📽️projection`, `🎮️playground/…`, `🚀️launch` → the Draw producer fixture fails
+  (`Cannot find module '../🎮️playground/⭐️default/🟦️.ts'`), "launch seed" and "producer context" tests fail, and the
+  generator's Nx inputs likely miss those modules too. Fix: static imports in the script, or input discovery admits
+  literal dynamic imports. I added the 10:40 `🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs` nx-plugin runtime module to the
+  scenario `producerContext.runtimeModules` (fixture + schema) — that one was a declared-input gap.
+
+### S2.3b Per-leaf scenario vectors registered structurally — DONE (17:30)
+
+- The sweep showed the ticket's new oracle-vector fixtures `🧫️fixtures/🩹️patch-snapshot-applied`, `🩹️patch-pixels-applied`,
+  `📸️set-snapshot-applied` (png/jpg, W2-W-media) unresolved: the stdio convention is `<leaf>-applied` (322 dirs) or
+  `<leaf>-<scenario>`, but the structural rule admitted only the exact `<leaf>` name.
+- Engine (`🧹️normalization/🟦️.ts`): `provenMutationLeafOwners` proves a vector directory `<owner>/🧫️fixtures/<leaf>` or
+  `…/<leaf>-<scenario>` through a proven sibling `<owner>/🧬️schema/🧬️mutations/<leaf>` (names compared without U+FE0F;
+  sibling names from the scope plus one cached `readdir`) and returns the vector directory itself;
+  `canonicalDirectory` resolves a `🧫️fixtures` child to `members-of-fixtures` iff it is in that set (no new free
+  identifiers). Engine probe: png `✳️any/🧫️fixtures` 20/24 vectors resolve, incl. all `-applied` ones (the 4 left
+  carry stale emoji / no leaf: stdio-owned, pre-existing).
+- Taxonomy: `members-of-fixtures` 240 → 221 — the 19 names whose every `🧫️fixtures/<name>` occurrence is now
+  structurally proven (census script in `🗑️generated/s2-tax`), 7 atomic Edit-tool removals; `validateTaxonomy` = `[]`;
+  engine probe on bcf `🖊️markup` and equation `🕸️graph` fixtures: the removed names still resolve.
+- TDD: `🧫️fixtures/🧫️mutation-leaf-identity` gains `subset-fixture-scenario-vector` (png `🩹️patch-snapshot-applied`),
+  schema form `fixture-scenario-vector`. `bun test 🧪️tests/🧪️mutation-leaf-identity` **9/0** (17:28).
+- Sealed evidence hit a fourth time (14:35, `🧪️test` module move codemod):
+  `🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json` restored to HEAD bytes; 49/49 seals match.
+
+### S2.3c Per-leaf scenario bundles and tool directories registered — DONE (22:00)
+
+- The sweep showed window `🎚️config` / `🫧️transient` per-leaf fixtures (`<owner>/🧫️fixtures/<leaf>/<case>/{🦠️mutation,
+  📸️snapshot,🔺️diff,🎯️outcome}`, gis map, writer, procedural…) with unresolved case directories (only `✅️apply` /
+  `🚫️apply` / `🟰️apply` were registered by name). `provenMutationLeafOwners` now also returns each scenario child of a
+  proven vector that holds a fixture bundle; `canonicalDirectory` resolves it to `members-of-members-of-fixtures`. No
+  registered case name is fully covered yet (their vectors sit under REPO-PATH-BUDGET-shortened names), so the registry
+  stays as is. TDD row `window-config-vector-scenario` (gis `🎨️set-vector-style/✅️set-vector`): leaf identity **10/0**.
+- `members-of-tools` gains `✋️drag` and `🧭️transform` — the W3-T tool-machine directories (wfc 2d/3d, flow, cad) that
+  were unresolved; engine probe: both resolve. Tools own no descriptor, so the existing tools registry is the authority.
+- The standalone classifier compile test ("the actual directory classifier agrees with independent compilers…", failing
+  with `ReferenceError: mutationFixtureMirrorOwnerPath` since `48d881aa7ab`) now extracts that helper too → passes.
+
+### S2.4 (d) `verify taxonomy report` on the ticket's new dirs — DONE
+
+Method: `🧪️s2-tax-scope-report.ts` runs the engine inventory behind `verify taxonomy report --scope` sequentially over the
+162 subset roots that hold a new mutation directory plus `⏪️time-travel` and `🛠️tool-machine` (per-mutation-root scopes
+give false `mutation-fixture-unpaired` / `scenario root is absent`: `validateMutationCasePairs` reads in-scope entries
+only), keeps findings on the 26,045 directories new since the ticket baseline `3eeee4f9119` (plan moves = a
+non-canonical `normalizedPath`), then classifies them (`attribute-report.ts`, `classify-report.ts`,
+`residual-owners.ts`; tables `findings*.tsv`, `owners-final.txt` in `🗑️generated/s2-tax/`). 164 scopes, 0 crashes
+(the 17:13 taxonomy-invalid window was re-run), 34 scopes re-run after S2.3b/c. **4,183 findings remain; none is a
+ticket evidence kind that the taxonomy fails to admit.**
+
+| Owner (whose) | Findings | What |
+|---|---|---|
+| REPO-PATH-BUDGET (peer) | 3,211 | leaf / case / group dirs shortened after 11:16 while descriptors (`semanticKind`), catalog vectors (`🔮️oracles` `mutationManifests`) and `mutationDomainOwners` keys keep the long names → `mutation-payload-schema-authority-invalid`, `projection-member-unresolved`, `projection-catalog-coverage`, then cascaded `directory-kind-unresolved` / `mutation-fixture-unpaired` / `mutation-fixture-invalid` / `normalization-move-required`. energy 1,191, stdio 765, architect 651, procedural 105, remodel 73, cad 76, layout 51, shooting 47, trinity 35, draw 34, mathematical 33, block 29, sequence 22, lowpoly 18, raster 12, playbook 8, forms 7, os modules 7, … |
+| path budget (`path-too-long`, `mutation-pair-path-budget`) | 528 + 14 | architect 222, gis 122 (+6 `🧾️wire-witness`), trinity 48 (+8 `🧾️wire-witness` under `🪟️window/🎚️config/🧫️fixtures/🧬️mutations/<leaf>`), writer 47, reasoning 36, cad 24, fem 14, block 12 — repo-wide budget, handed off (§14) |
+| UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O (peer) | 394 | `🧬️schema/📸️snapshot/🪶️sqlite/…`, `📸️snapshot/{🧪️tests,🧫️fixtures}/🪶️sqlite`, store `🪶️snapshot-capability`: stdio 327, norm 32, wfc 15, procedural 6, … |
+| ticket WPs | 36 | below |
+
+Ticket-owned remainder (all outside this WP; listed for their owners):
+- 📕️norm (norm WPs / W2-W-norm-1): 20 leaf dirs without VS16 (`path-emoji-presentation`): en1991 ×18 (`⏱change-fire-duration`,
+  `🌡change-t-max`, …), din4108 `🏷change-thermal-bridge-bb2-type`, en1998 `🛢insert-tank`; en1992 `🧷change-anchor-a-s`
+  (no VS16, descriptor kind `change-anchor-as`) and stray `🧬️mutations/🧪️tests/🔬️fixture` dirs in en1992 + din4108.
+- 🌀️procedural generation3d (S2-PROCEDURAL): `🧬️mutations/💾️binary/{🧪️tests,🧫️fixtures,🧬️schema}/🧬️semantic-wire` (binary
+  facet case dirs inside the mutations root) and `🚪️io/{🧪️tests/🔁️round-trip,🧫️fixtures}/🛡️authority`.
+- ✒️writer `🪟️windows/✒️main/🫧️transient/🧫️fixtures/{💬️set-engagement,📐️set-editor}` (+ their `✅️set` cases): vector names are
+  truncated prefixes of the leaves `💬️set-engagement-input` / `📐️set-editor-selection` → rename to the leaf names
+  (writer owner; added in `48d881aa7ab`).
+- 🀄️wfc bitmap (S2-STROKES): `🧬️mutations/✍️paint-input-stroke/🧪️tests/🔬️unit` is not a catalogued case
+  (`projection-catalog-coverage`) — move the unit test out of the case root.
+- Ticket evidence status: every `🧾️wire-witness` resolves (only the 14 over-budget paths above); `🩹️patch-snapshot` leaves,
+  `-applied` vectors and window per-leaf fixtures resolve structurally; `⏪️time-travel` / `🛠️tool-machine`: 0 findings.
+
+### S2.5 (e) Tests (all `bun test`, absolute paths, run by me)
+
+| Test | Result | Note |
+|---|---|---|
+| `🧪️mutation-leaf-identity` | **10/0** (22:05) | +2 rows (scenario vector, vector scenario) |
+| `🧪️mutation-wire-witness` | **11/0** (22:20) | |
+| `🕰️historical-json-source-encoding` | **23/0** (22:20) | new sealed-digest guard; was 21/1 |
+| `🔤️taxonomy-leading-grapheme` | **10/0** (22:20) | |
+| `🔬️workspace-contract` `-t "actual directory classifier…|artifact path projection authority|…schema boundary"` (`SEMIO_TEST_LEVEL=long`) | **22/24** (22:36) | 2 = peer plugin-registry closure (below) |
+| `🔬️workspace-contract` `-t "taxonomy normalization .*(CAD|Draw|…)"` | **6/12** (22:40) | 6 CAD+Draw fixtures fail in the producer step (peer, below); the schema-boundary overlay test passes |
+| `🏺️historical-package-owner-identity` | 25/1 | remaining: purity row 29 `…/🖍️draw/…/📦️glue.rs` absent from the 9-file golden since 09-25 (purity contract owner) |
+| `❄️frozen-markdown-coordinates` | 34/2 | pre-existing (JSON-authority snapshot grew; closed ticket `🧾️runs` ENOENT) |
+| `☂️frozen-coordinate-wildcard-coverage` | 4/1 | pre-existing (232 vs 234) |
+| `📍️draw-destination-observation` | 0/1 | frozen 09-19 observation of the 11-file live destination; needs re-observation of the 2-node destination (owner) |
+| `💥️nested-cargo-collision-authority` | 25/1 | discovery peer change (name-identity problem not emitted for empty nodes) |
+| tsc (discovery, normalization, both edited tests) | 0 errors in these files | 50 errors all in norm `🪨️en1996/…/🧬️mutations/🟦️.ts` (norm-2) |
+
+### Open items (not this WP)
+
+1. Draw producer fixture (the CAD+Draw normalization package-move tests): `🔌️plugin/📇️registry/📜️script.ts` lazy
+   `registerLazy(… await import(…))` leaves `📽️projection`, `🎮️playground`, `🚀️launch` outside the static producer
+   closure, and since S2-INFRA's owned-command routing the fixture also needs
+   `📚️library/📦️packages/🟦️typescript/📜️script.ts` (`Module not found`). Owners: plugin-registry + S2-INFRA (static
+   imports, or input discovery admitting literal dynamic imports — the generator's Nx inputs likely miss them too).
+2. REPO-PATH-BUDGET: shortened leaf/case/group dirs must carry their identity (descriptor `semanticKind`, catalog
+   vectors, `mutationDomainOwners`) or keep the leaf name — 3,211 findings above.
+3. Codemods keep rewriting sealed evidence (4 hits this ticket) — the new guard test now fails on the next one.
+
+### Coordinator actions
+
+- None for activation (no Rust touched). Central launch.json regeneration still needs the session-1 rows
+  `test-mutation-wire-witness` / `test-mutation-leaf-identity` (§6.2).
+
+### Files (Session 2)
+
+Edited (`LIB` = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library`):
+- `LIB/🔍️discovery/🟦️.ts` (structural `draw-editor-command-bundle-v1` rule), `LIB/🧹️normalization/🟦️.ts` (loader rule,
+  vector + scenario proof, `canonicalDirectory` branches).
+- `LIB/🔣️taxonomy.json` (Edit tool only): `cad-draw-projection-vectors-v1.sha256`, `members-of-fixtures` −19 names,
+  `members-of-tools` +2 names.
+- Tests: `LIB/🧪️tests/🔬️workspace-contract/🟦️.ts`, `LIB/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts`,
+  `LIB/🧪️tests/🏺️historical-package-owner-identity/🟦️.ts`.
+- Fixtures/schemas: `LIB/🧫️fixtures/🖍️draw-source-scenario/🔣️.json`, `LIB/🧬️schema/🖍️draw-source-scenario/🔣️.json`,
+  `LIB/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json` (liveBindings, re-sealed), `LIB/🧫️fixtures/❄️frozen-coordinate-evidence/🔣️.json`,
+  `LIB/🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json`,
+  `LIB/🧫️fixtures/📍️draw-destination-observation/🔣️.json`, `LIB/🧫️fixtures/🧫️mutation-leaf-identity/🔣️.json`,
+  `LIB/🧬️schema/🔣️mutation-leaf-identity/🔣️.json`.
+- Restored to sealed bytes: `LIB/🧫️fixtures/🔖️readme-current-source-revision/🔣️.json`,
+  `LIB/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json`,
+  `LIB/🧫️fixtures/👀️readme-reviewed-fixture-inputs/🎯️reviewed-expectations/🔣️.json`.
+
+Created (ticket root): `🧪️s2-tax-cad-live-bindings.ts`, `🧪️s2-tax-draw-command-bundle.ts`, `🧪️s2-tax-scope-report.ts`.

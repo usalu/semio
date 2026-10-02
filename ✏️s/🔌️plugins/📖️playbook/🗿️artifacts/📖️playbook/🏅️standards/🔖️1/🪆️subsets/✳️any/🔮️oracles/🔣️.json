@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.playbook.playbook` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
   "oracles": [

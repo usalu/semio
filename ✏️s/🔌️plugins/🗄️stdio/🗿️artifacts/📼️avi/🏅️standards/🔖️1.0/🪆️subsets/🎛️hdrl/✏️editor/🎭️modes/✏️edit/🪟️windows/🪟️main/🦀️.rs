@@ -3,7 +3,10 @@
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use crate::standards::v1_0::subsets::any::schema::inferences::duration::compute_avi_duration;
 use semio_framework_plugin::app::{MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowKit;
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;

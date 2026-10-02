@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
         agg_inverse(&DocxMutation::InsertXmlNode(self.clone()), base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert XML node", "XML-Knoten einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert XML node", "XML-Knoten einfügen")
     }
 
     fn target(&self) -> Vec<String> {

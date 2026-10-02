@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateWorkshop {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create workshop \"{}\"", self.workshop.header.name), &format!("Workshop \"{}\" erstellen", self.workshop.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create workshop \"{}\"", self.workshop.header.name), &format!("Workshop \"{}\" erstellen", self.workshop.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.workshop.header.id.0.clone()]

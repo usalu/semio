@@ -18,10 +18,23 @@ use crate::editor::puzzle5d::{
     Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene, Puzzle5dTargetVolume, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME,
     PUZZLE5D_PLAY_CONTROLLER_ID,
 };
-use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, ui_node_list, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.inspector";

@@ -1,0 +1,194 @@
+{
+  "schema": "semio.stdio.pdf.snapshot-schema-producer/v1",
+  "fields": [
+    {
+      "id": 1,
+      "key": "schema",
+      "shape": "Text",
+      "optional": false
+    },
+    {
+      "id": 2,
+      "key": "declaredVersion",
+      "shape": "Text",
+      "optional": false
+    },
+    {
+      "id": 3,
+      "key": "pages",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 4,
+      "key": "fonts",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 5,
+      "key": "images",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 6,
+      "key": "forms",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 7,
+      "key": "extGStates",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 8,
+      "key": "shadings",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 9,
+      "key": "patterns",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 10,
+      "key": "colorSpaces",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 11,
+      "key": "properties",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 12,
+      "key": "outlines",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 13,
+      "key": "namedDestinations",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 14,
+      "key": "pageLabels",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 15,
+      "key": "embeddedFiles",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 16,
+      "key": "outputIntents",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 17,
+      "key": "acroForm",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 18,
+      "key": "optionalContent",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 19,
+      "key": "pageLayout",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 20,
+      "key": "pageMode",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 21,
+      "key": "viewerPreferences",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 22,
+      "key": "openAction",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 23,
+      "key": "language",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 24,
+      "key": "markInfo",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 25,
+      "key": "metadata",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 26,
+      "key": "documentId",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 27,
+      "key": "encryption",
+      "shape": "Value",
+      "optional": true
+    },
+    {
+      "id": 28,
+      "key": "info",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 29,
+      "key": "catalogExtra",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 30,
+      "key": "objects",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 31,
+      "key": "trailer",
+      "shape": "Value",
+      "optional": false
+    }
+  ],
+  "maximumBytes": 65536,
+  "tinyMaximumBytes": 1,
+  "cancelAt": 2
+}

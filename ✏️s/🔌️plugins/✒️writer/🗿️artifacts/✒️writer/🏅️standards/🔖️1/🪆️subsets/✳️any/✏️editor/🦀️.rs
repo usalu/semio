@@ -28,19 +28,63 @@ use semio_framework::{kernel::Effect, InteractiveJobClassification, ToolExecutio
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolCompletionRejection, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
 use semio_framework_plugin::plugin_app_close_prelude::ArtifactDisposal;
-use semio_framework_plugin::{
-    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest,
-    ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass,
-    MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-    WindowMeasure,
-};
+use semio_framework_plugin::engagement_token_matches;
+use semio_framework_plugin::strip_engagement_prefix;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::ContextMenuTextContext;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::Menu;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::WindowMeasure;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_APP_ID: &str = "s.writer.writer@1/*#editor";
@@ -1212,7 +1256,7 @@ impl ArtifactEditor for WriterPlayApp {
             "commitRename" => Ok(WriterCommand::CommitRename(commit_rename::CommitRename { text: text_arg(&["text", "value"]).unwrap_or_default() })),
             "setCamera" => {
                 let value = args.and_then(|value| value.get("camera")).cloned().ok_or_else(|| Fault::from("writer setCamera requires a camera"))?;
-                Ok(WriterCommand::SetCamera(set_camera::SetCamera { camera: dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid writer setCamera camera: {error}")))? }))
+                Ok(WriterCommand::SetCamera(set_camera::SetCamera { camera: semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid writer setCamera camera: {error}")))? }))
             }
             "requestCompletions" => Ok(WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
             "lintDocument" => Ok(WriterCommand::LintDocument(lint_document::LintDocument {})),
@@ -1394,7 +1438,7 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
     }

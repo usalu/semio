@@ -99,9 +99,11 @@
     "BundleScript",
     "ScriptRouter",
     "buildBudgetMs",
-    "runBundleScriptMain",
-    "runCargoTestBudgeted",
-    "runTestBudgeted"
+    "readCargoTestPolicyV1",
+    "resolve",
+    "runBudgetedTestCommand",
+    "runCargoTestsV1",
+    "runScriptMain"
   ],
   "rejectedEntryPaths": [
     "../../../🦀️.rs",
@@ -148,5 +150,45 @@
         "order": 408.32
       }
     }
-  }
+  },
+  "moduleImports": [
+    {
+      "module": "node:path",
+      "names": [
+        "resolve"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+      "names": [
+        "readCargoTestPolicyV1",
+        "runCargoTestsV1"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts",
+      "names": [
+        "runBudgetedTestCommand"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/⏱️budget/🟦️.ts",
+      "names": [
+        "buildBudgetMs"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧭️routing/🟦️.ts",
+      "names": [
+        "BundleScript",
+        "ScriptRouter"
+      ]
+    },
+    {
+      "module": "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "names": [
+        "runScriptMain"
+      ]
+    }
+  ]
 }

@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertEntity {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::InsertEntity(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert entity", "Entität einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert entity", "Entität einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -2,11 +2,11 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::{RewriteRuleMutation, RuleLayoutPlacement};
 use crate::{LayoutPoint, RewritingSnapshot};
-use store::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
 
-store::artifact_retire_struct!(RewritingSnapshot { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout });
-store::artifact_retire_struct!(LayoutPoint { x, y });
-store::artifact_retire_struct!(RuleLayoutPlacement { key, x, y });
+semio_framework_value::artifact_retire_struct!(RewritingSnapshot { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout });
+semio_framework_value::artifact_retire_struct!(LayoutPoint { x, y });
+semio_framework_value::artifact_retire_struct!(RuleLayoutPlacement { key, x, y });
 
 impl RetireOwned for RewriteRuleMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
@@ -22,6 +22,9 @@ impl RetireOwned for RewriteRuleMutation {
             Self::PatchWorkingNodes(value) => (value.targets, (value.field, value.value)).retirement(),
             Self::DragRuleNodes(value) => (value.targets, (value.dx, value.dy)).retirement(),
             Self::SetRuleLayoutPoints(value) => (value.points, value.cleared).retirement(),
+            Self::DeleteWorkingNodes(value) => value.targets.retirement(),
+            Self::ConnectWorkingPorts(value) => (value.source, (value.target, value.kind)).retirement(),
+            Self::DisconnectWorkingEdges(value) => value.targets.retirement(),
         }
     }
 }

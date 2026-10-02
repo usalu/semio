@@ -62,25 +62,25 @@ impl IfcArtifact {
 
 //#region 🔖️Descriptor
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn ifc_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -341,7 +341,7 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {
-    ::framework_schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor()).expect("schema descriptor publication");
 }
 
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
@@ -349,6 +349,6 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 //#endregion 🔖️Register

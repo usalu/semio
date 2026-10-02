@@ -40,8 +40,6 @@ pub struct ShootingConfig {
     pub center_model: bool,
     /// 👁️ Bumped whenever the active asset changes to re-trigger a viewport fit.
     pub fit_revision: u32,
-    /// 👁️ In-progress "save camera" label draft.
-    pub camera_draft_label: String,
     /// 🎥️ The free/live viewport camera — session-only, never a document field.
     #[dsl(block)]
     pub camera: ShootingCamera,
@@ -100,7 +98,6 @@ impl Default for ShootingConfig {
             selected_shot_ids: Vec::new(),
             center_model: true,
             fit_revision: 0,
-            camera_draft_label: String::new(),
             camera: ShootingCamera::default(),
         }
     }

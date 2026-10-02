@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeSlopeAngle
     fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change slope angle", "Böschungswinkel ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change slope angle", "Böschungswinkel ändern")
     }
 }

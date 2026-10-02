@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "integer": "42", "binary64Bits": "4045000000000000", "binary32Bits": "42280000", "accept64": true, "accept32": true },
+    { "integer": "9007199254740992", "binary64Bits": "4340000000000000", "binary32Bits": "5a000000", "accept64": true, "accept32": true },
+    { "integer": "9007199254740993", "binary64Bits": "4340000000000000", "binary32Bits": "5a000000", "accept64": false, "accept32": false },
+    { "integer": "-9007199254740993", "binary64Bits": "c340000000000000", "binary32Bits": "da000000", "accept64": false, "accept32": false },
+    { "integer": "9223372036854774784", "binary64Bits": "43dfffffffffffff", "binary32Bits": "5f000000", "accept64": true, "accept32": false },
+    { "integer": "9223372036854775807", "binary64Bits": "43e0000000000000", "binary32Bits": "5f000000", "accept64": false, "accept32": false },
+    { "integer": "-9223372036854775808", "binary64Bits": "c3e0000000000000", "binary32Bits": "df000000", "accept64": true, "accept32": true },
+    { "integer": "-9223372036854775807", "binary64Bits": "c3e0000000000000", "binary32Bits": "df000000", "accept64": false, "accept32": false }
+  ]
+}

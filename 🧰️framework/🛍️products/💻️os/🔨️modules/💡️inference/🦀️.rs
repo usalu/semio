@@ -143,7 +143,7 @@ struct CacheEntry {
     byte_len: usize,
 }
 
-/// 🧠 Content-addressed inference value cache — mirrors `crate::os_engine::EngineCache`'s LRU/byte-budget
+/// 🧠 Content-addressed inference value cache — mirrors `semio_framework_2d::compute::EngineCache`'s LRU/byte-budget
 /// mechanism, keyed by [`DepHash`] instead of a raw content hash of caller-supplied input.
 pub struct InferenceCache {
     config: InferenceCacheConfig,

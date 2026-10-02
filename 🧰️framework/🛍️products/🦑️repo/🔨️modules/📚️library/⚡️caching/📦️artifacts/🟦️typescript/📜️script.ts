@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🧪️ The artifact's own TypeScript suites, relative to the artifact root: `check` type-checks them and `test` also runs
  * them with `bun test`, so a suite is registered here once instead of being discovered by a filename convention. */
@@ -17,7 +17,7 @@ export interface ArtifactTypeScriptPackageOptions {
 export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string, options: ArtifactTypeScriptPackageOptions = {}): Promise<void> {
   const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
   const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
-    await runOwnedCommand(process.execPath, ["x", "tsc", entry, ...args, "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
+    await runRepositoryCommand(process.execPath, ["x", "tsc", entry, ...args, "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, 120_000);
   };
   const suites = (options.suites ?? []).map((suite) => {
     const path = resolve(packageRoot, "../..", suite);
@@ -97,7 +97,7 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
       try { await typeScript(probe, ["--noEmit", "--typeRoots", typeRoots], false); } finally { rmSync(probe, { force: true }); rmSync(typeRoots, { recursive: true, force: true }); }
       assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
       await checkSuites();
-      for (const suite of suites) await runOwnedCommand(process.execPath, ["test", `./${relative(getWorkspaceRoot(), suite)}`], getWorkspaceRoot(), `artifact-typescript:${packageName}:suite`, 300_000);
+      for (const suite of suites) await runRepositoryCommand(process.execPath, ["test", `./${relative(getWorkspaceRoot(), suite)}`], getWorkspaceRoot(), `artifact-typescript:${packageName}:suite`, 300_000);
       console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length} suites=${suites.length}`);
     }
   }

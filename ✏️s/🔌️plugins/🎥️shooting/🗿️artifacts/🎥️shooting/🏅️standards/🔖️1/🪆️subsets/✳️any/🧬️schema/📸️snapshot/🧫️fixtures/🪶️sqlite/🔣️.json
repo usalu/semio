@@ -1,0 +1,175 @@
+{
+  "snapshot": {
+    "schema": "shooting 世界\u0000",
+    "assets": [
+      {
+        "id": "",
+        "name": "name\u0000",
+        "url": "!@/ 世界",
+        "format": "",
+        "origin": [
+          0,
+          -1,
+          2
+        ],
+        "orientation": [
+          0,
+          1,
+          -2,
+          3
+        ],
+        "scale": [
+          -1,
+          0,
+          2
+        ]
+      },
+      {
+        "id": "",
+        "name": "",
+        "url": "",
+        "format": "glb",
+        "origin": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "savedCameras": [
+      {
+        "id": "",
+        "label": "camera 世界\u0000",
+        "camera": {
+          "position": [
+            1,
+            -2,
+            3
+          ],
+          "target": [
+            4,
+            5,
+            6
+          ],
+          "zoom": 0,
+          "fov": -1,
+          "up": [
+            0,
+            0,
+            -1
+          ],
+          "projection": ""
+        }
+      },
+      {
+        "id": "",
+        "label": "",
+        "camera": {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "target": [
+            1,
+            1,
+            1
+          ],
+          "zoom": 1,
+          "fov": 50
+        }
+      }
+    ],
+    "scene": {
+      "background": "",
+      "sun": {
+        "enabled": false,
+        "azimuth": -1,
+        "elevation": 0,
+        "intensity": 2,
+        "color": ""
+      },
+      "ambient": {
+        "intensity": 0,
+        "color": "\u0000世界"
+      },
+      "shadow": {
+        "enabled": true,
+        "opacity": -1,
+        "softness": 0
+      },
+      "material": {
+        "color": "",
+        "metalness": 2,
+        "roughness": -2,
+        "emissive": "\u0000",
+        "emissiveIntensity": 0,
+        "stroke": ""
+      }
+    },
+    "shots": [
+      {
+        "id": "",
+        "label": "shot 世界\u0000",
+        "width": 0,
+        "height": 4294967295,
+        "format": "",
+        "shape": "",
+        "background": "",
+        "cameraId": "unresolved!@/"
+      },
+      {
+        "id": "",
+        "label": "",
+        "width": 4294967295,
+        "height": 0,
+        "format": "PNG",
+        "shape": "rectangle"
+      }
+    ],
+    "activeShotId": "unresolved\u0000",
+    "activeAssetId": "",
+    "emblem": {
+      "childId": "",
+      "target": {
+        "artifactId": "!@/\u0000世界",
+        "dialect": {
+          "artifactKind": "",
+          "standard": "",
+          "subset": ""
+        }
+      }
+    }
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "fff8123456789abc"
+  ],
+  "malformedSql": [
+    "DELETE FROM shooting_scene",
+    "UPDATE shooting_asset SET document_id=9 WHERE ordinal=0",
+    "UPDATE shooting_asset SET ordinal=0",
+    "UPDATE shooting_saved_camera SET ordinal=5 WHERE ordinal=1",
+    "UPDATE shooting_shot SET ordinal=0",
+    "UPDATE shooting_shot SET width=4294967296 WHERE ordinal=0",
+    "UPDATE shooting_scene SET sun_enabled=2",
+    "UPDATE shooting_asset SET orientation_x_bits=NULL WHERE ordinal=0",
+    "UPDATE shooting_saved_camera SET up_y_bits=NULL WHERE ordinal=0",
+    "UPDATE shooting_scene SET ambient_intensity_class='nan'",
+    "UPDATE shooting_asset SET name=x'01' WHERE ordinal=0",
+    "INSERT INTO shooting_emblem SELECT id+1,document_id,child_id,artifact_id,artifact_kind,standard,subset FROM shooting_emblem"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeTextBytes": 131073,
+    "maxOwnedBytes": 65536,
+    "tinyFileBytes": 1024
+  }
+}

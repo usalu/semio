@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./🟦️.ts",
-    "./routing": "./🧭️routing/🟦️.ts"
+    ".": "./🟦️.ts"
   },
   "scripts": {
     "go-test": "nx run @semio-tech/repo-lib:go-test",
@@ -66,10 +65,31 @@
     "test-cargo-dependency-direction": "nx run @semio-tech/repo-lib:test-cargo-dependency-direction",
     "lint-cargo-dependency-direction": "nx run @semio-tech/repo-lib:lint-cargo-dependency-direction",
     "test-rust-source-direction": "nx run @semio-tech/repo-lib:test-rust-source-direction",
+    "test-rust-source-attributes": "nx run @semio-tech/repo-lib:test-rust-source-attributes",
+    "test-rust-source-scopes": "nx run @semio-tech/repo-lib:test-rust-source-scopes",
+    "test-rust-source-graph": "nx run @semio-tech/repo-lib:test-rust-source-graph",
+    "test-canonical-json": "nx run @semio-tech/repo-lib:test-canonical-json",
+    "test-mutation-authority-scaffolding": "nx run @semio-tech/repo-lib:test-mutation-authority-scaffolding",
+    "test-mutation-authority-inventory": "nx run @semio-tech/repo-lib:test-mutation-authority-inventory",
+    "test-mutation-authority-reachability": "nx run @semio-tech/repo-lib:test-mutation-authority-reachability",
+    "test-mutation-authority-type-origin": "nx run @semio-tech/repo-lib:test-mutation-authority-type-origin",
     "lint-rust-source-direction": "nx run @semio-tech/repo-lib:lint-rust-source-direction",
     "test-native-dependencies": "nx run @semio-tech/repo-lib:test-native-dependencies",
     "test-owned-script-routes": "bun nx run @semio-tech/repo-lib:test-owned-script-routes",
-    "test-command-routing": "nx run @semio-tech/repo-lib:test-command-routing"
+    "test-dependency-policy-bootstrap": "bun nx run @semio-tech/repo-lib:test-dependency-policy-bootstrap",
+    "test-rust-binding": "bun nx run @semio-tech/repo-lib:test-rust-binding",
+    "test-rust-binding-native": "bun nx run @semio-tech/repo-lib:test-rust-binding-native",
+    "test:nx-project-inference": "nx run @semio-tech/repo-lib:test-nx-project-inference",
+    "test:nx-project-inference-revision": "nx run @semio-tech/repo-lib:test-nx-project-inference-revision",
+    "test:nx-project-inference-imports": "nx run @semio-tech/repo-lib:test-nx-project-inference-imports",
+    "test-rust-source-participation": "nx run @semio-tech/repo-lib:test-rust-source-participation",
+    "test-source-services": "nx run @semio-tech/repo-lib:test-source-services",
+    "test-rust-source-roots": "nx run @semio-tech/repo-lib:test-rust-source-roots",
+    "test-rust-fixture-ownership": "nx run @semio-tech/repo-lib:test-rust-fixture-ownership",
+    "test-pool-use-ownership": "nx run @semio-tech/repo-lib:test-pool-use-ownership",
+    "test-deferred-wake-ownership": "nx run @semio-tech/repo-lib:test-deferred-wake-ownership",
+    "test-rust-family-ownership": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership",
+    "test-rust-family-ownership-native": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership-native"
   },
   "nx": {
     "includedScripts": []

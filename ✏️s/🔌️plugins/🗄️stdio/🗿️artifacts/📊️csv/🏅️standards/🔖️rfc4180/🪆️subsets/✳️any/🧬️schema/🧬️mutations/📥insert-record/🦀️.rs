@@ -21,8 +21,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         agg_inverse(&CsvMutation::InsertRecord(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert record", "Datensatz einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

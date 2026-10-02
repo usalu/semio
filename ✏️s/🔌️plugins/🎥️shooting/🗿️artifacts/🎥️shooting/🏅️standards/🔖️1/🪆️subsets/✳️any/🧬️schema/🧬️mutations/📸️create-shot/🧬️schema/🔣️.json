@@ -58,6 +58,7 @@
         "width": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 4294967295,
           "x-semio-ui": {
             "widget": "stepper",
             "role": "value",
@@ -75,6 +76,7 @@
         "height": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 4294967295,
           "x-semio-ui": {
             "widget": "stepper",
             "role": "value",

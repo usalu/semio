@@ -15,70 +15,12 @@
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Vectors
-/// 🏷️ Every committed vector's scenario id, in the catalog's own order — duplicated, not imported,
-/// because the oracle-only build must not link the subject crate. The contract's mutation-coverage
-/// gate keeps this list honest against the catalog. `sets-*` vectors are applied, `keeps-*` no-ops.
-const VECTORS: &[&str] = &[
-    "sets-appearance",
-    "keeps-appearance",
-    "sets-layout",
-    "keeps-layout",
-    "sets-driver",
-    "keeps-driver",
-    "sets-custom-driver",
-    "keeps-custom-driver",
-    "sets-locale",
-    "keeps-locale",
-    "sets-terminology",
-    "keeps-terminology",
-    "sets-theme",
-    "keeps-theme",
-    "sets-custom-theme",
-    "keeps-custom-theme",
-    "sets-keybinding",
-    "keeps-keybinding",
-];
+#[path = "🧫️fixtures/🦀️.rs"]
+mod committed_vectors;
+use committed_vectors::{fixture_text, VECTORS};
 //#endregion 🔖️Vectors
 
 //#region 🔖️Fixtures
-/// 🧫️ Embeds one vector's `(before, mutation, after, outcome)` quintet text, read literally.
-macro_rules! vector {
-    ($leaf:literal, $vector:literal) => {
-        (
-            include_str!(concat!("../../../../../🎚️config/🧬️schema/🧬️mutations/", $leaf, "/🧫️fixtures/", $vector, "/📸️snapshot/⬅️before/🔣️.json")),
-            include_str!(concat!("../../../../../🎚️config/🧬️schema/🧬️mutations/", $leaf, "/🧫️fixtures/", $vector, "/🦠️mutation/🔣️.json")),
-            include_str!(concat!("../../../../../🎚️config/🧬️schema/🧬️mutations/", $leaf, "/🧫️fixtures/", $vector, "/📸️snapshot/➡️after/🔣️.json")),
-            include_str!(concat!("../../../../../🎚️config/🧬️schema/🧬️mutations/", $leaf, "/🧫️fixtures/", $vector, "/🎯️outcome/🔣️.json")),
-        )
-    };
-}
-
-/// 🧫️ The committed `(before, mutation, after, outcome)` specification vector TEXT for one scenario —
-/// this IS the independently handcrafted vector the no-oracle decision rests on, never recomputed.
-fn fixture_text(scenario: &str) -> (&'static str, &'static str, &'static str, &'static str) {
-    match scenario {
-        "sets-appearance" => vector!("🌗️set-appearance", "✏️sets-appearance"),
-        "keeps-appearance" => vector!("🌗️set-appearance", "🟰️keeps-appearance"),
-        "sets-layout" => vector!("📐️set-layout", "✏️sets-layout"),
-        "keeps-layout" => vector!("📐️set-layout", "🟰️keeps-layout"),
-        "sets-driver" => vector!("🕹️set-driver", "✏️sets-driver"),
-        "keeps-driver" => vector!("🕹️set-driver", "🟰️keeps-driver"),
-        "sets-custom-driver" => vector!("🚗️set-custom-driver", "✏️sets-custom-driver"),
-        "keeps-custom-driver" => vector!("🚗️set-custom-driver", "🟰️keeps-custom-driver"),
-        "sets-locale" => vector!("🗣️set-locale", "✏️sets-locale"),
-        "keeps-locale" => vector!("🗣️set-locale", "🟰️keeps-locale"),
-        "sets-terminology" => vector!("📖️set-terminology", "✏️sets-terminology"),
-        "keeps-terminology" => vector!("📖️set-terminology", "🟰️keeps-terminology"),
-        "sets-theme" => vector!("🖼️set-theme", "✏️sets-theme"),
-        "keeps-theme" => vector!("🖼️set-theme", "🟰️keeps-theme"),
-        "sets-custom-theme" => vector!("🎨️set-custom-theme", "✏️sets-custom-theme"),
-        "keeps-custom-theme" => vector!("🎨️set-custom-theme", "🟰️keeps-custom-theme"),
-        "sets-keybinding" => vector!("⌨️set-keybinding-override", "✏️sets-keybinding"),
-        "keeps-keybinding" => vector!("⌨️set-keybinding-override", "🟰️keeps-keybinding"),
-        other => panic!("mutate-os-config-ui-preferences: no specification vector registered for scenario {other:?}"),
-    }
-}
-
 /// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))

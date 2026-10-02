@@ -3,7 +3,7 @@
 //! value is that every locale×terminology combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the mindmap wires app; one field per label makes every locale×terminology combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.
     pub struct WiresLabels {
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";

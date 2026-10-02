@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { readServiceSession, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";

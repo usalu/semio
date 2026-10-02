@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.writer.writer`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config): its mutation vocabulary `WriterMainWindowConfigMutation` over `WriterMainWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-writer-writer-1-any-editor-edit-main-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],
@@ -185,35 +185,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📷️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📷️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a3f38f881238adbebdb4ed89c5612d9a76363adf22d3b7ad564a824adaba42c5",
           "bytes": 180
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📷️set-camera/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📷️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:72c6e0692ac417a66afc6762ee3ccf70d27f94a0f6d0d654e0ed8801ecca0c60",
           "bytes": 93
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📷️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📷️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f56fd95b1ea270964d43ca7ba7fb90aaea056fffd37491845c3158b01504282b",
           "bytes": 183
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📷️set-camera/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📷️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f56fd95b1ea270964d43ca7ba7fb90aaea056fffd37491845c3158b01504282b",
           "bytes": 183
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📷️set-camera/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📷️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

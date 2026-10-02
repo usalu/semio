@@ -268,7 +268,7 @@ pub mod document_io {
     /// the viewer's are THE SAME list, built once here rather than spelled twice, so a format this
     /// artifact stops claiming disappears from both surfaces at once.
     pub fn export_format_options() -> Vec<semio_framework_plugin::ActionArgOption> {
-        EXPORT_FORMATS.iter().map(|row| semio_framework_plugin::ActionArgOption::new(row.id, semio_framework_plugin::LocalizedLabel::native(row.label_en, row.label_de))).collect()
+        EXPORT_FORMATS.iter().map(|row| semio_framework_plugin::ActionArgOption::new(row.id, semio_framework_ui_locale::LocalizedLabel::native(row.label_en, row.label_de))).collect()
     }
 
     /// 🗂️ The file picker's `accept` filter — every importable extension, comma-joined, exactly the

@@ -23,14 +23,8 @@ syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 
-# 🔁️ Dev-only, deliberately cyclic (os-kernel depends on this crate in [dependencies] above the
-# fold; this only reaches back in [dev-dependencies], which Cargo permits and resolves fine since
-# dev-deps never enter the normal build graph) — `DslValue`/`ToValue`/`FromValue`/`ValueError` are
-# the concrete types every derive expansion here hardcodes as `::semio_framework_os_kernel::…`, so
-# exercising the derive's actual generated code (not just its token-stream shape) needs the real
-# runtime crate, not a hand-rolled stand-in.
 [dev-dependencies]
-semio-framework-os-kernel = { path = "../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
 # 🔬 Third-party oracle for the `flatten` integration test only (CLAUDE.md's sanctioned pattern:
 # external libs allowed in dev-dependencies to validate our own implementation) — proves this
 # derive's `#[value(flatten)]` wire shape is byte-identical to `#[serde(flatten)]`'s, never reached
@@ -59,3 +53,7 @@ path = "../../🧪️tests/🐫️variant-field-casing/🦀️.rs"
 [[test]]
 name = "typed_path"
 path = "../../🧪️tests/🧭️typed-path/🦀️.rs"
+
+[[test]]
+name = "neutral_owner"
+path = "../../../🧪️tests/🧩️neutral-owner/🦀️.rs"

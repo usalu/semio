@@ -1,0 +1,12 @@
+{
+ "name":"@semio-tech/energy-model",
+ "$schema":"../../../../../../../node_modules/nx/schemas/project-schema.json",
+ "projectType":"library",
+ "tags":["language:typescript","role:artifact","family:energy"],
+ "namedInputs":{"energyModelSources":["production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{projectRoot}/../../🟦️.ts","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"]},
+ "targets":{
+  "build":{"executor":"nx:run-commands","inputs":["energyModelSources","^production"],"cache":true,"outputs":["{projectRoot}/dist"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts build","forwardAllArgs":true}},
+  "check":{"executor":"nx:run-commands","inputs":["energyModelSources","^production"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts check","forwardAllArgs":true}},
+  "test":{"executor":"nx:run-commands","inputs":["energyModelSources","^production"],"options":{"cwd":"✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}}
+ }
+}

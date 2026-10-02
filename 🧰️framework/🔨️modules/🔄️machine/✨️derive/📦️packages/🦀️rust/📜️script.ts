@@ -1,13 +1,16 @@
 #!/usr/bin/env bun
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪄️ `@semio-tech/machine-derive-rs` router: `bun ./📜️script.ts test`. */
-import { resolveTestLevel, runCargoTestBudgeted } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-framework-machine-derive"], this.repoRoot, rest);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-machine-derive"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 

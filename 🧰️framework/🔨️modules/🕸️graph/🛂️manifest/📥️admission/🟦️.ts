@@ -1,7 +1,6 @@
 /** 📥️ No-follow discovery and parsing for graph manifest inputs. */
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { loadTaxonomy, pathIsExcluded } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export type ManifestAxes = { portModel?: string; directedness?: string };
 export type ManifestPropertyDef = { name: string; kind: "data" | "derived"; valueType?: unknown; expr?: string };
@@ -41,9 +40,12 @@ function admittedDirectory(root: string, area: string): string | undefined {
   return scanRoot;
 }
 
-export function findManifestFiles(root: string, inputAreas: readonly string[]): string[] {
+export function findManifestFiles(root: string, inputAreas: readonly string[], excludedInputPaths: readonly string[]): string[] {
   const out: string[] = [];
-  const taxonomy = loadTaxonomy();
+  function excluded(path: string): boolean {
+    const identity = relative(root, path).replaceAll("\\", "/");
+    return excludedInputPaths.some(prefix => identity === prefix || identity.startsWith(prefix + "/"));
+  }
   function walk(dir: string): void {
     let names: string[];
     try {
@@ -52,9 +54,8 @@ export function findManifestFiles(root: string, inputAreas: readonly string[]): 
       throw new Error(`cannot read admitted graph manifest directory ${relative(root, dir)}`, { cause: error });
     }
     for (const name of names) {
-      if (name === "node_modules" || name === "generated" || name === "🤖️generated" || name === "target" || name.startsWith(".")) continue;
       const path = join(dir, name);
-      if (pathIsExcluded(root, path, taxonomy)) continue;
+      if (excluded(path)) continue;
       const status = inspect(path, root);
       if (!status) throw new Error(`admitted graph manifest input disappeared: ${relative(root, path)}`);
       if (status.isSymbolicLink()) throw new Error(`admitted graph manifest input is a symbolic link: ${relative(root, path)}`);
@@ -63,8 +64,9 @@ export function findManifestFiles(root: string, inputAreas: readonly string[]): 
     }
   }
   for (const area of inputAreas) {
+    if (excluded(resolve(root, area))) continue;
     const scanRoot = admittedDirectory(root, area);
-    if (scanRoot && !pathIsExcluded(root, scanRoot, taxonomy)) walk(scanRoot);
+    if (scanRoot) walk(scanRoot);
   }
   return out.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
 }
@@ -73,9 +75,10 @@ export function readGraphManifestDocuments(
   root: string,
   log = true,
   inputAreas: readonly string[],
+  excludedInputPaths: readonly string[],
   read: (path: string) => string = (path) => readFileSync(path, "utf8"),
 ): readonly ManifestDocument[] {
-  const files = findManifestFiles(root, inputAreas);
+  const files = findManifestFiles(root, inputAreas, excludedInputPaths);
   const docs: ManifestDocument[] = [];
   for (const path of files) {
     let doc: ManifestDocument;

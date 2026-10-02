@@ -1,0 +1,18 @@
+# Layout Owned Snapshot Preflight
+
+Read-only prerequisite inventory for the assigned next parent owner. No Layout implementation or runtime result is claimed. Office controls remain the active execution lane.
+
+Canonical Rust owner: ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs. Its fourteen persisted fields are schema, name, grid, paragraph_styles, character_styles, stories, links, parent_pages, spreads, pages, optional print_target, optional data_fields_json, optional background_drawing and optional referenced_model. The intrinsic data_fields_json String remains literal text; its field name does not license parsing the entire snapshot as JSON.
+
+The concrete domain includes GridSettings; ParagraphStyle; CharacterStyle with optional Binary64 scalars and optional four-component Binary32 color; TextStory and ordered TextStyleRun with platform-width start/end; ImageLink; parent and actual pages; spreads; page margins/columns/guides; layers and ordered literal object identities; optional page overrides; and the three Frame variants Rect/Text/Image. Rect has optional Binary32 fill/stroke; Text adds literal story/thread identities, column count, inset rectangle and wrap mode; Image adds literal link identity. Bounds/rectangles/margins/grid/style metrics require exact IEEE64 words. All literal identity strings must survive empty, duplicate or unresolved references permitted by their actual typed owner. Structural ownership gets surrogate foreign keys; intrinsic author identities remain literal strings.
+
+Current Source schema is not yet a full canonical mirror: ImageLink lacks Rust artifact_kind and artifact_ref fields. TextStyleRun start/end are unsafe JavaScript numbers for full platform-width Rust values. Floating fields/colors use numeric values and cannot preserve every signaling-NaN word. Its backgroundDrawing declaration introduces a handle/content wrapper and unknown-shaped SemioDrawing content while the Rust owner uses the actual ArtifactChild identity type; the persisted ownership boundary must be inspected before retaining that wrapper. These are source observations, not failing test results.
+
+The Rust owner currently uses derived ordinary record Text/Pack and has no SQLite owner capability. Full controlled metadata/input/output can use the verified record producer pipeline after actual baseline refusal, but requires explicit domain row admission and correct child/link ownership. A schema-first relational contract, neutral field/fidelity fixtures, strict public Source consumer, and actual native erased/declaration laws are still required.
+
+
+## Exact Inline Drawing Authority
+
+Current physical readback confirms `LayoutDrawingChild { handle: ArtifactChild<SemioDrawingSnapshot>, content: SemioDrawingSnapshot }`. Its five handle strings alone are not complete snapshot coverage: Layout owns a full inline Drawing document too. The existing manual DslField also still uses an ordinary bare record factory and an uncontrolled intrinsic content conversion; both genuine metadata/output/input bindings must be authored and exercised after the owning baseline.
+
+Layout's individually declared own table graph must cover its 14 root fields and all frame, text, style, margin, column, layer, page, spread and override collections. Its inline Drawing component must use that owner's complete existing relational schema and a borrowed component decoder, with explicit containment/handle linkage. Cloning a whole child SqliteDatabase merely to filter parent tables is not an accepted design. No Layout provider or capability has been mounted, and no complete native result is claimed.

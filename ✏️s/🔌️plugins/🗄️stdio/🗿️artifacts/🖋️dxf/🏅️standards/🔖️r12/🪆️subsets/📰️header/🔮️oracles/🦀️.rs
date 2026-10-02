@@ -18,6 +18,10 @@
 
 use semio_repo_test_host::Json;
 
+#[cfg(feature = "oracles")]
+#[path = "../../../../../../../🔮️oracles/🖊️drawing/🧰️support/🦀️.rs"]
+mod reference_support;
+
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
@@ -45,14 +49,6 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
     imp::oracle_apply_mutation_inverse(input, spec)
 }
 
-/// 📄️ Independent semantic projection of a DXF R12 document, read back by `dxf` itself (never by
-/// this subset's own codec) — used to compare the oracle's and the subject's results under the
-/// `semantic-dxf-r12-v1` comparison profile declared in `./🔣️.json`.
-#[cfg(feature = "oracles")]
-pub fn project_dxf_r12(bytes: &[u8]) -> Result<Json, String> {
-    imp::project_dxf_r12(bytes)
-}
-
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
@@ -66,10 +62,6 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
-#[cfg(not(feature = "oracles"))]
-pub fn project_dxf_r12(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 /// 🔒️ Every `dxf`-linked helper lives inside this ONE `cfg`-gated module, so the non-`oracles` build
@@ -78,17 +70,13 @@ pub fn project_dxf_r12(_bytes: &[u8]) -> Result<Json, String> {
 #[cfg(feature = "oracles")]
 mod imp {
     use super::Json;
+    use super::reference_support::{load, point_json, obj};
     use dxf::entities::{Arc as DxfArc, Circle, Entity, EntityType, Insert, Line, Solid, Text};
     use dxf::tables::{Layer, LineType, Style};
     use dxf::enums::AcadVersion;
     use dxf::{Block, Color, Drawing, Point};
 
     //#region 🔖️LoadSave
-    /// 📥️ `dxf` fully parses the ASCII group-code stream into its own typed `Drawing` — never a
-    /// byte-level read of this subset's own model.
-    fn load(bytes: &[u8]) -> Result<Drawing, String> {
-        Drawing::load(&mut &bytes[..]).map_err(|error| format!("dxf oracle: load failed: {error:?}"))
-    }
 
     /// 📤️ Re-serializes from `dxf`'s own typed model alone.
     fn save(drawing: &Drawing) -> Result<Vec<u8>, String> {
@@ -122,12 +110,6 @@ mod imp {
     }
     fn point_from(v: &Json, key: &str) -> Point {
         point_of(v.get(key).unwrap_or(&Json::Null))
-    }
-    fn point_json(p: &Point) -> Json {
-        Json::Array(vec![Json::Number(p.x), Json::Number(p.y), Json::Number(p.z)])
-    }
-    fn obj(entries: Vec<(&str, Json)>) -> Json {
-        Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect())
     }
     fn member(v: &Json, key: &str) -> Result<Json, String> {
         v.get(key).cloned().ok_or_else(|| format!("dxf oracle: params carry no `{key}`"))
@@ -180,29 +162,7 @@ mod imp {
         Ok(obj(vec![(tag, obj(fields))]))
     }
 
-    /// 📄️ `dxf::entities::Entity` → the flat `semantic-dxf-r12-v1` projection shape (`entityKind` plus its fields), and
-    /// recursively for a block's nested entity list.
-    fn entity_to_json(entity: &Entity) -> Result<Json, String> {
-        let (kind, mut fields): (&str, Vec<(String, Json)>) = match &entity.specific {
-            EntityType::Line(l) => ("line", vec![("start".to_string(), point_json(&l.p1)), ("end".to_string(), point_json(&l.p2))]),
-            EntityType::Circle(c) => ("circle", vec![("center".to_string(), point_json(&c.center)), ("radius".to_string(), Json::Number(c.radius))]),
-            EntityType::Arc(a) => {
-                ("arc", vec![("center".to_string(), point_json(&a.center)), ("radius".to_string(), Json::Number(a.radius)), ("startAngle".to_string(), Json::Number(a.start_angle)), ("endAngle".to_string(), Json::Number(a.end_angle))])
-            }
-            EntityType::Text(t) => ("text", vec![("position".to_string(), point_json(&t.location)), ("height".to_string(), Json::Number(t.text_height)), ("value".to_string(), Json::String(t.value.clone()))]),
-            EntityType::Solid(s) => ("solid", vec![("points".to_string(), Json::Array(vec![point_json(&s.first_corner), point_json(&s.second_corner), point_json(&s.third_corner), point_json(&s.fourth_corner)]))]),
-            EntityType::Insert(i) => ("insert", vec![("blockName".to_string(), Json::String(i.name.clone())), ("position".to_string(), point_json(&i.location))]),
-            other => return Err(format!("dxf oracle: cannot capture inverse value for unsupported entity kind {other:?}")),
-        };
-        fields.push(("entityKind".to_string(), Json::String(kind.to_string())));
-        fields.push(("layer".to_string(), Json::String(entity.common.layer.clone())));
-        Ok(Json::Object(fields))
-    }
 
-    /// 📄️ Semantic projection of one entity, for `project_dxf_r12`.
-    fn entity_projection(entity: &Entity) -> Json {
-        entity_to_json(entity).unwrap_or_else(|_| obj(vec![("entityKind", Json::String("other".to_string())), ("layer", Json::String(entity.common.layer.clone()))]))
-    }
     //#endregion 🔖️EntityCodec
 
     //#region 🔖️TableCodecs
@@ -212,18 +172,12 @@ mod imp {
     fn layer_wire(layer: &Layer) -> Json {
         obj(vec![("name", Json::String(layer.name.clone())), ("color", Json::Number(layer.color.index().unwrap_or(7) as f64)), ("linetype", Json::String(layer.line_type_name.clone())), ("flags", Json::Number(0.0))])
     }
-    fn layer_to_json(layer: &Layer) -> Json {
-        obj(vec![("name", Json::String(layer.name.clone())), ("color", Json::Number(layer.color.index().unwrap_or(7) as f64)), ("linetype", Json::String(layer.line_type_name.clone()))])
-    }
 
     fn build_style(spec: &Json) -> Style {
         Style { name: spec.str("name"), primary_font_file_name: spec.str("fontName"), text_height: 2.5, ..Default::default() }
     }
     fn style_wire(style: &Style) -> Json {
         obj(vec![("name", Json::String(style.name.clone())), ("flags", Json::Number(0.0)), ("fontName", Json::String(style.primary_font_file_name.clone()))])
-    }
-    fn style_to_json(style: &Style) -> Json {
-        obj(vec![("name", Json::String(style.name.clone())), ("font", Json::String(style.primary_font_file_name.clone()))])
     }
 
     fn build_linetype(spec: &Json) -> LineType {
@@ -232,24 +186,14 @@ mod imp {
     fn linetype_wire(linetype: &LineType) -> Json {
         obj(vec![("name", Json::String(linetype.name.clone())), ("flags", Json::Number(0.0)), ("description", Json::String(linetype.description.clone()))])
     }
-    fn linetype_to_json(linetype: &LineType) -> Json {
-        obj(vec![("name", Json::String(linetype.name.clone())), ("description", Json::String(linetype.description.clone()))])
-    }
 
     fn build_block(spec: &Json) -> Result<Block, String> {
         let entities = spec.array("entities").iter().map(build_entity).collect::<Result<Vec<_>, String>>()?;
         Ok(Block { name: spec.str("name"), layer: "0".to_string(), base_point: point_from(spec, "basePoint"), entities, ..Default::default() })
     }
-    fn block_to_json(block: &Block) -> Result<Json, String> {
-        let entities = block.entities.iter().map(entity_to_json).collect::<Result<Vec<_>, String>>()?;
-        Ok(obj(vec![("name", Json::String(block.name.clone())), ("basePoint", point_json(&block.base_point)), ("entities", Json::Array(entities))]))
-    }
     fn block_wire(block: &Block) -> Result<Json, String> {
         let entities = block.entities.iter().map(entity_wire).collect::<Result<Vec<_>, String>>()?;
         Ok(obj(vec![("name", Json::String(block.name.clone())), ("basePoint", point_json(&block.base_point)), ("entities", Json::Array(entities))]))
-    }
-    fn block_projection(block: &Block) -> Json {
-        block_to_json(block).unwrap_or_else(|_| obj(vec![("name", Json::String(block.name.clone())), ("basePoint", point_json(&block.base_point)), ("entities", Json::Array(vec![]))]))
     }
     //#endregion 🔖️TableCodecs
 
@@ -605,25 +549,6 @@ mod imp {
         save(&drawing)
     }
 
-    /// 📄️ Semantic projection of a DXF R12 document. Handles, owner pointers and any R13+ subclass
-    /// marker a writer still emits are excluded: not normative.
-    pub fn project_dxf_r12(bytes: &[u8]) -> Result<Json, String> {
-        let drawing = load(bytes)?;
-        let layers: Vec<Json> = drawing.layers().map(layer_to_json).collect();
-        let styles: Vec<Json> = drawing.styles().map(style_to_json).collect();
-        let linetypes: Vec<Json> = drawing.line_types().map(linetype_to_json).collect();
-        let blocks: Vec<Json> = drawing.blocks().map(block_projection).collect();
-        let entities: Vec<Json> = drawing.entities().map(entity_projection).collect();
-        Ok(obj(vec![
-            ("acadVersion", Json::String(format!("{:?}", drawing.header.version))),
-            ("insertionBase", point_json(&drawing.header.insertion_base)),
-            ("layers", Json::Array(layers)),
-            ("styles", Json::Array(styles)),
-            ("linetypes", Json::Array(linetypes)),
-            ("blocks", Json::Array(blocks)),
-            ("entities", Json::Array(entities)),
-        ]))
-    }
     //#endregion 🔖️Entry
 }
 

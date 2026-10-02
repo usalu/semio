@@ -25,7 +25,7 @@ fn install_fixture_text_editor_focus(window_id: &str, window_generation: u64, no
 #[test]
 fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no_credit() {
     let mut queue = UiDocumentCloseQueue::default();
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     for index in 0..ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS {
         let window_id = SurfaceId::try_from(format!("close-{index}").as_str()).unwrap();
         let token = engine.try_admit_surface(window_id.as_ref()).unwrap();
@@ -60,7 +60,7 @@ fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_sa
     for (fuel, deadline, clock, cancelled) in [(0, u64::MAX, (|| Some(0)) as fn() -> Option<u64>, false), (1, 1, (|| Some(2)) as fn() -> Option<u64>, false), (1, u64::MAX, (|| Some(0)) as fn() -> Option<u64>, true)] {
         let mut document = ingress_opportunity_document();
         let header = document.header().unwrap();
-        let mut engine = ui_wgpu::wgpu::Ui::new();
+        let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
         let mut cursor = UiDocumentFrameCursor::default();
         let mut sequence = 0;
         let cancel = semio_framework_job::CancelToken::root_now();
@@ -85,7 +85,7 @@ fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_sa
 #[test]
 fn retained_document_page_with_a_live_wrong_generation_remains_a_terminal_fault() {
     let mut document = ingress_opportunity_document();
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     let mut cursor = UiDocumentFrameCursor::default();
     let mut sequence = 0;
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -1322,7 +1322,7 @@ fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier(
     });
     install_fixture_text_editor_focus(window, target.window_generation, node, &target.host_id);
     let mut runtime = crate::AppInteractionState {
-        shell: crate::shell::ShellState::new(Vec::new(), "text-editor-runtime-space".into()),
+        shell: crate::shell::ShellState::new(Vec::new(), "text-editor-runtime-space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: Default::default(),
         theme: Default::default(),
         theme_dark: false,

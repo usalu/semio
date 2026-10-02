@@ -107,6 +107,23 @@ pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> 
 pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
     mutation.inverse(snapshot)
 }
+
+/// 🔢️ A history label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
+pub fn note_label_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let en = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded }).trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 🎚️ A document-setting history label from the setting's `(en, de)` name: "Change grid spacing to 20" / "Rasterabstand auf
+/// 20 ändern" for a value, "Reset grid spacing" / "Rasterabstand zurücksetzen" for `None` (the default applies again).
+pub fn note_setting_label(setting: (&str, &str), value: Option<(String, String)>) -> semio_framework_ui_locale::LocalizedLabel {
+    match value {
+        Some((en, de)) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {} to {en}", setting.0), &format!("{} auf {de} ändern", setting.1)),
+        None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Reset {}", setting.0), &format!("{} zurücksetzen", setting.1)),
+    }
+}
 //#endregion 🔖️Helpers
 
 //#region 🔖️Kinds

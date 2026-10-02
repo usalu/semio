@@ -1,3 +1,13 @@
-(* ebnf stdio.gif snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.gif', newline ;
+document = "semio stdio.gif.89a.dsl v1", snapshot ;
+snapshot = "schema=", text, "width=", uint, "height=", uint, "background-color-index=", uint, "pixel-aspect-ratio=", uint, [ "loop-count=", uint ], [ global_palette ], "frames=[", { frame }, "]", "comments=[", { text }, "]", "app-extensions=[", { application }, "]" ;
+global_palette = "gct{", palette, "}" ;
+local_palette = "lct{", palette, "}" ;
+palette = "sorted=", boolean, "colors=[", { color }, "]" ;
+color = "{r=", uint, "g=", uint, "b=", uint, "}" ;
+frame = "{left=", uint, "top=", uint, "width=", uint, "height=", uint, "interlace=", boolean, "indices=", text, "delay-cs=", uint, "disposal=", disposal, [ "transparent-index=", uint ], "user-input=", boolean, [ local_palette ], [ plain_text ], "}" ;
+plain_text = "plain-text{", "left=", uint, "top=", uint, "width=", uint, "height=", uint, "cell-width=", uint, "cell-height=", uint, "fg-color-index=", uint, "bg-color-index=", uint, "text=", text, "}" ;
+application = "{identifier=", uint, ",", uint, ",", uint, ",", uint, ",", uint, ",", uint, ",", uint, ",", uint, "auth-code=", uint, ",", uint, ",", uint, "data=", text, "}" ;
+disposal = "unspecified" | "do-not-dispose" | "restore-to-background" | "restore-to-previous" ;
+uint = digit, { digit } ;
+boolean = "true" | "false" ;
+text = quoted_text | identifier ;

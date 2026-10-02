@@ -4,7 +4,7 @@
 //! dispatches the independent Python reference `🐍️.py` beside this file in the ORACLE role, and this
 //! adapter registers the SUBJECT half — this subset's own codec and mutation vocabulary. Every law the
 //! subject claims is asserted inside its handlers through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module.
 //!
 //! ⚠️ What this case can and cannot prove is set by the vectors it has. Ten of the eleven pin a rejection
 //! or a no-op branch, so the forward assertion is the committed `🎯️outcome`'s status AND code, not a
@@ -68,7 +68,7 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::snapshot::text::{parse_forms_dsl, print_forms_dsl};
     use semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome, decode_form_mutation_json, decode_form_snapshot_json, encode_form_snapshot_json, inverse_form_mutation_steps, seed_form_scene_json, FormMutation};
     use semio_s_artifact_forms_forms::FormsSnapshot;

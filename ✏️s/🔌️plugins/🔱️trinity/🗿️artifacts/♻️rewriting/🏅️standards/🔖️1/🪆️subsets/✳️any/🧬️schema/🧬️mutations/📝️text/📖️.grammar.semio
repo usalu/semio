@@ -3,7 +3,7 @@ grammar rewriting.mutations
 extension rewriting
 start line
 
-line = edit-before-fixture / edit-lhs / edit-rhs / change-parameter-binding / remove-parameter-binding / change-rule-layout-point / remove-rule-layout-point / drag-working-nodes / patch-working-nodes / drag-rule-nodes / set-rule-layout-points
+line = edit-before-fixture / edit-lhs / edit-rhs / change-parameter-binding / remove-parameter-binding / change-rule-layout-point / remove-rule-layout-point / drag-working-nodes / patch-working-nodes / drag-rule-nodes / set-rule-layout-points / delete-working-nodes / connect-working-ports / disconnect-working-edges
 
 edit-before-fixture = "edit-before-fixture" SP text
 edit-lhs = "edit-lhs" SP text
@@ -16,6 +16,9 @@ drag-working-nodes = "drag-working-nodes" SP targets SP number SP number
 patch-working-nodes = "patch-working-nodes" SP targets SP key SP value
 drag-rule-nodes = "drag-rule-nodes" SP targets SP number SP number
 set-rule-layout-points = "set-rule-layout-points" SP placement-table SP targets
+delete-working-nodes = "delete-working-nodes" SP targets
+connect-working-ports = "connect-working-ports" SP key SP key SP key
+disconnect-working-edges = "disconnect-working-edges" SP targets
 
 point-block = "{" NL number SP number "}"
 placement-table = "{" *( NL key SP number SP number ) "}"

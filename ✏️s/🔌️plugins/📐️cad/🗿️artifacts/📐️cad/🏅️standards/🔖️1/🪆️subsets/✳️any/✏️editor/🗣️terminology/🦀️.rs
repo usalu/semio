@@ -3,10 +3,11 @@
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
 use crate::editor::cad::TYPOLOGY_CATALOG;
-use semio_framework_plugin::{Locale, ViewModel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Terminology
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
     pub struct CadLabels {
         // entity nouns — remapped under the "reuse" terminology

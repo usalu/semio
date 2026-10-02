@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/schema-validator-rs",
+  "private": true,
+  "scripts": {
+    "test": "nx run @semio-tech/schema-validator-rs:test"
+  }
+}

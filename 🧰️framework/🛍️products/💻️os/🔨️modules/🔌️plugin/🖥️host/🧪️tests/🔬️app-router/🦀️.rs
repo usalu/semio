@@ -3,7 +3,7 @@ use super::*;
 async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
     semio_framework::ArtifactKindSpec {
         id: id.into(),
-        label: semio_framework::LocalizedLabel::data(id),
+        label: semio_framework_ui_locale::LocalizedLabel::data(id),
         source_format: id.into(),
         component_kind: "document".into(),
         dimension: "data".into(),
@@ -22,15 +22,15 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
         id: id.into(),
         role,
         dialect,
-        label: ui_wgpu::wgpu::LocalizedLabel::data(id),
+        label: semio_framework_ui_locale::LocalizedLabel::data(id),
         breadcrumb: vec![id.into()],
         icon_id: None,
         controller_id: format!("{id}-play"),
-        modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "edit".into(), label: ui_wgpu::wgpu::LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+        modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "edit".into(), label: semio_framework_ui_locale::LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".into(),
         window_kinds: semio_framework::WindowKinds::one(semio_framework::WindowKindDefinition {
             id: id.into(),
-            label: ui_wgpu::wgpu::LocalizedLabel::data(id),
+            label: semio_framework_ui_locale::LocalizedLabel::data(id),
             body_key: id.into(),
             surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
             icon_id: "app-window".into(),

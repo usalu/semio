@@ -24,9 +24,17 @@ use crate::editor::wfc3d::modes::edit::tools::fill::{self, Wfc3dFillTickPayload}
 use crate::editor::wfc3d::transient::{assigned_tile, Wfc3dTransient};
 use semio_framework_plugin::ToolRunView;
 use crate::schema::snapshot::{Slot3d, Tile, TileMedia3d, Wfc3dSnapshot};
-use semio_framework_plugin::{
-    scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, World3dScene, world3d_camera_projection_json, world3d_selection_json, WorldProjectionConfig,
-};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::World3dScene;
+use semio_framework_plugin::world3d_camera_projection_json;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::WorldProjectionConfig;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 

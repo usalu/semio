@@ -1,0 +1,15 @@
+{
+  "schema": "semio.framework.process.execution-budget/v1",
+  "cases": [
+    { "name": "default", "environment": {}, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 0 } },
+    { "name": "build", "environment": { "SEMIO_BUILD_BUDGET_MS": "15000" }, "expected": { "build": 15000, "command": 0, "orchestrator": 0, "daemon": 0 } },
+    { "name": "command-exponent", "environment": { "SEMIO_CMD_BUDGET_MS": "12e2" }, "expected": { "build": 0, "command": 1200, "orchestrator": 0, "daemon": 0 } },
+    { "name": "explicit-zero-and-daemon", "environment": { "SEMIO_ORCHESTRATOR_BUDGET_MS": "0", "SEMIO_DAEMON_BUDGET_MS": "45000" }, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 45000 } },
+    { "name": "blank-keeps-zero", "environment": { "SEMIO_BUILD_BUDGET_MS": " " }, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 0 } },
+    { "name": "negative", "environment": { "SEMIO_BUILD_BUDGET_MS": "-1" }, "expected": null },
+    { "name": "fractional", "environment": { "SEMIO_CMD_BUDGET_MS": "1.5" }, "expected": null },
+    { "name": "infinite", "environment": { "SEMIO_ORCHESTRATOR_BUDGET_MS": "Infinity" }, "expected": null },
+    { "name": "text", "environment": { "SEMIO_DAEMON_BUDGET_MS": "not-number" }, "expected": null },
+    { "name": "unsafe-integer", "environment": { "SEMIO_BUILD_BUDGET_MS": "9007199254740992" }, "expected": null }
+  ]
+}

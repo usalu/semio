@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.reasoning.wires` is a semio-NATIVE argument board whose nodes live inside an untyped `DslValue` tree, so no oracle is registered and the evidence rests on the committed per-kind vectors — four refusals and six no-ops — plus the inverse law (see noOracleDecisions).",
   "oracles": [
@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes s.reasoning.wires's .wires.dsl.semio/.wires.pack.semio carriers — a semio-native argument board whose body is an untyped value tree edited one scalar key at a time. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-wires-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/move/resize/change/edit/set/connect/disconnect verb entries. It imports nothing from the Rust it judges and transliterates none of it — every no-op guard reads with .get(field, default) rather than assuming a key is present, which the committed move-node (no y key) and set-node-root (no root key) vectors are built to require. All ten kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twenty passed (a first standalone run caught a real bug — a rejected mutation returning no document instead of the unchanged one — fixed before registration).",
+      "rationale": "🐍️ No third-party library reads or writes s.reasoning.wires's .wires.dsl.semio/.wires.pack.semio carriers — a semio-native argument board whose body is an untyped value tree edited one scalar key at a time. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-wires-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/move/resize/change/edit/set/connect/disconnect verb entries. It imports nothing from the Rust it judges and transliterates none of it — every no-op guard reads with .get(field, default) rather than assuming a key is present, which the committed move-node (no y key) and set-node-root (no root key) vectors are built to require. All twelve kinds' committed vectors are reproduced (the relative move-nodes and its one-row set-node-positions inverse report their no-op branches like the single-field kinds).",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -41,7 +41,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 10,
+          "vectors": 12,
           "capabilitiesCovered": [
             "wires-1-mutate"
           ]
@@ -166,6 +166,28 @@
               "directoryName": "🧪️reports"
             }
           ]
+        },
+        {
+          "mutationId": "move-nodes",
+          "sourceMutationDirectoryName": "🚚️move-nodes",
+          "mutationDirectoryName": "🚚️move-nodes",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-the-drag-offset-is-zero",
+              "directoryName": "🧪️reports"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-node-positions",
+          "sourceMutationDirectoryName": "📍️set-node-positions",
+          "mutationDirectoryName": "📍️set-node-positions",
+          "scenarios": [
+            {
+              "id": "reports-a-no-op-when-every-node-already-sits-there",
+              "directoryName": "🧪️reports"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -178,7 +200,9 @@
         "edit-node-text",
         "set-node-root",
         "connect-nodes",
-        "disconnect-nodes"
+        "disconnect-nodes",
+        "move-nodes",
+        "set-node-positions"
       ]
     }
   ],
@@ -396,15 +420,51 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ]
+        },
+        {
+          "id": "move-nodes",
+          "capability": "wires-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-nodes",
+            "bridgeVersion": 1,
+            "variant": "MoveNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wires-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-node-positions",
+          "capability": "wires-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-positions",
+            "bridgeVersion": 1,
+            "variant": "SetNodePositions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "wires-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
         }
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    }
-  ]
+  "oracleHostPackages": []
 }

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "s.draw.drawing@1/🔀️transform -- Geometric placement and shape-processing -- transform, boolean operation, trace params. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../../✳️any/🔮️oracles/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🔮️oracles contribution repo-wide, so none of that needs restating here). The `mutate-drawing-1` cross-language differential test still exhaustively claims the original `drawing-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
   "oracles": [],
@@ -190,7 +190,7 @@
               "node-order-preserved-except-where-the-mutation-changes-it"
             ]
           },
-          "notes": "The recomputed path is witnessed by geometry diff only — quick-xml never sees the operation name, only its geometric consequence via this repository's own semio_s_2d boolean kernel."
+          "notes": "The recomputed path is witnessed by geometry diff only — quick-xml never sees the operation name, only its geometric consequence via this repository's own semio_framework_2d boolean kernel."
         },
         {
           "id": "update-layer-trace-params",
@@ -224,7 +224,7 @@
               "node-order-preserved-except-where-the-mutation-changes-it"
             ]
           },
-          "notes": "The retraced path is witnessed by geometry diff only — quick-xml never sees the threshold/epsilon parameters, only their geometric consequence via this repository's own semio_s_2d trace kernel."
+          "notes": "The retraced path is witnessed by geometry diff only — quick-xml never sees the threshold/epsilon parameters, only their geometric consequence via this repository's own semio_framework_2d trace kernel."
         },
         {
           "id": "update-path-geometry",

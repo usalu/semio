@@ -20,7 +20,7 @@ fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 /// 🧭️ The unmounted route commits a one-shot as the relative `move-selection` leaf — never a per-step amend — refreshes
@@ -125,8 +125,40 @@ async fn gumball_flags_are_model_window_config() {
     let results_view = view(results_window::FEM3D_WINDOW_RESULTS);
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &results_view).is_err());
     assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "mirror".into(), pressed: None }, &cfg, &model_view).is_err());
-    assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &ViewModel::default()).is_err());
+    assert!(set_transform_gumball_flag::handle_window(&set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: None }, &cfg, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err());
     let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) })).await;
     close(&mut app);
+}
+
+/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`): every
+/// verb dispatch the host owes for a scripted gesture, decoded from its wire args exactly as the host sends them (the
+/// targets swapped for one fem3d node), publishes exactly the fixture's guest edits and moves the node by its offset — a
+/// streamed gesture is ONE edit, an aborted one leaves zero trace, a gesture that never moved publishes nothing.
+#[semio_framework_async_macros::async_test]
+async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json"))).expect("the protocol fixture parses");
+    let cases = fixture["cases"].as_array().expect("cases");
+    let mut consumed = 0;
+    for case in cases.iter().filter(|case| case.get("guest").is_some()) {
+        let name = case["name"].as_str().expect("name");
+        let mut app = fem3d_demo_app().await;
+        let before = node_position(&app, "n20_l1");
+        let mut edits = 0;
+        for dispatch in case["steps"].as_array().expect("steps").iter().map(|step| &step["dispatch"]).filter(|dispatch| !dispatch.is_null()) {
+            let mut args = dispatch["args"].clone();
+            args["ids"] = serde_json::json!(["n20_l1"]);
+            let args: dsl::DslValue = dsl::json::from_json_str(&args.to_string()).expect("wire args parse");
+            let action = dispatch["action"].as_str().expect("action");
+            let command = <EditorApp<Fem3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action(action, Some(&args)).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
+            edits += dispatch_rows(&mut app, command).await.len();
+        }
+        let after = node_position(&app, "n20_l1");
+        let offset: Vec<f64> = case["guest"]["offset"].as_array().expect("offset").iter().map(|value| value.as_f64().expect("number")).collect();
+        assert_eq!(edits as u64, case["guest"]["edits"].as_u64().expect("edits"), "{name}: the published edits");
+        assert_eq!([after[0] - before[0], after[1] - before[1], after[2] - before[2]], [offset[0], offset[1], offset[2]], "{name}: the node's offset");
+        close(&mut app);
+        consumed += 1;
+    }
+    assert!(consumed >= 7, "every guest case of the protocol fixture is consumed: {consumed}");
 }

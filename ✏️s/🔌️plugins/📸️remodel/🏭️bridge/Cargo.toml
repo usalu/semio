@@ -14,6 +14,7 @@ name = "semio-remodel-mutation-bridge"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-remodel-remodeling = { path = "../🗿️artifacts/📸️remodeling/📦️packages/🦀️rust" }

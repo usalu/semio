@@ -10,7 +10,8 @@
 //! `📸️snapshot/🦀️.rs` (now removed) once this subset was mounted and compiled — verified
 //! byte-exact with `wc -c`/`xxd`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "sheet";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

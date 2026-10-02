@@ -59,6 +59,8 @@ pub(crate) mod context {
     pub fn process3d_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../..");
     
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     
@@ -194,7 +196,7 @@ pub(crate) mod context {
     }
     
     pub fn settled_dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let mut view_state = ViewModel::default();
+        let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         view_state.active_utility_id = Some(active_utility_id.into());
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
         let mut result = semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &action_meta)).expect("dispatch");
@@ -237,7 +239,7 @@ pub(crate) mod context {
     /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
     /// now fails with `BuiltChildren requires retained page transport`.
     pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::default())
+        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
     }
 
     /// 🪟️ Renders one body against a host view state — the seam every tree-window law drives, since
@@ -256,7 +258,7 @@ pub(crate) mod context {
         ViewModel {
             window_id: Some(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into()),
             window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
     
@@ -893,7 +895,7 @@ async fn world_context_menu_exposes_process_commands() {
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
     assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
     assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
@@ -975,9 +977,9 @@ async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_by_default_and_in_german() {
-    let english = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::En, ..Default::default() };
+    let english = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::En, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert_eq!(process3d_labels(&english).stock.as_str(), "Stock");
-    let german = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let german = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     assert_eq!(process3d_labels(&german).stock.as_str(), "Rohteil");
 }
 

@@ -1,0 +1,10 @@
+{
+  "mutation": "setNodePositions",
+  "positions": [
+    {
+      "id": "node-a",
+      "x": 120.0,
+      "y": 40.0
+    }
+  ]
+}

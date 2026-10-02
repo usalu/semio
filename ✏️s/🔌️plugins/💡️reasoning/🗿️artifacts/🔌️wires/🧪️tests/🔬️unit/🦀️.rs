@@ -30,12 +30,11 @@ async fn empty_snapshot_has_empty_fixtures() {
 /// `SemioGraphEdge` shape has no native slot for (`radius`/`root`/`edgeKind`/...).
 #[semio_framework_async_macros::async_test]
 async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
-    let node = dsl::to_dsl_value(&dsl::json!({
+    let node = semio_framework_value::ToValue::to_value(&dsl::json!({
         "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 3.0, "y": 4.0,
         "radius": 24.0, "text": "Alpha", "root": true, "handles": []
-    }))
-    .unwrap();
-    let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+    }));
+    let edge = semio_framework_value::ToValue::to_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" }));
     let content = wires_content_snapshot_from_scene(std::slice::from_ref(&node), std::slice::from_ref(&edge));
     assert_eq!(content.nodes.len(), 1);
     assert_eq!(content.nodes[0].id.value, "node-1");
@@ -48,7 +47,7 @@ async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn content_child_handle_is_content_addressed_and_deterministic() {
-    let node = dsl::to_dsl_value(&dsl::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
+    let node = semio_framework_value::ToValue::to_value(&dsl::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] }));
     let handle_a = wires_content_child_handle(std::slice::from_ref(&node), &[]);
     let handle_b = wires_content_child_handle(std::slice::from_ref(&node), &[]);
     assert_eq!(handle_a.child_id, handle_b.child_id, "same content must mint the same handle");

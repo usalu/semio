@@ -21,8 +21,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemovePartNu
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove part-number input \"{}\"", self.key), &format!("Artikelnummer-Eingabe \"{}\" entfernen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

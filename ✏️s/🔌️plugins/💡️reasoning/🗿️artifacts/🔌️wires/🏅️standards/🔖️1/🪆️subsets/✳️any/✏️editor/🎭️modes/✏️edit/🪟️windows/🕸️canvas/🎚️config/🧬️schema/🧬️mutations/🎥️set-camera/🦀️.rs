@@ -22,8 +22,8 @@ impl protocol::MutationKind<WiresCanvasWindowConfig, WiresCanvasWindowConfigMuta
     fn inverse(&self, base: &WiresCanvasWindowConfig) -> Vec<WiresCanvasWindowConfigMutation> {
         (base.camera != self.camera).then(|| WiresCanvasWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })).into_iter().collect()
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Camera", "Kamera setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

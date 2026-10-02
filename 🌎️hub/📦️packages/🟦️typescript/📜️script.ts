@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
  * Bun integration-test harness that boots the REAL `os-hub` binary and drives it with two
  * independent clients to prove the hub's collaboration contract end-to-end (ticket
@@ -8,7 +9,7 @@
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { type TestLevel } from "../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
-import { resolveTestLevel, runBunxStatus, runCargo, runVitest, runTestBudgeted } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -36,7 +37,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "build-freshness") {
       if (segments.length !== 1) throw new Error("Expected test build-freshness");
-      await runTestBudgeted(process.execPath, ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🏷️hub-freshness/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 30_000 });
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🏷️hub-freshness/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 30_000 });
       return;
     }
     const { rest } = resolveTestLevel(segments);

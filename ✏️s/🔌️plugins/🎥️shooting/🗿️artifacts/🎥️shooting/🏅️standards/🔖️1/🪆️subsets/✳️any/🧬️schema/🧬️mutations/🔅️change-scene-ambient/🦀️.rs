@@ -22,7 +22,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneAmbientInte
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change ambient intensity to {}", self.new_intensity), &format!("Umgebungsintensität auf {} ändern", self.new_intensity))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change ambient intensity to {}", self.new_intensity), &format!("Umgebungsintensität auf {} ändern", self.new_intensity))
     }
 }

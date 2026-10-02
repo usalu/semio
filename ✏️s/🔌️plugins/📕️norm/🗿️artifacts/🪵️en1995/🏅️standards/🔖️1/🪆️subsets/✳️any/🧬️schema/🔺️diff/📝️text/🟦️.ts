@@ -1,12 +1,8 @@
-/** 🧬️ EN 1995 sparse diff TypeScript mirror. */
-import type { En1995Artifact } from "../../🟦️";
-import type { AnnexChoice, TimberConnection, TimberMember } from "../../📸️snapshot/🟦️";
+/** 📝️ `En1995DiffText` wire twin: the serialized text form this facet's grammar and codec speak, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormWireReader, normWireString } from "../../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
-export interface En1995MemberList { values: TimberMember[]; }
-export interface En1995ConnectionList { values: TimberConnection[]; }
-export interface En1995Diff {
-  artifact?: En1995Artifact;
-  annex?: AnnexChoice;
-  members?: En1995MemberList;
-  connections?: En1995ConnectionList;
-}
+export type En1995DiffText = string;
+
+export const parseEn1995DiffText: NormWireReader<En1995DiffText> = normWireString;

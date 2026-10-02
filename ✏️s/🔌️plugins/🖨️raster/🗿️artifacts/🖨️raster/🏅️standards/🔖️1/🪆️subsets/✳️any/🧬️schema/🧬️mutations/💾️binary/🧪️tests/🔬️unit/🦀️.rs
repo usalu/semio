@@ -1229,6 +1229,22 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         }),
         RasterMutation::ChangeLayerAdjustmentParameter(crate::mutations::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.25))}),
         RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
+        RasterMutation::PaintStroke(crate::mutations::paint_stroke::PaintStroke {
+            layer_id: "pixel".into(),
+            target: "mask".into(),
+            tool: "eraser".into(),
+            brush: crate::mutations::paint_stroke::RasterBrush { size: 3.0, hardness: 0.5, opacity: 0.75, color: vec![0.2, 0.2, 0.2, 1.0] },
+            points: vec![crate::mutations::paint_stroke::RasterStrokePoint { x: 0.5, y: 0.5 }, crate::mutations::paint_stroke::RasterStrokePoint { x: 1.5, y: 2.5 }],
+            selection: Some(vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 2, coverage: 255 }]),
+        }),
+        RasterMutation::FillRegion(crate::mutations::fill_region::FillRegion {
+            layer_id: "pixel".into(),
+            target: "mask".into(),
+            seed: crate::mutations::fill_region::RasterSeed { x: 1, y: 2 },
+            tolerance: 32,
+            color: vec![0.2, 0.2, 0.2, 1.0],
+            selection: Some(vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 2, coverage: 255 }]),
+        }),
     ];
     assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {

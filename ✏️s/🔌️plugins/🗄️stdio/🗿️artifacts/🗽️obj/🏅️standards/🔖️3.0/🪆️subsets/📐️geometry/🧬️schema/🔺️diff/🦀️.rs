@@ -616,7 +616,7 @@ impl ObjFacesDiff {
 #[value(rename_all = "camelCase")]
 pub struct ObjGroupDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub faces: Option<Vec<usize>>,
+    pub faces: Option<Vec<u64>>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
@@ -627,21 +627,21 @@ fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
 /// types per the recipe — this tiny local trait lets `apply_group_diff`/membership helpers work
 /// over either without merging the two public types back into one shared type.
 trait HasFaces {
-    fn faces_mut(&mut self) -> &mut Vec<usize>;
+    fn faces_mut(&mut self) -> &mut Vec<u64>;
 }
 impl HasFaces for ObjGroup {
-    fn faces_mut(&mut self) -> &mut Vec<usize> {
+    fn faces_mut(&mut self) -> &mut Vec<u64> {
         &mut self.faces
     }
 }
 impl HasFaces for ObjObject {
-    fn faces_mut(&mut self) -> &mut Vec<usize> {
+    fn faces_mut(&mut self) -> &mut Vec<u64> {
         &mut self.faces
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn group_between(a_faces: &[usize], b_faces: &[usize]) -> ObjGroupDiff {
+fn group_between(a_faces: &[u64], b_faces: &[u64]) -> ObjGroupDiff {
     ObjGroupDiff { faces: (a_faces != b_faces).then(|| b_faces.to_vec()) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1298,7 +1298,7 @@ fn enc_group(g: &ObjGroup) -> String {
 fn dec_group(s: &str) -> Result<ObjGroup, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("group: expected 2 fields, got {}", parts.len())) };
-    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
     Ok(ObjGroup { name: hex_decode_str(name_hex)?, faces })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1309,7 +1309,7 @@ fn enc_object(o: &ObjObject) -> String {
 fn dec_object(s: &str) -> Result<ObjObject, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("object: expected 2 fields, got {}", parts.len())) };
-    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
     Ok(ObjObject { name: hex_decode_str(name_hex)?, faces })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1320,7 +1320,7 @@ fn enc_usemtl(u: &ObjUsemtlRange) -> String {
 fn dec_usemtl(s: &str) -> Result<ObjUsemtlRange, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, mat] = parts.as_slice() else { return Err(format!("usemtl: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjUsemtlRange { face_index_from: parse_usize(idx)?, material: hex_decode_str(mat)? })
+    Ok(ObjUsemtlRange { face_index_from: parse_u64(idx)?, material: hex_decode_str(mat)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_smoothing(sg: &ObjSmoothingRange) -> String {
@@ -1330,7 +1330,7 @@ fn enc_smoothing(sg: &ObjSmoothingRange) -> String {
 fn dec_smoothing(s: &str) -> Result<ObjSmoothingRange, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [idx, grp] = parts.as_slice() else { return Err(format!("smoothing: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjSmoothingRange { face_index_from: parse_usize(idx)?, group: decode_option(grp, parse_u32)? })
+    Ok(ObjSmoothingRange { face_index_from: parse_u64(idx)?, group: decode_option(grp, parse_u32)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_unknown(u: &ObjUnknownStatement) -> String {
@@ -1491,7 +1491,7 @@ fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("group diff: bad entry {entry:?}"))?;
         match tag {
             "F" => {
-                let faces = split_top_level(strip_brackets(val)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+                let faces = split_top_level(strip_brackets(val)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
                 d.faces = Some(faces);
             }
             other => return Err(format!("group diff: unknown tag {other:?}")),
@@ -1814,44 +1814,44 @@ fn dec_face_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFace, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_group_bin(g: &ObjGroup, out: &mut Vec<u8>) {
     write_str_bin(out, &g.name);
-    write_vec_bin(out, &g.faces, |f, o| write_usize_bin(o, *f));
+    write_vec_bin(out, &g.faces, |f, o| write_u64_bin(o, *f));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_group_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroup, String> {
     let name = read_str_bin(reader)?;
-    let faces = read_vec_bin(reader, read_usize_bin)?;
+    let faces = read_vec_bin(reader, read_u64_bin)?;
     Ok(ObjGroup { name, faces })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_object_bin(o: &ObjObject, out: &mut Vec<u8>) {
     write_str_bin(out, &o.name);
-    write_vec_bin(out, &o.faces, |f, out| write_usize_bin(out, *f));
+    write_vec_bin(out, &o.faces, |f, out| write_u64_bin(out, *f));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_object_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObject, String> {
     let name = read_str_bin(reader)?;
-    let faces = read_vec_bin(reader, read_usize_bin)?;
+    let faces = read_vec_bin(reader, read_u64_bin)?;
     Ok(ObjObject { name, faces })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_usemtl_bin(u: &ObjUsemtlRange, out: &mut Vec<u8>) {
-    write_usize_bin(out, u.face_index_from);
+    write_u64_bin(out, u.face_index_from);
     write_str_bin(out, &u.material);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_usemtl_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUsemtlRange, String> {
-    let face_index_from = read_usize_bin(reader)?;
+    let face_index_from = read_u64_bin(reader)?;
     let material = read_str_bin(reader)?;
     Ok(ObjUsemtlRange { face_index_from, material })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_smoothing_bin(sg: &ObjSmoothingRange, out: &mut Vec<u8>) {
-    write_usize_bin(out, sg.face_index_from);
+    write_u64_bin(out, sg.face_index_from);
     write_option_bin(out, &sg.group, |g, o| write_u32_bin(o, *g));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_smoothing_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjSmoothingRange, String> {
-    let face_index_from = read_usize_bin(reader)?;
+    let face_index_from = read_u64_bin(reader)?;
     let group = read_option_bin(reader, read_u32_bin)?;
     Ok(ObjSmoothingRange { face_index_from, group })
 }
@@ -1936,11 +1936,11 @@ fn dec_face_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceDiff, 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_group_diff_bin(d: &ObjGroupDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.faces, |v, o| write_vec_bin(o, v, |f, oo| write_usize_bin(oo, *f)));
+    write_option_bin(out, &d.faces, |v, o| write_vec_bin(o, v, |f, oo| write_u64_bin(oo, *f)));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff, String> {
-    let faces = read_option_bin(reader, |r| read_vec_bin(r, read_usize_bin))?;
+    let faces = read_option_bin(reader, |r| read_vec_bin(r, read_u64_bin))?;
     Ok(ObjGroupDiff { faces })
 }
 //#endregion 🔖️DiffValueBinaryCodecs
@@ -2338,7 +2338,7 @@ pub fn diff_set_face(index: usize, diff: ObjFaceDiff) -> ObjDiff {
     ObjDiff { faces: Some(ObjFacesDiff { removed: vec![], modified: vec![ObjFaceModified { index, diff }], added: vec![] }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_group(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
+pub fn diff_set_group(index: usize, name: &str, faces: Vec<u64>, existed: bool) -> ObjDiff {
     if existed {
         ObjDiff { groups: Some(ObjGroupsDiff { removed: vec![], modified: vec![ObjGroupModified { name: name.to_string(), diff: ObjGroupDiff { faces: Some(faces) } }], added: vec![] }), ..Default::default() }
     } else {
@@ -2350,7 +2350,7 @@ pub fn diff_remove_group(name: &str) -> ObjDiff {
     ObjDiff { groups: Some(ObjGroupsDiff { removed: vec![name.to_string()], modified: vec![], added: vec![] }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_object(index: usize, name: &str, faces: Vec<usize>, existed: bool) -> ObjDiff {
+pub fn diff_set_object(index: usize, name: &str, faces: Vec<u64>, existed: bool) -> ObjDiff {
     if existed {
         ObjDiff { objects: Some(ObjObjectsDiff { removed: vec![], modified: vec![ObjGroupModified { name: name.to_string(), diff: ObjGroupDiff { faces: Some(faces) } }], added: vec![] }), ..Default::default() }
     } else {
@@ -2458,3 +2458,7 @@ pub use crate::schema::snapshot::ObjSmoothingRange;
 pub use crate::schema::snapshot::ObjUnknownStatement;
 pub use crate::schema::snapshot::ObjUsemtlRange;
 //#endregion 🔁️Re-exports
+
+fn parse_u64(value:&str)->Result<u64,String>{value.parse::<u64>().map_err(|error|error.to_string())}
+fn write_u64_bin(output:&mut Vec<u8>,value:u64){store::pack_rt::write_varint_u64(output,value)}
+fn read_u64_bin(reader:&mut store::ByteReader<'_>)->Result<u64,String>{reader.read_varint_u64().map_err(|error|error.to_string())}

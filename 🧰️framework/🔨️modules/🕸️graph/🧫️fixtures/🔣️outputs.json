@@ -20,7 +20,15 @@
     ],
     "inputAreas": [
       "owners"
-    ]
+    ],
+    "policy": {
+      "excludedInputPaths": [],
+      "genericEmojiIdentities": [
+        "📁️",
+        "📂️",
+        "📄️"
+      ]
+    }
   },
   "manifestIds": [
     "measurement",
@@ -113,6 +121,55 @@
       ],
       "value": "../owner",
       "schemaInvalid": true
+    },
+    {
+      "name": "missing-policy",
+      "path": [
+        "policy"
+      ],
+      "value": null,
+      "schemaInvalid": true
+    },
+    {
+      "name": "input-exclusion-traversal",
+      "path": [
+        "policy",
+        "excludedInputPaths"
+      ],
+      "value": [
+        "../owner"
+      ],
+      "schemaInvalid": true
+    },
+    {
+      "name": "duplicate-exclusion",
+      "path": [
+        "policy",
+        "excludedInputPaths"
+      ],
+      "value": [
+        "owners/hidden",
+        "owners/hidden"
+      ],
+      "schemaInvalid": true
+    },
+    {
+      "name": "unknown-policy-field",
+      "path": [
+        "policy",
+        "fallback"
+      ],
+      "value": true,
+      "schemaInvalid": true
+    },
+    {
+      "name": "generic-output-owner",
+      "path": [
+        "shared",
+        "rustRegistry"
+      ],
+      "value": "📁️registry/🦀️.rs",
+      "schemaInvalid": false
     }
   ],
   "empty": {
@@ -123,7 +180,15 @@
       "typescriptIndex": "🟦️.ts",
       "typescriptTypes": "🔠️types/🟦️.ts"
     },
-    "manifests": []
+    "manifests": [],
+    "policy": {
+      "excludedInputPaths": [],
+      "genericEmojiIdentities": [
+        "📁️",
+        "📂️",
+        "📄️"
+      ]
+    }
   },
   "emission": [
     {
@@ -155,5 +220,26 @@
         }
       ]
     }
-  ]
+  ],
+  "admission": {
+    "inputAreas": [
+      "owners"
+    ],
+    "excludedInputPaths": [
+      "owners/hidden"
+    ],
+    "files": [
+      {
+        "path": "owners/hidden/missing.manifest.json",
+        "linked": true
+      },
+      {
+        "path": "owners/hidden-also/admitted.manifest.json",
+        "id": "admitted"
+      }
+    ],
+    "expectedIds": [
+      "admitted"
+    ]
+  }
 }

@@ -1,4 +1,4 @@
-import { canonicalJson } from "../../🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { taxonomyCliByteCompare, taxonomyCliCanonicalArrayDigest, taxonomyCliCanonicalJson, taxonomyCliEntryViolations, taxonomyCliExactKeys, taxonomyCliInventoryEntries, taxonomyCliInventoryMetadata, taxonomyCliRecord, taxonomyCliSha256, taxonomyCliStableViolations, taxonomyInventoryIncrementalCanonicalDigest } from "../🧾️serialization/🟦️.ts";
 
 //#region 📊️TaxonomyInventoryShards

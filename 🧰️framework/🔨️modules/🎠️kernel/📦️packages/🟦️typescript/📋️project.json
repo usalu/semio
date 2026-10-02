@@ -2,7 +2,10 @@
   "name": "@semio-tech/framework-kernel",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎚️config/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {
@@ -38,6 +41,22 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "test-localized-label": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌐️locale/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test localized-label",
         "forwardAllArgs": true
       }
     }

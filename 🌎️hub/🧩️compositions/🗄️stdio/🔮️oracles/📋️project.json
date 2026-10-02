@@ -1,0 +1,39 @@
+{
+  "name": "@semio-tech/hub-stdio-test-oracle",
+  "root": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
+  "projectType": "library",
+  "tags": [
+    "lang:typescript",
+    "role:hub",
+    "test-only"
+  ],
+  "targets": {
+    "test-drawing-reader": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts test-drawing-reader",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-composition": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts test-composition",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native-oracles": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun 📜️script.ts test-native-oracles",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

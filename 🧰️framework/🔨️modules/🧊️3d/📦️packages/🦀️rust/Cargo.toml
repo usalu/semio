@@ -16,6 +16,7 @@ role = "framework"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-hash.workspace = true
 semio-framework-job.workspace = true
 semio-framework-mesh-engine.workspace = true

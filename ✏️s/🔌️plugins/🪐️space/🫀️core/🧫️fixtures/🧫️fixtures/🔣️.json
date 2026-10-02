@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "id": "json-source",
+      "source": {
+        "slug": "fixture:shape",
+        "format": "json",
+        "codec": "shape-v1",
+        "text": "{\"schema\":\"shape.v1\",\"id\":\"owned\"}"
+      },
+      "expected": {
+        "schema": "shape.v1",
+        "id": "owned"
+      }
+    },
+    {
+      "id": "dsl-source",
+      "source": {
+        "slug": "fixture:dsl-shape",
+        "format": "dsl",
+        "codec": "shape-v1",
+        "text": "shape id=owned"
+      },
+      "expected": {
+        "schema": "shape.v1",
+        "id": "owned"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "id": "empty-sources",
+      "sources": []
+    },
+    {
+      "id": "unknown-format",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "xml",
+          "codec": "shape-v1",
+          "text": "<shape/>"
+        }
+      ]
+    },
+    {
+      "id": "blank-slug",
+      "sources": [
+        {
+          "slug": "",
+          "format": "json",
+          "codec": "shape-v1",
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "unknown-codec",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "json",
+          "codec": "missing-codec",
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "malformed-document",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "json",
+          "codec": "shape-v1",
+          "text": "{"
+        }
+      ]
+    },
+    {
+      "id": "empty-document",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "json",
+          "codec": "shape-v1",
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "array-document",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "json",
+          "codec": "shape-v1",
+          "text": "[]"
+        }
+      ]
+    },
+    {
+      "id": "invalid-dsl",
+      "sources": [
+        {
+          "slug": "fixture:shape",
+          "format": "dsl",
+          "codec": "shape-v1",
+          "text": "shape invalid"
+        }
+      ]
+    }
+  ]
+}

@@ -12,12 +12,38 @@ use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, H
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
-    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -220,7 +246,9 @@ impl ArtifactOwnedToolJobFactory for HtmlRetainedCommandJobFactory {
 /// or removes the attributes that changed and walks its children; a text, comment or raw-text node re-sets its text. Children
 /// unchanged at either end of a list stay untouched, surplus children are removed (last first) or inserted, and a child that
 /// changed kind (or whose attribute order the attribute leaves cannot reproduce) is removed and inserted anew. History
-/// therefore edits the node an author changed; only a root that must be replaced is the whole-document `set-snapshot`.
+/// therefore edits the node an author changed. The genuine whole-document replacements are `set-snapshot`: another document
+/// schema, or a root the node leaves cannot reach (another node kind, or a root attribute order the attribute leaves cannot
+/// reproduce). The main window's Apply and the document-details editor both commit through here.
 fn html_net_mutations(base: &HtmlSnapshot, next: &HtmlSnapshot) -> Vec<HtmlMutation> {
     let mut leaves = Vec::new();
     if base.doctype != next.doctype {
@@ -505,7 +533,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for HtmlEdi
 
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| HtmlMutation::SetSnapshot(SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, html_net_mutations)
     }
 }
 //#endregion 🔖️Editor

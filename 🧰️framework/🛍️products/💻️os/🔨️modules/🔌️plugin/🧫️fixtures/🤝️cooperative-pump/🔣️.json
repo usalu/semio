@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "hostSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+  "nativeOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤝️cooperative-pump/🦀️.rs",
+  "module": "cooperative_pump_tests",
+  "nativeLaw": "component::cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner",
+  "neutralSources": [
+    "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🦀️.rs",
+    "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️standalone/🦀️.rs"
+  ],
+  "neutralRouter": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+  "cases": [
+    {
+      "id": "current",
+      "before": null,
+      "after": null,
+      "accepted": true
+    },
+    {
+      "id": "foreign-pump",
+      "before": "pump_runtime_live_cooperative_turn(cell)?;",
+      "after": "other_pump(cell)?;",
+      "accepted": false
+    },
+    {
+      "id": "missing-pump",
+      "before": "pump_runtime_live_cooperative_turn(cell)?;",
+      "after": "",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-pump",
+      "before": "pump_runtime_live_cooperative_turn(cell)?;",
+      "after": "pump_runtime_live_cooperative_turn(cell)?; pump_runtime_live_cooperative_turn(cell)?;",
+      "accepted": false
+    },
+    {
+      "id": "unbounded-pump",
+      "before": "pool.pump(now_ms);",
+      "after": "while pool.pump(now_ms) {}",
+      "accepted": false
+    },
+    {
+      "id": "foreign-clock",
+      "before": "let now_ms = semio_framework_job::default_now_ms();",
+      "after": "let now_ms = Some(0);",
+      "accepted": false
+    }
+  ],
+  "neutralLaws": [
+    "worker_maintenance_matches_neutral_retention_and_aba_lifecycle",
+    "worker_maintenance_capacity_and_pool_identity_are_exact",
+    "worker_maintenance_running_callback_retires_requested_generation_exactly_once",
+    "worker_maintenance_native_idle_wake_uses_no_queued_job",
+    "worker_maintenance_native_self_retire_reuses_all_fixed_slots",
+    "worker_maintenance_cooperative_wake_obeys_pump_and_drr",
+    "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation",
+    "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks",
+    "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks",
+    "native_drr_finishes_eligible_deficit_frontier_before_idle",
+    "cooperative_maintenance_retains_deficit_until_later_host_turn",
+    "cooperative_maintenance_snapshot_contention_preserves_queued_job"
+  ]
+}

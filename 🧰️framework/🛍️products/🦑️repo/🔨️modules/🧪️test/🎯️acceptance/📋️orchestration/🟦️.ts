@@ -14,7 +14,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { DEPENDENCY_INTERFACE_OWNERS, dependencyTestDomain } from "../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts";
 //#endregion 🔌️Adapters
 

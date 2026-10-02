@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §26 defines the Application Extension as a self-contained, optional block (block label 0x21 0xFF) identifying an 11-byte application identifier/auth-code plus opaque application sub-blocks -- the mechanism `add-app-extension`/`remove-app-extension` expose directly, and that the de-facto NETSCAPE2.0 looping sub-block (`set-loop-count`) is layered on top of. All three are owned here rather than by `🧱️base`, for the same family-module reuse rationale as `../../🎛️graphic-control/🔮️oracles/🔣️.json`.",
   "oracles": [],
@@ -169,5 +169,6 @@
         "set-loop-count"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

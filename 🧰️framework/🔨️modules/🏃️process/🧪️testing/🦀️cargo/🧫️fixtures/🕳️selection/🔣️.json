@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "packageName": "semio-zero-selection-fixture",
+  "manifest": "[package]\nname = \"semio-zero-selection-fixture\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[workspace]\n",
+  "source": "#[test]\nfn selected_control() { assert_eq!(2 + 2, 4); }\n",
+  "config": "[profile.quick]\nfail-fast = false\n",
+  "filter": "test(sqlite_snapshot_absent_neutral_selection)",
+  "action": "fail",
+  "expectedStatus": 4
+}

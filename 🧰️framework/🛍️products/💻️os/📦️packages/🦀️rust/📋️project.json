@@ -467,6 +467,14 @@
       },
       "outputs": []
     },
+    "test-list-record-boundaries": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-list-record-boundaries",
+        "cwd": "{projectRoot}"
+      }
+    },
     "test-ieee-payload-native": {
       "executor": "nx:run-commands",
       "options": {
@@ -506,6 +514,47 @@
           "paged-history-stack-check",
           "--native"
         ]
+      }
+    },
+    "document-http-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "nativeTestSources",
+        "^nativeTestSources"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-http-check"
+      },
+      "metadata": {
+        "workspaceCommand": true
+      }
+    },
+    "test-directory-lease-fixture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🔏️document-execution-target-lease-v1/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-directory-lease-fixture"
+      }
+    },
+    "test-composed-pack-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-composed-pack-schema",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
       }
     }
   },

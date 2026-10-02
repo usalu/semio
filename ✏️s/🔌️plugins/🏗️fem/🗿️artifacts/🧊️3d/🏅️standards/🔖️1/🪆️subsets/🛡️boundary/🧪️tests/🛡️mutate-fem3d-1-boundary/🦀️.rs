@@ -167,7 +167,7 @@ fn reject_vector_of(identifier: &str) -> Vector {
 mod subject {
     use super::{canonical, hall_vector_of, reject_vector_of, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
 
     //#region 🔖️Report

@@ -19,6 +19,7 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 # 🃏️ wave MATHEND: `semio-framework-os-kernel`/`semio-framework-graph`/`serde`/`serde_json`/
 # `thiserror` removed — they existed only for `graph::dsl` (Jack, relocated to
 # `semio-framework-graph`) and dead code; `sampling`, the only content left, only needs

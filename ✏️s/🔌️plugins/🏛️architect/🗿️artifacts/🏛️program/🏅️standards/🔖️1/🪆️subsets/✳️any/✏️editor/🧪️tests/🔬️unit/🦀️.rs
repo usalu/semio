@@ -53,6 +53,8 @@ pub(crate) mod context {
     pub fn architect_app_manifest_for_tests() -> App {
         App { definition: create_architect_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("architect", ArchitectPlayApp, architect_app_manifest_for_tests, "../..");
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> ArchitectApp {
@@ -93,7 +95,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("retire app render")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("retire app render")
     }
     
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `ArchitectCommand::dispatch` — mirrors
@@ -133,7 +135,7 @@ pub(crate) mod context {
     
     pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> String {
         let history = HistoryView::empty();
-        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::default()).expect("editor render");
+        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config, window: None }, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("editor render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire editor tree")
     }
 }
@@ -304,7 +306,7 @@ async fn graph_body_emits_node_graph_scene() {
     let program = sample_plugin();
     let history = semio_framework_plugin::HistoryView::empty();
     let cfg = ArchitectPlayApp::initial_config();
-    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg, window: None }, &semio_framework_plugin::ViewModel::default()).expect("graph render");
+    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg, window: None }, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("graph render");
     let semio_framework_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());
@@ -374,7 +376,7 @@ async fn formatted_report_renders_section_headings() {
     let selected_report_id = payload.report_record.header.id.clone();
     program.reports.push(payload.report_record.clone());
     let config = report_window::config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
-    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
+    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }
@@ -436,7 +438,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("architect-register-test".into()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "architect-register-test".into(), window_kind_id: register_window::ARCHITECT_WINDOW_REGISTER.into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let result = app.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta).await.expect("select exact Register window");

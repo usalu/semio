@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemovePart {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::RemovePart(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove part", "Paketteil entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove part", "Paketteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

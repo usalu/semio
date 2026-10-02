@@ -13,6 +13,7 @@ workspace = true
 role = "framework"
 
 [lib]
+name = "semio_framework_2d"
 path = "🦀️.rs"
 
 [features]
@@ -25,12 +26,15 @@ trace = []
 serde = ["dep:serde"]
 
 [dependencies]
-semio-framework-os-kernel = { workspace = true }
-# 🔢️ `⚙️engine`, mounted into this crate via `#[path]`, content-addresses its cache keys with
-# `semio_framework_hash::hash` — the dep travels with that mount.
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+# 🔢️ Neutral compute owns content-addressed engine keys.
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # 🪶 Optional — gated behind the `serde` feature above. See the `[features]` note and
 # `⚙️engine/🦀️.rs`'s `PathSegment` doc comment.
 serde = { workspace = true, optional = true }
 # 🧬️ `#[derive(ToValue, FromValue)]`, always on — the plugin-facing wire encoding for `PathSegment`.
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+blake3 = "1.8.2"

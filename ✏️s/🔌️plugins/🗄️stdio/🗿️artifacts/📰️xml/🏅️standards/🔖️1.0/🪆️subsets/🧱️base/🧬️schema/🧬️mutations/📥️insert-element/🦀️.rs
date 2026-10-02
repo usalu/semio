@@ -52,8 +52,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMu
         vec![super::XmlMutation::InsertElement(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert Element", "Element einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert Element", "Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-element".to_string()]

@@ -22,8 +22,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::UpsertMember(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Upsert member", "Eigenschaft einfügen oder aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

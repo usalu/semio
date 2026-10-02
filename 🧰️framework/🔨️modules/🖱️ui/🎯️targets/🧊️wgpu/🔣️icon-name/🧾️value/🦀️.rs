@@ -21,17 +21,17 @@
 
 use super::IconName;
 
-impl dsl::ToValue for IconName {
-    fn to_value(&self) -> dsl::DslValue {
+impl semio_framework_value::ToValue for IconName {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let json = serde_json::to_value(self).expect("IconName's generated Serialize impl never fails");
-        dsl::DslValue::from(&json)
+        semio_framework_value::DslValue::from(&json)
     }
 }
 
-impl dsl::FromValue for IconName {
-    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+impl semio_framework_value::FromValue for IconName {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let json = serde_json::Value::from(value);
-        serde_json::from_value(json).map_err(|error| dsl::ValueError::new(error.to_string()))
+        serde_json::from_value(json).map_err(|error| semio_framework_value::ValueError::new(error.to_string()))
     }
 }
 

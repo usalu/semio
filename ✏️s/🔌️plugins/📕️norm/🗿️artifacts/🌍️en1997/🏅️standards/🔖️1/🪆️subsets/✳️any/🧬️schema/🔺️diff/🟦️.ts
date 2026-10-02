@@ -1,52 +1,23 @@
-/** 🧬️ EN 1997 diff schema. */
-
-import type { En1997Artifact } from "../🟦️.ts";
+/** 🔺️ `En1997Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormJson, normWireDefault, normWireInteger, normWireJson, normWireMap, normWireNullable, normWireNumber, normWireObject, type NormWireReader, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
 export interface En1997Diff {
-  /** @state artifact */
-  artifact?: En1997Artifact;
-  /** @state artifact */
-  vEdKn?: number;
-  /** @state artifact */
-  hEdKn?: number;
-  /** @state artifact */
-  footingAreaM2?: number;
-  /** @state artifact */
-  phiDeg?: number;
-  /** @state artifact */
-  cKpa?: number;
-  /** @state artifact */
-  gammaKnM3?: number;
-  /** @state artifact */
-  bM?: number;
-  /** @state artifact */
-  dFM?: number;
-  /** @state artifact */
-  eSMpa?: number;
-  /** @state artifact */
-  nu?: number;
-  /** @state artifact */
-  designApproach?: number;
-  /** @state artifact */
-  annex?: number;
-  /** @state artifact */
-  settlementLimitMm?: number;
-  /** @state artifact */
-  nPileEdKn?: number;
-  /** @state artifact */
-  alphaS?: number;
-  /** @state artifact */
-  pileDM?: number;
-  /** @state artifact */
-  qSKpa?: number;
-  /** @state artifact */
-  pileLM?: number;
-  /** @state artifact */
-  qBKpa?: number;
-  /** @state artifact */
-  pileBaseAreaM2?: number;
-  /** @state artifact */
-  pileNProfiles?: number;
-  /** @state artifact */
-  zInvestigatedM?: number;
+  artifact: { [key: string]: NormJson } | null;
+  structureId: string | null;
+  geotechnicalCategory: number | null;
+  designSituation: string | null;
+  designApproach: string | null;
+  annex: string | null;
+  groundwaterLevel: number | null;
+  investigationDepth: number | null;
+  layers: { [key: string]: NormJson } | null;
+  footings: { [key: string]: NormJson } | null;
+  piles: { [key: string]: NormJson } | null;
+  retainingWalls: { [key: string]: NormJson } | null;
+  slopes: { [key: string]: NormJson } | null;
+  upliftCases: { [key: string]: NormJson } | null;
 }
+
+export const parseEn1997Diff: NormWireReader<En1997Diff> = normWireObject<En1997Diff>({ artifact: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), structureId: normWireDefault(normWireNullable(normWireString), () => null), geotechnicalCategory: normWireDefault(normWireNullable(normWireInteger), () => null), designSituation: normWireDefault(normWireNullable(normWireString), () => null), designApproach: normWireDefault(normWireNullable(normWireString), () => null), annex: normWireDefault(normWireNullable(normWireString), () => null), groundwaterLevel: normWireDefault(normWireNullable(normWireNumber), () => null), investigationDepth: normWireDefault(normWireNullable(normWireNumber), () => null), layers: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), footings: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), piles: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), retainingWalls: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), slopes: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null), upliftCases: normWireDefault(normWireNullable(normWireMap(normWireJson)), () => null) });

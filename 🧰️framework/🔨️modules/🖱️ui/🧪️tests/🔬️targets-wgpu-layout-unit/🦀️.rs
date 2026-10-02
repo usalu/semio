@@ -60,7 +60,7 @@ fn slider_unit_is_a_shrink_to_content_sibling_outside_the_inner_track_and_readou
     let value = unit["value"].as_f64().unwrap();
     let gap = unit["gap"].as_f64().unwrap() as f32;
     let suffix_width = 40.0;
-    assert_eq!(slider_unit_label(value, unit["unit"].as_str()), Some(unit["externalReadout"].as_str().unwrap().to_string()));
+    assert_eq!(slider_unit_label(&ui_contract::format_ui_number(value), unit["unit"].as_str()), Some(unit["externalReadout"].as_str().unwrap().to_string()));
     for placement in unit["placements"].as_array().unwrap() {
         let bounds = Rect::new(placement["bounds"][0].as_f64().unwrap() as f32, placement["bounds"][1].as_f64().unwrap() as f32, placement["bounds"][2].as_f64().unwrap() as f32, placement["bounds"][3].as_f64().unwrap() as f32);
         let inline = if placement["inline"] == "rtl" { ui_contract::FlowInline::Rtl } else { ui_contract::FlowInline::Ltr };

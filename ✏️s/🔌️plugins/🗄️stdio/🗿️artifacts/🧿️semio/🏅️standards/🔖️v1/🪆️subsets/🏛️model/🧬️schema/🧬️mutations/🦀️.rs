@@ -16,20 +16,7 @@ use protocol::Mutation;
 /// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.flow`'s own
 /// mutations facet needed).
 use protocol::{OpBinary, OpText};
-
-//#region 🔖️DoubleOption
-/// 🕳️ Standard double-`Option` workaround: with plain `#[value(default)]`, a field typed
-/// `Option<Option<T>>` can't distinguish "untouched" (key absent) from "cleared" (`Some(None)`,
-/// key present with `DslValue::Null`) — both would collapse to the outer `None` on decode, because
-/// the derive's blanket `impl<T: FromValue> FromValue for Option<T>` treats `Null` as absence at
-/// ANY nesting depth (same subtlety `serde`'s own blanket impl has). Combined with
-/// `skip_serializing_if = "Option::is_none"` (so "untouched" omits the key entirely), this makes
-/// key-PRESENT-with-`Null` unambiguously mean `Some(None)`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
-}
-//#endregion 🔖️DoubleOption
+use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves

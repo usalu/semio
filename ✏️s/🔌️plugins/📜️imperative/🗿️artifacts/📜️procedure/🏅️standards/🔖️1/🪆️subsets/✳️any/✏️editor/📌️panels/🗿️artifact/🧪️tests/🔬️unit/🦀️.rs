@@ -75,13 +75,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_procedure_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let document = oversized_procedure(OVERSIZED);
-    let tree = render(&document, imperative_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert!(steps.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", steps.children.len());
@@ -92,7 +92,7 @@ async fn an_oversized_procedure_stamps_the_full_total_and_materialises_at_most_i
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let document = oversized_procedure(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(false), 0, 32)]);
-    let tree = render(&document, imperative_labels(&ViewModel::default()), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert_eq!(steps.children.len(), 0);
@@ -102,7 +102,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_step_row_id() {
     let document = oversized_procedure(OVERSIZED);
     let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(true), 70, 5)]);
-    let tree = render(&document, imperative_labels(&ViewModel::default()), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, IMPERATIVE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 70));
     assert_eq!(window_law_keys(steps), (70..75).map(|index| step_row_id(&format!("step-{index:03}"))).collect::<Vec<_>>());
@@ -111,7 +111,7 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = oversized_procedure(3);
-    let tree = render(&document, imperative_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, imperative_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, STEPS_SECTION).children.iter() {

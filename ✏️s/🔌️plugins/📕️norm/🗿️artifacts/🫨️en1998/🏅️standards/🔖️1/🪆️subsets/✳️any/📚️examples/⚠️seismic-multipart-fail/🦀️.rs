@@ -1,7 +1,8 @@
 //! ⚠️ Non-compliant DE multi-part seismic example (EN 1998-1…6).
 
 use crate::En1998Snapshot;
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "seismic-multipart-fail";
 pub const ICON: &str = "file";

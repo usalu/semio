@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { sourceFreshnessOracle } from "../../🧪️tests/🔬️source-freshness/🟦️.ts";
 import { schemaDocumentAuthorityOracle } from "../../🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts";
 import { extensionRetirementOracle } from "../../🧪️tests/🔬️extension-retirement/🟦️.ts";
 import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
-import { resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import assert from "node:assert/strict";
@@ -58,7 +59,7 @@ class TestScript extends BundleScript {
     console.log(`history-label-reload-oracle cases=${historyLabelReloadOracle(this.repoRoot)}`);
     console.log(`composed-child-history-oracle cases=${composedChildHistoryOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         env: { ...process.env, RUST_MIN_STACK: "268435456" },
         groups: [
@@ -77,7 +78,7 @@ class TestScript extends BundleScript {
     }
     const invocation = pluginTestInvocation(segments);
     if (invocation.mode === "inventory") await runCargo(invocation.args, this.root);
-    else await runCargoTestBudgeted([], this.root, invocation.args);
+    else await runRepositoryCargoTests([], this.root, invocation.args);
   }
 }
 
@@ -89,13 +90,42 @@ class CodecSendSourceScript extends BundleScript {
   }
 }
 
+/** 🏗️ Pins concrete fixture interfaces to their original implementation and neutral imports. */
+class FixtureChannelInterfacesScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-fixture-channel-interfaces accepts no arguments");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🔬️app-declarations-fixture/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15_000 });
+  }
+}
+
+/** 🤝️ Keeps actual host pump ownership and all retained native host witnesses in the plugin. */
+class CooperativeHostCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("cooperative-host-check accepts only --native");
+    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🤝️cooperative-pump/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15_000 });
+    if (segments[0] !== "--native") return;
+    const receipts = await runRepositoryExactCargoLaws({
+      cwd: this.repoRoot,
+      env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+      nativeEnv: { RUST_MIN_STACK: "268435456" },
+      groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws: ["component::cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner"] }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) { console.log(`cooperative-host-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+    });
+    for (const receipt of receipts) console.log(`cooperative-host-native-receipt: ${JSON.stringify(receipt)}`);
+  }
+}
+
 /** 🧾️ Verifies explicit shared schema authority through the actual plugin assembly boundary. */
 class SchemaDocumentAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("Unsupported schema document authority argument");
     console.log(`schema-document-authority oracle=${schemaDocumentAuthorityOracle()}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "268435456" },
       groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws: ["builder::schema_document_authority_tests::schema_document_authority_follows_portable_owner_corpus"] }],
@@ -119,7 +149,7 @@ class ArtifactAdmissionCheckScript extends BundleScript {
       "strict_artifact_identity_matches_independent_neutral_fixture",
       "strict_artifact_identity_owned_tree_and_definition_channels_publish",
     ];
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "268435456" },
       groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, laws }],
@@ -140,7 +170,7 @@ class GuestLifecycleCheckScript extends BundleScript {
     );
     console.log(`guest-lifecycle-oracle cases=${guestLifecycleOracle()} patch-cases=${issuedPatchOracle()}`);
     if (!segments.includes("--native")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       groups: [
@@ -188,7 +218,7 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
     const hostile = await coldDocumentPairIngressOracle(this.repoRoot);
     console.log(`cold-document-pair-ingress-oracle: ajv=1 sha256=3 webcrypto=3 hostile=${hostile} limits=64KiB/64/4MiB`);
     if (!segments.includes("--native")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456", CARGO_BUILD_RUSTFLAGS: "-Z threads=1" },
@@ -231,7 +261,7 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
     const rows = documentBackboneBindingOracle(this.repoRoot);
     console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB genesis=4MiB pending=64/1MiB`);
     if (!segments.includes("--native")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456", CARGO_BUILD_RUSTFLAGS: "-Z threads=1" },
@@ -278,7 +308,7 @@ class CanonicalArchitectureScript extends BundleScript {
     console.log(`extension-retirement-oracle cases=${extensionRetirementOracle(this.repoRoot)}`);
     console.log(`source-freshness-oracle cases=${await sourceFreshnessOracle(this.repoRoot,nextestArtifactLocation(this.repoRoot).directory)}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
       nativeEnv: { RUST_MIN_STACK: "268435456" },
@@ -313,11 +343,13 @@ class CanonicalArchitectureScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("canonical-architecture", CanonicalArchitectureScript)
+  .register("cooperative-host-check", CooperativeHostCheckScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
   .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript)
   .register("schema-document-authority-check", SchemaDocumentAuthorityCheckScript);

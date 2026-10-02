@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "nextest",
+    "configPath",
+    "level",
+    "buildBudgetMs",
+    "assertionThreads",
+    "artifactDirectory",
+    "retainArtifacts",
+    "coveragePath",
+    "rustMinStack",
+    "manifestPath",
+    "assertionBudgets",
+    "coverageEnabled",
+    "targetDirectory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "nextest": {
+      "type": "boolean"
+    },
+    "configPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "level": {
+      "enum": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ]
+    },
+    "buildBudgetMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "assertionThreads": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "artifactDirectory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retainArtifacts": {
+      "type": "boolean"
+    },
+    "coveragePath": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "rustMinStack": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "manifestPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assertionBudgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ],
+      "properties": {
+        "fundamental": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "quick": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "long": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "exhaustive": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "coverageEnabled": {
+      "type": "boolean"
+    },
+    "targetDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    }
+  }
+}

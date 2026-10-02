@@ -29,8 +29,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Unbind
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind the weather file", "Bindung der Wetterdatei aufheben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind the weather file", "Bindung der Wetterdatei aufheben")
     }
 }
 //#endregion 🔖️Mutation

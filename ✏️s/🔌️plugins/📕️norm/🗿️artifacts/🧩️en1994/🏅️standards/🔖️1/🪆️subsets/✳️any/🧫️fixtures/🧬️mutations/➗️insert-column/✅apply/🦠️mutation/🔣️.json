@@ -5,6 +5,8 @@
       "id": "col-new",
       "kind": "concrete_filled",
       "lengthM": 3.5,
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
       "steelAM2": 0.0084,
       "steelFYPa": 355000000.0,
       "concreteAM2": 0.072,
@@ -13,24 +15,22 @@
       "reinforcementFYkPa": 500000000.0,
       "iM4": 0.00021,
       "bucklingCurve": "a",
-      "outerSizeM": 0.3,
-      "wallThicknessM": 0.01,
       "actions": [
         {
           "id": "G-col",
           "kind": "permanent",
           "category": "self",
           "stage": "composite",
-          "mKNm": 20000.0,
-          "nKN": 1200000.0
+          "nKN": 1200000.0,
+          "mKNm": 20000.0
         },
         {
           "id": "Q-col",
           "kind": "imposed",
           "category": "B",
           "stage": "composite",
-          "mKNm": 15000.0,
-          "nKN": 400000.0
+          "nKN": 400000.0,
+          "mKNm": 15000.0
         }
       ]
     }

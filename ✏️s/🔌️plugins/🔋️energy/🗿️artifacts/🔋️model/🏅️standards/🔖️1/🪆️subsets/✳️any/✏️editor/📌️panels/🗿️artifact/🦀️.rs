@@ -26,11 +26,28 @@ use crate::editor::model::interaction::{
 use crate::editor::model::{energy_model_action, surface_class_id, ui_label, ENERGY_MODEL_EDITOR_CONTROLLER_ID};
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Space, Surface, Zone};
 use crate::EnergyModelSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, Label as UiLabel};
-use semio_framework_plugin::{
-    activation_target, tree_item_desc, tree_window_item, ActionId, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_ui_contract::Label as UiLabel;
+use semio_framework_plugin::activation_target;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::ActionId;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

@@ -36,6 +36,9 @@ name = "compile_cancellation_law"
 path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes
 # `GatewayBackend`'s implementor set (`NullBackend`, `HeadlessWorkspace`, `Arc<HeadlessWorkspace>`)
 # into a real enum instead of `Box<dyn GatewayBackend>`. Same dependency shape `🔌️plugin`'s and

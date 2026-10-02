@@ -26,7 +26,7 @@
 //! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
 
 use crate::standards::v1::subsets::any::schema;
-use crate::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};
+use crate::PUZZLE5D_DIALECT;
 use crate::editor::puzzle5d as editor;
 use crate::viewer::puzzle5d as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
@@ -38,8 +38,8 @@ fn examples() -> &'static [ExampleSource] {
     EXAMPLES.get_or_init(|| vec![crate::examples::puzzle5d::nakagin_capsule_tower::SOURCE.clone(), crate::examples::puzzle5d::capsule_dream::SOURCE.clone(), crate::examples::puzzle5d::concrete_forest::SOURCE.clone()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::puzzle5d_artifact_inference_descriptor()]).as_slice()
 }
 
@@ -54,7 +54,7 @@ fn io_declaration() -> IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<Puzzle5dSnapshot, Puzzle5dMutation>(PUZZLE_5D_SCHEMA.to_string()),
+            codec: schema::snapshot::native_codec(),
         },
         entries: &[],
     }
@@ -71,3 +71,7 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
         examples: examples(),
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️every-example/🦀️.rs"]
+mod every_example_tests;

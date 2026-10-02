@@ -20,6 +20,12 @@ default = []
 component-app-assembly = []
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -32,6 +38,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+blake3 = "1.8"
 semio-framework-ui-scene = { workspace = true }
 # 🔮 Test-only GeoJSON ORACLE: the third-party `geojson` crate reads what the rfc8259/geojson writer emits and writes what its reader must accept.
 geojson = { version = "1.0.0", default-features = false }

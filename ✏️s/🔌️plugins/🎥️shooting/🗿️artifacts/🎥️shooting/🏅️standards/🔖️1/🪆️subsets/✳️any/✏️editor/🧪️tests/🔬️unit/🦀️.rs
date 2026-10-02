@@ -45,6 +45,8 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_shooting_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("shooting", ShootingPlayApp, shooting_app_manifest_for_tests, "../..");
+
     /// 🧪️ Registry-backed and bound — the bare `new_app` carries an empty `AppActionRegistry`, and
     /// `tool_job_registration` admits a `bounded_first_step_tool_proofs!` row only when its id is
     /// `Migrated` in the LIVE registry, so a bare instance faults at construction with
@@ -126,18 +128,18 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("project and retire semantic tree")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("project and retire semantic tree")
     }
     
     pub async fn world_scene(app: &mut ShootingApp) -> semio_framework_plugin::World3dScene {
-        let tree = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::default()).await.expect("render scene");
+        let tree = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render scene");
         let decoded = semio_framework_plugin::artifact_app_laws::built_surface_scene(&tree.root);
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire scene tree");
         decoded.expect("assembled 3D scene")
     }
     
     pub async fn icon_scene(app: &mut ShootingApp) -> semio_framework_plugin::IconRenderScene {
-        let tree = app.render(SHOOTING_PLAY_BODY_ICON, None, &ViewModel::default()).await.expect("render icon");
+        let tree = app.render(SHOOTING_PLAY_BODY_ICON, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render icon");
         let decoded = match &tree.root.component {
             semio_framework_plugin::Component::Surface(props) => semio_framework_ui_scene::decode(props),
             _ => panic!("icon surface"),
@@ -148,7 +150,7 @@ pub(crate) mod context {
     
     /// 🪟️ The two default-layout panes — window chrome (`window_engagements`/`window_measures`) is keyed
     /// by window INSTANCE and only projected for instances the view state carries.
-    pub fn view(locale: semio_framework_plugin::Locale) -> ViewModel {
+    pub fn view(locale: semio_framework_ui_locale::Locale) -> ViewModel {
         ViewModel {
             locale,
             window_id: Some(SHOOTING_PLAY_WINDOW_SCENE.into()),
@@ -156,16 +158,16 @@ pub(crate) mod context {
                 ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_SCENE.into(), window_kind_id: SHOOTING_PLAY_WINDOW_SCENE.into() },
                 ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_ICON.into(), window_kind_id: SHOOTING_PLAY_WINDOW_ICON.into() },
             ],
-            ..Default::default()
+            ..ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
         }
     }
 
     pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&view(semio_framework_plugin::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+        app.window_measures(&view(semio_framework_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
     }
     
     pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&view(semio_framework_plugin::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
+        app.window_measures(&view(semio_framework_ui_locale::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
     }
 }
 
@@ -290,7 +292,7 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
         ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s1".into()) }),
         ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some("a1".into()) }),
         ShootingCommand::SetShotCamera(set_shot_camera::SetShotCamera { shot_id: "s1".into(), camera: default_camera([1.0, 2.0, 3.0]) }),
-        ShootingCommand::SaveCamera(save_camera::SaveCamera {}),
+        ShootingCommand::SaveCamera(save_camera::SaveCamera { label: "Hero".into() }),
         ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 45.0 }),
         ShootingCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 35.0 }),
         ShootingCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 2.4 }),
@@ -312,7 +314,6 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
         ShootingCommand::ScaleSelection(scale_selection::ScaleSelection { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 }),
         ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera([9.0, 9.0, 9.0]) }),
         ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }),
-        ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }),
         ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) }),
         ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into()] }),
         ShootingCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
@@ -428,7 +429,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         );
     }
     let mut app = shooting_app().await;
-    let engagements = app.window_engagements(&context::view(semio_framework_plugin::Locale::En)).await;
+    let engagements = app.window_engagements(&context::view(semio_framework_ui_locale::Locale::En)).await;
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
     assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
@@ -468,7 +469,7 @@ async fn shooting_labels_resolve_native_english_by_default() {
     let catalogue_json = context::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Add Shot"));
     assert!(catalogue_json.contains("SVG Rectangle"));
-    let engagements = app.window_engagements(&context::view(semio_framework_plugin::Locale::En)).await;
+    let engagements = app.window_engagements(&context::view(semio_framework_ui_locale::Locale::En)).await;
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
 }
@@ -476,7 +477,7 @@ async fn shooting_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_german() {
     let mut app = shooting_app().await;
-    let view_state = context::view(semio_framework_plugin::Locale::De);
+    let view_state = context::view(semio_framework_ui_locale::Locale::De);
     let document_json = artifact_app_laws::project_and_retire_fixture_tree(app.render(SHOOTING_PLAY_BODY_ARTIFACT, None, &view_state).await.expect("render document")).expect("retire document tree");
     assert!(document_json.contains("Aufnahmen"));
     assert!(document_json.contains("Objekte"));

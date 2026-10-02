@@ -12,7 +12,7 @@
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
+use semio_s_artifact_stdio_md_test_oracle::standards::v_commonmark::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 
 
 //#region 🔖️Input
@@ -103,10 +103,10 @@ mod subject {
     use super::{mutable_input, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_md::schema::mutations::apply_md_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_md::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_md::{MdMutation, MdSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::project_md;
+    use semio_s_artifact_stdio_md_test_oracle::standards::v_commonmark::subsets::any::project_md;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own

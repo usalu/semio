@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, boundedServicePayloadV1, documentServiceRequestV1, parseDocumentServiceDeclarationV1, parseInstalledServiceOperationV1, type InstalledServiceDriverV1 } from "../🟦️.ts";
-import { compileDocumentJsonSchemaV1 } from "../../../../../../🔨️modules/🧬️schema/🌐️document-http/🟦️.ts";
+import { compileDocumentJsonSchemaV1 } from "../../../📇️directory/🔌️client/🌐️document-http/🟦️.ts";
 
 /** ⚖️ Language-neutral service laws with independent Ajv admission and exact JSON observations. */
 export function verifyInstalledServiceLawsV1(): Readonly<Record<string, number>> {

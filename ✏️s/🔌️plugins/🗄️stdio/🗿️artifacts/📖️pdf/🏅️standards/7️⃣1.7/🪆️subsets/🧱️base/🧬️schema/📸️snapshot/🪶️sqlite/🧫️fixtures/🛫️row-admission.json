@@ -1,0 +1,15 @@
+{
+  "schema": "semio.pdf.native-row-admission/v1",
+  "arrayLength": 1024,
+  "totalRows": 2056,
+  "refusedRows": 2055,
+  "cancelAt": 256,
+  "counts": {
+    "pdf_cos_value": 1028,
+    "pdf_cos_array_element": 1024,
+    "pdf_document": 1,
+    "pdf_document_info": 1,
+    "pdf_indirect_object": 1,
+    "pdf_document_object": 1
+  }
+}

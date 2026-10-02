@@ -27,7 +27,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateLink {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "link", kind: "update-link", record: "UpdatedLink" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_link(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_update_link(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Update link \"{}\"", self.id), &format!("Verknüpfung \"{}\" aktualisieren", self.id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Update link \"{}\"", self.id), &format!("Verknüpfung \"{}\" aktualisieren", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

@@ -23,7 +23,7 @@
 //
 // @see ../🔮️oracles/🔣️.json — the registered vectors this reads, and the oracle registration
 // @see ../🔮️oracles/🦀️.rs — the json-rust reader the parity case runs
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 
 //#endregion 🧲️Header
 

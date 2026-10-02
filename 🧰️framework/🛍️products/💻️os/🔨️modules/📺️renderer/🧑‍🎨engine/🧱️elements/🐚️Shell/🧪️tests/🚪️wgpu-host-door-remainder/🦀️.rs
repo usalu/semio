@@ -105,7 +105,7 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
         assert_eq!(command_host_platform(), expected, "⌨️ and the shell's keybinding filter reads exactly that");
     }
 
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let fullscreen_description = |shell: &ShellState| shell.command_search_items().into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
     crate::set_host_platform("MacIntel");
     let apple = fullscreen_description(&shell);
@@ -159,7 +159,7 @@ fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
     assert_eq!(ShellEditVerb::Undo.action_id(), "undo");
     assert_eq!(ShellEditVerb::Redo.action_id(), "redo");
 
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let table = shell.shortcut_table();
     for chord in ["mod+z", "mod+shift+z", "mod+y"] {
         assert!(!reserved_shell_chords_v1(&table, &[]).contains(chord), "⏪️ `{chord}` is not a reserved shell chord — an app must be able to shadow it");
@@ -315,7 +315,7 @@ fn every_palette_command_shape_has_a_live_route() {
         assert!(routes.contains(&format!("strip_prefix(\"{prefix}\")")), "🎛️ `{prefix}` is routed in `activate_search_item`");
     }
 
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let items = shell.command_search_items();
     assert!(!items.is_empty(), "🎛️ the os built-ins alone fill the palette");
     for item in &items {

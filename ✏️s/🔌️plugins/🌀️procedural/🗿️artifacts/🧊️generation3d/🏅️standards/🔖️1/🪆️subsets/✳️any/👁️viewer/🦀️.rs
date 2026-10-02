@@ -23,13 +23,47 @@ use crate::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GE
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    app::InteractionView, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
-    ArtifactView, ConfigView, Dialect, DomainTopology, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label,
-    LocalizedLabel, MergeMode, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, TopologyNode, ViewEmit, Viewer, ViewerApp, WindowMeasure,
-};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_plugin::ViewerApp;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const GENERATION3D_VIEW_APP_ID: &str = "procedural3d-view";
@@ -1559,7 +1593,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 🎚️ The Preview window's chrome: show mode, LOD and the sun group, all bound to this viewer's
     /// own actions so the read-only surface's window controls actually do something.
     fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         HashMap::from([(preview::WINDOW_KIND_ID.to_string(), preview::preview_window_measures(cfg.snapshot, is_de, generation3d_view_action))])
     }
 }

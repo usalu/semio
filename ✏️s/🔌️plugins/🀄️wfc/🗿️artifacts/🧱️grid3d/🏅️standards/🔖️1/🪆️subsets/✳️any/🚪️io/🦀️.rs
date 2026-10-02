@@ -2,6 +2,9 @@
 //! `io()`/`IoDeclaration`. The composition below is what lets a foreign source in a read dialect be
 //! composed INTO this dialect; conformance runs inside the io mechanism's own entry, never here.
 
+/// 📸️ Native document capability shared by the exact subset declaration and owned I/O laws.
+pub fn native_snapshot_codec()->store::ArtifactCodec{store::ArtifactCodec::bare::<crate::Grid3dSnapshot,crate::Grid3dMutation>(crate::WFC_GRID3D_DOCUMENT_SCHEMA.to_string())}
+
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.txt"]
 }

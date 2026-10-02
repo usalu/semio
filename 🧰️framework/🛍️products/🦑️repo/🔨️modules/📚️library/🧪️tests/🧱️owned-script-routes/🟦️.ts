@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -43,6 +44,32 @@ test("real contributions bind Nx package commands and root coordinator imports n
   visit(ast);
   expect(imports.filter((specifier) => specifier.startsWith("./✏️s") || specifier.includes("/🗿️artifacts/"))).toEqual([]);
 }, 60_000);
+
+test("every real contribution is reachable from a dispatcher call site and no verify route shadows a root verify command", () => {
+  const root = findWorkspaceRoot(import.meta.dir), routes = ownedScriptRoutes(root);
+  const scripts = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "--", "📜️script.ts", "*/📜️script.ts"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 }).split("\n").filter((path) => path && !path.includes("/🎫️tickets/"));
+  const dispatchers: { prefix: string[]; open: boolean; site: string }[] = [];
+  let builtins: string[] = [];
+  for (const path of scripts) {
+    const source = readFileSync(join(root, path), "utf8");
+    if (!source.includes("dispatchOwnedScriptRoute(")) continue;
+    const visit = (node: ts.Node): void => {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "dispatchOwnedScriptRoute" && node.arguments[1] && ts.isArrayLiteralExpression(node.arguments[1])) {
+        const elements = node.arguments[1].elements, prefix: string[] = [];
+        for (const element of elements) { if (!ts.isStringLiteral(element)) break; prefix.push(element.text); }
+        dispatchers.push({ prefix, open: prefix.length < elements.length, site: path });
+      }
+      if (path === "📜️script.ts" && ts.isClassDeclaration(node) && node.name?.text === "VerifyScript") builtins = [...node.getText().matchAll(/segments\[0\] === "([^"]+)"/gu)].map((match) => match[1]!);
+      ts.forEachChild(node, visit);
+    };
+    visit(ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true));
+  }
+  expect(dispatchers.some(({ prefix, open, site }) => site === "📜️script.ts" && open && prefix.join(" ") === "verify")).toBe(true);
+  expect(builtins).toContain("taxonomy");
+  const reachable = (command: readonly string[]): boolean => dispatchers.some(({ prefix, open }) => prefix.length > 0 && prefix.slice(0, command.length).every((word, index) => command[index] === word) && (open ? command.length >= prefix.length : command.length <= prefix.length));
+  expect(routes.filter((route) => !reachable(route.command)).map((route) => `${route.project}:${route.target} ${route.command.join(" ")}`)).toEqual([]);
+  expect(routes.filter((route) => route.command[0] === "verify" && builtins.includes(route.command[1]!)).map((route) => route.command.join(" "))).toEqual([]);
+}, 120_000);
 
 
 test("the neutral repository coordinator builds with every domain plugin source removed from the resolver", async () => {

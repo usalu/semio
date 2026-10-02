@@ -1,6 +1,7 @@
 import { dirname, join, posix, relative, resolve } from "node:path";
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustStructure } from "../../../🔍️discovery/🟦️.ts";
+import type { BreachRecord } from "../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustCompileReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustStructure, type RustModuleGraph, type RustModuleContext, type RustModuleParticipation, type RustModuleParticipationReason } from "../../../🔍️discovery/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyArtifactRootOfMutationsDir, policyStripEmoji } from "../🪪️identity/🟦️.ts";
 import { mutationTaxonomyCancelled, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyAssignmentRow, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex, mutationTaxonomySourceSnapshot, type MutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";
@@ -44,7 +45,7 @@ export interface MutationTaxonomyRecord {
 
 export type MutationTaxonomyConsumerKind = "catalog" | "command" | "cross-owner" | "editor" | "leaf" | "oracle" | "registry" | "sibling-operation" | "test" | "viewer";
 
-export interface MutationTaxonomyConsumerEdge { readonly sourcePath: string; readonly targetPath: string; readonly kind: MutationTaxonomyConsumerKind; readonly relation: "import" | "mount" | "reexport" }
+export interface MutationTaxonomyConsumerEdge { readonly sourcePath: string; readonly targetPath: string; readonly kind: MutationTaxonomyConsumerKind; readonly relation: "import" | "mount" | "reexport"; readonly authority: "graph" | "physical" }
 
 export interface MutationTaxonomyAssignmentEvidence { readonly status: "resolved" | "missing" | "conflicting" | "invalid"; readonly ledgerPath: string | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly reason: string | null }
 
@@ -119,74 +120,85 @@ export function mutationTaxonomyAssignment(rows: readonly MutationTaxonomyAssign
 }
 
 
-export type MutationTaxonomyRustModuleContext = { readonly crateRoot: string; readonly modulePath: readonly string[]; readonly sourceScope: readonly string[]; readonly moduleBase: string };
-
-export type MutationTaxonomyRustModuleGraph = { readonly targets: ReadonlyMap<string, string>; readonly contexts: ReadonlyMap<string, readonly MutationTaxonomyRustModuleContext[]>; readonly namedCrates: ReadonlyMap<string, readonly string[]>; readonly dependencies: ReadonlyMap<string, readonly string[]> };
-
-
 export function mutationTaxonomyRustModuleKey(crateRoot: string, modulePath: readonly string[]): string {
-  return `${crateRoot}\0${modulePath.join("::")}`;
+  return crateRoot + "\0" + modulePath.join("::");
 }
 
-
-/** 🦀️ Builds only crate/module edges demonstrated by a mounted Rust source graph. */
-export function mutationTaxonomyRustModuleGraph(files: readonly string[], contents: ReadonlyMap<string, string>): MutationTaxonomyRustModuleGraph {
-  return inspectRustModuleGraph(files, (path) => contents.get(path), { conventionalRoots: true });
+/** 🦀️ Reads strict Cargo and compile origins from the inventory's captured byte view. */
+export function mutationTaxonomyRustModuleGraph(files: readonly string[], contents: ReadonlyMap<string, string>): RustModuleGraph {
+  const compileReferences = new Map(files.filter((path) => path.endsWith(".rs") && contents.has(path)).map((path) => [path, inspectRustCompileReferences(contents.get(path)!)]));
+  return inspectRustModuleGraph(files, (path) => contents.get(path), { conventionalRoots: true, strictManifests: true, compileReferences });
 }
-
 
 export function mutationTaxonomyRustUsePath(specifier: string): string[] | null {
   const match = /^\s*((?:::)?(?:[A-Za-z_][A-Za-z0-9_]*)(?:::[A-Za-z_][A-Za-z0-9_]*)*)/u.exec(specifier);
   return match ? match[1]!.replace(/^::/u, "").split("::") : null;
 }
 
+/** 🚦️ Distinguishes proven routes from refused origins and literal orphan observations. */
+export type MutationTaxonomyRustRoute = Readonly<{ state: "admitted"; targets: readonly string[]; provenance: "graph"; reason: null } | { state: "denied"; targets: readonly []; provenance: null; reason: RustModuleParticipationReason } | { state: "unmounted"; targets: readonly string[]; provenance: "physical" | null; reason: "unmounted-path" | "unavailable-source" | "unresolved-scope" | "ambiguous-local-target" | "nonportable-target" | null }>;
 
-export function mutationTaxonomyResolveRustGraphTargets(sourcePath: string, specifier: string, modulePathInSource: readonly string[], graph: MutationTaxonomyRustModuleGraph): string[] {
-  const parts = mutationTaxonomyRustUsePath(specifier);
-  const sourceContexts = (graph.contexts.get(sourcePath) ?? []).filter((context) => context.sourceScope.join("::") === modulePathInSource.join("::"));
-  if (!parts || sourceContexts.length !== 1) return [];
-  const source = sourceContexts[0]!;
-  let crateRoots: readonly string[] = [source.crateRoot];
-  let modulePath: string[];
-  if (parts[0] === "crate") modulePath = parts.slice(1);
-  else if (parts[0] === "self") modulePath = [...source.modulePath, ...parts.slice(1)];
-  else if (parts[0] === "super") {
-    let offset = 0;
-    while (parts[offset] === "super") offset += 1;
-    if (offset > source.modulePath.length) return [];
-    modulePath = [...source.modulePath.slice(0, source.modulePath.length - offset), ...parts.slice(offset)];
-  } else {
-    crateRoots = (graph.dependencies.get(source.crateRoot) ?? []).includes(parts[0]!) ? graph.namedCrates.get(parts[0]!) ?? [] : [];
-    modulePath = parts.slice(1);
+export function mutationTaxonomyResolveRustRoute(sourcePath: string, specifier: string, sourceScope: readonly string[], graph: RustModuleGraph, contents: ReadonlyMap<string, string>): MutationTaxonomyRustRoute {
+  const denied = (reason: RustModuleParticipationReason): MutationTaxonomyRustRoute => ({ state: "denied", targets: [], provenance: null, reason });
+  const orphan = (reason: "unmounted-path" | "unavailable-source" | "unresolved-scope" | "ambiguous-local-target" | "nonportable-target"): MutationTaxonomyRustRoute => ({ state: "unmounted", targets: [], provenance: null, reason });
+  for (const row of graph.participations) if (!("context" in row)) {
+    const base = posix.dirname(row.target.path);
+    if (base === "." || sourcePath.startsWith(base + "/")) return denied(row.reason);
   }
-  if (crateRoots.length !== 1) return [];
-  for (let length = modulePath.length; length > 0; length -= 1) {
-    const target = graph.targets.get(mutationTaxonomyRustModuleKey(crateRoots[0]!, modulePath.slice(0, length)));
-    if (target) return [target];
+  const known = graph.participations.filter((row): row is Extract<RustModuleParticipation, { context: RustModuleContext }> => row.target.kind !== "manifest" && row.target.kind === "source" && row.target.path === sourcePath);
+  const selected = known.filter((row) => row.context.sourceScope.join("\0") === sourceScope.join("\0"));
+  for (const row of selected) if (row.state === "denied") return denied(row.reason);
+  const source = contents.get(sourcePath), parts = mutationTaxonomyRustUsePath(specifier);
+  if (source === undefined) return known.length ? denied("unavailable-source") : orphan("unavailable-source");
+  const facts = inspectRustModuleGraphFacts(source);
+  if (rustModuleScopeProof(facts, sourceScope).state === "unresolved") return known.length ? denied("unresolved-scope") : orphan("unresolved-scope");
+  if (!parts) return known.length ? denied("unresolved-target") : orphan("unmounted-path");
+  const sourceContexts = (graph.contexts.get(sourcePath) ?? []).filter((context) => context.sourceScope.join("\0") === sourceScope.join("\0"));
+  if (known.length) {
+    if (sourceContexts.length === 0 || selected.length === 0) return denied("unresolved-scope");
+    const targets = new Set<string>();
+    for (const context of sourceContexts) {
+      let roots: readonly string[] = [context.crateRoot], path: readonly string[];
+      if (parts[0] === "crate") path = parts.slice(1);
+      else if (parts[0] === "self") path = [...context.modulePath, ...parts.slice(1)];
+      else if (parts[0] === "super") {
+        let offset = 0;
+        while (parts[offset] === "super") offset++;
+        if (offset > context.modulePath.length) return denied("unresolved-target");
+        path = [...context.modulePath.slice(0, context.modulePath.length - offset), ...parts.slice(offset)];
+      } else if ((graph.dependencies.get(context.crateRoot) ?? []).includes(parts[0]!)) { roots = graph.namedCrates.get(parts[0]!) ?? []; path = parts.slice(1); }
+      else path = [...context.modulePath, ...parts];
+      if (roots.length !== 1) return denied("conflicting-target");
+      for (let length = 0; length <= path.length; length++) if (graph.unresolvedTargets.has(mutationTaxonomyRustModuleKey(roots[0]!, path.slice(0, length)))) return denied("unresolved-target");
+      let target: string | undefined;
+      for (let length = path.length; length > 0 && !target; length--) target = graph.targets.get(mutationTaxonomyRustModuleKey(roots[0]!, path.slice(0, length)));
+      if (!target) return denied("unresolved-target");
+      if (contents.get(target) === undefined) return denied("unavailable-source");
+      targets.add(target);
+    }
+    if (targets.size !== 1) return denied("conflicting-target");
+    return { state: "admitted", targets: [...targets], provenance: "graph", reason: null };
   }
-  return [];
+  if (/^\s*::/u.test(specifier) || ["crate", "self", "super"].includes(parts[0]!)) return orphan("unmounted-path");
+  const declarations = facts.modules.filter((module) => module.modulePath.length === sourceScope.length + 1 && module.modulePath.slice(0, -1).join("\0") === sourceScope.join("\0") && module.name === parts[0]);
+  if (declarations.length !== 1) return orphan("ambiguous-local-target");
+  const declaration = declarations[0]!;
+  if (declaration.unresolved || declaration.inline || declaration.pathTarget === null) return orphan("unmounted-path");
+  const raw = declaration.pathTarget;
+  if (posix.isAbsolute(raw) || /^[A-Za-z]:/u.test(raw) || raw.includes("\\") || raw.includes("\0")) return orphan("nonportable-target");
+  const target = posix.normalize(posix.join(posix.dirname(sourcePath), raw)), targetSource = contents.get(target);
+  if (target.startsWith("../") || target === "..") return orphan("nonportable-target");
+  if (targetSource === undefined) return orphan("unavailable-source");
+  if (rustModuleScopeProof(inspectRustModuleGraphFacts(targetSource), []).state === "unresolved") return orphan("unresolved-scope");
+  return { state: "unmounted", targets: [target], provenance: "physical", reason: null };
 }
 
-
-export function mutationTaxonomyResolveTargets(repoRoot: string, taxonomy: ReturnType<typeof loadTaxonomy>, sourcePath: string, source: string, specifier: string, files: readonly string[], rustGraph: MutationTaxonomyRustModuleGraph, modulePathInSource: readonly string[] = []): string[] {
-  if (specifier.startsWith(".")) {
-    const base = posix.normalize(posix.join(posix.dirname(sourcePath), specifier));
-    const componentFiles = Object.values(taxonomy.componentFileKinds).map((kind) => canonicalPrimaryFilenameForKind(kind, taxonomy));
-    return [base, `${base}.ts`, `${base}.tsx`, `${base}.rs`, `${base}.json`, ...componentFiles.map((file) => `${base}/${file}`)].filter((candidate) => files.includes(candidate));
-  }
-  if (!sourcePath.endsWith(".rs")) return [];
-  const graphTargets = mutationTaxonomyResolveRustGraphTargets(sourcePath, specifier, modulePathInSource, rustGraph);
-  if (graphTargets.length > 0) return graphTargets;
-  if (/^(?:self|super|crate)::/u.test(specifier.trim())) return [];
-  const first = specifier.split("::")[0]?.trim();
-  if (!first) return [];
-  const declaration = inspectRustModuleGraphFacts(source).modules.find((module) => module.modulePath.length === modulePathInSource.length + 1 && module.modulePath.slice(0, -1).join("::") === modulePathInSource.join("::") && module.name === first && !module.inline && module.pathTarget !== null);
-  if (!declaration?.pathTarget) return [];
-  const target = relative(repoRoot, resolve(dirname(join(repoRoot, sourcePath)), declaration.pathTarget)).replaceAll("\\", "/");
-  if (files.includes(target)) return [target];
-  return [];
+export function mutationTaxonomyResolveTargets(taxonomy: ReturnType<typeof loadTaxonomy>, sourcePath: string, specifier: string, files: readonly string[]): string[] {
+  if (!specifier.startsWith(".")) return [];
+  const base = posix.normalize(posix.join(posix.dirname(sourcePath), specifier));
+  const componentFiles = Object.values(taxonomy.componentFileKinds).map((kind) => canonicalPrimaryFilenameForKind(kind, taxonomy));
+  return [base, base + ".ts", base + ".tsx", base + ".rs", base + ".json", ...componentFiles.map((file) => base + "/" + file)].filter((candidate) => files.includes(candidate));
 }
-
 
 /** 📊️ Builds the deterministic direct-leaf mutation inventory without traversing opaque roots. */
 export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTaxonomyInventoryOptions = {}): MutationTaxonomyInventory {
@@ -229,16 +241,17 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const specs = sourcePath.endsWith(".rs") ? mutationTaxonomyRustSpecs(source) : sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx") ? mutationTaxonomyTsSpecs(source) : [];
       for (const { specifier, relation, modulePath = [] } of specs) {
         const sourceLeaf = leaves.find((leaf) => sourcePath.startsWith(`${leaf.leafRel}/`));
-        const targets = mutationTaxonomyResolveTargets(repoRoot, taxonomy, sourcePath, source, specifier, before.files, rustGraph, modulePath);
+        const route = sourcePath.endsWith(".rs") ? mutationTaxonomyResolveRustRoute(sourcePath, specifier, modulePath, rustGraph, before.contents) : null;
+        const targets = route?.targets ?? mutationTaxonomyResolveTargets(taxonomy, sourcePath, specifier, before.files);
         if (targets.length > 0) {
           for (const targetPath of targets) {
             const target = leaves.find((leaf) => leaf.leafFiles.includes(targetPath));
             if (!target && sourceLeaf) helpersByLeaf.set(sourceLeaf.leafRel, [...(helpersByLeaf.get(sourceLeaf.leafRel) ?? []), targetPath]);
-            const edge: MutationTaxonomyConsumerEdge = { sourcePath, targetPath, kind: mutationTaxonomyConsumerKind(sourcePath, target?.rootRel ?? "", sourceLeaf?.rootRel ?? target?.rootRel ?? ""), relation };
+            const edge: MutationTaxonomyConsumerEdge = { sourcePath, targetPath, kind: mutationTaxonomyConsumerKind(sourcePath, target?.rootRel ?? "", sourceLeaf?.rootRel ?? target?.rootRel ?? ""), relation, authority: route?.provenance ?? "physical" };
             edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), edge]);
           }
         } else {
-          const unresolvedEdge = { sourcePath, specifier, reason: "The import could not be resolved to one unambiguous mounted source path." };
+          const unresolvedEdge = { sourcePath, specifier, reason: route?.reason ? `Rust route ${route.state}: ${route.reason}.` : "The import could not be resolved to one unambiguous mounted source path." };
           const mutationLike = /mutation/iu.test(specifier);
           if (sourceLeaf || mutationLike) unresolvedBySource.set(sourcePath, [...(unresolvedBySource.get(sourcePath) ?? []), unresolvedEdge]);
           if (sourceLeaf && mutationLike) unresolvedByLeaf.set(sourceLeaf.leafRel, [...(unresolvedByLeaf.get(sourceLeaf.leafRel) ?? []), unresolvedEdge]);
@@ -256,7 +269,8 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
       const mountedModule = rootFacts.modules.find((entry) => entry.name === alias && !entry.inline && entry.pathTarget !== null);
       const resolvedPath = mountedModule?.pathTarget ? posix.normalize(posix.join(leaf.rootRel, mountedModule.pathTarget)) : null;
       const explicitPath = new RegExp(`#\\[path\\s*=\\s*"[^"]+"\\]\\s*(?:pub\\s+)?mod\\s+${alias}\\s*;`, "u").test(rootSource);
-      if (targetPath && mounted && (!explicitPath || resolvedPath === targetPath)) edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), { sourcePath: rootComponent, targetPath, kind: "leaf", relation: "mount" }]);
+      const route = mutationTaxonomyResolveRustRoute(rootComponent, alias, [], rustGraph, before.contents);
+      if (route.state !== "denied" && route.provenance !== null && targetPath && mounted && (!explicitPath || resolvedPath === targetPath) && route.targets.includes(targetPath)) edgesByTarget.set(targetPath, [...(edgesByTarget.get(targetPath) ?? []), { sourcePath: rootComponent, targetPath, kind: "leaf", relation: "mount", authority: route.provenance }]);
     }
     for (const leaf of leaves) {
       const semantic = leaf.folder ? policyMutationSemanticIdentity(leaf.rootRel, leaf.folder, taxonomy) : leaf.identity.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();

@@ -21,11 +21,11 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "frame", kind: "reorder-frame", record: "ReorderFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_reorder_frame(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_reorder_frame(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.forward {
-            protocol::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Bring frame \"{}\" forward", self.frame_id), &format!("Rahmen \"{}\" nach vorn holen", self.frame_id))
         } else {
-            protocol::LocalizedLabel::native(&format!("Send frame \"{}\" backward", self.frame_id), &format!("Rahmen \"{}\" nach hinten stellen", self.frame_id))
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Send frame \"{}\" backward", self.frame_id), &format!("Rahmen \"{}\" nach hinten stellen", self.frame_id))
         }
     }
     fn target(&self) -> Vec<String> { vec![self.frame_id.clone()] }

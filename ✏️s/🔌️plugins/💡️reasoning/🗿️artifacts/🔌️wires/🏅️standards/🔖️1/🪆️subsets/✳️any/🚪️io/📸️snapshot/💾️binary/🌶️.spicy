@@ -1,4 +1,28 @@
-module Stdio_json_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+module Reasoning_wires_snapshot;
+import spicy;
+type Varint = unit {
+    var value: uint64 = 0;
+    var shift: uint64 = 0;
+    octets: uint8[] &until-including=(($$ & 0x80) == 0) foreach {
+        self.value |= cast<uint64>($$ & 0x7f) << self.shift;
+        self.shift += 7;
+    }
+};
+type Segment = unit {
+    tag: uint16 &byte-order=spicy::ByteOrder::Little;
+    stored_length: Varint;
+    raw_length: Varint if ((self.tag & 0xff00) == 0x0300);
+    stored_bytes: bytes &size=self.stored_length.value;
+    crc32: uint32 &byte-order=spicy::ByteOrder::Little;
+};
+public type Document = unit {
+    magic: b"\x89SPK\x0d\x0a\x1a\x0a";
+    format_major: uint16 &byte-order=spicy::ByteOrder::Little;
+    format_minor: uint16 &byte-order=spicy::ByteOrder::Little;
+    required_flags: uint32 &byte-order=spicy::ByteOrder::Little;
+    optional_flags: uint32 &byte-order=spicy::ByteOrder::Little;
+    header_crc32: uint32 &byte-order=spicy::ByteOrder::Little;
+    reserved: bytes &size=8;
+    segments: Segment[] &until-including=($$.tag == 0);
+    footer: bytes &size=84;
 };

@@ -28,10 +28,20 @@ fn knife_selection_parameters_match_shared_fixtures() {
 #[test]
 fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
     let _serial = crate::test_serial::lock();
+    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{apply_generation3d_mutation, Generation3dMutation};
     let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    let result = with_host(&snapshot.host_snapshot, |host| {
-        let before: serde_json::Value = serde_json::from_str(&host.evaluate().map_err(|error| error.to_string())?).unwrap();
-        let id = insert_operation(host, &payload(), &["extrude@meshOut#0.face.0".into()])?;
+    let (id, rows) = cut_rows(&payload(), &snapshot.host_snapshot, &["extrude@meshOut#0.face.0".into()]).unwrap();
+    let channels: Vec<&str> = rows.iter().filter_map(|row| match row { Generation3dMutation::ChangeWidgetInput(input) if input.id == id => Some(input.channel.as_str()), _ => None }).collect();
+    assert_eq!(channels, ["face", "start", "end"], "the cut's inputs are absolute leaves after the default-params splice");
+    let mut landed = snapshot.clone();
+    for row in rows {
+        apply_generation3d_mutation(&mut landed, &row).unwrap();
+        row.retire_cold();
+    }
+    let before_snapshot = snapshot.clone();
+    let before: serde_json::Value = serde_json::from_str(&with_host(&before_snapshot.host_snapshot, |host| host.evaluate()).unwrap()).unwrap();
+    before_snapshot.retire_cold();
+    let result = with_host(&landed.host_snapshot, |host| {
         assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.to == "analysis" && wire.to_port == "mesh"));
         assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.to == id && wire.to_port == "mesh"));
         let after: serde_json::Value = serde_json::from_str(&host.evaluate().map_err(|error| error.to_string())?).unwrap();
@@ -43,6 +53,7 @@ fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
         }
         Ok::<_, String>(())
     });
+    landed.retire_cold();
     snapshot.retire_cold();
     result.unwrap();
 }

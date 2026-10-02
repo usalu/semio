@@ -6,7 +6,11 @@
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, PUZZLE2D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::{LabelText, LocalizedLabel, UtilityCategory, UtilityDefinition, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
 pub const UTILITY_ID: &str = "areaBrush";

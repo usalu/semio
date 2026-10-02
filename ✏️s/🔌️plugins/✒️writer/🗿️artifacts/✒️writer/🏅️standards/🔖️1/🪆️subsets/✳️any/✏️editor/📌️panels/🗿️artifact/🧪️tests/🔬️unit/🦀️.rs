@@ -5,7 +5,7 @@ use crate::editor::writer::unit_tests::context::{app_with_jack, new_app, render 
 async fn renders_document_tree_for_jack() {
     use semio_framework_plugin::PluginApp;
     let mut app = new_app().await;
-    let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::document_dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::document_dsl::jack_example_json()), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("render JSON");
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Query"));
@@ -113,7 +113,7 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -149,7 +149,7 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_ast_id
 #[semio_framework_async_macros::async_test]
 async fn ast_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = crate::WriterSnapshot { language_id: "jack".into(), document: crate::document_child_handle_with_text("doc", "match Wall\n", "jack"), ..crate::WriterSnapshot::default() };
-    let tree = render(&document, writer_play_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&document, writer_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     let ast = window_law_node(&tree, AST_SECTION);

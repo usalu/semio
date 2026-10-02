@@ -84,7 +84,7 @@ async fn reorganize_is_the_context_menus_top_level_layout_verb() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let menu = semio_framework_plugin::PluginApp::context_menu(&mut *app, &request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = semio_framework_plugin::PluginApp::context_menu(&mut *app, &request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     let ids: Vec<String> = menu.iter().map(|item| item.id.clone()).collect();
     assert!(ids.iter().any(|id| id == "reorganize"), "the flow canvas context menu must offer reorganize at top level: {ids:?}");
 }

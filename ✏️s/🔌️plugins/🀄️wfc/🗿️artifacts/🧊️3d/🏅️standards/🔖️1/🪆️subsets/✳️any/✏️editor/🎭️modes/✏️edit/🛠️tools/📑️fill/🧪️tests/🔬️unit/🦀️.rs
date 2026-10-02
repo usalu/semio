@@ -4,7 +4,8 @@ use super::*;
 use crate::examples::tower_stack;
 use crate::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
-use semio_framework_plugin::{LocalizedLabel, ToolRunJobPort};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 use std::sync::Arc;
 

@@ -5,14 +5,14 @@
 //! committed, independently handcrafted per-kind specification fixtures
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🧬️mutations/<slug>/<fixture>/`)
 //! literally — no recomputation, no reimplementation of mutation semantics. `subject` drives this
-//! repository's own `apply_dag_mutation_reporting` over the full fourteen-kind `DagMutation`
+//! repository's own `apply_dag_mutation_reporting` over the full seventeen-kind `DagMutation`
 //! vocabulary.
 //!
 //! **The one fact everything here turns on.** `DagSnapshot` persists NO nodes and NO edges — only
 //! `schema` and one composed `s.stdio.semio.graph` child handle whose `childId` is a content digest
 //! of the child. So the persisted projection moves if and only if the working scene moved, which
 //! makes it an exact observability surface; and a committed `➡️after` for an APPLIED mutation would
-//! have to carry a hand-forged `DefaultHasher` digest, which is why all fourteen committed vectors
+//! have to carry a hand-forged `DefaultHasher` digest, which is why all seventeen committed vectors
 //! are REJECTION vectors. Each `mutate-<kind>` handler therefore runs BOTH halves: the committed
 //! vector for its exact `(code, severity, target)` triple with the handle required to stay put, and
 //! the feature's own real-effect payload against the real committed five-node pipeline with the
@@ -60,6 +60,9 @@ const KINDS: &[&str] = &[
     "reorder-nodes",
     "connect-nodes",
     "disconnect-nodes",
+    "move-nodes",
+    "set-node-positions",
+    "set-slider",
 ];
 
 /// 🗣️ The real committed pipeline — `slider → scale → combine → screen` with `mode` feeding
@@ -75,10 +78,10 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "create-node" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🎯️outcome/🔣️.json"),
         ),
         "delete-node" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
@@ -157,6 +160,24 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/🎯️outcome/🔣️.json"),
+        ),
+        "move-nodes" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️rejects/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️rejects/🎯️outcome/🔣️.json"),
+        ),
+        "set-node-positions" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️rejects/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️rejects/🎯️outcome/🔣️.json"),
+        ),
+        "set-slider" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🎚️set-slider/🧪️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎚️set-slider/🧪️rejects/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎚️set-slider/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎚️set-slider/🧪️rejects/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-dag-1: no specification vector registered for kind {other:?}"),
     }

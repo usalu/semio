@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧪️ The presentation product's contribution to the repository test platform. Every entry is a test-only reference implementation for one part of the slide authoring pipeline; the subject is the product's own compiler under 📦️packages/🟦️typescript. Every package listed here is a devDependency of the declared hostPath and is imported only from 🧪️tests/**.",
   "oracles": [

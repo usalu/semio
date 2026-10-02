@@ -6,19 +6,13 @@ use crate::editor::dag::unit_tests::context::DagApp;
 use crate::editor::dag::DagCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb, settle_registered_typed_operation};
-use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::PluginApp;
 use serde_json::json;
 
-/// 🧪️ `nodeGraphEdit` batches multiple sub-edits (connect + delete-selection here) into a single
-/// typed command — mirrors the pre-migration JSON `operations` array, now closed and typed. The
-/// `graph` domain's live selection (populated via the framework's own `interactionSelect` action —
-/// the only way a downstream crate can populate a genuine `InteractionView`) drives the batched
-/// delete-selection sub-op — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-///
-/// 🧪️ The wrapper is MOUNTED, so every typed dispatch is settled before the document is read and
-/// the framework-injected `interactionSelect` admission is settled through its reserved job.
+/// 🧪️ `nodeGraphEdit` batches id-keyed sub-edits: a `connect` row adds an edge, and a `delete` row removes exactly the
+/// nodes it names together with every wire they hold — never an ambient selection.
 #[semio_framework_async_macros::async_test]
-async fn node_graph_edit_batches_connect_then_delete_selection() {
+async fn node_graph_edit_connects_then_deletes_the_named_node() {
     let mut app = context::new_app().await;
     let (source_id, target_id) = {
         let projection = app.snapshot().expect("projection");
@@ -32,17 +26,11 @@ async fn node_graph_edit_batches_connect_then_delete_selection() {
     )
     .await;
     assert!(app.snapshot().expect("projection").edges().len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
-
-    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: source_id }]).expect("targets");
-    let admitted = app
-        .handle_action(INTERACTION_SELECT_ACTION_ID, Some(&dsl::DslValue::from(&json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }))), &meta("local"))
-        .await
-        .expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("interactionSelect admission settles");
-    context::settle(&mut app).await;
     let nodes_before = app.snapshot().expect("projection").nodes().len();
-    context::dispatch(&mut app, DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] })).await;
-    assert_eq!(app.snapshot().expect("projection").nodes().len(), nodes_before - 1);
+    context::dispatch(&mut app, DagCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Delete { node_ids: vec![source_id.clone()], synapse_ids: Vec::new() }] })).await;
+    let projection = app.snapshot().expect("projection");
+    assert_eq!(projection.nodes().len(), nodes_before - 1);
+    assert!(!projection.edges().iter().any(|edge| edge.source.starts_with(&format!("{source_id}@")) || edge.target.starts_with(&format!("{source_id}@"))), "the deleted node's wires go with it");
     context::close(&mut app);
 }
 
@@ -103,7 +91,7 @@ fn position(app: &DagApp, id: &str) -> (f64, f64) {
 
 fn slider_value(app: &DagApp, id: &str) -> f64 {
     match app.snapshot().expect("projection").nodes().into_iter().find(|node| node.id == id).map(|node| node.kind) {
-        Some(crate::DagNodeKind::Slider { value, .. }) => value,
+        Some(DagNodeKind::Slider { value, .. }) => value,
         other => panic!("{id} is no slider: {other:?}"),
     }
 }
@@ -165,29 +153,6 @@ async fn zero_trace_two_transactions_and_the_palette_drop() {
     assert_eq!(rows[1].transaction.as_ref().expect("drop").tool, "s.dag.dag@1/*#editor#moveMediaNode");
     assert_eq!(english(&rows[1]), "Move 1 node(s) by (20, 80)", "the drop is the offset from the base position after the first drag");
     assert_eq!(position(&app, &id), (x + 30.0, y + 80.0));
-    context::close(&mut app);
-}
-
-/// ⚖️ LAW: the React surface's whole-snapshot commit of a drag is still intent — every node moved by one offset is ONE
-/// `move-nodes` leaf in ONE tool transaction, never one absolute move per node.
-#[semio_framework_async_macros::async_test]
-async fn a_host_snapshot_drag_is_one_relative_leaf() {
-    let mut app = context::new_app().await;
-    let document = app.snapshot().expect("projection");
-    let mut fixture = semio_framework_artifact_infinite_dag::dag_host_snapshot_from_document(&semio_framework_artifact_infinite_dag::DagSnapshot::from(&document), semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 });
-    let ids: Vec<String> = fixture.nodes.iter().take(3).map(|node| node.id.clone()).collect();
-    for node in fixture.nodes.iter_mut().filter(|node| ids.contains(&node.id)) {
-        node.x += 25.0;
-        node.y += 5.0;
-    }
-    let before = edit_rows(&mut app).await.len();
-    send(&mut app, "nodeGraphEdit", json!({ "operations": [{ "operation": "setHostSnapshot", "hostSnapshotJson": dsl::json::to_json_string(&fixture) }] })).await;
-    let rows = edit_rows(&mut app).await;
-    let rows = &rows[before..];
-    assert_eq!(rows.len(), 1, "{rows:?}");
-    assert!(rows[0].transaction.is_some(), "a snapshot drag is a tool transaction");
-    assert_eq!(rows[0].op_lines.iter().filter(|line| line.starts_with("move-nodes")).count(), 1, "{:?}", rows[0].op_lines);
-    assert!(!rows[0].op_lines.iter().any(|line| line.starts_with("move-node ")), "no absolute per-node move: {:?}", rows[0].op_lines);
     context::close(&mut app);
 }
 
@@ -293,4 +258,25 @@ fn the_host_wire_decodes_by_name() {
     assert!(decode(json!({ "operations": [{ "operation": "teleport" }] })).is_err());
     assert_eq!(decode(json!({ "operations": [], "gesture": "press", "abort": "blur" })).expect("an abort carries no rows").operations, Vec::new());
 }
+/// ⚖️ LAW: the guest decodes the renderer's committed node-graph row vocabulary — every accepted row, and only those — and
+/// maps each to its typed row (`insertPort` sides by name, `delete` by its node and wire ids).
+#[test]
+fn the_renderer_row_fixture_decodes_exactly() {
+    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
+    let batch = |row: &serde_json::Value| NodeGraphEdit::from_action_args(Some(&dsl::DslValue::from(json!({ "operations": [row] }))));
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        assert!(batch(&case["row"]).is_ok(), "accepted row {} refused", case["id"]);
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        assert!(batch(&case["row"]).is_err(), "refused row {} decoded", case["id"]);
+    }
+    let decoded = NodeGraphEdit::from_action_args(Some(&dsl::DslValue::from(json!({ "operations": [
+        { "operation": "insertPort", "nodeId": "add", "side": "output", "index": 0 },
+        { "operation": "delete", "nodeIds": ["add"], "synapseIds": ["s1"] }
+    ] })))).expect("rows decode");
+    assert_eq!(decoded.operations, vec![DagNodeGraphEditOp::InsertPort { node_id: "add".into(), side: "output".into(), index: 0 }, DagNodeGraphEditOp::Delete { node_ids: vec!["add".into()], synapse_ids: vec!["s1".into()] }]);
+}
+
+/// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
+const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 //#endregion ✋️GestureLaws

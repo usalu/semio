@@ -1,21 +1,23 @@
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import type { DslValue, FormExpr, FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
+import{parseIntrinsicValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 
 /** 📝️ Authoritative form content survives standalone document reloads. */
 export interface FormsDefinition { steps: FormStep[] }
 
 /** 🌳️ Admits only the closed condition language. */
-export function parseCondition(value: unknown, depth = 0): FormExpr {
-  if (depth > 32 || !value || typeof value !== "object" || Array.isArray(value)) throw new Error("invalid-condition");
-  const row = value as Record<string, unknown>;
-  switch (row.kind) {
-    case "const": parseSchemaRecord(value, ["kind", "value"]); if ("value" in row) return { kind: "const", value: row.value as DslValue }; break;
-    case "var": parseSchemaRecord(value, ["kind", "name"]); if (typeof row.name === "string") return { kind: "var", name: row.name }; break;
-    case "eq": parseSchemaRecord(value, ["kind", "left", "right"]); return { kind: "eq", left: parseCondition(row.left, depth + 1), right: parseCondition(row.right, depth + 1) };
-    case "and": case "or": parseSchemaRecord(value, ["kind", "items"]); if (Array.isArray(row.items)) return { kind: row.kind, items: row.items.map(item => parseCondition(item, depth + 1)) }; break;
-    case "truthy": parseSchemaRecord(value, ["kind", "expr"]); return { kind: "truthy", expr: parseCondition(row.expr, depth + 1) };
-  }
-  throw new Error("invalid-condition");
+export function parseCondition(value: unknown): FormExpr {
+  let result:FormExpr|undefined;const active=new Set<object>(),pending:({value:unknown;put:(expr:FormExpr)=>void}|{close:object})[]=[{value,put:expr=>{result=expr}}];
+  while(pending.length){const frame=pending.pop()!;if("close"in frame){active.delete(frame.close);continue;}const source=frame.value;if(!source||typeof source!=="object"||Array.isArray(source)||active.has(source)||!("kind"in source))throw Error("invalid-condition");active.add(source);pending.push({close:source});
+    const put=frame.put;switch(source.kind){
+      case"const":{const row=parseSchemaRecord(source,["kind","value"]);put({kind:"const",value:parseIntrinsicValue(row.value)});break;}
+      case"var":{const row=parseSchemaRecord(source,["kind","name"]);if(typeof row.name!=="string")throw Error("invalid-condition");put({kind:"var",name:row.name});break;}
+      case"eq":{const row=parseSchemaRecord(source,["kind","left","right"]),expr={kind:"eq"}as FormExpr&{kind:"eq"};put(expr);pending.push({value:row.right,put:value=>{expr.right=value}},{value:row.left,put:value=>{expr.left=value}});break;}
+      case"and":case"or":{const row=parseSchemaRecord(source,["kind","items"]);if(!Array.isArray(row.items))throw Error("invalid-condition");const items:FormExpr[]=new Array(row.items.length);put({kind:source.kind,items});for(let i=row.items.length-1;i>=0;i--)pending.push({value:row.items[i],put:value=>{items[i]=value}});break;}
+      case"truthy":{const row=parseSchemaRecord(source,["kind","expr"]),expr={kind:"truthy"}as FormExpr&{kind:"truthy"};put(expr);pending.push({value:row.expr,put:value=>{expr.expr=value}});break;}
+      default:throw Error("invalid-condition");
+    }
+  }return result!;
 }
 
 /** 🪪️ Decodes the schema's complete field contract without external runtime dependencies. */
@@ -32,7 +34,7 @@ export function parseFormsDefinition(value: unknown): FormsDefinition {
     unique(step.id, stepIds);
     if (typeof step.title !== "string" || step.description !== undefined && typeof step.description !== "string" || !Array.isArray(step.blocks)) throw new Error("invalid step");
     const blocks = step.blocks.map(value => {
-      const question = parseSchemaRecord(value, ["id", "label", "kind", "description", "required", "placeholder", "default", "min", "max", "step", "unit", "text", "options", "fields", "schema", "src", "accept", "fixtureSlug", "params", "condition"]);
+      const question = {...parseSchemaRecord(value, ["id", "label", "kind", "description", "required", "placeholder", "default", "min", "max", "step", "unit", "text", "options", "fields", "schema", "src", "accept", "fixtureSlug", "params", "condition"])};
       unique(question.id, questionIds);
       if (typeof question.kind !== "string" || !question.kind.trim() || typeof question.label !== "string") throw new Error("invalid question");
       for (const key of ["description", "placeholder", "unit", "text", "schema", "src", "accept", "fixtureSlug"]) if (question[key] !== undefined && typeof question[key] !== "string") throw new Error("invalid question text");
@@ -50,9 +52,10 @@ export function parseFormsDefinition(value: unknown): FormsDefinition {
           if (collection === "fields" && item.value !== undefined && (typeof item.value !== "number" || !Number.isFinite(item.value))) throw new Error("invalid vector value");
         }
       }
-      if (question.params !== undefined && (!question.params || typeof question.params !== "object" || Array.isArray(question.params))) throw new Error("invalid extension parameters");
+      if(question.default!==undefined)question.default=parseIntrinsicValue(question.default);
+      if(question.params!==undefined){question.params=parseIntrinsicValue(question.params);if((question.params as DslValue).kind!=="object")throw Error("invalid extension parameters");}
       if (question.condition !== undefined) question.condition = parseCondition(question.condition);
-      return structuredClone(question) as unknown as FormQuestion;
+      return question as unknown as FormQuestion;
     });
     return { ...step, blocks } as unknown as FormStep;
   });

@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "files": {
+    "a/Cargo.toml": "[package]\nname=\"owner-a\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n",
+    "a/🦀️.rs": "#[path=\"leaf.rs\"] mod leaf;",
+    "a/leaf.rs": "pub const VALUE: u8 = 1;",
+    "b/Cargo.toml": "[package]\nname=\"owner-b\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n",
+    "b/🦀️.rs": "pub const VALUE: u8 = 2;",
+    "b/📋️project.json": "{\"name\":\"explicit-b\",\"targets\":{}}",
+    "🧪️emoji/Cargo.toml": "[package]\nname=\"emoji-owner\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n",
+    "🧪️emoji/🦀️.rs": "pub const VALUE: u8 = 3;",
+    "target/Cargo.toml": "[package]\nname=\"excluded\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n",
+    "target/🦀️.rs": ""
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "files": [],
+      "names": []
+    },
+    {
+      "id": "subset",
+      "files": [
+        "a/Cargo.toml"
+      ],
+      "names": [
+        "owner-a"
+      ]
+    },
+    {
+      "id": "explicit-overrides",
+      "files": [
+        "b/📋️project.json",
+        "b/Cargo.toml"
+      ],
+      "names": [
+        "explicit-b"
+      ]
+    },
+    {
+      "id": "supplied-cargo-without-project",
+      "files": [
+        "a/Cargo.toml",
+        "b/Cargo.toml"
+      ],
+      "names": [
+        "owner-a",
+        "owner-b"
+      ]
+    },
+    {
+      "id": "missing",
+      "files": [
+        "missing/Cargo.toml"
+      ],
+      "names": []
+    },
+    {
+      "id": "duplicate",
+      "files": [
+        "a/Cargo.toml",
+        "a/Cargo.toml"
+      ],
+      "names": [
+        "owner-a"
+      ]
+    },
+    {
+      "id": "windows",
+      "files": [
+        "a\\Cargo.toml"
+      ],
+      "names": [
+        "owner-a"
+      ]
+    },
+    {
+      "id": "raw-traversal",
+      "files": [
+        "missing/../a/Cargo.toml"
+      ],
+      "names": []
+    },
+    {
+      "id": "absolute",
+      "files": [
+        "$absolute"
+      ],
+      "names": []
+    },
+    {
+      "id": "generated",
+      "files": [
+        "target/Cargo.toml"
+      ],
+      "names": []
+    },
+    {
+      "id": "emoji",
+      "files": [
+        "🧪️emoji/Cargo.toml"
+      ],
+      "names": [
+        "emoji-owner"
+      ]
+    },
+    {
+      "id": "lossy",
+      "files": [
+        "�emoji/Cargo.toml"
+      ],
+      "names": []
+    },
+    {
+      "id": "linked-ancestor",
+      "files": [
+        "linked/Cargo.toml"
+      ],
+      "names": []
+    },
+    {
+      "id": "linked-leaf",
+      "files": [
+        "leaf-link/Cargo.toml"
+      ],
+      "names": []
+    }
+  ],
+  "snapshot": {
+    "entry": "a/🦀️.rs",
+    "inputs": [
+      "a/leaf.rs",
+      "a/🦀️.rs"
+    ],
+    "nextSource": "#[path=\"next.rs\"] mod next;",
+    "nextFile": "a/next.rs",
+    "nextInputs": [
+      "a/next.rs",
+      "a/🦀️.rs"
+    ]
+  },
+  "authorities": [
+    "⚡️caching/🔣️policy.json",
+    "🔣️taxonomy.json",
+    "🕸️dependencies/🧩️runtime/🟨️.mjs",
+    "⚡️caching/📥️inference/🟨️.mjs"
+  ],
+  "imports": [
+    {
+      "id": "type-only",
+      "path": "case.ts",
+      "source": "import type {Value} from \"./erased.ts\"; export const value=1;",
+      "imports": []
+    },
+    {
+      "id": "value",
+      "path": "case.ts",
+      "source": "import {value} from \"./leaf.ts\"; export const result=value;",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "export",
+      "path": "case.ts",
+      "source": "export {value} from \"./leaf.ts\";",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "dynamic",
+      "path": "case.ts",
+      "source": "export const load=()=>import(\"./leaf.ts\");",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "require",
+      "path": "case.cjs",
+      "source": "module.exports=require(\"./leaf.cjs\");",
+      "imports": [
+        "./leaf.cjs"
+      ]
+    },
+    {
+      "id": "erased-export",
+      "path": "case.ts",
+      "source": "export type {Value} from \"./erased.ts\";",
+      "imports": []
+    },
+    {
+      "id": "mixed",
+      "path": "case.ts",
+      "source": "import {type Value,value} from \"./leaf.ts\"; export const result=value;",
+      "imports": [
+        "./leaf.ts"
+      ]
+    },
+    {
+      "id": "declaration",
+      "path": "case.d.ts",
+      "source": "import {Value} from \"./erased.ts\"; export declare const value: Value;",
+      "imports": []
+    }
+  ]
+}

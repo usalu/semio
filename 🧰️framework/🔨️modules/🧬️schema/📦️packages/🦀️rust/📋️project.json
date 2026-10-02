@@ -35,14 +35,6 @@
         "forwardAllArgs": true
       }
     },
-    "document-http-check": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts document-http-check"
-      },
-      "outputs": []
-    },
     "test-subset-contract": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -50,7 +42,51 @@
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-subset-contract"
+        "command": "bun ./📜️script.ts test subset-contract"
+      }
+    },
+    "test-entity-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "generate"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test entity-ownership"
+      }
+    },
+    "test-mutation-leaf-registration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test mutation-leaf-registration"
+      }
+    },
+    "test-neutrality": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test neutrality"
       }
     }
   },
@@ -59,18 +95,21 @@
   ],
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📋️plan/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📋️plan/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-      "{projectRoot}/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🏷️entity-ownership/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📏️ownership/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
     ]
   }
 }

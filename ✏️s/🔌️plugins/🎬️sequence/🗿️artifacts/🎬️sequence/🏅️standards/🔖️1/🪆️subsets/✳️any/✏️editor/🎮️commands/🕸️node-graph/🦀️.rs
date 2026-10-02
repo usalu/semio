@@ -1,12 +1,16 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::sequence_child_emit_from_host_mutation;
+use crate::editor::sequence::{sequence_child_leaves_emit, sequence_child_leaves_from_host_mutation, SEQUENCE_PLAY_APP_ID};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceSnapshot};
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use dsl::os_pack::json::{self, Value};
+use semio_framework_plugin::app::ChildEmit;
+use semio_framework_tool_machine::{node_drag_commit, NodeDragRecord, NodeGraphEditRow};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️NodeGraphEdit
 pub mod node_graph_edit {
@@ -18,48 +22,72 @@ pub mod node_graph_edit {
         pub operations_json: String,
     }
 
-    fn edit_with_selection(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, selected: &[String]) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        let sub_operations: Vec<Value> = match json::parse(&payload.operations_json) {
-            Ok(Value::Array(operations)) => operations,
-            _ => Vec::new(),
+    /// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.
+    pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
+
+    /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
+    /// `insertPort` rows a sequence has no widget for are refused by name, so the whole batch is refused.
+    pub(crate) fn sequence_node_graph_row(row: &dsl::DslValue) -> Result<NodeGraphEditRow, Fault> {
+        match NodeGraphEditRow::from_row(row).map_err(|reason| Fault::from(format!("sequence nodeGraphEdit refusal: {reason}")))? {
+            NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(Fault::from("sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
+            row => Ok(row),
+        }
+    }
+
+    /// 🧾️ Every row edits the editor host by the ids it names, and the published edit is the child INTENT leaves that carry
+    /// the content from where it was to where the host left it (`sequence_content_leaves`), never a whole-content snapshot:
+    /// - `move` — the node-graph gesture record (design §13.3): its steps move by the ONE offset, landing as relative
+    ///   `drag-nodes`; a drag commits through the ONE node-drag machine as ONE composed-child tool transaction (design §12);
+    /// - `connect`, `disconnect`, `delete` — one-shot structural edits of the steps and edges they name.
+    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
+        let rows: Vec<NodeGraphEditRow> = match json::parse(&payload.operations_json) {
+            Ok(Value::Array(rows)) => rows.iter().map(|row| sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?,
+            _ => return Err(Fault::from("sequence nodeGraphEdit operations must be a JSON array")),
         };
-        sequence_child_emit_from_host_mutation(doc, |host| {
-            for operation in &sub_operations {
-                match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                    "setHostSnapshot" => {
-                        if let Some(fixture) = operation.get("hostSnapshotJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::SequenceHostSnapshot>(json).ok()) {
-                            let _ = host.replace_snapshot(fixture);
+        let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| if let NodeGraphEditRow::Move(record) = row { Some(record.clone()) } else { None }).filter(NodeDragRecord::moves).collect();
+        let leaves = sequence_child_leaves_from_host_mutation(doc, |host| {
+            if !records.is_empty() {
+                let mut next = host.snapshot.clone();
+                for record in &records {
+                    for step in next.steps.iter_mut().filter(|step| record.node_ids.contains(&step.id)) {
+                        step.x += record.dx;
+                        step.y += record.dy;
+                    }
+                }
+                let _ = host.replace_snapshot(next);
+            }
+            for row in &rows {
+                match row {
+                    NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => {
+                        let _ = host.connect_steps(source_node_id, target_node_id);
+                    }
+                    NodeGraphEditRow::Disconnect { synapse_id } => {
+                        if let Some(edge) = host.snapshot.edges.iter().find(|edge| &edge.id == synapse_id).cloned() {
+                            host.disconnect_steps(&edge.from, &edge.to);
                         }
                     }
-                    "deleteSelection" => {
-                        for step_id in selected {
+                    NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                        for edge in host.snapshot.edges.iter().filter(|edge| synapse_ids.contains(&edge.id)).cloned().collect::<Vec<_>>() {
+                            host.disconnect_steps(&edge.from, &edge.to);
+                        }
+                        for step_id in node_ids {
                             host.remove_step(step_id);
                         }
                     }
-                    "connect" => {
-                        let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
-                        let to = operation.get("targetNodeId").and_then(|value| value.as_str());
-                        if let (Some(from), Some(to)) = (from, to) {
-                            let _ = host.connect_steps(from, to);
-                        }
-                    }
-                    _ => {}
+                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => {}
                 }
             }
-        })
-    }
-
-    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg).await` is framework-fixed at this exact 3-arg
-    /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
-    /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
-    /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
-    /// treating the selection as empty; every other sub-operation (`setHostSnapshot`/`connect`) is unaffected.
-    pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        edit_with_selection(payload, doc, &[])
-    }
-
-    pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        edit_with_selection(payload, doc, &interaction.selection(crate::editor::sequence::SEQUENCE_INTERACTION_STEPS).ids)
+        })?;
+        let dragged = leaves.iter().any(|leaf| matches!(leaf, SemioFlowMutation::DragNodes(_)));
+        let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
+        if !dragged || authoring_seed.is_empty() {
+            return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves));
+        }
+        let Some(gesture) = records.first().map(|record| record.gesture_id.as_str()) else { return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves)) };
+        let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
+        let Some((transaction, leaves)) = node_drag_commit(format!("{SEQUENCE_PLAY_APP_ID}#{NODE_GRAPH_EDIT_VERB}"), protocol::ActorId(authoring_seed.to_string()), gesture, leaves, clock) else { return Ok(Emit::default()) };
+        let child = ChildEmit::of::<SemioFlowSnapshot, _>("content", &doc.snapshot.content.child_id, &leaves);
+        Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::commit_child_transaction(transaction, vec![child]) })
     }
 }
 //#endregion 🔖️NodeGraphEdit

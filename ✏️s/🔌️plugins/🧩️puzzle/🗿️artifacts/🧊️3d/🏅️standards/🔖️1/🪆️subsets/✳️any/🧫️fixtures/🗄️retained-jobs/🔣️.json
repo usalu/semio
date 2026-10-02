@@ -167,6 +167,7 @@
     ],
     "worldRelocate": [
       "gestureRead",
+      "proximityScan",
       "toolCommit",
       "closeOwner"
     ],
@@ -1246,6 +1247,7 @@
       "toolId": "worldRelocate",
       "boundaries": [
         "gestureRead",
+        "proximityScan",
         "toolCommit",
         "closeOwner"
       ],
@@ -1258,6 +1260,7 @@
       "toolId": "worldRelocate",
       "boundaries": [
         "gestureRead",
+        "proximityScan",
         "toolCommit",
         "closeOwner"
       ],

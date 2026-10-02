@@ -21,7 +21,9 @@
 //! to send back, so the browser (`🚪️host-io`) and native halves both drive it the same way the
 //! plugin bridge is driven — see the packet report for the socket wiring that is still absent.
 
-use ui_wgpu::wgpu::{Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::Terminology;
 
 //#region 🔖️BridgeVersion
 /// 🔢️ `BRIDGE_VERSION` from the SSOT — the value a `Hello` frame carries.

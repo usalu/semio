@@ -1,0 +1,78 @@
+{
+  "dialect": {
+    "artifactKind": "s.lowpoly.lowpoly",
+    "standard": "1",
+    "subset": "*"
+  },
+  "schema": "lowpoly authored 世界\u0000",
+  "objectIds": [
+    "same",
+    "same",
+    ""
+  ],
+  "names": [
+    "世界",
+    "🧱",
+    ""
+  ],
+  "meshContent": "{ \"vertices\": [] }\u0000intrinsic",
+  "meshChild": {
+    "childId": "child !@/",
+    "target": {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "independent",
+        "standard": "",
+        "subset": "/*"
+      }
+    }
+  },
+  "floatWords": [
+    "00000000",
+    "80000000",
+    "3f800000",
+    "7f800000",
+    "ff800000",
+    "7f800123",
+    "ffc01234",
+    "00000001",
+    "7f7fffff"
+  ],
+  "opacityWords": [
+    "7f800321",
+    "80000000"
+  ],
+  "pixels": [
+    0,
+    1,
+    127,
+    128,
+    255
+  ],
+  "editedText": "independent SQL edit 世界",
+  "longOctets": 1024,
+  "controlledNative": {
+    "text": "世界 🧱",
+    "repeat": 40000,
+    "cancelAfter": 65536,
+    "rowBudget": 2,
+    "valueBudget": 128
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.lowpoly.lowpoly",
+      "standard": "1",
+      "subset": "unknown"
+    },
+    {
+      "artifactKind": "s.lowpoly.lowpoly",
+      "standard": "wrong",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.space.home",
+      "standard": "1",
+      "subset": "*"
+    }
+  ]
+}

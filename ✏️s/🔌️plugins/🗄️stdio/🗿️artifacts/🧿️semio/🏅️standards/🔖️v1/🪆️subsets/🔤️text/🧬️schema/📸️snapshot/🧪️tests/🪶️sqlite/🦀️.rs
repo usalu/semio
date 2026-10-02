@@ -1,4 +1,5 @@
 use super::*;
+use store::{ArtifactPack,ArtifactDsl};
 use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 
 fn fixture() -> SemioTextSnapshot {
@@ -45,7 +46,7 @@ fn sqlite_snapshot_semio_text_bounded_native_text_binary_admission() {
         snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
         let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
         let actual=(provider.import)("Semio native admission",&dialect,database,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
-        let expected=match encoding{SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)),SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snapshot))};assert_eq!(actual,expected);
+        let expected=match encoding{SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)),SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snapshot))};assert!(actual==expected,"controlled native output differs from the authored ordinary wire");
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:16,..SqliteDatabaseLimits::default()})).is_err());
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());
     }
@@ -53,3 +54,19 @@ fn sqlite_snapshot_semio_text_bounded_native_text_binary_admission() {
     assert!(large.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:4096,..SqliteDatabaseLimits::default()})).is_err());
     assert!(large.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary,&mut SqliteSnapshotControl::new(&mut |p|p.phase!=SqliteSnapshotPhase::EncodeNative||p.completed==0,SqliteDatabaseLimits::default())).is_err());
 }
+
+#[test]
+fn sqlite_snapshot_semio_text_explicit_controlled_native_owner(){
+ let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let expected=fixture();
+ for payload in [store::os_io::IoPayload::Binary(expected.encode_pack()),store::os_io::IoPayload::Text(expected.print_dsl())]{
+  let actual=SemioTextSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(actual==expected,"controlled native output differs from the authored ordinary wire");
+  assert!(SemioTextSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());
+  assert!(SemioTextSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:f["nativeAdmission"]["tinyBudgetBytes"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()})).is_err());
+  assert!(SemioTextSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()})).is_err());
+ }
+ let count=f["nativeAdmission"]["collectionItems"].as_u64().unwrap() as usize;let canceled=f["nativeAdmission"]["cancelAfter"].as_u64().unwrap() as usize;let large=SemioTextSnapshot{schema:expected.schema,runs:vec![SemioTextRun{language:"en".into(),content:"actual owned field".into(),marks:vec![SemioTextMark{kind:SemioTextMarkKind::Link,href:"🌠".into()}]};count]};
+ for payload in [store::os_io::IoPayload::Binary(large.encode_pack()),store::os_io::IoPayload::Text(large.print_dsl())]{let mut interior=false;let mut callback=|p:SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::DecodeNative&&p.total==count&&p.completed==canceled{interior=true;false}else{true}};assert!(SemioTextSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).is_err());assert!(interior);}
+}
+
+#[test]
+fn sqlite_snapshot_semio_text_controlled_native_output(){let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let mut s=fixture();s.runs[0].content="x".repeat(f["nativeOutputBytes"].as_u64().unwrap() as usize);for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let expected=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<SemioTextSnapshot as store::ArtifactPack>::encode_pack(&s)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&s))};assert!(actual==expected,"controlled native output differs from the authored ordinary wire");for measured in [false,true]{let mut interior=false;let error=s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{let cancel=event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=65536&&(if measured{event.total==0}else{event.total>65536&&event.completed<event.total});interior|=cancel;!cancel},SqliteDatabaseLimits::default())).unwrap_err();assert!(interior&&error.contains("cancel"),"{error}");}for limits in [SqliteDatabaseLimits{max_value_bytes:4096,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_file_bytes:4096,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_rows:0,..SqliteDatabaseLimits::default()}]{assert!(s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}assert!(s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());}}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ascii-directory-without-separator",
+      "directory": "alpha",
+      "separator": false,
+      "kind": "alpha",
+      "value": 3
+    },
+    {
+      "id": "ascii-directory-with-separator",
+      "directory": "alpha",
+      "separator": true,
+      "kind": "alpha",
+      "value": 3
+    },
+    {
+      "id": "unicode-directory-without-separator",
+      "directory": "⚙️unicode",
+      "separator": false,
+      "kind": "unicode",
+      "value": 7
+    },
+    {
+      "id": "unicode-directory-with-separator",
+      "directory": "⚙️unicode",
+      "separator": true,
+      "kind": "unicode",
+      "value": 7
+    }
+  ]
+}

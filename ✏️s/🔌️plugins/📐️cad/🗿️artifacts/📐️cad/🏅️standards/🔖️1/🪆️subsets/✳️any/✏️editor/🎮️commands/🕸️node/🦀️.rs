@@ -22,9 +22,9 @@ pub mod add_node {
         pub kind: String,
     }
 
-    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
-        let mut runtime = runtime_of(cfg);
+        let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let id = next_cad_id("node");
         let label = format!("Node {}", document.nodes.len() + 1);
         let node = CadNode { id: id.clone(), label, kind: payload.kind.clone() };
@@ -69,8 +69,8 @@ pub mod set_node_selection {
         pub node_ids: Vec<String>,
     }
 
-    pub fn handle(payload: &SetNodeSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut runtime = runtime_of(cfg);
+    pub fn handle(payload: &SetNodeSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let mut runtime = runtime_of(cfg, &ctx.window_transient);
         runtime.selected_node_ids = payload.node_ids.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
     }

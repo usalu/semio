@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-schema-state"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canonical neutral schema state"
+build = false
+
+[package.metadata.semio]
+role = "framework"
+id = "schema-state"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+
+[[test]]
+name = "schema-state-neutrality"
+path = "../../🧪️tests/🧱️neutrality/🦀️.rs"
+
+[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

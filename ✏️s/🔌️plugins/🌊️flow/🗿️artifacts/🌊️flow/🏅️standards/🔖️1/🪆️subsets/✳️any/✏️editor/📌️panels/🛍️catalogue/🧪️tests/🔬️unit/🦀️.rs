@@ -29,7 +29,7 @@ async fn every_built_in_extension_is_listed_in_the_installed_section() {
     let mut app = flow_app().await;
     let view = semio_framework_plugin::ViewModel {
         tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: FLOW_PLAY_BODY_CATALOGUE.into(), node_key: "flow-play-extensions.installed".into(), open: Some(true), offset: 0, rows: FLOW_AUTOMATIONS.len() as u32 }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, FLOW_PLAY_BODY_CATALOGUE, &view).await;
     for (id, ..) in FLOW_AUTOMATIONS {

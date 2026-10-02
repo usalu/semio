@@ -29,8 +29,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetTexcoord(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set texcoord", "Texturkoordinate setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set texcoord", "Texturkoordinate setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

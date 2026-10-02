@@ -33,6 +33,7 @@ neo4j = ["dep:neo4rs", "dep:tokio"]
 claimed-backend-laws = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-replication = { workspace = true }
 # 🔌️ `db_storage`'s schema-first task family crosses the sync/async boundary through the

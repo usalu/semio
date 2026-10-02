@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for ReplaceXmlNode {
         agg_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace XML node", "XML-Knoten ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace XML node", "XML-Knoten ersetzen")
     }
 
     fn target(&self) -> Vec<String> {

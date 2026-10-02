@@ -132,40 +132,11 @@ pub struct LowpolyObject {
     pub name: String,
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
-    /// 🕸️ Owned CHILD handle for this object's mesh representation (`s.stdio.semio.mesh`, ticket
-    /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`). The child is its own document; this parent
-    /// stores only the two-string handle (`child_id`/`target`), never embedded geometry — replaces
-    /// the old opaque `mesh_json: String` this field used to be. Lifecycle via `create-mesh`/
-    /// `delete-mesh` (`🧬️mutations/🕸️create-mesh`, `🧬️mutations/🧨delete-mesh`), which replace the
-    /// old whole-value `replace-object-mesh`. `LowpolySnapshot`'s hand-rolled `ArtifactDsl`/
-    /// `ArtifactPack` below persist ONLY this handle for the mesh slot — the live half-edge-mesh
-    /// JSON content itself never lives on this struct at all (see `✏️editor/🖌️session::LowpolyScratch`'s
-    /// `mesh_workspace` field, the session-local cache this field's content moved to, round 2 of this
-    /// ticket's fix — `LowpolySnapshot`'s hand-rolled codecs already asserted "never `mesh_workspace`"
-    /// in this same doc comment before the field was removed; a struct-level round-trip law
-    /// (`store::os_store::test_support::assert_document_text_round_trip`) forbids a codec-excluded
-    /// field from living on a persisted snapshot type at all — see `📸️snapshot/🦀️.rs`'s
-    /// module doc comment).
-    ///
-    /// ⚠️ Framework limitation (flagged in this ticket's `lowpoly-report.md` for the next fan-out
-    /// agent hitting the same shape): `#[derive(ArtifactSchema)]`'s `#[child(kind = "…")]` mechanism
-    /// (`🧬️schema/✨️derive/🦀️.rs`) only recognizes a child field declared DIRECTLY on the
-    /// struct it derives — it does not recurse into a `Vec<T>` element type's own fields the way
-    /// `LowpolySnapshot.objects: Vec<LowpolyObject>` would need. Every W2c precedent (`✳️object`,
-    /// `✳️kit`) only ever put its child fields directly on the top-level snapshot struct, never
-    /// nested inside a collection element — this is the first subset in the ticket with that shape.
-    /// Consequently `#[child(...)]` cannot be applied here (no derive on `LowpolyObject` declares it
-    /// as a valid helper attribute) and `LowpolySnapshot::child_slots()` cannot discover this slot.
-    /// The type/mutation-vocabulary/persistence layer is still fully real; only the derive-generated
-    /// SCHEMA INTROSPECTION table is incomplete for it.
+    /// 🕸️ Independently persisted identity of the optional mesh child.
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[value(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
-    /// 🕸️ The half-edge-mesh JSON the `mesh` handle hashes (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS,
-    /// 2026-09-17): no WASM guest can resolve a child document, so a handle-only object lost its
-    /// geometry on every undo/redo (the session cache went stale), page reload and document import.
-    /// Persisted by both codecs; `""` for a legacy handle-only document, which then falls back to
-    /// the session `mesh_workspace` cache.
+    /// 🧱️ Persisted mesh source text, preserved independently of the child identity.
     #[value(default)]
     pub mesh_content: String,
 }
@@ -349,7 +320,7 @@ pub const LOWPOLY_DIALECT: semio_framework_plugin::app::Dialect = semio_framewor
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.lowpoly".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Lowpoly", "3D-Lowpoly"),
         source_format: "lowpoly.fixture".into(),
         component_kind: "lowpoly".into(),
         dimension: "3d".into(),

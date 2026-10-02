@@ -8,6 +8,8 @@ pub(crate) mod context {
     pub fn playground_editor_manifest_for_tests() -> App {
         App { definition: create_playground_editor(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("demonstrator", PlaygroundEditor, playground_editor_manifest_for_tests, "../..");
 }
 
 use super::*;

@@ -113,7 +113,7 @@ message ApplyPaintStroke {
   string object_id = 1;
   uint64 layer_index = 2;
   bool eraser = 3;
-  repeated uint32 color = 4;
+  repeated float color = 4;
   float radius = 5;
   float hardness = 6;
   float opacity = 7;

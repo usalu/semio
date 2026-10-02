@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderNodesM
         vec![super::GltfMutation::ReorderNodes(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Nodes", "Knoten umordnen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Reorder Nodes", "Knoten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -6,7 +6,14 @@
 
 use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_from_document, dag_host_snapshot_to_wire_literal, DagCamera};
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TextEditorScene;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";

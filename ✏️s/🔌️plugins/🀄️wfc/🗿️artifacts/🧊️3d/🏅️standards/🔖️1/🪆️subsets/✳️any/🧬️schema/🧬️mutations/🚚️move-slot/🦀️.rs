@@ -31,8 +31,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for MoveSlot {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move slot \"{}\"", self.id), &format!("Slot \"{}\" verschieben", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move slot \"{}\"", self.id), &format!("Slot \"{}\" verschieben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

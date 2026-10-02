@@ -30,8 +30,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for CreateSlot {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Slot", "Slot erstellen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Slot", "Slot erstellen")
     }
 }
 //#endregion 🔖️CreateSlot

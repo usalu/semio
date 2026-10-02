@@ -149,10 +149,10 @@ pub fn core_tool_capabilities() -> Vec<CapabilityDefinition> {
 /// way — a running gateway server with SOME broken plugin data must still start and serve its core
 /// tools, never crash on launch.
 pub fn build_catalog() -> Catalog {
-    compile(&discover_catalog_source(None), semio_framework::Locale::En, semio_framework::Terminology::Native).unwrap_or_else(|error| {
+    compile(&discover_catalog_source(None), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).unwrap_or_else(|error| {
         eprintln!("[mcp registry] catalog compile failed ({error}) — falling back to gateway-only capabilities");
         let gateway_only = CatalogSource { descriptors: Vec::new(), os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
-        compile(&gateway_only, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("core gateway capabilities alone never collide with themselves")
+        compile(&gateway_only, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("core gateway capabilities alone never collide with themselves")
     })
 }
 
@@ -160,7 +160,7 @@ pub fn build_catalog() -> Catalog {
 /// Unlike installed discovery, this function never reads a registry or descriptor path.
 pub(crate) fn catalog_from_descriptors(descriptors: Vec<semio_framework::PackageDescriptor>) -> Result<Catalog, GatewayError> {
     let source = CatalogSource { descriptors, os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
-    compile(&source, semio_framework::Locale::En, semio_framework::Terminology::Native)
+    compile(&source, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         .map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("authenticated Hub descriptor catalog did not compile: {error}")).retryable())
 }
 

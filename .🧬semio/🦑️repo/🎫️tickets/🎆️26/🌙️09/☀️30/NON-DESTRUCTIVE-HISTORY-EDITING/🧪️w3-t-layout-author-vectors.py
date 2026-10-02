@@ -143,23 +143,23 @@ def scale(targets, pivot, sx, sy, page="page-1"):
 
 BOTH = ["frame-rect", "frame-text"]
 CASES = [
-    ("drag-frames", "✋️", "drags-both-frames", False, drag(BOTH, 16.0, -8.0), "The rect and the text frame of page 1 both move 16 right and 8 up; their extents and rotations stay."),
-    ("drag-frames", "⚠️", "skips-a-locked-and-a-missing-frame", True, drag(["frame-ghost", "frame-rect", "frame-text"], 5.0, 2.5), "Only the rect moves; the absent `frame-ghost` and the locked text frame are skipped with one Warning-level `mutation.partial` per reason."),
-    ("drag-frames", "🚫️", "rejects-missing-frames", False, drag(["frame-ghost"], 1.0, 1.0), "No target is a frame of page 1: Error-level `mutation.target-missing`, nothing moves."),
-    ("drag-frames", "⏸️", "keeps-a-zero-offset", False, drag(["frame-rect"], 0.0, 0.0), "A zero offset moves nothing: Warning-level `mutation.no-op` and the default diff."),
-    ("drag-frames", "🔁️", "refuses-a-repeated-frame", False, drag(["frame-rect", "frame-rect"], 4.0, 0.0), "A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing moves."),
-    ("rotate-frames", "🔃️", "orbits-both-frames-a-quarter-turn", False, turn(BOTH, (75.0, 100.0), math.pi / 2), "A quarter turn about the centroid of both frame centres: each centre orbits the pivot and each rotation grows by the angle; the extents stay."),
-    ("rotate-frames", "🌀️", "turns-the-rect-about-its-centre", False, turn(["frame-rect"], (50.0, 50.0), 0.5), "A turn about the rect's own centre leaves its origin where it is and only grows its rotation."),
-    ("rotate-frames", "⚠️", "skips-a-locked-and-a-missing-frame", True, turn(["frame-rect", "frame-text", "frame-ghost"], (50.0, 50.0), 0.25), "Only the rect turns; the locked text frame and the absent `frame-ghost` are skipped with one Warning-level `mutation.partial` per reason."),
-    ("rotate-frames", "🚫️", "rejects-a-missing-page", False, turn(["frame-rect"], (50.0, 50.0), 1.0, page="page-ghost"), "The addressed page does not exist: Error-level `mutation.target-missing` at the page, nothing turns."),
-    ("rotate-frames", "⏸️", "keeps-a-zero-angle", False, turn(BOTH, (75.0, 100.0), 0.0), "A zero angle turns nothing: Warning-level `mutation.no-op` and the default diff."),
-    ("rotate-frames", "🔁️", "refuses-a-repeated-frame", False, turn(["frame-text", "frame-text"], (100.0, 150.0), 0.5), "A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing turns."),
-    ("scale-frames", "🗜️", "doubles-both-frames-about-their-centroid", False, scale(BOTH, (75.0, 100.0), 2.0, 2.0), "Doubling about the centroid of both frame centres moves each centre twice as far from the pivot and doubles each extent."),
-    ("scale-frames", "↔️", "stretches-the-rect-sideways", False, scale(["frame-rect"], (50.0, 50.0), 1.5, 1.0), "Stretching the rect by 1.5 along x about its own centre widens it symmetrically; its height and centre stay."),
-    ("scale-frames", "⚠️", "skips-a-locked-and-a-missing-frame", True, scale(["frame-text", "frame-ghost", "frame-rect"], (50.0, 50.0), 0.5, 0.5), "Only the rect shrinks; the absent `frame-ghost` and the locked text frame are skipped with one Warning-level `mutation.partial` per reason."),
-    ("scale-frames", "🚫️", "rejects-missing-frames", False, scale(["frame-ghost"], (0.0, 0.0), 2.0, 2.0), "No target is a frame of page 1: Error-level `mutation.target-missing`, nothing scales."),
-    ("scale-frames", "⏸️", "keeps-unit-factors", False, scale(["frame-rect"], (50.0, 50.0), 1.0, 1.0), "Unit factors scale nothing: Warning-level `mutation.no-op` and the default diff."),
-    ("scale-frames", "🫓️", "refuses-a-zero-factor", False, scale(["frame-rect"], (50.0, 50.0), 0.0, 1.0), "A zero factor would collapse the rect to a line; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`, nothing scales."),
+    ("drag-frames", "✋️", "drags-both-frames", "drags-both-frames", False, drag(BOTH, 16.0, -8.0), "The rect and the text frame of page 1 both move 16 right and 8 up; their extents and rotations stay."),
+    ("drag-frames", "⚠️", "skips", "skips-a-locked-and-a-missing-frame", True, drag(["frame-ghost", "frame-rect", "frame-text"], 5.0, 2.5), "Only the rect moves; the absent `frame-ghost` and the locked text frame are skipped with one Warning-level `mutation.partial` per reason."),
+    ("drag-frames", "🚫️", "rejects", "rejects-missing-frames", False, drag(["frame-ghost"], 1.0, 1.0), "No target is a frame of page 1: Error-level `mutation.target-missing`, nothing moves."),
+    ("drag-frames", "⏸️", "keeps-a-zero-offset", "keeps-a-zero-offset", False, drag(["frame-rect"], 0.0, 0.0), "A zero offset moves nothing: Warning-level `mutation.no-op` and the default diff."),
+    ("drag-frames", "🔁️", "refuses", "refuses-a-repeated-frame", False, drag(["frame-rect", "frame-rect"], 4.0, 0.0), "A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing moves."),
+    ("rotate-frames", "🔃️", "orbits", "orbits-both-frames-a-quarter-turn", False, turn(BOTH, (75.0, 100.0), math.pi / 2), "A quarter turn about the centroid of both frame centres: each centre orbits the pivot and each rotation grows by the angle; the extents stay."),
+    ("rotate-frames", "🌀️", "turns", "turns-the-rect-about-its-centre", False, turn(["frame-rect"], (50.0, 50.0), 0.5), "A turn about the rect's own centre leaves its origin where it is and only grows its rotation."),
+    ("rotate-frames", "⚠️", "skips", "skips-a-locked-and-a-missing-frame", True, turn(["frame-rect", "frame-text", "frame-ghost"], (50.0, 50.0), 0.25), "Only the rect turns; the locked text frame and the absent `frame-ghost` are skipped with one Warning-level `mutation.partial` per reason."),
+    ("rotate-frames", "🚫️", "rejects", "rejects-a-missing-page", False, turn(["frame-rect"], (50.0, 50.0), 1.0, page="page-ghost"), "The addressed page does not exist: Error-level `mutation.target-missing` at the page, nothing turns."),
+    ("rotate-frames", "⏸️", "keeps-a-zero-angle", "keeps-a-zero-angle", False, turn(BOTH, (75.0, 100.0), 0.0), "A zero angle turns nothing: Warning-level `mutation.no-op` and the default diff."),
+    ("rotate-frames", "🔁️", "refuses", "refuses-a-repeated-frame", False, turn(["frame-text", "frame-text"], (100.0, 150.0), 0.5), "A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing turns."),
+    ("scale-frames", "🗜️", "doubles", "doubles-both-frames-about-their-centroid", False, scale(BOTH, (75.0, 100.0), 2.0, 2.0), "Doubling about the centroid of both frame centres moves each centre twice as far from the pivot and doubles each extent."),
+    ("scale-frames", "↔️", "stretches", "stretches-the-rect-sideways", False, scale(["frame-rect"], (50.0, 50.0), 1.5, 1.0), "Stretching the rect by 1.5 along x about its own centre widens it symmetrically; its height and centre stay."),
+    ("scale-frames", "⚠️", "skips", "skips-a-locked-and-a-missing-frame", True, scale(["frame-text", "frame-ghost", "frame-rect"], (50.0, 50.0), 0.5, 0.5), "Only the rect shrinks; the absent `frame-ghost` and the locked text frame are skipped with one Warning-level `mutation.partial` per reason."),
+    ("scale-frames", "🚫️", "rejects", "rejects-missing-frames", False, scale(["frame-ghost"], (0.0, 0.0), 2.0, 2.0), "No target is a frame of page 1: Error-level `mutation.target-missing`, nothing scales."),
+    ("scale-frames", "⏸️", "keeps-unit-factors", "keeps-unit-factors", False, scale(["frame-rect"], (50.0, 50.0), 1.0, 1.0), "Unit factors scale nothing: Warning-level `mutation.no-op` and the default diff."),
+    ("scale-frames", "🫓️", "refuses", "refuses-a-zero-factor", False, scale(["frame-rect"], (50.0, 50.0), 0.0, 1.0), "A zero factor would collapse the rect to a line; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`, nothing scales."),
 ]
 #endregion 🧫️Vectors
 
@@ -348,12 +348,12 @@ def mount(cases):
             "                            mod component;",
             "                            pub use component::*;",
         ]
-        for case_kind, case_emoji, slug, *_ in cases:
+        for case_kind, case_emoji, folder, slug, *_ in cases:
             if case_kind != kind:
                 continue
             lines += [
                 "                            #[cfg(test)]",
-                f"                            #[path = \"{SUBSET_REL}/🧬️schema/🧬️mutations/{emoji}{kind}/🧪️tests/{case_emoji}{slug}/🦀️.rs\"]",
+                f"                            #[path = \"{SUBSET_REL}/🧬️schema/🧬️mutations/{emoji}{kind}/🧪️tests/{case_emoji}{folder}/🦀️.rs\"]",
                 f"                            mod {module_of(slug)};",
             ]
         lines.append("                        }")
@@ -375,9 +375,9 @@ def mount(cases):
 
 def main():
     schemas = {kind: json.load(open(f"{MUTATIONS}/{emoji}{kind}/🧬️schema/🔣️.json", encoding="utf-8")) for kind, (emoji, _variant) in LEAVES.items()}
-    for kind, emoji, slug, lock_text, payload, story in CASES:
+    for kind, emoji, short, slug, lock_text, payload, story in CASES:
         leaf = f"{LEAVES[kind][0]}{kind}"
-        folder = f"{emoji}{slug}"
+        folder = emoji + short
         before = base(lock_text)
         after, diff, result = outcome(kind, payload, before)
         valid = jsonschema.Draft7Validator(schemas[kind]).is_valid(payload)

@@ -26,8 +26,8 @@
 //! expectation tables rather than one text under two names.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_refusal, oracle_restore, oracle_round_trip, project_dwg};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
+use semio_s_artifact_stdio_dwg_test_oracle::standards::v_ac1024::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_refusal, oracle_restore, oracle_round_trip, project_dwg};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 
 //#region 🔖️Input
@@ -75,7 +75,7 @@ fn refused(code: &str, untouched: Json) -> Json {
 /// the first field that broke. Without this the handler would pass whenever the writer merely
 /// declined to error.
 fn conforms(kind: &str, projection: &Json, expected: &Json) -> Result<(), String> {
-    match semio_s_plugin_stdio_test_oracle::law::divergence(projection, expected) {
+    match semio_repo_test_host::law::divergence(projection, expected) {
         None => Ok(()),
         Some(first) => Err(format!("{kind:?} did not produce the preamble the published offsets predict — {first}")),
     }
@@ -166,8 +166,8 @@ mod subject {
     use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
     use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg};
     use semio_s_artifact_stdio_dwg::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1024::subsets::any::project_dwg;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};
+    use semio_s_artifact_stdio_dwg_test_oracle::standards::v_ac1024::subsets::any::project_dwg;
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};
 
     /// 🦠️ The spec's wire payload, decoded by `DwgMutation`'s own payload constructor through the shared stdio bridge, and
     /// held against the payload the subject re-emits from it — the row IS the leaf's wire, member for member.

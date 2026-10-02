@@ -75,7 +75,7 @@ async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
 async fn the_window_collects_every_option_node_exactly_once() {
     let config = MapWindowConfig::default();
     let document = GisMapSnapshot::default();
-    let measures = window_measures(&document, &config, gis2d_labels(&semio_framework_plugin::ViewModel::default()));
+    let measures = window_measures(&document, &config, gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
     let mut app = app().await;
     assert_eq!(main_window_measures(&mut app).await.len(), measures.len(), "the app routes the same set under the window id");

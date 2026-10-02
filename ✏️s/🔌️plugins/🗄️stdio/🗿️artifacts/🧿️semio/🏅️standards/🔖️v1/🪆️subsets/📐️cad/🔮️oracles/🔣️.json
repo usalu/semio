@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.cad`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.cad` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars and the committed binary protocol rather than a third-party package.",
   "oracles": [
@@ -2306,5 +2306,6 @@
       "family": "step-line-circle",
       "notes": "The circle widened from 1.5 to 2.25. Carries `counterexample-after.step`, the known-BAD answer (radius 2.30, centre x 2.1) the gate is validated against on this carrier too."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

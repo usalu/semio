@@ -3,7 +3,10 @@
 //! pixels through `ImageWindowKit` (contract §2.6) — no editing chrome, no utilities.
 
 use crate::viewer::raster::modes::view::windows::{composite, navigator};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const RASTER_VIEW_MODE_VIEW: &str = "view";
 

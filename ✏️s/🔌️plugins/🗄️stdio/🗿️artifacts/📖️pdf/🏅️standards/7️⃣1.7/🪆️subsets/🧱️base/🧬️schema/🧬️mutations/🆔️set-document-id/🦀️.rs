@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDocumentId {
         vec![PdfMutation::SetDocumentId(SetDocumentId { id: base.document_id.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set document-id", "Dokument-ID setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set document-id", "Dokument-ID setzen")
     }
 
     fn target(&self) -> Vec<String> {

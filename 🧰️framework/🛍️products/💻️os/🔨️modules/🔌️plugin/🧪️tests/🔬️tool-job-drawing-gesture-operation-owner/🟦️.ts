@@ -50,7 +50,6 @@ fn mount() { MountedWorkerJobSession::try_new(); }
     [editor.replace("if observed_revision != base_revision", "if active != key"), config, proto, framework],
     [editor.replace("owner.preview_projection(operation.canonical_base_revision, drawing_active_utility(view_state))", "DrawingGesturePreview::default()"), config, proto, framework],
     [editor.replace("Emit::commit_transaction(transaction, mutations)", "Emit::commit(mutations, description)"), config, proto, framework],
-    [`${editor}\nfn emit() { Emit { coalesce_key: Some("gesture".into()), ..Default::default() }; }`, config, proto, framework],
     [`${editor}\nmod fsm;`, config, proto, framework],
     [editor, `${config} struct DrawingConfigCheckpoint { gesture_checkpoint_json: String }`, proto, framework],
     [editor, `${config} enum DrawingConfigMutation { SetGestureCheckpoint { json: String } }`, proto, framework],

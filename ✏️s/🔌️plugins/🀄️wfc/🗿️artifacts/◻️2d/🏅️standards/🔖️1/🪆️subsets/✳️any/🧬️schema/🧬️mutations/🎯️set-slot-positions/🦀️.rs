@@ -53,10 +53,10 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for SetSlotPositions {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.positions.len() {
-            1 => protocol::LocalizedLabel::native("Set 1 slot position", "1 Slotposition setzen"),
-            count => protocol::LocalizedLabel::native(&format!("Set {count} slot positions"), &format!("{count} Slotpositionen setzen")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Set 1 slot position", "1 Slotposition setzen"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {count} slot positions"), &format!("{count} Slotpositionen setzen")),
         }
     }
     fn target(&self) -> Vec<String> {

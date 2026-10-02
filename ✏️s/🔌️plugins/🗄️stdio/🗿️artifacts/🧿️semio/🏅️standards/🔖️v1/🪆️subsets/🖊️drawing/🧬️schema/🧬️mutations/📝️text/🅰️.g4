@@ -53,7 +53,7 @@ point3: '[' number ',' number ',' number ']';
 quaternion: '[' number ',' number ',' number ',' number ']';
 rgba: '[' number ',' number ',' number ',' number ']';
 bool: '0' | '1';
-number: INT | FLOAT;
+number: INT | FLOAT | IEEE;
 
 optionHex: '[' '0' ']' | '[' '1' ',' HEX ']';
 optionRgba: '[' '0' ']' | '[' '1' ',' rgba ']';
@@ -63,3 +63,6 @@ HEX: [0-9a-f]*;
 INT: '-'? [0-9]+;
 FLOAT: '-'? [0-9]+ '.' [0-9]+;
 WS: [ \t\r\n]+ -> skip;
+
+IEEE: '-'? 'inf' | 'nan64_' WORD WORD WORD WORD | 'nan32_' WORD WORD;
+fragment WORD: [0-9a-f] [0-9a-f] [0-9a-f] [0-9a-f];

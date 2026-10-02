@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "maximumBytes": 1048576,
+  "tinyBytes": 1,
+  "largeCharacters": 65537,
+  "cancelAfterBytes": 65536,
+  "contracts": [
+    {
+      "kindId": "\u0000世界",
+      "mediaType": {
+        "class": "data",
+        "form": "value"
+      },
+      "wire": {
+        "kind": "document",
+        "schema": "literal !@"
+      },
+      "conversion": null
+    },
+    {
+      "kindId": "",
+      "mediaType": {
+        "class": "computation",
+        "form": "procedure"
+      },
+      "wire": {
+        "kind": "document",
+        "schema": ""
+      },
+      "conversion": [
+        "procedure",
+        "deck"
+      ]
+    },
+    {
+      "kindId": "encoded media kind",
+      "mediaType": { "class": "threeD", "form": "mesh" },
+      "wire": { "kind": "binary", "format_kind": "😀\u0000" },
+      "conversion": ["brep", "mesh"]
+    }
+  ],
+  "port": {
+    "id": "\u0000世界:out",
+    "spec": {
+      "id": "",
+      "label": "😀",
+      "direction": "out",
+      "mediaType": {
+        "class": "presentation",
+        "form": "deck"
+      },
+      "kindId": "",
+      "required": true,
+      "multiplicity": "many"
+    }
+  },
+  "input": {
+    "id": "\u0000世界",
+    "kindId": "",
+    "selector": "**/😀",
+    "required": false,
+    "multiplicity": "many"
+  }
+}

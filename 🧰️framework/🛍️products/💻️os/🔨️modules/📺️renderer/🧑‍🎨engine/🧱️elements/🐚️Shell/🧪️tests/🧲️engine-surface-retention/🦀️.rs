@@ -23,7 +23,7 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
     let fixture = law();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "every-composited-kind-is-retained-alike").expect("cross-kind retained-surface case");
     let rows = case["frames"][0]["drain"].as_array().expect("painted surface rows");
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
     let mut documents = Vec::new();

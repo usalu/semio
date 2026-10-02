@@ -2,18 +2,17 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { repoCacheDirectory } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 // #endregion 🔌️Adapters
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
-const repoRoot = resolve(root, "../../../../../../..");
 
 /** 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */
 export default defineConfig({
   root: testRoot,
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "ui-react"),
+  cacheDir: testCacheDirectoryV1(process.env, "ui-react"),
   resolve: {
     alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "🟦️.tsx") }],
   },
@@ -41,6 +40,7 @@ export default defineConfig({
       "../../../../🧱️elements/📻️TableAvatar/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🗨️Popover/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../🧱️elements/🪜️Stepper/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🔀️Toggle/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🎛️ToggleGroup/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",

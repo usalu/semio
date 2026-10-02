@@ -1,3 +1,4 @@
+import { requireRecord, requireString, requireStringArray } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -7,8 +8,10 @@ import picomatch from "picomatch";
 import ts from "typescript";
 import { parseTree, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { createValidFileMatcher } from "next/dist/server/lib/find-page-file.js";
-import { createTaxonomyPathMatcher, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDomainOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, reservedDocumentationBasename, semanticDirectoryKindId, semanticManifestFilenameForCollection, semanticProjectionCatalogProblems, subsetDirectoryNameForId, subsetIdForDirectoryName, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
-import { inventoryTaxonomySources } from "../../🧹️normalization/🟦️.ts";
+import { createTaxonomyPathMatcher, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadCatalogTaxonomy, mutationDomainOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, semanticDirectoryKindId, semanticManifestFilenameForCollection, semanticProjectionCatalogProblems, subsetDirectoryNameForId, subsetIdForDirectoryName, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { inventoryTaxonomySources } from "../../🧹️normalization/🚪️source-admission/📁️io/🟦️.ts";
 import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems, mutationPayloadSchemaRelativePath, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/🟦️.ts";
 import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/🟦️.ts";
@@ -113,7 +116,7 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
   ].map((row) => ({ artifactRoot: "🗿️sample", artifactId: "sample", standardVersion: "1", standardDirectoryName: "🔖️1", subsetId: "any", subsetDirectoryName: "✳️any", mutationId: row.mutationId, mutationDirectoryName: "🌱️create", sourceScenarioId: "sample", sourceScenarioDirectoryName: "📨️sample", subsetRoot: contract.source, mutationRoot: `${sourceRoot}/${row.owner}`, scenarioRoot: `${sourceRoot}/${row.owner}/🧪️tests/📨️sample`, fixtureSourceRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/📨️sample`, expectedImplementationRoot: `${sourceRoot}/${row.owner}/🧪️tests/✅️applied`, expectedFixtureRoot: `${contract.source}/🧫️fixtures/🧬️mutations/${row.owner}/✅️applied` }));
   for (const row of scenarioSources) for (const [path, nodeKind, fileKind] of [[row.mutationRoot, "directory", null], [row.scenarioRoot, "directory", null], [`${row.scenarioRoot}/🦀️.rs`, "file", "rust-source"], [row.fixtureSourceRoot, "directory", null], [`${row.fixtureSourceRoot}/🔣️.json`, "file", "json"]] as const) entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind, fileKind, violations: [] });
   const inspectedRoots: string[] = [];
-  const support = { basename, dirname, Buffer, splitLeadingEmoji: leadingEmojiIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), record: (value: unknown) => value, requiredString: (value: unknown) => { if (typeof value !== "string" || !value) throw new Error("string required"); return value; }, stringArray: (value: unknown) => value, canonicalProjectedMemberName: (name: string) => name, projectionSourceAt: (path: string) => scenarioSources.find((row) => row.scenarioRoot === path) ?? null, mutationDescendantContract: () => ({ pathBudgetReserve: { bytes: 0 } }), projectionBundleProblem: (row: { scenarioRoot: string }) => { inspectedRoots.push(row.scenarioRoot); return null; }, setProjectedPath: (entry: any, path: string) => { entry.normalizedPath = path; }, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
+  const support = { basename, dirname, Buffer, existsSync: (path: string) => documents.has(path), splitLeadingEmoji: leadingEmojiIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, absolutePath: (_root: string, path: string) => path, readFileSync: (path: string) => documents.get(path), requireRecord, requireString, requireStringArray, canonicalProjectedMemberName: (name: string) => name, projectionSourceAt: (path: string) => scenarioSources.find((row) => row.scenarioRoot === path) ?? null, mutationDescendantContract: () => ({ pathBudgetReserve: { bytes: 0 } }), projectionBundleProblem: (row: { scenarioRoot: string }) => { inspectedRoots.push(row.scenarioRoot); return null; }, setProjectedPath: (entry: any, path: string) => { entry.normalizedPath = path; }, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     inspectedRoots.length = 0;
     const readers = new Function(...Object.keys(support), `${compile(definitions.map((node) => node!.getText(syntax)).join("\n"))}\nreturn {catalogs: projectionCatalogsForMutationSource, owner: canonicalProjectedMutationOwner, normalize: normalizeMutationCasePairs};`)(...Object.values(support));
@@ -131,7 +134,10 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
     expect([...normalized.values()].flatMap((entry: any) => entry.violations)).toEqual([]);
     expect(readers.owner("🌱️create", "create-camera", contract.catalog, { discoverySchema: taxonomy })).toBe("🎥️camera/🌱️create");
     expect(readers.owner("🌱️create", "create-unknown", contract.catalog, { discoverySchema: taxonomy })).toBeNull();
+    const capturedDocuments = new Map(documents);
+    documents.clear();
     expect(readers.catalogs(".", new Map(), contract.source, { discoverySchema: taxonomy }).every((catalog: any) => Boolean(catalog.error))).toBe(true);
+    for (const [path, document] of capturedDocuments) documents.set(path, document);
     const malformed = { ...taxonomy, mutationCatalogSourceOwners: { [contract.catalog]: `${contract.source}/✏️editor` } };
     expect(() => readers.catalogs(".", entries, contract.source, { discoverySchema: malformed })).toThrow();
   }
@@ -143,23 +149,35 @@ test("glTF generator follows exact fixture-manifest roles and handpicked file co
   const syntax = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "gltfFixtureOutputPaths");
   expect(definition).toBeDefined();
+  const operations = new Set<string>();
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "recipe") {
+      const value = node.arguments[1]!;
+      if (ts.isStringLiteral(value)) operations.add(value.text.split("-")[0]!);
+      else if (ts.isTemplateExpression(value)) operations.add(value.head.text.split("-")[0]!);
+      else throw Error("Recipe operation vocabulary must be explicit");
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(syntax);
+  expect([...operations].sort()).toEqual(contract.contextualOperations);
   const catalogDir = join(repoRoot, contract.owner, "🔮️oracles");
   const live = JSON.parse(readFileSync(join(catalogDir, "🔣️.json"), "utf8"));
   expect(parseTree(JSON.stringify(live.fixtureManifests))?.type).toBe("array");
   for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
-    const paths = new Function("basename", "dirname", "isAbsolute", "join", "relative", "resolve", `${compile(definition!.getText(syntax).replace(/^export /u, ""))}\nreturn gltfFixtureOutputPaths;`)(basename, dirname, isAbsolute, join, relative, resolve);
+    const paths = new Function("basename", "dirname", "isAbsolute", "join", "relative", "resolve", "leadingEmojiIdentity", `${compile(definition!.getText(syntax).replace(/^export /u, ""))}\nreturn gltfFixtureOutputPaths;`)(basename, dirname, isAbsolute, join, relative, resolve, leadingEmojiIdentity);
     for (const item of contract.cases) {
       const record = { id: contract.id, files: item.paths.map((path: string, index: number) => ({ role: index === 0 ? "expected-before-gltf" : "expected-after-gltf", path })) };
       if (item.valid) {
         for (const path of item.paths) expect(picomatch(contract.pathShapes)(relative(resolve(catalogDir, "../.."), resolve(catalogDir, path)).replaceAll("\\", "/"))).toBe(true);
-        expect(paths([record], contract.id, catalogDir)).toEqual({ before: resolve(catalogDir, item.paths[0]), after: resolve(catalogDir, item.paths[1]) });
-        expect(paths([record], contract.id, catalogDir, "scratch")).toEqual({ before: join("scratch", contract.id, basename(item.paths[0])), after: join("scratch", contract.id, basename(item.paths[1])) });
-        expect(() => paths([record, record], contract.id, catalogDir)).toThrow();
-        expect(() => paths([record], "../escape", catalogDir)).toThrow();
-        expect(() => paths([{ ...record, files: [...record.files, record.files[0]] }], contract.id, catalogDir)).toThrow();
-      } else expect(() => paths([record], contract.id, catalogDir)).toThrow();
+        expect(paths([record], contract.id, catalogDir, contract.contextualOperations)).toEqual({ before: resolve(catalogDir, item.paths[0]), after: resolve(catalogDir, item.paths[1]) });
+        expect(paths([record], contract.id, catalogDir, contract.contextualOperations, "scratch")).toEqual({ before: join("scratch", contract.id, basename(item.paths[0])), after: join("scratch", contract.id, basename(item.paths[1])) });
+        expect(() => paths([record, record], contract.id, catalogDir, contract.contextualOperations)).toThrow();
+        expect(() => paths([record], "../escape", catalogDir, contract.contextualOperations)).toThrow();
+        expect(() => paths([{ ...record, files: [...record.files, record.files[0]] }], contract.id, catalogDir, contract.contextualOperations)).toThrow();
+      } else expect(() => paths([record], contract.id, catalogDir, contract.contextualOperations)).toThrow();
     }
-    const current = paths(live.fixtureManifests, contract.id, catalogDir);
+    const current = paths(live.fixtureManifests, contract.id, catalogDir, contract.contextualOperations);
     for (const file of live.fixtureManifests.find((record: { id: string }) => record.id === contract.id).files) {
       const target = file.role === "expected-before-gltf" ? current.before : current.after;
       const bytes = readFileSync(target);
@@ -167,7 +185,7 @@ test("glTF generator follows exact fixture-manifest roles and handpicked file co
       expect(`sha256:${new Bun.CryptoHasher("sha256").update(bytes).digest("hex")}`).toBe(file.sha256);
     }
   }
-  expect(source.includes("gltfFixtureOutputPaths(catalog.fixtureManifests, id, catalogDir, outRoot)")).toBe(true);
+  expect(source.includes("gltfFixtureOutputPaths(catalog.fixtureManifests, id, catalogDir, contextualOperations, outRoot)")).toBe(true);
   expect(source.includes('join(dir, "before.gltf")')).toBe(false);
 });
 
@@ -275,14 +293,7 @@ test("payload authority validates actual Draft-07 schema shape against Ajv", () 
 
 test("TSV mutation payload schemas resolve with camel-case language-neutral contracts", () => {
   const mutations = resolve(root, "../../../../../../..", "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
-  const cases = [
-    { directory: "➕insert-row", positive: { index: 0, row: ["a"] }, negative: { index: -1, row: ["a"] } },
-    { directory: "➖remove-row", positive: { index: 0 }, negative: { index: 0.5 } },
-    { directory: "🔲set-cell", positive: { rowIndex: 0, fieldIndex: 1, value: "a" }, negative: { row_index: 0, field_index: 1, value: "a" } },
-    { directory: "📸️set-snapshot", positive: { snapshot: { schema: "stdio.tsv", records: [], trailingNewline: false, lineEnding: "lf" } }, negative: { snapshot: { schema: "stdio.tsv", records: [], trailing_newline: false, line_ending: "lf" } } },
-    { directory: "🔀set-line-ending", positive: { lineEnding: "crlf" }, negative: { lineEnding: "cr" } },
-    { directory: "🔚set-trailing-newline", positive: { trailingNewline: false }, negative: { trailingNewline: "false" } },
-  ];
+  const cases: readonly { directory: string; tag: string; positive: Record<string, unknown>; negative: Record<string, unknown> }[] = fixture.tsvMutationPayloadCases;
   const ajv = new Ajv({ strict: false });
   const payloadRelative = mutationPayloadSchemaRelativePath(loadCatalogTaxonomy());
   ajv.addSchema(JSON.parse(readFileSync(join(dirname(mutations), "📸️snapshot/🔣️.json"), "utf8")));
@@ -290,6 +301,7 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
     const owner = join(mutations, row.directory);
     const descriptor = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
     expect(descriptor.payloadSchema, row.directory).toBe(payloadRelative);
+    if (typeof descriptor.payloadSchema !== "string") throw new Error(`Missing payload schema: ${row.directory}`);
     const schemaPath = join(owner, descriptor.payloadSchema);
     expect(existsSync(schemaPath), row.directory).toBe(true);
     const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
@@ -298,6 +310,13 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
     expect(validate(row.positive), `${row.directory}: ${JSON.stringify(validate.errors)}`).toBe(true);
     expect(validate(row.negative), row.directory).toBe(false);
     expect(readFileSync(join(owner, "🦀️.rs"), "utf8"), row.directory).toContain('#[value(rename_all = "camelCase")]');
+  }
+  const aggregate = ajv.compile(JSON.parse(readFileSync(join(mutations, "🔣️.json"), "utf8")));
+  for (const row of cases) {
+    expect(aggregate({ mutation: row.tag, ...row.positive }), row.directory).toBe(true);
+    expect(aggregate(row.positive), row.directory).toBe(false);
+    expect(aggregate({ mutation: row.tag, ...row.negative }), row.directory).toBe(false);
+    expect(aggregate({ mutation: "undeclared", ...row.positive }), row.directory).toBe(false);
   }
   const oracle = JSON.parse(readFileSync(join(dirname(dirname(mutations)), "🔮️oracles/🔣️.json"), "utf8"));
   const declared = oracle.mutationManifests.flatMap((manifest: any) => manifest.mutations).filter((mutation: any) => cases.some((row) => row.directory.endsWith(mutation.id)));
@@ -340,7 +359,7 @@ test("normalization validates descriptor authority for flat and grouped owners w
     }
     entries.set(descriptorPath, { sourcePath: descriptorPath, normalizedPath: descriptorPath, nodeKind: "file", violations: [] });
     if (row.state !== "absent") entries.set(target, { sourcePath: target, normalizedPath: target, nodeKind: row.state, violations: [] });
-    const support = { basename, dirname, Buffer, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, record: (value: unknown) => value, readFileSync: (path: string) => Buffer.from(documents.get(path)!), assertLexicalInputOutsideOpaque: (_root: string, path: string) => path, isExcluded: (path: string) => Boolean(row.repositoryBoundary && path === dirname(target)), violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
+    const support = { basename, dirname, Buffer, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, requireRecord, readFileSync: (path: string) => Buffer.from(documents.get(path)!), assertLexicalInputOutsideOpaque: (_root: string, path: string) => path, isExcluded: (path: string) => Boolean(row.repositoryBoundary && path === dirname(target)), violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
     for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       const rows = structuredClone(entries);
       new Function(...Object.keys(support), `${compile(definition!)}\nreturn validateMutationPayloadSchemas;`)(...Object.values(support))(".", rows, { discoverySchema });
@@ -377,7 +396,7 @@ test("normalization requires one exact descriptor authority per admitted mutatio
         entries.set(path, { sourcePath: path, normalizedPath: path, nodeKind: "directory", violations: [] });
       }
     }
-    const support = { basename, dirname, Buffer, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, record: (value: unknown) => value, readFileSync: (path: string) => Buffer.from(documents.get(path)!), assertLexicalInputOutsideOpaque: (_root: string, path: string) => path, isExcluded: () => false, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
+    const support = { basename, dirname, Buffer, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, requireRecord, readFileSync: (path: string) => Buffer.from(documents.get(path)!), assertLexicalInputOutsideOpaque: (_root: string, path: string) => path, isExcluded: () => false, violation: (code: string, path: string, detail: string) => ({ code, path, detail }) };
     for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       const rows = structuredClone(entries);
       new Function(...Object.keys(support), `${compile(definition)}\nreturn validateMutationPayloadSchemas;`)(...Object.values(support))(".", rows, { discoverySchema });
@@ -534,7 +553,7 @@ test("normalization discovers exact domain mutation scenarios without flattening
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [mutationRoot]: fixture.mutationDomainContract.domains } };
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const definitions = ["mutationDomainOwnerLocation", "projectionDirectorySlug", "projectionSourceAt", "canonicalProjectedMemberName", "canonicalProjectedMutationOwner"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
-  const support = { basename, mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, splitLeadingEmoji: leadingEmojiIdentity, emojiFold: (value: string) => value.replaceAll("\uFE0F", "") };
+  const support = { basename, dirname, subsetIdForDirectoryName, mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, splitLeadingEmoji: leadingEmojiIdentity, emojiFold: (value: string) => value.replaceAll("\uFE0F", "") };
   const literalKinds: Record<string, string> = { "🏅️standards": "standards", "🔖️1": "standard", "🪆️subsets": "subsets", "✳️any": "subset", "🧬️schema": "schema", "🧬️mutations": "schema", "🧪️tests": "tests" };
   for (const compile of [
     (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code),

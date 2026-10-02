@@ -12,7 +12,15 @@
 
 use crate::editor::grid2d::window::{effective_camera, Grid2dWindowConfig};
 use crate::schema::snapshot::Grid2dSnapshot;
-use semio_framework_plugin::{ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

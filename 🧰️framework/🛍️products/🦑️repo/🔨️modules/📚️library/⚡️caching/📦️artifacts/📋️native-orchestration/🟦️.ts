@@ -1,10 +1,14 @@
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { CARGO_RELAY_BUDGET_ENV, buildBudgetMs, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { buildCargoArtifacts } from "../🏗️native-build/🟦️.ts";
+import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
+import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1, repositoryCargoTestPolicyV1, repositoryWasmBuildPolicyV1 } from "../../../🟦️.ts";
+import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 
 /** 🧩️ The ONE cargo `rustc` argument list that links a plugin/extension component: `component-<profile>` and
@@ -34,10 +38,24 @@ export class NativeScript extends BundleScript {
     const [tool, operation] = args;
     const index = args.indexOf("--manifest");
     const manifest = index >= 0 ? args[index + 1] : undefined;
+    if(tool==="owner-command"){
+      const cwdIndex=args.indexOf("--cwd"), separator=args.indexOf("--"), command=args[separator+1];
+      if(index!==1||cwdIndex!==3||separator!==5||!manifest||!args[cwdIndex+1]||!command)throw Error("native owner-command --manifest <Cargo.toml> --cwd <directory> -- <command> <args>");
+      const path=resolve(this.repoRoot,manifest),cwd=resolve(this.repoRoot,args[cwdIndex+1]!);
+      prepareCargoWorkspaceInvocation(this.repoRoot,["test","--manifest-path",path],cwd);
+      const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
+      if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
+      const env: Record<string,string|undefined>={...process.env,SEMIO_VITEST_POLICY:JSON.stringify(repositoryVitestPolicyV1(cwd)),SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(repositoryProcessOwnerContextV1(cwd)),SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd))};
+      delete env.SEMIO_CARGO_TEST_POLICY;
+      if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd)) });
+      if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,{SEMIO_WASM_BUILD_POLICY:JSON.stringify(repositoryWasmBuildPolicyV1(cwd))});
+      await runOwnedCommand(command,args.slice(separator+2),cwd,"native:owner-command",0,{env});
+      return;
+    }
     if (tool === "cargo" && operation === "metadata") {
       if (index !== 2 || args.length !== 4 || !manifest) throw new Error("native cargo metadata --manifest <Cargo.toml>");
       const path = resolve(this.repoRoot, manifest);
-      await runOwnedCommand("cargo", ["metadata", "--locked", "--format-version=1", "--manifest-path", path], dirname(path), "cargo:locked-metadata", buildBudgetMs(), { stdout: "ignore" });
+      await runRepositoryCommand("cargo", ["metadata", "--locked", "--format-version=1", "--manifest-path", path], dirname(path), "cargo:locked-metadata", buildBudgetMs(), { stdout: "ignore" });
       console.log("[cargo:locked-metadata] dependency lock validated");
       return;
     }
@@ -46,7 +64,7 @@ export class NativeScript extends BundleScript {
       const cargo = Bun.TOML.parse(readFileSync(resolve(this.repoRoot, manifest), "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
       if (!cargo.package?.name || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.["component-kind"] ?? "")) throw new Error(`Not a plugin component manifest: ${manifest}`);
       const packageName=cargo.package.name;
-      await buildCargoArtifacts(
+      await buildRepositoryCargoArtifacts(
         manifest,
         pluginComponentRustcArgs(packageName, `wasm-${operation}`),
         this.repoRoot,
@@ -69,7 +87,7 @@ export class NativeScript extends BundleScript {
     const extra = args.slice(index + 2);
     validateNativeCargoArguments(operation, extra);
     if (operation === "build") {
-      await buildCargoArtifacts(manifest, extra, this.repoRoot);
+      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot);
       return;
     }
     const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot });

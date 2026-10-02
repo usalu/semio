@@ -3,7 +3,13 @@
 use crate::{kernel, pack, value_derive};
 use kernel::{ArtifactDsl, DslValue, FromValue, Mutation, MutationDiff, OpBinary, ToValue};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, Fault, FaultCode, FaultOrigin, LocalizedLabel};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::{
     AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Dialect, EditorApp, Emit,
     InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
@@ -519,7 +525,7 @@ fn snapshot_schema_descriptor_for_dialect(dialect: Dialect, document_schema: &st
     if descriptor_id != dialect.artifact_kind && !descriptor_id.strip_prefix(dialect.artifact_kind).is_some_and(|suffix| suffix.starts_with('.')) {
         return Err(SnapshotEditError::new("snapshot-edit.schema-owner", "$.schema", format!("native document schema '{descriptor_id}' is not owned by editor artifact '{}'", dialect.artifact_kind)));
     }
-    semio_framework_schema::with_artifact_schema_registry(|artifacts| {
+    semio_framework_schema_registry::with_artifact_schema_registry(|artifacts| {
         if artifacts.get(&descriptor_id).is_some() {
             return Ok(descriptor_id);
         }
@@ -547,7 +553,7 @@ fn validate_registered_snapshot_schema(original: &DslValue, value: &DslValue) ->
             return validate_snapshot_value_with_validator(value, validator);
         }
     }
-    semio_framework_schema::with_artifact_schema_registry(|artifacts| {
+    semio_framework_schema_registry::with_artifact_schema_registry(|artifacts| {
         if artifacts.get(&id).is_none() {
             return Ok(());
         }
@@ -1305,6 +1311,18 @@ where
 {
     let next = apply_snapshot_edit(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
     Ok(Emit { artifact_mutations: vec![wrap(next)], description: Some("Edit document details".into()), ..Default::default() })
+}
+
+/// 🧮️ One snapshot edit as the artifact's own domain leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
+/// event applies to `snapshot`, `net` answers the leaves that carry `snapshot` to exactly that result, and they publish with no
+/// description, so every history row is labelled from its leaves and time travel edits the leaf that changed; an edit that
+/// changes nothing publishes nothing.
+pub fn snapshot_edit_net<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Emit<M, C, D>, Fault>
+where
+    S: ArtifactDsl + ToValue + FromValue,
+{
+    let next = apply_snapshot_edit(snapshot, event).map_err(|error| edit_fault(error.code, error.to_string()))?;
+    Ok(Emit { artifact_mutations: net(snapshot, &next), ..Default::default() })
 }
 
 /// 🩹️ Prepares a compact native mutation for the validated snapshot-edit reducer.

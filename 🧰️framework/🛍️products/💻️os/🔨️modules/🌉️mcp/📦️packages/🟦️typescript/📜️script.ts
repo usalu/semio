@@ -1,11 +1,13 @@
 #!/usr/bin/env bun
+import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp` TS task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`.
  * Nx restores the Rust build before these process consumers run. An explicit binary override
  * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { resolveTestLevel, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { requireMcpBinary, runMcpClientEndToEnd } from "../../🟦️.ts";
@@ -42,5 +44,15 @@ class ClientEndToEndScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("client-e2e", ClientEndToEndScript);
+
+/** 🧱️ Runs the retained owned fixture law against its independent oracle. */
+class ApprovalRequestFixtureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-approval-request-fixture accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/✅️approval-request/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
+  }
+}
+
+router.register("test-approval-request-fixture", ApprovalRequestFixtureScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

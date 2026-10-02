@@ -8,6 +8,7 @@ import sliderPresentationSchema from "../../../../🧬️schema/🎚️slider-pr
 import numberControlsFixture from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json";
 import numberControlsSchema from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🧬️schema/🔣️.json";
 import { Slider, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, resolveSliderDraftClear, sliderValuesMatch } from "../../🟦️.tsx";
+import { sliderAxisPosition } from "../../../../🧬️contract/🧩️component/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎚️SliderMatrix
@@ -249,11 +250,12 @@ describe("Slider", () => {
     for (const row of numberControlsFixture.pointer) {
       const change = vi.fn();
       const start = row.expected === row.min ? row.max : row.min;
-      const { container, unmount } = render(<Slider id={`slider.${row.case}`} value={[start]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} onValueChange={change} />);
+      const scale = "scale" in row && row.scale === "log" ? "log" : "linear";
+      const { container, unmount } = render(<Slider id={`slider.${row.case}`} value={[start]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} scale={scale} onValueChange={change} />);
       const track = container.querySelector<HTMLElement>('[data-slot="slider-track"]')!;
       track.getBoundingClientRect = () => ({ left: 0, right: 1000, top: 0, bottom: 4, width: 1000, height: 4 }) as DOMRect;
       expect(container.querySelectorAll('[data-slot="slider-tick"]').length).toBe(row.snaps.length);
-      fireEvent.pointerDown(track, { pointerId: 1, clientX: ((row.value - row.min) / (row.max - row.min)) * 1000, clientY: 2 });
+      fireEvent.pointerDown(track, { pointerId: 1, clientX: sliderAxisPosition(row.value, row.min, row.max, scale) * 1000, clientY: 2 });
       if (row.step > 0) expect(change, row.case).toHaveBeenLastCalledWith([row.expected]);
       else expect(change.mock.lastCall?.[0]?.[0], row.case).toBe(row.expected);
       unmount();
@@ -282,12 +284,14 @@ describe("Slider", () => {
   it("answers every bounded shared keyboard-law row through the physical keys", () => {
     const physical = { increment: "ArrowRight", decrement: "ArrowLeft", pageUp: "PageUp", pageDown: "PageDown", home: "Home", end: "End" } as const;
     for (const row of numberControlsFixture.keys) {
-      if (row.min == null || row.max == null) continue;
+      if (row.min == null || row.max == null || !(row.step > 0)) continue;
       const rung = row.step > 0 ? row.step : 1;
       const settled = row.snaps.includes(row.current) || Math.abs((row.current - row.min) / rung - Math.round((row.current - row.min) / rung)) < 1e-9;
       if (!settled) continue;
       const change = vi.fn();
-      const { getByRole, unmount } = render(<Slider id={`slider.${row.case}`} value={[row.current]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} onValueChange={change} />);
+      const precision = "precision" in row ? row.precision : null;
+      const factor = "factor" in row ? row.factor : null;
+      const { getByRole, unmount } = render(<Slider id={`slider.${row.case}`} value={[row.current]} min={row.min} max={row.max} step={row.step || undefined} snapValues={row.snaps} precision={precision} displayFactor={factor} onValueChange={change} />);
       fireEvent.keyDown(getByRole("slider"), { key: physical[row.key as keyof typeof physical], shiftKey: row.large });
       if (row.expected === row.current) expect(change, row.case).not.toHaveBeenCalled();
       else expect(change, row.case).toHaveBeenLastCalledWith([row.expected]);
@@ -304,6 +308,61 @@ describe("Slider", () => {
     expect(change).toHaveBeenLastCalledWith([5.1]);
     expect(sliderValuesMatch([5.1], [5], 0.5, [5.1])).toBe(false);
     expect(resolveSliderDraftClear([5.1], [5], 0.5, [5.1])).toEqual([5.1]);
+  });
+
+  it("draws a degree dial: one tick per detent, display-unit ARIA numbers, a pointer angle snapping onto 90° and one-degree arrows", () => {
+    const degrees = 180 / Math.PI;
+    const snaps = [-Math.PI, -Math.PI / 2, 0, Math.PI / 2, Math.PI];
+    const change = vi.fn();
+    const { container, getByRole } = render(<Slider id="slider.dial" appearance="dial" value={[0]} min={-Math.PI} max={Math.PI} step={Math.PI / 180} snapValues={snaps} displayFactor={degrees} aria-valuetext="0 °" onValueChange={change} />);
+    expect(container.querySelector('[data-slot="slider-dial"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-slot="slider-tick"]').length).toBe(5);
+    const thumb = getByRole("slider");
+    expect([thumb.getAttribute("aria-valuemin"), thumb.getAttribute("aria-valuemax"), thumb.getAttribute("aria-valuenow"), thumb.getAttribute("aria-valuetext")]).toEqual(["-180", "180", "0", "0 °"]);
+    expect(container.querySelector('[data-slot="slider-value"]')!.textContent).toBe("0");
+    const dial = container.querySelector<HTMLElement>('[data-slot="slider-dial"]')!;
+    dial.getBoundingClientRect = () => ({ left: 0, right: 40, top: 0, bottom: 40, width: 40, height: 40 }) as DOMRect;
+    const towards = (angle: number) => ({ pointerId: 1, clientX: 20 + Math.cos(angle) * 18, clientY: 20 - Math.sin(angle) * 18 });
+    fireEvent.pointerDown(dial, towards((88 * Math.PI) / 180));
+    expect(change).toHaveBeenLastCalledWith([Math.PI / 2]);
+    fireEvent.pointerUp(dial, { pointerId: 1 });
+    fireEvent.keyDown(thumb, { key: "ArrowRight" });
+    expect(change.mock.lastCall?.[0]?.[0] * degrees).toBeCloseTo(91, 9);
+  });
+
+  it("places log-axis ticks at their log position and lands a pointer on the nearest log detent", () => {
+    const change = vi.fn();
+    const { container } = render(<Slider id="slider.log" scale="log" value={[1]} min={0.1} max={10} step={0.01} precision={2} snapValues={[0.25, 0.5, 1, 2, 4]} onValueChange={change} />);
+    const ticks = Array.from(container.querySelectorAll<HTMLElement>('[data-slot="slider-tick"]')).map((tick) => Number.parseFloat(tick.style.left));
+    [0.25, 0.5, 1, 2, 4].forEach((snap, index) => expect(ticks[index]).toBeCloseTo(sliderAxisPosition(snap, 0.1, 10, "log") * 100, 9));
+    expect(ticks[2]).toBeCloseTo(50, 9);
+    expect(container.querySelector('[data-slot="slider-value"]')!.textContent).toBe("1.00");
+    const track = container.querySelector<HTMLElement>('[data-slot="slider-track"]')!;
+    track.getBoundingClientRect = () => ({ left: 0, right: 1000, top: 0, bottom: 4, width: 1000, height: 4 }) as DOMRect;
+    fireEvent.pointerDown(track, { pointerId: 1, clientX: sliderAxisPosition(3.7, 0.1, 10, "log") * 1000, clientY: 2 });
+    expect(change).toHaveBeenLastCalledWith([4]);
+  });
+
+  it("refuses a typed value beyond a hard bound visibly, keeping the draft, and commits one beyond the soft travel exactly", () => {
+    const change = vi.fn();
+    const commit = vi.fn();
+    const limits = { min: { value: 0, exclusive: true, refusal: "Must be greater than 0" }, max: null };
+    const { container, getByRole, queryByRole } = render(<Slider id="slider.factor" scale="log" value={[1]} min={0.1} max={10} step={0.01} precision={2} limits={limits} onValueChange={change} onValueCommit={commit} />);
+    fireEvent.doubleClick(container.querySelector('[data-slot="slider-value"]')!);
+    const field = container.querySelector<HTMLInputElement>('input[type="number"]')!;
+    fireEvent.change(field, { target: { value: "-5" } });
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(getByRole("alert").textContent).toBe("Must be greater than 0");
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    expect(field.getAttribute("aria-describedby")).toBe("slider.factor-refusal");
+    expect(container.querySelector<HTMLInputElement>('input[type="number"]')!.value).toBe("-5");
+    expect(change).not.toHaveBeenCalled();
+    expect(commit).not.toHaveBeenCalled();
+    fireEvent.change(field, { target: { value: "20" } });
+    expect(queryByRole("alert")).toBeNull();
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(commit).toHaveBeenLastCalledWith([20]);
+    expect(container.querySelector('input[type="number"]')).toBeNull();
   });
 });
 // #endregion 🎚️SliderMatrix

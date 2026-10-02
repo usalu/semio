@@ -24,8 +24,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathSha
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::InsertClipPathShape(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert clip path shape", "Form des Beschneidungspfads einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert clip path shape", "Form des Beschneidungspfads einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

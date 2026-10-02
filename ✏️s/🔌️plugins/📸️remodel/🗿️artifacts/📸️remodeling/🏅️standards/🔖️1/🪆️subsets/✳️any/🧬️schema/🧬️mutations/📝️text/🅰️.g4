@@ -37,11 +37,11 @@ replaceTrajectoryOp: 'replace-trajectory' ('trajectory' '=' trajectoryBlock)? ;
 replaceTracksOp: 'replace-tracks' 'tracks' '=' '[' trackRecord* ']' ;
 replaceGeoProductsOp: 'replace-geo-products' ('geo' '=' geoProductsBlock)? ;
 replaceQcOp: 'replace-qc' ('qc' '=' qcBlock)? ;
-appendContentOp: 'append-content' 'content-id' '=' name 'kind' '=' contentKind ('mime' '=' name)? 'width' '=' INT 'height' '=' INT 'first' '=' INT 'chunks' '=' textList ;
+appendContentOp: 'append-content' 'content-id' '=' name 'kind' '=' contentKind ('mime' '=' name)? 'width' '=' INT 'height' '=' INT 'first' '=' INT 'chunks' '=' octetList ;
 removeContentOp: 'remove-content' 'content-id' '=' name 'from' '=' INT ;
 commitReconstructionOp: 'commit-reconstruction' ('sparse' '=' sparseBlock)? ('trajectory' '=' trajectoryBlock)? ('mesh' '=' meshResultBlock)? ('geo' '=' geoProductsBlock)? ('qc' '=' qcBlock)? 'assets' assetCommitHeader '{' assetCommitRow* '}' ;
 name: IDENT | TEXT ;
-num: INT | FLOAT ;
+num: INT | FLOAT | NONFINITE ;
 quantity: num IDENT ;
 coord3: '@' num ',' num ',' num ;
 pair: num ',' num ;
@@ -91,9 +91,9 @@ geoParamField: 'enabled' '=' BOOL | 'origin-lon' '=' num | 'origin-lat' '=' num 
 posesHeader: '[' 'camera-id' ':' 'TEXT' 'rotation-wxyz' ':' 'TUPLE' 'translation' ':' 'CRD' ']' ;
 poseRow: name quad coord3 ;
 sparseBlock: '{' sparseField+ '}' ;
-sparseField: 'points' '=' name | 'colors' '=' name ;
+sparseField: 'points' floatBuffer | 'colors' '=' octets ;
 denseCloudBlock: '{' denseCloudField+ '}' ;
-denseCloudField: 'positions' '=' name | 'colors' '=' name | 'confidence' '=' name | 'classification' '=' name ;
+denseCloudField: 'positions' floatBuffer | 'colors' '=' octets | 'confidence' floatBuffer | 'classification' '=' octets ;
 trajectoryBlock: '{' trajectoryPosesTable '}' ;
 trajectoryPosesTable: 'poses' posesHeader '{' poseRow* '}' ;
 meshResultBlock: '{' meshResultPart* '}' ;
@@ -110,7 +110,14 @@ trackRecord: 'id' '=' name 'length' '=' INT 'class' '=' trackClass 'mean-speed-m
 assetCommitHeader: '[' 'id' ':' 'TEXT' 'content-id' ':' 'TEXT' ']' ;
 assetCommitRow: name (name | cell) ;
 
+floatBuffer: '{' floatBufferVariant '}' ;
+floatBufferVariant: 'inline' 'values' '=' '[' num* ']' | 'content' 'content-id' '=' name 'chunk-count' '=' INT ;
+octets: TEXT ;
+octetList: '[' octets* ']' ;
+
 // 📐 Framework dialect-primitive terminals (only named, never defined, by the .semio itself).
+NONFINITE: 'inf' | '-inf' | 'nan' | 'nan32_' HEX HEX HEX HEX HEX HEX HEX HEX | 'nan64_' HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX ;
+fragment HEX: [0-9a-fA-F] ;
 BOOL: 'true' | 'false' ;
 FLOAT: '-'? [0-9]+ '.' [0-9]+ ([eE] [+-]? [0-9]+)? ;
 INT: '-'? [0-9]+ ;

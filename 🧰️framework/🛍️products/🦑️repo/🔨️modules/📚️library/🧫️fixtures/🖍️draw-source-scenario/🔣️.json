@@ -360,7 +360,7 @@
     {
       "path": "🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts",
       "format": "typescript",
-      "content": "#!/usr/bin/env bun\n/** ✨️ `@semio-tech/drawing-fsm-macros` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runCargoTestBudgeted([\"semio-s-plugin-draw-fsm-macros\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
+      "content": "#!/usr/bin/env bun\n/** ✨️ `@semio-tech/drawing-fsm-macros` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runScriptMain, runRepositoryCargoTests } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runRepositoryCargoTests([\"semio-s-plugin-draw-fsm-macros\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
     },
     {
       "path": "🔄️fsm/✨️macros/🦀️.rs",
@@ -380,7 +380,7 @@
     {
       "path": "🔄️fsm/📦️packages/🦀️rust/📜️script.ts",
       "format": "typescript",
-      "content": "#!/usr/bin/env bun\n/** 🎭️ `@semio-tech/drawing-fsm` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runCargoTestBudgeted([\"semio-s-plugin-draw-fsm\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
+      "content": "#!/usr/bin/env bun\n/** 🎭️ `@semio-tech/drawing-fsm` router: `bun ./📜️script.ts test`. */\nimport { BundleScript, ScriptRouter, resolveTestLevel, runScriptMain, runRepositoryCargoTests } from \"@semio-tech/repo-lib\";\n\nclass TestScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    const { rest } = resolveTestLevel(segments);\n    await runRepositoryCargoTests([\"semio-s-plugin-draw-fsm\"], this.repoRoot, rest);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"test\", TestScript);\n\nawait runScriptMain(router, import.meta.url, { defaultCommand: \"test\" });\n"
     },
     {
       "path": "🔄️fsm/🦀️.rs",
@@ -417,7 +417,7 @@
     {
       "path": "📜️script.ts",
       "format": "typescript",
-      "content": "import { readFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio-tech/repo-lib\";\n\n/** 🖍️ Reads the Draw editor command source the workspace router depends on. */\nclass SourcesScript extends BundleScript {\n  async run(): Promise<void> {\n    const drawEditorSources = [\n      \"__SCOPE__/{{artifactSourceRoot}}/🦀️.rs\",\n    ].map((file) => readFileSync(join(this.repoRoot, file), \"utf8\"));\n    console.log(drawEditorSources.length);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"sources\", SourcesScript);\n\nawait runBundleScriptMain(router, import.meta.url, { defaultCommand: \"sources\" });\n"
+      "content": "import { readFileSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { BundleScript, ScriptRouter, runScriptMain } from \"@semio-tech/repo-lib\";\n\n/** 🖍️ Reads the Draw editor command source the workspace router depends on. */\nclass SourcesScript extends BundleScript {\n  async run(): Promise<void> {\n    const drawEditorSources = [\n      \"__SCOPE__/{{artifactSourceRoot}}/🦀️.rs\",\n    ].map((file) => readFileSync(join(this.repoRoot, file), \"utf8\"));\n    console.log(drawEditorSources.length);\n  }\n}\n\nconst router = new ScriptRouter(import.meta.dir).register(\"sources\", SourcesScript);\n\nawait runScriptMain(router, import.meta.url, { defaultCommand: \"sources\" });\n"
     }
   ],
   "retention": {

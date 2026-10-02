@@ -18,7 +18,7 @@ fn cell_value(value: &dsl::DslValue) -> Result<XlsxCellValue, store::TextError> 
         dsl::DslValue::Bool(flag) => Ok(XlsxCellValue::Boolean(*flag)),
         dsl::DslValue::Number(_) => value.as_f64().map(XlsxCellValue::Number).ok_or_else(|| export_error(format!("program->xlsx: number {value:?} is not representable as f64"))),
         dsl::DslValue::String(text) => Ok(XlsxCellValue::InlineString(text.clone())),
-        dsl::DslValue::Array(_) | dsl::DslValue::Object(_) => Ok(XlsxCellValue::InlineString(dsl::json::to_json_string(value))),
+        dsl::DslValue::Bytes(_) | dsl::DslValue::Array(_) | dsl::DslValue::Object(_) => Ok(XlsxCellValue::InlineString(dsl::json::to_json_string(value))),
     }
 }
 

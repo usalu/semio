@@ -758,10 +758,24 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-schema-registry"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-schema-state"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -781,6 +795,16 @@ dependencies = [
 [[package]]
 name = "semio-framework-trace"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-value"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "semio-framework-value-derive"

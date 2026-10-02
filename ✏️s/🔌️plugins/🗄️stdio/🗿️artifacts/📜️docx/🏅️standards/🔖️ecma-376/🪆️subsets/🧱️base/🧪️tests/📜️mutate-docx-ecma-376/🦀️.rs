@@ -13,7 +13,7 @@
 //! the Rust subject phase runs (`subject exhaustive --owner 🗄️stdio --case mutate-docx-ecma-376`
 //! executes all 25 scenarios), and wave 14 ran the full differential comparison against the oracle.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
 //! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
 //! untouched package's projection, and `identity-round-trip` must both preserve the projection and
@@ -24,8 +24,8 @@
 //! outright rather than faked, and the feature says so.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_replace_package, oracle_round_trip, project_docx_ecma_376};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_replace_package, oracle_round_trip, project_docx_ecma_376};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📜️example-readme.docx";
@@ -113,12 +113,12 @@ mod subject {
     use super::{mutable_input, set_snapshot_document};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_snapshot};
     use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
+    use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
     fn decode(bytes: &[u8]) -> Result<DocxSnapshot, String> {
         decode_docx(bytes).map_err(|error| format!("decode_docx failed: {error}"))

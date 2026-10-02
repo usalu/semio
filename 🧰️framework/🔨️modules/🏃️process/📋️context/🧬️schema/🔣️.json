@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cwd",
+    "cacheRoot",
+    "leaseDirectory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cacheRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "leaseDirectory": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

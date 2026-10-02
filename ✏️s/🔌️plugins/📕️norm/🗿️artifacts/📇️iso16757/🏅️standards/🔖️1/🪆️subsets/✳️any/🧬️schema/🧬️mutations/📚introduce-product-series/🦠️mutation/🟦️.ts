@@ -1,7 +1,3 @@
-/** mutation payload — mirrors `IntroduceProductSeries`. */
-import type { ProductSeries } from "../../🟦️.ts";
-
-export interface IntroduceProductSeries {
-  productSeries: ProductSeries;
-  index?: number;
-}
+/** 📚 `introduce-product-series` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseIntroduceProductSeries, type IntroduceProductSeries } from "../🧬️schema/🟦️.ts";

@@ -1,0 +1,55 @@
+{
+  "dialect": "s.puzzle.puzzle3d@1/*",
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000042",
+    "fff0000000000042"
+  ],
+  "signed32": [
+    -2147483648,
+    2147483647
+  ],
+  "invalidSigned32": [
+    -2147483649,
+    2147483648,
+    0.5
+  ],
+  "wordSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "bits"
+    ],
+    "properties": {
+      "bits": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    }
+  },
+  "sqlEdits": [
+    {
+      "sql": "UPDATE puzzle3_reference_source SET url='edited literal'",
+      "url": "edited literal"
+    },
+    {
+      "sql": "UPDATE puzzle3_author SET rank=2147483647",
+      "rank": 2147483647
+    }
+  ],
+  "malformedSql": [
+    "UPDATE puzzle3_object SET origin_x=2",
+    "UPDATE puzzle3_object SET orientation_y_ieee754_bits=NULL,orientation_y=NULL,orientation_y_numeric_class=NULL",
+    "UPDATE puzzle3_object_kind_base SET ordinal=5 WHERE ordinal=1",
+    "UPDATE puzzle3_object_scale SET x=0,x_ieee754_bits=0,x_numeric_class='finite'",
+    "UPDATE puzzle3_author SET rank=2147483648",
+    "UPDATE puzzle3_reference_source SET reference_id=999",
+    "DELETE FROM puzzle3_reference_source",
+    "UPDATE puzzle3_vortex SET hidden=2"
+  ]
+}

@@ -849,11 +849,11 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_anchor_a_s {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-a-s/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-as/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-a-s/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-as/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-a-s/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-anchor-as/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

@@ -96,20 +96,20 @@ pub(crate) fn test_child_handle(uri: &str) -> Result<store::ArtifactChild<TestSn
 /// ♻️ The fixture child is an openable member, so its snapshot needs the same bounded owned-value
 /// retirement a real member's does — `store::PackMemberSnapshotOpen` retires the decoded snapshot
 /// through it when an open is cancelled or rejected mid-flight.
-impl crate::store::retirement::RetireOwned for TestSnapshot {
-    fn retirement(self) -> Box<dyn crate::store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for TestSnapshot {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self { count, label, slot } = self;
-        crate::store::retirement::sequence(vec![crate::store::retirement::RetireOwned::retirement(count), crate::store::retirement::RetireOwned::retirement(label), crate::store::retirement::RetireOwned::retirement(slot)])
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::RetireOwned::retirement(count), semio_framework_value::retirement::RetireOwned::retirement(label), semio_framework_value::retirement::RetireOwned::retirement(slot)])
     }
 }
 
-impl semio_framework_schema::ArtifactCompositionFields for TestSnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
-        semio_framework_schema::ChildFieldRefs::visit_child_field(&self.slot, "slot", visitor)
+impl semio_framework_schema_composition::ArtifactCompositionFields for TestSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        semio_framework_schema_composition::ChildFieldRefs::visit_child_field(&self.slot, "slot", visitor)
     }
 
-    fn child_slots() -> &'static [semio_framework_schema::ChildSlotSpec] {
-        &[semio_framework_schema::ChildSlotSpec { name: "slot", kind: "s.test.child", many: true }]
+    fn child_slots() -> &'static [semio_framework_schema_composition::ChildSlotSpec] {
+        &[semio_framework_schema_composition::ChildSlotSpec { name: "slot", kind: "s.test.child", many: true }]
     }
 }
 

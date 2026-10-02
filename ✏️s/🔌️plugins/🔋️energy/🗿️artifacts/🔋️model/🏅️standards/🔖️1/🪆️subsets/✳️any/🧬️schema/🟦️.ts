@@ -1,18 +1,6 @@
-/** 🧬️ EnergyModel artifact schema — every field with its state class. */
+/** 🧬️ The complete typed Energy artifact with its independently recomputed preview. */
+import type {EnergyModelSnapshot} from "./📸️snapshot/🟦️.ts";
 
-export interface EnergyModelArtifact {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  model: unknown;
-  /** @state artifact @child s.stdio.semio.value */
-  structure: { childId: string; target: string };
-  /** @state artifact @child s.stdio.semio.table */
-  zones: { childId: string; target: string };
-  /** @state artifact @link model */
-  referencedModel?: unknown;
-  /** @state artifact @link weather */
-  weatherLink?: unknown;
-  /** @state artifact */
+export interface EnergyModelArtifact extends EnergyModelSnapshot {
   resultsJson: string;
 }

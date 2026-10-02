@@ -8,7 +8,11 @@
 
 use crate::schema::{default_value_for_question, dsl_to_value, is_extension_question_kind, json_string_value};
 use crate::{forms_steps, FormQuestion, FormsSnapshot};
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract as ui;
 use ui::{Buildable, HasBase, HasChildren};
 

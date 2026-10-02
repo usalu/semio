@@ -113,7 +113,7 @@ pub enum PdfStreamFilter {
     Dct { color_transform: Option<u32> },
     Jpx,
     Ccitt { parameters: PdfCcittParameters },
-    Jbig2 { #[value(with="pack::value::bytes::optional")] globals: Option<Vec<u8>> },
+    Jbig2 { #[value(with="pack::value::bytes::optional", serialize_controlled_with="pack::value::bytes::optional::to_value_controlled", deserialize_controlled_with="pack::value::bytes::optional::from_value_controlled", retire_with="std::mem::drop")] globals: Option<Vec<u8>> },
     Crypt { name: Option<String> },
 }
 
@@ -352,7 +352,7 @@ pub const PDF_IDENTITY_MATRIX: PdfMatrix = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextString {
     Text { text: String },
-    Codes { #[value(with="pack::value::bytes")] bytes: Vec<u8> },
+    Codes { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] bytes: Vec<u8> },
 }
 
 impl PdfTextString {
@@ -368,7 +368,7 @@ impl PdfTextString {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextArrayItem {
     Text { text: String },
-    Codes { #[value(with="pack::value::bytes")] bytes: Vec<u8> },
+    Codes { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] bytes: Vec<u8> },
     Adjust { amount: f64 },
 }
 
@@ -399,7 +399,7 @@ pub struct PdfInlineImage {
     pub interpolate: bool,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub filters: Vec<PdfStreamFilter>,
-    #[value(with="pack::value::bytes")]
+    #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
@@ -520,7 +520,7 @@ pub enum PdfOp {
 /// 🌈 A colour space (§8.6). `Named` refers to an entry of the current resource dictionary's
 /// `/ColorSpace` sub-dictionary and only appears where the spec allows a name.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", retire_with="retire_pdf_color_space")]
 pub enum PdfColorSpace {
     DeviceGray,
     DeviceRgb,
@@ -528,12 +528,35 @@ pub enum PdfColorSpace {
     CalGray { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<f64> },
     CalRgb { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<[f64; 3]>, matrix: Option<[f64; 9]> },
     Lab { white_point: [f64; 3], black_point: Option<[f64; 3]>, range: Option<[f64; 4]> },
-    IccBased { components: u32, #[value(with="pack::value::bytes")] profile: Vec<u8>, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
-    Indexed { base: Box<PdfColorSpace>, hival: u32, #[value(with="pack::value::bytes")] lookup: Vec<u8> },
+    IccBased { components: u32, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] profile: Vec<u8>, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
+    Indexed { base: Box<PdfColorSpace>, hival: u32, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] lookup: Vec<u8> },
     Separation { name: String, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction },
     DeviceN { names: Vec<String>, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction, attributes: Option<Vec<PdfDictEntry>> },
     Pattern { base: Option<Box<PdfColorSpace>> },
     Named { name: String },
+}
+
+/// ♻️ Retires recursive colour-space children through their actual value owners.
+fn retire_pdf_color_space(value: PdfColorSpace) {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            PdfColorSpace::IccBased { alternate, .. } | PdfColorSpace::Pattern { base: alternate } => {
+                if let Some(child) = alternate { pending.push(*child); }
+            }
+            PdfColorSpace::Indexed { base, .. } => pending.push(*base),
+            PdfColorSpace::Separation { alternate, tint_transform, .. } => {
+                pending.push(*alternate);
+                <PdfFunction as semio_framework_value::FromValue>::retire_decoded(tint_transform);
+            }
+            PdfColorSpace::DeviceN { alternate, tint_transform, attributes, .. } => {
+                pending.push(*alternate);
+                <PdfFunction as semio_framework_value::FromValue>::retire_decoded(tint_transform);
+                <Option<Vec<PdfDictEntry>> as semio_framework_value::FromValue>::retire_decoded(attributes);
+            }
+            leaf => drop(leaf),
+        }
+    }
 }
 
 impl PdfColorSpace {
@@ -554,13 +577,24 @@ impl PdfColorSpace {
 /// 🧮 A PDF function (§7.10): sampled (type 0), exponential (2), stitching (3), PostScript
 /// calculator (4, retained as its source text), or an array of 1-out functions.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", retire_with="retire_pdf_function")]
 pub enum PdfFunction {
-    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, #[value(with="pack::value::bytes")] samples: Vec<u8> },
+    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] samples: Vec<u8> },
     Exponential { domain: Vec<f64>, range: Option<Vec<f64>>, c0: Vec<f64>, c1: Vec<f64>, n: f64 },
     Stitching { domain: Vec<f64>, range: Option<Vec<f64>>, functions: Vec<PdfFunction>, bounds: Vec<f64>, encode: Vec<f64> },
     PostScript { domain: Vec<f64>, range: Vec<f64>, code: String },
     Array { functions: Vec<PdfFunction> },
+}
+
+/// ♻️ Retires function forests without recursive native destruction.
+fn retire_pdf_function(value: PdfFunction) {
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            PdfFunction::Stitching { functions, .. } | PdfFunction::Array { functions } => pending.extend(functions),
+            leaf => drop(leaf),
+        }
+    }
 }
 
 /// 🌅 A shading (§8.7.4.5). Mesh types 4–7 keep their packed vertex data with the decode
@@ -571,7 +605,7 @@ pub enum PdfShadingKind {
     FunctionBased { domain: Option<[f64; 4]>, matrix: Option<PdfMatrix>, function: PdfFunction },
     Axial { coords: [f64; 4], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
     Radial { coords: [f64; 6], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
-    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, #[value(with="pack::value::bytes")] data: Vec<u8> },
+    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -784,15 +818,15 @@ pub struct PdfFontDescriptor {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFontProgram {
     /// `FontFile`: Type 1 with its clear-text/encrypted/zeros segment lengths.
-    Type1 { #[value(with="pack::value::bytes")] data: Vec<u8>, length1: u32, length2: u32, length3: u32 },
+    Type1 { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8>, length1: u32, length2: u32, length3: u32 },
     /// `FontFile2`: a TrueType (sfnt) program.
-    TrueType { #[value(with="pack::value::bytes")] data: Vec<u8> },
+    TrueType { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /Type1C`.
-    Cff { #[value(with="pack::value::bytes")] data: Vec<u8> },
+    Cff { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /CIDFontType0C`.
-    CidCff { #[value(with="pack::value::bytes")] data: Vec<u8> },
+    CidCff { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /OpenType`.
-    OpenType { #[value(with="pack::value::bytes")] data: Vec<u8> },
+    OpenType { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
 }
 
 /// 🈴 One `ToUnicode` mapping (§9.10.3): a character code (of `byte_width` bytes) to a Unicode
@@ -896,7 +930,7 @@ pub struct PdfCidVerticalRun {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCidToGid {
     Identity,
-    Map { #[value(with="pack::value::bytes")] data: Vec<u8> },
+    Map { #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] data: Vec<u8> },
 }
 
 /// 🔤 A CIDFont (§9.7.4), the descendant of a Type 0 font.
@@ -995,7 +1029,7 @@ pub enum PdfImageCodec {
     Dct { color_transform: Option<u32> },
     Jpx,
     Ccitt { parameters: PdfCcittParameters },
-    Jbig2 { #[value(with="pack::value::bytes::optional")] globals: Option<Vec<u8>> },
+    Jbig2 { #[value(with="pack::value::bytes::optional", serialize_controlled_with="pack::value::bytes::optional::to_value_controlled", deserialize_controlled_with="pack::value::bytes::optional::from_value_controlled", retire_with="std::mem::drop")] globals: Option<Vec<u8>> },
 }
 
 /// 🎭 An image's explicit mask (§8.9.6): a stencil image id or colour-key ranges.
@@ -1025,7 +1059,7 @@ pub struct PdfImage {
     pub interpolate: bool,
     #[value(default = "PdfImage::raw")]
     pub codec: PdfImageCodec,
-    #[value(with="pack::value::bytes")]
+    #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub soft_mask: Option<String>,
@@ -1205,11 +1239,20 @@ pub enum PdfActionKind {
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with="retire_pdf_action")]
 pub struct PdfAction {
     pub kind: PdfActionKind,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub next: Vec<PdfAction>,
+}
+
+/// ♻️ Retires an action forest through its typed kind owner.
+fn retire_pdf_action(value: PdfAction) {
+    let mut pending = vec![value];
+    while let Some(PdfAction { kind, next }) = pending.pop() {
+        pending.extend(next);
+        <PdfActionKind as semio_framework_value::FromValue>::retire_decoded(kind);
+    }
 }
 
 impl PdfAction {
@@ -1225,7 +1268,7 @@ impl PdfAction {
 
 /// 📑 One outline (bookmark) item (§12.3.3) with its nested children.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with="retire_pdf_outline_item")]
 pub struct PdfOutlineItem {
     pub title: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -1244,6 +1287,16 @@ pub struct PdfOutlineItem {
     pub children: Vec<PdfOutlineItem>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
+}
+
+/// ♻️ Retires outline children and their owned actions without recursive destruction.
+fn retire_pdf_outline_item(value: PdfOutlineItem) {
+    let mut pending = vec![value];
+    while let Some(PdfOutlineItem { children, action, extra, .. }) = pending.pop() {
+        pending.extend(children);
+        <Option<PdfAction> as semio_framework_value::FromValue>::retire_decoded(action);
+        <Vec<PdfDictEntry> as semio_framework_value::FromValue>::retire_decoded(extra);
+    }
 }
 
 impl PdfOutlineItem {
@@ -1454,7 +1507,7 @@ pub enum PdfFormFieldKind {
 /// 📝 One field of the interactive form tree (§12.7.3). `widgets` are `(page index, annotation
 /// index)` pairs of the Widget annotations presenting this field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with="retire_pdf_form_field")]
 pub struct PdfFormField {
     pub name: String,
     pub kind: PdfFormFieldKind,
@@ -1476,6 +1529,17 @@ pub struct PdfFormField {
     pub additional_actions: Vec<PdfDictEntry>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
+}
+
+/// ♻️ Retires field forests and delegates signature dictionaries to their owner.
+fn retire_pdf_form_field(value: PdfFormField) {
+    let mut pending = vec![value];
+    while let Some(PdfFormField { kind, children, additional_actions, extra, .. }) = pending.pop() {
+        pending.extend(children);
+        <PdfFormFieldKind as semio_framework_value::FromValue>::retire_decoded(kind);
+        <Vec<PdfDictEntry> as semio_framework_value::FromValue>::retire_decoded(additional_actions);
+        <Vec<PdfDictEntry> as semio_framework_value::FromValue>::retire_decoded(extra);
+    }
 }
 
 /// 📝 The document's interactive form dictionary (§12.7.2).
@@ -1539,9 +1603,9 @@ pub struct PdfOptionalContent {
 #[value(rename_all = "camelCase")]
 pub struct PdfDate {
     pub year: i32,
-    #[value(default = "PdfDate::one")]
+    #[value(default = "PdfDate::one", default_controlled="PdfDate::one_controlled")]
     pub month: u32,
-    #[value(default = "PdfDate::one")]
+    #[value(default = "PdfDate::one", default_controlled="PdfDate::one_controlled")]
     pub day: u32,
     #[value(default)]
     pub hour: u32,
@@ -1554,6 +1618,10 @@ pub struct PdfDate {
 }
 
 impl PdfDate {
+    fn one_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<u32, semio_framework_value::ValueError> {
+        control.checkpoint().map_err(semio_framework_value::ValueError::new)?;
+        Ok(1)
+    }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn one() -> u32 {
         1
@@ -1639,7 +1707,7 @@ pub struct PdfEmbeddedFile {
     pub description: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
-    #[value(with="pack::value::bytes")]
+    #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub creation_date: Option<PdfDate>,
@@ -1664,7 +1732,7 @@ pub struct PdfOutputIntent {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub info: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    #[value(with="pack::value::bytes::optional")]
+    #[value(with="pack::value::bytes::optional", serialize_controlled_with="pack::value::bytes::optional::to_value_controlled", deserialize_controlled_with="pack::value::bytes::optional::from_value_controlled", retire_with="std::mem::drop")]
     pub profile: Option<Vec<u8>>,
 }
 
@@ -2114,11 +2182,55 @@ impl pack::value::ToValue for PdfSnapshot {
             ("trailer".to_string(), self.trailer.to_value()),
         ])
     }
+    fn to_value_controlled(&self,control:&mut pack::value::NativeEncodeControl<'_>)->Result<pack::value::DslValue,pack::value::ValueError>{
+        use pack::value::{DslValue as V,ValueError as E};
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            control.begin_stage(31).map_err(E::new)?;let mut fields=V::object_encoding_controlled(31,control)?;
+            macro_rules! field{($key:literal,$value:expr)=>{{let key=control.copy_text($key).map_err(E::new)?;let value=$value.map_err(|error:E|error.under($key))?;fields.get_mut().push((key,value));control.step().map_err(E::new)?;}};}
+            field!("schema",self.schema.to_value_controlled(control));
+            field!("declaredVersion",self.declared_version.to_value_controlled(control));
+            field!("pages",self.pages.to_value_controlled(control));
+            field!("fonts",self.fonts.to_value_controlled(control));
+            field!("images",self.images.to_value_controlled(control));
+            field!("forms",self.forms.to_value_controlled(control));
+            field!("extGStates",self.ext_g_states.to_value_controlled(control));
+            field!("shadings",self.shadings.to_value_controlled(control));
+            field!("patterns",self.patterns.to_value_controlled(control));
+            field!("colorSpaces",self.color_spaces.to_value_controlled(control));
+            field!("properties",self.properties.to_value_controlled(control));
+            field!("outlines",self.outlines.to_value_controlled(control));
+            field!("namedDestinations",self.named_destinations.to_value_controlled(control));
+            field!("pageLabels",self.page_labels.to_value_controlled(control));
+            field!("embeddedFiles",self.embedded_files.to_value_controlled(control));
+            field!("outputIntents",self.output_intents.to_value_controlled(control));
+            field!("acroForm",self.acro_form.to_value_controlled(control));
+            field!("optionalContent",self.optional_content.to_value_controlled(control));
+            field!("pageLayout",self.page_layout.to_value_controlled(control));
+            field!("pageMode",self.page_mode.to_value_controlled(control));
+            field!("viewerPreferences",self.viewer_preferences.to_value_controlled(control));
+            field!("openAction",self.open_action.to_value_controlled(control));
+            field!("language",self.language.to_value_controlled(control));
+            field!("markInfo",self.mark_info.to_value_controlled(control));
+            field!("metadata",self.metadata.to_value_controlled(control));
+            field!("documentId",octets::document_id_to_value_controlled(&self.document_id,control));
+            field!("encryption",self.encryption.to_value_controlled(control));
+            field!("info",self.info.to_value_controlled(control));
+            field!("catalogExtra",self.catalog_extra.to_value_controlled(control));
+            field!("objects",self.objects.to_value_controlled(control));
+            field!("trailer",self.trailer.to_value_controlled(control));
+            Ok(V::Object(fields.take()))
+        }))
+    }
+
 }
 
 /// 🔀️ First-party value decoding for the public PDF snapshot. `schema` remains required while
 /// every other field falls back to its default; a path edit goes through the value tree ([`pack::value::edit_through_value`]).
 impl pack::value::FromValue for PdfSnapshot {
+    fn retire_decoded(self){
+        fn retire<T:pack::value::FromValue>(value:T){T::retire_decoded(value)}
+        retire(self.schema);retire(self.declared_version);retire(self.pages);retire(self.fonts);retire(self.images);retire(self.forms);retire(self.ext_g_states);retire(self.shadings);retire(self.patterns);retire(self.color_spaces);retire(self.properties);retire(self.outlines);retire(self.named_destinations);retire(self.page_labels);retire(self.embedded_files);retire(self.output_intents);retire(self.acro_form);retire(self.optional_content);retire(self.page_layout);retire(self.page_mode);retire(self.viewer_preferences);retire(self.open_action);retire(self.language);retire(self.mark_info);retire(self.metadata);retire(self.document_id);retire(self.encryption);retire(self.info);retire(self.catalog_extra);retire(self.objects);retire(self.trailer);
+    }
     fn edit_value_at_path(&mut self, path: &[&str], edit: pack::value::ValueEdit) -> Result<(), pack::value::ValueError> {
         pack::value::edit_through_value(self, path, edit)
     }
@@ -2249,3 +2361,7 @@ pub fn demo_pdf17_snapshot() -> PdfSnapshot {
 
 #[path = "🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/♻️retirement/🦀️.rs"]
+mod recursive_retirement_tests;

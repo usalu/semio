@@ -27,8 +27,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ReplaceSynapse
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" ersetzen", self.synapse.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" ersetzen", self.synapse.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.synapse.id.clone()]

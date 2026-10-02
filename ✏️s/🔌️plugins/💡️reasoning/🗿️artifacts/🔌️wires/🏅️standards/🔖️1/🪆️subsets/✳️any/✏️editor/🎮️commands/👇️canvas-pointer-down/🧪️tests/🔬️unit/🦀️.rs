@@ -18,7 +18,7 @@ async fn pointer_drag_translates_node_by_screen_delta() {
     use crate::editor::wires::WIRES_PLAY_WINDOW_CANVAS;
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance};
     let mut app = new_app().await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("local") };
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
     for command in [
@@ -55,7 +55,7 @@ async fn pointer_down_selects_the_hit_node_inline() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖱️pointer-move.json")).expect("pointer-move fixture");
     let mut app = crate::editor::wires::unit_tests::context::app_with_registry().await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").expect("canvas window instance");
     let result: Result<(), String> = async {
         let mut seed = crate::empty_wires_snapshot();
@@ -94,7 +94,7 @@ async fn pointer_down_on_empty_space_requests_no_select_effect() {
     use crate::editor::wires::{WIRES_INTERACTION_GRAPH, WIRES_PLAY_WINDOW_CANVAS};
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance};
     let mut app = new_app().await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("local") };
     app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await.expect("viewport");
     settle(&mut app).await;

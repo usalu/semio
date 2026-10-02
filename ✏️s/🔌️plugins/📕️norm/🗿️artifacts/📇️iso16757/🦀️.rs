@@ -36,6 +36,10 @@ pub struct CatalogueId(pub String);
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for CatalogueId {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<String as dsl::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<String as dsl::DslField>::to_value_controlled(&self.0,control)}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{<String as dsl::DslField>::from_value_controlled(value,control).map(Self)}
+
     fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
@@ -113,7 +117,7 @@ pub struct CatalogueUnit {
 /// 🔢️ Typed catalogue value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum CatalogueValue {
     Boolean { value: bool },
@@ -130,24 +134,23 @@ pub enum CatalogueValue {
     List { items: Vec<CatalogueValue> },
 }
 
-/// 🔗️ Hand `DslField` bridge for `CatalogueValue`: a deeply serde-tagged data enum that is also
-/// embedded as a `BTreeMap`/`Vec` VALUE type in several places (`shared_property_values`,
-/// `parameter_values`, `part_number_inputs`), which mechanically requires `DslField` (map/list
-/// values bind through `DslField`, not `DslVariants`) — `#[derive(dsl::DslEnum)]` only produces
-/// `DslVariants`, so it can't satisfy those sites. Binds through `Shape::Value` (the engine's
-/// existing serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
+/// 🧿️ Catalogue syntax uses its owned tagged intrinsic value shape, preserving exact numeric words.
 impl dsl::DslField for CatalogueValue {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{semio_framework_value::ToValue::to_value_controlled(self,control).map(dsl::FieldValue::Value).map_err(|error|error.to_string())}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{crate::snapshot::native_decoding::catalogue_value(value,control)}
+    fn retire_decoded(self){crate::snapshot::native_decoding::retire_value(self)}
+
     fn shape() -> dsl::Shape {
         dsl::Shape::Value
     }
     fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("CatalogueValue always serializes to DslValue"))
+        dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
-                let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
-                dsl::from_dsl_value(normalized)
+                semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string())
             }
             other => Err(format!("expected Value, found {other:?}")),
         }
@@ -609,8 +612,9 @@ pub mod part_2 {
     /// collection), both recursing back into this same enum's own `DslVariants` impl.
     #[derive(Clone, Debug, PartialEq, dsl::DslEnum, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(tag = "node", rename_all = "camelCase"))]
+    #[cfg_attr(test, serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
     #[value(tag = "node", rename_all = "camelCase")]
+    #[dsl(retire_with="crate::snapshot::native_decoding::retire_geometry")]
     pub enum GeometryNode {
         Primitive {
             kind: String,
@@ -619,7 +623,7 @@ pub mod part_2 {
         Transform {
             translation: [f64; 3],
             rotation_deg: [f64; 3],
-            #[dsl(statements)]
+            #[dsl(statements, block)]
             child: Box<GeometryNode>,
         },
         Boolean {
@@ -869,7 +873,7 @@ pub mod part_5 {
     /// 🔢️ Part number rule.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+    #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
     #[value(tag = "kind", rename_all = "camelCase")]
     pub enum PartNumberRule {
         Literal { value: String },
@@ -882,15 +886,19 @@ pub mod part_5 {
     /// attribute on `Box<T>`/`Vec<T>`/`Option<T>` wrappers) — binding through `Shape::Value` avoids
     /// changing `Document.part_number_rule`'s plain-enum public shape just for the DSL boundary.
     impl dsl::DslField for PartNumberRule {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{semio_framework_value::ToValue::to_value_controlled(self,control).map(dsl::FieldValue::Value).map_err(|error|error.to_string())}
+        fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{crate::snapshot::native_decoding::part_number(value,control)}
+
         fn shape() -> dsl::Shape {
             dsl::Shape::Value
         }
         fn to_value(&self) -> dsl::FieldValue {
-            dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("PartNumberRule always serializes to DslValue"))
+            dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
         }
         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
             match value {
-                dsl::FieldValue::Value(dsl_value) => dsl::from_dsl_value(dsl_value.clone()),
+                dsl::FieldValue::Value(dsl_value) => semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string()),
                 other => Err(format!("expected Value, found {other:?}")),
             }
         }

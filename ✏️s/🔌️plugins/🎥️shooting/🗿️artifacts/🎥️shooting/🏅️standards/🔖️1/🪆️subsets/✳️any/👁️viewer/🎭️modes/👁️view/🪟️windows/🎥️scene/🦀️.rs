@@ -11,7 +11,16 @@ use crate::standards::v1::subsets::any::schema::{active_shot, is_transparent_sho
 use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use dsl::json;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions, World3dScene, WorldSunConfig};
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::World3dScene;
+use semio_framework_plugin::WorldSunConfig;
 use std::collections::HashSet;
 
 fn vec3(v: [f64; 3]) -> Value {

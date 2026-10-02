@@ -25,7 +25,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️Live
 #[cfg(feature = "oracles")]
 mod live {
-    use crate::markup::live::*;
+    use semio_s_plugin_stdio_markup_test_oracle::live::*;
     use semio_repo_test_host::Json;
 
     //#region 🔖️Profile

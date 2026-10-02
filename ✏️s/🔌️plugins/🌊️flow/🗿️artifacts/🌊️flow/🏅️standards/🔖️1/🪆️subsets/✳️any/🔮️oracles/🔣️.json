@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `FlowMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
   "oracles": [

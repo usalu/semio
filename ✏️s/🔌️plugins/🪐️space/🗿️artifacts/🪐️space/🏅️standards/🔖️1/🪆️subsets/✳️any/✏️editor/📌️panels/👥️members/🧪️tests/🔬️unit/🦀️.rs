@@ -47,7 +47,7 @@ fn oversized_config(members: usize) -> SpaceIndexConfig {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(config: &SpaceIndexConfig, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render(config, &TreeWindows::for_body(&view, SPACE_INDEX_BODY_MEMBERS)).expect("render the members panel");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the members panel")
 }

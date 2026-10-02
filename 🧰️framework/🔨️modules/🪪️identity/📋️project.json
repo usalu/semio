@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/framework-identity",
+  "targets": {
+    "test-grapheme": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🪪️identity",
+        "command": "bun ./📜️script.ts test grapheme"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework"
+  ]
+}

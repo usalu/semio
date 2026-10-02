@@ -37,5 +37,6 @@
     "7ff8000000000042",
     "fff8000000000042"
   ],
-  "jsonDepth": 128
+  "jsonDepth": 128,
+  "controlledRetirementDepth": 8192
 }

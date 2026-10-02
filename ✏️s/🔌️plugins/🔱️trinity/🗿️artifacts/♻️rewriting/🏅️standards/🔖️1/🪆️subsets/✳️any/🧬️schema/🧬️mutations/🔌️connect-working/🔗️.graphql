@@ -1,0 +1,2 @@
+# 🔌️ Relative connect-working-ports / ConnectWorkingPorts payload.
+input ConnectWorkingPortsInput { source: String!, target: String!, kind: String! }

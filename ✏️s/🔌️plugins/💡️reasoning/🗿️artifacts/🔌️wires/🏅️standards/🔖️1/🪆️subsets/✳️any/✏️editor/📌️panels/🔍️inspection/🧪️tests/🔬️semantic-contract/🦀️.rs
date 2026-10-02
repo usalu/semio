@@ -11,8 +11,8 @@ fn wires_semantic_panels_match_the_json_oracle() {
     let document = crate::empty_wires_snapshot();
     for row in vectors["cases"].as_array().expect("locales") {
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(&semio_framework_plugin::ViewModel {
-            locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")),
-            ..Default::default()
+            locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"),
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native)
         });
         let tree = project(crate::editor::wires::panels::document::render(&document, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);

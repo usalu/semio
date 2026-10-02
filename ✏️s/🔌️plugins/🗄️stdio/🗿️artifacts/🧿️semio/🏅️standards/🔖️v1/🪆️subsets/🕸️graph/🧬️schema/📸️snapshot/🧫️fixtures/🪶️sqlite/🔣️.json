@@ -1,4 +1,5 @@
 {
+  "nativeOutputBytes": 100000,
   "schema": "s.stdio.semio.graph",
   "nodeIds": [
     "first",
@@ -68,5 +69,15 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32
+  },
+  "reconstructionRetirement": {
+    "depth": 8192,
+    "stackBytes": 65536,
+    "schemaBytes": 100000
+  }
 }

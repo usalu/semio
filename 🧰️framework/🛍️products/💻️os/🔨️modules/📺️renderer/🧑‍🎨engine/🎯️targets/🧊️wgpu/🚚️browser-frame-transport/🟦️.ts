@@ -280,6 +280,10 @@ export type BrowserFrameHostIntroductionPolicy = { readonly kind: "host-introduc
 
 export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
+/** 🫥️ The page was hidden (`visibilitychange` to hidden, which a closing tab fires before `pagehide` retires the mount): the Worker ends every open text-editor typing run
+ * (`hidden`, design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) so the keystrokes of its last idle bound are never lost. */
+export type BrowserFrameHostPageHidden = { readonly kind: "host-page-hidden"; readonly lifecycle: number };
+
 /** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
  * gateway offers one. The Worker owns no page and dials nothing it discovered itself: the page reads the offer, the
  * Worker hands it to the renderer's `semioWgpuSetAgentBridgeConfig`, and the bridge socket goes through the page door. */
@@ -327,7 +331,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameUiMessage = BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -724,6 +728,17 @@ export class BrowserFrameTransport {
       this.requestFrame();
     } catch {
       /* a Worker that cannot take an appearance change is already failing on its own channel */
+    }
+  }
+
+  /** 🫥️ Tells the Worker the page was hidden. Posted at once, never batched: a hidden page gets no animation frame, so
+   * the Worker runs its own frame turn to send every typing run's `hidden` commit. Fire-and-forget like {@link setHostAppearance}. */
+  setHostPageHidden(): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-page-hidden", lifecycle: this.lifecycle });
+    } catch {
+      /* a Worker that cannot take the hidden page is already failing on its own channel */
     }
   }
 

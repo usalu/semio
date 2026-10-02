@@ -8,6 +8,18 @@
 use crate::os_dsl::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
 use std::collections::{HashMap, HashSet};
 
+#[path = "🛬️decoding/🦀️.rs"]
+mod controlled_decoding;
+pub use controlled_decoding::{parse_exact_controlled,parse_expr_text_controlled};
+
+#[path = "🛫️encoding/🦀️.rs"]
+mod controlled_encoding;
+pub use controlled_encoding::{print_controlled,print_expr_controlled};
+
+#[path = "🏭️producer/🦀️.rs"]
+pub mod producer;
+pub use producer::{NativeSchemaControl,RecordSpecProducer};
+
 //#region 🔖️Shape
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecordLayout {
@@ -41,21 +53,21 @@ pub enum Shape {
     Enum(Vec<(String, u32)>),
     /// Packed `x,y,z` — `len = Some(n)` enforces arity.
     Tuple(Box<Shape>, Option<usize>),
-    /// Bracketed `[a b c]`.
+    /// 🧾️ Bracketed scalar lists `[a b c]`; each direct record item is braced `[ { fields } { } ]`.
     List(Box<Shape>),
-    /// Inline nested `key=value` run using another record's fields, unwrapped. Lazy for the same
+    /// 📄️ Inline nested `key=value` run using another record's fields. Direct list items are braced. Lazy for the same
     /// reason `Statements` is: a self-referential `#[derive(DslRecord)]` struct (a field whose type
     /// recurses back to the struct itself, e.g. a dynamic-value type with a nested-dictionary-of-
     /// itself field) would otherwise recurse infinitely just building its own `RecordSpec`.
-    Record(fn() -> RecordSpec),
+    Record(RecordSpecProducer),
     /// Wraps the inner shape in `{ ... }`.
     Block(Box<Shape>),
     /// Keyword-dispatched, order-preserving repeated records: `(keyword, spec_fn)` per variant.
     /// `spec_fn` is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec` — a genuinely
     /// self-referential grammar (a recursive block tree whose own variant table contains itself)
-    /// would otherwise recurse infinitely just building the table. Calling `spec_fn()` one level at
+    /// would otherwise recurse infinitely just building the table. Calling `(spec_fn.ordinary)()` one level at
     /// a time bottoms out naturally at real documents' finite depth instead.
-    Statements(Vec<(String, fn() -> RecordSpec)>),
+    Statements(Vec<(String, RecordSpecProducer)>),
     /// `{ key=value ... }` block, keys sorted on canonical print.
     Map(Box<Shape>),
     /// Dynamic JSON-equivalent literal.
@@ -69,7 +81,7 @@ pub enum Shape {
     /// (a table row's own column, a list element, the generic `key=` keyed dispatch) prints/parses
     /// as the bracketed AoS list `[ {...} {...} ]` instead — the bare form has no bracket of its
     /// own to mark where it ends, so it's only safe directly after a record's leading keyword.
-    Table(fn() -> RecordSpec),
+    Table(RecordSpecProducer),
     /// Graph endpoint literal: `id[:kind][@port][->|--id2[:kind2][@port2]]{props}`.
     Wire,
     /// A `Shape::Float` refinement: prints/parses with a glued unit suffix (`210GPa`). The value
@@ -245,12 +257,12 @@ pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
             let items = shape_json_schema(inner);
             object([("type".to_string(), Value::from("array")), ("items".to_string(), items)])
         }
-        Shape::Record(spec_fn) => record_spec_json_schema(&spec_fn()),
+        Shape::Record(spec_fn) => record_spec_json_schema(&(spec_fn.ordinary)()),
         Shape::Block(inner) => shape_json_schema(inner),
         Shape::Statements(variants) => {
             let mut one_of = Vec::with_capacity(variants.len());
             for (keyword, spec_fn) in variants {
-                let mut entry = record_spec_json_schema(&spec_fn());
+                let mut entry = record_spec_json_schema(&(spec_fn.ordinary)());
                 if let Value::Object(map) = &mut entry {
                     map.insert("x-semio-keyword", Value::from(keyword.clone()));
                 }
@@ -264,7 +276,7 @@ pub fn shape_json_schema(shape: &Shape) -> crate::os_pack::json::Value {
         }
         Shape::Value => Value::Object(crate::os_pack::json::Object::new()),
         Shape::Table(spec_fn) => {
-            let items = record_spec_json_schema(&spec_fn());
+            let items = record_spec_json_schema(&(spec_fn.ordinary)());
             object([("type".to_string(), Value::from("array")), ("items".to_string(), items)])
         }
         Shape::Wire => object([("type".to_string(), Value::from("string")), ("x-semio-shape".to_string(), Value::from("wire"))]),
@@ -309,7 +321,7 @@ fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut crate::os_
     for field in &spec.fields {
         if field.flatten {
             if let Shape::Record(spec_fn) = &field.shape {
-                collect_record_spec_properties(&spec_fn(), properties, required);
+                collect_record_spec_properties(&(spec_fn.ordinary)(), properties, required);
                 continue;
             }
         }
@@ -341,7 +353,7 @@ mod json_schema_tests;
 /// `FieldValue`) share these method names — a type deriving both `DslRecord`/`DslScalar` AND
 /// `ToValue`/`FromValue` must disambiguate with UFCS (`<T as value::ToValue>::to_value(&x)`) at
 /// any call site where both traits are in scope.
-pub use protocol::value::{edit_through_value, from_dsl_value, ordered, to_dsl_value, DslValue, FromValue, Number, ToValue, ValueEdit, ValueError, ValueShape};
+pub use protocol::value::{edit_through_value, ordered, DecodedValue, DslValue, FromValue, NativeEncodeControl, Number, ToValue, ValueEdit, ValueError, ValueShape};
 
 /// 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -536,6 +548,14 @@ impl Cursor {
     fn at_keyword(&self, keyword: &str) -> bool {
         self.peek().kind == TokenKind::Ident && self.peek().text.as_str().as_ref() == keyword
     }
+
+    fn dynamic_attr_key(&self) -> Result<Option<String>, TextError> {
+        if self.peek().kind == TokenKind::Text && self.peek_at(1).kind == TokenKind::Equals {
+            crate::os_dsl::unescape_text(&self.peek().text.as_str(), false).map(Some).map_err(|message| TextError::new(message, self.span()))
+        } else {
+            Ok(self.at_attr_key())
+        }
+    }
 }
 //#endregion 🔖️Cursor
 
@@ -697,9 +717,9 @@ fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
             let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(ExprValue::Num(value))
         }
-        TokenKind::Ident => {
+        TokenKind::Ident | TokenKind::Text => {
             let token = cursor.advance();
-            let name = ident_like_text(&token);
+            let name = if token.kind==TokenKind::Text{crate::os_dsl::unescape_text(&token.text.as_str(),false).map_err(|error|TextError::new(error,token.span))?}else{ident_like_text(&token)};
             if cursor.peek().kind == TokenKind::LParen {
                 cursor.advance();
                 let mut args = Vec::new();
@@ -756,10 +776,10 @@ pub fn print_expr(expr: &ExprValue) -> String {
 fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
     let (body, own_prec) = match expr {
         ExprValue::Num(v) => (format_f64(*v), 255),
-        ExprValue::Var(name) => (name.clone(), 255),
+        ExprValue::Var(name) => (expression_name(name), 255),
         ExprValue::Call(name, args) => {
             let joined = args.iter().map(|a| print_expr_prec(a, 0)).collect::<Vec<_>>().join(", ");
-            (format!("{name}({joined})"), 255)
+            (format!("{}({joined})",expression_name(name)), 255)
         }
         // min_prec=4 is higher than every binary op (max 2) and Neg's own rank (3), so a nested
         // Binary OR another Neg always gets parenthesized — the latter specifically avoids ever
@@ -778,6 +798,8 @@ fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
         body
     }
 }
+
+fn expression_name(name:&str)->String{if crate::os_dsl::is_bare_ident(name){name.to_string()}else{format!("\"{}\"",crate::os_dsl::escape_text(name))}}
 
 /// 📛️ `Shape::Text`'s own body, factored out so `Shape::Ref` (identical grammar, distinct
 /// type only) can share it without a redundant match arm duplicating both branches.
@@ -963,16 +985,15 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             let mut items = Vec::new();
             while cursor.peek().kind != TokenKind::RBracket {
                 let pos_before = cursor.pos;
-                items.push(parse_shape(cursor, elem, depth + 1)?);
-                // A bare `Shape::Record` element (no keyword, no brackets of its own — e.g. a
-                // list of `key=value` port records) can legitimately parse to an empty record
-                // consuming zero tokens once its remaining keys stop matching whatever comes
-                // next: an unrecognized key (typo, wrong field name) looks identical to "this
-                // record legitimately ended" from `parse_record_body`'s point of view. Detecting
-                // it here — the one place with cursor before/after to compare — turns what would
-                // otherwise be an infinite zero-progress loop (silently bottoming out at the
-                // `check_nodes` safety limit, far from the actual offending token) into an
-                // immediate, correctly-spanned parse error.
+                let value = if let Shape::Record(make) = elem.as_ref() {
+                    cursor.expect(TokenKind::LBrace)?;
+                    let record = parse_record_body(cursor, &(make.ordinary)(), depth + 1)?;
+                    cursor.expect(TokenKind::RBrace)?;
+                    FieldValue::Record(record)
+                } else {
+                    parse_shape(cursor, elem, depth + 1)?
+                };
+                items.push(value);
                 if cursor.pos == pos_before {
                     return Err(TextError::new(format!("list element made no progress at {:?} '{}' — likely an unrecognized field key", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
                 }
@@ -981,7 +1002,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             cursor.expect(TokenKind::RBracket)?;
             Ok(FieldValue::List(items))
         }
-        Shape::Record(spec_fn) => Ok(FieldValue::Record(parse_record_body(cursor, &spec_fn(), depth + 1)?)),
+        Shape::Record(spec_fn) => Ok(FieldValue::Record(parse_record_body(cursor, &(spec_fn.ordinary)(), depth + 1)?)),
         Shape::Block(inner) => {
             cursor.expect(TokenKind::LBrace)?;
             let value = parse_shape(cursor, inner, depth + 1)?;
@@ -994,7 +1015,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
                 let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == &keyword) else { break };
                 // `parse_record_body` consumes the keyword itself (see its own check below); we
                 // only peek here to decide whether this token starts a known variant at all.
-                let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
+                let record = parse_record_body(cursor, &(spec_fn.ordinary)(), depth + 1)?;
                 out.push((keyword, record));
                 cursor.limits.check_nodes(out.len(), cursor.span())?;
                 if cursor.peek().kind == TokenKind::RBrace || cursor.peek().kind == TokenKind::Eof {
@@ -1006,7 +1027,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
         Shape::Map(inner) => {
             cursor.expect(TokenKind::LBrace)?;
             let mut entries = Vec::new();
-            while let Some(key) = cursor.at_attr_key() {
+            while let Some(key) = cursor.dynamic_attr_key()? {
                 cursor.advance();
                 cursor.expect(TokenKind::Equals)?;
                 let value = parse_shape(cursor, inner, depth + 1)?;
@@ -1016,19 +1037,8 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             Ok(FieldValue::Map(entries))
         }
         Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1)?)),
-        // Reached whenever a `Table` shape is parsed via the generic `key=` dispatch (the
-        // AoS-verbose alternate input, `name=[ {row} {row} ... ]`) or nested inside another shape
-        // (a table row's own column, a list element). Delegates to `parse_table_list`, NOT to
-        // plain `List(Record)`: a table row type is commonly declared with no keyword of its own
-        // (a header already gives every row its column order, so SoA rows don't need one), and a
-        // bare `Shape::Record` with no keyword and no brace has nothing marking where one row's
-        // fields end and the next row's begin — the exact ambiguity `parse_table_cell` guards
-        // against for table COLUMNS applies identically to table ROWS printed as a bare list. The
-        // bare SoA form (`name [col:TYPE ...] { rows }`) is recognized earlier, in
-        // `parse_record_body`, and calls `parse_table_soa` directly since its grammar (a header,
-        // then count-delimited rows) isn't reachable through `parse_shape` at all.
         Shape::Table(spec_fn) => {
-            validate_table_columns(&spec_fn())?;
+            validate_table_columns(&(spec_fn.ordinary)())?;
             parse_table_list(cursor, *spec_fn, depth)
         }
         Shape::Wire => Ok(FieldValue::Wire(parse_wire(cursor)?)),
@@ -1049,7 +1059,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
         TokenKind::LBrace => {
             cursor.advance();
             let mut entries = Vec::new();
-            while let Some(key) = cursor.at_attr_key() {
+            while let Some(key) = cursor.dynamic_attr_key()? {
                 cursor.advance();
                 cursor.expect(TokenKind::Equals)?;
                 entries.push((key, parse_dsl_value(cursor, depth + 1)?));
@@ -1421,8 +1431,8 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
 /// lets a hand-written header omit types the engine can already infer. Rows have NO separator —
 /// reading exactly `columns.len()` values per row is what makes a row self-delimiting, which is
 /// also why every column shape must itself be self-delimiting (`validate_table_columns`).
-fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
-    let element_spec = spec_fn();
+fn parse_table_soa(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usize) -> Result<FieldValue, TextError> {
+    let element_spec = (spec_fn.ordinary)();
     validate_table_columns(&element_spec)?;
     cursor.expect(TokenKind::LBracket)?;
     let mut columns: Vec<&FieldSpec> = Vec::new();
@@ -1473,7 +1483,7 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usiz
 fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
     if let Shape::Record(spec_fn) = shape {
         cursor.expect(TokenKind::LBrace)?;
-        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
+        let record = parse_record_body(cursor, &(spec_fn.ordinary)(), depth + 1)?;
         cursor.expect(TokenKind::RBrace)?;
         return Ok(FieldValue::Record(record));
     }
@@ -1488,12 +1498,12 @@ fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<
 /// field could let its parse run on into the next row's same-named token exactly like the
 /// column-vs-column case. Bracing every row here removes that ambiguity regardless of whether the
 /// row type happens to declare a keyword or not.
-fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_table_list(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usize) -> Result<FieldValue, TextError> {
     cursor.expect(TokenKind::LBracket)?;
     let mut items = Vec::new();
     while cursor.peek().kind != TokenKind::RBracket {
         cursor.expect(TokenKind::LBrace)?;
-        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
+        let record = parse_record_body(cursor, &(spec_fn.ordinary)(), depth + 1)?;
         cursor.expect(TokenKind::RBrace)?;
         items.push(FieldValue::Record(record));
         cursor.limits.check_nodes(items.len(), cursor.span())?;
@@ -1504,13 +1514,13 @@ fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usi
 
 /// 📋️ Prints the braced AoS-list form `parse_table_list` reads back. Ordinary `[ ]` spacing
 /// (a space just inside, per the general list rule — NOT the header's own tight-glued exception).
-fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
+fn print_table_list(spec_fn: RecordSpecProducer, items: &[FieldValue], writer: &mut Writer) {
     writer.atom("[");
     for item in items {
         let FieldValue::Record(record) = item else { continue };
         writer.atom("{");
         writer.glue();
-        print_record(record, &spec_fn(), writer);
+        print_record(record, &(spec_fn.ordinary)(), writer);
         writer.glue();
         writer.atom("}");
     }
@@ -1987,12 +1997,18 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
         (FieldValue::List(items), Shape::List(elem)) => {
             writer.atom("[");
             for item in items {
-                print_shape(item, elem, writer);
+                if matches!(elem.as_ref(), Shape::Record(_)) {
+                    writer.atom("{");
+                    print_shape(item, elem, writer);
+                    writer.atom("}");
+                } else {
+                    print_shape(item, elem, writer);
+                }
             }
             writer.atom("]");
         }
         (FieldValue::Record(record), Shape::Record(spec_fn)) => {
-            print_record(record, &spec_fn(), writer);
+            print_record(record, &(spec_fn.ordinary)(), writer);
         }
         (FieldValue::Block(inner_value), Shape::Block(inner_shape)) => {
             writer.open_block();
@@ -2003,16 +2019,16 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
             for (keyword, record) in items {
                 writer.new_record();
                 if let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == keyword) {
-                    print_record(record, &spec_fn(), writer);
+                    print_record(record, &(spec_fn.ordinary)(), writer);
                 }
             }
         }
         (FieldValue::Map(entries), Shape::Map(inner)) => {
             writer.open_block();
-            let mut sorted = entries.clone();
+            let mut sorted = entries.iter().collect::<Vec<_>>();
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             for (key, value) in &sorted {
-                writer.atom(format!("{key}="));
+                writer.atom(dynamic_key_text(key));
                 writer.glue();
                 print_shape(value, inner, writer);
             }
@@ -2029,8 +2045,8 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
 /// automatically. Header `[ ]` is glued tight on both sides (`[id:TEXT x:NUM]`); rows have no
 /// separator, one row per line in Document mode purely for readability (`new_record` is a no-op
 /// in Inline mode).
-fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
-    let element_spec = spec_fn();
+fn print_table(spec_fn: RecordSpecProducer, items: &[FieldValue], writer: &mut Writer) {
+    let element_spec = (spec_fn.ordinary)();
     writer.atom("[");
     writer.glue();
     for field in &element_spec.fields {
@@ -2061,12 +2077,16 @@ fn print_table_cell(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     if let (FieldValue::Record(record), Shape::Record(spec_fn)) = (value, shape) {
         writer.atom("{");
         writer.glue();
-        print_record(record, &spec_fn(), writer);
+        print_record(record, &(spec_fn.ordinary)(), writer);
         writer.glue();
         writer.atom("}");
         return;
     }
     print_shape(value, shape, writer);
+}
+
+fn dynamic_key_text(key: &str) -> String {
+    if crate::os_dsl::is_bare_ident(key) { format!("{key}=") } else { format!("\"{}\"=", crate::os_dsl::escape_text(key)) }
 }
 
 fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
@@ -2096,7 +2116,7 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             writer.open_block();
             for (key, value) in &sorted {
-                writer.atom(format!("{key}="));
+                writer.atom(dynamic_key_text(key));
                 writer.glue();
                 print_dsl_value(value, writer);
             }
@@ -2198,7 +2218,7 @@ fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet
 }
 
 /// 🔁️ `seen` guards against a genuinely self-referential `Statements` table (a recursive
-/// block tree whose own variant list contains itself): each `spec_fn()` call is only expanded the
+/// block tree whose own variant list contains itself): each `(spec_fn.ordinary)()` call is only expanded the
 /// first time its keyword is reached, so the keyword set — which is always finite, even when the
 /// grammar's real nesting isn't — is collected exactly once instead of infinitely. `seen_records`
 /// is the same guard for a self-referential `Shape::Record` (a `#[derive(DslRecord)]` struct field
@@ -2209,8 +2229,8 @@ fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet
 fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashSet<String>, seen_records: &mut HashSet<usize>) {
     match shape {
         Shape::Record(spec_fn) => {
-            if seen_records.insert(*spec_fn as usize) {
-                collect_keywords(&spec_fn(), out, seen, seen_records);
+            if seen_records.insert(spec_fn.ordinary as usize) {
+                collect_keywords(&(spec_fn.ordinary)(), out, seen, seen_records);
             }
         }
         Shape::Block(inner) => collect_shape_keywords(inner, out, seen, seen_records),
@@ -2218,7 +2238,7 @@ fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashS
             for (kw, spec_fn) in variants {
                 out.push(kw.clone());
                 if seen.insert(kw.clone()) {
-                    collect_keywords(&spec_fn(), out, seen, seen_records);
+                    collect_keywords(&(spec_fn.ordinary)(), out, seen, seen_records);
                 }
             }
         }
@@ -2237,3 +2257,7 @@ mod tests;
 #[cfg(test)]
 #[path="🧪️tests/🧬️intrinsic-bytes/🦀️.rs"]
 mod intrinsic_bytes_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🧾️record-list/🦀️.rs"]
+mod list_record_tests;

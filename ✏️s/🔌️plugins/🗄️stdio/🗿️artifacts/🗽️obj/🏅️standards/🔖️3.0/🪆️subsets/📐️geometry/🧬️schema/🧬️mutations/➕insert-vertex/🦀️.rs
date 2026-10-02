@@ -29,8 +29,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertVertex {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::InsertVertex(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert vertex", "Vertex einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert vertex", "Vertex einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

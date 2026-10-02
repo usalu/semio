@@ -74,7 +74,10 @@ fn renamed_role_link_spec() -> crate::os_dsl::RecordSpec {
     spec
 }
 
-fn with_link_spec(link: fn() -> crate::os_dsl::RecordSpec) -> crate::os_dsl::RecordSpec {
+fn renamed_role_link_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{let mut spec=artifact_link_spec_controlled(control)?;let field=spec.fields.iter_mut().find(|field|field.key=="role").ok_or("link role field")?;field.key=control.copy_text("purpose")?;Ok(spec)}
+fn renamed_role_link_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:renamed_role_link_spec,decoding:|control|renamed_role_link_controlled(control),encoding:|control|renamed_role_link_controlled(control)}}
+
+fn with_link_spec(link: crate::os_dsl::RecordSpecProducer) -> crate::os_dsl::RecordSpec {
     let mut spec = ComposedSnapshot::__dsl_spec();
     for field in &mut spec.fields {
         field.shape = match (field.key.as_str(), &field.shape) {
@@ -113,8 +116,8 @@ fn pack_schema_hash_differs_when_the_structure_differs() {
     let composed = crate::os_pack::schema_hash(&ComposedSnapshot::__dsl_spec());
     let without_links = crate::os_pack::schema_hash(&ComposedWithoutLinks::__dsl_spec());
     let renamed_child = crate::os_pack::schema_hash(&ComposedRenamedChild::__dsl_spec());
-    let renamed_link_role = crate::os_pack::schema_hash(&with_link_spec(renamed_role_link_spec));
-    assert_eq!(crate::os_pack::schema_hash(&with_link_spec(artifact_link_spec)), composed);
+    let renamed_link_role = crate::os_pack::schema_hash(&with_link_spec(renamed_role_link_producer()));
+    assert_eq!(crate::os_pack::schema_hash(&with_link_spec(artifact_link_spec_producer())), composed);
     assert_ne!(composed, without_links);
     assert_ne!(composed, renamed_child);
     assert_ne!(composed, renamed_link_role);

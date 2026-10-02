@@ -13,17 +13,21 @@
   ],
   "properties": {
     "annex": {
-      "type": "string"
+      "type": "string",
+      "enum": ["En", "De"]
     },
     "masonryClass": {
-      "type": "string"
+      "type": "string",
+      "enum": ["Class1", "Class2", "Class3", "Class4", "Class5"]
     },
     "designSituation": {
-      "type": "string"
+      "type": "string",
+      "enum": ["Persistent", "Transient", "Accidental", "Seismic"]
     },
     "storeys": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 4294967295
     },
     "walls": {
       "type": "array",
@@ -76,7 +80,8 @@
             "type": "string"
           },
           "wallType": {
-            "type": "string"
+            "type": "string",
+            "enum": ["LoadBearing", "Shear", "NonLoadBearing"]
           },
           "thicknessM": {
             "type": "number"
@@ -88,7 +93,9 @@
             "type": "number"
           },
           "supportSides": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
           },
           "openings": {
             "type": "array",
@@ -127,10 +134,12 @@
             "type": "number"
           },
           "unitGroup": {
-            "type": "string"
+            "type": "string",
+            "enum": ["Group1", "Group2", "Group3", "Group4"]
           },
           "unitMaterial": {
-            "type": "string"
+            "type": "string",
+            "enum": ["Clay", "CalciumSilicate", "Aerated", "Concrete"]
           },
           "fBPa": {
             "type": "number"
@@ -145,10 +154,12 @@
             "type": "number"
           },
           "mortarType": {
-            "type": "string"
+            "type": "string",
+            "enum": ["GeneralPurpose", "ThinLayer", "Lightweight"]
           },
           "mortarClass": {
-            "type": "string"
+            "type": "string",
+            "enum": ["M1", "M2_5", "M5", "M10", "M15", "M20"]
           },
           "mortarStrengthPa": {
             "type": "number"
@@ -169,10 +180,13 @@
             "type": "number"
           },
           "fireReiMin": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
           },
           "exposure": {
-            "type": "string"
+            "type": "string",
+            "enum": ["Mx1", "Mx2", "Mx3", "Mx4", "Mx5"]
           },
           "mu": {
             "type": "number"

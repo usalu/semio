@@ -1,16 +1,13 @@
 //! ⏱️ Process 3d play app commands — the replay cursor (`Process3dConfig.resolved_up_to`). The cursor is VIEW
 //! state: stepping through the process timeline moves the viewer's config cursor, never the document and never
-//! history, so a time-travel session can step through a process while the document is frozen. Consecutive cursor
-//! moves fold into one config edit under [`PROCESS3D_CURSOR_COALESCE_KEY`]. Every move clamps to the timeline:
-//! `0` shows the bare stock, the step count (or `None`) every step.
+//! history, so a time-travel session can step through a process while the document is frozen. A cursor move is a seek
+//! that ends at once (a stepper press, a typed step): ONE plain config edit, never an amend (design §20.1). Every move
+//! clamps to the timeline: `0` shows the bare stock, the step count (or `None`) every step.
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-/// 🔑️ The one coalesce key every cursor move carries, so stepping through the timeline is one config edit.
-pub const PROCESS3D_CURSOR_COALESCE_KEY: &str = "process3d-cursor";
 
 /// 📍️ The resolved step count the viewer shows on `snapshot`: its cursor clamped to the timeline, every step when unset.
 pub fn process3d_cursor(snapshot: &Process3dSnapshot, config: &Process3dConfig) -> usize {
@@ -27,9 +24,9 @@ pub fn process3d_cursor_moves(snapshot: &Process3dSnapshot, config: &Process3dCo
     vec![Process3dConfigMutation::SetCursor { value: next }]
 }
 
-/// ⏩️ The view emit of one cursor move: a coalesced config edit, nothing on the document.
+/// ⏩️ The view emit of one cursor move: one config edit, nothing on the document.
 fn cursor_emit(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, next: Option<usize>) -> Emit<Process3dMutation, Process3dConfigMutation> {
-    Emit::amend_config(process3d_cursor_moves(doc.snapshot, cfg.snapshot, next), PROCESS3D_CURSOR_COALESCE_KEY)
+    Emit::config(process3d_cursor_moves(doc.snapshot, cfg.snapshot, next))
 }
 
 //#region 🔖️SetCursor

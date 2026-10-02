@@ -1,0 +1,57 @@
+{
+  "dialect": {
+    "artifactKind": "s.mathematical.equation",
+    "standard": "1",
+    "subset": "*"
+  },
+  "invalidDialects": [
+    "equation@1/*",
+    "s.mathematical.equation@2/*",
+    "s.mathematical.equation@1/graph"
+  ],
+  "labelMaximum": "18446744073709551615",
+  "nextLabel": "0",
+  "lexeme": "NaN 01 世界\u0000",
+  "numerator": "",
+  "denominator": "0",
+  "symbol": "x\u0000世界",
+  "deep": 2048,
+  "cancelAt": 256,
+  "maxRows": 10,
+  "maxValueBytes": 128,
+  "children": [
+    {
+      "childId": "notation\u0000世界",
+      "target": {
+        "artifactId": "n",
+        "dialect": {
+          "artifactKind": "arbitrary persisted kind",
+          "standard": "",
+          "subset": "unowned"
+        }
+      }
+    },
+    {
+      "childId": "results",
+      "target": {
+        "artifactId": "r",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "table"
+        }
+      }
+    },
+    {
+      "childId": "computed",
+      "target": {
+        "artifactId": "c",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value"
+        }
+      }
+    }
+  ]
+}

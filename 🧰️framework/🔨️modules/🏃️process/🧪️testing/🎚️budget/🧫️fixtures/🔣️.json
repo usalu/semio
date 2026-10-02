@@ -5,5 +5,113 @@
     "quick": 300000,
     "long": 900000,
     "exhaustive": 1800000
-  }
+  },
+  "cases": [
+    {
+      "segments": [],
+      "environment": {},
+      "minimum": "fundamental",
+      "expected": {
+        "level": "fundamental",
+        "rest": [],
+        "budgetMs": 15000,
+        "rank": 0,
+        "coverage": null
+      }
+    },
+    {
+      "segments": [
+        "quick",
+        "filter"
+      ],
+      "environment": {},
+      "minimum": "fundamental",
+      "expected": {
+        "level": "quick",
+        "rest": [
+          "filter"
+        ],
+        "budgetMs": 300000,
+        "rank": 1,
+        "coverage": null
+      }
+    },
+    {
+      "segments": [
+        "filter"
+      ],
+      "environment": {
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "minimum": "fundamental",
+      "expected": {
+        "level": "long",
+        "rest": [
+          "filter"
+        ],
+        "budgetMs": 900000,
+        "rank": 2,
+        "coverage": null
+      }
+    },
+    {
+      "segments": [
+        "fundamental"
+      ],
+      "environment": {},
+      "minimum": "quick",
+      "expected": {
+        "level": "quick",
+        "rest": [],
+        "budgetMs": 300000,
+        "rank": 1,
+        "coverage": null
+      }
+    },
+    {
+      "segments": [
+        "exhaustive"
+      ],
+      "environment": {},
+      "minimum": "fundamental",
+      "expected": {
+        "level": "exhaustive",
+        "rest": [],
+        "budgetMs": 1800000,
+        "rank": 3,
+        "coverage": "1"
+      }
+    },
+    {
+      "segments": [
+        "exhaustive"
+      ],
+      "environment": {
+        "SEMIO_COVERAGE": "0",
+        "SEMIO_TEST_BUDGET_MS": "7000"
+      },
+      "minimum": "fundamental",
+      "expected": {
+        "level": "exhaustive",
+        "rest": [],
+        "budgetMs": 7000,
+        "rank": 3,
+        "coverage": "0"
+      }
+    },
+    {
+      "segments": [],
+      "environment": {
+        "SEMIO_TEST_LEVEL": "unknown"
+      },
+      "minimum": "fundamental",
+      "expected": {
+        "level": "fundamental",
+        "rest": [],
+        "budgetMs": 15000,
+        "rank": 0,
+        "coverage": null
+      }
+    }
+  ]
 }

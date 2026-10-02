@@ -1,13 +1,15 @@
+import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { buildBudgetMs, cmdBudgetMs, daemonBudgetMs, defaultBudgetMs, orchestratorBudgetMs, workspaceScriptExists } from "../../🏃️process/🟦️.ts";
+import { defaultBudgetMs, workspaceScriptExists } from "../../🏃️process/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
+const budgetPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts", import.meta.url));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
 /** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
 type ExecaOracle = (file: string, args: readonly string[], options: { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean }) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
@@ -19,11 +21,22 @@ test("owned snapshot Cargo feature admission remains separate from the ordinary 
  const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket generated directory");
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
  for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"snapshot-features-"));
-  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runCargoTestBudgeted:async(packages,cwd,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
+  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryCargoTests:async(packages,cwd,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
   const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_TEST_ARTIFACT_DIR:output},timeout:10000,reject:false});if(result.code!==0)throw Error(`Owned feature route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);expect(result.stdout).toContain("owned-assertions-complete");
   const call=JSON.parse(result.stdout.split(/\r?\n/u).find(line=>line.startsWith("{"))!);expect(call.packages).toEqual([corpus.packageName]);expect(call.cwd).toBe(root.replace(/[/\\]$/u,""));expect(call.args.flatMap((value:string,index:number)=>value==="--features"?[call.args[index+1]]:[])).toEqual(row.expectedFeatures);expect(call.args).toContain("--lib");
 
  }
+},30000);
+
+test("owned snapshot source groups retain exact coverage and finite per-group budgets",async()=>{
+ const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));
+ const shape=JSON.parse(readFileSync(new URL("../../🧬️schema/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).validate(shape,corpus)).toBe(true);
+ const {Database}=await import("bun:sqlite"),db=new Database(":memory:");db.exec("CREATE TABLE owned_source(name TEXT PRIMARY KEY, ordinal INTEGER NOT NULL)");for(const [index,name] of corpus.sources.entries())db.query("INSERT INTO owned_source VALUES (?,?)").run(name,index);expect(db.query("SELECT name FROM owned_source ORDER BY ordinal").all().map((row:any)=>row.name)).toEqual(corpus.sources);db.close();
+ const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
+ const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});let calls=[];mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryTestCommand:async(file,args,options)=>calls.push({file,args,options})}));process.argv=[process.execPath,"owned-route","test-snapshot-sqlite","source"];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});const corpus=${JSON.stringify(corpus)};const cases=[];for(const row of[...corpus.cases,...corpus.invalidGroups.map(groups=>({groups,invalid:true}))]){calls=[];let error=null;try{await runArtifactRustPackageMain(${JSON.stringify(root)},"owned-neutral-package",{snapshotSqliteTests:corpus.sources,snapshotSqliteTestGroups:row.groups,snapshotSqliteTestBudgetMs:corpus.budgetMs});}catch(cause){error=String(cause);}cases.push({calls,error});}console.log(JSON.stringify(cases));`;
+ const result=await execa(process.execPath,["-e",code],{env:cleanEnv(),timeout:10000,reject:false});expect(result.code,result.stderr).toBe(0);const observed=JSON.parse(result.stdout);expect(observed.length).toBe(corpus.cases.length+corpus.invalidGroups.length);
+ for(const [index,row] of corpus.cases.entries()){const{calls,error}=observed[index];expect(error).toBeNull();expect(calls.map((call:any)=>call.args.slice(1))).toEqual(row.expected.map((group:string[])=>group.map(name=>join(root,name))));expect(calls.map((call:any)=>call.options.budgetMs)).toEqual(row.expected.map(()=>corpus.budgetMs));expect(calls.every((call:any)=>call.file===process.execPath)).toBe(true);}
+ for(const row of observed.slice(corpus.cases.length)){expect(row.error).toContain("Owned SQLite snapshot source groups");expect(row.calls).toEqual([]);}
 },30000);
 
 /** 🧼️ Keeps the budget contract independent of the developer's launch environment. */
@@ -70,9 +83,9 @@ for (const row of fixture.processes) {
   }, 12000);
 }
 
-for (const runner of ["runCmd", "runCmdStatus", "runTestBudgeted"]) {
+for (const runner of ["runCmd", "runCmdStatus", "runRepositoryTestCommand"]) {
   test(`process budgets let ${runner} complete with the unlimited build preset`, async () => {
-    const code = `const { ${runner}, buildBudgetMs } = await import(${JSON.stringify(libraryPath)}); await ${runner}(process.execPath, ["-e", "await Bun.sleep(120); console.log('build-complete')"], { budgetMs: buildBudgetMs() });`;
+    const code = `const { ${runner} } = await import(${JSON.stringify(libraryPath)}); const { buildBudgetMs } = await import(${JSON.stringify(budgetPath)}); await ${runner}(process.execPath, ["-e", "await Bun.sleep(120); console.log('build-complete')"], { budgetMs: buildBudgetMs() });`;
     const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_CMD_BUDGET_MS: "1", SEMIO_TEST_BUDGET_MS: "1" }, timeout: 5000, reject: false });
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout).toBe("build-complete");
@@ -81,7 +94,7 @@ for (const runner of ["runCmd", "runCmdStatus", "runTestBudgeted"]) {
 }
 
 test("process budgets preserve explicit async test deadlines", async () => {
-  const code = `const { runTestBudgeted } = await import(${JSON.stringify(libraryPath)}); await runTestBudgeted(process.execPath, ["-e", "await Bun.sleep(2000)"], { budgetMs: 100 });`;
+  const code = `const { runRepositoryTestCommand } = await import(${JSON.stringify(libraryPath)}); await runRepositoryTestCommand(process.execPath, ["-e", "await Bun.sleep(2000)"], { budgetMs: 100 });`;
   const result = await execa(process.execPath, ["-e", code], { env: cleanEnv(), timeout: 5000, reject: false });
   expect(result.code).not.toBe(0);
   expect(result.stderr).toContain("[budget]");
@@ -101,8 +114,8 @@ test("process budgets let captured nextest compilation finish before budgeted as
       spawnSync: (cmd, args, opts) => cmd === "cargo" ? { status: 0 } : spawnSync(cmd, args, opts),
       spawn: (cmd, args, opts) => cmd === "cargo" ? spawn(process.execPath, ["-e", args.includes("list") ? "await Bun.sleep(120); console.log('{}')" : "console.log('assertions-complete')"], opts) : spawn(cmd, args, opts),
     }));
-    const { runCargoTestBudgeted } = await import(${JSON.stringify(libraryPath)});
-    await runCargoTestBudgeted([], process.cwd());
+    const { runRepositoryCargoTests } = await import(${JSON.stringify(libraryPath)});
+    await runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd());
   `;
   const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_BUILD_BUDGET_MS: "0", SEMIO_TEST_BUDGET_MS: "1000", SEMIO_TEST_ARTIFACT_DIR: directory }, timeout: 5000, reject: false });
   expect(result.code, result.stderr).toBe(0);
@@ -127,8 +140,8 @@ for (const nextest of [true, false]) {
           return spawn(process.execPath, ["-e", building ? "await Bun.sleep(300); console.log('coverage-built')" : reporting ? "console.log('coverage-reported')" : "console.log('assertions-complete')"], opts);
         },
       }));
-      const { runCargoTestBudgeted } = await import(${JSON.stringify(libraryPath)});
-      await runCargoTestBudgeted([], process.cwd());
+      const { runRepositoryCargoTests } = await import(${JSON.stringify(libraryPath)});
+      await runRepositoryCargoTests(["semio-s-artifact-stdio-mp4"], process.cwd());
     `;
     const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_COVERAGE: "1", SEMIO_TEST_BUDGET_MS: "200" }, timeout: 5000, reject: false });
     expect(result.code, result.stderr).toBe(0);
@@ -137,7 +150,7 @@ for (const nextest of [true, false]) {
 }
 
 test("process budgets enforce an explicitly selected build deadline", async () => {
-  const code = `const { runCmd, buildBudgetMs } = await import(${JSON.stringify(libraryPath)}); runCmd(process.execPath, ["-e", "await Bun.sleep(2000)"], { budgetMs: buildBudgetMs() });`;
+  const code = `const { runCmd } = await import(${JSON.stringify(libraryPath)}); const { buildBudgetMs } = await import(${JSON.stringify(budgetPath)}); runCmd(process.execPath, ["-e", "await Bun.sleep(2000)"], { budgetMs: buildBudgetMs() });`;
   const result = await execa(process.execPath, ["-e", code], { env: { ...cleanEnv(), SEMIO_BUILD_BUDGET_MS: "100" }, timeout: 5000, reject: false });
   expect(result.code).not.toBe(0);
   expect(result.stderr).toContain("exceeded 100ms");
@@ -157,7 +170,7 @@ test("process budgets bind nested native workspace profiles to the repository co
   const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
   expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
   for(const coverage of corpus.coverage){
-    const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runCargoTestBudgeted,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runCargoTestBudgeted([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
+    const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runRepositoryCargoTests,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runRepositoryCargoTests([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
     const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_COVERAGE:coverage?"1":"0",SEMIO_TEST_LEVEL:corpus.profile},timeout:12000,reject:false});
     if(result.code!==0)throw Error(`Native profile route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);
     const records=result.stderr.replace(/\u001b\[[0-9;]*m/g,"").split(/\r?\n/u).map(line=>line.trim()).filter(line=>line.startsWith('["')||line.startsWith('{"root":')).map(line=>JSON.parse(line));

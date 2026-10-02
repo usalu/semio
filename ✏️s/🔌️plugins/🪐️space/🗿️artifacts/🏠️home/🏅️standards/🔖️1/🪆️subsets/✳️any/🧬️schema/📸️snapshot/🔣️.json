@@ -15,9 +15,10 @@
     },
     "catalogGeneration": {
       "type": "integer",
-      "format": "int64",
+      "format": "uint64",
       "minimum": 0,
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "maximum": 18446744073709551615
     }
   }
 }

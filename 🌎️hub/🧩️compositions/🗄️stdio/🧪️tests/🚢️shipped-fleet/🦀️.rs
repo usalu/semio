@@ -33,7 +33,7 @@ fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> P
     let bundle = bundle.unwrap_or_else(|error| panic!("[DEBUG] outward component assembly rejected: {error:?}"));
     install_plugin_bundle_result(&runtime, Ok(bundle));
     let bytes = semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
-    semio_framework::from_dsl_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
+    semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
 }
 
 /// 📦️ The stdio component and its nine family components.
@@ -178,7 +178,7 @@ async fn the_shipped_assembly_publishes_every_editor_document_schema_and_a_json_
     for package in packages() {
         for app in package.descriptor.manifest.apps.iter().filter(|app| app.role == AppRole::Editor) {
             let kind = app.id.split('@').next().expect("an app id names its artifact kind");
-            assert!(semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(kind), "{} ({}) edits {kind}, whose document schema its package's assembly must publish", app.id, package.id);
+            assert!(semio_framework_schema_registry::artifact_schema_descriptor_registered(kind), "{} ({}) edits {kind}, whose document schema its package's assembly must publish", app.id, package.id);
         }
     }
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>, _>(async {
@@ -256,10 +256,10 @@ fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bo
     let value = |namespace: &str| values(namespace).into_iter().next().unwrap_or_default();
     match resolve_ready(requirement.kind()).as_str() {
         "schema" => match value("schema-export").split_once('#') {
-            Some((scope, export)) => semio_framework_schema::resolve_schema_export(scope, export, semio_framework_schema::SchemaFormat::JsonSchema).is_ok(),
-            None => semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(&value("schema")),
+            Some((scope, export)) => semio_framework_schema_registry::resolve_schema_export(scope, export, semio_framework_schema_registry::SchemaFormat::JsonSchema).is_ok(),
+            None => semio_framework_schema_registry::artifact_schema_descriptor_registered(&value("schema")),
         },
-        "inference" => semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(&value("schema")),
+        "inference" => semio_framework_schema_registry::artifact_inference_descriptor_registered(&value("schema")),
         "codec" => resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
         "composer" => resolve_ready(semio_framework::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
         "subset-validator" => resolve_ready(semio_framework::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
@@ -298,7 +298,7 @@ fn package_contract_probe() {
     let id = std::env::var(CONTRACT_PROBE_PACKAGE).expect("the parent law names one package");
     let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
     assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
-    let contracts = semio_framework_os_kernel::with_kernel_artifact_schema_catalog(|entries| entries.iter().map(|entry| entry.id).collect::<Vec<_>>());
+    let contracts = semio_framework_schema_registry::with_artifact_schema_catalog(|entries| entries.iter().map(|entry| entry.id).collect::<Vec<_>>());
     assert!(!contracts.is_empty(), "{id} registers the snapshot contracts of the kinds it opens");
     let unresolved = contracts.iter().filter_map(|contract| semio_framework_schema::structural_validator_for(contract, "snapshot").err().map(|error| format!("{contract}: {error}"))).collect::<Vec<_>>();
     assert!(unresolved.is_empty(), "{id} alone registers {} unresolvable snapshot contracts: {unresolved:#?}", unresolved.len());

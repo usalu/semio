@@ -99,8 +99,8 @@ fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
 fn semio_drawing_node_from_scene_node(node: &DrawingSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Option<SemioDrawNode> {
     let style = intern_semio_style(styles, node);
     if let Some(text) = &node.text {
-        let children = semio_s_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_, line)| !line.is_empty()).map(|(index, line)| {
-            SemioDrawNode::Text { value: line.to_owned(), at: SemioPoint2 { x: 0.0, y: text.size + index as f64 * text.size * semio_s_2d::text::DRAWING_TEXT_LINE_HEIGHT }, style: style.clone() }
+        let children = semio_framework_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_, line)| !line.is_empty()).map(|(index, line)| {
+            SemioDrawNode::Text { value: line.to_owned(), at: SemioPoint2 { x: 0.0, y: text.size + index as f64 * text.size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT }, style: style.clone() }
         }).collect();
         return Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children });
     }

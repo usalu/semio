@@ -37,7 +37,7 @@ fn open_branch(segments: &[&str], offset: u32, rows: u32) -> TreeWindowRequest {
 /// 🛍️ The catalogue body exactly as the host reads it, for the host-known windows in `requests`.
 async fn window_body(requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, ..Default::default() };
-    let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::default()), Locale::En, &TreeWindows::for_body(&view, S_PLAY_CATALOGUE_BODY_KEY)).await.expect("catalogue tree");
+    let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), Locale::En, &TreeWindows::for_body(&view, S_PLAY_CATALOGUE_BODY_KEY)).await.expect("catalogue tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection")
 }
 

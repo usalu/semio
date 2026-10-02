@@ -270,7 +270,7 @@ pub fn genesis_presentation_child_pack(snapshot: &PresentationSnapshot, slot: &s
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Animate Presentation", "Animierte Präsentation"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Animate Presentation", "Animierte Präsentation"),
         source_format: PRESENTATION_DOCUMENT_SCHEMA.into(),
         component_kind: "panel".into(),
         dimension: "2d".into(),

@@ -12,12 +12,18 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutation
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use serde_json::json;
 
+/// ➕️ The add-node gesture record of a flow canvas (design §13.3): the widget kind with the descriptor fields a catalogue
+/// row carries (operator kind, slider label, action, export format) and the world position it lands at. The owner mints
+/// the widget id.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct AddWidget {
     pub kind: String,
     pub neuron_kind: Option<String>,
     pub x: Option<f64>,
     pub y: Option<f64>,
+    pub label: Option<String>,
+    pub action: Option<String>,
+    pub format: Option<String>,
 }
 
 fn child_add_widget_fault(message: impl Into<String>) -> Fault {
@@ -53,7 +59,9 @@ fn child_add_widget_mutation(content: &SemioFlowSnapshot, descriptor_json: &str,
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.as_deref().unwrap_or("math.add") }).to_string(),
-        "inputSlider" => json!({ "kind": "inputSlider", "label": "" }).to_string(),
+        "inputSlider" => json!({ "kind": "inputSlider", "label": payload.label.as_deref().unwrap_or("") }).to_string(),
+        "outputAction" => json!({ "kind": "outputAction", "action": payload.action.as_deref().unwrap_or("") }).to_string(),
+        "outputExport" => json!({ "kind": "outputExport", "format": payload.format.as_deref().unwrap_or("") }).to_string(),
         other => json!({ "kind": other }).to_string(),
     };
     let x = payload.x.unwrap_or(120.0);

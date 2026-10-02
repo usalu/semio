@@ -4,8 +4,8 @@
 //! derives on those records, for one measured reason: `WfcTile2d::media` is a tagged ENUM whose
 //! `Image` arm carries a `store::ArtifactChild<SemioImageSnapshot>`, so a single `dsl::DslRecord`
 //! derive cannot state it. The twin carries the field as `dsl::DslValue` — the engine's own
-//! schema-less literal — and bridges at the boundary through `dsl::to_dsl_value`/
-//! `dsl::from_dsl_value`, which exist for every `ToValue`/`FromValue` type. The remaining records
+//! schema-less literal — and bridges at the boundary through `semio_framework_value::ToValue::to_value`/
+//! `semio_framework_value::FromValue::from_value`, which exist for every `ToValue`/`FromValue` type. The remaining records
 //! are twinned for symmetry so ONE file states this subset's whole text grammar.
 
 //#region 📖️SemioGrammar
@@ -15,6 +15,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA};
+#[path = "🛬️native/🦀️.rs"]
+mod controlled_native;
+pub(crate) use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};
 
 //#region 🔖️Direction
 /// 🧭️ The wire token of one direction — the same `SCREAMING_SNAKE_CASE` spelling the JSON Schema
@@ -79,13 +82,13 @@ pub struct WfcCell2dDsl {
 /// 🎨️ `media` is the one field that cannot be a derive: see this file's own docstring. Media that
 /// refuses to project is `Null`, never a silent drop.
 pub fn tile_to_dsl(tile: &WfcTile2d) -> WfcTile2dDsl {
-    WfcTile2dDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: dsl::to_dsl_value(&tile.media).unwrap_or(dsl::DslValue::Null) }
+    WfcTile2dDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: semio_framework_value::ToValue::to_value(&tile.media) }
 }
 
 pub fn tile_from_dsl(tile: WfcTile2dDsl) -> Result<WfcTile2d, store::TextError> {
     let media: WfcTileMedia2d = match tile.media {
         dsl::DslValue::Null => WfcTileMedia2d::default(),
-        other => dsl::from_dsl_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+        other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
     };
     Ok(WfcTile2d { id: tile.id, label: tile.label, weight: tile.weight, media })
 }

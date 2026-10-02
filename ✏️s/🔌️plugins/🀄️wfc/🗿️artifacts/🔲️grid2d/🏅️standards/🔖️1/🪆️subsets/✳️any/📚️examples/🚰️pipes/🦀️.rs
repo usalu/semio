@@ -9,7 +9,8 @@
 //! would be redundant — and `create-rule` would refuse it as a duplicate constraint anyway.
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcColor, WfcDirection2d, WfcPathSegment, WfcPinnedCell2d, WfcPoint2, WfcTile2d, WfcTileMedia2d, WfcVectorPath, WFC_GRID2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "pipes";
 pub const ICON: &str = "network";

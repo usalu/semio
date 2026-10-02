@@ -1,0 +1,27 @@
+{
+ "snapshot": {
+  "schema": "sequence 世界\u0000",
+  "content": {
+   "childId": "child 世界\u0000; content",
+   "target": {
+    "artifactId": "artifact 世界\u0000",
+    "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow"}
+   }
+  }
+ },
+ "malformedSql": [
+  "DELETE FROM sequence_document",
+  "DELETE FROM sequence_content",
+  "INSERT INTO sequence_content SELECT 2,document_id,child_id,artifact_id,artifact_kind,standard,subset FROM sequence_content",
+  "UPDATE sequence_document SET id=2",
+  "UPDATE sequence_content SET document_id=2",
+  "UPDATE sequence_content SET id=0",
+  "UPDATE sequence_document SET schema=x'FF'",
+  "UPDATE sequence_content SET child_id=x'FF'",
+  "UPDATE sequence_content SET artifact_id=x'FF'",
+  "UPDATE sequence_content SET artifact_kind=x'FF'",
+  "UPDATE sequence_content SET standard=x'FF'",
+  "UPDATE sequence_content SET subset=x'FF'"
+ ],
+ "control": {"largeTextBytes": 131073, "maxOwnedBytes": 65536, "tinyFileBytes": 1024}
+}

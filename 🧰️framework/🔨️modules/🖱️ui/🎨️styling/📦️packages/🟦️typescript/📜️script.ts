@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
+import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs, resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** 🧭️ `@semio-tech/ui-styling` task router: `bun ./📜️script.ts <generate|fonts>`. */
-import { resolveTestLevel, runTestBudgeted, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
@@ -18,9 +21,9 @@ class FontsScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🧩️suite/🟦️.ts", ...rest], { cwd: this.root });
+    runBudgetedTestCommand(process.execPath, ["test", "../../🧪️tests/🧩️suite/🟦️.ts", ...rest], { cwd: this.root , budgetMs: testLevelBudgetMs()});
   }
 }
 
@@ -28,8 +31,8 @@ class TestScript extends BundleScript {
 class ThemeGeometryTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-geometry accepts no arguments");
-    runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🧩️suite/🟦️.ts", "--test-name-pattern", "shared theme geometry"], { cwd: this.root });
-    await runVitest(this.root, ["--testNamePattern", "neutral geometry vectors|invalid geometry publication"], "../../🧪️tests/🎚️config/🟦️.ts");
+    runBudgetedTestCommand(process.execPath, ["test", "../../🧪️tests/🧩️suite/🟦️.ts", "--test-name-pattern", "shared theme geometry"], { cwd: this.root , budgetMs: testLevelBudgetMs()});
+    await runVitestV1(readVitestPolicyV1(process.env,this.root), ["--testNamePattern", "neutral geometry vectors|invalid geometry publication"], "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 
@@ -44,7 +47,7 @@ class TwinScript extends BundleScript {
 class AssetTransportTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("test-asset-transport has a fixed neutral transport selection");
-    await runVitest(this.root, ["../../🏗️builder/🌐️vite/🟦️.ts", "--testNamePattern", "resolveAssetServeMode|tileProxyVitePlugin|playgroundAssetVitePlugins"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitestV1(readVitestPolicyV1(process.env,this.root), ["../../🏗️builder/🌐️vite/🟦️.ts", "--testNamePattern", "resolveAssetDeliveryModeV1|tileProxyVitePlugin|createAssetBuildPluginsV1"], "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 

@@ -293,6 +293,8 @@ const F_TRANSITION_HLC: u16 = 2;
 const F_TRANSITION_DEPENDENCIES: u16 = 3;
 const F_TRANSITION_PAYLOAD: u16 = 4;
 const F_TRANSITION_OBSERVED: u16 = 5;
+const F_VIEWER_LINE: u16 = 0;
+const F_VIEWER_CHECKPOINT: u16 = 1;
 
 fn doc_spec() -> RecordSpec {
     RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
@@ -330,6 +332,12 @@ fn transition_spec() -> RecordSpec {
             FieldSpec::new(F_TRANSITION_OBSERVED, "observed", Shape::Text).optional(),
         ],
     )
+}
+
+/// 👁 `viewer [line=<alternative>] [checkpoint=<checkpoint>]` — this replica's head ([`HistoryLog::viewer_line`],
+/// [`HistoryLog::viewer_checkpoint`]), the text twin of `REC_VIEWER`; no `viewer` line is the canonical trunk tip.
+fn viewer_spec() -> RecordSpec {
+    RecordSpec::new(Some("viewer"), RecordLayout::Inline, vec![FieldSpec::new(F_VIEWER_LINE, "line", Shape::Text).optional(), FieldSpec::new(F_VIEWER_CHECKPOINT, "checkpoint", Shape::Text).optional()])
 }
 
 fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
@@ -394,6 +402,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     }
 
     let mut log = HistoryLog::default();
+    let mut viewer_seen = false;
     let mut pending: Option<PendingEdit> = None;
     let mut forwards: Vec<OpPayload> = Vec::new();
 
@@ -432,6 +441,15 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 log.doc_id = required_text(&record, F_DOC_ID, "doc id")?;
                 log.schema = required_text(&record, F_DOC_SCHEMA, "doc schema")?;
             }
+            "viewer" => {
+                if viewer_seen {
+                    return Err(ProtocolError::Malformed { what: "ops text viewer", offset: 0, detail: "repeated viewer line".to_string() });
+                }
+                viewer_seen = true;
+                let record = crate::os_dsl::schema::parse(trimmed, &viewer_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.viewer_line = field_text(&record, F_VIEWER_LINE);
+                log.viewer_checkpoint = field_text(&record, F_VIEWER_CHECKPOINT);
+            }
             "edit" => {
                 let record = crate::os_dsl::schema::parse(trimmed, &edit_spec(), &opts).map_err(text_error_to_protocol)?;
                 pending = Some(PendingEdit {
@@ -467,8 +485,8 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     Ok(log)
 }
 
-/// 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space
-/// indented forward op lines), then one `transition` line per [`HistoryTransitionRecord`]. Errors if any op payload carries no text
+/// 📤️ Prints a `HistoryLog` back to `.ops` text: `doc`, the `viewer` head unless it is the canonical trunk tip, every
+/// edit (header + two-space indented forward op lines), then one `transition` line per [`HistoryTransitionRecord`]. Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
 /// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
@@ -478,6 +496,11 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let doc_record = record_with(vec![(F_DOC_ID, FieldValue::Text(log.doc_id.clone())), (F_DOC_SCHEMA, FieldValue::Text(log.schema.clone()))]);
     out.push_str(&crate::os_dsl::schema::print(&doc_record, &doc_spec(), JoinMode::Inline));
     out.push('\n');
+    if log.viewer_line.is_some() || log.viewer_checkpoint.is_some() {
+        let fields = [(F_VIEWER_LINE, &log.viewer_line), (F_VIEWER_CHECKPOINT, &log.viewer_checkpoint)].into_iter().filter_map(|(id, value)| value.clone().map(|value| (id, FieldValue::Text(value)))).collect();
+        out.push_str(&crate::os_dsl::schema::print(&record_with(fields), &viewer_spec(), JoinMode::Inline));
+        out.push('\n');
+    }
 
     for edit in &log.edits {
         let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone())), (F_EDIT_LINE, FieldValue::List(edit.line.iter().cloned().map(FieldValue::Text).collect()))];

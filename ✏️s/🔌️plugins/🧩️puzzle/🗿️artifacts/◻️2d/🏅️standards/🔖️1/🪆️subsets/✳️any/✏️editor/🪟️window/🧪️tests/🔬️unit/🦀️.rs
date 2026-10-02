@@ -49,7 +49,7 @@ use super::*;
         let footprint = puzzle2d_window_transient_preflight(&Puzzle2dWindowTransientMutation::Snapshot { transient: transient.clone() }).expect("admitted exact footprint");
         assert_eq!(footprint.work_items, 1);
         assert!(footprint.retained_bytes < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        let mut retirement = store::retirement::owned_retirement(Puzzle2dWindowTransientMutation::Snapshot { transient });
+        let mut retirement = semio_framework_value::retirement::owned_retirement(Puzzle2dWindowTransientMutation::Snapshot { transient });
         for _ in 0..32_768 {
             match retirement.close_step(1, 1).expect("bounded retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -67,7 +67,7 @@ use super::*;
     }
 
     fn retire_returned_puzzle2d_transient(transient: Puzzle2dWindowTransient) {
-        let mut retirement = store::retirement::owned_retirement(Puzzle2dWindowTransientMutation::Snapshot { transient });
+        let mut retirement = semio_framework_value::retirement::owned_retirement(Puzzle2dWindowTransientMutation::Snapshot { transient });
         for _ in 0..4_096 {
             match retirement.close_step(1, 1).expect("returned Puzzle 2D owner retirement") {
                 store::SnapshotRetirementStep::Complete => {

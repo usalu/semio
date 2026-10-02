@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
@@ -24,12 +23,14 @@ test("portable Cargo declarations define exact physical and semantic verdicts", 
 });
 
 test("independent Cargo metadata and TOML parsing validate every neutral verdict", async () => {
-  const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
+  if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("Cargo direction laws require caller-owned SEMIO_TEST_ARTIFACT_DIR");
+  const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR);
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "cargo-direction-")));
   try {
     for (const [index, row] of fixture.cases.entries()) {
-      const cwd = join(root, String(index)), workspace: any = { workspace: { resolver: "2", members: (row.id === "implicit-local-member" ? row.packages.slice(0, 1) : row.packages).map((pkg) => pkg.owner) } };
+      const members = (row.id === "implicit-local-member" ? row.packages.slice(0, 1) : row.packages).map((pkg) => pkg.owner);
+      const cwd = join(root, String(index)), workspace: any = { workspace: { resolver: "2", members, metadata: { semio: { repository: { "schema-version": 1, "member-manifests": members.map(owner => owner + "/Cargo.toml") } } } } };
       for (const pkg of row.packages) {
         const manifest: any = { package: { name: pkg.name, version: "0.1.0", edition: "2021", metadata: { unrelated: { role: "framework" }, semio: pkg.role === null ? {} : { role: pkg.role } } }, lib: { path: "lib.rs" } };
         for (const dependency of pkg.dependencies) {
@@ -107,6 +108,11 @@ test("owner classification rejects omitted, malformed and contradictory authorit
     if (id === "unknown-owner-role") policy.ownerRoles[0].roles = ["unclassified"];
     if (id === "duplicate-owner-rule") policy.ownerRoles.push(policy.ownerRoles[0]);
     if (id === "empty-owner-pattern") policy.ownerRoles[0].path = "";
+    if (id === "empty-source-selector") { policy.rules["cargo-framework-no-products"].fromRoles = []; delete policy.rules["cargo-framework-no-products"].fromOwnerPaths; }
+    if (id === "empty-target-selector") { policy.rules["cargo-framework-no-products"].toRoles = []; delete policy.rules["cargo-framework-no-products"].toOwnerSegments; }
+    if (id === "duplicate-source-role") policy.rules["cargo-framework-no-implementation-role"].fromRoles = ["framework", "framework"];
+    if (id === "duplicate-target-role") policy.rules["cargo-framework-no-implementation-role"].toRoles = ["hub", "hub"];
+    if (id === "unknown-rule-field") policy.rules["cargo-framework-no-products"].exceptions = ["framework/modules/general"];
     expect(() => cargoDependencyDirectionReport(packages, packages, policy), id).toThrow();
   }
 });

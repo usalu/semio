@@ -33,8 +33,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ResizeBlock {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Größe von Block \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize block \"{}\"", self.id), &format!("Größe von Block \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

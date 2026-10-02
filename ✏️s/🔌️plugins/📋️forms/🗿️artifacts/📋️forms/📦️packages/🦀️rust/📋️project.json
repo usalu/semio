@@ -56,6 +56,72 @@
           ]
         }
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite ",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "forms-test-snapshot-sqlite"
+          ]
+        }
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "forms-test-snapshot-sqlite-native"
+          ]
+        }
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/**/*",
+        "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "forms-test-snapshot-sqlite-source"
+          ]
+        }
+      }
     }
   }
 }

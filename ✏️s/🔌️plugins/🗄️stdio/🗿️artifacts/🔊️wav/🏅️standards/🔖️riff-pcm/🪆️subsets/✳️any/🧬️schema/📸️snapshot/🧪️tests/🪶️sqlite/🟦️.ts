@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import floats from "../../🧫️fixtures/🪶️sqlite/🔢️float32.json";
 import indices from "../../🧫️fixtures/🪶️sqlite/🧭️indices.json";
+import integerQueries from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/🎯️integer-query.json";
 import schema from "../../🔣️.json";
 import textSchema from "../../📝️text/🔣️.json";
 import {buildSchema,graphqlSync} from "graphql";
@@ -14,6 +15,20 @@ import {WAV_SQLITE_SCHEMA,wavSnapshotToSqliteDatabase,wavSnapshotFromSqliteDatab
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 function fixtureSnapshot():WavSnapshot{return parseWavSnapshot({...fixture,chunkOrder:fixture.chunkOrder.map(reference=>reference.kind==="other"?{kind:"other",value:BigInt(reference.value!)}:{kind:reference.kind})})}
+
+test("WAV INTEGER query samples agree with independently measured binary32 words",async()=>{
+ const oracle=new Database(":memory:",{safeIntegers:true}),view=new DataView(new ArrayBuffer(4));
+ try{
+  oracle.run("CREATE TABLE exact_query(sample BLOB)");
+  for(const item of integerQueries.cases){
+   const integer=BigInt(item.integer),bits=parseInt(item.binary32Bits,16);view.setUint32(0,bits);expect(BigInt(view.getFloat32(0))===integer).toBe(item.accept32);
+   oracle.run("DELETE FROM exact_query");oracle.run("INSERT INTO exact_query VALUES(?)",[integer]);const query=(oracle.query("SELECT sample FROM exact_query").get()as{sample:bigint}).sample;expect(query).toBe(integer);
+   const snapshot:WavSnapshot={...fixtureSnapshot(),data:{kind:"float32",value:[{bits}]}};const database=await wavSnapshotToSqliteDatabase(snapshot);
+   const edited={...database,tables:database.tables.map(table=>table.name!=="wav_float32_sample"?table:{...table,rows:table.rows.map(row=>({...row,values:row.values.map((value,index)=>index===5?query:value)}))})};
+   if(item.accept32)expect(await wavSnapshotFromSqliteDatabase(edited)).toEqual(snapshot);else await expect(wavSnapshotFromSqliteDatabase(edited)).rejects.toThrow();
+  }
+ }finally{oracle.close();}
+});
 
 test("WAV unsigned64 auxiliary indices retain independently queryable optional relationships",async()=>{
  const snapshot:WavSnapshot={...fixtureSnapshot(),chunkOrder:indices.unsigned64ChunkIndices.map(value=>({kind:"other",value:BigInt(value)}))};const database=await wavSnapshotToSqliteDatabase(snapshot);expect(await wavSnapshotFromSqliteDatabase(database)).toEqual(snapshot);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT auxiliary_chunk_index,other_chunk_id FROM wav_chunk_order ORDER BY ordinal").all()).toEqual(indices.unsigned64ChunkIndices.map((value,index)=>({auxiliary_chunk_index:value,other_chunk_id:index<2?index+1:null})));db.run("UPDATE wav_chunk_order SET auxiliary_chunk_index='1',other_chunk_id=2 WHERE ordinal=4");const expected={...snapshot,chunkOrder:snapshot.chunkOrder.map((value,index)=>index===4?{kind:"other" as const,value:1n}:value)};expect(await wavSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(expected);db.run("UPDATE wav_chunk_order SET auxiliary_chunk_index='18446744073709551615',other_chunk_id=1 WHERE ordinal=4");await expect(wavSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}

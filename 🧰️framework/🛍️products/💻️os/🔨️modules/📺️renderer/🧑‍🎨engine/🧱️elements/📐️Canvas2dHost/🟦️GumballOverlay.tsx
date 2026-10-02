@@ -408,9 +408,9 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
       {config.scaleUniform ? (
         <circle className="pointer-events-auto cursor-nwse-resize" cx={knob("scaleUniform").x} cy={knob("scaleUniform").y} r={CANVAS2D_GUMBALL_HIT_RADIUS} fill={SPATIAL_AXIS_COLOR_REFS.z} onPointerDown={(event) => onPointerDown("scaleUniform", event)} />
       ) : null}
-      <circle cx={cx} cy={cy} r={4} fill="white" stroke="#94a3b8" strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={4} fill="var(--foreground)" stroke="var(--muted-foreground)" strokeWidth={1} />
       {ghost ? <Canvas2dGumballGhost preview={ghost} pivot={pivotScreen} /> : null}
-      {preview ? <circle cx={cx} cy={cy} r={3} fill="rgba(250,204,21,0.9)" /> : null}
+      {preview ? <circle cx={cx} cy={cy} r={3} fill="var(--warning-border)" fillOpacity={0.9} /> : null}
     </svg>
   );
 }
@@ -419,18 +419,18 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
  * a turn, the reach ring for a scaling. The document only changes on release. */
 function Canvas2dGumballGhost({ preview, pivot }: { readonly preview: LocalPreview; readonly pivot: { readonly x: number; readonly y: number } }) {
   const { gesture, pointer } = preview;
-  const stroke = "rgba(250,204,21,0.9)";
+  const stroke = "var(--warning-border)";
   if (gesture.kind === "moveX" || gesture.kind === "moveY") {
     const x = gesture.kind === "moveX" ? pivot.x + pointer.x - gesture.start.x : pivot.x;
     const y = gesture.kind === "moveY" ? pivot.y + pointer.y - gesture.start.y : pivot.y;
     return (
       <>
-        <line x1={pivot.x} y1={pivot.y} x2={x} y2={y} stroke={stroke} strokeWidth={1.5} strokeDasharray="3 3" />
-        <circle cx={x} cy={y} r={5} fill="none" stroke={stroke} strokeWidth={2} />
+        <line x1={pivot.x} y1={pivot.y} x2={x} y2={y} stroke={stroke} strokeOpacity={0.9} strokeWidth={1.5} strokeDasharray="3 3" />
+        <circle cx={x} cy={y} r={5} fill="none" stroke={stroke} strokeOpacity={0.9} strokeWidth={2} />
       </>
     );
   }
-  if (gesture.kind === "rotate") return <line x1={pivot.x} y1={pivot.y} x2={pointer.x} y2={pointer.y} stroke={stroke} strokeWidth={2} />;
-  return <circle cx={pivot.x} cy={pivot.y} r={Math.hypot(pointer.x - pivot.x, pointer.y - pivot.y)} fill="none" stroke={stroke} strokeWidth={1.5} strokeDasharray="3 3" />;
+  if (gesture.kind === "rotate") return <line x1={pivot.x} y1={pivot.y} x2={pointer.x} y2={pointer.y} stroke={stroke} strokeOpacity={0.9} strokeWidth={2} />;
+  return <circle cx={pivot.x} cy={pivot.y} r={Math.hypot(pointer.x - pivot.x, pointer.y - pivot.y)} fill="none" stroke={stroke} strokeOpacity={0.9} strokeWidth={1.5} strokeDasharray="3 3" />;
 }
 //#endregion 🧭️Canvas2dGumballOverlay

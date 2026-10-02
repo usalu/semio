@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeElementD
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change glazing correction ΔUg", "Verglasungskorrektur ΔUg ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change glazing correction ΔUg", "Verglasungskorrektur ΔUg ändern")
     }
 }

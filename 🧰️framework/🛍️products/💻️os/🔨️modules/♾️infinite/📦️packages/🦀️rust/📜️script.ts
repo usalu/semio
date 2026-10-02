@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { resolveTestLevel, runCargoTestBudgeted } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../🖼️canvas/🔤️fonts/🟦️.ts";
 
 const ROOT = import.meta.dir;
@@ -21,10 +22,10 @@ class FontsScript extends BundleScript {
     const cancel = (): void => { cancelled = true; };
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      await runOwnedCommand(binary, [asset], ROOT, "font-assets:publish", 60_000);
+      await runRepositoryCommand(binary, [asset], ROOT, "font-assets:publish", 60_000);
       if (cancelled) throw new Error("Font dump cancelled");
       const bytes = readFileSync(asset), count = validateFontAsset(bytes);
-      await stageArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));
+      await stageRepositoryArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));
       console.log(`Staged ${count} fonts (${bytes.byteLength} bytes)`);
     } finally {
       process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);
@@ -42,7 +43,7 @@ class FontsScript extends BundleScript {
 class TestWgpuWorldTerrainScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted([], this.root, ["--lib", ...rest, "world::", "terrain"]);
+    await runRepositoryCargoTests([], this.root, ["--lib", ...rest, "world::", "terrain"]);
   }
 }
 

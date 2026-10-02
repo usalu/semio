@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceHumanFactorRequir
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace human factor requirement \"{}\"", self.human_factor_requirement.header.name), &format!("Ergonomieanforderung \"{}\" ersetzen", self.human_factor_requirement.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace human factor requirement \"{}\"", self.human_factor_requirement.header.name), &format!("Ergonomieanforderung \"{}\" ersetzen", self.human_factor_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.human_factor_requirement.header.id.0.clone()]

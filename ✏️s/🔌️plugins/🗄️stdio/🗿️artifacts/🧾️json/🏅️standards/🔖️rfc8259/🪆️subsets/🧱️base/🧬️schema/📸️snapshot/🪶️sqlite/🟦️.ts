@@ -1,3 +1,4 @@
+import {jsonNumberMeaning} from "../🔢️number/🟦️.ts";
 /** 🧾️ RFC8259 JSON value/member/element relations mirror the adjacent handcrafted schema. */
 import type { JsonSnapshot, JsonValue } from "../🟦️.ts";
 import { artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteInteger, artifactSqliteReal, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
@@ -7,19 +8,6 @@ import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../..
 export const JSON_SQLITE_SCHEMA = "CREATE TABLE json_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES json_value(id));\nCREATE TABLE json_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null', 'boolean', 'number', 'string', 'array', 'object')), boolean_value INTEGER CHECK(boolean_value IN (0, 1)), number_lexeme TEXT, string_value TEXT, number_value REAL, CHECK((kind IN ('null', 'array', 'object') AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'boolean' AND number_value IS NULL AND boolean_value IS NOT NULL AND number_lexeme IS NULL AND string_value IS NULL) OR (kind = 'number' AND boolean_value IS NULL AND number_lexeme IS NOT NULL AND string_value IS NULL) OR (kind = 'string' AND number_value IS NULL AND boolean_value IS NULL AND number_lexeme IS NULL AND string_value IS NOT NULL)));\nCREATE TABLE json_object_member (id INTEGER PRIMARY KEY, object_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), key TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES json_value(id));\nCREATE TABLE json_array_element (id INTEGER PRIMARY KEY, array_value_id INTEGER NOT NULL REFERENCES json_value(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), value_id INTEGER NOT NULL REFERENCES json_value(id));\n";
 
 function kind(value: JsonValue): string { return value.kind === "bool" ? "boolean" : value.kind; }
-async function number(lexeme:string,options:ArtifactSqliteOptions,phase:"projectSnapshot"|"reconstructSnapshot",completed:number,total:number):Promise<number|null>{
- let cursor=0;
- const checkpoint=async():Promise<void>=>{if(cursor%65536===0)await artifactSqliteCheckpoint(options,phase,completed,total);};
- const digits=async():Promise<boolean>=>{const start=cursor;while(cursor<lexeme.length&&lexeme.charCodeAt(cursor)>=48&&lexeme.charCodeAt(cursor)<=57){cursor++;if(cursor%65536===0)await checkpoint();}return cursor>start;};
- if(lexeme.length>65536)await artifactSqliteCheckpoint(options,phase,completed,total);
- if(lexeme[cursor]==="-")cursor++;
- if(lexeme[cursor]==="0")cursor++;
- else if(lexeme.charCodeAt(cursor)>=49&&lexeme.charCodeAt(cursor)<=57){if(!await digits())return null;}else return null;
- if(lexeme[cursor]==="."){cursor++;if(!await digits())return null;}
- if(lexeme[cursor]==="e"||lexeme[cursor]==="E"){cursor++;if(lexeme[cursor]==="+"||lexeme[cursor]==="-")cursor++;if(!await digits())return null;}
- if(cursor!==lexeme.length)return null;
- const value=Number(lexeme);return Number.isFinite(value)?value===0?0:value:null;
-}
 function rowLimit(rows: number, options: ArtifactSqliteOptions): void {
   if (!Number.isSafeInteger(rows) || rows > (options.maxRows ?? 1_000_000)) throw new Error("JSON SQLite row limit");
 }
@@ -84,7 +72,7 @@ export async function jsonSnapshotToSqliteDatabase(snapshot: JsonSnapshot, optio
   while (stack.length) {
     const { value, parent, ordinal, key } = stack.pop()!;
     const id = BigInt(values.length + 1);
-    values.push({ rowid: id, values: [id, kind(value), value.kind === "bool" ? BigInt(Number(value.value)) : null, value.kind === "number" ? value.lexeme : null, value.kind === "string" ? value.value : null, value.kind === "number" ? await number(value.lexeme,options,"projectSnapshot",1+values.length+members.length+elements.length,total) : null] });
+    values.push({ rowid: id, values: [id, kind(value), value.kind === "bool" ? BigInt(Number(value.value)) : null, value.kind === "number" ? value.lexeme : null, value.kind === "string" ? value.value : null, value.kind === "number" ? (await jsonNumberMeaning(value.lexeme,options,"projectSnapshot",1+values.length+members.length+elements.length,total)).numeric : null] });
     if (parent !== undefined) {
       const rows = key === undefined ? elements : members;
       const linkId = BigInt(rows.length + 1);
@@ -117,7 +105,7 @@ export async function jsonSnapshotFromSqliteDatabase(database: SqliteDatabase, o
     switch (tag) {
       case "null": case "array": case "object": if (!empty(2) || !empty(3) || !empty(4) || !empty(5)) throw new Error("JSON primitive payload mismatch"); break;
       case "boolean": artifactSqliteBoolean(row, 2); if (!empty(3) || !empty(4) || !empty(5)) throw new Error("JSON primitive payload mismatch"); break;
-      case "number": {const expected=await number(artifactSqliteText(row,3),options,"reconstructSnapshot",0,total);if(!empty(2)||!empty(4)||(expected===null?!empty(5):empty(5)||artifactSqliteReal(row,5)!==expected))throw new Error("JSON derived numeric value disagrees with its owned lexeme");break;}
+      case "number": {const expected=(await jsonNumberMeaning(artifactSqliteText(row,3),options,"reconstructSnapshot",0,total)).numeric;if(!empty(2)||!empty(4)||(expected===null?!empty(5):empty(5)||artifactSqliteReal(row,5)!==expected))throw new Error("JSON derived numeric value disagrees with its owned lexeme");break;}
       case "string": artifactSqliteText(row, 4); if (!empty(2) || !empty(3) || !empty(5)) throw new Error("JSON primitive payload mismatch"); break;
       default: throw new Error("JSON primitive kind is invalid");
     }

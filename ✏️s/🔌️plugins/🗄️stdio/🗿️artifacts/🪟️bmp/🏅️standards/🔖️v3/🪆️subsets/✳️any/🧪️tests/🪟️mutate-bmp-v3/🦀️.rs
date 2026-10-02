@@ -14,8 +14,8 @@
 //! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip, oracle_undo_mutation, project_bmp_mutation};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip, oracle_undo_mutation, project_bmp_mutation};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -88,11 +88,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::mutable_input;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
+    use semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::project_bmp_mutation;
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_bmp::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, BmpMutation};
     use semio_s_artifact_stdio_bmp::BmpSnapshot;

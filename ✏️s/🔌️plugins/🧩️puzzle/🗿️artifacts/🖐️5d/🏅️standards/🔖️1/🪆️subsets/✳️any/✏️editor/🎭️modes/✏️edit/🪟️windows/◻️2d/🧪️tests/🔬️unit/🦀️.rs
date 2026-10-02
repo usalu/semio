@@ -26,18 +26,21 @@ fn board_scene_with(interaction: crate::editor::puzzle5d::Puzzle5dInteractionSna
 /// projects — one shared interaction domain, so selecting a part in either pane highlights it in the
 /// other. The world half of this law lives in the sibling `🧊️3d` window's tests.
 #[test]
-fn board_paints_the_live_selection_and_hover() {
+fn board_paints_the_live_selection_hover_and_history_draft_references() {
     let interaction = crate::editor::puzzle5d::Puzzle5dInteractionSnapshot {
         granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(),
         selected: vec!["teil-ä".into()],
         hovered: vec!["teil-ä".into()],
+        referenced: vec!["teil-ä".into(), "teil-b".into()],
     };
     let scene = board_scene_with(interaction, Puzzle5dRuntime::default());
     assert_eq!(scene.selection_json, "[\"teil-ä\"]");
     assert_eq!(scene.hovered_id.as_deref(), Some("teil-ä"));
+    assert_eq!(scene.highlighted_ids_json, "[\"teil-ä\",\"teil-b\"]", "the board highlights what the open history draft references");
     let idle = board_scene_with(crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
     assert_eq!(idle.selection_json, "[]");
     assert!(idle.hovered_id.is_none());
+    assert_eq!(idle.highlighted_ids_json, "[]", "no draft, no highlight");
 }
 
 /// 🎯️ Law: this pane's own grid and selectable-kind options reach the board engine's scene fields.

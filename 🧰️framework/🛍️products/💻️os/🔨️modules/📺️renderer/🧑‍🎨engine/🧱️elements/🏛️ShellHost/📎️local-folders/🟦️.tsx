@@ -14,7 +14,7 @@ import { applyLocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA, type Loca
 // #endregion 🔌️Adapters
 
 //#region 🔖️EventLog
-/** 📁️ No binding remembered. */
+/** 🫙️ No binding remembered. */
 export const EMPTY_LOCAL_FOLDER_BINDINGS_V1: LocalFolderBindings = { bindings: [] };
 
 /** 🧾️ The persisted event log of the facet: every mutation this device committed, in order. */
@@ -54,7 +54,7 @@ export function replayLocalFolderEventsV1(events: readonly LocalFoldersConfigMut
   return events.reduce(applyLocalFoldersConfigMutation, EMPTY_LOCAL_FOLDER_BINDINGS_V1);
 }
 
-/** 📖️ This device's remembered folder bindings. */
+/** 📚️ This device's remembered folder bindings. */
 export function readLocalFolderBindingsV1(storage: StoragePort): LocalFolderBindings {
   return replayLocalFolderEventsV1(readLocalFolderEventsV1(storage));
 }
@@ -88,7 +88,7 @@ export function localFolderNameV1(path: string): string {
   return segments.at(-1) ?? path;
 }
 
-/** 📎️ The accessible offer to reconnect a remembered folder: a polite status naming the folder, with "Reconnect folder"
+/** 🛎️ The accessible offer to reconnect a remembered folder: a polite status naming the folder, with "Reconnect folder"
  * (the person's own gesture reattaches it) and "Forget folder". Texts arrive localized. */
 export function LocalFolderReconnectBand(props: Readonly<{ message: string; reconnect: string; forget: string; label: string; busy: boolean; onReconnect: () => void; onForget: () => void }>): React.ReactElement {
   const { message, reconnect, forget, label, busy, onReconnect, onForget } = props;

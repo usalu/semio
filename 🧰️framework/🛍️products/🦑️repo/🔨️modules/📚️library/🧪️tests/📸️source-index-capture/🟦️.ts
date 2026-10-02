@@ -6,7 +6,8 @@ import { basename, dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import type { Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import type { TaxonomySourceInventory, TaxonomySourceObservation } from "../../🧹️normalization/🟦️.ts";
+import type { TaxonomySourceInventory } from "../../🧹️normalization/🚪️source-admission/📁️io/🟦️.ts";
+import type { TaxonomySourceObservation } from "../../🧹️normalization/🚪️source-admission/🟦️.ts";
 import { sourceFileFactByteCompare, sourceFileFactOracleKind } from "../🔮️source-file-facts-oracle/🟦️.ts";
 
 //#region 🧭️Inputs

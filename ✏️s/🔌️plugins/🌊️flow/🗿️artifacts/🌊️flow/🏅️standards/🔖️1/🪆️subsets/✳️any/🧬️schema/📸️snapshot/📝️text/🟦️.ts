@@ -49,5 +49,5 @@ export const flowFlowSnapshotTextGuardConstant = <T extends string | number | bo
 //#endregion 🚪️Parsers
 
 export function parseFlowSnapshotText(value: unknown, at = "$"): FlowSnapshotText {
-  return flowFlowSnapshotTextGuardObject(value, `${at}`);
+  return flowFlowSnapshotTextGuardString(value, at);
 }

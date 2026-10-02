@@ -61,7 +61,7 @@ impl FillRunStage {
     }
 
     /// 🏷️ The terminology field carrying this stage's caption.
-    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_plugin::LabelText {
+    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_ui_locale::LabelText {
         match self {
             Self::Capture => |labels| labels.fill_stage_capture,
             Self::Search => |labels| labels.fill_stage_search,
@@ -120,7 +120,7 @@ impl FillRunCounter {
         }
     }
 
-    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_plugin::LabelText {
+    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_ui_locale::LabelText {
         match self {
             Self::Tested => |labels| labels.fill_counter_tested,
             Self::Accepted => |labels| labels.fill_counter_accepted,
@@ -198,7 +198,7 @@ impl FillRunReason {
         }
     }
 
-    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_plugin::LabelText {
+    pub fn label(self) -> fn(&crate::editor::puzzle2d::terminology::Puzzle2dLabels) -> semio_framework_ui_locale::LabelText {
         match self {
             Self::Fits => |labels| labels.fill_reason_fits,
             Self::HostCollision => |labels| labels.fill_reason_host_collision,

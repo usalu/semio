@@ -1,4 +1,4 @@
-import { stageArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -128,7 +128,7 @@ export async function stagePlaygroundSession(variant: string, sessionsRoot = joi
   try {
     const file = playgroundSessionOutputPath(temporary);
     const session = writePlaygroundSession(variant, file, projection);
-    await stageArtifacts(output, `playground-session:${variant}`, new Map([[PLAYGROUND_SESSION_ARTIFACT_KEY, file]]));
+    await stageRepositoryArtifacts(output, `playground-session:${variant}`, new Map([[PLAYGROUND_SESSION_ARTIFACT_KEY, file]]));
     return { path: playgroundSessionStagedOutputPath(sessionsRoot, variant), session };
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

@@ -9,13 +9,26 @@
     "@semio-tech/framework-os": "workspace:*"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/gis-gismap-js:inference-check",
-    "inference-presentation-check": "nx run @semio-tech/gis-gismap-js:inference-presentation-check"
+    "test": "bun nx run @semio-tech/gis-gismap-js:test",
+    "inference-presentation-check": "nx run @semio-tech/gis-gismap-js:inference-presentation-check",
+    "build": "bun nx run @semio-tech/gis-gismap-js:build",
+    "check": "bun nx run @semio-tech/gis-gismap-js:check"
   },
   "nx": {
     "includedScripts": []
   },
   "devDependencies": {
     "d3-geo": "3.1.1"
-  }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
+  "types": "./dist/🟦️.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ]
 }

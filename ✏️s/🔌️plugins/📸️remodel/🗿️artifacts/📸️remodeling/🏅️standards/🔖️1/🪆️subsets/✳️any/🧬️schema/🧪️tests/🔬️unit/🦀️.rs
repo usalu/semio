@@ -1,12 +1,20 @@
 use super::*;
 
+fn admission(seed: &str) -> semio_framework_plugin::AppOperationContext {
+    semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "remodel".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: seed.into() }
+}
+
+/// 🆔️ A minted id is a pure function of the admission's seed and the prefix: two admissions mint two ids, a replayed
+/// admission mints the same one, and the id is the specified `content_id` (SHA-256 over `seed U+001F prefix`).
 #[semio_framework_async_macros::async_test]
-async fn next_remodeling_id_is_monotonic_and_prefixed() {
-    let a = next_remodeling_id("stream");
-    let b = next_remodeling_id("stream");
-    assert!(a.starts_with("stream-"));
-    assert!(b.starts_with("stream-"));
-    assert_ne!(a, b);
+async fn a_minted_id_is_content_addressed_over_the_admission_seed() {
+    let (first, second) = (admission("seed-a"), admission("seed-b"));
+    let id = mint_remodeling_id(Some(&first), "stream");
+    assert!(id.starts_with("stream-") && id.len() == "stream-".len() + 16, "{id}");
+    assert_eq!(mint_remodeling_id(Some(&first), "stream"), id);
+    assert_ne!(mint_remodeling_id(Some(&second), "stream"), id);
+    assert_ne!(mint_remodeling_id(Some(&first), "gcp").trim_start_matches("gcp-"), id.trim_start_matches("stream-"));
+    assert_eq!(id, store::content_id("stream", "seed-a\u{1f}stream".as_bytes()));
 }
 
 

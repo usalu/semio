@@ -50,7 +50,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
 
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
             let ids: Vec<&str> = fixture["windowInstances"].as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
             let view = ViewModel {
                 window_instances: vec![
@@ -59,7 +59,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                     ViewWindowInstance { id: ids[2].into(), window_kind_id: SequenceScriptWindowTransientOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: ids[3].into(), window_kind_id: SequenceScriptWindowTransientOwner::WINDOW_KIND_ID.into() },
                 ],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
             let main_left = view.for_window_instance(ids[0]).unwrap();
             let main_right = view.for_window_instance(ids[1]).unwrap();
@@ -127,7 +127,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let reopened_right = graph_scene(&mut reopened, &main_right).await?.viewport.ok_or("reopened right Sequence viewport missing")?;
                 drop(reopened);
                 if reopened_left != left_graph || reopened_right != right_graph { return Err("Sequence persisted window config changed during restore".into()); }
-                let stale = ViewModel { window_id: Some("lost-sequence-window".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                let stale = ViewModel { window_id: Some("lost-sequence-window".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 if addressed(&stale, SequenceMainWindowConfig::default()).is_ok() { return Err("Sequence accepted stale window identity".into()); }
                 if semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::transient::addressed(&main_left, SequenceScriptWindowTransient::default()).is_ok() {
                     return Err("Sequence accepted wrong-kind window identity".into());

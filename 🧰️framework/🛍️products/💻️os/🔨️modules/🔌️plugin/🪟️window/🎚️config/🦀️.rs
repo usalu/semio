@@ -398,6 +398,8 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn maintenance_retirements_under_pressure(&self) -> bool;
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)>;
     fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot>;
+    fn preview(&mut self, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot>;
+    fn retire_preview(&mut self, preview: WindowConfigSnapshot);
 }
 
 struct TypedWindowConfigStoreOwner<O: WindowConfigOwner> {
@@ -540,6 +542,27 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         Some(WindowConfigSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation(), revision: partition.store.content_revision_now(), snapshot: partition.store.snapshot_root() })
     }
 
+    fn preview(&mut self, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot> {
+        let partition = self.partitions.get_mut(window_id)?;
+        let committed = partition.store.snapshot_owner();
+        let (mut running, mut displaced) = (None, Vec::new());
+        for mutation in mutations.iter().filter_map(|mutation| mutation.mutation.downcast_ref::<O::Mutation>()) {
+            super::app::tool_machine::fold_leaf(&committed, &mut running, &mut displaced, mutation);
+        }
+        for alias in displaced {
+            super::app::tool_machine::retire_overlay_alias(partition.store.retire_snapshot_alias(alias));
+        }
+        let state: Arc<O::State> = running?;
+        Some(WindowConfigSnapshot { window_id: window_id.to_string(), window_kind_id: O::WINDOW_KIND_ID, generation: partition.store.generation(), revision: partition.store.content_revision_now(), snapshot: state })
+    }
+
+    fn retire_preview(&mut self, preview: WindowConfigSnapshot) {
+        let Some(partition) = self.partitions.get_mut(&preview.window_id) else { return };
+        if let Ok(state) = Arc::downcast::<O::State>(preview.snapshot) {
+            super::app::tool_machine::retire_overlay_alias(partition.store.retire_snapshot_alias(state));
+        }
+    }
+
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)> {
         self.partitions
             .iter()
@@ -621,6 +644,20 @@ impl WindowConfigOwnerRegistry {
     /// 📸️ The current config snapshot of window `window_id` of kind `window_kind_id`, without creating its partition.
     pub fn snapshot(&self, window_kind_id: &str, window_id: &str) -> Option<WindowConfigSnapshot> {
         self.owners.get(window_kind_id)?.snapshot(window_id)
+    }
+
+    /// 🪞️ Window `window_id`'s committed config with `mutations` folded on it and never published — a press's provisional
+    /// window config (design §20.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); `None` when none applies or the window
+    /// has no partition yet. Hand it back to [`Self::retire_preview`], never drop it plainly.
+    pub(crate) fn preview(&mut self, window_kind_id: &str, window_id: &str, mutations: &[&WindowConfigMutation]) -> Option<WindowConfigSnapshot> {
+        self.owners.get_mut(window_kind_id)?.preview(window_id, mutations)
+    }
+
+    /// 🧹️ Retires a [`Self::preview`] through its partition's store.
+    pub(crate) fn retire_preview(&mut self, preview: WindowConfigSnapshot) {
+        if let Some(owner) = self.owners.get_mut(preview.window_kind_id) {
+            owner.retire_preview(preview);
+        }
     }
 
     /// ⏯️ The values `pointers` (RFC 6901) name in every window config partition of `window_kind_id`, by window id

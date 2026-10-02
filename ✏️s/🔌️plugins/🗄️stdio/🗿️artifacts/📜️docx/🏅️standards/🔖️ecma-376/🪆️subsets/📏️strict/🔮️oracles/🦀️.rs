@@ -29,7 +29,7 @@ pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set
 //#region 🔖️Profile
 /// 🏅️ This artifact's conformance-class coordinates, `[transitional, strict]` per pair.
 #[cfg(feature = "oracles")]
-const PROFILE: crate::document::ooxml::OoxmlProfile = crate::document::ooxml::OoxmlProfile {
+const PROFILE: semio_s_plugin_stdio_document_test_oracle::ooxml::OoxmlProfile = semio_s_plugin_stdio_document_test_oracle::ooxml::OoxmlProfile {
     format: "docx",
     main_namespaces: ["http://schemas.openxmlformats.org/wordprocessingml/2006/main", "http://purl.oclc.org/ooxml/wordprocessingml/main"],
     drawing_namespaces: None,
@@ -49,7 +49,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     if !KINDS.contains(&kind.as_str()) {
         return Err(format!("mutation kind {kind:?} is not declared by the docx-ecma-376-strict catalog"));
     }
-    crate::document::ooxml::apply_conformance_mutation(input, spec, &PROFILE)
+    semio_s_plugin_stdio_document_test_oracle::ooxml::apply_conformance_mutation(input, spec, &PROFILE)
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
@@ -61,7 +61,7 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// 🔁️ The reference implementation's own decode/re-encode of the container.
 #[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
-    crate::document::ooxml::round_trip(input)
+    semio_s_plugin_stdio_document_test_oracle::ooxml::round_trip(input)
 }
 
 #[cfg(not(feature = "oracles"))]
@@ -74,7 +74,7 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 /// implementation; nothing is carried by the caller.
 #[cfg(feature = "oracles")]
 pub fn project_package(input: &[u8]) -> Result<Json, String> {
-    crate::document::ooxml::project(input, "docx")
+    semio_s_plugin_stdio_document_test_oracle::ooxml::project(input, "docx")
 }
 
 #[cfg(not(feature = "oracles"))]
@@ -88,9 +88,9 @@ pub fn project_package(_input: &[u8]) -> Result<Json, String> {
 /// `mutate-set-snapshot`/`inverse-set-snapshot` scenarios, whose subject replaces its whole snapshot with its own stamp (`set-snapshot`).
 #[cfg(feature = "oracles")]
 pub fn oracle_stamp(input: &[u8], strict: bool) -> Result<Vec<u8>, String> {
-    let mut parts = crate::document::ooxml::read_parts(input)?;
-    crate::document::ooxml::stamp_conformance_class(&mut parts, &PROFILE, strict)?;
-    crate::document::ooxml::write_parts(&parts)
+    let mut parts = semio_s_plugin_stdio_document_test_oracle::ooxml::read_parts(input)?;
+    semio_s_plugin_stdio_document_test_oracle::ooxml::stamp_conformance_class(&mut parts, &PROFILE, strict)?;
+    semio_s_plugin_stdio_document_test_oracle::ooxml::write_parts(&parts)
 }
 
 #[cfg(not(feature = "oracles"))]
@@ -101,10 +101,10 @@ pub fn oracle_stamp(_input: &[u8], _strict: bool) -> Result<Vec<u8>, String> {
 
 //#region 🔖️Bridge
 /// 🎬️ Prepares the input a removal kind needs its target to be present in — see the shared engine's
-/// [`crate::document::ooxml::conformance_arrange`]. Every other kind reads the committed bytes.
+/// [`semio_s_plugin_stdio_document_test_oracle::ooxml::conformance_arrange`]. Every other kind reads the committed bytes.
 #[cfg(feature = "oracles")]
 pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
-    crate::document::ooxml::conformance_arrange(input, forward, &PROFILE)
+    semio_s_plugin_stdio_document_test_oracle::ooxml::conformance_arrange(input, forward, &PROFILE)
 }
 
 #[cfg(not(feature = "oracles"))]
@@ -115,7 +115,7 @@ pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String>
 /// ↩️ The undo of `forward`, read out of `base` by the independent implementation alone.
 #[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
-    crate::document::ooxml::conformance_inverse_spec(base, forward, &PROFILE)
+    semio_s_plugin_stdio_document_test_oracle::ooxml::conformance_inverse_spec(base, forward, &PROFILE)
 }
 
 #[cfg(not(feature = "oracles"))]

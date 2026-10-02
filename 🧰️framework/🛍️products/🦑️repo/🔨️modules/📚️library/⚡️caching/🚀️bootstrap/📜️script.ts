@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -268,7 +269,6 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     return { args: ["run", command === "all" ? "workspace:cpp" : `workspace:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
   }
   if (target === "workspace:test") {
-    const { resolveTestLevel } = nxRoutingServices();
     const { level, rest } = resolveTestLevel(selected);
     if (!rest.length) return { args: ["run", `workspace:test-${level}`, ...options], env: { SEMIO_TEST_LEVEL: level } };
     if (rest[0] === "repo-client" || rest[0] === "repo-mcp") {

@@ -35,7 +35,7 @@ durable field = 'kind', '=', name
      | 'mime', '=', name
      | 'width', '=', int terminal
      | 'height', '=', int terminal
-     | 'chunks', '=', text list ;
+     | 'chunks', '=', octet list ;
 calibration block = 'calibration', '{', cameras table, rig table, '}' ;
 cameras table = 'cameras', cameras header, '{', { camera row }, '}' ;
 cameras header = '[', 'id', ':', 'TEXT', 'label', ':', 'TEXT', 'model', ':', 'TEXT', 'fx', ':', 'NUM', 'fy', ':', 'NUM', 'cx', ':', 'NUM', 'cy', ':', 'NUM', 'skew', ':', 'NUM', 'distortion', ':', 'TUPLE', 'rms-reprojection-px', ':', 'NUM', 'locked', ':', 'BOOL', ']' ;
@@ -161,13 +161,13 @@ results part = sparse block
      | qc block
      | tracks table ;
 sparse block = 'sparse', '{', sparse field, { sparse field }, '}' ;
-sparse field = 'points', '=', name
-     | 'colors', '=', name ;
+sparse field = 'points', float buffer
+     | 'colors', '=', octets ;
 dense result block = 'dense', '{', dense result field, { dense result field }, '}' ;
-dense result field = 'positions', '=', name
-     | 'colors', '=', name
-     | 'confidence', '=', name
-     | 'classification', '=', name ;
+dense result field = 'positions', float buffer
+     | 'colors', '=', octets
+     | 'confidence', float buffer
+     | 'classification', '=', octets ;
 mesh result block = 'mesh', '{', { mesh result part }, '}' ;
 mesh result part = 'source', '=', mesh source
      | 'texture-asset-id', '=', name
@@ -227,3 +227,8 @@ letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' |
        | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
        | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
 digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+float buffer = '{', float buffer variant, '}' ;
+float buffer variant = 'inline', 'values', '=', '[', { num }, ']' | 'content', 'content-id', '=', name, 'chunk-count', '=', int terminal ;
+octets = text terminal ;
+octet list = '[', { octets }, ']' ;

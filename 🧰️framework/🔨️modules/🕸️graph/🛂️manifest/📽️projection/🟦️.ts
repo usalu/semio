@@ -176,7 +176,8 @@ export type GraphArtifact = { path: string; content: string };
 /** 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
 export function renderGraphArtifacts(root: string, outDir: string, catalog: GraphOutputCatalog, log = true): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
     const artifacts: GraphArtifact[] = [];
-    const docs = readGraphManifestDocuments(root, log, catalog.inputAreas);
+    const declared = parseGraphOutputCatalog(catalog, catalog.manifests.map(doc => doc.id));
+    const docs = readGraphManifestDocuments(root, log, declared.inputAreas, declared.policy.excludedInputPaths);
     const outputs = parseGraphOutputCatalog(catalog, docs.map((doc) => doc.id));
     const byId = new Map(outputs.manifests.map((row) => [row.id, row]));
     const tsSpecifier = (from: string, to: string): string => {

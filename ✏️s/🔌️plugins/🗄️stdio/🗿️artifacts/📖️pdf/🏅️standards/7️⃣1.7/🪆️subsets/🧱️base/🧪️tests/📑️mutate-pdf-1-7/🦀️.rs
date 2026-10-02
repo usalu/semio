@@ -26,7 +26,7 @@
 //! No measured ratio is recorded here. A parity figure in source is a claim about one moment that
 //! silently becomes false when anything moves; the dated ticket record is where measurements live.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
 //! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
 //! must land back on the untouched document's projection, and `identity-round-trip` must both
@@ -35,8 +35,8 @@
 //! argued there in full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, UNOBSERVABLE};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, UNOBSERVABLE};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf";
@@ -105,13 +105,13 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, PDF_TOLERANCE, PDF_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::UNOBSERVABLE;
+    use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::UNOBSERVABLE;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::project_pdf_1_7;
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7;
 
     //#region 🔖️SpecCodec
     /// 📨️ The scenario's `{kind, params}` row decoded generically: `params` is the leaf wire payload, the only channel

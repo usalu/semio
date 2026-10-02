@@ -10,9 +10,9 @@ pub fn diff(payload: &super::PatchWorkingNodes, base: &RewritingSnapshot) -> pro
     }
     let value = payload.value.trim().to_string();
     let patched = super::super::edit_working_graph_nodes(&base.before_fixture_json, &payload.targets, |node| {
-        let next = serde_json::Value::String(value.clone());
+        let next = pack::JsonValue::String(value.clone());
         let changed = node.get(&payload.field) != Some(&next);
-        node.insert(payload.field.clone(), next);
+        node.insert(payload.field.as_str(), next);
         changed
     });
     let Some((json, missing, changed)) = patched else {

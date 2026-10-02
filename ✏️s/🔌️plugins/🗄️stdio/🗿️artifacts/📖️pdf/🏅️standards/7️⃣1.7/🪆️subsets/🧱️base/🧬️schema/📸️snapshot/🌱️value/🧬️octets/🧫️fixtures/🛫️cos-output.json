@@ -1,0 +1,102 @@
+{
+  "schema": "semio.pdf.cos-owned-output/v1",
+  "maximumBytes": 65536,
+  "cases": [
+    {
+      "wire": {
+        "kind": "null"
+      }
+    },
+    {
+      "wire": {
+        "kind": "bool",
+        "value": true
+      }
+    },
+    {
+      "wire": {
+        "kind": "int",
+        "value": -42
+      }
+    },
+    {
+      "wire": {
+        "kind": "real",
+        "negative": true,
+        "coefficient": "1234500",
+        "scale": 4
+      }
+    },
+    {
+      "wire": {
+        "kind": "str",
+        "value": [
+          0,
+          255,
+          37
+        ]
+      }
+    },
+    {
+      "wire": {
+        "kind": "name",
+        "value": "owned 世界\u0000/@"
+      }
+    },
+    {
+      "wire": {
+        "kind": "array",
+        "value": [
+          {
+            "kind": "null"
+          },
+          {
+            "kind": "str",
+            "value": []
+          }
+        ]
+      }
+    },
+    {
+      "wire": {
+        "kind": "dict",
+        "value": [
+          {
+            "key": "owned 世界",
+            "value": {
+              "kind": "int",
+              "value": 7
+            }
+          }
+        ]
+      }
+    },
+    {
+      "wire": {
+        "kind": "ref",
+        "num": 4294967295,
+        "gen": 65535
+      }
+    },
+    {
+      "wire": {
+        "kind": "stream",
+        "dict": [
+          {
+            "key": "Length",
+            "value": {
+              "kind": "int",
+              "value": 3
+            }
+          }
+        ],
+        "data": [
+          0,
+          255,
+          37
+        ],
+        "filters": []
+      }
+    }
+  ]
+}

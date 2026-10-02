@@ -67,7 +67,6 @@ fn every_document_command_dispatches_to_exactly_one_mutation() {
         };
         assert_eq!(emit.artifact_mutations.len(), 1, "{command:?} must emit exactly one mutation");
         assert!(emit.config_mutations.is_empty(), "{command:?} must not touch the pane config");
-        assert!(emit.description.is_some());
     }
 }
 
@@ -94,9 +93,9 @@ fn a_pin_with_no_explicit_tile_uses_the_panes_armed_tile() {
     let document = document();
     let armed = Wfc3dConfig { active_tile_id: "room".into(), ..Default::default() };
     let emit = dispatch(&Wfc3dEditorCommand::PinSlot { id: "room-a".into(), tile_id: String::new() }, &document, &armed).unwrap_or_else(|_| panic!("pin dispatches"));
-    assert_eq!(emit.description.as_deref(), Some("Pin room-a to room"));
+    assert_eq!(emit.artifact_mutations, vec![pin_slot("room-a".into(), "room".into())]);
     let emit = dispatch(&Wfc3dEditorCommand::PinSlot { id: "room-a".into(), tile_id: String::new() }, &document, &Wfc3dConfig::default()).unwrap_or_else(|_| panic!("pin dispatches"));
-    assert_eq!(emit.description.as_deref(), Some("Pin room-a to corridor"), "the fallback is the document's FIRST tile");
+    assert_eq!(emit.artifact_mutations, vec![pin_slot("room-a".into(), "corridor".into())], "the fallback is the document's FIRST tile");
 }
 
 #[test]
@@ -159,7 +158,6 @@ fn the_graph_view_projects_x_and_y_scaled_and_drops_z() {
     assert_eq!(slots.len(), document.slots.len());
     let cantilever = slots.iter().find(|slot| slot.id == "cantilever").expect("the cantilever projects");
     assert_eq!((cantilever.x, cantilever.y), (1.5 * WFC_3D_GRAPH_UNIT, 3.0 * WFC_3D_GRAPH_UNIT));
-    assert_eq!((slot_coordinate(cantilever.x), slot_coordinate(cantilever.y)), (1.5, 3.0), "the canvas→document inverse is exact, or a released drag lands a wrong move-slot");
 }
 
 /// ✋️ A released node drag — the node-graph gesture record — is ONE relative `drag-slots` in DOCUMENT units with
@@ -170,9 +168,8 @@ fn a_dragged_node_lands_one_drag_slots_in_document_units_keeping_z() {
     let document = crate::examples::tower_stack::snapshot();
     let authored = document.slots.iter().find(|slot| slot.id == "cantilever").expect("the cantilever exists").clone();
     let operations = format!(r#"[{{"operation":"move","gestureId":"node-drag:1","nodeIds":["cantilever"],"dx":{},"dy":{}}}]"#, 2.5 * WFC_3D_GRAPH_UNIT, 2.0 * WFC_3D_GRAPH_UNIT);
-    let (mutations, description) = graph_edit_mutations(&document, &operations).expect("the gesture lowers");
+    let mutations = graph_edit_mutations(&document, &operations).expect("the gesture lowers");
     assert_eq!(mutations.len(), 1, "one gesture is one edit, never one per pointer tick");
-    assert_eq!(description, "Drag cantilever");
     assert_eq!(mutations, vec![drag_slots(vec!["cantilever".into()], 2.5, 2.0, 0.0)]);
     let mut moved = document.clone();
     crate::mutations::apply_wfc3d_mutation(&mut moved, &mutations[0]).expect("the drag applies");
@@ -192,7 +189,6 @@ fn a_seeded_release_is_one_tool_transaction_and_nothing_moved_is_zero_trace() {
     let first = command_emit(&record("node-drag:1", 1.0), &document, &Wfc3dConfig::default(), "seed-one").expect("the drag dispatches");
     let transaction = first.transaction.clone().expect("the release is a tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc3d@1/*#editor#nodeGraphEdit", "{transaction:?}");
-    assert!(first.coalesce_key.is_none(), "a committed transaction is a plain edit");
     let second = command_emit(&record("node-drag:2", 1.0), &document, &Wfc3dConfig::default(), "seed-two").expect("the second drag dispatches");
     assert_ne!(second.transaction.expect("second ref").id, transaction.id, "two releases are two transactions");
     let idle = command_emit(&record("node-drag:3", 0.0), &document, &Wfc3dConfig::default(), "seed-three").expect("an idle release dispatches");
@@ -205,11 +201,10 @@ fn a_seeded_release_is_one_tool_transaction_and_nothing_moved_is_zero_trace() {
 fn a_connect_gesture_lands_one_connect_slots_and_never_duplicates() {
     let document = crate::examples::two_room_corridor::snapshot();
     let operations = r#"[{"operation":"connect","sourceNodeId":"room-a","sourcePortId":"room-a@adjacent-out","targetNodeId":"room-b","targetPortId":"room-b@adjacent-in"}]"#;
-    let (mutations, description) = graph_edit_mutations(&document, operations).expect("the gesture lowers");
-    assert_eq!(mutations.len(), 1);
-    assert_eq!(description, "Connect room-a to room-b");
-    let repeated = r#"[{"operation":"connect","sourceNodeId":"room-a","targetNodeId":"corridor"}]"#;
-    assert!(graph_edit_mutations(&document, repeated).expect("the gesture lowers").0.is_empty(), "room-a already borders the corridor, so the gesture authors nothing");
+    let mutations = graph_edit_mutations(&document, operations).expect("the gesture lowers");
+    assert!(matches!(mutations.as_slice(), [Wfc3dMutation::ConnectSlots(wire)] if wire.edge.from_slot_id == "room-a" && wire.edge.to_slot_id == "room-b"), "{mutations:?}");
+    let repeated = r#"[{"operation":"connect","sourceNodeId":"room-a","sourcePortId":"adjacent-out","targetNodeId":"corridor","targetPortId":"adjacent-in"}]"#;
+    assert!(graph_edit_mutations(&document, repeated).expect("the gesture lowers").is_empty(), "room-a already borders the corridor, so the gesture authors nothing");
 }
 
 /// 🎨️ Every bundled example resolves by its registered id, the empty id is the shell's own "default
@@ -274,97 +269,39 @@ fn every_declared_action_bridges_through_command_from_action() {
     assert!(bridged >= 10, "expected every declared wfc3d verb to bridge, saw {bridged}");
 }
 
-/// 🕸️ The wasm node-graph surface commits a released gesture as a WHOLE graph
-/// (`setHostSnapshot`), not as a `move`/`connect` pair. A drag must therefore still land exactly one
-/// relative `drag-slots`, in document units, with `z` kept — and an untouched graph must land NOTHING, or every
-/// click in the pane would mint an edit.
+/// 🔗️ Against the shared node-graph record contract (`🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows`): every
+/// accepted row decodes — `setSlider` and `insertPort` are refused BY NAME, a wfc slot graph has neither inline sliders
+/// nor variadic ports — and every refused row (the deleted `setHostSnapshot` and `deleteSelection` included) refuses its
+/// whole batch.
 #[test]
-fn a_host_snapshot_commit_lands_only_what_actually_changed() {
+fn node_graph_rows_follow_the_shared_contract() {
     let document = crate::examples::two_room_corridor::snapshot();
-    let unchanged = serde_json::json!({
-        "operation": "setHostSnapshot",
-        "hostSnapshotJson": serde_json::to_string(&serde_json::json!({
-            "nodes": document.slots.iter().map(|slot| serde_json::json!({ "id": slot.id, "x": slot.x * WFC_3D_GRAPH_UNIT, "y": slot.y * WFC_3D_GRAPH_UNIT })).collect::<Vec<_>>(),
-            "edges": document.edges.iter().map(|edge| serde_json::json!({ "id": edge.id, "source": edge.from_slot_id, "target": edge.to_slot_id })).collect::<Vec<_>>(),
-        })).expect("host snapshot"),
-    });
-    assert!(graph_edit_mutations(&document, &serde_json::Value::Array(vec![unchanged]).to_string()).expect("lowers").0.is_empty(), "an untouched graph owes no edit");
-
-    let room_a = document.slots.iter().find(|slot| slot.id == "room-a").expect("room-a").clone();
-    let dragged = serde_json::json!({
-        "operation": "setHostSnapshot",
-        "hostSnapshotJson": serde_json::to_string(&serde_json::json!({
-            "nodes": document.slots.iter().map(|slot| {
-                let y = if slot.id == "room-a" { 2.0 } else { slot.y };
-                serde_json::json!({ "id": slot.id, "x": slot.x * WFC_3D_GRAPH_UNIT, "y": y * WFC_3D_GRAPH_UNIT })
-            }).collect::<Vec<_>>(),
-            "edges": document.edges.iter().map(|edge| serde_json::json!({ "id": edge.id, "source": format!("{}@adjacent-out", edge.from_slot_id), "target": format!("{}@adjacent-in", edge.to_slot_id) })).collect::<Vec<_>>(),
-        })).expect("host snapshot"),
-    });
-    let (mutations, description) = graph_edit_mutations(&document, &serde_json::Value::Array(vec![dragged]).to_string()).expect("lowers");
-    assert_eq!(mutations, vec![drag_slots(vec!["room-a".into()], 0.0, 2.0 - room_a.y, 0.0)]);
-    assert_eq!(description, "Drag room-a");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON");
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        let result = graph_edit_mutations(&document, &serde_json::json!([case["row"].clone()]).to_string());
+        match case["row"]["operation"].as_str() {
+            Some("setSlider" | "insertPort") => assert_eq!(result.err().map(|fault| fault.code.0), Some("wfc3d.node-graph.row".into()), "{}", case["id"]),
+            _ => assert!(result.is_ok(), "{}: {result:?}", case["id"]),
+        }
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": document.edges[0].id }, case["row"].clone()]);
+        let Err(fault) = graph_edit_mutations(&document, &batch.to_string()) else { panic!("{} must refuse its batch", case["id"]) };
+        assert_eq!(fault.code.0, "wfc3d.node-graph.row", "{}", case["id"]);
+    }
 }
 
-/// 🔗 A wire drawn on the wasm surface arrives as a NEW edge inside the whole-graph commit, with
-/// `{node}@{port}` endpoints — one `connect-slots`, endpoints resolved back to their slots.
+/// ✂️🗑️ A cut wire is ONE `disconnect-slots` of the document's own edge id; a delete row cuts the named adjacencies and
+/// deletes the named slots (each cascading its own wires), once each, and never cuts a wire twice.
 #[test]
-fn a_host_snapshot_commit_lands_a_new_wire_as_connect_slots() {
+fn cut_and_delete_rows_land_their_intent_leaves() {
     let document = crate::examples::two_room_corridor::snapshot();
-    let mut edges: Vec<serde_json::Value> = document
-        .edges
-        .iter()
-        .map(|edge| serde_json::json!({ "id": edge.id, "source": format!("{}@adjacent-out", edge.from_slot_id), "target": format!("{}@adjacent-in", edge.to_slot_id) }))
-        .collect();
-    edges.push(serde_json::json!({ "id": "wire-1", "source": "room-a@adjacent-out", "target": "room-b@adjacent-in" }));
-    let wired = serde_json::json!({
-        "operation": "setHostSnapshot",
-        "hostSnapshotJson": serde_json::to_string(&serde_json::json!({
-            "nodes": document.slots.iter().map(|slot| serde_json::json!({ "id": slot.id, "x": slot.x * WFC_3D_GRAPH_UNIT, "y": slot.y * WFC_3D_GRAPH_UNIT })).collect::<Vec<_>>(),
-            "edges": edges,
-        })).expect("host snapshot"),
-    });
-    let (mutations, description) = graph_edit_mutations(&document, &serde_json::Value::Array(vec![wired]).to_string()).expect("lowers");
-    assert_eq!(mutations.len(), 1);
-    assert_eq!(description, "Connect room-a to room-b");
+    let edge = document.edges[0].id.clone();
+    let cut = graph_edit_mutations(&document, &serde_json::json!([{ "operation": "disconnect", "synapseId": edge }]).to_string()).expect("a cut lowers");
+    assert_eq!(cut, vec![disconnect_slots(edge.clone())]);
+    let deleted = graph_edit_mutations(&document, &serde_json::json!([{ "operation": "delete", "nodeIds": ["room-b", "ghost"], "synapseIds": [edge, "ghost-wire"] }, { "operation": "disconnect", "synapseId": document.edges[0].id }]).to_string()).expect("a delete lowers");
+    assert_eq!(deleted, vec![disconnect_slots(document.edges[0].id.clone()), delete_slot("room-b".into())]);
 }
-
-/// ✂️ The canvas mints its OWN wire ids, so a whole-graph commit that re-ids the authored edges must
-/// not read them as deletions. Only an adjacency the commit genuinely dropped is a `disconnect-slots`,
-/// and the pair is unordered.
-#[test]
-fn a_host_snapshot_commit_never_disconnects_an_edge_it_only_renamed() {
-    let document = crate::examples::two_room_corridor::snapshot();
-    let renamed: Vec<serde_json::Value> = document
-        .edges
-        .iter()
-        .enumerate()
-        .map(|(index, edge)| serde_json::json!({ "id": format!("wire-{index}"), "source": format!("{}@adjacent-out", edge.to_slot_id), "target": format!("{}@adjacent-in", edge.from_slot_id) }))
-        .collect();
-    let commit = serde_json::json!({
-        "operation": "setHostSnapshot",
-        "hostSnapshotJson": serde_json::to_string(&serde_json::json!({
-            "nodes": document.slots.iter().map(|slot| serde_json::json!({ "id": slot.id, "x": slot.x * WFC_3D_GRAPH_UNIT, "y": slot.y * WFC_3D_GRAPH_UNIT })).collect::<Vec<_>>(),
-            "edges": renamed,
-        })).expect("host snapshot"),
-    });
-    assert!(
-        graph_edit_mutations(&document, &serde_json::Value::Array(vec![commit]).to_string()).expect("lowers").0.is_empty(),
-        "re-ided and reversed edges are the same adjacencies, so the commit owes nothing"
-    );
-
-    let dropped = serde_json::json!({
-        "operation": "setHostSnapshot",
-        "hostSnapshotJson": serde_json::to_string(&serde_json::json!({
-            "nodes": document.slots.iter().map(|slot| serde_json::json!({ "id": slot.id, "x": slot.x * WFC_3D_GRAPH_UNIT, "y": slot.y * WFC_3D_GRAPH_UNIT })).collect::<Vec<_>>(),
-            "edges": [renamed[0].clone()],
-        })).expect("host snapshot"),
-    });
-    let (mutations, description) = graph_edit_mutations(&document, &serde_json::Value::Array(vec![dropped]).to_string()).expect("lowers");
-    assert_eq!(mutations.len(), 1, "exactly the one adjacency the commit really dropped");
-    assert!(description.starts_with("Disconnect "), "saw {description}");
-}
-
 
 /// 🚚️ The `wfc-graph` window is shared with `wfc2d`, so its staged `move-slot`/`resize-slot` forms
 /// offer only `x`/`y` and `width`/`height`. A dispatch that omits the third axis must KEEP the slot's

@@ -25,8 +25,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for CreateNode {
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.label), &format!("Knoten \"{}\" erstellen", self.label))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node \"{}\"", self.label), &format!("Knoten \"{}\" erstellen", self.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

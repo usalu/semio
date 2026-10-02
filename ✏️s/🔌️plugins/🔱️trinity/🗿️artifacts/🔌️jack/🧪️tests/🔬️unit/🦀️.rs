@@ -16,8 +16,8 @@ impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
 #[semio_framework_async_macros::async_test]
 async fn working_scene_belongs_to_the_exact_content_child() {
     let owned = jack_content_child_with_owner(Vec::new(), Vec::new());
-    let wire = pack::json_to_string(&pack::json_from_dsl_value(&dsl::to_dsl_value(&owned).expect("Jack child wire identity"))).into_bytes();
-    let reconstructed: JackContentChild = dsl::from_dsl_value(pack::json_to_dsl_value(&pack::parse_json_bytes(&wire).expect("Jack child wire roundtrip"))).expect("Jack child wire roundtrip");
+    let wire = pack::json_to_string(&pack::json_from_dsl_value(&semio_framework_value::ToValue::to_value(&owned))).into_bytes();
+    let reconstructed: JackContentChild = semio_framework_value::FromValue::from_value(pack::json_to_dsl_value(&pack::parse_json_bytes(&wire).expect("Jack child wire roundtrip"))).expect("Jack child wire roundtrip");
     let observed = pack::json!({
         "ownedHasScene": owned.local_owner::<JackWorkingScene>().is_some(),
         "wireIdentityMatches": owned == reconstructed,

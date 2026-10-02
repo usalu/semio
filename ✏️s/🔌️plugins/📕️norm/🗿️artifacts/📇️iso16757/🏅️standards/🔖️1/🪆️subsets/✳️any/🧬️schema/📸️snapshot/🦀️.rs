@@ -36,7 +36,7 @@ pub struct Iso16757Snapshot {
 // `NormArtifactRecord`/`norm_{parse,print}_dsl`/`norm_{encode,decode}_pack` (see that
 // region's doc comment in `📄️artifact/🦀️.rs` for why it can't collapse further
 // than this one macro call — Rust's orphan rule still needs a concrete per-type impl).
-crate::impl_norm_artifact_record!(Iso16757Snapshot, extension = "iso16757", envelope_id = "norm.iso16757");
+crate::impl_norm_artifact_record!(Iso16757Snapshot, extension = "iso16757", envelope_id = "norm.iso16757", sqlite=crate::snapshot::sqlite::codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for Iso16757Snapshot {
@@ -95,3 +95,16 @@ pub fn encode_iso16757_pack(snapshot: &Iso16757Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 //#endregion 🌉️ExternalCodecBridge
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[path="🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path="🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

@@ -1,0 +1,11 @@
+# Final Native Queue Roster Provenance Review
+
+Read-only actual script/mount/report evidence; no runtime reruns. Capture helper source-coherence receipt remains separate and unchanged by this report.
+
+Cooperative-host native script96–110 executes package semio-framework-plugin library target and exactly `component::cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner`. Actual plugin package Rust root22 mounts component; component source34–36 mounts cooperative_pump_tests under cfg(test). Thus this library test target compiles actual plugin root including the removed app macro_use attribute, rather than an extracted stand-in. Current post-removal native execution is pending in the documented queue; the older host1 outcome is not reused.
+
+Compute permanent script15 selects `compute::` and retains all original unit6 plus cache4/key1. Original unit file SHA256 remains `96ea271d3e9e0e809d325e1f7a33d6d21d1f767129d654009c069b7b358962dc`. Cache-contract109 now evaluates EngineFault matching into a code before JSON construction, preserving the exact generated result object and subsequent scenario expected-value assertion. Added test factoring affects source epoch, so earlier compute11 runtime is not represented as post-factoring current; documented sequential replay owns that proof.
+
+DWG permanent script retains default artifact test routing; controlled-metadata and grammar-shape are additional commands, not replacements for the default collection. Native execution history3333 records full selected90 with one declared skip, no canceled laws and actual grammar corpus. History3353 explicitly distinguishes the later SQLite module split canonical `crate::dsl` correction from that earlier90 receipt. Current full DWG replay must cover this binding epoch before reuse; no assertion/law removal is inferred or requested.
+
+Latest execution history3357 explicitly queues current host1/compute11 after source changes, then fullDWG and originalHub6; normal preparation4 covers Space's direct2D manifest. These statements preserve source freshness and separate current family74/69 from domain-native proofs. No whole69 descriptor/capture GREEN or compiler-freshness inference is made from rosters alone.

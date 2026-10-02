@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/native-source-ownership.fixture.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "surface",
+    "built"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "fixture"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^🧰️framework/🔨️modules/",
+          "minLength": 1
+        },
+        "fixture": {
+          "type": "string",
+          "pattern": "^🧰️framework/🔨️modules/",
+          "minLength": 1
+        }
+      }
+    },
+    "built": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "fixture"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "pattern": "^🧰️framework/🔨️modules/",
+          "minLength": 1
+        },
+        "fixture": {
+          "type": "string",
+          "pattern": "^🧰️framework/🔨️modules/",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

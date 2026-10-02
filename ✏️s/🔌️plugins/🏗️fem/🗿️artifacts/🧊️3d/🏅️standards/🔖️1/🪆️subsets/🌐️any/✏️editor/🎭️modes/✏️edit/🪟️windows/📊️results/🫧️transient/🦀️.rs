@@ -109,22 +109,22 @@ impl protocol::MutationDiff<Fem3dResultsWindowTransient> for Fem3dResultsWindowT
 mod mutations;
 pub use mutations::*;
 
-impl store::retirement::RetireOwned for Fem3dPlaybackClock {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![store::retirement::leaf(self.phase), store::retirement::leaf(self.reverse)])
+impl semio_framework_value::retirement::RetireOwned for Fem3dPlaybackClock {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(self.phase), semio_framework_value::retirement::leaf(self.reverse)])
     }
 }
 
-impl store::retirement::RetireOwned for Fem3dResultsWindowTransient {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::RetireOwned::retirement(self.clock)
+impl semio_framework_value::retirement::RetireOwned for Fem3dResultsWindowTransient {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.clock)
     }
 }
 
-impl store::retirement::RetireOwned for Fem3dResultsWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for Fem3dResultsWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self::SetPlaybackClock(mutation) = self;
-        store::retirement::RetireOwned::retirement(mutation.clock)
+        semio_framework_value::retirement::RetireOwned::retirement(mutation.clock)
     }
 }
 
@@ -146,8 +146,8 @@ impl semio_framework_plugin::WindowTransientOwner for Fem3dResultsWindowTransien
     type Mutation = Fem3dResultsWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(clock_footprint, clock_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

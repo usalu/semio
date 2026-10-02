@@ -10,8 +10,8 @@
 //! see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{epw_snapshot_wire, oracle_apply_mutation, project_epw, round_trip_epw, EPW_RECORD_COLUMNS};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
+use semio_s_artifact_stdio_epw_test_oracle::standards::v_energyplus::subsets::any::{epw_snapshot_wire, oracle_apply_mutation, project_epw, round_trip_epw, EPW_RECORD_COLUMNS};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
 
 //#region 🔖️Input
@@ -133,11 +133,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::{decode_epw, encode_epw};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_epw::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::apply_epw_mutation;
     use semio_s_artifact_stdio_epw::{EpwMutation, EpwSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::project_epw;
+    use semio_s_artifact_stdio_epw_test_oracle::standards::v_energyplus::subsets::any::project_epw;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor — the only
     /// channel between the feature's parameters and the subject's codec.

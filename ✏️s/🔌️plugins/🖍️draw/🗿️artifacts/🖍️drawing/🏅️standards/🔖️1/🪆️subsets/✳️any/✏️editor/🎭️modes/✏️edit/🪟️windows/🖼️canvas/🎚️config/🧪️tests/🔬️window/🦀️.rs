@@ -47,7 +47,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                     ViewWindowInstance { id: "drawing-right".into(), window_kind_id: DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: "drawing-properties".into(), window_kind_id: "drawing-properties".into() },
                 ],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
             let left = view.for_window_instance("drawing-left").unwrap();
             let right = view.for_window_instance("drawing-right").unwrap();
@@ -97,7 +97,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                 if reopened_left.framing.is_some() || reopened_right.framing.is_some() { return Err("Restored navigation requested another fit".into()); }
                 if reopened_left.camera_x != left_scene.camera_x || reopened_right.camera_x != right_scene.camera_x { return Err("Drawing Canvas config changed during restore".into()); }
-                let stale = ViewModel { window_id: Some("lost-drawing".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                let stale = ViewModel { window_id: Some("lost-drawing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 if addressed(&stale, DrawingCanvasWindowConfig::default()).is_ok() { return Err("Drawing accepted stale window identity".into()); }
                 let wrong = view.for_window_instance("drawing-properties").unwrap();
                 if addressed(&wrong, DrawingCanvasWindowConfig::default()).is_ok() { return Err("Drawing accepted a non-Canvas window identity".into()); }

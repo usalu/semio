@@ -7,7 +7,7 @@ const PROGRAM: &str = "shared://🧬️mutations/🧱️program-element/🌱️c
 
 fn oracle(ctx: &Context) -> Result<Outcome, String> {
     let raw = ctx.subject_raw_bytes("rust")?;
-    let projection = semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::project_xlsx_workbook(&raw, 0)?;
+    let projection = semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::project_xlsx_workbook(&raw, 0)?;
     Ok(Outcome::with_raw(raw, projection))
 }
 

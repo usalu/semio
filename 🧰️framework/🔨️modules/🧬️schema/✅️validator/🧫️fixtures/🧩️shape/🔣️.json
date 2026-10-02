@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 1,
+  "json": [
+    {
+      "id": "empty-record",
+      "guard": "record",
+      "value": {},
+      "label": "transport.empty-record",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "null-record",
+      "guard": "record",
+      "value": null,
+      "label": "transport.null-record",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.null-record must be an object"
+      }
+    },
+    {
+      "id": "array-record",
+      "guard": "record",
+      "value": [],
+      "label": "transport.array-record",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.array-record must be an object"
+      }
+    },
+    {
+      "id": "number-record",
+      "guard": "record",
+      "value": 3,
+      "label": "transport.number-record",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.number-record must be an object"
+      }
+    },
+    {
+      "id": "string-record",
+      "guard": "record",
+      "value": "value",
+      "label": "transport.string-record",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.string-record must be an object"
+      }
+    },
+    {
+      "id": "proto-record",
+      "guard": "record",
+      "value": {
+        "__proto__": 1
+      },
+      "label": "transport.proto-record",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "empty-array",
+      "guard": "array",
+      "value": [],
+      "label": "transport.empty-array",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "empty-string-array",
+      "guard": "array",
+      "value": [
+        ""
+      ],
+      "label": "transport.empty-string-array",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "string-array",
+      "guard": "array",
+      "value": [
+        "yes",
+        " "
+      ],
+      "label": "transport.string-array",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "mixed-array",
+      "guard": "array",
+      "value": [
+        "x",
+        1
+      ],
+      "label": "transport.mixed-array",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.mixed-array must be a string array"
+      }
+    },
+    {
+      "id": "null-array",
+      "guard": "array",
+      "value": null,
+      "label": "transport.null-array",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.null-array must be a string array"
+      }
+    },
+    {
+      "id": "empty-string",
+      "guard": "string",
+      "value": "",
+      "label": "transport.empty-string",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.empty-string must be a non-empty string"
+      }
+    },
+    {
+      "id": "whitespace-string",
+      "guard": "string",
+      "value": " \t",
+      "label": "transport.whitespace-string",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "nonempty-string",
+      "guard": "string",
+      "value": "yes",
+      "label": "transport.nonempty-string",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "null-string",
+      "guard": "string",
+      "value": null,
+      "label": "transport.null-string",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.null-string must be a non-empty string"
+      }
+    },
+    {
+      "id": "number-string",
+      "guard": "string",
+      "value": 3,
+      "label": "transport.number-string",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.number-string must be a non-empty string"
+      }
+    },
+    {
+      "id": "exact-literal",
+      "guard": "literal",
+      "value": "on",
+      "label": "transport.exact-literal",
+      "allowed": [
+        "on",
+        "off"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "case-literal",
+      "guard": "literal",
+      "value": "On",
+      "label": "transport.case-literal",
+      "allowed": [
+        "on",
+        "off"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.case-literal must be one of on, off"
+      }
+    },
+    {
+      "id": "missing-literal",
+      "guard": "literal",
+      "value": "no",
+      "label": "transport.missing-literal",
+      "allowed": [
+        "on",
+        "off"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.missing-literal must be one of on, off"
+      }
+    },
+    {
+      "id": "empty-literal",
+      "guard": "literal",
+      "value": "",
+      "label": "transport.empty-literal",
+      "allowed": [
+        "",
+        "on"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.empty-literal must be a non-empty string"
+      }
+    },
+    {
+      "id": "duplicate-allowed",
+      "guard": "literal",
+      "value": "on",
+      "label": "transport.duplicate-allowed",
+      "allowed": [
+        "on",
+        "on"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "no-allowed",
+      "guard": "literal",
+      "value": "on",
+      "label": "transport.no-allowed",
+      "allowed": [],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.no-allowed must be one of "
+      }
+    },
+    {
+      "id": "reordered-keys",
+      "guard": "keys",
+      "value": {
+        "b": 2,
+        "a": 1
+      },
+      "label": "transport.reordered-keys",
+      "keys": [
+        "a",
+        "b"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "missing-keys",
+      "guard": "keys",
+      "value": {
+        "a": 1
+      },
+      "label": "transport.missing-keys",
+      "keys": [
+        "a",
+        "b"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.missing-keys must contain exactly a, b"
+      }
+    },
+    {
+      "id": "extra-keys",
+      "guard": "keys",
+      "value": {
+        "a": 1,
+        "b": 2
+      },
+      "label": "transport.extra-keys",
+      "keys": [
+        "a"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.extra-keys must contain exactly a"
+      }
+    },
+    {
+      "id": "duplicate-keys",
+      "guard": "keys",
+      "value": {
+        "a": 1
+      },
+      "label": "transport.duplicate-keys",
+      "keys": [
+        "a",
+        "a"
+      ],
+      "expected": {
+        "admitted": false,
+        "diagnostic": "transport.duplicate-keys must contain exactly a, a"
+      }
+    },
+    {
+      "id": "proto-keys",
+      "guard": "keys",
+      "value": {
+        "__proto__": 1
+      },
+      "label": "transport.proto-keys",
+      "keys": [
+        "__proto__"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "empty-keys",
+      "guard": "keys",
+      "value": {},
+      "label": "transport.empty-keys",
+      "keys": [],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    }
+  ],
+  "runtime": [
+    {
+      "id": "date-record",
+      "guard": "record",
+      "mode": "date",
+      "label": "runtime.date-record",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "map-record",
+      "guard": "record",
+      "mode": "map",
+      "label": "runtime.map-record",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "inherited-record",
+      "guard": "record",
+      "mode": "inherited",
+      "label": "runtime.inherited-record",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "sparse-array",
+      "guard": "array",
+      "mode": "sparse",
+      "label": "runtime.sparse-array",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "undefined-array",
+      "guard": "array",
+      "mode": "undefined",
+      "label": "runtime.undefined-array",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "runtime.undefined-array must be a string array"
+      }
+    },
+    {
+      "id": "inherited-string-array",
+      "guard": "array",
+      "mode": "inherited-string",
+      "label": "runtime.inherited-string-array",
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "inherited-number-array",
+      "guard": "array",
+      "mode": "inherited-number",
+      "label": "runtime.inherited-number-array",
+      "expected": {
+        "admitted": false,
+        "diagnostic": "runtime.inherited-number-array must be a string array"
+      }
+    },
+    {
+      "id": "symbol-keys",
+      "guard": "keys",
+      "mode": "symbol",
+      "label": "runtime.symbol-keys",
+      "keys": [
+        "x"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "hidden-keys",
+      "guard": "keys",
+      "mode": "nonenumerable",
+      "label": "runtime.hidden-keys",
+      "keys": [
+        "x"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "inherited-keys",
+      "guard": "keys",
+      "mode": "inherited",
+      "label": "runtime.inherited-keys",
+      "keys": [
+        "x"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "null-prototype-keys",
+      "guard": "keys",
+      "mode": "null-prototype",
+      "label": "runtime.null-prototype-keys",
+      "keys": [
+        "x"
+      ],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "date-keys",
+      "guard": "keys",
+      "mode": "date",
+      "label": "runtime.date-keys",
+      "keys": [],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    },
+    {
+      "id": "map-keys",
+      "guard": "keys",
+      "mode": "map",
+      "label": "runtime.map-keys",
+      "keys": [],
+      "expected": {
+        "admitted": true,
+        "diagnostic": null
+      }
+    }
+  ]
+}

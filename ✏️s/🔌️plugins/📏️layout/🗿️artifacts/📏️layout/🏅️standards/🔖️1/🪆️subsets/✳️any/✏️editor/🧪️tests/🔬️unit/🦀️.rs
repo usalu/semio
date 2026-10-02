@@ -45,6 +45,8 @@ pub(crate) mod context {
         App { definition: create_layout_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("layout", LayoutPlayApp, layout_app_manifest_for_tests, "../..");
+
     pub async fn layout_app() -> LayoutApp {
         layout_app_with_registry().await
     }
@@ -80,7 +82,7 @@ pub(crate) mod context {
                 semio_framework_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() },
                 semio_framework_plugin::ViewWindowInstance { id: PREVIEW_WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_PREVIEW.into() },
             ],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
 
@@ -100,7 +102,7 @@ pub(crate) mod context {
         let window = match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => WINDOW,
             LAYOUT_PLAY_BODY_PREVIEW => PREVIEW_WINDOW,
-            _ => return ViewModel::default(),
+            _ => return ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         };
         windowed_view().for_window_instance(window).expect("fixture window instance is mounted")
     }
@@ -127,7 +129,7 @@ pub(crate) mod context {
     /// VIEW's locale, so a translation assertion that reuses the default view reads English text no
     /// matter which language it is asserting.
     pub async fn render_localized(app: &mut LayoutApp, body_key: &str, locale: &str) -> String {
-        let view = ViewModel { locale: semio_framework_plugin::locale_from_str(locale), ..Default::default() };
+        let view = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(locale).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
         render_in(app, body_key, &view).await
     }
 
@@ -284,7 +286,7 @@ use semio_framework_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel
 async fn context_menu_json(app: &mut LayoutApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> String {
     use semio_framework_plugin::{ContextMenuRequest, PluginApp, UiMenuRef};
     let request = ContextMenuRequest { menu: UiMenuRef { id: "layout".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_string(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or_default()
+    serde_json::to_string(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or_default()
 }
 
 /// ⚖️ LAW: an empty blueprint canvas offers creation verbs and never delete-selection.
@@ -419,7 +421,7 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
 async fn context_menu_on_preflight_row_offers_focus_issue() {
     let mut app = layout_app_with_registry().await;
     let snapshot = app.snapshot().expect("projection");
-    let labels = layout_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = layout_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let issue = run_layout_preflight(&snapshot, &labels).into_iter().next().expect("demo document must surface at least one preflight issue");
     let row_id = format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone()));
     let menu = context_menu_json(
@@ -485,7 +487,7 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
 async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     let mut app = layout_app_with_registry().await;
     let frame_id = app.snapshot().expect("projection").pages[0].frames.first().expect("frame").id().to_string();
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     app.bind_instance_id(meta.instance_id).await;
     app.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta).await.expect("select frame");
@@ -658,7 +660,7 @@ async fn window_engagements_cover_both_windows() {
         let view = semio_framework_plugin::ViewModel {
             window_id: Some(window_id.into()),
             window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_id.into() }],
-            ..Default::default()
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let engagements = app.window_engagements(&view).await;
         let engagement = engagements.get(window_id).unwrap_or_else(|| panic!("{window_id} engagement"));
@@ -779,7 +781,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["catalogue-left", "catalogue-right"].map(|id| ViewWindowInstance { id: id.into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }).into(),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let left = view.for_window_instance("catalogue-left").unwrap();
     let right = view.for_window_instance("catalogue-right").unwrap();

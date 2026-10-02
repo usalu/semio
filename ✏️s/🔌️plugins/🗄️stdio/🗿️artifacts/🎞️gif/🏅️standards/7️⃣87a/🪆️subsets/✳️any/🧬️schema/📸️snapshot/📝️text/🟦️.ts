@@ -49,5 +49,5 @@ export const stdioGif87aAnySnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parseGifSnapshotText(value: unknown, at = "$"): GifSnapshotText {
-  return stdioGif87aAnySnapshotTextGuardObject(value, `${at}`);
+  return stdioGif87aAnySnapshotTextGuardString(value, `${at}`);
 }

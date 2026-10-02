@@ -36,8 +36,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ResizeNode {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize node \"{}\"", self.node_id), &format!("Größe von Knoten \"{}\" ändern", self.node_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize node \"{}\"", self.node_id), &format!("Größe von Knoten \"{}\" ändern", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

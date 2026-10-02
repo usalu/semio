@@ -6,7 +6,9 @@
 use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;

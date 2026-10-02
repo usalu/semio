@@ -49,7 +49,7 @@ impl dsl::FromValue for CurationSnapshot {
     }
 }
 impl CurationSnapshot {
-    /// 🪆 Requires a Kit child with equal persisted slot and artifact identity.
+    /// 🪆 Requires the persisted child target to use the Kit dialect.
     pub fn validate(&self) -> Result<(), String> {
         semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&self.catalog.child_id, &self.catalog.target, "kit")
     }
@@ -58,6 +58,12 @@ impl CurationSnapshot {
 pub fn curation_selection_summary(snapshot: &CurationSnapshot) -> String {
     snapshot.curated.iter().map(|item| format!("{}x{}", item.object_id, item.count)).collect::<Vec<_>>().join(" ")
 }
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
 #[cfg(test)]
-#[path = "../🧪️tests/🪪️document/🦀️.rs"]
+#[path = "../🧪️tests/🪪️document-contract/🦀️.rs"]
 mod document_contract_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

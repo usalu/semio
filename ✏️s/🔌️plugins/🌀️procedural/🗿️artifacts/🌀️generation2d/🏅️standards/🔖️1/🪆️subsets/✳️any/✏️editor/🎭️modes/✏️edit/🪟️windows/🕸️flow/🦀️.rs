@@ -8,7 +8,12 @@ use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, 
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui::wgpu::{NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord};
 
 #[path = "🎚️config/🦀️.rs"]

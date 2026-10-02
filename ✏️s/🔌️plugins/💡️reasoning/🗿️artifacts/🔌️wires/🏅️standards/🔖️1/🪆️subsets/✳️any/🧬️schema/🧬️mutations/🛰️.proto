@@ -11,6 +11,8 @@ import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/�
 import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚩set-node-root/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-nodes/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧬️schema/🛰️.proto";
+import "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🧬️schema/🛰️.proto";
 
 message WiresMutation {
   oneof mutation {
@@ -24,5 +26,7 @@ message WiresMutation {
     semio.s.reasoning.wires.mutation.set_node_root.SetNodeRoot set_node_root = 8;
     semio.s.reasoning.wires.mutation.connect_nodes.ConnectNodes connect_nodes = 9;
     semio.s.reasoning.wires.mutation.move_node.MoveNode move_node = 10;
+    semio.s.reasoning.wires.mutation.move_nodes.MoveNodes move_nodes = 11;
+    semio.s.reasoning.wires.mutation.set_node_positions.SetNodePositions set_node_positions = 12;
   }
 }

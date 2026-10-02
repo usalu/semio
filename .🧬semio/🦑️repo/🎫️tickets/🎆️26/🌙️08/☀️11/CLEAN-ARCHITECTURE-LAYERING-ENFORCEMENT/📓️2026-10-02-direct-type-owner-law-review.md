@@ -1,0 +1,19 @@
+# Direct Type Owner Law Review
+
+Read-only current fixture/schema/test inspection; no jobs or production edits. All assets are under library `🧹️normalization`, with the test at `🧪️tests/🏗️source-services/🟦️.ts` and corresponding fixture/schema directories.
+
+The fixture lines44–46 and schema required `directTypeOwners`/exact const roster bind precisely TaxonomyProgress to operation and TaxonomyNodeKind to source-admission. Existing exact six-owner/dependency/denied/load contracts remain present. Schema negative assertions reject a dropped row and umbrella-owned replacement.
+
+The new law at test lines50–62 creates an actual default-host TypeScript Program rooted at the physical normalization umbrella. Owner modules enter through its real imports, not synthetic declaration injection, custom resolver or stub. It obtains actual checker module exports, asserts canonical exported symbol existence and declaration source path, rejects all umbrella ExportDeclaration nodes, then rejects either original names or renamed TypeScript export aliases resolving to those symbols. Therefore current two production forwarding lines14–15 are genuine baseline failure witnesses. No owner/assertion bypass was found for that targeted removal contract. Missing physical owner source cannot silently succeed: the checker access/assertions would fail.
+
+Bounded limitation: this is module-export/declaration-origin proof, not whole semantic diagnostic verification. A differently named declared type alias such as `export type OtherProgress = TaxonomyProgress` is a TypeAlias symbol, not SymbolFlags.Alias, and is not covered by the name/alias filter. It would also avoid ExportDeclaration. Such newly authored alias is absent from inspected current production; do not claim this law proves absence of every possible compatibility wrapper. If the intended closed guarantee includes renamed declared aliases, add that explicit hostile form and follow the declaration's type-reference binding with the same checker, rather than comparing structural type equality (which would reject unrelated legitimately equal shapes).
+
+The current exact named/aliased module forwarding claim is sound. No test result is inferred from source inspection; baseline session33479 is owned by Root.
+
+## Bounded Three-File Revision
+
+Current source was reread after Root's baseline timeout. The law now parses actual umbrella bytes and asserts zero ExportDeclaration **before** creating a Program. Thus both original forwards, renamed export aliases, star exports and namespace exports fail through physical authored syntax independently of subsequent module resolution.
+
+The Program rootNames are exactly the physical umbrella plus both fixture-owned declaration files. It uses the default compiler host and noResolve/noLib/types[]; no injected declarations, replacement source or custom module-resolution adapter is present. noResolve bounds imported-file admission; both intended relative TS targets are already explicit rootNames. The actual leaf export symbols and declaration-file assertions remain. Their symbol-identity comparison can therefore check ordinary renamed module aliases where resolution succeeds; a resolution failure cannot restore forwarding authority because the prior syntax assertion rejects every ExportDeclaration.
+
+This is honestly a selected namespace/declaration-origin proof. It does not inspect semantic diagnostics for the incomplete three-file closure, and cannot claim entire imported type correctness. Strict whole-program checks and unchanged esbuild runtime closure are separate evidence. The earlier renamed **declared** type-alias limitation remains expressly outside the claim. No new concrete false grant is present in this targeted contract. No baseline outcome or runtime alias-resolution success is inferred by this source-only review; session32361 belongs to Root.

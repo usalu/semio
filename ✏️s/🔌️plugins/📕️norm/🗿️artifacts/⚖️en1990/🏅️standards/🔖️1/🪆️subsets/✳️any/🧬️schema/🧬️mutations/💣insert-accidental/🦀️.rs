@@ -10,7 +10,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for InsertAccidental
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "accidental", kind: "insert-accidental", record: "InsertedAccidental" };
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert accidental action", "Außergewöhnliche Einwirkung einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert accidental action", "Außergewöhnliche Einwirkung einfügen")
     }
 }

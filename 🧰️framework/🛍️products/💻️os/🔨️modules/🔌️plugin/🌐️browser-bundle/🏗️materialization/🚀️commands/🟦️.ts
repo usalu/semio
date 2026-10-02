@@ -1,10 +1,11 @@
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { declaredComponentDeploymentDirectoryV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
 import { createRequire } from "node:module";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { getWorkspaceRoot, runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { stageArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
 import { pluginModulesRoot } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { ACTOR_COMPONENT_EXPORTS, PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
@@ -32,8 +33,8 @@ export class SupportScript extends BundleScript {
       ensurePreview2ShimVendorAt(vendor, getWorkspaceRoot());
       mkdirSync(shard);
       writeFileSync(join(shard, SHARD_WORKER_FILE), shardWorkerSource());
-      await stageArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
-      await stageArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
+      await stageRepositoryArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
+      await stageRepositoryArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
       if (!ensureGuestSlimTypstFontsAt(root, getWorkspaceRoot())) throw new Error("Missing typst font seed; run semio-framework-os-infinite:fonts through Nx");
       console.log(`Browser support ${profile}: vendor shims, typst fonts and shard worker staged`);
     } finally { rmSync(temporary, { recursive: true, force: true }); }
@@ -65,7 +66,7 @@ export class MaterializeScript extends BundleScript {
       controller.signal.throwIfAborted();
       console.log(`Materializing ${pluginId} ${profile}: descriptor`);
       const stdoutPath = join(temporary, ".descriptor.stdout"), stderrPath = join(temporary, ".descriptor.stderr");
-      const probe = await runExactCargoLawProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(temporary, componentBase + ".js")], { cwd: repo, env: process.env, budgetMs: 60_000, maxOutputBytes: 12 * 1024 * 1024, stdoutPath, stderrPath, cancelled: () => controller.signal.aborted });
+      const probe = await captureOwnedProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(temporary, componentBase + ".js")], { cwd: repo, env: process.env, budgetMs: 60_000, maxOutputBytes: 12 * 1024 * 1024, stdoutPath, stderrPath, cancelled: () => controller.signal.aborted });
       if (probe.status !== 0) throw new Error(`Plugin descriptor failed for ${pluginId}: ${probe.stderr}`);
       const base64 = probe.stdout.trim();
       if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) throw new Error(`Invalid descriptor response for ${pluginId}`);
@@ -75,7 +76,7 @@ export class MaterializeScript extends BundleScript {
       writeFileSync(join(temporary, "🔣️.json"), descriptor.json);
       writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, crate + ".wasm"));
       controller.signal.throwIfAborted();
-      await stageArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary), { signal: controller.signal });
+      await stageRepositoryArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary), { signal: controller.signal });
       console.log(`Materialized ${pluginId} ${profile}: browser bridge and descriptor staged -> ${output}`);
       // 📣️ A served dev session reads THIS directory directly, so a plugin is live the moment it is
       // staged; an extension is not — the runtime install root (`/🧩️extension-modules`) is written by

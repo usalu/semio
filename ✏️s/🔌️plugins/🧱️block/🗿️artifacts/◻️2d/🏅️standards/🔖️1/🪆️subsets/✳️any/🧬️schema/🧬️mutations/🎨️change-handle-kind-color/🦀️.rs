@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKi
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change handle kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change handle kind \"{}\" color to \"{}\"", self.id, self.new_color), &format!("Farbe von Griffart \"{}\" auf \"{}\" ändern", self.id, self.new_color))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

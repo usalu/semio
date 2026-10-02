@@ -29,8 +29,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Discon
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Disconnect the referenced model", "Referenziertes Modell trennen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Disconnect the referenced model", "Referenziertes Modell trennen")
     }
 }
 //#endregion 🔖️Mutation

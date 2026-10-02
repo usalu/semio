@@ -42,10 +42,12 @@ pub(crate) mod context {
         DrawingAppFixture(app)
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || App { definition: create_drawing_app(), examples: Vec::new() }, "../..");
+
     /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
     pub fn meta_with_utility(utility: &str) -> ActionMeta {
         let mut action_meta = meta("local");
-        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..Default::default() });
+        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         action_meta
     }
 }
@@ -92,6 +94,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
             "edits": [{
                 "id": "drawing-retained-edit-final",
                 "actor": "drawing-retained-actor",
+                "line": null,
                 "forwards": [mutation_hex],
                 "inverse": [],
                 "sequenceNumber": 1,
@@ -243,7 +246,7 @@ fn last_layer_id(app: &DrawingApp) -> String {
 async fn renders_canvas_scene_with_segments() {
     let mut app = drawing_app().await;
     let example_json = semio_drawing_example_json();
-    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::default()).await.expect("render");
+    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("segments"));
@@ -260,7 +263,7 @@ async fn renders_canvas_scene_with_segments() {
 #[semio_framework_async_macros::async_test]
 async fn default_document_exposes_artboard_dimensions_on_canvas() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let scene = canvas_scene(node);
     let layers_json = scene.layers_json.as_str();
     assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
@@ -269,7 +272,7 @@ async fn default_document_exposes_artboard_dimensions_on_canvas() {
 #[semio_framework_async_macros::async_test]
 async fn layers_panel_lists_default_layer() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("drawing-play-layers.add.path"));
     assert!(json.contains("Layer 1"));
@@ -278,7 +281,7 @@ async fn layers_panel_lists_default_layer() {
 #[semio_framework_async_macros::async_test]
 async fn catalogue_panel_lists_boolean_operations() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("drawing-play-catalogue.path"));
     assert!(json.contains("Boolean union"));
@@ -405,8 +408,8 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     assert_eq!(projection.layers.len(), before + 1, "the per-window map arms the rectangle utility: {:?}", receipt.lanes);
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     assert!(receipt.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "selectDirect")), "the canvas returns to select-direct: {:?}", receipt.effects);
-    assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..Default::default() }), "pen", "the flat field still resolves when no map entry addresses the window");
-    assert_eq!(drawing_active_utility(&ViewModel::default()), DRAWING_DEFAULT_UTILITY);
+    assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), "pen", "the flat field still resolves when no map entry addresses the window");
+    assert_eq!(drawing_active_utility(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), DRAWING_DEFAULT_UTILITY);
     artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
@@ -558,7 +561,7 @@ async fn inline_selection_app() -> (DrawingAppFixture, semio_framework_plugin::A
     let app = drawing_app().await;
     let view = ViewModel {
         window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance")), ..artifact_laws::meta("local") };
     (app, meta)
@@ -668,7 +671,7 @@ fn drawing_composite_shape_meta() -> semio_framework_plugin::ActionMeta {
         focused_window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
         window_instances: vec![ViewWindowInstance { id: DRAWING_PLAY_WINDOW_CANVAS.into(), window_kind_id: DRAWING_PLAY_WINDOW_CANVAS.into() }],
         session_identity: Some(ViewSessionIdentity { user_id: "draw-repeat-owner".into(), display_name: "Draw Repeat Owner".into() }),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     semio_framework_plugin::ActionMeta { view_state: view.for_window_instance(DRAWING_PLAY_WINDOW_CANVAS), ..artifact_laws::meta("local") }
 }
@@ -1010,7 +1013,7 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_labels_resolve_native_by_default() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
     assert!(json.contains("Add Path"));
     assert!(json.contains("Add Rectangle"));
@@ -1020,7 +1023,7 @@ async fn drawing_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_labels_translate_panels_in_german() {
     let mut app = drawing_app().await;
-    let view_state = ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = ViewModel { locale: semio_framework_ui_locale::Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &view_state).await.expect("render");
     let layers_json = artifact_laws::project_and_retire_fixture_tree(layers_node).expect("retire layers tree");
     assert!(layers_json.contains("Pfad hinzufügen"));
@@ -1356,7 +1359,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 30);
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 31);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();

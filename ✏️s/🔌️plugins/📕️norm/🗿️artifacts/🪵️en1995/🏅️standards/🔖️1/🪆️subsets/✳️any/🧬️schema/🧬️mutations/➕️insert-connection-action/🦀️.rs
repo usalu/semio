@@ -10,6 +10,6 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for InsertConnection
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "connection-action", kind: "insert-connection-action", record: "InsertedConnectionAction" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Insert action {} into connection {} at #{}", self.action.id, self.connection_id, self.index), &format!("Einwirkung {} in Verbindung {} an #{} einfügen", self.action.id, self.connection_id, self.index)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert action {} into connection {} at #{}", self.action.id, self.connection_id, self.index), &format!("Einwirkung {} in Verbindung {} an #{} einfügen", self.action.id, self.connection_id, self.index)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone(), self.action.id.clone()] }
 }

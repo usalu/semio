@@ -33,3 +33,9 @@ record drag-rule-nodes tag=9
 field payload bytes
 record set-rule-layout-points tag=10
 field payload bytes
+record delete-working-nodes tag=11
+field payload bytes
+record connect-working-ports tag=12
+field payload bytes
+record disconnect-working-edges tag=13
+field payload bytes

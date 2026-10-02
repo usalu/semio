@@ -5,13 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "domain",
-    "meta",
-    "objects",
-    "attractions",
-    "targetVolumes",
-    "references"
+    "schema"
   ],
   "properties": {
     "schema": {
@@ -57,13 +51,19 @@
   },
   "$defs": {
     "Puzzle3dMeta": {
-      "type": "object",
       "title": "Puzzle3dMeta",
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "kindCatalogs": {
-          "type": "object",
-          "additionalProperties": true
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dKindCatalogs"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "kindCompatibility": {
           "type": "array",
@@ -71,53 +71,75 @@
             "$ref": "#/$defs/Puzzle3dKindCompatibility"
           }
         }
-      }
+      },
+      "required": []
     },
     "Puzzle3dObject": {
-      "type": "object",
       "title": "Puzzle3dObject",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "origin"
-      ],
       "properties": {
         "id": {
           "type": "string"
         },
         "label": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "objectKind": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "anchor": {
-          "type": "string",
           "enum": [
             "fixed",
             "derived"
-          ],
-          "default": "fixed"
+          ]
         },
         "origin": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
+          "$ref": "#/$defs/Puzzle3dVector3"
         },
         "orientation": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 4,
-          "maxItems": 4
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dVector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "scale": {},
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "meshUrl": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "vortices": {
           "type": "array",
@@ -131,16 +153,15 @@
         "locked": {
           "type": "boolean"
         }
-      }
+      },
+      "required": [
+        "id"
+      ]
     },
     "Puzzle3dAttraction": {
-      "type": "object",
       "title": "Puzzle3dAttraction",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "attracting",
-        "attracted"
-      ],
       "properties": {
         "id": {
           "type": "string"
@@ -152,105 +173,65 @@
           "type": "string"
         },
         "gap": {
-          "type": "number",
-          "default": 0
+          "$ref": "#/$defs/Binary64Transport"
         },
         "shift": {
-          "type": "number",
-          "default": 0
+          "$ref": "#/$defs/Binary64Transport"
         },
         "rise": {
-          "type": "number",
-          "default": 0
+          "$ref": "#/$defs/Binary64Transport"
         },
         "rotation": {
-          "type": "number",
-          "default": 0,
-          "description": "degrees"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "turn": {
-          "type": "number",
-          "default": 0,
-          "description": "degrees"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "tilt": {
-          "type": "number",
-          "default": 0,
-          "description": "degrees"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "x": {
-          "type": "number",
-          "default": 0,
-          "description": "diagram offset (compose u)"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "y": {
-          "type": "number",
-          "default": 0,
-          "description": "diagram offset (compose v)"
+          "$ref": "#/$defs/Binary64Transport"
         }
-      }
+      },
+      "required": [
+        "attracting",
+        "attracted"
+      ]
     },
     "Puzzle3dTargetVolume": {
+      "title": "Puzzle3dTargetVolume",
       "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "title": "Puzzle3dTargetVolume"
-    },
-    "Puzzle3dReference": {
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      },
-      "title": "Puzzle3dReference"
-    },
-    "Puzzle3dVortex": {
-      "type": "object",
-      "title": "Puzzle3dVortex",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
+      "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string"
         },
-        "vortexKind": {
-          "type": "string"
+        "origin": {
+          "$ref": "#/$defs/Puzzle3dVector3"
         },
-        "label": {
-          "type": "string"
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dVector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "direction": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "radius": {
-          "type": "number"
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "hidden": {
           "type": "boolean"
@@ -258,16 +239,105 @@
         "locked": {
           "type": "boolean"
         }
-      }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Puzzle3dReference": {
+      "title": "Puzzle3dReference",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/Puzzle3dReferenceSource"
+        },
+        "origin": {
+          "$ref": "#/$defs/Puzzle3dVector3"
+        },
+        "widthWorld": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Puzzle3dVortex": {
+      "title": "Puzzle3dVortex",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vortexKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "$ref": "#/$defs/Puzzle3dVector3"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Puzzle3dVector3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ]
     },
     "Puzzle3dKindCompatibility": {
-      "type": "object",
       "title": "Puzzle3dKindCompatibility",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "source",
-        "target"
-      ],
       "properties": {
         "source": {
           "type": "string"
@@ -276,35 +346,30 @@
           "type": "string"
         },
         "bidirectional": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "important": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "specificity": {
-          "type": "string",
           "enum": [
             "general",
             "object",
             "attraction",
             "vortex",
             "cable"
-          ],
-          "default": "general"
+          ]
         }
-      }
+      },
+      "required": [
+        "source",
+        "target"
+      ]
     },
     "Puzzle3dRepresentation": {
-      "type": "object",
       "title": "Puzzle3dRepresentation",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "url"
-      ],
       "properties": {
         "id": {
           "type": "string"
@@ -325,16 +390,24 @@
           }
         },
         "lod": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "description": {
           "type": "string"
         }
-      }
+      },
+      "required": []
     },
     "Puzzle3dCatalogVortexTemplate": {
-      "type": "object",
       "title": "Puzzle3dCatalogVortexTemplate",
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -353,44 +426,58 @@
           "type": "string"
         },
         "vortexKind": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "point": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
+          "$ref": "#/$defs/Puzzle3dVector3"
         },
         "direction": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
+          "$ref": "#/$defs/Puzzle3dVector3"
         },
         "t": {
-          "type": "number"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "mandatory": {
-          "type": "boolean"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "radius": {
-          "type": "number"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      }
+      },
+      "required": []
     },
     "Puzzle3dCatalogObjectKind": {
-      "type": "object",
       "title": "Puzzle3dCatalogObjectKind",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "label"
-      ],
       "properties": {
         "id": {
           "type": "string"
@@ -414,8 +501,7 @@
           "type": "string"
         },
         "abstract": {
-          "type": "boolean",
-          "default": false
+          "type": "boolean"
         },
         "baseKinds": {
           "type": "array",
@@ -447,27 +533,50 @@
             "$ref": "#/$defs/Puzzle3dAuthor"
           }
         }
-      }
-    },
-    "Puzzle3dCatalogVortexKind": {
-      "type": "object",
-      "title": "Puzzle3dCatalogVortexKind",
-      "additionalProperties": false,
+      },
       "required": [
         "id"
-      ],
+      ]
+    },
+    "Puzzle3dCatalogVortexKind": {
+      "title": "Puzzle3dCatalogVortexKind",
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string"
         },
         "code": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "label": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "order": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "compatibleWith": {
           "type": "array",
@@ -487,7 +596,10 @@
         "defaultCableKind": {
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "id"
+      ]
     },
     "Puzzle3dFillRun": {
       "title": "Puzzle3dFillRun",
@@ -861,13 +973,9 @@
       ]
     },
     "Puzzle3dAttribute": {
-      "type": "object",
       "title": "Puzzle3dAttribute",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "key",
-        "value"
-      ],
       "properties": {
         "id": {
           "type": "string"
@@ -879,17 +987,22 @@
           "type": "string"
         },
         "definition": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      }
+      },
+      "required": []
     },
     "Puzzle3dAuthor": {
-      "type": "object",
       "title": "Puzzle3dAuthor",
+      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
       "properties": {
         "id": {
           "type": "string"
@@ -901,12 +1014,172 @@
           "type": "string"
         },
         "role": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "rank": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bits"
+      ],
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
         }
       }
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "Puzzle3dVector3": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "Puzzle3dVector4": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "Puzzle3dScale": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        {
+          "$ref": "#/$defs/Puzzle3dVector3"
+        }
+      ]
+    },
+    "Puzzle3dReferenceSource": {
+      "title": "Puzzle3dReferenceSource",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "mediaKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "Puzzle3dCatalogCableKind": {
+      "title": "Puzzle3dCatalogCableKind",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "defaultAttractionKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Puzzle3dCatalogAttractionKind": {
+      "title": "Puzzle3dCatalogAttractionKind",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "Puzzle3dKindCatalogs": {
+      "title": "Puzzle3dKindCatalogs",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dCatalogObjectKind"
+          }
+        },
+        "vortices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dCatalogVortexKind"
+          }
+        },
+        "cables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dCatalogCableKind"
+          }
+        },
+        "attractions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dCatalogAttractionKind"
+          }
+        }
+      },
+      "required": []
     }
   }
 }

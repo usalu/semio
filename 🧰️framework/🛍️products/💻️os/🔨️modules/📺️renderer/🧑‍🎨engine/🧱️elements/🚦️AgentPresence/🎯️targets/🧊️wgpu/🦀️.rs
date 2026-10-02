@@ -10,7 +10,9 @@
 //! spellings of `success`/`accent`/`warning`/`text_muted`, which is what a themed renderer must read.
 
 use crate::agent_bridge::{agent_label, AgentBridgePresence, AgentBridgeStatus};
-use ui_wgpu::wgpu::{Locale, Rgba, Theme};
+use semio_framework_ui_locale::Locale;
+use ui_wgpu::wgpu::Rgba;
+use ui_wgpu::wgpu::Theme;
 
 //#region 🔖️AgentPresence
 /// 🚦️ The four visual states the indicator collapses the (status, presence) pair into.

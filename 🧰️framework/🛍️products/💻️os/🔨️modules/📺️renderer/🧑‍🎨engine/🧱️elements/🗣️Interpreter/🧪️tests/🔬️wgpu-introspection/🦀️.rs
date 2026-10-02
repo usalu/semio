@@ -1,5 +1,14 @@
 use super::*;
-use ui_wgpu::wgpu::{Label, LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
+use semio_framework_ui_locale::Label;
+use ui_wgpu::wgpu::LayoutBucket;
+use ui_wgpu::wgpu::Node;
+use ui_wgpu::wgpu::NodeFlags;
+use ui_wgpu::wgpu::NodeKey;
+use ui_wgpu::wgpu::Theme;
+use ui_wgpu::wgpu::UiPresence;
+use ui_wgpu::wgpu::UiStackNode;
+use ui_wgpu::wgpu::UiTextNode;
+use ui_wgpu::wgpu::WidgetSpec;
 
 fn text_node(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -56,7 +65,7 @@ fn focus_path_is_recorded_for_the_focused_node() {
 #[test]
 fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json")).expect("visibility fixture parses");
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     for window_id in law["liveWindows"].as_array().expect("live windows") {
         engine.set_viewport(window_id.as_str().expect("window id"), 400.0, 300.0);
     }
@@ -150,7 +159,8 @@ fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
 }
 
 /// 🎲️ `dumpBoard2d` answers React's Board2dHost `data-board-*` vitals for one board: every node's world position, the
-/// published `{x, y, zoom}` camera, the selection, and the node, edge and handle counts; a fixture that does not parse
+/// published `{x, y, zoom}` camera, the selection, the ids a time-travel draft references, and the node, edge and handle
+/// counts; a fixture that does not parse
 /// reads `parsed: false`, `-1` counts and no positions, exactly as React's `board2dVitals`.
 #[test]
 fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
@@ -161,6 +171,7 @@ fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
     .to_string();
     let mut board = ui_wgpu::wgpu::Board2dScene::base(fixture, serde_json::json!({"x": 12.5, "y": -3.0, "zoom": 1.75}).to_string(), true);
     board.selection_json = serde_json::json!(["n-2", "n-1:h-1"]).to_string();
+    board.highlighted_ids_json = serde_json::json!(["n-1", "n-2"]).to_string();
     let surface = board2d_surface("puzzle2d-edit", "2d-edit", &board, [100.0, 50.0, 640.0, 480.0]);
     let json = serde_json::to_value(&surface).expect("the row serializes");
     assert_eq!(
@@ -170,12 +181,13 @@ fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
             "camera": {"x": 12.5, "y": -3.0, "zoom": 1.75},
             "positions": {"n-1": [10.0, -4.5], "n-2": [0.0, 3.0]},
             "selection": ["n-2", "n-1:h-1"],
+            "highlighted": ["n-1", "n-2"],
             "nodes": 3, "edges": 1, "handles": 2, "parsed": true
         }),
         "the wire shape the W3-E2E probe reads (`📓️w3-e2e-report.md` W.3 P1)"
     );
     let broken = board2d_surface("s", "w", &ui_wgpu::wgpu::Board2dScene::base("{not json".into(), "{}".into(), false), [0.0; 4]);
-    assert_eq!((broken.parsed, broken.nodes, broken.edges, broken.handles, broken.positions.len(), broken.camera, broken.selection.len()), (false, -1, -1, -1, 0, None, 0));
+    assert_eq!((broken.parsed, broken.nodes, broken.edges, broken.handles, broken.positions.len(), broken.camera, broken.selection.len(), broken.highlighted.len()), (false, -1, -1, -1, 0, None, 0, 0));
 }
 
 /// 🚶️ The board walk finds a board wherever the dock nested it, names the window it was found in, and reports its
@@ -195,7 +207,7 @@ fn walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window() {
     let text_id = tree.insert_child(None, Node::new(NodeKey::Explicit("plain".into()), WidgetSpec(text_node("no board"))));
     walk_board2d(&tree, text_id, 0.0, 0.0, "plain", &mut none);
     assert!(none.is_empty());
-    assert_eq!(serde_json::to_value(build_board2d_dump(&ui_wgpu::wgpu::Ui::new(), None)).expect("serializes"), serde_json::json!({"surfaces": []}), "an engine with no window answers an empty board list");
+    assert_eq!(serde_json::to_value(build_board2d_dump(&ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En), None)).expect("serializes"), serde_json::json!({"surfaces": []}), "an engine with no window answers an empty board list");
 }
 
 #[test]
@@ -262,7 +274,7 @@ impl ui_wgpu::wgpu::SceneHost for NoSceneHost {
 /// window fails here instead of in a screenshot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 #[test]
 fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "chrome-law";
     engine.apply_tree(window_id, &stack_node(Some("root"), vec![text_node("Puzzle 3D"), text_node("Catalogue")]));
     engine.set_viewport(window_id, 640.0, 360.0);

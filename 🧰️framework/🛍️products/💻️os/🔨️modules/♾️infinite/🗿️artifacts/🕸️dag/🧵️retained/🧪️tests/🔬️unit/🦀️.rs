@@ -71,21 +71,21 @@ fn dag_opens_as_an_owned_member_through_its_own_pack_codec() {
     let encoded = crate::os_store::ArtifactPack::encode_pack(&snapshot);
     let decoded = <DagSnapshot as crate::os_store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded.nodes, snapshot.nodes, "the opener's decode round-trips the exact member snapshot");
-    let mut cursor = crate::os_store::retirement::RetireOwned::retirement(decoded);
+    let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
     for turn in 0..1_000_000 {
         match cursor.close_step(4_096) {
-            crate::os_store::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
-            crate::os_store::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
+            semio_framework_value::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
+            semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
             _ => {}
         }
         assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");
     }
-    let mut zero = crate::os_store::retirement::RetireOwned::retirement(crate::default_dag_document());
-    assert!(matches!(zero.close_step(0), crate::os_store::retirement::RetirementStep::BudgetExhausted), "a zero grant is exhaustion, never progress");
+    let mut zero = semio_framework_value::retirement::RetireOwned::retirement(crate::default_dag_document());
+    assert!(matches!(zero.close_step(0), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "a zero grant is exhaustion, never progress");
     for turn in 0..1_000_000 {
         match zero.close_step(4_096) {
-            crate::os_store::retirement::RetirementStep::Complete if zero.terminal_is_empty() => break,
-            crate::os_store::retirement::RetirementStep::BudgetExhausted => panic!("the refused turn left the cursor stuck on turn {turn}"),
+            semio_framework_value::retirement::RetirementStep::Complete if zero.terminal_is_empty() => break,
+            semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the refused turn left the cursor stuck on turn {turn}"),
             _ => {}
         }
     }

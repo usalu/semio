@@ -98,7 +98,7 @@ async fn generation_row_affordances_are_localized_in_german() {
     let mut app = app().await;
     let ids = seed_generations(&mut app, 1).await;
     dispatch(&mut app, Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: ids[0].clone() })).await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     let body = crate::editor_domain::editor_laws::context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_GENERATIONS, &view_state).await;
     for german in ["Entfernen", "Generierung umbenennen", "Generierungen", "Generierung hinzufügen"] {
         assert!(body.contains(german), "the German generations tree must carry {german}: {body}");
@@ -166,7 +166,7 @@ fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> semio_framewo
             offset,
             rows,
         }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

@@ -468,6 +468,26 @@ async fn ops_text_round_trips_every_transition_field() {
     assert_eq!(parse_ops_text(&text).unwrap(), log);
 }
 
+/// 👁 LAW: the `.ops` text carries this replica's head exactly like `.spr`'s `REC_VIEWER` — no `viewer` line on the
+/// canonical trunk tip, one line naming the alternative and/or the explicit checkpoint otherwise — and refuses a repeat.
+#[semio_framework_async_macros::async_test]
+async fn ops_text_round_trips_the_viewer_head() {
+    let mut log = sample_log().await;
+    for edit in &mut log.edits {
+        edit.meta = None;
+    }
+    assert!(!print_ops_text(&log).unwrap().lines().any(|line| line.starts_with("viewer")), "the trunk tip prints no viewer line");
+    for (line, checkpoint) in [(Some("alt-1"), None), (None, Some("ck-1")), (Some("alt-1"), Some("ck-1"))] {
+        let viewed = HistoryLog { viewer_line: line.map(str::to_string), viewer_checkpoint: checkpoint.map(str::to_string), ..log.clone() };
+        let text = print_ops_text(&viewed).unwrap();
+        assert_eq!(text.lines().filter(|line| line.starts_with("viewer")).count(), 1, "{text}");
+        let parsed = parse_ops_text(&text).unwrap();
+        assert_eq!(parsed, viewed);
+        assert_eq!(parsed.fold().unwrap().alternative.as_deref(), line);
+    }
+    assert!(parse_ops_text("doc d schema=s\nviewer line=a\nviewer checkpoint=c\n").is_err(), "one head per replica");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn ops_text_rejects_a_transition_without_hlc_or_payload() {
     for line in ["transition t actor=a dependencies=[] payload=\"AA==\"", "transition t actor=a hlc=1,2 dependencies=[] payload=\"AA==\"", "transition t actor=a hlc=1,2,3 dependencies=[]"] {
@@ -804,7 +824,8 @@ async fn fold_is_identical_after_a_binary_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn fold_falls_back_to_positional_mutation_ids_and_zero_clock_without_meta() {
-    let log = sample_log().await;
+    assert_eq!(sample_log().await.fold().unwrap().alternative, None, "a branch selects no replica's head: without a viewer line the fold is the trunk tip");
+    let log = HistoryLog { viewer_line: Some("alt-1".to_string()), ..sample_log().await };
     let fold = log.fold().unwrap();
     assert_eq!(fold.changes[0].edit_ids, vec!["edit-1".to_string(), "edit-2".to_string()]);
     assert_eq!(fold.alternative.as_deref(), Some("alt-1"));

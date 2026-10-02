@@ -556,3 +556,364 @@ spec-built, with `content_lines` always `None`.
 - **React:** `RE/🗣️Interpreter/{🟦️.tsx,🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx}`
 - **Budget:** `🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json`
 - **Ticket input:** `w1e-conformance-cases.py` (tree-row case)
+
+## Session 2 — 2026-10-01 (G6)
+
+Successor of W1-E (session 2, coordinator `⚪552b484a…`), gap **G6**: input-metadata rendering completeness. Repair-first check: no
+half-finished W1-E edit was found (the last W1-E work, follow-up 2, closed at 18:45 on 09-30; the only later diffs in `UI/**` are a peer's
+wgpu action-value refactor, left alone).
+
+Status: **IN PROGRESS** (this section is updated at every milestone).
+
+### S2.1 Contract (Rust source of record, `C/🧩️component`, `C/🛡️limits`, `C/♿️accessibility`) — DONE, tested
+
+- New types:
+  - `UiNumberScale { Linear (default), Log }`
+  - `SliderAppearance { Track (default), Dial }`
+  - `UiNumberBound { value, exclusive, refusal: Option<Label> }`
+  - `UiNumberLimits { min?, max? }`
+  - The refusal label is localized by the producer and names the bound in display units, because the contract carries no locale.
+- `SliderProps` gains `appearance`, `scale`, `precision`, `display_unit`, `display_factor` and `limits`.
+  - `min`/`max` are the travel.
+  - Without `limits`, the travel is the hard range.
+  - With `limits`, the travel is a soft range: a typed value may leave it while the limits admit it.
+- `NumberStepperProps` gains `snaps` (detents), `unit`, `display_unit`, `display_factor` and `limits`.
+- `InputProps` gains `display_factor` and `limits`. A number field's `value` stays the stored number.
+- All three props derive `Default`. External literals use `..Default::default()` (coordinator request after the 13:10 compile break).
+- Laws (Rust, each with a TS twin in `C/🧩️component/🟦️.ts`):
+  - `slider_axis_position` / `slider_axis_value`: linear or log axis, `min`/`max` exact at the ends.
+  - `dial_angle` / `dial_position`: one full counter-clockwise turn, the travel's centre at 3 o'clock, the seam at 9 o'clock. A
+    `-180°..180°` angle points where it turns.
+  - `slider_pointer_value(value, min, max, step, snaps, scale)`: the snap radius is measured on the axis (the log axis for `log`), and
+    stepped values are cleaned to the ladder decimals.
+  - `ui_number_key_value`:
+    - Arrows move one rung.
+    - Shift and PageUp/PageDown move ten rungs. A page key stops on the first detent it reaches.
+    - Any key that lands within ladder tolerance of a detent lands on it exactly. Example: arrows from 89° land on π/2 itself.
+    - Arrows still never stop on an off-path detent.
+  - `ui_number_display` / `ui_number_display_text`: shown value = stored × factor, at the given precision or 12 digits.
+  - `ui_number_typed_value`: a candidate whose display text equals the typed text keeps its exact stored value (typing `90` gives π/2),
+    otherwise the value is rounded and divided back.
+  - `ui_number_crossed_bound`: returns the crossed bound, lower first. An excluded limit refuses itself. Without declared limits the
+    bounds are the inclusive `min`/`max`.
+- Validation:
+  - New `UiContractViolation::InvalidNumberRange`, checked in `validate_core` and the streaming validator, with TS twins in the
+    retained graph validator and `UiDocumentStore`.
+  - The range is invalid when:
+    - the display factor is not positive;
+    - a log travel is not strictly positive;
+    - the limits are inverted;
+    - the limits do not admit `min`/`max` and every detent.
+  - Stepper snaps obey the detent law (`InvalidSnaps`).
+  - New limit values and display factors count in `NonFiniteNumber`.
+- Accessibility value law (Rust and TS twin):
+  - Range controls announce min/max/now in display units (cleaned to 12 digits).
+  - The value text is the display text plus the shown unit (`display_unit`, else `unit`). For example, the dial announces `90 °`.
+- Builders (`C/🏗️builder`):
+  - `SliderBuilder::{appearance, scale, precision, display_unit, display_factor, limits}`.
+  - `NumberStepperBuilder::{try_snap, unit, display_unit, display_factor, limits}`.
+  - `InputBuilder::{display_factor, limits}`. `number()` prints the exact stored number once a factor is set.
+  - `VectorInputBuilder::{display_factor, limits}`.
+- Typed catalog, copy, compare and retirement cover the new fields and types. The typed retirement depth grows from 7 to 9 (a labelled
+  bound nests two levels). The fixed path holds 16; the pin in `🌳️typed` tests was updated.
+- TS projection: SliderProps v4, NumberStepperProps v3, InputProps v4, UiContractViolation v5, plus the new SliderAppearance,
+  UiNumberBound, UiNumberLimits and UiNumberScale (91 types). The generated `🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts` was
+  regenerated with `SEMIO_TYPEGEN_OUT`; `typegen_export` passes.
+- Retained typed-wire TS decoder: new `numberLimits`/`numberBound`, and slider, stepper and input decode every new field. The fixture
+  `🧾️typed` gains 2 rows (27); the schema count was bumped to match.
+
+### S2.2 Language-agnostic tests — DONE (Rust + TS), the third-party oracle wired
+
+- `C/🧫️fixtures/🧫️number-controls`:
+  - New sections `axis` (10), `dial` (6), `display` (6), `typed` (6) and `limits` (7).
+  - New rows: `pointer` (+6: log detent, axis-relative radius, dial right angle), `keys` (+8: one-degree arrow, settle onto π/2, page
+    walks ten rungs before a far detent, page stops on a detent, log, stepper page detents), `valueTexts` (+4, including
+    valueNow/Min/Max), `documents` (+9: dial, log, stepper detents, `invalidNumberRange` cases).
+  - The schema was extended.
+  - The expectations were written by the independent Python implementation `🧪️s2-w1e-number-controls.py` (ticket root, input
+    script; `decimal` for exact-binary half-up).
+- TS twin test `C/🧪️tests/🧪️number-controls/🟦️.ts`:
+  - d3-scale `scaleLog`/`scaleLinear` are the third-party axis oracle (position and inverse) and the display-factor/read-back oracle.
+  - decimal.js remains the ladder oracle. It now cleans to the ladder decimals and applies the ladder tolerance.
+  - `d3-scale@4.0.2` and `@types/d3-scale@4.0.9` were added as root devDependencies (test oracle only). `bun install --lockfile-only`
+    added 2 lines to `bun.lock`.
+- Conformance corpus: 5 new `🧩️component` cases, generated by `w1e-conformance-cases.py` (76 cases; counts bumped in Rust and TS):
+  - `🧭️dial-with-snaps`: rad stored, ° shown, detents at ±180/±90/0.
+  - `📈️log-slider`: ticks at 0.25/0.5/1/2/4, hard `> 0` refusal.
+  - `🔁️display-factor`: stepper π/4 reads 45 °.
+  - `📍️stepper-detents`.
+  - `⛔️hard-bound-refusal`: number field, exclusive 0 / max 100.
+
+### S2.3 Renderers — React DONE, tested (wgpu: S2.5b)
+
+- React `🎚️Slider`:
+  - New props `scale`, `appearance` (an SVG dial face with radial ticks, a needle and a thumb on the rim; the pointer angle goes
+    through `dial_position`), `displayFactor`, `precision` and `limits`.
+  - Ticks, the thumb and the ready extent sit at axis positions.
+  - ARIA min/max/now are in display units.
+  - The typed readout reads display units. A refused value keeps editing, sets `aria-invalid`, and shows the refusal in a
+    `role="alert"` (`aria-describedby`). An admitted value beyond a soft travel commits unclamped.
+- React `🪜️Stepper`:
+  - New props `snapValues`, `displayFactor`, `unit` (suffix), `limits` and `aria-valuetext`.
+  - Typing goes through a draft; refusals are visible and nothing is dispatched.
+  - Arrows and page keys follow the shared key law.
+- Interpreter (`RE/🗣️Interpreter`):
+  - `SliderView` and `NumberStepperView` pass every facet.
+  - `InputView`: number fields show and read display units, and refuse unreadable or crossing values visibly (the draft is kept).
+  - The external slider unit readout is the display text plus the shown unit.
+- ui-react `tsc --noEmit` is clean; the suites are in S2.6.
+
+### S2.3b Keyboard law — coordinator decision §18 (17:00) — DONE, tested
+
+This replaces the S2.1 page rule. `ui_number_key_value` / `slider_key_value` (Rust and TS twins) now take `precision` and
+`display_factor`:
+
+- **Step:** `step`, else `10^-precision` display units divided back by the factor, else 1.
+- **Arrows:** one step on the ladder from `min`.
+- **PageUp/PageDown:** the next or previous detent; without one ahead, 10 steps.
+- **Home/End:** the bounds.
+- **Rounding:** walked values are rounded half away from zero at `precision` in display units, divided back, then clamped. A value
+  within ladder tolerance of a detent lands on the detent exactly.
+
+All callers were updated compile-atomically: React Slider, Stepper and the Interpreter's `pageKey`; the shell `nudge_by`/`slide`
+pass `precision` and `None` (S2-W2C's file); ShellHelpers' `StagedVectorField` passes `control.precision` and
+`control.displayFactor` (S2-W2B's file); wgpu events pass `input.precision`, and the slider passes `None`/`None` until S2.6 wires
+the node facets.
+
+New `keys` rows:
+- `vector-page-to-the-next-detent`: S2-W2B's case, x = 0.25 → 1.5.
+- `vector-page-down-to-the-previous-detent`
+- `page-without-snaps-walks-ten-steps`: → 0.35.
+- `arrow-step-from-precision-and-display-factor`: → 0.26.
+- `half-away-rounding-in-display-units`: ±0.025 → ±0.03.
+- `home-reaches-the-hard-minimum` and `end-reaches-the-hard-maximum`.
+- The dial rows were renamed to the detent-jump semantics. The rows retired by the generator are dropped.
+
+The decimal.js ladder oracle applies the same display rounding. To keep the stories' and consumers' literals free of the new
+facets, they are optional in the TS projection (SliderProps, NumberStepperProps and InputProps facets; the UiNumberBound refusal;
+the UiNumberLimits sides). The renderer-react stories typecheck clean again.
+
+### S2.4 Time-travel mapping (`🔌️plugin/⏪️time-travel/🦀️.rs` `🔖️Panel` region) — DONE, plugin lib compiles
+
+`time_travel_input_row` maps every facet:
+- **Slider:** scale, units, display factor, precision, detents and hard limits.
+- **Dial:** a slider with `appearance(Dial)` and the same facets. Before, it dropped snaps, units and the factor.
+- **Stepper:** detents, stored and shown unit, display factor and limits. An excluded schema bound is limits-only, never a key range
+  end.
+- **Number:** display factor and limits; the shown unit goes into the row description.
+- **Vector:** display factor, limits and the shown unit.
+- Select/Segmented, Toggle, Colour, Reference and Text are unchanged; they were already complete.
+
+New helpers:
+- `time_travel_unit_symbol`: `deg` reads `°`.
+- `time_travel_bound_excluded`
+- `time_travel_number_limits`: builds the contract limits from the schema bounds, with refusals localized through the new
+  `HistoryPanelText::{AtLeast, GreaterThan, AtMost, LessThan}` (en: "Must be greater than {bound}", de: "Muss größer als {bound}
+  sein"…). The bound is named in display units and the shown unit.
+- `time_travel_slider`
+
+`cargo check -p semio-framework-plugin --lib` ✔ (140 warnings, none left in the Panel region).
+
+### S2.5 Runtime law (puzzle 2d rotate/scale descriptors → controls) — WRITTEN, run pending
+
+The puzzle 2d corpus law `every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_fold`
+(`PZ2D/✏️editor/🧪️tests/🧪️select-tool-history`, S2-W2D's harness, region-scoped addition) now also checks each input's rendered
+contract component in the history body against a new corpus key `component`. The schema `🔣️select-tool-history` admits it.
+
+The corpus pins these facets:
+- `/angle` is a dial over ±π with step π/180, `rad` → `°` (×57.29577951308232), detents at −π, −π/2, 0, π/2 and π, and open
+  limits.
+- `/factor` is a log slider over 0.1..10 with step 0.01, precision 2, detents at 0.25/0.5/1/2/4, and a `> 0` limit refusing with
+  "Must be greater than 0".
+- `/pivotX` is a stepper with precision 2.
+
+### S2.5b wgpu renderer (`UI/🎯️targets/🧊️wgpu`, `UI/🧱️elements/{🎚️Slider,🪜️Stepper}/🎯️targets/🧊️wgpu`) — WRITTEN, compile/test pending
+
+Nodes and reconcile:
+- `ActionDescriptor`, `UiSliderNode`, `UiNumberStepperNode` and `UiInputNode` derive `Default`. Every literal ends with
+  `..Default::default()`; the codemod is `T/🧪️s2-w1e-wgpu-node-literals.py`.
+- `UiSliderNode` gains appearance, scale, precision, display unit, display factor and limits. The stepper gains detents, shown
+  unit, factor and limits. The input gains factor and limits. Reconcile maps them all.
+
+Display and geometry:
+- Node helpers `readout`/`shown_unit`/`unit_label`/`axis_position` and `value_text` depend only on `ui_contract`, so the
+  feature-less guest build compiles.
+- The external unit readout is the display text plus the shown unit.
+- Slider geometry runs on axis positions: ticks at `slider_axis_position`, thumb and range at the axis share.
+- The dial: `dial_face`/`dial_point`/`dial_tick_lines`. `slider_node_pointer_value` reads the pointer angle about the face, or
+  the track share. The retained and test painters share `paint_slider_travel`: a face, radial ticks, a needle and a rim thumb, or
+  rail/range/ticks/thumb.
+
+Keys and typed values:
+- The keyboard law receives precision and factor. Stepper PageUp/PageDown follow the law.
+- The shared verdict `events::typed_number`/`edit_refusal` drives every typed commit:
+  - an unreadable text, or one crossing a bound, is refused and never dispatched;
+  - the slider readout keeps its edit open on Enter;
+  - blur keeps a refused buffer;
+  - a stepper keeps its draft as typed and is no longer clamped while typing.
+- The refusal lives in a new `WidgetState.number_refusal`:
+  - the slider paints the message in its track cell and the draft in the error colour;
+  - the stepper draft and the number field border and draft turn the error colour;
+  - the accessibility tree puts the message in the node description.
+- Number fields with a factor show and seed display text.
+
+### S2.5c The wgpu corpus law and the laws the hard-bound rule rewrote
+
+New law `the_g6_number_control_cases_carry_and_paint_every_facet` (`UI/🧪️tests/🧪️conformance-corpus`; the shape groups now count
+54 accept cases). It pins, through the mounted retained nodes:
+- **Dial:** appearance, `rad`/`°`, five detents, readout `90`, unit readout `90 °`, open limits, painted ticks, the 90° tick pointing
+  up and the 0° tick at three o'clock, a pointer at 88° landing on π/2 exactly and one at −120° reading −120°, an arrow stepping 1°,
+  a page key jumping to π/2.
+- **Log slider:** ticks at log positions, 1 in the middle, `-5` refused with "Must be greater than 0", `20` admitted beyond the soft
+  travel.
+- **Steppers:** the radian stepper reads `45 °` and a typed `90` keeps π/2 exactly; the detent stepper pages 2 → 5 and refuses `12`
+  with "Must be at most 10 mm".
+- **Hard-bound field:** `-1`/`0`/`120`/`x` refused, `4.5` admitted.
+
+The 23:00 run of `cargo test -p semio-framework-ui --features testkit --lib` gave 764 ✔ and 7 ✘. Six were mine and are fixed in
+source:
+- **Slot budget:** `UiSurfaceRegistry` element 165872 → 165920 B, because of `WidgetState.number_refusal`. The fixture
+  `⏳️async/🧫️fixtures/🧱️boxed-fixed-slots` is updated.
+- **Shared fixtures moved to the hard-bound law** (typed out-of-range values are refused, never clamped):
+  - `⌨️number-stepper-editing`: `validEdit` is 3 → 3, and a new `refusedEdit` (9, the draft kept) is in the schema.
+  - `⌨️slider-readout-editing`: `rejected[].editing` is new; `out-of-range-enter-is-refused` keeps the editor open on `11`.
+  - The consumers are wgpu `🔬️targets-wgpu-events-unit` and React `⚙️settings-general-layout`.
+  - The retained-control-commit law is now `a value above/below the bounds is refused, the draft kept`.
+- **The Enter commit of a blur field** records its refusal.
+- **A slider readout keeps its draft on blur only after a refusal was shown** (React's `handleEditBlur` parity).
+- **The number-field commit** snaps to the step again, rounding in display units.
+- **The slider key-row law** passes precision and factor and skips `step: 0` rows, like the React slider.
+- **React Stepper arrows** dispatch on every press again (the bound at the bound, the step as a delta), as `⌨️number-stepper-editing`
+  pins.
+
+The 7th failure is not mine: `theme::tests::no_wgpu_target_paints_a_hand_written_colour_literal` flags 3 literals in
+`📐️Canvas2dHost` (peer).
+
+Re-run pending under the coordinator's CARGO HOLD (rule 26).
+
+### S2.6 Verification so far (gated, foreground, `target-nde-s2-w1e`)
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-ui-contract --tests --all-features` | 0 errors (warnings only) |
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` (after the hold, 10-02) | lib 215 ✔, carrier map 12 ✔, typegen 1 ✔ |
+| `cargo test -p semio-framework-ui-contract --features typegen --test typegen_export` (regenerate, then pass) | 1 ✔ (91 types) |
+| TS `bun -e` self-tests | number-controls 273 ✔, corpus 76 ✔, a11y twin 279 ✔, colour 31 ✔ |
+| `cargo check -p semio-framework-plugin --lib` | ✔ |
+| `cargo check -p semio-framework-ui --target wasm32-unknown-unknown` (default and `--features wgpu-engine`) | ✔ (guest gate); default re-checked ✔ on 10-02 |
+| `cargo check -p semio-framework-artifact-playbook-playbook --target wasm32-unknown-unknown` | ✔ |
+| `cargo check -p semio-framework-ui --features testkit --tests` | ✔ |
+| `cargo test -p semio-framework-ui --features testkit --lib` (23:00) | 764 ✔ / 7 ✘ — 6 mine, fixed in source (S2.5c); 1 peer (`📐️Canvas2dHost` colour literals) |
+| ui-react vitest `🎚️Slider` / `🪜️Stepper` (10-02, `SEMIO_VITEST_POLICY` from `repositoryVitestPolicyV1`) | 20 ✔ / 3 ✔ |
+| renderer vitest `⚙️settings-general-layout` (`SEMIO_TEST_LEVEL=long`) | 13 ✔ / 1 ✘ — the ✘ is a peer's `anchorPositionStyle` source pin (panel inset refactor) |
+| renderer vitest `⏪️time-travel` component / `🧪️staged-arg-controls` | 31 ✔ / 13 ✔ |
+| renderer vitest `🗣️Interpreter` corpus (`SEMIO_TEST_LEVEL=long`) | 79 ✔ |
+| ui-react `tsc --noEmit` | 0 errors |
+| renderer-react `tsc --noEmit` | none in G6 files (remaining: peer store worker `line`, Shell `idleInstalledServiceStatusV1`) |
+| `cargo test -p semio-framework-ui --features testkit --lib` (10-02, after the hold) | blocked: `semio-framework-os-kernel` does not compile (peer `RecordSpecProducer` dsl refactor, 26 errors); the `wgpu` feature depends on it |
+| puzzle 2d corpus law, plugin `time_travel` tests, wgpu renderer check | blocked by the same os-kernel break |
+
+Fixes from the 10-02 React runs:
+- **React Stepper:** a step button or an arrow while editing showed an empty field; the draft is now `null` unless typed. A refused
+  draft survives blur.
+- **React Slider:** the readout editor again carries `min`/`max`, now in display units (the hard bounds; an exclusive bound has none).
+- **`⚙️settings-general-layout`:** now also checks `⌨️number-stepper-editing.refusedEdit` in React (no dispatch, the draft kept,
+  `aria-invalid`).
+- **`StagedVectorField`** (S2-W2B's file): the precision-derived step is `10^-precision` display units divided back by the factor, and
+  the key law gets the declared step (the law derives the rest), as §18 says. `🧪️staged-arg-controls` passes the corpus rows'
+  `precision`/`factor`; the axis `step` attribute is `0.1` (one display unit of precision 1), not `1`.
+
+Open for the coordinator:
+- The live probe needs a puzzle 2d re-activation; activation is not run by this WP.
+- The shell's dialog staged-arg slider (`staged_arg_row`, S2-W2C's file) still builds a linear slider without display facets.
+
+## Session 3 — 2026-10-02
+
+Successor S3-W1E (session 3, coordinator `⚪b7db773a…`). Focus: verify → fix → close (rule 29). Status: **IN PROGRESS** (updated at
+every milestone).
+
+Repair-first check (rule 28): files under `UI/**` newer than the session-2 section — `🪜️Stepper/🟦️.tsx` (the S2.6 React Stepper
+fixes, complete; one docstring emoji made unique), `🔬️component-unit` (peer fixture move of `🎛️inline-tree-controls`), two
+`📋️project.json` (peer nx targets), `🖼️raster-residency` + `🖼️scene-raster-ownership` (peer), `📚️I18n` + react `🌐️i18n` (peer).
+No half-finished W1-E edit.
+
+### S3.1 Shared number-facet helper (staged-arg slider open item) — WRITTEN, TS green, Rust check pending
+
+One mapping from an input descriptor to its UI-contract number facets, used by the time-travel editor and by both shells' staged
+dialog fields (so React and wgpu render the same control):
+
+- Rust (`🛂️manifest/🦀️.rs`, new region `🔖️ActionArgFacets`):
+  - `pub struct ActionArgNumberFacets { min, max, step: Option<f64>, appearance: SliderAppearance, scale: UiNumberScale, unit,
+    display_unit: Option<String>, display_factor: Option<f64>, precision: Option<u16>, snaps: Vec<f64>, limits: UiNumberLimits }`
+    plus `shown_unit()`.
+  - `impl ActionArgDef { pub fn number_facets(&self, locale: Locale) -> Option<ActionArgNumberFacets> }` — `None` unless the
+    control is Number/Stepper/Slider/Dial/Vector.
+  - `pub fn action_arg_unit_symbol(unit: &str) -> String` (`deg` → `°`, `percent` → `%`).
+  - Key range: a slider's/dial's travel; a stepper's/field's/axis' hard bounds, an excluded bound `None`. Step: non-positive →
+    `None`. Precision clamped to 15. Detents: ascending, inside the key range, admitted by the limits. Limits: the schema's hard
+    bounds with the refusal copy (en/de) naming the bound in display units beside the shown unit.
+- TS twin (`🛂️manifest/🟦️.ts`, region `🔖️ActionArgFacets`): `actionArgNumberFacets(def, locale)`, `actionArgUnitSymbol`, type
+  `ActionArgNumberFacets`.
+- Fixture `🛂️manifest/🧫️fixtures/🧫️number-facets` (9 cases + schema), written by the independent Python implementation
+  `T/🧪️s3-w1e-number-facets.py`. Rust test `🧪️tests/🧪️number-facets/🦀️.rs`; TS test `🟦️.ts` beside it (npm `jsonschema` validates
+  the corpus, decimal.js recomputes each refusal's bound in display units, the contract detent/range laws hold on every row).
+- The time-travel `🔖️Panel` region now maps every number control through `number_facets`; `time_travel_unit_symbol`,
+  `time_travel_bound_excluded`, `time_travel_number_limits` and `HistoryPanelText::{AtLeast, GreaterThan, AtMost, LessThan}` are
+  deleted (the copy lives in the manifest helper); `time_travel_slider(value, &facets)`.
+
+### S3.2 Verification (gated, foreground, `target-nde-s3-w1e`)
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-ui-contract --tests --all-features` | ✔ (warnings only) |
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` | lib 215 ✔, carrier map 12 ✔, typegen 1 ✔ |
+| `cargo check -p semio-framework-ui --features testkit --tests` (native wgpu, S2.5b) | ✔ (132 warnings) |
+| `cargo test -p semio-framework-ui --features testkit --lib` (S2.5b + S2.5c) | 769 ✔ / 2 ✘: peer `📐️Canvas2dHost` colour literals (theme law); `the_history_editor_controls_project_their_corpus_accessibility` "a11y.choices: layout settles" (investigating) |
+| `bun test ./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️number-facets/🟦️.ts` | 13 ✔ |
+| ui-react `bun ./📜️script.ts test 🎚️Slider 🪜️Stepper` (`SEMIO_VITEST_POLICY` from `repositoryVitestPolicyV1`, budget 540 s) | 2 files, 23 ✔ |
+| renderer-react `bun ./📜️script.ts test 🗣️Interpreter 🧪️staged-arg-controls ⏪️time-travel/🧪️tests/🧩️component ⚙️settings-general-layout` (`SEMIO_TEST_LEVEL=long`) | 248 ✔ / 3 ✘ — all peer: `⚙️settings-general-layout` `anchorPositionStyle` source pin and 2 `📐️overlay-flow` Interpreter laws (Overlay inset/size now `calc(n * var(--ui-spacing))`, the tests still expect rem) |
+| `cargo check -p semio-framework --lib --tests` (manifest helper + its test) | ✔ (12:08) |
+| `cargo check -p semio-framework-plugin --lib`, `cargo check -p semio-framework-ui --target wasm32-unknown-unknown`, UI lib re-run | BLOCKED since 12:21 by peer breaks: `🧬️schema/📇️registry/🦀️.rs:349` E0428 duplicate `ArtifactSchemaRegistry` + E0432 `semio_framework_os_kernel`; `📡️replication/🎮️mutation/🦀️.rs:218` E0425 `StateClass`; (12:02–12:24) os-kernel `🏪️store/🦀️.rs:3353` E0433 `os_schema_composition` — reported to the coordinator |
+
+### S3.3 Fixes
+
+- **`the_history_editor_controls_project_their_corpus_accessibility` "a11y.choices: layout settles"** — the corpus `mount` helper
+  busy-polled the layout worker pool 200 000 times; under fleet load (load 70+) the worker had not delivered by then. The loop is
+  now bounded by a 120 s wall deadline and yields the thread between polls (`🧪️conformance-corpus/🦀️.rs`). Re-run pending (tree red).
+
+### S3.4 Gap N2 (editor limits) — WRITTEN, verification pending (tree red from peers)
+
+Agreed with S3-W2A (one paging mechanism = tree windows, no new verb, no view state) and relayed to the coordinator.
+
+- **Verb shape:** `historyEditInput{path, value?, edit?: "insert"|"remove", generation?}`. No `edit` sets the input, as before.
+  `insert` puts `value` (absent → the item schema's default) at `<list>/<i>` or `<list>/-`; `remove` drops the item at
+  `<list>/<i>`. Validation is unchanged: `minItems`/`maxItems` refuse through the normal refused row (on the list's row).
+  - Manifest `🔖️HistoryEdit`: `HISTORY_EDIT_ARG_EDIT`, `HISTORY_EDIT_INPUT_INSERT`/`_REMOVE`; the `historyEditInput` definition
+    has `value` optional and an `edit` select. TS twin constants, `🧫️history-edit-actions` fixture + schema, and the Rust and TS
+    vocabulary laws are updated (bun 3 ✔).
+- **TT `🔖️Pointer`:**
+  - `time_travel_pointer_insert` / `time_travel_pointer_remove` (private `time_travel_pointer_get_mut`).
+  - `time_travel_default_value`.
+  - `TimeTravelInputRow.{list, item}` with `TimeTravelList { len, addable }` and `TimeTravelListItem { index, removable }`.
+  - `time_travel_input_rows` expands a list of ANY item kind: the list row, then per item an item row (an object item: header
+    + fields; any other item: its own value row).
+- **TT `🔖️Driver`:** `draft_time_travel_input(path, value: Option, edit: Option, …)`. The list edit resolves the list input
+  (`Array` item schema, or a reference list element) and inserts or removes, then runs the same verdict/rebuild tail.
+- **TT `🔖️Panel`:**
+  - (a) `framework.history.editor.inputs` is `tree_window_indexed_section` over every row.
+    `TIME_TRAVEL_EDITOR_INPUT_ROWS` and the "N more inputs" row are deleted.
+  - (b) A reference input row is a `tree_window_indexed_item`: [Use selection, one chip row per id (label = entity name; Remove =
+    `edit: remove` at `<pointer>/<i>`, many only, disabled at `minItems`), Clear if nullable]. `TIME_TRAVEL_PANEL_CHIPS` and the
+    overflow row are deleted; the remove args are O(1) (no list copy per chip).
+  - (c) The list row holds Add item (disabled at `maxItems`, reads "Items: n"). An object item row holds Remove item; any other
+    item nests a Remove item row (disabled at `minItems`).
+  - (d) A select/segmented input with more than `UI_FIXED_LIST_ITEMS` options is a windowed list of option rows (check icon on
+    the chosen one). ≤ 32 options stay a Select. Option search is deferred: every option is reachable by scrolling.
+  - New copy `HistoryPanelText::{AddItem, RemoveItem, ItemCount}` (en/de); `MoreInputs`/`MoreReferences` are deleted.
+    `time_travel_clear_args` became `time_travel_value_args`; new `time_travel_list_edit_args`.
+  - `time_travel_editor_sections(.., windows, ..)`: the one call line in `ui_history_panel` passes `&windows`.
+- **Laws:**
+  - New `list_inputs_add_and_remove_items_within_their_bounds` (plugin `🧪️time-travel`).
+  - Updated: `input_pointers_and_host_values_take_the_declared_shape` (list + item rows), the chips law (chip rows, window
+    total ≥ 11, remove by index), the session-leads law (inputs are a window over every row).
+  - The puzzle 2d `useSelection` corpus step finds the reference row (`….row`).

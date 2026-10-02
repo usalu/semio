@@ -7,7 +7,8 @@ use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::lowpoly_window_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{utility_param_bool, utility_params_value, GUMBALL_MOVE_PARAM, GUMBALL_ROTATE_PARAM, GUMBALL_SCALE_PARAM};
-use semio_framework_plugin::{LabelText, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The three handle-group switches as the scene publishes them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

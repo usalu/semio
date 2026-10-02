@@ -20,6 +20,7 @@ pub(super) enum MapValue {
 }
 
 #[derive(Debug, Serialize, Deserialize, ToValue, FromValue)]
+#[value(retire_with = "std::mem::drop")]
 pub(super) enum MapMutation {
     ReplaceMap {
         map: BTreeMap<String, MapValue>,

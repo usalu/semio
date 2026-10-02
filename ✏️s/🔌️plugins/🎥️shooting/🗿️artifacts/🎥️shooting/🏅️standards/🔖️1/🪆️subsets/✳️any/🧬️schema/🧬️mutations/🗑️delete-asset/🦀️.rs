@@ -22,8 +22,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for DeleteAsset {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete asset \"{}\"", self.id), &format!("Asset \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete asset \"{}\"", self.id), &format!("Asset \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -42,7 +42,7 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
     if keys != fixture.body_keys.iter().cloned().collect() {
         return Err(format!("{} manifest returned the wrong surface inventory", fixture.app_id));
     }
-    let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::default() };
+    let view = ViewModel { locale: Locale::En, terminology: Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     for key in &fixture.body_keys {
         let tree = app.render(key, None, &view).await.map_err(|error| format!("{} {key}: {error:?}", fixture.app_id))?;
         let projection = project_and_retire_fixture_tree(tree).map_err(|error| format!("{} {key} observation and retirement: {error}", fixture.app_id))?;

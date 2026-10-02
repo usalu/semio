@@ -4,7 +4,8 @@ mod tests {
     use semio_framework::{AppRole, ArtifactDialect, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
     use std::sync::Arc;
     use store::{MemoryBackbone, MemoryBackbonePort};
-    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
+    use semio_framework_ui_locale::LocalizedLabel;
+    use ui_wgpu::wgpu::SurfaceKind;
 
     #[test]
     fn loads_plugin_apps_into_registry() {
@@ -188,7 +189,7 @@ mod tests {
             },
             artifact_uri: "program://draw".into(),
         });
-        let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
+        let instance_id = host.create_instance("draw-play", "{}".into(), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("instance");
         let generation_before = host.instance(instance_id).expect("instance").generation;
         let event = host.hot_swap_plugin(LoadedProgram {
             plugin_id: "draw".into(),
@@ -284,7 +285,7 @@ mod tests {
             },
             artifact_uri: "program://draw".into(),
         });
-        let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
+        let instance_id = host.create_instance("draw-play", "{}".into(), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("instance");
         let generation_before = host.instance(instance_id).expect("instance").generation;
         let event = host.hot_swap_plugin(LoadedProgram {
             plugin_id: "draw".into(),

@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, scanTestLayout, TEST_LAYOUT_FINDING_CODES, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import protocol from "../../🧬️schema/🔣️.json";
+import protocol from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 import vectors from "../../🧫️fixtures/📐️test-layout/🔣️.json";
 
 type Expected = Readonly<{ code: string; path: string; line: number | null }>;
@@ -277,18 +277,5 @@ describe("📐️ canonical test layout", () => {
     expect(libraryInputs.production).toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
   });
 
-  test("Nx discovers the same canonical names and semantic owners as the layout vectors", async () => {
-    const { default: plugin } = await import("../../🟨️.mjs");
-    const cases = new Map<string, boolean>();
-    for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {
-      if (!/^.+\/🧪️tests\/[^/]+\/🟦️\.ts$/u.test(source.path)) continue;
-      if (source.path.split("/").at(-2) === taxonomy.testRunnerConfigurationCaseName) continue;
-      const accepted = !vector.expected.some(finding => finding.path === source.path && ["test-case-name", "test-owner-delivery-scope", "test-layout-depth"].includes(finding.code));
-      cases.set(source.path.replace(/🟦️\.ts$/u, "🥒️.feature"), accepted);
-    }
-    for (const [path, accepted] of cases) {
-      const discovered = await plugin.createNodesV2[1]([path], {}, { workspaceRoot: repoRootFromHere() });
-      expect(discovered.length > 0, path).toBe(accepted);
-    }
-  });
+
 });

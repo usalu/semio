@@ -1,6 +1,3 @@
-/** mutation payload — mirrors `ChangeScriptLimits`. */
-export interface ChangeScriptLimits {
-  newMaxSteps: number;
-  newMaxRecursion: number;
-  newTimeoutMs: number;
-}
+/** 🚦️ `change-script-limits` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseChangeScriptLimits, type ChangeScriptLimits } from "../🧬️schema/🟦️.ts";

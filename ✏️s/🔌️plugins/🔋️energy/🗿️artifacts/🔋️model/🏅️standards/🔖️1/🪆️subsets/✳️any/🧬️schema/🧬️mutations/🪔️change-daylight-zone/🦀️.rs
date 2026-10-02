@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change daylight zone {} illuminance target to {:?}", self.id.0, self.new_illuminance_target_lux), &format!("Soll-Beleuchtungsstärke von Tageslichtzone {} auf {:?} ändern", self.id.0, self.new_illuminance_target_lux))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change daylight zone {} illuminance target to {:?}", self.id.0, self.new_illuminance_target_lux), &format!("Soll-Beleuchtungsstärke von Tageslichtzone {} auf {:?} ändern", self.id.0, self.new_illuminance_target_lux))
     }
 
     fn target(&self) -> Vec<String> {

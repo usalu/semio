@@ -170,7 +170,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | clears-the-d2f81a        | replace-trajectory        | 🛣️replace-trajectory/🧹️clears             |
       | drops-the-6436a8         | replace-trajectory        | 🛣️replace-trajectory/🕳️drops              |
       | swaps-in-a-three-49b17f  | replace-trajectory        | 🛣️replace-trajectory/🛣️swaps       |
-      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines-the-cam-0eaef0 |
+      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines2     |
       | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera/🔍️refines     |
       | raises-the-dense-ddb263  | update-dense-params       | 🌁update-dense-params/🔬️raises       |
       | sharpens-the-25044c      | update-dense-params       | 🌁update-dense-params/🧊️sharpens           |
@@ -382,7 +382,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | clears-the-d2f81a        | replace-trajectory        | 🛣️replace-trajectory/🧹️clears             |
       | drops-the-6436a8         | replace-trajectory        | 🛣️replace-trajectory/🕳️drops              |
       | swaps-in-a-three-49b17f  | replace-trajectory        | 🛣️replace-trajectory/🛣️swaps       |
-      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines-the-cam-0eaef0 |
+      | refines-the-cam-0eaef0   | update-camera-calibration | 🛠️update-camera/🔍️refines2     |
       | refines-the-9fd25a       | update-camera-calibration | 🛠️update-camera/🔍️refines     |
       | raises-the-dense-ddb263  | update-dense-params       | 🌁update-dense-params/🔬️raises       |
       | sharpens-the-25044c      | update-dense-params       | 🌁update-dense-params/🧊️sharpens           |

@@ -26,6 +26,8 @@ pub(crate) mod context {
     pub fn equation_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_equation_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("mathematical", EquationPlayApp, equation_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ Bound to the live runtime instance `meta("local")` addresses. Binding is mandatory now that
@@ -89,7 +91,7 @@ pub(crate) mod context {
     pub async fn render(app: &mut MathApp, body_key: &str) -> String {
         // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
         // `Debug` gives every test caller here the same "does the render mention X" substring check.
-        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+        format!("{:?}", app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render"))
     }
 }
 
@@ -138,7 +140,7 @@ fn retained_schema_contract_and_factory_identity_are_exact() {
         assert_eq!(key.controller_id, "s.mathematical.equation@1/*#editor");
         assert_eq!(key.tool_id, *tool_id);
     }
-    assert_eq!(<EquationPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 7);
+    assert_eq!(<EquationPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 8);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -164,10 +166,10 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: maximum_text, seed: None }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: excessive_text, seed: None }), &snapshot).is_none());
 
-    let operations = |count: usize| json::to_string(&json::array(std::iter::repeat(json::object([])).take(count)));
+    let operations = |count: usize| json::to_string(&json::array(std::iter::repeat(json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))])).take(count)));
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(EQUATION_MAX_EDIT_OPERATIONS) }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(EQUATION_MAX_EDIT_OPERATIONS + 1) }), &snapshot).is_none());
-    let delete = |count: usize| json::to_string(&json::array([json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array((0..count).map(|index| Value::from(format!("n{index}")))))])]));
+    let delete = |count: usize| json::to_string(&json::array([json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array((0..count).map(|index| Value::from(format!("n{index}"))))), ("synapseIds".to_string(), json::array([]))])]));
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(EQUATION_MAX_DELETE_IDS) }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(EQUATION_MAX_DELETE_IDS + 1) }), &snapshot).is_none());
     let exact_json = format!("[{}]", " ".repeat(EQUATION_MAX_EDIT_JSON_BYTES - 2));
@@ -185,8 +187,8 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
         operations_json: json::to_string(&json::array([
             json::object([("operation".to_string(), Value::from("move")), ("gestureId".to_string(), Value::from("node-drag:7")), ("nodeIds".to_string(), json::array([Value::from("n7")])), ("dx".to_string(), Value::from(41.0)), ("dy".to_string(), Value::from(42.0))]),
-            json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array([Value::from("n1"), Value::from("n3")]))]),
-            json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(5.0)), ("y".to_string(), Value::from(6.0))]),
+            json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array([Value::from("n1"), Value::from("n3")])), ("synapseIds".to_string(), json::array([]))]),
+            json::object([("operation".to_string(), Value::from("connect")), ("sourceNodeId".to_string(), Value::from("n2")), ("sourcePortId".to_string(), Value::from("")), ("targetNodeId".to_string(), Value::from("n5")), ("targetPortId".to_string(), Value::from(""))]),
         ])),
     });
     let operation = retained_operation(13);
@@ -256,8 +258,8 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     let graph = graph_with_shape(EQUATION_MAX_NODES, EQUATION_MAX_EDGES);
     let snapshot = crate::equation_snapshot_with_state(&graph, &EquationGeometry::default());
     let ids = (0..EQUATION_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
-    let mut operations = vec![json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str()))))])];
-    operations.resize(EQUATION_MAX_EDIT_OPERATIONS, json::object([]));
+    let mut operations = vec![json::object([("operation".to_string(), Value::from("delete")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str())))), ("synapseIds".to_string(), json::array([]))])];
+    operations.resize(EQUATION_MAX_EDIT_OPERATIONS, json::object([("operation".to_string(), Value::from("disconnect")), ("synapseId".to_string(), Value::from("e1"))]));
     let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json::to_string(&json::array(operations)) });
     let operation = retained_operation(23);
     let extent = equation_command_extent(&command, &snapshot).expect("maximum retained extent");
@@ -285,6 +287,26 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
 }
 //#endregion 🔖️RetainedCommands
 
+//#region 🔖️NodeGraphRows
+/// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
+const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+
+/// ⚖️ LAW: the equation guest decodes the renderer's committed node-graph rows through the ONE shared decoder: every refused
+/// row is refused, every accepted row its graph carries (`move`, `connect`, `disconnect`, `delete`) decodes, and the
+/// `setSlider`/`insertPort` rows it has no widget for are refused by name.
+#[test]
+fn the_renderer_row_fixture_decodes_exactly() {
+    let fixture: Value = json::parse(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
+        assert_eq!(EquationEditOperation::from_value(&case["row"]).is_ok(), carried, "accepted row {:?}", case["id"].as_str());
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        assert!(EquationEditOperation::from_value(&case["row"]).is_err(), "refused row {:?} decoded", case["id"].as_str());
+    }
+}
+//#endregion 🔖️NodeGraphRows
+
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
 /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
@@ -296,7 +318,7 @@ async fn command_ids_are_unique_and_the_full_row_set_is_covered() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 7, "every EquationCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 8, "every EquationCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -335,10 +357,11 @@ pub(super) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::document_dsl::math_graph_to_dsl(&EquationGraph::default()), geometry: EquationGeometry::default() }),
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
-        EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
+        EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"move","gestureId":"node-drag:1","nodeIds":["a"],"dx":12.0,"dy":34.0}]"#.into() }),
         EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
         EquationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
+        EquationCommand::AddNode(crate::editor::equation::commands::add_node::AddNode { x: 12.0, y: 34.0 }),
     ]
 }
 

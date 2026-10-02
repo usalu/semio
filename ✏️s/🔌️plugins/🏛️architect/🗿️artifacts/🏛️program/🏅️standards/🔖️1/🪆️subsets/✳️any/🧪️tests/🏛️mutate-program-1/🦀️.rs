@@ -5,7 +5,7 @@
 //! it never links the subject implementation. The older Python second implementation remains
 //! supplemental evidence, while this carrier reader is the qualifying third-party oracle. The laws
 //! this half claims are asserted inside the subject handlers through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module, whose helpers are dependency-free
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module, whose helpers are dependency-free
 //! and format-neutral by their own doc comment; the Python half restates them by hand in its own
 //! `🔖️Laws` region, because the Python host exposes no `law` module.
 //!
@@ -39,7 +39,7 @@ fn archive_projection(mut entries: Vec<(String, Vec<u8>)>) -> Result<semio_repo_
 
 fn archive_oracle(ctx: &semio_repo_test_host::Context) -> Result<semio_repo_test_host::Outcome, String> {
     let raw = ctx.subject_raw_bytes("rust")?;
-    let entries = semio_s_plugin_stdio_test_oracle::archive::read_zip_entries(&raw)?.into_iter().map(|entry| (entry.name, entry.bytes)).collect();
+    let entries = semio_s_plugin_stdio_archive_test_oracle::read_zip_entries(&raw)?.into_iter().map(|entry| (entry.name, entry.bytes)).collect();
     Ok(semio_repo_test_host::Outcome::with_raw(raw, archive_projection(entries)?))
 }
 
@@ -349,7 +349,7 @@ mod subject {
     };
     use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::snapshot::{parse_program_dsl, print_program_dsl};
     use semio_s_artifact_architect_program::ProgramSnapshot;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     fn block_on<F: std::future::Future>(future: F) -> F::Output {
         let mut future = std::pin::pin!(future);

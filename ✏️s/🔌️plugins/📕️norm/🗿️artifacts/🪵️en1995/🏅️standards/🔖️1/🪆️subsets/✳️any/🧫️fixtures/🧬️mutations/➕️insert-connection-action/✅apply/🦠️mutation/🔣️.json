@@ -1,12 +1,12 @@
 {
   "InsertConnectionAction": {
+    "connectionId": "conn-C1",
+    "index": 99,
     "action": {
-      "fKN": 8000.0,
       "id": "w",
       "kind": "permanent",
-      "loadDuration": "permanent"
-    },
-    "connectionId": "conn-C1",
-    "index": 99
+      "loadDuration": "permanent",
+      "fKN": 8000.0
+    }
   }
 }

@@ -257,7 +257,7 @@ fn load_registry(ui: &Ui, window_id: &str, body: Rect) -> InputState<ActionDescr
 fn mount(case: &Value) -> (Ui, InputState<ActionDescriptor>, String, Rect) {
     let window_id = case["windowId"].as_str().expect("window id").to_string();
     let body = body_rect(case);
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree(&window_id, &ui_node(&case["tree"]));
     drive(&mut ui, &window_id, body, &mut atlas);

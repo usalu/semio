@@ -25,10 +25,10 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Drag
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.ats.len() {
-            1 => protocol::LocalizedLabel::native("Drag 1 node", "1 Knoten ziehen"),
-            count => protocol::LocalizedLabel::native(&format!("Drag {count} nodes"), &format!("{count} Knoten ziehen")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Drag 1 node", "1 Knoten ziehen"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {count} nodes"), &format!("{count} Knoten ziehen")),
         }
     }
     fn target(&self) -> Vec<String> {

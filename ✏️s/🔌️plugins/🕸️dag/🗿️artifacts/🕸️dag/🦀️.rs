@@ -213,7 +213,7 @@ impl From<semio_framework_artifact_infinite_dag::DagCamera> for DagCamera {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.dag".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("DAG", "DAG"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("DAG", "DAG"),
         source_format: DAG_DOCUMENT_SCHEMA.into(),
         component_kind: "dag".into(),
         dimension: "graph".into(),
@@ -361,7 +361,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧪️rejects-a-duplicate-node-id/🦀️.rs"]
                             mod tests_rejects_a_duplicate_node_id;
                         }
                         #[path = "."]
@@ -528,6 +528,9 @@ pub mod standards {
                             pub mod inverse;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🧪️rejects/🦀️.rs"]
+                            mod tests_rejects_dragging_missing_nodes;
                         }
                         #[path = "."]
                         pub mod set_node_positions {
@@ -537,6 +540,9 @@ pub mod standards {
                             pub mod inverse;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🧪️tests/🧪️rejects/🦀️.rs"]
+                            mod tests_rejects_placing_a_missing_node;
                         }
                         #[path = "."]
                         pub mod set_slider {
@@ -546,6 +552,9 @@ pub mod standards {
                             pub mod inverse;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️set-slider/🧪️tests/🧪️rejects/🦀️.rs"]
+                            mod tests_rejects_scrubbing_a_missing_slider;
                         }
                     }
                 }

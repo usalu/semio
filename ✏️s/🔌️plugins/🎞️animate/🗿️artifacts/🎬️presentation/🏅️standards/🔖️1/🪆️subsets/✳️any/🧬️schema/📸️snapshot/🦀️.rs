@@ -1,12 +1,14 @@
 //! 🧬️ Presentation snapshot schema — persistent fields only.
 //!
 //! `PresentationSnapshot` carries the shared `source` figure, its `tiles`, and two owned composed-child
-//! handles (`presentation`/`animation`). `ArtifactPack` encodes its derived `dsl::DslRecord` spec; the
-//! hex/bracket text codec lives in `../../../../🚪️io/📸️snapshot/📝️text/🦀️.rs`. This file keeps only the
-//! type + its pure transforms.
+//! handles (`presentation`/`animation`). Both native encodings use the derived literal
+//! `dsl::DslRecord` shape, including the complete child reference fields.
 
 use crate::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted presentation document snapshot — a composed `presentation` deck (shared source figure +
@@ -64,6 +66,10 @@ pub fn demo_snapshot() -> PresentationSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

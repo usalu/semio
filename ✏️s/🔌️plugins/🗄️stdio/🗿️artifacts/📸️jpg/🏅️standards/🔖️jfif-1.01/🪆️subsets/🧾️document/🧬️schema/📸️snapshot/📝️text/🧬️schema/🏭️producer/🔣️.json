@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.stdio.jpg.snapshot-schema-producer/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "fields",
+    "maximumBytes",
+    "tinyMaximumBytes",
+    "cancelAt"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.jpg.snapshot-schema-producer/v1"
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "key",
+          "shape",
+          "optional"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "shape": {
+            "enum": [
+              "Text",
+              "UInt",
+              "Bytes64",
+              "Bool",
+              "Value"
+            ]
+          },
+          "optional": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tinyMaximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    }
+  }
+}

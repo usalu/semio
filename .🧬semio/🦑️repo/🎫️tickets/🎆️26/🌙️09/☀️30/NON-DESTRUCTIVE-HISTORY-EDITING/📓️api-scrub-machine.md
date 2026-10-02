@@ -93,3 +93,22 @@ by position `"0"`…, retract the rest); the release commits ONE edit (`Committe
 leaves); a release from idle is a one-shot press; the id is minted at the press's first upsert; another press or tool in
 the window, or a moved document revision, drops the open press with zero trace and reopens; a late tick of a closed
 (released or cancelled) press is a silent no-op; windows are independent; `abort_all`/`retain_windows` drop presses.
+
+## 4. Config lanes of a press (design §20.1, S3-CONTROLS 2026-10-02)
+
+A press is not only a document gesture: a verb answering a tick with `config_mutations` (app config) or
+`window_config_mutations` (window config) gets the same treatment, so a config slider, a viewer camera stream or a playback
+scrub needs no coalesce key and no amend:
+
+- tick: the emit's config lanes leave the emit and are held per window as the press's provisional config (each tick replaces
+  the previous one — absolute values); every render seam reads `config_overlay_or(committed)` /
+  `window_config_overlay_or(committed window snapshot)` (overlays folded with `fold_leaf`, retired through the config store /
+  `WindowConfigOwnerRegistry::retire_preview`, never dropped plainly);
+- release: the release's own config lanes publish as ONE config edit (coalesce key cleared); a late release (or tick) of the
+  press the window already closed stays silent;
+- abort (`blur`, `captureLost`, `frozen`, `retired`, another press in the window): the held lanes leave with zero trace;
+- host-configuration verbs (`ArtifactApp::host_configuration_mutation`) ride the same press;
+- config edits are never history rows (L4). Law: energy `a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row`.
+
+Hosts: send `{value…, gesture, commit}` exactly as for a document control (React lane / wgpu presses); a camera whose host already
+dispatches once per settled gesture needs nothing more.

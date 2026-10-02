@@ -3,7 +3,11 @@ use crate::editor::fem3d::commands::set_active_example::SetActiveExample;
 use crate::editor::fem3d::terminology::fem3d_labels;
 use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, render as render_body};
 use crate::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::{ComponentTree, Locale, Terminology, TreeWindows, ViewModel};
+use semio_framework_plugin::ComponentTree;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::ViewModel;
 
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
@@ -26,7 +30,7 @@ fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
 }
 
 fn english(doc: &Fem3dSnapshot, ids: &[&str]) -> String {
-    panel(doc, ids, &ViewModel::default())
+    panel(doc, ids, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🔎️ The projected node carrying `key`, anywhere under the body.
@@ -191,7 +195,7 @@ async fn nothing_selected_renders_the_document_summary_3d() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_resolves_every_field_label_the_inspector_binds_3d() {
-    let view_state = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..Default::default() };
+    let view_state = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(Locale::De, Terminology::Native) };
     let doc = demo();
     assert!(panel(&doc, &["concrete"], &view_state).contains("Querdehnzahl"));
     assert!(panel(&doc, &["sol1"], &view_state).contains("Netzweite"));

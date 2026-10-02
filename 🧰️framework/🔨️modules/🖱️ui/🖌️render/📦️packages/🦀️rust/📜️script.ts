@@ -1,4 +1,11 @@
 #!/usr/bin/env bun
+import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { resolve } from "node:path";
+import { mkdirSync, mkdtempSync } from "node:fs";
+import { captureOwnedProcess } from "../../../../🏃️process/📥️capture/🟦️.ts";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-render` suite, the browser-target gate, and the dependency
  * boundary assertion that keeps this crate backend-neutral.
  *
@@ -7,7 +14,6 @@
  * dependency tree. That is a property no type signature can express, so it is asserted here. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runCmd, runProbe } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -23,18 +29,18 @@ const FORBIDDEN_DEPENDENCIES: ReadonlyArray<readonly [string, string]> = [
 
 //#region 🔖️test
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
-    runCmd("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], { cwd: packageRoot, budgetMs: buildBudgetMs() });
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env));
+    await runOwnedCommand("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }
 //#endregion 🔖️test
 
 //#region 🔖️check-wasm
 class CheckWasmScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["check", "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"], { cwd: packageRoot, budgetMs: buildBudgetMs() });
+  async run(): Promise<void> {
+    await runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }
 //#endregion 🔖️check-wasm
@@ -42,21 +48,35 @@ class CheckWasmScript extends BundleScript {
 //#region 🔖️boundaries
 /** 🧭️ Fails when a forbidden crate reaches this crate's normal (non-dev, non-build) dep tree. */
 class BoundariesScript extends BundleScript {
-  run(): void {
+  async run(): Promise<void> {
+    const { artifactDirectory } = readCargoTestPolicyV1(process.env);
+    mkdirSync(artifactDirectory, { recursive: true });
+    const evidence = mkdtempSync(resolve(artifactDirectory, "ui-render-boundaries-"));
+    let cancelled = false;
+    const cancel = (): void => { cancelled = true; };
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    let result;
+    try {
+      console.log("Inspecting ui-render normal dependencies (0/1).");
+      result = await captureOwnedProcess("cargo", ["tree", "--manifest-path", resolve(packageRoot, "Cargo.toml"), "-p", "semio-framework-ui-render", "--edges", "normal", "--prefix", "none", "--format", "{p}"], { cwd: packageRoot, env: process.env, budgetMs: buildBudgetMs(), maxOutputBytes: 4 * 1024 * 1024, stdoutPath: resolve(evidence, "stdout.log"), stderrPath: resolve(evidence, "stderr.log"), cancelled: () => cancelled });
+    } finally {
+      process.removeListener("SIGINT", cancel);
+      process.removeListener("SIGTERM", cancel);
+    }
+    if (result.reason !== "exit" || result.status !== 0) throw Error(`Cannot inspect ui-render dependencies: ${result.reason} (${result.status}). ${result.stderr}`);
+    const dependencies = new Set(result.stdout.trim().split(/\r?\n/u).filter(Boolean).map(line => line.trim().split(/\s+/u)[0]));
+    if (!dependencies.has("semio-framework-ui-render")) throw Error("Cargo dependency inventory does not contain its requested ui-render root");
     const violations: string[] = [];
     for (const [crate, reason] of FORBIDDEN_DEPENDENCIES) {
-      // 🧭️ `cargo tree --invert <crate>` fails with "did not match any packages" when the crate is
-      // absent from the graph entirely — that failure IS the passing state. A zero exit means cargo
-      // resolved it and printed the dependents, i.e. the crate reaches us.
-      const result = runProbe("cargo", ["tree", "-p", "semio-framework-ui-render", "--edges", "normal", "--prefix", "none", "--invert", crate], { cwd: packageRoot, budgetMs: buildBudgetMs() });
-      if (result.status === 0 && result.stdout.trim().length > 0) violations.push(`${crate}: ${reason}`);
+      if (dependencies.has(crate)) violations.push(`${crate}: ${reason}`);
     }
     if (violations.length > 0) {
       console.error("semio-framework-ui-render must stay backend-neutral, but its dependency tree contains:");
       for (const violation of violations) console.error(`  - ${violation}`);
-      process.exit(1);
+      throw Error("ui-render dependency boundaries are violated");
     }
-    console.log(`ui-render dependency boundaries hold (${FORBIDDEN_DEPENDENCIES.length} forbidden crates absent).`);
+    console.log(`ui-render dependency boundaries hold (1/1; ${FORBIDDEN_DEPENDENCIES.length} forbidden crates absent).`);
   }
 }
 //#endregion 🔖️boundaries

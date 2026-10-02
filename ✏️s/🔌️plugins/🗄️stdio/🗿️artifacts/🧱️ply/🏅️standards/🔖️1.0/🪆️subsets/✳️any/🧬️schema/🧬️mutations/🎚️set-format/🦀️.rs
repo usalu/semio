@@ -20,8 +20,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetFormat {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::SetFormat(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set format", "Format setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set format", "Format setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

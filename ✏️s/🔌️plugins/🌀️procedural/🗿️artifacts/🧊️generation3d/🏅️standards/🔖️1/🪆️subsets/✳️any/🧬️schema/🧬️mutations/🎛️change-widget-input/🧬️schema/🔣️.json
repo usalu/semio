@@ -1,0 +1,480 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-widget-input/schema.json",
+  "title": "ChangeWidgetInput",
+  "description": "The `change-widget-input` mutation record — the ABSOLUTE typed literal one unconnected operator input of the generator graph (or a text source's text) is set to: an inspector field committed on blur, or a parameter a mesh edit inserts its operator with. Numbers are finite; the diff refuses a wired input or a literal of another declared type.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "number",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "step": 0.1,
+            "precision": 3,
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Number",
+          "de": "Zahl"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "text",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 1048576,
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "boolean",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "On",
+              "de": "Ein"
+            },
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Switch",
+          "de": "Schalter"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "point",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Point",
+              "de": "Punkt"
+            },
+            "step": 0.1,
+            "precision": 3,
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Point",
+          "de": "Punkt"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
+          "const": "vector",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "x-semio-ui": {
+            "widget": "vector",
+            "role": "value",
+            "label": {
+              "en": "Vector",
+              "de": "Vektor"
+            },
+            "step": 0.1,
+            "precision": 3,
+            "group": "value",
+            "order": 40
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Vector",
+          "de": "Vektor"
+        }
+      }
+    }
+  ]
+}

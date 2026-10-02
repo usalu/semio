@@ -1,5 +1,155 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/snapshot/text.json",
-  "title": "WiresSnapshotText",
-  "type": "object"
+  "title": "WiresNativeDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixtureRoot",
+    "metaRoot",
+    "content",
+    "nodes"
+  ],
+  "properties": {
+    "fixtureRoot": {
+      "$ref": "#/$defs/index"
+    },
+    "metaRoot": {
+      "$ref": "#/$defs/index"
+    },
+    "content": {
+      "$ref": "#/$defs/child"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    }
+  },
+  "$defs": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "target"
+      ],
+      "properties": {
+        "childId": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/index"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "items",
+        "members"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "null",
+            "boolean",
+            "unsigned",
+            "signed",
+            "float",
+            "text",
+            "bytes",
+            "array",
+            "object"
+          ]
+        },
+        "boolean": {
+          "type": "boolean"
+        },
+        "unsigned": {
+          "$ref": "#/$defs/index"
+        },
+        "signed": {
+          "type": "integer"
+        },
+        "float": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "pattern": "^(nan64_[0-9a-fA-F]{16}|-?inf)$"
+            }
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/index"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/member"
+          }
+        }
+      }
+    }
+  }
 }

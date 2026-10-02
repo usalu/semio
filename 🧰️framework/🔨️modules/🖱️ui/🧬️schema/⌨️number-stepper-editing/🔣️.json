@@ -3,7 +3,7 @@
   "title": "Number Stepper Editing",
   "type": "object",
   "additionalProperties": false,
-  "required": ["uniform", "mixed", "validEdit", "boundedKeys", "boundedPointer", "hold"],
+  "required": ["uniform", "mixed", "validEdit", "refusedEdit", "boundedKeys", "boundedPointer", "hold"],
   "properties": {
     "uniform": { "$ref": "#/$defs/stepper" },
     "mixed": { "$ref": "#/$defs/stepper" },
@@ -13,6 +13,15 @@
       "properties": {
         "input": { "type": "string" },
         "expectedValue": { "type": "number" },
+        "expectedDisplay": { "type": "string" }
+      }
+    },
+    "refusedEdit": {
+      "description": "A typed value beyond the stepper's hard bound: refused, nothing dispatched, the draft kept as typed (the UI contract's hard-bound law).",
+      "type": "object", "additionalProperties": false,
+      "required": ["input", "expectedDisplay"],
+      "properties": {
+        "input": { "type": "string" },
         "expectedDisplay": { "type": "string" }
       }
     },

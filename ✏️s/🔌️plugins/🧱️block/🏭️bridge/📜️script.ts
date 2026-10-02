@@ -15,7 +15,7 @@
 //   bun 📜️script.ts list-mutations <artifact> <standard> <subset> [<surface>]
 //
 // @see 🦀️.rs — the binary that reads the dispatch aggregates
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
 
 //#endregion 🧲️Header
 

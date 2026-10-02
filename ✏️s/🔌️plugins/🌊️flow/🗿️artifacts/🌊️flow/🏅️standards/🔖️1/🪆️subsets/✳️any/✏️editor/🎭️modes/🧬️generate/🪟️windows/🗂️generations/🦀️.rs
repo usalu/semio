@@ -3,11 +3,28 @@
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::FormGeneration;
-use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{
-    activation_target, row_action, tree_item_with_action, Buildable, BuiltNode, HasBase, HasChildren, Locale, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, RowActionPlacement, SurfaceKind, Terminology, TreeWindows, Trigger,
-    UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions,
-};
+use semio_framework_ui_contract::Label;
+use semio_framework_plugin::activation_target;
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

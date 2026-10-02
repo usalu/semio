@@ -7,7 +7,7 @@
 
 use crate::{EnergyAdmissionRejected, EnergyJob, EnergyJobCursor, EnergyJobStage, EnergyModelCloseCursor, EnergyModelSnapshot, EnergyNumericalBounds, EnergyQualityTier, Model, SimulationConfig};
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
-use semio_framework_plugin::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunSettingsReads, ToolRunStepRing,
     ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,

@@ -58,7 +58,7 @@ pub fn path_from_spec(path: &Json) -> Vec<PathSeg> {
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment.
 #[cfg(feature = "oracles")]
-pub fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option<&'a json::JsonValue> {
+pub(crate) fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option<&'a json::JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
@@ -73,7 +73,7 @@ pub fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option<&'a js
 /// 🔧️ Mutable navigation of `path` from `root`, `None` on the first unresolvable segment. An empty
 /// `path` resolves to `root` itself, so `set-scalar`'s whole-document replacement needs no special case.
 #[cfg(feature = "oracles")]
-pub fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -> Option<&'a mut json::JsonValue> {
+pub(crate) fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -> Option<&'a mut json::JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
@@ -89,7 +89,7 @@ pub fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -> Optio
 //#region 🔖️Codec
 /// 📥️ Independent RFC 8259 read via the reference implementation.
 #[cfg(feature = "oracles")]
-pub fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
+pub(crate) fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("independent reader: input is not UTF-8: {error}"))?;
     json::parse(text).map_err(|error| format!("independent reader could not parse JSON: {error}"))
 }
@@ -97,7 +97,7 @@ pub fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
 /// 📤️ Independent RFC 8259 write via the reference implementation — `json`'s own compact form
 /// (`dump`) and number formatting, never this subset's own writer.
 #[cfg(feature = "oracles")]
-pub fn write_json(value: &json::JsonValue) -> Result<Vec<u8>, String> {
+pub(crate) fn write_json(value: &json::JsonValue) -> Result<Vec<u8>, String> {
     Ok(value.dump().into_bytes())
 }
 
@@ -264,7 +264,7 @@ fn host_number(value: &json::JsonValue) -> f64 {
 }
 
 #[cfg(feature = "oracles")]
-pub fn project_value(value: &json::JsonValue) -> Json {
+pub(crate) fn project_value(value: &json::JsonValue) -> Json {
     match value {
         json::JsonValue::Null => Json::Null,
         json::JsonValue::Boolean(flag) => Json::Bool(*flag),

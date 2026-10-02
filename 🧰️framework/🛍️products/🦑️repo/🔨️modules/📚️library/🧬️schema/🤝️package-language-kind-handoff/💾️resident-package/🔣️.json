@@ -19,7 +19,8 @@
     "imports",
     "rejectedEntryPaths",
     "launch",
-    "existingTs"
+    "existingTs",
+    "moduleImports"
   ],
   "properties": {
     "schemaVersion": {
@@ -143,14 +144,11 @@
       ]
     },
     "imports": {
-      "const": [
-        "BundleScript",
-        "ScriptRouter",
-        "buildBudgetMs",
-        "runBundleScriptMain",
-        "runCargoTestBudgeted",
-        "runTestBudgeted"
-      ]
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "rejectedEntryPaths": {
       "const": [
@@ -200,6 +198,33 @@
           "presentation": {
             "group": "4_gate",
             "order": 408.32
+          }
+        }
+      }
+    },
+    "moduleImports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "names"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true,
+            "minItems": 1
           }
         }
       }

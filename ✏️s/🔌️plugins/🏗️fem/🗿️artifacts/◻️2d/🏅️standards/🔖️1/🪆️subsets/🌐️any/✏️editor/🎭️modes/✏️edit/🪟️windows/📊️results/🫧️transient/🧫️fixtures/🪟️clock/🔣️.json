@@ -1,0 +1,12 @@
+{
+  "steps": [
+    { "windowId": "results-a", "clock": { "phase": 0.1, "reverse": false } },
+    { "windowId": "results-b", "clock": { "phase": 0.9, "reverse": true } },
+    { "windowId": "results-a", "clock": { "phase": 0.2, "reverse": false } },
+    { "windowId": "results-b", "clock": null }
+  ],
+  "expected": {
+    "results-a": { "phase": 0.2, "reverse": false },
+    "results-b": null
+  }
+}

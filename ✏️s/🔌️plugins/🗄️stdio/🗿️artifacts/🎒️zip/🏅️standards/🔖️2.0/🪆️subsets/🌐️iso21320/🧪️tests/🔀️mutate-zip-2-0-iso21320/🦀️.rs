@@ -12,8 +12,8 @@
 //! host's `sut` feature so the oracle-only run never links `semio-s-plugin-stdio`.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_iso21320};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
+use semio_s_artifact_stdio_zip_test_oracle::standards::v2_0::subsets::iso21320::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_iso21320};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
 //#region 🔖️Input
 
@@ -86,8 +86,8 @@ mod subject {
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_zip};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, ZipIso21320Mutation};
     use semio_s_artifact_stdio_zip::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, ZipSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::project_zip_iso21320;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_zip_test_oracle::standards::v2_0::subsets::iso21320::project_zip_iso21320;
+    use semio_repo_test_host::law::wire_operation;
 
     //#region 🔖️Spec
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire

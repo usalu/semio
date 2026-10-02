@@ -325,7 +325,7 @@ async fn mutation_law_add_load_inverse_and_diff_absorb() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_mutation_registers_a_semantic_descriptor() {
-    register_fem3d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_fem3d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::kinds();
     assert_eq!(kinds.len(), 30, "every semantic mutation kind must be registered exactly once");
     for descriptor in kinds {

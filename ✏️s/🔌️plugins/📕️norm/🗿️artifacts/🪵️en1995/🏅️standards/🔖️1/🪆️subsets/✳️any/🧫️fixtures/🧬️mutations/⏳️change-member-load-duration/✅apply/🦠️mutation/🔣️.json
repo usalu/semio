@@ -1,7 +1,7 @@
 {
   "ChangeMemberLoadDuration": {
-    "actionId": "g",
     "memberId": "beam-B1",
+    "actionId": "g",
     "newValue": "short"
   }
 }

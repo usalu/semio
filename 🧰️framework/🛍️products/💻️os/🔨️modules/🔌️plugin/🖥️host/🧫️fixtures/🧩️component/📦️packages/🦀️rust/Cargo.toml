@@ -21,6 +21,11 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework.workspace = true
 semio-framework-dispatch-macros.workspace = true
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }

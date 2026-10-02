@@ -36,7 +36,7 @@ fn result_to_table(parsed: &QueryResult) -> (String, String) {
 
 pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
     if let Some(error) = error {
-        return semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(error)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
+        return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(error)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.query.error-label", "the query error exceeds its UI label bound"));
     }
     let empty = QueryResult::table(Vec::new(), Vec::new());
     let result = result.unwrap_or(&empty);

@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/stdio-pdf-rs",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-recursive-retirement": "nx run @semio-tech/stdio-pdf-rs:test-recursive-retirement"
+  }
+}

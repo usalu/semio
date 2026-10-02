@@ -12,13 +12,68 @@ use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMut
 use crate::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoTransient, NoTransientMutation, NodeGraphEdgeRecord,
-    NodeGraphNodeRecord, NodeGraphPortRecord, PanelGroup, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::NodeGraphEdgeRecord;
+use semio_framework_plugin::NodeGraphNodeRecord;
+use semio_framework_plugin::NodeGraphPortRecord;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_os_kernel::Viewport2d;
 // 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
@@ -26,7 +81,7 @@ use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
@@ -80,8 +135,8 @@ pub(crate) fn jack_window_action(action: &str, args: Option<pack::JsonValue>) ->
 }
 
 /// 🏷️ Admits resolved Jack text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Jack UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Jack UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -233,7 +288,7 @@ impl protocol::OpText for TrinityJackCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -243,7 +298,7 @@ impl protocol::OpText for TrinityJackCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -256,7 +311,7 @@ impl protocol::OpBinary for TrinityJackCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -274,7 +329,7 @@ impl protocol::OpBinary for TrinityJackCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -997,7 +1052,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
@@ -1005,7 +1060,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
         // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
         // so the context-menu row must dispatch the `deleteSelection` action id directly.
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, &nodes, &edges, NodeGraphDeleteDispatch::Direct) {
             menu = menu.item(spec);
         }
         menu.build()
@@ -1048,7 +1103,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
                 source_format: "trinity.graph".into(),
                 component_kind: "trinity".into(),
                 dimension: "graph".into(),

@@ -7,14 +7,23 @@
 use crate::{Block5dSnapshot, BLOCK5D_DIALECT, BLOCK_5D_SCHEMA};
 use crate::viewer::block5d::modes::view;
 use crate::viewer::block5d::modes::view::windows::world;
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
 // 🚧️ SDK GAP: `ArtifactViewer`/`Viewer`/`ViewEmit` are in the crate-root re-export list now
 // (ticket 26/08/16 W0-F closed that gap), but `Dialect` itself is not — only reachable through
 // `app`. Flagged in this packet's migration report, not fixable here (`🧰️framework/**` is
 // outside this packet's lease).
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::{ArtifactViewer, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

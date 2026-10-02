@@ -62,25 +62,29 @@
       "id": "owned-mesh-relative-transport",
       "url": "/mesh/🏠️house.glb",
       "output": "/mesh/🏗️models/🏠️house/🧊️shape.glb",
-      "valid": true
+      "valid": true,
+      "isolatedCatalogOnly": true
     },
     {
       "id": "external-owner-transport",
       "url": "https://external.test/model.glb",
       "output": "https://external.test/model.glb",
-      "valid": true
+      "valid": true,
+      "isolatedCatalogOnly": true
     },
     {
       "id": "other-owner-relative-transport",
       "url": "/other/model.glb",
       "output": "/other/model.glb",
-      "valid": true
+      "valid": true,
+      "isolatedCatalogOnly": true
     },
     {
       "id": "missing-mesh-owner-refusal",
       "url": "/mesh/missing.glb",
       "output": null,
-      "valid": false
+      "valid": false,
+      "isolatedCatalogOnly": true
     }
   ]
 }

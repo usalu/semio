@@ -43,7 +43,7 @@ fn container_of(json: &str, key: &str) -> (u64, u64, usize, Vec<String>) {
 fn widget_window(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
     ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

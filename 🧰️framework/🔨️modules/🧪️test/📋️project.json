@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/framework-test",
+  "targets": {
+    "test-adapter-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts test adapter-ownership"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework"
+  ]
+}

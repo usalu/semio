@@ -3,7 +3,7 @@ use super::*;
 /// 🧬️ Registers the document schema png's declaration contributes — the contract every snapshot edit validates against;
 /// a fixture editor runs without the plugin assembly that publishes it.
 fn register_document_schema() {
-    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor()]).expect("the png document schema registers");
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor()]).expect("the png document schema registers");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,8 +79,8 @@ async fn image_window_exposes_a_typed_localized_pixel_region_action() {
     let window = definition.window_kinds.iter().find(|window| window.id == main::WINDOW_KIND_ID).expect("image window");
     let window_action = window.actions.iter().find(|action| action.id == patch_pixel_region::ACTION_ID).expect("visible image action");
     assert_eq!(window_action.args.len(), 8);
-    assert_eq!(window_action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "Paint Pixel Region");
-    assert_eq!(window_action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De), "Pixelbereich malen");
+    assert_eq!(window_action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint Pixel Region");
+    assert_eq!(window_action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Pixelbereich malen");
 }
 
 #[test]

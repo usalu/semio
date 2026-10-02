@@ -169,6 +169,9 @@ impl<'a> ByteReader<'a> {
         Self { bytes, pos: 0 }
     }
 
+    /// 🪞️ Forks a borrowed read position without owning a payload or advancing its source cursor.
+    pub fn fork(&self)->Self{Self{bytes:self.bytes,pos:self.pos}}
+
     pub fn remaining(&self) -> usize {
         self.bytes.len() - self.pos
     }
@@ -396,6 +399,21 @@ pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackError> {
         let _ = raw;
         Err(PackError::UnsupportedCodec(1))
     }
+}
+
+/// 🗜️ Compresses under the same cumulative caller admission as native field emission.
+pub fn deflate_compress_controlled(raw:&[u8],control:&mut crate::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{
+    #[cfg(feature="deflate")]
+    {
+        struct Admission<'a,'b>{control:&'a mut crate::value::native_encoding::NativeEncodeControl<'b>,phase:Option<semio_framework_deflate::DeflateEncodePhase>,completed:usize,total:usize}
+        impl semio_framework_deflate::DeflateEncodeControl for Admission<'_,'_>{
+            fn admit(&mut self,bytes:usize)->Result<(),String>{self.control.charge(bytes)}
+            fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),String>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or("Deflate output progress regressed")?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}
+        }
+        control.scoped_stage(|control|{semio_framework_deflate::deflate_controlled(raw,&mut Admission{control,phase:None,completed:0,total:0})}).map_err(PackError::Schema)
+    }
+    #[cfg(not(feature="deflate"))]
+    {let _=(raw,control);Err(PackError::UnsupportedCodec(1))}
 }
 
 pub fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {

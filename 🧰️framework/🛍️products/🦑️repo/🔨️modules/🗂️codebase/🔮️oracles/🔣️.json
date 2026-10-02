@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ Test-only references of the 🗂️codebase owner. Every case of this module rests on a recorded no-oracle decision: the TypeScript library's 🔍️discovery module was inspected for an equivalent artifact-id builder and implements a different vocabulary entirely (its `artifactId` is a directory name, not an emoji id chain), so no in-repository reference exists, and no published package walks a repository into this repository's own technology, bundle and emoji-id vocabulary. The gitignore semantics the ignore case leans on are judged against a real engine by 🏠️workspace's own oracle-backed cases.",
   "oracles": [],

@@ -20,8 +20,8 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetFitRe
     fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Fit Revision", "Einpassungsrevision setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["fit_revision".into()]

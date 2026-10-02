@@ -16,14 +16,14 @@ pub const ZOOM_SCALE: f64 = 2.15;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
-pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_detail),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
         icon_id: "focus".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, host, labels)) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: Vec::new(),
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN)],

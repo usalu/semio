@@ -1,3 +1,4 @@
+import { runBudgetedTestCommand } from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runCmd } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -5,6 +6,11 @@ import { join } from "node:path";
 import { flowTypedRetirementSelfTests } from "../../🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
 class OwnedVerifyScript extends BundleScript {
  async run(segments: string[]): Promise<void> {
+    if (segments[0] === "slider-labels-fixture") {
+      if (segments.length !== 1) throw new Error("verify slider-labels-fixture accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🏷️slider-labels/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
+      return;
+    }
 if (segments[0] === "framework-flow-physical-retirement") {
       if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-flow-physical-retirement accepts only optional native");
       const testPath = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts");

@@ -1,0 +1,28 @@
+{
+  "brush": {
+    "color": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "hardness": 0.25,
+    "opacity": 0.5,
+    "size": 4.0
+  },
+  "layerId": "ghost",
+  "mutation": "paintStroke",
+  "points": [
+    {
+      "x": 1.0,
+      "y": 1.0
+    },
+    {
+      "x": 2.0,
+      "y": 3.0
+    }
+  ],
+  "selection": null,
+  "target": "pixels",
+  "tool": "eraser"
+}

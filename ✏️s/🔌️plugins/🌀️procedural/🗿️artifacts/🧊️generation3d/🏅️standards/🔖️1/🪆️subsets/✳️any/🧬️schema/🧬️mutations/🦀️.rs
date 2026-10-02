@@ -188,6 +188,17 @@ pub mod move_nodes {
     pub mod inverse;
     pub use component::*;
 }
+
+#[path = "."]
+pub mod change_widget_input {
+    #[path = "🎛️change-widget-input/🦀️.rs"]
+    mod component;
+    #[path = "🎛️change-widget-input/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🎛️change-widget-input/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    pub use component::*;
+}
 //#endregion 🔖️NewLeaves
 
 //#region 🔖️RepurposedLeaves
@@ -232,6 +243,7 @@ pub enum Generation3dMutation {
     RotateTransforms(rotate_transforms::RotateTransforms),
     ScaleTransforms(scale_transforms::ScaleTransforms),
     MoveNodes(move_nodes::MoveNodes),
+    ChangeWidgetInput(change_widget_input::ChangeWidgetInput),
 }
 
 //#region 🏷️Kinds
@@ -259,6 +271,7 @@ pub const KINDS: &[&str] = &[
     "rotate-transforms",
     "scale-transforms",
     "move-nodes",
+    "change-widget-input",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -332,7 +345,7 @@ pub fn generation3d_number_literal(value: f64) -> dsl::DslValue {
 
 /// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf writes an operator. `None`
 /// when a param value is not a neural value; the patch and the displaced params are retired cold, never dropped.
-pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&'static str, dsl::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
+pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, dsl::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
     use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
     let mut patch = Dictionary::new();
     for (key, entry) in entries {

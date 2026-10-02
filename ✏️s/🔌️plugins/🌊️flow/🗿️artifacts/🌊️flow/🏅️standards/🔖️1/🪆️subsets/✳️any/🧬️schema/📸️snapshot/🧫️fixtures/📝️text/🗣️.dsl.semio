@@ -1,0 +1,2 @@
+semio flow.flow.dsl v1
+schema=flow.host_snapshot content=childId=content target=artifactId="literal target!@/日本" artifactKind=s.stdio.semio standard=v1 subset=flow

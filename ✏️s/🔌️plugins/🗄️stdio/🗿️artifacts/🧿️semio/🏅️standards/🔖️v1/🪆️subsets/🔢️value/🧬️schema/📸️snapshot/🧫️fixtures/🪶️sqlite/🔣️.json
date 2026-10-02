@@ -1,4 +1,5 @@
 {
+  "nativeOutputBytes": 100000,
   "schema": "stdio.semio.value",
   "integerLexeme": "-184467440737095516160001",
   "floatLexeme": "1.234567890123456789e-99",
@@ -30,5 +31,14 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32,
+    "maximumDepth": 64
+  },
+  "retirementDepth": 100000,
+  "retirementStackBytes": 65536,
+  "retirementCancelRemaining": 256
 }

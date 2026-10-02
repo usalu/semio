@@ -45,8 +45,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for SetNodePositions {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set the positions of {} node(s)", self.positions.len()), &format!("Positionen von {} Knoten setzen", self.positions.len()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the positions of {} node(s)", self.positions.len()), &format!("Positionen von {} Knoten setzen", self.positions.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids()

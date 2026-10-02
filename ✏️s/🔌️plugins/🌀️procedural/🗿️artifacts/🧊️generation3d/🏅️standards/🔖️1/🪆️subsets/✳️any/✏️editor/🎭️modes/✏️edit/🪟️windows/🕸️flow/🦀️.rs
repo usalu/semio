@@ -12,10 +12,21 @@ use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, HasStackLayout, Trigger, UiAssemblyResult};
-use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_window_item, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, TreeWindows, WindowKindDefinition, WindowMeasure,
-    WindowOptions,
-};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphHover;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants

@@ -4,6 +4,14 @@ use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dP
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+/// 🚪️ Owns the codec used by the actual subset's native declaration.
+pub(crate) fn native_codec()->store::ArtifactCodec {
+    store::ArtifactCodec::bare::<Puzzle5dSnapshot,crate::Puzzle5dMutation>(PUZZLE_5D_SCHEMA)
+}
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted puzzle5d document snapshot (persistent fields of the artifact).
 ///
@@ -98,6 +106,9 @@ impl store::ArtifactPack for Puzzle5dSnapshot {
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
@@ -111,3 +122,7 @@ impl Default for Puzzle5dSnapshot {
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::Puzzle5dKindCatalogsExtra;
 //#endregion 🔁️Re-exports
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

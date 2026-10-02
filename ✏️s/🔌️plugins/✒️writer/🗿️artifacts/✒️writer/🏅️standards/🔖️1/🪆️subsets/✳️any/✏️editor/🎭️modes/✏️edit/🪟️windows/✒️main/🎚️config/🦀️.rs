@@ -83,5 +83,5 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: WriterMainW
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-state-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window-state/🦀️.rs"]
 mod tests;

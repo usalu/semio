@@ -8,8 +8,39 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data, se
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactBoundedFirstStepProof;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 
 #[path = "🎮️commands/🔊️edit-audio/🦀️.rs"]
@@ -82,7 +113,7 @@ fn wavEditor_retained_extent(command: &WavEditCommand, _snapshot: &WavSnapshot, 
 }
 fn wavEditor_retained_reduce(command: &WavEditCommand, _snapshot: &WavSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<WavEditor>>>, _operation: &AppOperationContext) -> Result<Emit<WavMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        WavEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() }),
+        WavEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -411,7 +442,6 @@ impl ArtifactEditor for WavEditor {
         match command {
             WavEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&wavEditor_example_snapshot(example_id), STDIO_WAV_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
             WavEditCommand::EditAudio(_) => Err(Fault::from("WAV natural audio editing requires the cancellable retained route")),

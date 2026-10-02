@@ -143,5 +143,5 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingMod
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
+#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
 mod window_ownership_tests;

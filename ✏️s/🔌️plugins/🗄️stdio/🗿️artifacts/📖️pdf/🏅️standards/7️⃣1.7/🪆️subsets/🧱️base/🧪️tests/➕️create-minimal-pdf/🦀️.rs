@@ -9,7 +9,7 @@
 //! pass WITHOUT compiling or invoking the local implementation, which is what makes "the reference
 //! library really does support this case" provable before any repository code exists.
 
-use semio_s_plugin_stdio_test_oracle::document::{oracle_create_pdf, project_pdf, PdfPageSpec, PdfSpec};
+use semio_s_plugin_stdio_document_test_oracle::{oracle_create_pdf, project_pdf, PdfPageSpec, PdfSpec};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Specs
@@ -40,7 +40,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{spec_for, PdfSpec};
-    use semio_s_plugin_stdio_test_oracle::document::project_pdf;
+    use semio_s_plugin_stdio_document_test_oracle::project_pdf;
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::encode_pdf;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};

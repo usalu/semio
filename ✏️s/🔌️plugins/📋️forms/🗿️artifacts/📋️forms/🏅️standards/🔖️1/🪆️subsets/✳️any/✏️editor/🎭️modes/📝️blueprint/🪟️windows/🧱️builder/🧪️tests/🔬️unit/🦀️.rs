@@ -17,7 +17,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
         active_mode_id: Some(definition.default_mode_id.clone()),
         window_id: Some("design-test".into()),
         window_instances: vec![ViewWindowInstance { id: "design-test".into(), window_kind_id: FORMS_PLAY_WINDOW_BLUEPRINT.into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     for case in fixture["actions"].as_array().unwrap() {
         let action = case["action"].as_str().unwrap();
@@ -51,7 +51,7 @@ async fn block_list_gestures_reach_mounted_document_commands() {
 async fn renders_blueprint_builder_cards() {
     let spec = FormsSnapshot::default();
     let config = FormsConfig::default();
-    let node = render(&spec, &config, &semio_framework_plugin::ViewModel::default(), None).expect("blueprint surface");
+    let node = render(&spec, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None).expect("blueprint surface");
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
     let expected = crate::mutations::as_playbook_spec(&spec);
@@ -69,7 +69,7 @@ async fn definition_declares_the_block_list_surface_and_body_key() {
 #[test]
 fn blueprint_cards_publish_exact_forms_selection_targets() {
     let spec = crate::schema::default_example_spec();
-    let node = render(&spec, &FormsConfig::default(), &semio_framework_plugin::ViewModel::default(), Some("name")).unwrap();
+    let node = render(&spec, &FormsConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), Some("name")).unwrap();
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).unwrap();
     assert_eq!(scene.domain_id.as_deref(), Some(crate::editor::forms::FORMS_INTERACTION_FIELDS));

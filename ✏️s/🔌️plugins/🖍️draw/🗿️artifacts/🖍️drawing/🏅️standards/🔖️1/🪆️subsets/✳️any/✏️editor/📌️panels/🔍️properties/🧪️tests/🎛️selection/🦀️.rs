@@ -11,7 +11,7 @@ fn inspector_selection_fixtures() {
     let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
     for case in fixture["cases"].as_array().unwrap() {
         let ids = case["selection"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
-        let view = ViewModel::default();
+        let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let tree = render(&document, &ids, &DrawingPlayLabels::NATIVE_EN, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
         let _: serde_json::Value = serde_json::from_str(&json).unwrap();
@@ -27,7 +27,7 @@ fn inspector_stroke_controls_are_localized() {
     let layer = create_drawing_shape_layer_rect("Rectangle");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let view = ViewModel::default();
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         let tree = render(&document, &[id.clone()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -42,11 +42,11 @@ fn inspector_path_nodes_publish_localized_edit_actions() {
     let mut layer = crate::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 12.0], ctrl2: [12.0, 12.0], to: [12.0, 0.0] }, PathSegment::Line { to: [12.0,12.0] }, PathSegment::Move { to: [20.0,20.0] }, PathSegment::Line { to: [30.0,30.0] }]);
     layer_base_mut(&mut layer).id = "path".into();
     let mut document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let view = ViewModel::default();
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         let mut json = String::new();
         for offset in 0..5 {
-            let paged = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset, rows: 1 }], ..Default::default() };
+            let paged = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset, rows: 1 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
             let tree = render(&document, &["path".into()], labels, &TreeWindows::for_body(&paged, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
             json.push_str(&project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap());
         }
@@ -122,7 +122,7 @@ fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
     let mut layer=create_drawing_shape_layer_rect("Shape");
     layer_base_mut(&mut layer).id="shape".into();
     let mut document=DrawingSnapshot { layers:vec![layer],..Default::default() };
-    let view=ViewModel::default();
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let tree=render(&document,&["shape".into()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -141,7 +141,7 @@ fn gradient_inspector_projects_type_coordinates_and_stops() {
     layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
     let mut document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let view = ViewModel::default();
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let tree = render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -171,7 +171,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
     layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let view = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset: 0, rows: 2 }], ..Default::default() };
+    let view = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset: 0, rows: 2 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let tree = render(&document,&[id.clone()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let projection = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -187,7 +187,7 @@ fn text_inspector_is_multiline_localized_and_commits_on_blur() {
     let layer = crate::schema::create_drawing_text_layer("Text");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
-    let view = ViewModel::default();
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         let tree = render(&document, &[id.clone()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -210,7 +210,7 @@ fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
     layer_base_mut(&mut first).id="first".into();
     layer_base_mut(&mut second).id="second".into();
     let mut document=DrawingSnapshot {layers:vec![first,second],..Default::default()};
-    let view=ViewModel::default();
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         for (rule,locked,value) in [(crate::FillRule::Evenodd,false,"evenodd"),(crate::FillRule::Nonzero,false,""),(crate::FillRule::Nonzero,true,"")] {
             layer_base_mut(&mut document.layers[1]).attributes.fill_rule=rule;
@@ -235,7 +235,7 @@ fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
     let mut layer=create_drawing_shape_layer_rect("Layer");
     layer_base_mut(&mut layer).id="layer".into();
     let document=DrawingSnapshot {layers:vec![layer],..Default::default()};
-    let view=ViewModel::default();
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let tree=render(&document,&["layer".into()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
         let json=project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
@@ -247,7 +247,7 @@ fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
 fn ungroup_control_appears_for_editable_groups_in_both_languages() {
     let mut group=crate::schema::create_drawing_group_layer("Group");
     layer_base_mut(&mut group).id="group".into();
-    let view=ViewModel::default();
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {for locked in [false,true] {
         layer_base_mut(&mut group).locked=locked;
         let document=DrawingSnapshot {layers:vec![group.clone()],..Default::default()};
@@ -272,7 +272,7 @@ fn group_isolation_inspector_exposes_localized_common_mixed_and_locked_states() 
     let mut second=crate::schema::create_drawing_group_layer("Second");
     layer_base_mut(&mut first).id="first".into();layer_base_mut(&mut second).id="second".into();
     let mut document=DrawingSnapshot {layers:vec![first,second],..Default::default()};
-    let view=ViewModel::default();
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         for (first_value,second_value,locked) in [(false,false,false),(true,true,false),(true,false,false),(true,false,true)] {
             let DrawingLayerNode::Group(first)=&mut document.layers[0] else {unreachable!()};first.isolation=first_value;
@@ -301,7 +301,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
     let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
     let modes = cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode" && case["accepted"] == true).map(|case| case["patch"]["value"].as_str().unwrap()).collect::<Vec<_>>();
     assert_eq!(modes.len(), 16);
-    let view = ViewModel::default();
+    let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for mode in &modes { for (mixed, locked) in [(false,false),(true,false),(true,true)] {
             let mut first = create_drawing_shape_layer_rect("First");

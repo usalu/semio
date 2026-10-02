@@ -1,0 +1,18 @@
+{
+  "statements": [
+    "UPDATE obj_document SET id=-id-100",
+    "UPDATE obj_vertex SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_texcoord SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_normal SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_face SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_face_vertex SET id=-id-100,face_id=-face_id-100,vertex_id=-vertex_id-100,texcoord_id=-texcoord_id-100,normal_id=-normal_id-100",
+    "UPDATE obj_group SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_group_face SET id=-id-100,group_id=-group_id-100,face_id=-face_id-100",
+    "UPDATE obj_object SET id=-id-100,document_id=-document_id-100",
+    "UPDATE obj_object_face SET id=-id-100,object_id=-object_id-100,face_id=-face_id-100",
+    "UPDATE obj_face_boundary SET id=-id-100,document_id=-document_id-100,face_id=-face_id-100",
+    "UPDATE obj_material_range SET id=-id-100,document_id=-document_id-100,first_boundary_id=-first_boundary_id-100",
+    "UPDATE obj_smoothing_range SET id=-id-100,document_id=-document_id-100,first_boundary_id=-first_boundary_id-100",
+    "UPDATE obj_unknown_statement SET id=-id-100,document_id=-document_id-100"
+  ]
+}

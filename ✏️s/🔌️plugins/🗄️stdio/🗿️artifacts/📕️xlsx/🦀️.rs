@@ -90,6 +90,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .subset_validators(xlsx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("strict") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("transitional") })
         .try_build()
 }
 
@@ -180,7 +182,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.xlsx".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Xlsx", "Xlsx"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Xlsx", "Xlsx"),
         source_format: STDIO_XLSX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

@@ -1,22 +1,4 @@
-/** 🔤️ `s.stdio.txt@utf-8` → remodeling snapshot, fidelity `Exact` — a real `.semio` DSL reader.
- *
- *  The txt rendition of a remodeling document IS its DSL text: the exact bytes
- *  `📚️examples/**​/🖼️assets/🗣️.dsl.semio` carries. This reader is spec-driven — every key is the
- *  `kebab-case` rename of the Rust field name, re-derived from `RecordSpec` rather than
- *  transcribed, so a field rename cannot desynchronise it from the JSON reader.
- *
- *  🚧 Declared boundary, exercised against `📚️examples/🎬️demo`: the grammar surface implemented is
- *  the one the snapshot printer emits for this document — the `semio <envelope> v1` preamble,
- *  `key=value` scalars (bare lexemes, quoted text, `#[dsl(unit)]` suffixes such as `5mm` /
- *  `2m` / `1.5m/s`), `name { … }` blocks, `name={ … }` map literals and
- *  `name [col:TYPE …] { … }` tables whose cells are scalars. Two things are deliberately NOT
- *  implemented and refuse loudly rather than guessing: a table cell that is itself a `TABLE` or
- *  `BLOCK` (no committed asset exercises one — `streams.frames` and `streams.source` only ever
- *  appear in a zero-row table), and the `_` positional placeholder lexeme. There is no DSL
- *  *printer* here either: `dsl::print`'s layout rules (block/table selection, column-header
- *  synthesis, unit re-suffixing, per-type number lexemes) live in the framework's `🗣️dsl` module
- *  and have no TypeScript twin anywhere in the repo.
- */
+/** 🔤️ Declared Remodeling Text reader binds primitive words, record tables, nested braced cells, and literal references. */
 
 import {
   REMODELING_SNAPSHOT_SPEC,
@@ -26,6 +8,10 @@ import {
   type RemodelingSnapshot,
   type ValueSpec,
 } from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+
+import {binary32,binary64} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+
+import {base64StandardDecode} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 
 /** 🚫 A DSL refusal carrying the 1-based line it was raised on. */
 export class RemodelingDslError extends Error {
@@ -98,9 +84,11 @@ export function lexDsl(text: string): Token[] {
 //#endregion 🔖️Lexer
 
 //#region 🔖️Parser
+type DslCell = Token | DslNode | DslNode[];
+
 interface DslTable {
   columns: { name: string; type: string }[];
-  rows: Token[][];
+  rows: DslCell[][];
   line: number;
 }
 
@@ -109,10 +97,12 @@ interface DslNode {
   blocks: Map<string, DslNode>;
   tables: Map<string, DslTable>;
   maps: Map<string, Map<string, DslNode>>;
+  arrays: Map<string, Token[]>;
+  statements: {name:string,node:DslNode}[];
   line: number;
 }
 
-const emptyNode = (line: number): DslNode => ({ scalars: new Map(), blocks: new Map(), tables: new Map(), maps: new Map(), line });
+const emptyNode = (line: number): DslNode => ({ scalars: new Map(), blocks: new Map(), tables: new Map(), maps: new Map(), arrays:new Map(), statements:[], line });
 
 class Cursor {
   index = 0;
@@ -143,14 +133,22 @@ const readTable = (cursor: Cursor, line: number): DslTable => {
   }
   cursor.expect("close-bracket");
   cursor.expect("open-brace");
-  const rows: Token[][] = [];
+  const rows: DslCell[][] = [];
   while (cursor.peek()?.kind !== "close-brace") {
-    const row: Token[] = [];
+    const row: DslCell[] = [];
     for (const column of columns) {
-      if (column.type === "TABLE" || column.type === "BLOCK") throw new RemodelingDslError(cursor.peek()?.line ?? line, `table column "${column.name}" is a nested ${column.type}, which this reader does not implement`);
       const cell = cursor.next();
+      if(cell.kind==="word"&&cell.text==="_"){row.push(cell);continue;}
+      if(column.type==="TABLE"){
+        if(cell.kind!=="open-bracket")throw new RemodelingDslError(cell.line,"nested table requires a braced record list");
+        const values:DslNode[]=[];while(cursor.peek()?.kind!=="close-bracket"){const opening=cursor.expect("open-brace");values.push(readNode(cursor,opening.line,true));}
+        cursor.expect("close-bracket");row.push(values);continue;
+      }
+      if(column.type==="BLOCK"){
+        if(cell.kind!=="open-brace")throw new RemodelingDslError(cell.line,"nested block requires an opening brace");
+        row.push(readNode(cursor,cell.line,true));continue;
+      }
       if (cell.kind !== "word" && cell.kind !== "string") throw new RemodelingDslError(cell.line, `expected a scalar cell for column "${column.name}", got ${cell.kind}`);
-      if (cell.kind === "word" && cell.text === "_") throw new RemodelingDslError(cell.line, "the positional `_` placeholder is not implemented by this reader");
       row.push(cell);
     }
     rows.push(row);
@@ -171,9 +169,11 @@ function readNode(cursor: Cursor, line: number, terminated: boolean): DslNode {
     }
     const key = cursor.expect("word").text;
     const follow = cursor.peek();
+    if((key==="inline"||key==="content")&&follow?.kind!=="equals") {node.statements.push({name:key,node:readNode(cursor,head.line,true)});return node;}
     if (follow?.kind === "equals") {
       cursor.next();
       const value = cursor.next();
+      if(value.kind==="open-bracket"){const values:Token[]=[];while(cursor.peek()?.kind!=="close-bracket"){const item=cursor.next();if(item.kind!=="word"&&item.kind!=="string")throw new RemodelingDslError(item.line,"expected a scalar list element");values.push(item)}cursor.expect("close-bracket");node.arrays.set(key,values);continue;}
       if (value.kind === "open-brace") {
         const entries = new Map<string, DslNode>();
         while (cursor.peek()?.kind !== "close-brace") {
@@ -209,34 +209,36 @@ function readNode(cursor: Cursor, line: number, terminated: boolean): DslNode {
 //#region 🔖️Binder
 const UNIT_SUFFIX = /(mm|m\/s|m|deg|rad|s|ms|px|%)$/;
 
-const scalarNumber = (token: Token): number => {
-  const raw = token.text.replace(UNIT_SUFFIX, "");
-  const value = Number(raw);
-  if (!Number.isFinite(value)) throw new RemodelingDslError(token.line, `expected a number, got ${JSON.stringify(token.text)}`);
-  return value;
+const scalarFloat = (token:Token,width:32|64):unknown => {
+  const raw=token.text.replace(UNIT_SUFFIX,"");
+  const widened=/^nan64_([0-9a-f]{16})$/.exec(raw);
+  if(width===32&&widened){const bits=BigInt("0x"+widened[1]);if((bits&0x7ff0000000000000n)!==0x7ff0000000000000n||(bits&0xfffffffffffffn)===0n||(bits&0x1fffffffn)!==0n)throw new RemodelingDslError(token.line,"NaN word is not exactly representable at binary32 width");return{bits:Number(((bits>>32n)&0x80000000n)|0x7f800000n|((bits>>29n)&0x7fffffn))};}
+  const exact=width===32?/^nan32_([0-9a-f]{8})$/:/^nan64_([0-9a-f]{16})$/;
+  const word=exact.exec(raw);
+  if(word){const bits=BigInt("0x"+word[1]);if(width===32){if((bits&0x7f800000n)!==0x7f800000n||(bits&0x007fffffn)===0n)throw new RemodelingDslError(token.line,"invalid binary32 NaN word");return{bits:Number(bits)}}if((bits&0x7ff0000000000000n)!==0x7ff0000000000000n||(bits&0x000fffffffffffffn)===0n)throw new RemodelingDslError(token.line,"invalid binary64 NaN word");return{bits}}
+  const value=raw==="inf"?Infinity:raw==="-inf"?-Infinity:Number(raw);
+  if(raw===""||Number.isNaN(value))throw new RemodelingDslError(token.line,`expected a binary${width} number, got ${JSON.stringify(token.text)}`);
+  return width===32?binary32(value):binary64(value);
 };
+const scalarInteger=(token:Token,signed:boolean):bigint=>{if(!/^-?(0|[1-9][0-9]*)$/.test(token.text)||token.text==="-0")throw new RemodelingDslError(token.line,"expected a canonical integer");const value=BigInt(token.text),minimum=signed?-(1n<<63n):0n,maximum=signed?(1n<<63n)-1n:(1n<<64n)-1n;if(value<minimum||value>maximum)throw new RemodelingDslError(token.line,"integer exceeds native width");return value};
 
 const bindScalar = (token: Token, spec: ValueSpec, key: string): unknown => {
   switch (spec.k) {
-    case "text":
-      return token.text;
+    case "text":return token.text;
+    case "bytes":if(token.kind!=="string")throw new RemodelingDslError(token.line,"expected quoted Bytes64");return base64StandardDecode(token.text);
     case "bool":
       if (token.text !== "true" && token.text !== "false") throw new RemodelingDslError(token.line, `expected a boolean for "${key}", got ${JSON.stringify(token.text)}`);
       return token.text === "true";
-    case "uint":
-    case "int":
-      return scalarNumber(token);
-    case "f64":
-      return scalarNumber(token);
-    case "f32":
-      return Math.fround(scalarNumber(token));
+    case "uint": {const value=scalarInteger(token,false);if(value>0xffffffffn)throw new RemodelingDslError(token.line,"integer exceeds unsigned32");return Number(value)}
+    case "int":return scalarInteger(token,true);
+    case "u64":return scalarInteger(token,false);
+    case "f64":return scalarFloat(token,64);
+    case "f32":return scalarFloat(token,32);
     case "enum":
       if (!spec.of.includes(token.text)) throw new RemodelingDslError(token.line, `expected one of ${spec.of.join(" | ")} for "${key}", got ${JSON.stringify(token.text)}`);
       return token.text;
     case "tuple": {
-      const parts = token.text.split(",").map((part) => Number(part.replace(UNIT_SUFFIX, "")));
-      if (parts.length !== spec.len || parts.some((part) => !Number.isFinite(part))) throw new RemodelingDslError(token.line, `expected ${spec.len} comma-separated numbers for "${key}", got ${JSON.stringify(token.text)}`);
-      return spec.w === 32 ? parts.map(Math.fround) : parts;
+      const parts=token.text.split(",");if(parts.length!==spec.len)throw new RemodelingDslError(token.line,`expected ${spec.len} comma-separated numbers for "${key}"`);return parts.map(text=>scalarFloat({...token,text},spec.w));
     }
     case "opt":
       return bindScalar(token, spec.of, key);
@@ -247,27 +249,34 @@ const bindScalar = (token: Token, spec: ValueSpec, key: string): unknown => {
 
 const inner = (spec: ValueSpec): ValueSpec => (spec.k === "opt" ? spec.of : spec);
 
-/** 🧩️ `store::os_io::ArtifactRef`'s compact DSL lexeme, `<artifact-id>!<kind>@<standard>/<subset>`. */
-const bindArtifactRef = (token: Token): Record<string, unknown> => {
-  const bang = token.text.indexOf("!");
-  const at = token.text.indexOf("@", bang + 1);
-  const slash = token.text.indexOf("/", at + 1);
-  if (bang < 0 || at < 0 || slash < 0) throw new RemodelingDslError(token.line, `expected an artifact reference "<id>!<kind>@<standard>/<subset>", got ${JSON.stringify(token.text)}`);
-  return {
-    artifactId: token.text.slice(0, bang),
-    dialect: { artifactKind: token.text.slice(bang + 1, at), standard: token.text.slice(at + 1, slash), subset: token.text.slice(slash + 1) },
-  };
+const bindArtifactRef=(node:DslNode):Record<string,unknown>=>{
+ const required=["artifact-id","artifact-kind","standard","subset"];if(node.blocks.size||node.maps.size||node.tables.size||node.arrays.size||node.statements.length||node.scalars.size!==4)throw new RemodelingDslError(node.line,"artifact reference requires exactly four literal text fields");
+ const values=required.map(key=>{const value=node.scalars.get(key);if(!value)throw new RemodelingDslError(node.line,"missing artifact reference "+key);return value.text});return{artifactId:values[0],dialect:{artifactKind:values[1],standard:values[2],subset:values[3]}};
+};
+const bindFloatBuffer=(node:DslNode):unknown=>{
+ if(node.scalars.size||node.blocks.size||node.maps.size||node.tables.size||node.arrays.size||node.statements.length!==1)throw new RemodelingDslError(node.line,"float buffer requires one typed variant");
+ const value=node.statements[0]!,body=value.node;
+ if(body.blocks.size||body.tables.size||body.maps.size||body.statements.length)throw new RemodelingDslError(body.line,"unexpected float buffer child");
+ if(value.name==="inline"){const values=body.arrays.get("values");if(body.scalars.size||body.arrays.size!==1||!values)throw new RemodelingDslError(body.line,"inline buffer requires samples");return{kind:"inline",values:values.map(token=>scalarFloat(token,32))}}
+ const id=body.scalars.get("content-id"),count=body.scalars.get("chunk-count");if(body.arrays.size||body.scalars.size!==2||!id||!count)throw new RemodelingDslError(body.line,"content buffer requires literal identity and count");return{kind:"content",contentId:id.text,chunkCount:scalarInteger(count,false)};
 };
 
 const dslKeyOf = (field: FieldSpec): string => field.dslKey ?? kebabOf(field.name);
 
-const bindRow = (row: Token[], table: DslTable, spec: RecordSpec): Record<string, unknown> => {
+const bindCell=(cell:DslCell,spec:ValueSpec,key:string):unknown=>{
+ if(Array.isArray(cell)){const shape=inner(spec);if(shape.k!=="list"||inner(shape.of).k!=="rec")throw new RemodelingDslError(cell[0]?.line??1,"nested table requires a record-list field");const item=inner(shape.of);if(item.k!=="rec")throw new RemodelingDslError(1,"nested table item differs");return cell.map(node=>bindRecord(node,item.of()));}
+ if("kind" in cell){if(cell.kind==="word"&&cell.text==="_"){if(spec.k!=="opt")throw new RemodelingDslError(cell.line,"absent table cell requires an optional field");return null;}return bindScalar(cell,spec,key);}
+ const shape=inner(spec);if(shape.k!=="rec")throw new RemodelingDslError(cell.line,"nested block requires a record field");return bindRecord(cell,shape.of());
+};
+const bindRow = (row: DslCell[], table: DslTable, spec: RecordSpec): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   for (const field of spec.fields) out[camelKey(field.name)] = field.dflt();
+  const consumed=new Set<string>();
   table.columns.forEach((column, index) => {
     const field = spec.fields.find((candidate) => dslKeyOf(candidate) === column.name);
-    if (field === undefined) throw new RemodelingDslError(row[index].line, `unknown column "${column.name}" for ${spec.title}`);
-    out[camelKey(field.name)] = bindScalar(row[index], field.spec, column.name);
+    if (field === undefined) throw new RemodelingDslError(table.line, `unknown column "${column.name}" for ${spec.title}`);
+    if(consumed.has(column.name))throw new RemodelingDslError(table.line,"duplicate table column "+column.name);
+    consumed.add(column.name);out[camelKey(field.name)] = bindCell(row[index]!,field.spec,column.name);
   });
   return out;
 };
@@ -276,18 +285,17 @@ const camelKey = (snake: string): string => snake.split("_").map((part, index) =
 
 /** 🧱 Binds one parsed node onto a record spec; an absent key falls to its Rust default. */
 export function bindRecord(node: DslNode, spec: RecordSpec): Record<string, unknown> {
+  if(spec.title==="ArtifactRef")return bindArtifactRef(node);
   const out: Record<string, unknown> = {};
   const consumed = new Set<string>();
   for (const field of spec.fields) {
     const key = dslKeyOf(field);
     const shape = inner(field.spec);
     consumed.add(key);
+    if(shape.k==="floatBuffer"&&node.blocks.has(key)){out[camelKey(field.name)]=bindFloatBuffer(node.blocks.get(key)!);continue;}
+    if(shape.k==="list"&&node.arrays.has(key)){out[camelKey(field.name)]=node.arrays.get(key)!.map(token=>bindScalar(token,shape.of,key));continue;}
     if (shape.k === "rec" && node.blocks.has(key)) {
       out[camelKey(field.name)] = bindRecord(node.blocks.get(key)!, shape.of());
-      continue;
-    }
-    if (shape.k === "rec" && shape.of().title === "ArtifactRef" && node.scalars.has(key)) {
-      out[camelKey(field.name)] = bindArtifactRef(node.scalars.get(key)!);
       continue;
     }
     if (shape.k === "list" && node.tables.has(key)) {
@@ -302,7 +310,7 @@ export function bindRecord(node: DslNode, spec: RecordSpec): Record<string, unkn
       const value = inner(shape.of);
       if (value.k !== "rec") throw new RemodelingDslError(node.line, `"${key}" is a map of ${value.k}, which this reader does not implement`);
       const bound: Record<string, unknown> = {};
-      for (const [entryKey, entryNode] of [...entries.entries()].sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))) bound[entryKey] = bindRecord(entryNode, value.of());
+      for (const [entryKey, entryNode] of [...entries.entries()].sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))) Object.defineProperty(bound,entryKey,{value:bindRecord(entryNode,value.of()),enumerable:true,writable:true,configurable:true});
       out[camelKey(field.name)] = bound;
       continue;
     }
@@ -312,7 +320,7 @@ export function bindRecord(node: DslNode, spec: RecordSpec): Record<string, unkn
     }
     out[camelKey(field.name)] = field.dflt();
   }
-  for (const key of [...node.scalars.keys(), ...node.blocks.keys(), ...node.tables.keys(), ...node.maps.keys()])
+  for (const key of [...node.scalars.keys(), ...node.blocks.keys(), ...node.tables.keys(), ...node.maps.keys(),...node.arrays.keys()])
     if (!consumed.has(key)) throw new RemodelingDslError(node.line, `unknown key "${key}" for ${spec.title}`);
   return out;
 }

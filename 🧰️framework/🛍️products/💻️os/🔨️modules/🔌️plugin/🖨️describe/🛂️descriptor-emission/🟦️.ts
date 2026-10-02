@@ -1,7 +1,8 @@
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { createHash } from "node:crypto";
 import { closeSync, lstatSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { buildBudgetMs, devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { verifyDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, ensureBuiltBin } from "../🏗️component-build/🟦️.ts";

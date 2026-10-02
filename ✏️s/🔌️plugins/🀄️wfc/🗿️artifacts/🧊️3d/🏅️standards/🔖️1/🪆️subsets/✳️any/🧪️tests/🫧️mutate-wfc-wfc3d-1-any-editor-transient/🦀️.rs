@@ -1,24 +1,24 @@
 //! 🫧️ `s.wfc.wfc3d` ✏️editor/🫧️transient state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `wfc-wfc3d-1-any-editor-transient-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
-//! the subject handlers through `semio_s_plugin_stdio_test_oracle::law::vector` over the report of this crate's
+//! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
 //! production bridge `wfc3d_transient_mutation_report_json`. The oracle handlers answer with the committed after- and before-snapshots read
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
+use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🫧️transient/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-solve" => Vector {
-            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -44,7 +44,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
     use semio_s_artifact_wfc_3d::editor::wfc3d::transient::mutations::wfc3d_transient_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {

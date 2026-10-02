@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridOpacity {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change grid opacity to {:?}", self.new_opacity), &format!("Rasterdeckkraft auf {:?} ändern", self.new_opacity))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::mutations::note_setting_label(("grid opacity", "Rasterdeckkraft"), self.new_opacity.map(|opacity| { let (en, de) = crate::schema::mutations::note_label_number(opacity * 100.0); (format!("{en}%"), format!("{de} %")) }))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

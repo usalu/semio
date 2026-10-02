@@ -11,7 +11,7 @@ use serde_json::json;
 
 pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> WindowMeasure {
     let kinds = runtime.selectable_kinds;
-    let toggle = |suffix: &str, icon: &str, label: semio_framework_plugin::LabelText, granularity: &str, pressed: bool| WindowMeasure::Toggle {
+    let toggle = |suffix: &str, icon: &str, label: semio_framework_ui_locale::LabelText, granularity: &str, pressed: bool| WindowMeasure::Toggle {
         id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-select-{suffix}"),
         icon_id: icon.into(),
         label: Some(label.into()),

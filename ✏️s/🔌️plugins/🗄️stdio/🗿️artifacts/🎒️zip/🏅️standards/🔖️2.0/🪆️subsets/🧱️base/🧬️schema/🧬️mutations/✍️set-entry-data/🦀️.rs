@@ -24,8 +24,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::SetEntryData(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

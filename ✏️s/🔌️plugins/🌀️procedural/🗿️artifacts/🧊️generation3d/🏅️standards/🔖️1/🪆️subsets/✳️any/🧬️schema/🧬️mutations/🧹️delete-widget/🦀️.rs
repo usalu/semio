@@ -28,8 +28,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Dele
         crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete widget position \"{}\"", self.id), &format!("Widget-Position \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete widget position \"{}\"", self.id), &format!("Widget-Position \"{}\" löschen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

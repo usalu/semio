@@ -60,8 +60,8 @@ async fn the_json_carrier_pairs_hold_the_kinds_the_csv_carrier_cannot_see() {
     let pairs = [
         ("move-step", include_str!("../../../../🪜️step/🧫️fixtures/📍️move-step/⬅️before.json"), include_str!("../../../../🪜️step/🧫️fixtures/📍️move-step/➡️after.json")),
         ("change-step-collapsed", include_str!("../../../../🪜️step/🧫️fixtures/🗂️change-step-collapsed/⬅️before.json"), include_str!("../../../../🪜️step/🧫️fixtures/🗂️change-step-collapsed/➡️after.json")),
-        ("connect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect/➡️after.json")),
-        ("disconnect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect/➡️after.json")),
+        ("connect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect-steps/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/🔗️connect-steps/➡️after.json")),
+        ("disconnect-steps", include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect-steps/⬅️before.json"), include_str!("../../../../🔗️dependency/🧫️fixtures/✂️disconnect-steps/➡️after.json")),
     ];
     let carrier = |text: &str| -> serde_json::Value { serde_json::from_str(text).expect("committed carrier parses in serde_json") };
     for (kind, before_text, after_text) in pairs {

@@ -1,0 +1,28 @@
+{
+  "dialect": {
+    "artifactKind": "s.gis.gisterrain",
+    "standard": "1",
+    "subset": "*"
+  },
+  "words": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff8000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "fff8123456789abc"
+  ],
+  "importedFeaturesJson": "not JSON — persisted text\n世界\u0000",
+  "child": {
+    "childId": "mesh identity ! @ /",
+    "target": {
+      "artifactId": "asset identifier ! @ /",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  }
+}

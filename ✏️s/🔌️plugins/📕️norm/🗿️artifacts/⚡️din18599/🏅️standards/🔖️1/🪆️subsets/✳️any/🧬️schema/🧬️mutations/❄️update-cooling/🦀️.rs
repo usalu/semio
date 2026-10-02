@@ -29,7 +29,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateCoolin
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update cooling system", "Kühlsystem aktualisieren")
     }
 }

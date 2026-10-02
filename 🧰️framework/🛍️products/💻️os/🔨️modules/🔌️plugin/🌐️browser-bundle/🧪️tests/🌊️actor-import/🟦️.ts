@@ -1,3 +1,4 @@
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 /** 🌊️ Qualifies actor-isolated canonical async result and stream imports through JCO/Wasm. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -5,7 +6,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
-import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 const testSourceDirectory = fileURLToPath(new URL("../../🧫️fixtures/🌊️actor-import", import.meta.url));
@@ -31,7 +32,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
   mkdirSync(evidenceRoot, { recursive: true });
   const evidence = mkdtempSync(join(evidenceRoot, "actor-import-"));
   const manifest = join(fixtureRoot, "👽️guest", "📦️packages", "🦀️rust", "Cargo.toml");
-  const build = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", manifest, "--target", "wasm32-wasip2", "--release", "--offline"], {
+  const build = await captureOwnedProcess("cargo", ["build", "--manifest-path", manifest, "--target", "wasm32-wasip2", "--release", "--offline"], {
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot), CARGO_BUILD_JOBS: "1" },
     budgetMs: fixture.limits.buildBudgetMs,
@@ -46,7 +47,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
   const jcoRoot = join(evidence, "jco");
   mkdirSync(jcoRoot);
   writeFileSync(componentPath, component, { mode: 0o600 });
-  const transpiled = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+  const transpiled = await captureOwnedProcess("node", ["--input-type=module", "-e", `
     import { transpile } from "@bytecodealliance/jco";
     import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
     import { dirname, join } from "node:path";
@@ -123,7 +124,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
   for (const core of cores) writeFileSync(join(evidence, core.name), core.bytes, { mode: 0o600 });
   const inputPath = join(evidence, "input.json");
   writeFileSync(inputPath, JSON.stringify({ actors: fixture.actors, canonicalInterface: fixture.identity.canonicalInterface, component: fixture.identity.component, importInterfaces, moduleUrl: pathToFileURL(modulePath).href, mode: closed ? "closed" : "raw" }), { mode: 0o600 });
-  const runtime = await runExactCargoLawProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "-e", `
+  const runtime = await captureOwnedProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "-e", `
     import assert from "node:assert/strict";
     import { readFileSync } from "node:fs";
     import * as cli from "@bytecodealliance/preview2-shim/cli";
@@ -224,7 +225,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
   if (actorModulePath) {
     const actorInputPath = join(evidence, "closed-input.json");
     writeFileSync(actorInputPath, JSON.stringify({ actors: fixture.actors, component: fixture.identity.component, moduleUrl: pathToFileURL(actorModulePath).href, pendingHostClose, streamClose: fixture.streamClose, guestStreamDrop: fixture.guestStreamDrop, lateStreamFault: fixture.lateStreamFault, failedStreamRetirement: fixture.failedStreamRetirement }), { mode: 0o600 });
-    const closedRuntime = await runExactCargoLawProcess("node", ["--unhandled-rejections=strict", "--experimental-wasm-jspi", "--input-type=module", "-e", `
+    const closedRuntime = await captureOwnedProcess("node", ["--unhandled-rejections=strict", "--experimental-wasm-jspi", "--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
       const fixture = JSON.parse(readFileSync(process.argv[1], "utf8"));

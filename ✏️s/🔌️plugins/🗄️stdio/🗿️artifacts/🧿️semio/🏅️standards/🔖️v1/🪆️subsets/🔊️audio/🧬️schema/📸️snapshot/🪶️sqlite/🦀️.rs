@@ -7,6 +7,8 @@ fn integer(value:usize)->Result<i64,String>{i64::try_from(value).map_err(|error|
 fn format(value:SemioAudioFormat)->&'static str{match value{SemioAudioFormat::Pcm8=>"pcm8",SemioAudioFormat::Pcm16=>"pcm16",SemioAudioFormat::Pcm24=>"pcm24",SemioAudioFormat::Pcm32=>"pcm32",SemioAudioFormat::Float32=>"f32",SemioAudioFormat::Float64=>"f64"}}
 fn identity(row:&SqliteRow,columns:usize)->Result<(),String>{if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err("invalid Semio audio row identity or columns".into())}else{Ok(())}}
 impl ArtifactSqliteSnapshot for SemioAudioSnapshot{
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

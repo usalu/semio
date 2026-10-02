@@ -86,9 +86,8 @@ describe("♿️ theme contrast live warning", () => {
 
 describe("Inline Tree resolution controls", () => {
   it("keeps both labeled resolution buttons available before selecting the conflict", () => {
-    const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
-    const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🎛️inline-tree-controls", "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🎛️inline-tree-controls", "🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json"), "utf8"));
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const resolve = vi.fn();

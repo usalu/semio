@@ -20,8 +20,8 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetShotS
     fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["selected_shot_ids".into()]

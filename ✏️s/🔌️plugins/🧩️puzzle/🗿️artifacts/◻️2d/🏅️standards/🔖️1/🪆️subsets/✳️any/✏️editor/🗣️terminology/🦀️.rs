@@ -2,7 +2,10 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel};
+use semio_framework_ui_locale::AppLabels;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
@@ -11,7 +14,7 @@ use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel};
 // cells repeat the native text verbatim were previously inherited via `..PUZZLE2D_LABELS_NATIVE_EN`
 // struct-update syntax — the new macro has no implicit inheritance, so those cells are now spelled
 // out explicitly (same text, four times).
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     pub struct Puzzle2dLabels {
         // entity nouns — remapped under the "reuse" terminology
         nodes: native_en "Nodes", native_de "Knoten", reuse_en "Building components", reuse_de "Baukomponenten";

@@ -22,5 +22,8 @@
         "forwardAllArgs": true
       }
     }
+  },
+  "metadata": {
+    "nativeRoot": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
   }
 }

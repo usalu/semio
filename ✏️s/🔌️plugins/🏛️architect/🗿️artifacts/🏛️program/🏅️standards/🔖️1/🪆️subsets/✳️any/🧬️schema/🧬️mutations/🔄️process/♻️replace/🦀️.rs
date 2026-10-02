@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceProcess {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace process \"{}\"", self.process.header.name), &format!("Prozess \"{}\" ersetzen", self.process.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace process \"{}\"", self.process.header.name), &format!("Prozess \"{}\" ersetzen", self.process.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.process.header.id.0.clone()]

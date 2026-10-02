@@ -50,7 +50,7 @@ fn generations_window(json: &str) -> (u64, u64, Vec<String>) {
 fn generations_view(open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
     ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_GENERATIONS.into(), node_key: GENERATION2D_PLAY_GENERATIONS_SECTION.into(), open, offset, rows }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

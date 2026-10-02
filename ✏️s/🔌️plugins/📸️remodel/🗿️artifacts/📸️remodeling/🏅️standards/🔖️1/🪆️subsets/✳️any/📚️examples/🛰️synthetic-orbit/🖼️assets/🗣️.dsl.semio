@@ -40,7 +40,7 @@ results {
   mesh {
     source=placeholder
     mesh {
-      child_id=remodeling-mesh-constant-box target="remodeling-mesh-constant:box!s.stdio.semio@v1/mesh"
+      child_id=remodeling-mesh-constant-box target { artifact-id="remodeling-mesh-constant:box" artifact-kind="s.stdio.semio" standard="v1" subset="mesh" }
     }
   }
   tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {

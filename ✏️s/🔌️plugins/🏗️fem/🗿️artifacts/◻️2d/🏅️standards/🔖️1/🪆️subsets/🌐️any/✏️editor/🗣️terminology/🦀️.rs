@@ -3,10 +3,11 @@
 //! inspector and the results/playback panel all resolve their nouns, field names and verbs here, so
 //! a term is spelled once per locale and never drifts between two panels showing the same entity.
 
-use semio_framework_plugin::{Locale, ViewModel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the fem2d app; one field per label makes every locale combination compile-checked.
     pub struct Fem2dLabels {
         artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";

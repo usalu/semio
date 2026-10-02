@@ -11,6 +11,7 @@ type Vector = Readonly<{
   projectName: string;
   projectRoot: string;
   nativeProject: Readonly<{ name: string; root: string; fixturePath: string }>;
+  nativeVocabulary: readonly { id: string; root: string; inputs: Record<string, string[]>; target: string; samples: readonly { path: string; selected: boolean }[]; refused: boolean }[];
   samples: readonly Readonly<{ id: string; role: "fixture" | "test" | "asset" | "code"; path: string; production: boolean; test: boolean }>[];
 }>;
 
@@ -88,4 +89,17 @@ test("production cache inputs exclude fixtures while test inputs retain them", (
   expect(nativeSelected("production")).toBe(false);
   expect(nativeSelected("test")).toBe(true);
   expect(cachePlugin.name).toBe("@repo/emoji-project-json");
+});
+
+
+test("native input vocabulary is total while owner overrides and unknown refusals remain exact", () => {
+  expect(new Ajv({ strict: true }).validate(schema, vector)).toBe(true);
+  for (const row of vector.nativeVocabulary) {
+    const project = { name: row.id, type: "lib" as const, data: { root: row.root, namedInputs: row.inputs, targets: { proof: { inputs: [{ input: row.target }] } } } };
+    if (row.refused) { expect(() => getTargetInputs(nxJson, project, "proof")).toThrow("not defined"); continue; }
+    const patterns = getTargetInputs(nxJson, project, "proof").selfInputs;
+    const selected = filterUsingGlobPatterns(row.root, row.samples.filter(sample => sample.path.startsWith(row.root + "/")).map(sample => ({ file: sample.path, hash: sample.path })), patterns).map(file => file.file);
+    expect(selected).toEqual(row.samples.filter(sample => sample.selected).map(sample => sample.path));
+    expect(selected).toEqual(row.samples.filter(sample => oracle(sample.path, patterns, row.root)).map(sample => sample.path));
+  }
 });

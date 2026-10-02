@@ -26,6 +26,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-s-artifact-dag-dag = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }

@@ -1534,25 +1534,25 @@
       ],
       "properties": {
         "min": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "max": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "target": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "current": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "forecast": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "peak": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "average": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "unit": {
           "type": "string"
@@ -2396,7 +2396,7 @@
         "tolerancePercent": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2406,7 +2406,7 @@
         "peakFactor": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2416,7 +2416,7 @@
         "growthFactor": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2426,7 +2426,7 @@
         "unitCost": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2691,7 +2691,7 @@
         "strength": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2770,7 +2770,7 @@
         "distanceConstraintM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2968,7 +2968,7 @@
           }
         },
         "weight": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "rationale": {
           "anyOf": [
@@ -2983,7 +2983,7 @@
         "distanceMaxM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -2993,7 +2993,7 @@
         "distanceMinM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -3414,7 +3414,7 @@
         "peakRate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -3424,7 +3424,7 @@
         "clearWidthM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -3434,7 +3434,7 @@
         "clearHeightM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -3849,7 +3849,7 @@
         "uptimeTarget": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4084,7 +4084,7 @@
         "weightKg": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4094,7 +4094,7 @@
         "powerKw": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4120,7 +4120,7 @@
         "noiseLevelDb": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4168,7 +4168,9 @@
         "lifecycleYears": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -4178,7 +4180,7 @@
         "replacementCost": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4395,7 +4397,7 @@
         "costPerUnit": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4459,7 +4461,7 @@
         "sharingRatio": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4562,7 +4564,7 @@
         "volumeM3": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4572,7 +4574,7 @@
         "weightKg": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4679,7 +4681,7 @@
         "growthAllowance": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4796,7 +4798,7 @@
         "targetValue": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4816,7 +4818,7 @@
         "minValue": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -4826,7 +4828,7 @@
         "maxValue": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5280,7 +5282,7 @@
         "clearWidthM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5290,7 +5292,7 @@
         "clearHeightM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5300,7 +5302,7 @@
         "turningCircleM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -5310,7 +5312,7 @@
         "rampSlope": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6289,7 +6291,7 @@
         "latitude": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6299,7 +6301,7 @@
         "longitude": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6309,7 +6311,7 @@
         "elevationM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6413,7 +6415,7 @@
         "maxHeightM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6423,7 +6425,7 @@
         "maxCoverage": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6956,7 +6958,7 @@
         "peakDemand": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6966,7 +6968,7 @@
         "diversityFactor": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -6994,7 +6996,7 @@
         "lifecycleCost": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -7524,7 +7526,7 @@
         "maximumSignageDistanceM": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -7713,7 +7715,9 @@
         "floatDays": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -7773,7 +7777,9 @@
         "contingencyDays": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -7904,7 +7910,7 @@
         "costOfChange": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8050,12 +8056,14 @@
           "$ref": "#/$defs/TimestampMeta"
         },
         "horizonYears": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "growthRate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8101,7 +8109,7 @@
         "budgetEnvelope": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8260,7 +8268,7 @@
         "baseline": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8270,7 +8278,7 @@
         "targetValue": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8344,7 +8352,7 @@
         "embodiedCarbon": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8354,7 +8362,7 @@
         "operationalCarbon": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8669,7 +8677,7 @@
         "amount": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8692,7 +8700,7 @@
         "unitCost": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8702,7 +8710,7 @@
         "contingencyPercent": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -8712,7 +8720,7 @@
         "escalationRate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9076,7 +9084,7 @@
         "riskScore": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9356,7 +9364,7 @@
         "costImpact": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9587,7 +9595,7 @@
         "costEstimate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9705,7 +9713,9 @@
         "rank": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -9715,7 +9725,7 @@
         "weight": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9803,7 +9813,7 @@
         "score": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9952,7 +9962,7 @@
         "probability": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9972,7 +9982,7 @@
         "costDelta": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9982,7 +9992,7 @@
         "areaDelta": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -9992,7 +10002,7 @@
         "headcountDelta": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10135,13 +10145,13 @@
         "scores": {
           "type": "array",
           "items": {
-            "type": "number"
+            "$ref": "#/$defs/Binary64Transport"
           }
         },
         "weightedScore": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10151,7 +10161,7 @@
         "costEstimate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10394,7 +10404,7 @@
         "costImpact": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10701,7 +10711,7 @@
         "target": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10721,7 +10731,7 @@
         "minimum": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10731,7 +10741,7 @@
         "maximum": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10773,7 +10783,7 @@
         "baseline": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10793,7 +10803,7 @@
         "weight": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10843,7 +10853,7 @@
         "penaltyThreshold": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -10853,7 +10863,7 @@
         "incentiveThreshold": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -12484,7 +12494,7 @@
         "costImpact": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -12902,7 +12912,7 @@
         "durationMs": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Unsigned64Transport"
             },
             {
               "type": "null"
@@ -13384,7 +13394,7 @@
           ]
         },
         "useCount": {
-          "type": "number"
+          "$ref": "#/$defs/Unsigned64Transport"
         },
         "pinned": {
           "type": "boolean"
@@ -13529,7 +13539,7 @@
         "progressPercent": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -13777,7 +13787,7 @@
         "budget": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -13911,12 +13921,14 @@
           ]
         },
         "responseCount": {
-          "type": "number"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "responseRate": {
           "anyOf": [
             {
-              "type": "number"
+              "$ref": "#/$defs/Binary64Transport"
             },
             {
               "type": "null"
@@ -14555,7 +14567,7 @@
           "$ref": "#/$defs/ValidationStatus"
         },
         "usageCount": {
-          "type": "number"
+          "$ref": "#/$defs/Unsigned64Transport"
         },
         "lastApplied": {
           "anyOf": [
@@ -14767,7 +14779,7 @@
           }
         },
         "usageCount": {
-          "type": "number"
+          "$ref": "#/$defs/Unsigned64Transport"
         }
       }
     },
@@ -14846,7 +14858,7 @@
           "type": "string"
         },
         "value": {
-          "type": "number"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "unit": {
           "type": "string"
@@ -14854,7 +14866,9 @@
         "sampleSize": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -14874,7 +14888,9 @@
         "collectionYear": {
           "anyOf": [
             {
-              "type": "number"
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -15197,6 +15213,39 @@
           }
         }
       }
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        }
+      ]
+    },
+    "Unsigned64Transport": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        }
+      ]
     }
   }
 }

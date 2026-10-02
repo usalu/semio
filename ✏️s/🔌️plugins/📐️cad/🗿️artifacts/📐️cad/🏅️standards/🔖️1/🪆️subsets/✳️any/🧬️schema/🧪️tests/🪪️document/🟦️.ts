@@ -19,11 +19,12 @@ type InvalidDocument = { kind: string; field?: string; value: unknown };
 export function testCadDocumentContractOracle(): void {
   testCadWorldWindowConfigContract();
   const document = structuredClone(vectors.document) as Record<string, unknown>;
+  const mismatchedChild = structuredClone(document) as Record<string, any>;
+  mismatchedChild.shapeModel.childId = "foreign-id";
   const invalidRows = vectors.invalidDocuments as InvalidDocument[];
-  const invalidDocuments = invalidRows.filter((row) => row.kind !== "shapeChildId").map((row) => {
+  const invalidDocuments = invalidRows.map((row) => {
     const candidate = structuredClone(document) as Record<string, any>;
     if (row.kind === "field") candidate[row.field!] = row.value;
-    if (row.kind === "shapeChildId") candidate.shapeModel.childId = row.value;
     if (row.kind === "shapeSubset") candidate.shapeModel.target.dialect.subset = row.value;
     if (row.kind === "drawingSubset") candidate.drawings[0].target.dialect.subset = row.value;
     return candidate;
@@ -33,13 +34,11 @@ export function testCadDocumentContractOracle(): void {
     artifact: { schema: artifactSchema, parse: parseCadArtifact },
     snapshot: { schema: snapshotSchema, parse: parseCadSnapshot },
     diff: { schema: diffSchema, parse: parseCadDiff },
-    validDocuments: [{ input: vectors.document, output: vectors.document }],
+    validDocuments: [{ input: vectors.document, output: vectors.document }, { input: mismatchedChild, output: mismatchedChild }],
     invalidDocuments, invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
     committed: { snapshots: 38, diffs: 19 },
   });
-  const mismatchedChild = structuredClone(document) as Record<string, any>;
-  mismatchedChild.shapeModel.childId = "foreign-id";
-  assert.throws(() => parseCadSnapshot(mismatchedChild), /childId must equal target.artifactId/);
+  assert.deepEqual(parseCadSnapshot(mismatchedChild), mismatchedChild);
   assert.deepEqual(parseCadDiff(vectors.diff), vectors.diff);
 }

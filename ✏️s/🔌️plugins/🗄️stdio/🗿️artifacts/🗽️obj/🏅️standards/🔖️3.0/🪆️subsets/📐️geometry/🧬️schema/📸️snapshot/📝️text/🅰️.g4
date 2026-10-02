@@ -1,27 +1,20 @@
-// 🅰️ ANTLR grammar for `stdio.obj` (snapshot text) — the real, commonly-implemented
-// Wavefront OBJ 3.0 statement grammar (statements may appear in any order).
 grammar Stdio_obj_snapshot;
-
-document    : statement* EOF ;
-statement   : comment | vertex | texcoord | normal | face | objectStmt | groupStmt
-            | usemtlStmt | mtllibStmt | smoothingStmt | unknownStmt ;
-
-comment     : COMMENT ;
-vertex      : 'v' FLOAT FLOAT FLOAT FLOAT? ;
-texcoord    : 'vt' FLOAT FLOAT? FLOAT? ;
-normal      : 'vn' FLOAT FLOAT FLOAT ;
-face        : 'f' faceVertex faceVertex faceVertex+ ;
-faceVertex  : INDEX ('/' INDEX? '/' INDEX | '/' INDEX)? ;
-objectStmt  : 'o' NAME? ;
-groupStmt   : 'g' NAME* ;
-usemtlStmt  : 'usemtl' NAME? ;
-mtllibStmt  : 'mtllib' NAME+ ;
-smoothingStmt : 's' ('off' | INDEX) ;
-unknownStmt : UNKNOWN_LINE ;
-
-FLOAT       : '-'? DIGIT+ ('.' DIGIT+)? (('e'|'E') ('-'|'+')? DIGIT+)? ;
-INDEX       : '-'? DIGIT+ ;
-NAME        : (~[ \t\r\n])+ ;
-COMMENT     : '#' ~[\r\n]* ;
-UNKNOWN_LINE: ~[\r\n]+ ;
-fragment DIGIT : [0-9] ;
+document: 'semio' 'stdio.obj.dsl' 'v1' snapshot EOF;
+snapshot: 'schema' '=' text ('mtllib' '=' text)? 'vertices' '=' '[' vertex* ']' 'texcoords' '=' '[' texcoord* ']' 'normals' '=' '[' normal* ']' 'faces' '=' '[' face* ']' 'groups' '=' '[' membership* ']' 'objects' '=' '[' membership* ']' 'usemtl' '=' '[' material* ']' 'smoothing-groups' '=' '[' smoothing* ']' 'unknown-statements' '=' '[' unknown* ']';
+vertex: '{' 'x' '=' number 'y' '=' number 'z' '=' number ('w' '=' number)? '}';
+texcoord: '{' 'u' '=' number 'v' '=' number ('w' '=' number)? '}';
+normal: '{' 'x' '=' number 'y' '=' number 'z' '=' number '}';
+face: '{' 'vertices' '=' '[' corner* ']' '}';
+corner: '{' 'vertex' '=' INT ('texcoord' '=' INT)? ('normal' '=' INT)? '}';
+membership: '{' 'name' '=' text 'faces' '=' '[' INT* ']' '}';
+material: '{' 'face-index-from' '=' INT 'material' '=' text '}';
+smoothing: '{' 'face-index-from' '=' INT ('group' '=' INT)? '}';
+unknown: '{' 'line-index' '=' INT 'raw' '=' text '}';
+number: FLOAT | INT | IEEE;
+text: IDENT | TEXT;
+IEEE: '-inf' | 'inf' | 'NaN' | 'nan64_' [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9] [a-fA-F0-9];
+FLOAT: '-'? [0-9]+ ('.' [0-9]+ (('e'|'E') ('-'|'+')? [0-9]+)? | ('e'|'E') ('-'|'+')? [0-9]+);
+INT: '-'? [0-9]+;
+IDENT: [a-zA-Z_] [a-zA-Z0-9_.-]*;
+TEXT: '"' ('\\' . | ~["\\])* '"';
+WS: [ \t\r\n]+ -> skip;

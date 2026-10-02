@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-mesh-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_stdio_mesh_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:stl_io", "dep:tobj"]
+
+[dependencies]
+"semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"stl_io" = { version = "0.8", optional = true }
+"tobj" = { version = "4", optional = true }

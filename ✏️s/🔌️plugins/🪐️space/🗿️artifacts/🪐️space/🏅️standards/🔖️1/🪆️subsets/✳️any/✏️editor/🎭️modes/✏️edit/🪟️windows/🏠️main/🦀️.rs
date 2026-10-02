@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, Space
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{activation_target, row_action, table_window_row, TableWindowKit, TreeWindows, WindowKit};
-use semio_framework_plugin::plugin_app_close_prelude::Label;
+use semio_framework_ui_contract::Label;
 use semio_framework_plugin::{IconName, RowActionPlacement, WindowKindDefinition};
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 

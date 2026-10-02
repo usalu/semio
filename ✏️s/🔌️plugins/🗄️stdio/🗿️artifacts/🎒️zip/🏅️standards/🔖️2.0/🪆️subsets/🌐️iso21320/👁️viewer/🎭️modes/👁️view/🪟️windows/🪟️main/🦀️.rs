@@ -5,7 +5,10 @@
 
 use crate::ZipSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;

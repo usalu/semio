@@ -6,6 +6,11 @@ import {
   type Puzzle5dFastener,
   type Puzzle5dPart,
   type Puzzle5dTargetVolume,
+  type Puzzle5dArtifact,
+  type Puzzle5dKindCompatibility,
+  type Puzzle5dMeta,
+  type Puzzle5dKindCatalogsExtra,
+  type ArtifactChildHandle,
 } from "../🟦️.ts";
 
 /** ⚓️ Part root plane policy. */
@@ -28,7 +33,7 @@ export interface Puzzle5dDiff {
   /** @state artifact */
   meta?: Puzzle5dMeta;
   /** @state artifact */
-  kindCatalogs?: Puzzle5dKindCatalogs | null;
+  kindCatalogs?: ArtifactChildHandle | null;
   /** @state artifact */
   kindCatalogsExtra?: Puzzle5dKindCatalogsExtra | null;
   /** @state artifact */
@@ -51,11 +56,7 @@ export interface Puzzle5dFastenerPatch { replacement?: Puzzle5dFastener; }
 export interface Puzzle5dTargetVolumesDelta { added: Puzzle5dTargetVolume[]; removed: string[]; patched: Puzzle5dTargetVolumePatchEntry[]; reordered?: string[]; }
 export interface Puzzle5dTargetVolumePatchEntry { id: string; patch: Puzzle5dTargetVolumePatch; }
 export interface Puzzle5dTargetVolumePatch { replacement?: Puzzle5dTargetVolume; }
-export interface Puzzle5dKindCompatibility { source?: string; target?: string; bidirectional?: boolean; important?: boolean; specificity?: Puzzle5dCompatSpecificity; [key: string]: unknown; }
-export interface Puzzle5dArtifact { [key: string]: unknown; }
-export interface Puzzle5dMeta { [key: string]: unknown; }
-export interface Puzzle5dKindCatalogs { [key: string]: unknown; }
-export interface Puzzle5dKindCatalogsExtra { [key: string]: unknown; }
+export type { Puzzle5dArtifact, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dKindCatalogsExtra, ArtifactChildHandle } from "../🟦️.ts";
 
 export interface Puzzle5dKindCompatibilityList { values: Puzzle5dKindCompatibility[]; }
 

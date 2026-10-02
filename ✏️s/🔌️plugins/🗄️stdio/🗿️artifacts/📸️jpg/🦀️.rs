@@ -42,7 +42,6 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA);
     codec.extension = "jpg";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
@@ -70,7 +69,7 @@ pub const JPG_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg"
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.jpg".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Jpg", "Jpg"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Jpg", "Jpg"),
         source_format: STDIO_JPG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

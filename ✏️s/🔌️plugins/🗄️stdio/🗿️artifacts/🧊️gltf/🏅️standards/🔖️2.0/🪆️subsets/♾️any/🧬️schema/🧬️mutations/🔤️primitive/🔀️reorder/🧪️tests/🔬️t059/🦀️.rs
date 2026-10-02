@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ReorderPrimitiveAttributesMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "reorder-primitive-attributes");
-    super::super::component::fixture_corpus_tests::assert_case("🔤️primitive-attribute/🔀️reorder/🔬️t059");
+    super::super::component::fixture_corpus_tests::assert_case("🔤️primitive/🔀️reorder/🔬️t059");
 }

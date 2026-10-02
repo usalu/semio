@@ -56,7 +56,7 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, BitmapSnapshot>
     let mutations = replace_document_operations(doc.snapshot, &next);
     match mutations.is_empty() {
         true => Ok(Emit::default()),
-        false => Ok(Emit { artifact_mutations: mutations, description: Some(format!("Load example {example_id}")), ..Default::default() }),
+        false => Ok(Emit::mutations(mutations)),
     }
 }
 

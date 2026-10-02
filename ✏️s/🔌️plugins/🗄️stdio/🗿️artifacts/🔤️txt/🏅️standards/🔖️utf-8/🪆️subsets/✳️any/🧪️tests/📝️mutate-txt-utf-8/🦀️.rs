@@ -12,8 +12,8 @@
 //! laws in role rather than deferring every check to the comparison.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{bstr_split, independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
+use semio_s_artifact_stdio_txt_test_oracle::standards::v_utf_8::subsets::any::{bstr_split, independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
 
@@ -117,11 +117,11 @@ mod subject {
     use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_txt::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_txt::{TxtMutation, TxtSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
+    use semio_s_artifact_stdio_txt_test_oracle::standards::v_utf_8::subsets::any::project_txt;
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
     /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.

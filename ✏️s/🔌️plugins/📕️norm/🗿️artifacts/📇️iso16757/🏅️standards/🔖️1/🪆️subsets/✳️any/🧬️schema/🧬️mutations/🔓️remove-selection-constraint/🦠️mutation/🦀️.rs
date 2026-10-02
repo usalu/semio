@@ -20,8 +20,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemoveSelect
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlbedingung #{} entfernen", self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove selection constraint #{}", self.index), &format!("Auswahlbedingung #{} entfernen", self.index))
     }
 }
 //#endregion 🔖️Payload

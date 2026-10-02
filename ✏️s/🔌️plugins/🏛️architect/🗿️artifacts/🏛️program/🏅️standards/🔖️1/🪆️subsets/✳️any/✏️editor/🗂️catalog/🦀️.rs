@@ -18,7 +18,8 @@ use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::normalize_pair;
 use crate::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use dsl::DslValue as Value;
-use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const REGISTER_IDS: &[&str] = &[
     "stakeholders",

@@ -27,8 +27,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_frame_fill(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change frame \"{}\" fill", self.frame_id), &format!("Füllung von Rahmen \"{}\" ändern", self.frame_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change frame \"{}\" fill", self.frame_id), &format!("Füllung von Rahmen \"{}\" ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

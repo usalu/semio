@@ -38,8 +38,8 @@ impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
         vec!["uri".to_string()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change document URI to \"{}\"", self.new_uri), &format!("Dokument-URI auf \"{}\" ändern", self.new_uri))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change document URI to \"{}\"", self.new_uri), &format!("Dokument-URI auf \"{}\" ändern", self.new_uri))
     }
 }
 //#endregion 🔖️Mutation

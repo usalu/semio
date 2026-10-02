@@ -77,7 +77,7 @@ fn the_built_tree_carries_one_trigger_per_row_with_the_selected_and_disabled_pre
     let UiNode::Button(first) = &list.children[0] else { panic!("a trigger is a Button") };
     assert_eq!(first.id.as_deref(), Some("admin.tabs.trigger.a"));
     assert_eq!(first.action.controller_id, "admin");
-    assert_eq!(first.action.args, Some(dsl::DslValue::Object(vec![("value".to_string(), dsl::DslValue::String("a".to_string()))])), "a click carries its own value, so one verb serves every trigger");
+    assert_eq!(first.action.args, Some(semio_framework_value::DslValue::Object(vec![("value".to_string(), semio_framework_value::DslValue::String("a".to_string()))])), "a click carries its own value, so one verb serves every trigger");
 }
 
 #[test]

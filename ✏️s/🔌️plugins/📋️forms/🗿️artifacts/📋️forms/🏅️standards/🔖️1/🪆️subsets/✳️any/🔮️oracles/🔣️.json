@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.forms.form` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
   "oracles": [
@@ -71,7 +71,11 @@
       "testOnly": true,
       "productionReachable": false,
       "networkDuringExecution": false,
-      "notes": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors."
+      "notes": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "Response event twins in Rust and TypeScript consume five shared before/event/after vectors at 🧬️schema/📨️response/🧫️fixtures/🔣️events.json. The TypeScript test independently applies fast-json-patch differences to reproduce accepted transitions and checks exact undo. The catalog snapshots below cover retry and missing-target guards; successful append and removal are covered by those shared response vectors."
     }
   ],
   "noOracleDecisions": [],

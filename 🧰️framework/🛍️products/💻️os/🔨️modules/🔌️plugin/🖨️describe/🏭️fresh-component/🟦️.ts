@@ -1,13 +1,14 @@
+import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
-import { acquireCargoBuildLeaseV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { createFreshComponentTests } from "../🧪️tests/🆕️fresh-component/🟦️.ts";
@@ -39,7 +40,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
     observe();
     if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: cargoDirectories(cwd, env).build, args, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
     if (command === "cargo") freshCheckpoint(control, stage, completed, total);
-    const result = await runExactCargoLawProcess(command, argv, {
+    const result = await captureOwnedProcess(command, argv, {
       cwd,
       env,
       budgetMs: Math.min(budgetMs, control.remainingMs()),

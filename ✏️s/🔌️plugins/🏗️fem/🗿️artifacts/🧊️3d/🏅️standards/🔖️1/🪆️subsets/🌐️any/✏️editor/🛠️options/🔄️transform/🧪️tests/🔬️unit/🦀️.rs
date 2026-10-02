@@ -3,7 +3,7 @@ use semio_framework_plugin::ViewModel;
 
 #[test]
 fn transform_options_group_is_tagged_for_transform_utility() {
-    let labels = crate::editor::fem3d::terminology::fem3d_labels(&ViewModel::default());
+    let labels = crate::editor::fem3d::terminology::fem3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let group = measure(&Fem3dGumballConfig::default(), labels);
     let WindowMeasure::Group { id, active_utility_id, children, .. } = group else { panic!("group") };
     assert_eq!(id, format!("{FEM3D_PLAY_CONTROLLER_ID}-utility-options-transform"));

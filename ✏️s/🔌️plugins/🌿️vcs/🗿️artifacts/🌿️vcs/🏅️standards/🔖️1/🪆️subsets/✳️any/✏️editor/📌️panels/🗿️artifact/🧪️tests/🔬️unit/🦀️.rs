@@ -85,13 +85,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_history_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let history = oversized_history(OVERSIZED);
-    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     let checkpoints = window_law_node(&tree, CHECKPOINTS_SECTION);
     assert_eq!(window_law_extent(checkpoints), (OVERSIZED as u32, 0));
     assert!(checkpoints.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", checkpoints.children.len());
@@ -102,7 +102,7 @@ async fn an_oversized_history_stamps_the_full_total_and_materialises_at_most_its
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let history = oversized_history(OVERSIZED);
     let view = window_law_view(vec![window_law_request(CHECKPOINTS_SECTION, Some(false), 0, 32)]);
-    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::default()), &TreeWindows::for_body(&view, VCS_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, VCS_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let checkpoints = window_law_node(&tree, CHECKPOINTS_SECTION);
     assert_eq!(window_law_extent(checkpoints), (OVERSIZED as u32, 0));
     assert_eq!(checkpoints.children.len(), 0);
@@ -112,7 +112,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_newest_first_slice() {
     let history = oversized_history(OVERSIZED);
     let view = window_law_view(vec![window_law_request(CHECKPOINTS_SECTION, Some(true), 10, 4)]);
-    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::default()), &TreeWindows::for_body(&view, VCS_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
+    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, VCS_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let checkpoints = window_law_node(&tree, CHECKPOINTS_SECTION);
     assert_eq!(window_law_extent(checkpoints), (OVERSIZED as u32, 10));
     let expected: Vec<String> = (0..4).map(|row| format!("vcs-play-document.checkpoint.checkpoint-{:03}", OVERSIZED - 1 - (10 + row))).collect();
@@ -125,7 +125,7 @@ async fn a_window_request_materialises_exactly_its_newest_first_slice() {
 #[semio_framework_async_macros::async_test]
 async fn the_tree_root_carries_one_interaction_select_and_rows_keep_their_checkout_action() {
     let history = oversized_history(3);
-    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
+    let tree = render(&history, crate::editor::vcs::terminology::vcs_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1);
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     for row in window_law_node(&tree, CHECKPOINTS_SECTION).children.iter() {

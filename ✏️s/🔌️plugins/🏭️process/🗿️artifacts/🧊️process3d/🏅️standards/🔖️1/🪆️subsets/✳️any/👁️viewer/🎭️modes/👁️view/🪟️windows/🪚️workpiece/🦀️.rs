@@ -12,7 +12,17 @@ use crate::schema::inferences::processed_mesh;
 use crate::Process3dSnapshot;
 use semio_framework_os_kernel::json;
 use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::world3d_camera_json;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeshView;
+use semio_framework_plugin::MeshWindowKit;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const PROCESS3D_VIEW_WINDOW_MAIN: &str = "process-workpiece-view";

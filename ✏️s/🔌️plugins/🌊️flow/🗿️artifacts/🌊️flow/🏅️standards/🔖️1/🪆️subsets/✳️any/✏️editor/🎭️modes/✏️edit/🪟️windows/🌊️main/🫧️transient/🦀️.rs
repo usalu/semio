@@ -113,12 +113,12 @@ impl protocol::OpBinary for FlowWindowTransientMutation {
     }
 }
 
-store::artifact_retire_struct!(FlowWindowTransient { generation_json, duplicate_widget_progress_json });
+semio_framework_value::artifact_retire_struct!(FlowWindowTransient { generation_json, duplicate_widget_progress_json });
 
-impl store::retirement::RetireOwned for FlowWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for FlowWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
         }
     }
 }
@@ -144,8 +144,8 @@ macro_rules! transient_owner {
             type State = FlowWindowTransient;
             type Mutation = FlowWindowTransientMutation;
             fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-                let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-                let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
                 semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }

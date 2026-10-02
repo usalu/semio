@@ -33,7 +33,7 @@ import { dirname, join } from "node:path";
 import Graph from "graphology";
 import { compare, applyPatch, deepClone, type Operation } from "fast-json-patch";
 import { Validator } from "jsonschema";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors

@@ -15,8 +15,8 @@ pcm8 = "kind" "=" "pcm8" "pcm8" "=" "[" INT* "]"
 float32 = "kind" "=" "float32" "float32" "=" "[" number* "]"
 raw = "kind" "=" "raw" "raw" "=" "[" INT* "]"
 other-chunks = "other-chunks" "=" "[" auxiliary-chunk* "]"
-auxiliary-chunk = "fourcc" "=" text "data" "=" STRING "pad-byte" "=" INT
+auxiliary-chunk = "{" "fourcc" "=" text "data" "=" STRING "pad-byte" "=" INT "}"
 chunk-order = "chunk-order" "=" "[" chunk-reference* "]"
-chunk-reference = "kind" "=" ("format" / "samples" / ("other" "index" "=" INT))
+chunk-reference = "{" "kind" "=" ("format" / "samples" / ("other" "index" "=" INT)) "}"
 text = STRING / IDENT / INT / FLOAT
 number = INT / FLOAT / IDENT

@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn labels_resolve_native_english_and_german_from_the_shared_view_state() {
-    assert_eq!(generation3d_labels(&semio_framework_plugin::ViewModel::default()).widgets.as_str(), "Widgets");
-    assert_eq!(generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() }).widgets.as_str(), "Elemente");
+    assert_eq!(generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).widgets.as_str(), "Widgets");
+    assert_eq!(generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) }).widgets.as_str(), "Elemente");
 }
 
 /// 🗣️ The shared roster both halves of the i18n law answer.

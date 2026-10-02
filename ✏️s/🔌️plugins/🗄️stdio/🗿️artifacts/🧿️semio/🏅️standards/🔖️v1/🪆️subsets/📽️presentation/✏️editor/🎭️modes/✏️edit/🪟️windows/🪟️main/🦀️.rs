@@ -57,7 +57,7 @@ fn world_instances_json(document: &SemioPresentationSnapshot) -> String {
 pub fn render(document: &SemioPresentationSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = pack::json_to_string(&pack::JsonValue::from(vec![pack::json_object([
         ("id".to_string(), pack::JsonValue::from(SEMIO_PRESENTATION_EDIT_FALLBACK_MESH_KIND)),
-        ("data".to_string(), pack::json_from_dsl_value(&dsl::to_dsl_value(&mesh_from_kind(SEMIO_PRESENTATION_EDIT_FALLBACK_MESH_KIND)).expect("MeshData serializes"))),
+        ("data".to_string(), pack::json_from_dsl_value(&semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_PRESENTATION_EDIT_FALLBACK_MESH_KIND)))),
     ])]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_PRESENTATION_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_PRESENTATION_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_PRESENTATION_EDIT_DEFAULT_CAMERA_FOV),

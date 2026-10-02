@@ -65,23 +65,19 @@ async fn send(app: &mut Generation3dApp, args: serde_json::Value) {
     settle_registered_typed_operation(app, action_meta.instance_id).await.expect("nodeGraphEdit settles");
 }
 
-/// 🧾️ Every applied history row that carries document operations.
+/// 🧾️ Every applied history row that carries document operations, oldest first.
 async fn edit_rows(app: &mut Generation3dApp) -> Vec<HistoryEntry> {
-    PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect()
+    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
 }
 
-/// 📍️ Places every widget of the document on the canvas in ONE setup edit, so a node drag has base positions; answers
-/// the placed ids.
-async fn place_every_widget(app: &mut Generation3dApp) -> Vec<String> {
-    let mut placed = snapshot(app).host_snapshot.clone();
-    let ids: Vec<String> = placed.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
-    for (index, id) in ids.iter().enumerate() {
-        let _ = placed.layout.insert(id.clone(), semio_framework_artifact_flow_flow::WidgetLayout { x: index as f64 * 100.0, y: 50.0 });
-    }
-    let json = dsl::json::to_json_string(&dsl::ToValue::to_value(&placed));
-    placed.retire_cold();
-    dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: serde_json::json!([{ "operation": "setHostSnapshot", "hostSnapshotJson": json }]).to_string() })).await;
-    ids
+/// 📍️ Lays every widget of the document out on the canvas (the `reorganize` verb, ONE setup edit), so a node drag has base
+/// positions; answers the placed ids with their base positions.
+async fn place_every_widget(app: &mut Generation3dApp) -> Vec<(String, (f64, f64))> {
+    dispatch(app, Generation3dCommand::Reorganize(crate::editor::generation3d::commands::reorganize::Reorganize {})).await;
+    let read = snapshot(app);
+    read.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
 }
 
 fn english(entry: &HistoryEntry) -> String {
@@ -158,13 +154,13 @@ fn a_slider_tick_declares_the_narrow_scope_the_table_states() {
 async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
     let _serial = crate::test_serial::lock();
     let mut app = app().await;
-    let ids = place_every_widget(&mut app).await;
-    let dragged = vec![ids[0].clone(), ids[1].clone()];
+    let placed = place_every_widget(&mut app).await;
+    let [(first, (first_x, first_y)), (second, (second_x, second_y))] = [placed[0].clone(), placed[1].clone()];
     let before = edit_rows(&mut app).await.len();
-    send(&mut app, serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": dragged, "dx": 40.0, "dy": -12.5 }] })).await;
+    send(&mut app, serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [first, second], "dx": 40.0, "dy": -12.5 }] })).await;
     let read = snapshot(&app);
-    assert_eq!(read.host_snapshot.layout.get(ids[0].as_str()).map(|layout| (layout.x, layout.y)), Some((40.0, 37.5)));
-    assert_eq!(read.host_snapshot.layout.get(ids[1].as_str()).map(|layout| (layout.x, layout.y)), Some((140.0, 37.5)));
+    assert_eq!(read.host_snapshot.layout.get(first.as_str()).map(|layout| (layout.x, layout.y)), Some((first_x + 40.0, first_y - 12.5)));
+    assert_eq!(read.host_snapshot.layout.get(second.as_str()).map(|layout| (layout.x, layout.y)), Some((second_x + 40.0, second_y - 12.5)));
     drop(read);
     let rows = edit_rows(&mut app).await;
     let rows = &rows[before..];
@@ -182,7 +178,8 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
 async fn a_drag_that_moves_nothing_leaves_zero_trace_and_two_drags_are_two_transactions() {
     let _serial = crate::test_serial::lock();
     let mut app = app().await;
-    let ids = place_every_widget(&mut app).await;
+    let (id, (x, y)) = place_every_widget(&mut app).await.remove(0);
+    let ids = [id];
     let before = edit_rows(&mut app).await.len();
     send(&mut app, serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": [ids[0]], "dx": 0.0, "dy": 0.0 }] })).await;
     send(&mut app, serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": ["ghost"], "dx": 10.0, "dy": 0.0 }] })).await;
@@ -193,6 +190,48 @@ async fn a_drag_that_moves_nothing_leaves_zero_trace_and_two_drags_are_two_trans
     let rows = &rows[before..];
     assert_eq!(rows.len(), 2, "{rows:?}");
     assert_ne!(rows[0].transaction.as_ref().expect("first").id, rows[1].transaction.as_ref().expect("second").id, "two drags are two transactions");
-    assert_eq!(snapshot(&app).host_snapshot.layout.get(ids[0].as_str()).map(|layout| (layout.x, layout.y)), Some((10.0, 60.0)));
+    assert_eq!(snapshot(&app).host_snapshot.layout.get(ids[0].as_str()).map(|layout| (layout.x, layout.y)), Some((x + 10.0, y + 10.0)));
 }
 //#endregion ✋️NodeDrag
+
+//#region 🔗️EditRows
+const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+
+/// ⚖️ LAW (shared row contract, design §13.3; fixture `🧫️node-graph-edit-rows`): every accepted renderer row decodes, and
+/// every refused one — a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute move, an unknown
+/// operation — refuses the whole `nodeGraphEdit` batch, both at admission and at authoring, before anything is authored.
+#[test]
+fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
+    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS_JSON).expect("node-graph edit rows fixture");
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        assert!(rows(&NodeGraphEdit { operations_json: serde_json::json!([case["row"]]).to_string() }).is_ok(), "{} decodes", case["id"]);
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
+        assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
+        let args: dsl::DslValue = serde_json::json!({ "operations": batch }).into();
+        assert!(<crate::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&args)).is_err(), "{} is refused at admission", case["id"]);
+    }
+}
+
+/// ⚖️ LAW: a `delete {nodeIds, synapseIds}` row deletes exactly the widget and the wire it names, as ONE edit — no ambient
+/// selection is read.
+#[semio_framework_async_macros::async_test]
+async fn a_delete_row_deletes_exactly_the_named_widget_and_wire_as_one_edit() {
+    let _serial = crate::test_serial::lock();
+    let mut app = app().await;
+    let (wire, widget) = {
+        let read = snapshot(&app);
+        let wire = read.host_snapshot.synapses.first().expect("a wire").clone();
+        let widget = read.host_snapshot.widgets.iter().map(crate::widget_id).find(|id| *id != wire.from && *id != wire.to).expect("a widget the wire does not hold").to_string();
+        (wire.id, widget)
+    };
+    let before = edit_rows(&mut app).await.len();
+    send(&mut app, serde_json::json!({ "operations": [{ "operation": "delete", "nodeIds": [widget], "synapseIds": [wire] }] })).await;
+    let read = snapshot(&app);
+    assert!(!read.host_snapshot.synapses.iter().any(|synapse| synapse.id == wire), "the named wire is gone");
+    assert!(!read.host_snapshot.widgets.iter().any(|candidate| crate::widget_id(candidate) == widget), "the named widget is gone");
+    drop(read);
+    assert_eq!(edit_rows(&mut app).await.len() - before, 1, "one delete row, one edit");
+}
+//#endregion 🔗️EditRows

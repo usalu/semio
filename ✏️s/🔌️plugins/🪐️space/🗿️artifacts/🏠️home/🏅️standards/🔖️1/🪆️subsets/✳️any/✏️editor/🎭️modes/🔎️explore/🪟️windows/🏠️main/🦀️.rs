@@ -25,7 +25,11 @@ use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
 use semio_framework_plugin::app::{row_action, row_target, table_window_row, TableWindowKit, TreeWindows, WindowKit};
-use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, RowActionPlacement, WindowKindDefinition};
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::IconName;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, HasStackLayout};
 
 //#region 🔖️Constants
@@ -65,7 +69,7 @@ fn fixed_text(value: &str, code: &'static str) -> semio_framework_plugin::UiAsse
 /// contract's own `Label` — the contract crate deliberately has no `From<LabelText>` (see
 /// `semio_framework_ui_contract::Label`'s doc), so this is the one bridge point every call site here
 /// goes through.
-fn fixed_label(value: semio_framework_plugin::LabelText, code: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+fn fixed_label(value: semio_framework_ui_locale::LabelText, code: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new(code, "fixed label admission failed"))
 }
 
@@ -78,7 +82,7 @@ fn home_space_target(space_id: &str) -> semio_framework_plugin::UiAssemblyResult
     row_target(S_HOME_CONTROLLER_ID, Some(semio_framework_plugin::UiValue::Map(args.finish())), Some("openSpace"))
 }
 
-fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, verb: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowAction> {
+fn home_row_action(icon: IconName, label: semio_framework_ui_locale::LabelText, verb: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::RowAction> {
     row_action(icon.as_str(), label.as_str(), verb, RowActionPlacement::Row)
 }
 
@@ -156,7 +160,7 @@ fn window_content_dead_line_spacer(key: &str) -> semio_framework_plugin::UiAssem
     Ok(spacer)
 }
 
-fn toolbar_button(icon: IconName, label: semio_framework_plugin::LabelText, id: &str, action_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn toolbar_button(icon: IconName, label: semio_framework_ui_locale::LabelText, id: &str, action_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, None)?;
     let builder = semio_framework_ui_contract::button(fixed_label(label, "ui.window.toolbar-label")?)
         .icon(fixed_text(icon.as_str(), "ui.window.toolbar-icon")?)

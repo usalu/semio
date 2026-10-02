@@ -3,8 +3,8 @@ import { createServer as createHttpServer } from "node:http";
 import { createRequire } from "node:module";
 import type { Socket } from "node:net";
 import { dirname, join } from "node:path";
-import { stageArtifacts } from "../📦️artifacts/🟦️.ts";
-import { collectArtifactFiles } from "../📦️artifacts/🗂️files/🟦️.ts";
+import { stageRepositoryArtifacts } from "../📦️artifacts/🟦️.ts";
+import { collectArtifactFiles } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { parseServiceSession, SERVICE_READY_ENDPOINT, type ServiceSession } from "./🧾️session/🟦️.ts";
 
 export type ViteArtifactBuild = {
@@ -40,7 +40,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<voi
     if (status !== 0) throw new Error(`Vite build failed for ${options.owner} (${status})`);
     const files = await collectArtifactFiles(temporary, options.signal);
     options.signal?.throwIfAborted();
-    await stageArtifacts(options.output, options.owner, files, { signal: options.signal });
+    await stageRepositoryArtifacts(options.output, options.owner, files, { signal: options.signal });
     console.log(`Published ${options.owner}: ${files.size} files at ${options.output}`);
   } finally { await rm(temporary, { recursive: true, force: true }); }
 }

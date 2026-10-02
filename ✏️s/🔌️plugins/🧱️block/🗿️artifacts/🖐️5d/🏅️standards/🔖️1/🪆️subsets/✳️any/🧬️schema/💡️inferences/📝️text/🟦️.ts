@@ -49,5 +49,5 @@ export const blockBlock5dInferenceTextGuardConstant = <T extends string | number
 //#endregion 🚪️Parsers
 
 export function parseBlock5dInferenceText(value: unknown, at = "$"): Block5dInferenceText {
-  return blockBlock5dInferenceTextGuardObject(value, `${at}`);
+  return blockBlock5dInferenceTextGuardString(value, at);
 }

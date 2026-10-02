@@ -19,6 +19,10 @@ mod supersede_replay_tests;
 #[path = "../🧪️tool-transaction/🦀️.rs"]
 mod tool_transaction_tests;
 
+#[cfg(test)]
+#[path = "../🧪️deferred-reprojection/🦀️.rs"]
+mod deferred_reprojection_tests;
+
 use super::fixture_mutations::{
     demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
@@ -26,10 +30,8 @@ use super::fixture_mutations::{
     timestamped::{SetN as TimestampedSetN, TimestampedMutation},
     validated::{RestoreN as ValidatedRestoreN, SetN as ValidatedSetN, ValidatedMutation},
 };
-use super::retained_clone::{
-    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef,
-    preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory},
-};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
+use super::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory};
 
 pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
     assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
@@ -1491,7 +1493,7 @@ where
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
@@ -1684,8 +1686,8 @@ pub(crate) struct DemoSnapshot {
     pub(super) n: Option<i32>,
 }
 
-impl crate::os_schema_composition::ArtifactCompositionFields for DemoSnapshot {
-    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for DemoSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -2031,7 +2033,7 @@ impl OpText for DemoMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -2041,7 +2043,7 @@ impl OpText for DemoMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -2052,7 +2054,7 @@ impl OpBinary for DemoMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -2070,7 +2072,7 @@ impl OpBinary for DemoMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -3303,8 +3305,8 @@ struct RetainedTextSnapshot {
     text: String,
 }
 
-impl crate::os_schema_composition::ArtifactCompositionFields for RetainedTextSnapshot {
-    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for RetainedTextSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -3466,7 +3468,7 @@ fn close_retained_clone_preparation_publication<P: Send + Sync + 'static, M>(pub
 
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
     for (index, row) in fixture["cases"].as_array().expect("lifecycle cases").iter().enumerate() {
         let initial = row["initial"].as_i64().expect("initial") as i32;
@@ -3596,20 +3598,20 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_store_grant() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️retained-clone/🧩preparation/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🔣️.json")).expect("retained clone preparation lifecycle fixture");
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["grant"]["maximumItems"].as_u64().expect("maximum items") as usize, maximum_bytes: fixture["grant"]["maximumBytes"].as_u64().expect("maximum bytes") as usize };
     let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
     let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
     let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
     let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None)).await;
     store.install_document_store_owners_exact(DocumentStoreOwners::new(
-        Arc::new(retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
-        Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default()),
-        Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
+        Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
         Box::new(ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new()),
     ));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
-        RetainedClonePreparationFactory::new(Arc::new(RetainedTextEdit), Arc::new(retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()), Arc::new(retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()), 64)
+        RetainedClonePreparationFactory::new(Arc::new(RetainedTextEdit), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()), Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()), 64)
             .expect("retained text preparation factory"),
     );
     let mut publication = store
@@ -6646,7 +6648,7 @@ impl OpText for TimestampedMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -6656,7 +6658,7 @@ impl OpText for TimestampedMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -6667,7 +6669,7 @@ impl OpBinary for TimestampedMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -6685,7 +6687,7 @@ impl OpBinary for TimestampedMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -6897,7 +6899,7 @@ impl OpText for SeverityMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -6907,7 +6909,7 @@ impl OpText for SeverityMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -6918,7 +6920,7 @@ impl OpBinary for SeverityMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -6936,7 +6938,7 @@ impl OpBinary for SeverityMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -8132,7 +8134,7 @@ impl OpText for ValidatedMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -8142,7 +8144,7 @@ impl OpText for ValidatedMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -8152,7 +8154,7 @@ impl OpBinary for ValidatedMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -8170,7 +8172,7 @@ impl OpBinary for ValidatedMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -8443,7 +8445,7 @@ async fn link_resolver_reports_resolved_missing_and_pinned_only_states() {
 
 #[semio_framework_async_macros::async_test]
 async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus() {
-    use crate::os_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
+    use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
     struct Parent<'a>(&'a [serde_json::Value]);
     fn fields(row: &serde_json::Value) -> ChildRefFields<'_> {
         ChildRefFields {

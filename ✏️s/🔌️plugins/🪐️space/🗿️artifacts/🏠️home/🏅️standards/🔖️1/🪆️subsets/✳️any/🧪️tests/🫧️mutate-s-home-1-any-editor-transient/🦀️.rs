@@ -1,37 +1,18 @@
 //! 🫧️ `s.space.home` ✏️editor/🫧️transient state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `s-home-1-any-editor-transient-state-lane-semantics`: the runner dispatches no oracle role, so
-//! every law is asserted inside the subject handler through `semio_s_plugin_stdio_test_oracle::law::vector` over the report
+//! every law is asserted inside the subject handler through `semio_repo_test_host::law::vector` over the report
 //! of this crate's production bridge `home_transient_mutation_report_json`. The oracle handler answers with the committed
 //! after- and before-snapshots read literally, so the reference side exists the moment a second producer does. The one verb
 //! is non-invertible (a derived projection page is never undone): its inverse law is asserted on the vectors that fold
 //! nothing, where no inverse step may exist and the projection must stay the committed before-snapshot.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 
 //#region 🔖️Vectors
-/// 🧫️ One committed vector of `apply-directory-page`, read literally from `✏️editor/🫧️transient/🧫️fixtures`.
-fn vector(id: &str) -> Result<Vector, String> {
-    macro_rules! committed {
-        ($name:literal, $observable:expr) => {
-            Vector {
-                before: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
-                mutation: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🦠️mutation/🔣️.json")),
-                after: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/➡️after/🔣️.json")),
-                diff: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🔺️diff/🔣️.json")),
-                outcome: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🎯️outcome/🔣️.json")),
-                observable: $observable,
-            }
-        };
-    }
-    Ok(match id {
-        "apply-directory-page-applied" => committed!("✅️apply", true),
-        "apply-directory-page-no-op" => committed!("🟰️apply", false),
-        "apply-directory-page-rejected" => committed!("🚫️apply", false),
-        other => return Err(format!("no committed vector for {other:?}")),
-    })
-}
+#[path = "🧫️fixtures/🦀️.rs"]
+mod committed_vectors;
+use committed_vectors::vector;
 //#endregion 🔖️Vectors
 
 //#region 🔖️Oracle
@@ -53,7 +34,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_s_artifact_space_home::editor::home::transient::mutations::home_transient_mutation_report_json;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let id = ctx.row()?;

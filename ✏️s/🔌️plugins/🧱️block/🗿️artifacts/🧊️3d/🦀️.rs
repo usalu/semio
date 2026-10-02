@@ -264,7 +264,7 @@ impl Block3dWindowView {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.block".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Object Kind", "Objekttyp"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Object Kind", "Objekttyp"),
         source_format: BLOCK_3D_SCHEMA.into(),
         component_kind: "block3d".into(),
         dimension: "3d".into(),

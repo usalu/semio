@@ -11,11 +11,18 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getWorkspaceRoot, orchestratorBudgetOpts, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { acquireQueuedResourceLease } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
+import rebuildSchema from "./🧬️schema/🔣️.json";
+
+const guestCheckSchema = rebuildSchema.$defs.GuestFrameworkCheckV1;
+const guestCheckKeys = [...guestCheckSchema.required].sort().join("\0");
+const guestCrate = new RegExp(guestCheckSchema.properties.packages.items.pattern, "u");
+const guestFeature = new RegExp(guestCheckSchema.properties.features.items.pattern, "u");
+const guestWorkspace = new RegExp(guestCheckSchema.properties.workspace.pattern, "u");
 
 /** 🧱️ Where a step sits in the dependency order: the input gates guard every build, descriptors feed the registry, the registry feeds the guests, the guests feed the catalog. */
 export const REBUILD_STAGES = ["inputs", "descriptors", "registry", "guests", "catalog"] as const;
@@ -44,28 +51,32 @@ export function readRebuildChain(path = join(dirname(fileURLToPath(import.meta.u
   );
 }
 
-/** 🧊️ One fail-fast `cargo check --lib` of guest-linked framework crates for one wasm target, as `🔣️.json` declares it. */
-export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; packages: readonly string[]; features: readonly string[] }>;
+/** 🧊️ One fail-fast `cargo check --lib` of guest-linked framework crates for one wasm target inside the one cargo workspace
+ * (`workspace`, repo-relative `Cargo.toml`) that owns them, as `🔣️.json` declares it. */
+export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; workspace: string; packages: readonly string[]; features: readonly string[] }>;
 
-/** 📜️ Reads the declared guest-framework checks: known targets, non-empty distinct package names, features naming a checked package. */
+/** 📜️ Reads the declared guest-framework checks against `🧬️schema/🔣️.json` `GuestFrameworkCheckV1`: exact keys, known targets, a
+ * portable repo-relative workspace manifest (`/` segments only, no `.`/`..`, `\` or `:`), distinct crate names, features naming a checked crate. */
 export function readGuestFrameworkChecks(path = join(dirname(fileURLToPath(import.meta.url)), "🔣️.json")): readonly GuestFrameworkCheckV1[] {
   const document = JSON.parse(readFileSync(path, "utf8")) as { guestFrameworkChecks?: unknown };
-  const crate = /^[a-z][a-z0-9-]*$/u;
   if (!Array.isArray(document.guestFrameworkChecks) || document.guestFrameworkChecks.length === 0) throw new Error("rebuild chain declares no guestFrameworkChecks");
   return Object.freeze(
     document.guestFrameworkChecks.map((value: any) => {
-      const packages = value?.packages, features = value?.features;
-      if (!["wasm32-wasip2", "wasm32-unknown-unknown"].includes(value?.target) || !Array.isArray(packages) || packages.length === 0 || new Set(packages).size !== packages.length || !packages.every((name: unknown) => typeof name === "string" && crate.test(name))
-        || !Array.isArray(features) || !features.every((feature: unknown) => typeof feature === "string" && packages.includes(feature.split("/")[0]) && feature.split("/").length === 2))
+      const packages = value?.packages, features = value?.features, workspace = value?.workspace;
+      if (!guestCheckSchema.properties.target.enum.includes(value?.target) || !Array.isArray(packages) || packages.length === 0 || new Set(packages).size !== packages.length || !packages.every((name: unknown) => typeof name === "string" && guestCrate.test(name))
+        || !Array.isArray(features) || new Set(features).size !== features.length || !features.every((feature: unknown) => typeof feature === "string" && guestFeature.test(feature) && packages.includes(feature.split("/")[0])))
         throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} is not a known target with distinct crates and crate-qualified features`);
-      return Object.freeze({ target: value.target, packages: Object.freeze([...packages]), features: Object.freeze([...features]) }) as GuestFrameworkCheckV1;
+      if (typeof workspace !== "string" || workspace.length > guestCheckSchema.properties.workspace.maxLength || !guestWorkspace.test(workspace))
+        throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} names no repo-relative workspace Cargo.toml`);
+      if (Object.keys(value).sort().join("\0") !== guestCheckKeys) throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} declares unknown keys`);
+      return Object.freeze({ target: value.target, workspace, packages: Object.freeze([...packages]), features: Object.freeze([...features]) }) as GuestFrameworkCheckV1;
     }),
   );
 }
 
-/** 🧊️ The cargo argument vector of one declared guest-framework check. */
+/** 🧊️ The cargo argument vector of one declared guest-framework check, scoped to its declared workspace. */
 export function guestFrameworkCheckArgs(check: GuestFrameworkCheckV1): readonly string[] {
-  return Object.freeze(["check", "--lib", "--target", check.target, ...check.packages.flatMap((name) => ["-p", name]), ...(check.features.length ? ["--features", check.features.join(",")] : [])]);
+  return Object.freeze(["check", "--manifest-path", check.workspace, "--lib", "--target", check.target, ...check.packages.flatMap((name) => ["-p", name]), ...(check.features.length ? ["--features", check.features.join(",")] : [])]);
 }
 
 /** 🧊️ `guest-framework-check`: the declared checks in order; cargo stops at the first crate that fails, so a broken guest-linked framework
@@ -76,7 +87,7 @@ export class GuestFrameworkCheckScript extends BundleScript {
     const repoRoot = getWorkspaceRoot();
     for (const check of readGuestFrameworkChecks()) {
       const started = Date.now();
-      console.log(`guest-framework-check ${check.target}: ${check.packages.join(", ")}`);
+      console.log(`guest-framework-check ${check.target} (${check.workspace}): ${check.packages.join(", ")}`);
       runCmd("cargo", [...guestFrameworkCheckArgs(check)], { cwd: repoRoot, ...orchestratorBudgetOpts() });
       console.log(`guest-framework-check ${check.target} done in ${Math.round((Date.now() - started) / 1000)} s`);
     }

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. Line splitting, line-ending policy and trailing-newline handling are exactly what this subset ITSELF defines — no third-party crate is authoritative over 'is this a text file's line structure' the way lopdf is authoritative over PDF or png is authoritative over PNG, so no oracle is registered here (see noOracleDecisions below).",
   "oracles": [
@@ -381,5 +381,6 @@
       "family": "txt-carrier",
       "notes": "SetTrailingNewlineMutation{value:false} drops the final trailing newline."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

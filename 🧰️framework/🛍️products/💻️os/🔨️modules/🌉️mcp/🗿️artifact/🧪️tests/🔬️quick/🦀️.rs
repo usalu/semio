@@ -28,7 +28,7 @@ fn every_artifact_tool_refuses_a_principal_without_its_scope_before_it_reads_its
 }
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 /// 🧪️ A minimal, self-built (never `🧫️fixtures`, reserved for `🗂️catalog`/`🔎️search`/`🧠️context`/
@@ -57,7 +57,7 @@ fn single_plugin_catalog(plugin_id: &str) -> Arc<Catalog> {
         source: CapabilitySource::Gateway,
     };
     let source = CatalogSource { gateway: vec![probe_capability], ..Default::default() };
-    Arc::new(compile(&source, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("single-plugin source compiles"))
+    Arc::new(compile(&source, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("single-plugin source compiles"))
 }
 
 fn assert_object_typed_2020_12(schema: &serde_json::Value) {

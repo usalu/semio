@@ -227,7 +227,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const [refusal, setRefusal] = reactHostPort.useState<{ readonly message: string | null } | null>(null);
   const range = reactHostPort.useMemo(() => normalizeSliderRange(min, max, step), [max, min, step]);
   const snaps = reactHostPort.useMemo(() => snapValues ?? [], [snapValues]);
-  const settle = reactHostPort.useCallback((value: number): number => (snaps.includes(value) ? value : normalizeSliderValue(value, range)), [range, snaps]);
+  const settle = reactHostPort.useCallback((value: number): number => (snaps.includes(value) ? value : precision != null ? Math.min(range.max, Math.max(range.min, value)) : normalizeSliderValue(value, range)), [precision, range, snaps]);
   const settleAll = reactHostPort.useCallback((values: readonly number[]): SliderValue => values.map(settle).sort((lhs, rhs) => lhs - rhs), [settle]);
   const controlled = Array.isArray(value);
   const [uncontrolledValues, setUncontrolledValues] = reactHostPort.useState<SliderValue>(() => settleAll(Array.isArray(defaultValue) ? defaultValue : [range.min, range.max]));
@@ -255,6 +255,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const displays = displayFactor != null || precision != null;
   const formatReadout = formatDisplayValue ?? (displays ? (value: number) => uiNumberDisplayText(value, displayFactor, precision) : formatNumber);
   const spoken = (value: number): number => (displayFactor == null ? value : Number(formatUiNumber(value * displayFactor)));
+  const editorBound = (bound: { readonly value: number; readonly exclusive?: boolean } | null | undefined): number | undefined => (bound && !bound.exclusive ? spoken(bound.value) : undefined);
   const axisShare = (value: number): number => sliderAxisPosition(value, range.min, range.max, scale);
   const span = range.max - range.min;
   const readyExtent = ready == null || span <= 0 ? null : Math.min(range.max, Math.max(range.min, ready));
@@ -446,7 +447,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
       keyboardActiveRef.current = true;
     }
     const current = valuesRef.current[thumbIdsRef.current.indexOf(thumbId)] ?? range.min;
-    updateThumb(thumbId, sliderKeyValue(current, range.min, range.max, range.step, snaps, key, event.shiftKey));
+    updateThumb(thumbId, sliderKeyValue(current, range.min, range.max, range.step, precision, displayFactor, snaps, key, event.shiftKey));
   };
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -603,6 +604,8 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             }}
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
+            min={editorBound(limits ? limits.min : { value: range.min })}
+            max={editorBound(limits ? limits.max : { value: range.max })}
             className="w-large min-w-large border-0 px-0 text-end text-xs"
             aria-invalid={refusal ? true : undefined}
             aria-describedby={refusal?.message && id ? `${id}-refusal` : undefined}

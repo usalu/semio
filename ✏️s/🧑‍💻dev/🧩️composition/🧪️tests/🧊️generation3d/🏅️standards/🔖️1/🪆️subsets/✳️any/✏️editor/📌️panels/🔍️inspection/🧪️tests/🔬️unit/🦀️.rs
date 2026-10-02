@@ -25,7 +25,7 @@ fn inspector_slider_control_rides_on_a_tree_row() {
         r#"{"schema":"flow.host_snapshot","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":3.0,"min":0.0,"max":10.0,"step":0.5}],"synapses":[],"layout":{"height":{"x":0.0,"y":0.0}}}"#,
     )
     .expect("law fixture parses");
-    let labels = semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let tree = render(&fixture, &["height".to_string()], labels).expect("inspector builds");
     fixture.retire_cold();
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("inspector projects");
@@ -49,7 +49,7 @@ fn inspector_exposes_typed_operator_fields_and_connected_sources() {
     host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width"}"#, 0.0, 0.0).unwrap();
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
-    let labels = semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let tree = render(&host.host_snapshot, &[shape.clone()], labels).unwrap();
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
     let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();

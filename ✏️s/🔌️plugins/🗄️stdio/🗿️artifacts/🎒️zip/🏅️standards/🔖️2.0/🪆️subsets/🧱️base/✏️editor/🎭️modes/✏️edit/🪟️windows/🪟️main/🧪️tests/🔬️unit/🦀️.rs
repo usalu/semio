@@ -11,7 +11,7 @@ fn archive_window_requires_complete_draft_arguments() {
 
 #[test]
 fn archive_window_renders_explicit_localized_drafts() {
-    for locale in [semio_framework_plugin::Locale::En, semio_framework_plugin::Locale::De] {
+    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
         let document = ZipSnapshot { comment: "Archive comment text".into(), ..Default::default() };
         let node = render(&document, &TreeWindows::unhosted(), locale).unwrap();
         assert_eq!(node.key.as_str(), "archive-fields");

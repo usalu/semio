@@ -1,0 +1,6 @@
+{
+  "mutation": "setSlider",
+  "id": "node-a",
+  "field": "value",
+  "value": 7.5
+}

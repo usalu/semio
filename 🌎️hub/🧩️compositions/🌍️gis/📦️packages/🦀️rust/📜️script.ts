@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌍️ GIS plugin package command router. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests, runCmd, devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
@@ -26,7 +28,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await proveGisNativeCodecReceipts(this.repoRoot);
-    await runCargoTestBudgeted(["semio-hub-gis"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-gis"], this.repoRoot, rest);
   }
 }
 

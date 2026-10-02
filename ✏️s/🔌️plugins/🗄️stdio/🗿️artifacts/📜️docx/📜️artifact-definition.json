@@ -65,7 +65,7 @@
         "artifact_kind": "s.stdio.docx",
         "artifact_schema": "stdio.docx",
         "extension": "docx",
-        "pack_schema_hash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+        "pack_schema_hash": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c",
         "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1"
       }
     }

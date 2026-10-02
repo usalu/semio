@@ -107,6 +107,20 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
+    },
+    "native-schema-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-schema-check",
+        "forwardAllArgs": true
+      }
     }
   }
 }

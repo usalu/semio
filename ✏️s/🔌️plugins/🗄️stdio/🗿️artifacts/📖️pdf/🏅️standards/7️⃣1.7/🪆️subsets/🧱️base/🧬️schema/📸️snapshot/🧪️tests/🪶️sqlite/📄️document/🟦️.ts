@@ -1,5 +1,6 @@
 /** 📖️ Independent SQLite verifies every top-level owned document relationship. */
 import { expect,test } from "bun:test";
+import Ajv2020 from "ajv/dist/2020.js";
 import { Database } from "bun:sqlite";
 import { parsePdfSnapshot } from "../../../🟦️.ts";
 import { pdfSnapshotFromNativeJson } from "../../../🪪️native-json/📄️document/🟦️.ts";
@@ -16,4 +17,21 @@ test("PDF complete reconstruction rejects partial geometry, document IDs, bad or
 test("PDF complete native document admission constructs the same Binary64 and bigint model",async()=>{const fixture=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/📄️document/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=parsePdfSnapshot(fixture);expect(value.pages[0]!.mediaBox[2]).toEqual({bits:0x4059000000000000n});expect(value.objects[0]!.value).toEqual({kind:"int",value:-123n});expect(value).toEqual(pdfSnapshotFromNativeJson(fixture));});
 test("PDF full document ownership remains queryable and editable without native codecs",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/📄️document/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=pdfSnapshotFromNativeJson(fixture);const database=await pdf17SnapshotToSqliteDatabase(value);const bytes=await exportSqliteDatabase(database);const sql=Database.deserialize(bytes);expect(sql.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(sql.query("SELECT d.schema,p.media_right,p.metadata,a.contents FROM pdf_document d JOIN pdf_document_page r ON r.document_id=d.id JOIN pdf_page p ON p.id=r.page_id JOIN pdf_page_annotation pa ON pa.page_id=p.id JOIN pdf_annotation a ON a.id=pa.annotation_id").get()).toEqual({schema:"owned-extension-schema",media_right:100,metadata:"page metadata",contents:"annotation"});expect(await pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(value);sql.query("UPDATE pdf_annotation SET contents='Independent edit'").run();const edited=await pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(sql.serialize()));expect(edited.pages[0]!.annotations![0]!.contents).toBe("Independent edit");sql.close();
+},{timeout:30_000});
+
+test("PDF direct domain row allowance excludes I/O metadata",async()=>{
+  const fixture=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/📄️document/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=pdfSnapshotFromNativeJson(fixture);const database=await pdf17SnapshotToSqliteDatabase(value);const count=database.tables.reduce((total,table)=>total+table.rows.length,0);const sql=Database.deserialize(await exportSqliteDatabase(database));let independent=0;for(const table of database.tables)independent+=Number((sql.query(`SELECT COUNT(*) AS count FROM "${table.name}"`).get() as {count:number}).count);expect(independent).toBe(count);expect(sql.query("SELECT name FROM sqlite_schema WHERE name='semio_snapshot'").all()).toEqual([]);sql.close();expect(await pdf17SnapshotToSqliteDatabase(value,{maxRows:count})).toEqual(database);expect(await pdf17SnapshotFromSqliteDatabase(database,{maxRows:count})).toEqual(value);await expect(pdf17SnapshotToSqliteDatabase(value,{maxRows:count-1})).rejects.toThrow();await expect(pdf17SnapshotFromSqliteDatabase(database,{maxRows:count-1})).rejects.toThrow();
+},{timeout:30_000});
+
+test("PDF native row fixture independently counts every COS value and relationship",async()=>{
+  const plan=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/🧫️fixtures/🛫️row-admission.json",import.meta.url)).text());
+  const schema=JSON.parse(await Bun.file(new URL("../../../🪶️sqlite/🧫️fixtures/🧬️schema/🛫️row-admission.json",import.meta.url)).text());
+  expect(new Ajv2020().validate(schema,plan)).toBe(true);
+  const value=pdfSnapshotFromNativeJson({schema:"row-admission",declaredVersion:"1.7",pages:[],fonts:[],images:[],forms:[],extGStates:[],shadings:[],patterns:[],colorSpaces:[],properties:[],outlines:[],namedDestinations:[],pageLabels:[],embeddedFiles:[],outputIntents:[],info:{},catalogExtra:[],trailer:[],objects:[{id:{num:1,gen:0},value:{kind:"array",value:Array.from({length:plan.arrayLength},()=>({kind:"null"}))}}]});
+  const database=await pdf17SnapshotToSqliteDatabase(value,{maxRows:plan.totalRows});
+  const sql=Database.deserialize(await exportSqliteDatabase(database));
+  const counts:Record<string,number>={};let total=0;
+  for(const row of sql.query("SELECT name FROM sqlite_schema WHERE type='table'").all() as {name:string}[]){const count=(sql.query(`SELECT COUNT(*) AS n FROM "${row.name}"`).get() as {n:number}).n;if(count)counts[row.name]=count;total+=count;}
+  expect(counts).toEqual(plan.counts);expect(total).toBe(plan.totalRows);sql.close();
+  await expect(pdf17SnapshotToSqliteDatabase(value,{maxRows:plan.refusedRows})).rejects.toThrow();
 },{timeout:30_000});

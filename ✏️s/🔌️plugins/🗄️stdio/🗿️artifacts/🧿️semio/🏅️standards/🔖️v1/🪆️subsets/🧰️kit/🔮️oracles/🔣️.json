@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.kit` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
   "oracles": [
@@ -536,6 +536,27 @@
           ]
         },
         {
+          "id": "set-snapshot",
+          "capability": "semio-v1-kit-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-kit-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "unbind-representation",
           "capability": "semio-v1-kit-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -557,5 +578,6 @@
         }
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

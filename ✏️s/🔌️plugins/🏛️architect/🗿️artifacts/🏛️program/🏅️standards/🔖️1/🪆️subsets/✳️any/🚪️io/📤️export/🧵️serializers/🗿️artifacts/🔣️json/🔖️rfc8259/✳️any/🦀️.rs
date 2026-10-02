@@ -15,7 +15,8 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = dsl::json::from_dsl_value(&dsl::ToValue::to_value(snapshot));
+    let projected=crate::standards::v1::subsets::any::io::program_json::convert(dsl::ToValue::to_value(snapshot),false).map_err(|message|store::TextError::new(message,dsl::TextSpan::at(1,1)))?;
+    let value=dsl::json::from_dsl_value(&projected);
     Ok(JsonSnapshot::from_value(value))
 }
 

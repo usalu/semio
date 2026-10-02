@@ -45,7 +45,7 @@ mod subject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{
         decode_semio_value_pack, decode_semio_value_snapshot_json, encode_semio_value_pack, encode_semio_value_snapshot_json, parse_semio_value_dsl, print_semio_value_dsl, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId,
     };
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Decode
     /// 🧫️ A small, forward-only, hand-written structural decoder — turns the fixture bytes

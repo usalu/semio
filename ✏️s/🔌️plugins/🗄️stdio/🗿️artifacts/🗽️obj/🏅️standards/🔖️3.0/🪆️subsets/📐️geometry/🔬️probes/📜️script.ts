@@ -23,7 +23,7 @@ const objLoader = new OBJLoader();
 //   bun 📜️script.ts obj-project --input <a.obj>
 //   bun 📜️script.ts obj-compare --input <expected.obj> --input <actual.obj>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📐️geometry/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from
 // @see ../🏭️generator/📖️reader/🦀️.rs — the `project` subcommand this file calls, and

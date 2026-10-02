@@ -43,11 +43,10 @@ pub type FormsResultsChild = store::ArtifactChild<SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-/// 🌉 `dsl::DslValue` (JSON-equivalent: used by `default`/`params`) <-> `SemioValue` — real,
-/// bidirectional. `Bytes`/`Ref` are never produced by `semio_value_from_dsl` (DslValue has no
-/// binary/graph-reference primitive), so `dsl_from_semio_value` degrades them to `Null` — a
-/// documented gap only reachable if a foreign composer ever wrote a `Bytes`/`Ref` value into this
-/// plugin's own `structure` child, never by this plugin's own round trip.
+/// 🌉 `dsl::DslValue` (used by `default`/`params`) <-> `SemioValue` — real, bidirectional, bytes included. `Ref` is never
+/// produced by `semio_value_from_dsl` (DslValue has no graph-reference primitive), so `dsl_from_semio_value` degrades it to
+/// `Null` — a documented gap only reachable if a foreign composer ever wrote a `Ref` value into this plugin's own
+/// `structure` child, never by this plugin's own round trip.
 fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
     match value {
         dsl::DslValue::Null => SemioValue::Null,
@@ -59,6 +58,7 @@ fn semio_value_from_dsl(value: &dsl::DslValue) -> SemioValue {
             dsl::Number::Float(v) => SemioValue::Float { lexeme: format!("{v}") },
         },
         dsl::DslValue::String(s) => SemioValue::Str { value: s.clone() },
+        dsl::DslValue::Bytes(bytes) => SemioValue::Bytes { value: bytes.clone() },
         dsl::DslValue::Array(items) => SemioValue::List { items: items.iter().map(semio_value_from_dsl).collect() },
         dsl::DslValue::Object(entries) => SemioValue::Map { entries: entries.iter().map(|(k, v)| SemioValueEntry { key: k.clone(), value: semio_value_from_dsl(v) }).collect() },
     }
@@ -72,7 +72,8 @@ fn dsl_from_semio_value(value: &SemioValue) -> dsl::DslValue {
         SemioValue::Str { value } => dsl::DslValue::String(value.clone()),
         SemioValue::List { items } => dsl::DslValue::Array(items.iter().map(dsl_from_semio_value).collect()),
         SemioValue::Map { entries } => dsl::DslValue::Object(entries.iter().map(|entry| (entry.key.clone(), dsl_from_semio_value(&entry.value))).collect()),
-        SemioValue::Bytes { .. } | SemioValue::Ref { .. } => dsl::DslValue::Null,
+        SemioValue::Bytes { value } => dsl::DslValue::Bytes(value.clone()),
+        SemioValue::Ref { .. } => dsl::DslValue::Null,
     }
 }
 
@@ -378,7 +379,7 @@ pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: 
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Form Dictionary", "Formularwörterbuch"),
         source_format: "form.dictionary".into(),
         component_kind: "forms".into(),
         dimension: "data".into(),
@@ -908,7 +909,7 @@ pub mod editor {
             pub mod reset_try;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔣️set-spec-json/🦀️.rs"]
             pub mod set_spec_json;

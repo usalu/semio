@@ -42,8 +42,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
         vec![PdfMutation::ResizePage(ResizePage { index: self.index, width: base.pages[self.index].width, height: base.pages[self.index].height })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Resize page", "Seitengröße ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Resize page", "Seitengröße ändern")
     }
 
     fn target(&self) -> Vec<String> {

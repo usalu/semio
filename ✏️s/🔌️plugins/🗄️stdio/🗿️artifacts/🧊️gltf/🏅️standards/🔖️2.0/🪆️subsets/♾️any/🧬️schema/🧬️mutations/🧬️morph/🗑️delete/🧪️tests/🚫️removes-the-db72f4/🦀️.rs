@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<DeleteMorphTargetMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "delete-morph-target");
-    super::super::component::fixture_corpus_tests::assert_case("🧬️morph-target/🗑️delete/🚫️removes");
+    super::super::component::fixture_corpus_tests::assert_case("🧬️morph/🗑️delete/🚫️removes");
 }

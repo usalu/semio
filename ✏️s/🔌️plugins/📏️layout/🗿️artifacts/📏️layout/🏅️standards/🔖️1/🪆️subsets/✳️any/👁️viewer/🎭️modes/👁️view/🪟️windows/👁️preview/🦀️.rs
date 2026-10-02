@@ -11,7 +11,11 @@
 
 use crate::standards::v1::subsets::any::schema::resolve_page;
 use crate::{Frame, LayoutSnapshot};
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

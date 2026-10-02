@@ -725,8 +725,8 @@ impl Generation3dMountedTypedSnapshotOwner {
             "cluster" => semio_framework_artifact_flow_flow::Widget::Cluster {
                 id,
                 name: second,
-                tree: dsl::from_dsl_value(first_dynamic.ok_or("generation3d-mounted.cluster-tree")?).map_err(|_| "generation3d-mounted.cluster-tree-shape")?,
-                flow: dsl::from_dsl_value(second_dynamic.ok_or("generation3d-mounted.cluster-flow")?).map_err(|_| "generation3d-mounted.cluster-flow-shape")?,
+                tree: semio_framework_value::FromValue::from_value(first_dynamic.ok_or("generation3d-mounted.cluster-tree")?).map_err(|_| "generation3d-mounted.cluster-tree-shape")?,
+                flow: semio_framework_value::FromValue::from_value(second_dynamic.ok_or("generation3d-mounted.cluster-flow")?).map_err(|_| "generation3d-mounted.cluster-flow-shape")?,
             },
             _ => return Err("generation3d-mounted.widget-variant"),
         })

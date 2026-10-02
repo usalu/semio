@@ -16,7 +16,7 @@
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
       "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
           "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
@@ -1078,5 +1078,6 @@
       "id": "semantic-tiff-byte-order-v1",
       "description": "The declared byte order, plus dimensions, colour type, sample count and a pixel checksum — the last so that a pair claiming to change only the order can be shown to change only the order."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

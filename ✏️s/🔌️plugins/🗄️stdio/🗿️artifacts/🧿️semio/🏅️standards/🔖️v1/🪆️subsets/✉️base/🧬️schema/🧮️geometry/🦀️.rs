@@ -110,3 +110,6 @@ impl SemioTransform {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+#[path="🔢️native/🦀️.rs"]
+pub(crate) mod native;

@@ -97,6 +97,108 @@
           -2
         ]
       }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "rotate",
+        "channel": "angle",
+        "type": "number",
+        "value": 0.25
+      },
+      "expected": {
+        "input": {
+          "$schema": "number",
+          "value": 0.25
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "translate",
+        "channel": "label",
+        "type": "text",
+        "value": "moved"
+      },
+      "expected": {
+        "input": {
+          "$schema": "text",
+          "value": "moved"
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "scale",
+        "channel": "uniform",
+        "type": "boolean",
+        "value": true
+      },
+      "expected": {
+        "input": {
+          "$schema": "boolean",
+          "value": true
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "scale",
+        "channel": "center",
+        "type": "point",
+        "value": [
+          0.5,
+          1.5,
+          -0.25
+        ]
+      },
+      "expected": {
+        "input": {
+          "$schema": "point",
+          "x": 0.5,
+          "y": 1.5,
+          "z": -0.25
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
+        "id": "translate",
+        "channel": "offset",
+        "type": "vector",
+        "value": [
+          1.5,
+          -2.25,
+          0.5
+        ]
+      },
+      "expected": {
+        "input": {
+          "$schema": "vector",
+          "x": 1.5,
+          "y": -2.25,
+          "z": 0.5
+        }
+      }
     }
   ]
 }

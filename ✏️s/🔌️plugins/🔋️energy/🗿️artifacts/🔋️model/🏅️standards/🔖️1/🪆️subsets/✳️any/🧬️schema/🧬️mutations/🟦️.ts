@@ -17,32 +17,84 @@ export interface ChangeModelVersion {
   readonly newVersion: string;
 }
 
-/** 🌍️ `update-site` payload. */
-export interface UpdateSite {
-  readonly mutation: "updateSite";
-  readonly latitudeDeg: number;
-  readonly longitudeDeg: number;
-  readonly elevationM: number;
-  readonly timeZoneHours: number;
-  readonly northAxisDeg: number;
+/** 🌍️ `change-site-latitude` payload. */
+export interface ChangeSiteLatitude {
+  readonly mutation: "changeSiteLatitude";
+  readonly newLatitudeDeg: number;
 }
 
-/** 🌡️ `update-ground-temperature` payload. */
-export interface UpdateGroundTemperature {
-  readonly mutation: "updateGroundTemperature";
-  readonly buildingSurfaceC: readonly number[];
-  readonly shallowC: readonly number[];
-  readonly deepC: number;
+/** 🌏️ `change-site-longitude` payload. */
+export interface ChangeSiteLongitude {
+  readonly mutation: "changeSiteLongitude";
+  readonly newLongitudeDeg: number;
 }
 
-/** 📅️ `update-run-period` payload. */
-export interface UpdateRunPeriod {
-  readonly mutation: "updateRunPeriod";
-  readonly startMonth: number;
-  readonly startDay: number;
-  readonly endMonth: number;
-  readonly endDay: number;
-  readonly year: number;
+/** ⛰️ `change-site-elevation` payload. */
+export interface ChangeSiteElevation {
+  readonly mutation: "changeSiteElevation";
+  readonly newElevationM: number;
+}
+
+/** 🕰️ `change-site-time-zone` payload. */
+export interface ChangeSiteTimeZone {
+  readonly mutation: "changeSiteTimeZone";
+  readonly newTimeZoneHours: number;
+}
+
+/** 🔝️ `change-site-north-axis` payload. */
+export interface ChangeSiteNorthAxis {
+  readonly mutation: "changeSiteNorthAxis";
+  readonly newNorthAxisDeg: number;
+}
+
+/** 🌡️ `change-ground-temperature-building-surface` payload. */
+export interface ChangeGroundTemperatureBuildingSurface {
+  readonly mutation: "changeGroundTemperatureBuildingSurface";
+  readonly month: number;
+  readonly newTemperatureC: number;
+}
+
+/** 🌱️ `change-ground-temperature-shallow` payload. */
+export interface ChangeGroundTemperatureShallow {
+  readonly mutation: "changeGroundTemperatureShallow";
+  readonly month: number;
+  readonly newTemperatureC: number;
+}
+
+/** ⛏️ `change-ground-temperature-deep` payload. */
+export interface ChangeGroundTemperatureDeep {
+  readonly mutation: "changeGroundTemperatureDeep";
+  readonly newTemperatureC: number;
+}
+
+/** 🛫️ `change-run-period-start-month` payload. */
+export interface ChangeRunPeriodStartMonth {
+  readonly mutation: "changeRunPeriodStartMonth";
+  readonly newStartMonth: number;
+}
+
+/** ▶️ `change-run-period-start-day` payload. */
+export interface ChangeRunPeriodStartDay {
+  readonly mutation: "changeRunPeriodStartDay";
+  readonly newStartDay: number;
+}
+
+/** 🛬️ `change-run-period-end-month` payload. */
+export interface ChangeRunPeriodEndMonth {
+  readonly mutation: "changeRunPeriodEndMonth";
+  readonly newEndMonth: number;
+}
+
+/** ⏹️ `change-run-period-end-day` payload. */
+export interface ChangeRunPeriodEndDay {
+  readonly mutation: "changeRunPeriodEndDay";
+  readonly newEndDay: number;
+}
+
+/** 📅️ `change-run-period-year` payload. */
+export interface ChangeRunPeriodYear {
+  readonly mutation: "changeRunPeriodYear";
+  readonly newYear: number;
 }
 
 /** 🫧️ `replace-airflow-network` payload. */
@@ -2175,9 +2227,19 @@ export interface RenameGasMaterial {
 export type EnergyModelMutation =
   | RenameModel
   | ChangeModelVersion
-  | UpdateSite
-  | UpdateGroundTemperature
-  | UpdateRunPeriod
+  | ChangeSiteLatitude
+  | ChangeSiteLongitude
+  | ChangeSiteElevation
+  | ChangeSiteTimeZone
+  | ChangeSiteNorthAxis
+  | ChangeGroundTemperatureBuildingSurface
+  | ChangeGroundTemperatureShallow
+  | ChangeGroundTemperatureDeep
+  | ChangeRunPeriodStartMonth
+  | ChangeRunPeriodStartDay
+  | ChangeRunPeriodEndMonth
+  | ChangeRunPeriodEndDay
+  | ChangeRunPeriodYear
   | ReplaceAirflowNetwork
   | AddOutputVariable
   | RemoveOutputVariable

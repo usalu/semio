@@ -1,65 +1,203 @@
-import { createRequire } from "node:module";
-import { join, posix } from "node:path";
-import { lstat, readFile, readdir, stat as followedStat } from "node:fs/promises";
-import { rustSourceDirectionEdges, rustSourceReferences, type RustSourceDirectionEdge } from "../🟦️.ts";
+import { dirname, join, posix, resolve } from "node:path";
+import { lstatSync, readFileSync, readdirSync } from "node:fs";
+import { mkdir, stat as followedStat, writeFile } from "node:fs/promises";
+import { rustSourceDirectionEdges, rustSourceReferences, rustSourceTargets, rustSourceTargetProblem, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem, type RustSourceTarget } from "../🟦️.ts";
 import type { DependencyDirectionRule } from "../../🟦️.ts";
-import { inspectRustModuleGraph } from "../../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts, type RustCompileExpansion } from "../../../../🔍️discovery/🟦️.ts";
+import { loadDependencyDirectionPolicy } from "../../🚀️bootstrap/🟦️.ts";
+import { rustCompilerAttributeOriginsClosed } from "../🔗️binding/🟦️.ts";
+import { COMPUTE_OWNERSHIP_CONTRACT_PATH, rustFamilyOwnershipActive, inspectRustFamilyOwnership, readRustFamilyOwnershipContract, type RustFamilyOwnershipProblem } from "../📍️ownership/🟦️.ts";
 
-/** 🛡️ Checks all authored framework Rust literal file dependencies without compiling specific owners. */
-export async function verifyRustSourceDirection(root: string): Promise<void> {
-  const library = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-  const taxonomy = JSON.parse(await readFile(join(library, "🔣️taxonomy.json"), "utf8"));
-  const policy = createRequire(import.meta.url)(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"));
-  const names = ["framework-no-implementation", ...Object.keys(taxonomy.dependencyDirections.rules)];
-  const rules: DependencyDirectionRule[] = policy.forbidden.filter((rule: DependencyDirectionRule) => names.includes(rule.name));
-  if (rules.length !== names.length || rules.some((rule) => rule.severity !== "error")) throw new Error("Rust source direction requires every declared strict framework rule");
+export type RustSourceInputFailure = Readonly<{ code: RustSourceInputProblem; to: string; kind: RustSourceTarget["reference"]["kind"]; line: number }>;
+export type RustSourceDirectionProblem = Readonly<{ code: RustFamilyOwnershipProblem["code"] | RustSourceInputProblem | "unsupported-expression" | "unresolved-target" | "unresolved-template-scope"; from: string; detail: string; to?: string; kind?: RustSourceTarget["reference"]["kind"]; line?: number; expansion?: RustCompileExpansion }>;
+export type RustSourceDirectionReport = Readonly<{ schemaVersion: 1; files: number; references: number; violations: readonly RustSourceDirectionEdge[]; problems: readonly RustSourceDirectionProblem[] }>;
+
+/** 🪪️ Inspects every authored input component with lstat so links cannot conceal another owner. */
+export async function inspectRustSourceInputs(root: string, targets: readonly RustSourceTarget[], sources: ReadonlySet<string>, checkCancellation: () => void = () => {}): Promise<readonly RustSourceInputFailure[]> {
+  if (!root || root.includes("\0") || /^[A-Za-z]:(?:$|[^\\/])/u.test(root) || root.split(/[\\/]/u).some((part) => part === "." || part === "..")) throw new Error(`Rust source input requires an unnormalized safe root: ${root}`);
+  const rootDirectory = resolve(root), ancestors: string[] = [];
+  for (let current = rootDirectory; ; current = dirname(current)) {
+    ancestors.push(current);
+    if (current === dirname(current)) break;
+  }
+  let inspected = 0;
+  for (const current of ancestors.reverse()) {
+    if (++inspected % 64 === 0) await new Promise<void>((accept) => setImmediate(accept));
+    checkCancellation();
+    let info;
+    try { info = lstatSync(current); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new Error(`Rust source input has an unavailable root: ${current}`);
+      throw error;
+    }
+    if (info.isSymbolicLink()) throw new Error(`Rust source input refuses a linked root: ${current}`);
+    if (!info.isDirectory()) throw new Error(`Rust source input requires a physical root directory kind: ${current}`);
+  }
+  const nodes = new Map<string, RustSourceInputNode["kind"]>(), absent = new Set<string>(), failures: RustSourceInputFailure[] = [];
+  const inspect = async (to: string, directory: boolean): Promise<RustSourceInputProblem | null> => {
+    checkCancellation();
+    if (to === ".") {
+      const info = lstatSync(rootDirectory);
+      return info.isSymbolicLink() ? "linked-input" : info.isDirectory() && directory ? null : "unexpected-input-kind";
+    }
+    const parts = to.split("/");
+    if (posix.isAbsolute(to) || /^[A-Za-z]:/u.test(to) || to.includes("\\") || parts.some((part) => part === ".." || part === "." || part === "")) throw new Error(`Rust source input requires a canonical workspace target: ${to}`);
+    for (let index = 0; index < parts.length; index++) {
+      if (++inspected % 64 === 0) await new Promise<void>((accept) => setImmediate(accept));
+      checkCancellation();
+      const path = parts.slice(0, index + 1).join("/");
+      if (absent.has(path)) break;
+      if (!nodes.has(path)) {
+        try {
+          const info = lstatSync(join(rootDirectory, path));
+          if (!info.isSymbolicLink() && !info.isDirectory() && !info.isFile()) throw new Error(`Unsupported authored input type: ${path}`);
+          nodes.set(path, info.isSymbolicLink() ? "symlink" : info.isDirectory() ? "directory" : "file");
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+          absent.add(path); break;
+        }
+      }
+      if (nodes.get(path)! !== "directory") break;
+    }
+    return rustSourceTargetProblem(to, directory, nodes, sources);
+  };
+  for (const { to, reference, directories } of targets) {
+    let failure: RustSourceInputFailure | undefined;
+    for (const directory of directories) {
+      const code = await inspect(directory, true);
+      if (code) { failure = { code: code === "unexpected-input-kind" ? "non-directory-ancestor" : code, to: directory, kind: reference.kind, line: reference.line }; break; }
+    }
+    if (!failure) {
+      const code = await inspect(to, reference.directory === true);
+      if (code) failure = { code, to, kind: reference.kind, line: reference.line };
+    }
+    if (failure) failures.push(failure);
+  }
+  return failures;
+}
+
+/** 🧾️ Inventories every present authored Rust owner and returns the complete typed layer verdict. */
+export async function inspectRustSourceDirection(root: string): Promise<RustSourceDirectionReport> {
+  const { taxonomy, policy } = loadDependencyDirectionPolicy(root);
+  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
+  const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
+  const rules: DependencyDirectionRule[] = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => {
+    if (!rule.from.path || !rule.to.path) throw new Error(`Rust source direction requires authored selectors: ${rule.name}`);
+    return { name: rule.name, severity: rule.severity, from: { path: patterns(rule.from.path), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } };
+  });
+  if (names.some((name) => !rules.some((rule) => rule.name === name)) || new Set(rules.map((rule) => rule.name)).size !== rules.length || rules.some((rule) => rule.severity !== "error")) throw new Error("Rust source direction requires every declared strict layer rule");
   const ignore: string[] = taxonomy.implementationLeafPolicy.ignoredPathPatterns.map((path: string) => path.replace(/^\*\*\//u, ""));
-  const excluded: string[] = Object.values(taxonomy.pathExclusions).map((value: any) => value.path.replace(/\/$/u, ""));
+  const excluded: string[] = Object.values(taxonomy.pathExclusions).map((value) => value.path.replace(/\/$/u, ""));
   const edges: RustSourceDirectionEdge[] = [];
-  const sources = new Map<string, string>();
-  const unsupported: string[] = [];
+  let sources = new Map<string, string>();
+  const inventory = new Map<string, RustSourceInputNode["kind"]>();
+  const rootInput = lstatSync(root);
+  if (!rootInput.isDirectory() || rootInput.isSymbolicLink()) throw Error("Rust source census requires a physical root");
+  inventory.set(".", "directory");
+  const problems: RustSourceDirectionProblem[] = [];
   let files = 0, references = 0, stopped = false;
   const stop = (): void => { stopped = true; };
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   const check = (): void => { if (stopped) throw new Error("Rust source direction scan canceled"); };
-  const walk = async (path: string): Promise<void> => {
+  let inspected = 0;
+  const checkpoint = async (): Promise<void> => {
+    if (++inspected % 64 === 0) await new Promise<void>((accept) => setImmediate(accept));
     check();
-    if (ignore.some((part) => path === part || path.endsWith(`/${part}`)) || excluded.some((part) => path === part || path.startsWith(`${part}/`))) return;
-    const stat = await lstat(join(root, path));
+  };
+  const walk = async (path: string): Promise<readonly string[]> => {
+    await checkpoint();
+    if (ignore.some((part) => path === part || path.endsWith(`/${part}`)) || excluded.some((part) => path === part || path.startsWith(`${part}/`))) return [];
+    const stat = lstatSync(join(root, path));
+    inventory.set(path, stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "directory" : "file");
     if (stat.isSymbolicLink()) {
-      if (path.endsWith(".rs") || path.endsWith("/Cargo.toml") || (await followedStat(join(root, path))).isDirectory()) throw new Error(`Rust source direction cannot inventory linked input: ${path}`);
-      return;
+      if (path === COMPUTE_OWNERSHIP_CONTRACT_PATH || path.endsWith(".rs") || path === "Cargo.toml" || path.endsWith("/Cargo.toml") || (await followedStat(join(root, path))).isDirectory()) throw new Error(`Rust source direction cannot inventory linked input: ${path}`);
+      return [];
     }
     if (stat.isDirectory()) {
-      for (const entry of await readdir(join(root, path))) await walk(`${path}/${entry}`);
-    } else if (stat.isFile() && (path.endsWith(".rs") || path.endsWith("/Cargo.toml"))) sources.set(path, await readFile(join(root, path), "utf8"));
+      return readdirSync(join(root, path)).sort().map((entry) => `${path}/${entry}`);
+    } else if (stat.isFile() && (path === COMPUTE_OWNERSHIP_CONTRACT_PATH || path.endsWith(".rs") || path === "Cargo.toml" || path.endsWith("/Cargo.toml"))) sources.set(path, readFileSync(join(root, path), "utf8"));
+    return [];
   };
   try {
-    for (const [area, layer] of Object.entries(taxonomy.areaLayers)) if (layer === "framework") await walk(area);
+    let pending: readonly string[] = [];
+    for (const area of Object.keys(taxonomy.areaLayers)) {
+      check();
+      let entry;
+      try { entry = lstatSync(join(root, area)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") continue; throw error; }
+      if (!entry.isDirectory()) throw new Error(`Rust source area requires a physical directory: ${area}`);
+      pending = [...pending, area];
+    }
+    for (const entry of readdirSync(root, { withFileTypes: true })) if ((entry.isFile() || entry.isSymbolicLink()) && (entry.name.endsWith(".rs") || entry.name === "Cargo.toml")) pending = [...pending, entry.name];
+    while (pending.length) {
+      const batch = pending, children: (readonly string[])[] = new Array(batch.length);
+      for (let index = 0; index < batch.length; index++) children[index] = await walk(batch[index]!);
+      pending = children.flat();
+    }
+    sources = new Map([...sources].sort(([left], [right]) => Buffer.from(left).compare(Buffer.from(right))));
     const compileReferences = new Map<string, ReturnType<typeof rustSourceReferences>>();
     for (const [path, source] of sources) {
-      check();
+      await checkpoint();
       if (!path.endsWith(".rs")) continue;
-      try { compileReferences.set(path, rustSourceReferences(source)); } catch (error) { unsupported.push(`${path}: ${(error as Error).message}`); }
+      try { compileReferences.set(path, rustSourceReferences(source)); } catch (error) { problems.push({ code: "unsupported-expression", from: path, detail: (error as Error).message }); }
     }
-    const graph = inspectRustModuleGraph([...sources.keys()], (path) => sources.get(path), { checkCancellation: check, compileReferences });
+    const graph = inspectRustModuleGraph([...sources.keys()], (path) => sources.get(path), { checkCancellation: check, compileReferences, strictManifests: true });
+    if (rustFamilyOwnershipActive({ sources, graph, inventory, checkCancellation: check })) try {
+      const bytes = sources.get(COMPUTE_OWNERSHIP_CONTRACT_PATH);
+      if (bytes === undefined || inventory.get(COMPUTE_OWNERSHIP_CONTRACT_PATH) !== "file") throw Error("Canonical compute ownership contract is not a captured physical input");
+      problems.push(...inspectRustFamilyOwnership({ contract: readRustFamilyOwnershipContract(JSON.parse(bytes)), sources, graph, inventory, checkCancellation: check }));
+    } catch (error) { problems.push({ code: "invalid-ownership-contract", from: COMPUTE_OWNERSHIP_CONTRACT_PATH, detail: error instanceof Error ? error.message : String(error) }); }
+    const sourcePaths = new Set(sources.keys());
     for (const [path] of sources) {
-      check();
+      await checkpoint();
       if (!path.endsWith(".rs")) continue;
       const refs = compileReferences.get(path) ?? [];
       references += refs.length; files++;
       const contexts = graph.contexts.get(path), manifestPaths: string[] = [];
+      const checkedTemplates = new Set<number>();
+      let uses: ReturnType<typeof inspectRustModuleGraphFacts>["uses"] | undefined;
+      for (const reference of refs) {
+        const expansion = reference.expansion;
+        if (!expansion || checkedTemplates.has(expansion.definitionOffset)) continue;
+        checkedTemplates.add(expansion.definitionOffset);
+        const scope = expansion.scope, lexicalPath = scope.kind === "module" ? scope.modulePath : reference.modulePath ?? [];
+        const occurrences = refs.filter((ref) => ref.expansion?.definitionOffset === expansion.definitionOffset);
+        const coherent = occurrences.every((ref) => {
+          const item = ref.expansion!;
+          return (ref.modulePath ?? []).join("::") === lexicalPath.join("::") && item.macro === expansion.macro && item.definitionLine === expansion.definitionLine && JSON.stringify(item.scope) === JSON.stringify(scope) && item.definitionOffset < item.templateOffset && item.templateOffset < item.invocationOffset && item.invocationOffset < sources.get(path)!.length && (scope.kind === "module" || scope.startOffset < item.definitionOffset && item.invocationOffset < scope.endOffset);
+        });
+        const candidates = contexts?.filter((context) => context.sourceScope.join("::") === lexicalPath.join("::")) ?? [];
+        uses ??= inspectRustModuleGraphFacts(sources.get(path)!).uses;
+        const aliases = uses.some((fact) => fact.specifier.split(/[^\p{L}\p{N}_]/u).includes(expansion.macro));
+        const sealed = coherent && !aliases && candidates.length > 0 && candidates.every((context) => {
+          if (!context.manifestPath || graph.invalidManifests.has(context.manifestPath) || context.sourceChain[0] !== context.crateRoot || context.sourceChain.at(-1) !== path || context.mount.kind === "include") return false;
+          if (scope.kind === "local-block") return scope.startOffset < expansion.definitionOffset && expansion.definitionOffset < expansion.templateOffset && expansion.templateOffset < expansion.invocationOffset && expansion.invocationOffset < scope.endOffset && (!scope.compilerAttributes?.length || rustCompilerAttributeOriginsClosed({ context, graph, sources, attributes: scope.compilerAttributes }));
+          const mount = context.mount;
+          return mount.kind === "module" && !mount.inline && mount.visibility === "private" && !mount.macroUse && graph.targets.get(`${context.crateRoot}\0${context.modulePath.join("::")}`) === path && context.sourceChain.at(-2) === mount.from && (graph.contexts.get(mount.from) ?? []).some((parent) => parent.crateRoot === context.crateRoot && parent.manifestPath === context.manifestPath && parent.modulePath.join("::") === mount.modulePath.join("::") && parent.sourceScope.join("::") === mount.sourceScope.join("::") && parent.sourceChain.join("\0") === context.sourceChain.slice(0, -1).join("\0"));
+        });
+        if (!sealed) problems.push({ code: "unresolved-template-scope", from: path, kind: reference.kind, line: reference.line, expansion, detail: `Finite Rust macro requires an exclusive live lexical scope: ${expansion.macro}; definitionOffset=${expansion.definitionOffset}` });
+      }
       for (let directory = posix.dirname(path); directory !== "."; directory = posix.dirname(directory)) {
         const manifest = `${directory}/Cargo.toml`;
         if (sources.has(manifest)) { manifestPaths.push(manifest); break; }
       }
-      try { edges.push(...rustSourceDirectionEdges(path, refs, rules, { contexts, manifestPaths: contexts?.some((context) => context.manifestPath) ? [] : manifestPaths })); } catch (error) { unsupported.push((error as Error).message); }
+      try {
+        const ownership = { contexts, manifestPaths: contexts?.some((context) => context.manifestPath) ? [] : manifestPaths };
+        edges.push(...rustSourceDirectionEdges(path, refs, rules, ownership));
+        for (const failure of await inspectRustSourceInputs(root, rustSourceTargets(path, refs, ownership), sourcePaths, check)) problems.push({ ...failure, from: path, detail: `Authored compile input failed physical census: ${failure.to}` });
+      } catch (error) { problems.push({ code: "unresolved-target", from: path, detail: (error as Error).message }); }
       if (files % 250 === 0) console.log(`[rust-source-direction] progress; files=${files}; references=${references}`);
     }
-    if (!files) throw new Error("Rust source direction requires a nonempty authored framework source inventory");
-    for (const edge of edges) console.error(`[rust-source-direction] ${edge.rule}: ${edge.from}:${edge.line} → ${edge.to}; kind=${edge.kind}`);
-    for (const error of unsupported) console.error(`[rust-source-direction] unsupported: ${error}`);
-    if (edges.length || unsupported.length) throw new Error(`Rust source direction failed: ${edges.length} strict compile-time boundary violations and ${unsupported.length} unsupported source inputs across ${files} files and ${references} authored references`);
-    console.log(`[rust-source-direction] passed; files=${files}; authoredReferences=${references}; scope=all-configurations-and-macro-templates`);
+    if (!files) throw new Error("Rust source direction requires a nonempty authored Rust source inventory");
+    return { schemaVersion: 1, files, references, violations: edges, problems };
   } finally { process.off("SIGINT", stop); process.off("SIGTERM", stop); }
+}
+
+/** 🛡️ Rejects every compile-time direction or physical census failure without reducing the report. */
+export async function verifyRustSourceDirection(root: string, reportPath?: string): Promise<void> {
+  const report = await inspectRustSourceDirection(root);
+  if (reportPath) { await mkdir(join(reportPath, ".."), { recursive: true }); await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`); }
+  for (const edge of report.violations) console.error(`[rust-source-direction] ${edge.rule}: ${edge.from}:${edge.line} → ${edge.to}; kind=${edge.kind}`);
+  for (const problem of report.problems) console.error(`[rust-source-direction] ${problem.code}: ${problem.from}${problem.line ? `:${problem.line}` : ""}: ${problem.detail}`);
+  if (report.violations.length || report.problems.length) throw new Error(`Rust source direction failed: ${report.violations.length} strict compile-time boundary violations and ${report.problems.length} source census problems across ${report.files} files and ${report.references} authored references`);
+  console.log(`[rust-source-direction] passed; files=${report.files}; authoredReferences=${report.references}; scope=all-configurations-and-macro-templates`);
 }

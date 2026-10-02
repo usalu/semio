@@ -1,0 +1,12 @@
+{
+  "depth": 600,
+  "cancelAfter": 256,
+  "maxRows": 10,
+  "maxValueBytes": 4096,
+  "binary64Bits": "fff0000000001234",
+  "surrogateOffset": 1000,
+  "unreachableCycle": [
+    800,
+    801
+  ]
+}

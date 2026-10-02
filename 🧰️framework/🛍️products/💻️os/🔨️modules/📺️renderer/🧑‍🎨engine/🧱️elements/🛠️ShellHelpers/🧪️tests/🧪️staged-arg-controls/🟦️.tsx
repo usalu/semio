@@ -3,15 +3,22 @@
  * slider read in display units), a segmented choice (pressed toggle buttons), vector axes (one named number field per
  * axis carrying the unit) and a reference list (chips that remove, an empty line, "use current selection" from the
  * reference's own domain, capped at `maxItems`). The controls are derived by the manifest's own `argControl` from the
- * stored schema; `dom-accessibility-api` names every field and `@testing-library` drives it. */
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+ * stored schema; `dom-accessibility-api` names every field, `@testing-library` drives it, and every vector axis follows the
+ * shared number-control corpus (`🖱️ui/🧬️contract/🧫️fixtures/🧫️number-controls`: all `keys`, `typed` and `limits` rows, design §18). */
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { argControl } from "@semio-tech/framework";
+import { Stepper } from "@semio-tech/ui-react";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import "../../../🐚️Shell/🟦️.tsx";
-import { interactionSelectionIdsV1, renderStagedArgControl, syncShellLabelLocale, type ResolvedActionArgDef, type StagedArgContextV1 } from "../../🟦️.tsx";
+import { interactionSelectionIdsV1, renderStagedArgControl, stagedNumberDisplayText, stagedNumberFacetsV1, syncShellLabelLocale, type ResolvedActionArgDef, type StagedArgContextV1 } from "../../🟦️.tsx";
+import numberControls from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json";
+import numberFacets from "../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️number-facets/🔣️.json";
+import type { ActionArgNumberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+import { formatUiNumber } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
@@ -79,16 +86,124 @@ describe("🎛️ staged mutation-input controls", () => {
     expect(view.changes).toEqual([[1, 4, 3]]);
   });
 
-  it("gives every vector axis the vector's facets: bounds, precision, display factor and detents on the page keys", () => {
+  it("gives every vector axis the vector's facets, stages a typed value and refuses one beyond a hard bound visibly, keeping the draft", () => {
+    syncShellLabelLocale("en");
     const turn: Def = { id: "turn", label: "Turn", schema: { kind: "vector", dims: 2, min: -3, max: 3, precision: 1, snaps: [-1.5, 0, 1.5], displayUnit: "°", displayFactor: 10 }, required: true };
     const view = mount(turn, [0.25, 1]);
     const fields = [...view.container.querySelectorAll<HTMLInputElement>('input[type="number"]')];
-    expect(fields.map((field) => [computeAccessibleName(field), field.value, field.min, field.max, field.step])).toEqual([["x (°)", "2.5", "-30", "30", "1"], ["y (°)", "10", "-30", "30", "1"]]);
-    fireEvent.keyDown(fields[0]!, { key: "PageUp" });
-    fireEvent.keyDown(fields[1]!, { key: "PageDown" });
+    expect(fields.map((field) => [computeAccessibleName(field), field.value, field.min, field.max, field.step])).toEqual([["x (°)", "2.5", "-30", "30", "0.1"], ["y (°)", "10.0", "-30", "30", "0.1"]]);
     fireEvent.change(fields[0]!, { target: { value: "12.34" } });
     fireEvent.change(fields[1]!, { target: { value: "99" } });
-    expect(view.changes).toEqual([[1.5, 1], [0.25, 0], [1.23, 1], [0.25, 3]]);
+    expect(view.changes).toEqual([[1.23, 1]]);
+    const refusal = view.container.querySelector<HTMLElement>("[data-staged-refusal]")!;
+    expect([fields[1]!.value, fields[1]!.getAttribute("aria-invalid"), refusal.getAttribute("role"), refusal.textContent, fields[1]!.getAttribute("aria-describedby")]).toEqual(["99", "true", "alert", "Must be at most 30 °", refusal.id]);
+    fireEvent.change(fields[1]!, { target: { value: "-5" } });
+    expect([view.changes.at(-1), fields[1]!.getAttribute("aria-invalid"), view.container.querySelector("[data-staged-refusal]")]).toEqual([[0.25, -0.5], null, null]);
+  });
+
+  type KeyRow = { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: string; readonly large: boolean; readonly precision?: number; readonly factor?: number; readonly expected: number };
+  type TypedRow = { readonly case: string; readonly typed: number; readonly factor: number | null; readonly precision: number | null; readonly candidates: readonly number[]; readonly expected: number };
+  type LimitRow = { readonly case: string; readonly value: number; readonly min: number | null; readonly max: number | null; readonly limits: { readonly min?: { readonly value: number; readonly exclusive?: boolean }; readonly max?: { readonly value: number; readonly exclusive?: boolean } } | null; readonly crossed: "min" | "max" | null };
+  const KEY_EVENTS: Readonly<Record<string, string>> = { increment: "ArrowUp", decrement: "ArrowDown", pageUp: "PageUp", pageDown: "PageDown", home: "Home", end: "End" };
+  const axisDef = (facets: Record<string, unknown>): Def => ({ id: "axis", label: "Axis", schema: { kind: "vector", dims: 1, ...facets }, required: true });
+
+  it("walks a vector axis by every key of the shared number-control corpus exactly as its keyboard law says", () => {
+    const rows = numberControls.keys as readonly KeyRow[];
+    expect(new Set(rows.map((row) => row.key))).toEqual(new Set(Object.keys(KEY_EVENTS)));
+    for (const row of rows) {
+      const def = axisDef({ snaps: [...row.snaps], ...(row.step > 0 ? { step: row.step } : {}), ...(row.precision === undefined ? {} : { precision: row.precision }), ...(row.factor === undefined ? {} : { displayFactor: row.factor }), ...(row.min === null ? {} : { min: row.min }), ...(row.max === null ? {} : { max: row.max }) });
+      const view = mount(def, [row.current]);
+      const unbound = (row.key === "home" && row.min === null) || (row.key === "end" && row.max === null);
+      const pressed = fireEvent.keyDown(view.container.querySelector<HTMLInputElement>('input[type="number"]')!, { key: KEY_EVENTS[row.key], shiftKey: row.large });
+      const last = view.changes.at(-1) as readonly number[] | undefined;
+      expect([pressed, view.changes.length], `${row.case}: a Home/End without its bound stays the caret's key`).toEqual(unbound ? [true, 0] : [false, 1]);
+      expect(last?.[0] ?? row.current, row.case).toBeCloseTo(row.expected, 9);
+      view.unmount();
+    }
+  });
+
+  it("reads every typed display value of the corpus back to its stored value: an exact detent or the current value kept, else rounded and divided back", () => {
+    for (const row of numberControls.typed as readonly TypedRow[]) {
+      const current = row.candidates[0] ?? 0;
+      const view = mount(axisDef({ snaps: [...row.candidates], ...(row.factor === null ? {} : { displayFactor: row.factor }), ...(row.precision === null ? {} : { precision: row.precision }) }), [current]);
+      fireEvent.change(view.container.querySelector<HTMLInputElement>('input[type="number"]')!, { target: { value: String(row.typed) } });
+      const last = view.changes.at(-1) as readonly number[] | undefined;
+      expect(last?.length, row.case).toBe(1);
+      expect(last![0], row.case).toBeCloseTo(row.expected, 12);
+      view.unmount();
+    }
+  });
+
+  it("refuses exactly the typed values the corpus's hard-bound rows cross, keeping each draft, and stages the admitted ones", () => {
+    syncShellLabelLocale("en");
+    for (const row of numberControls.limits as readonly LimitRow[]) {
+      const crossed = uiNumberCrossedBound(row.value, row.min, row.max, row.limits as Parameters<typeof uiNumberCrossedBound>[3]);
+      const side = crossed === null ? null : row.limits !== null ? (crossed === row.limits.min ? "min" : "max") : crossed.value === row.min && row.value <= crossed.value ? "min" : "max";
+      expect(side, `${row.case}: the bound law the axis refuses by`).toBe(row.crossed);
+      const inclusiveOnly = row.limits !== null && row.min === null && row.max === null && [row.limits.min, row.limits.max].every((bound) => bound === undefined || bound.exclusive !== true);
+      if (row.limits !== null && !inclusiveOnly) continue;
+      const min = row.limits === null ? row.min : (row.limits.min?.value ?? null);
+      const max = row.limits === null ? row.max : (row.limits.max?.value ?? null);
+      const view = mount(axisDef({ ...(min === null ? {} : { min }), ...(max === null ? {} : { max }) }), [(min ?? 0) + 1]);
+      const field = view.container.querySelector<HTMLInputElement>('input[type="number"]')!;
+      fireEvent.change(field, { target: { value: String(row.value) } });
+      const refusal = view.container.querySelector<HTMLElement>("[data-staged-refusal]");
+      expect([view.changes.length, field.getAttribute("aria-invalid"), field.value, refusal?.textContent ?? null], row.case).toEqual(row.crossed === null ? [1, null, String(row.value), null] : [0, "true", String(row.value), row.crossed === "min" ? `Must be at least ${min}` : `Must be at most ${max}`]);
+      view.unmount();
+    }
+  });
+
+  it("names a stepper's value field only through a label that exists, so a stepper with no name is reported instead of pointing at a missing id", () => {
+    const fieldOf = (props: { readonly id: string; readonly "aria-label"?: string; readonly showLabel?: boolean }) => {
+      const view = render(createElement(Stepper, { value: 2, ...props }));
+      const field = view.container.querySelector<HTMLInputElement>("input")!;
+      const labelledBy = field.getAttribute("aria-labelledby");
+      const reading = { labelledBy: labelledBy === null ? null : labelledBy.split(/\s+/u).every((ref) => document.getElementById(ref) !== null), name: computeAccessibleName(field) };
+      view.unmount();
+      return reading;
+    };
+    vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
+    try {
+      expect([fieldOf({ id: "stepper.named", "aria-label": "Count" }), fieldOf({ id: "stepper.bare" }), fieldOf({ id: "stepper.shown", showLabel: true }).labelledBy]).toEqual([{ labelledBy: null, name: "Count" }, { labelledBy: null, name: "" }, true]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("draws every staged number control with the shared number-facet corpus: travel, look, axis, detents, display units and localized limits", () => {
+    type FacetCase = { readonly name: string; readonly locale: "en" | "de"; readonly def: { readonly id: string; readonly label: { readonly native: Readonly<Record<"en" | "de", string>> } } & Record<string, unknown>; readonly facets: ActionArgNumberFacets | null };
+    vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
+    try {
+      for (const row of numberFacets.cases as readonly FacetCase[]) {
+        syncShellLabelLocale(row.locale);
+        const def = { ...row.def, label: row.def.label.native[row.locale] } as unknown as Def;
+        if (row.facets === null) {
+          expect(() => stagedNumberFacetsV1(def), row.name).toThrow();
+          continue;
+        }
+        const facets = stagedNumberFacetsV1(def);
+        expect(facets, `${row.name}: the shell's facets are the corpus's`).toEqual(row.facets);
+        const value = facets.snaps[0] ?? facets.min ?? 0;
+        const view = mount(def, def.schema.kind === "vector" ? Array.from({ length: def.schema.dims }, () => value) : value);
+        const slider = view.container.querySelector<HTMLElement>('[role="slider"]');
+        if (slider !== null) {
+          const spoken = (stored: number) => String(facets.displayFactor === undefined ? stored : Number(formatUiNumber(stored * facets.displayFactor)));
+          expect([view.container.querySelector('[data-slot="slider-dial"]') !== null, view.container.querySelectorAll('[data-slot="slider-tick"]').length, slider.getAttribute("aria-valuetext"), slider.getAttribute("aria-valuemin"), slider.getAttribute("aria-valuemax")], row.name).toEqual([facets.appearance === "dial", facets.snaps.length, stagedNumberDisplayText(value, facets), spoken(facets.min!), spoken(facets.max!)]);
+        } else {
+          const field = view.container.querySelector<HTMLInputElement>('[data-stepper-input="true"], input[type="number"]')!;
+          const unit = facets.displayUnit ?? facets.unit;
+          const shownUnit = view.container.querySelector('[data-slot="stepper-unit"], [data-slot="staged-unit"]')?.textContent ?? view.container.querySelector("label")?.textContent?.match(/\((.*)\)$/u)?.[1] ?? null;
+          expect([field.value, shownUnit], row.name).toEqual([uiNumberDisplayText(value, facets.displayFactor, facets.precision), unit ?? null]);
+          const [bound, beyond] = facets.limits.max != null ? [facets.limits.max, 1] : [facets.limits.min!, -1];
+          fireEvent.change(field, { target: { value: String(uiNumberDisplay(bound.value, facets.displayFactor) + beyond) } });
+          expect([view.container.querySelector('[role="alert"]')?.textContent, field.getAttribute("aria-invalid")], `${row.name}: the typed value beyond the limit is refused in ${row.locale}`).toEqual([bound.refusal, "true"]);
+        }
+        view.unmount();
+      }
+    } finally {
+      vi.unstubAllGlobals();
+      syncShellLabelLocale("en");
+    }
   });
 
   it("renders a reference list as removable chips with an empty line and a use-selection button in both languages", async () => {

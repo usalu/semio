@@ -120,6 +120,7 @@ fn hovering_an_input_uses_the_text_cursor() {
         on_repeat_last: None,
         presence: UiPresence::default(),
         menu: None,
+        ..Default::default()
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
 }
@@ -170,6 +171,7 @@ fn a_disabled_node_uses_the_not_allowed_cursor_before_any_other_affordance() {
         on_repeat_last: None,
         presence: UiPresence::disabled_if(true),
         menu: None,
+        ..Default::default()
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(input), None), SemioCursor::NotAllowed);
 

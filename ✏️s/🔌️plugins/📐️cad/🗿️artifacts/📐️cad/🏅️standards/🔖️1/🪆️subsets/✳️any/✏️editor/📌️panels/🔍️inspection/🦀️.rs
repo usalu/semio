@@ -8,10 +8,21 @@ use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text,
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
 use crate::{CadNode, CadPaneId};
-use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";

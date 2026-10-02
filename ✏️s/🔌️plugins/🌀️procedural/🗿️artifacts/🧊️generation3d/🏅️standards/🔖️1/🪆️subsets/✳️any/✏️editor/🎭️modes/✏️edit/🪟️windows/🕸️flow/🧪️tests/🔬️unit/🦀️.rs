@@ -5,8 +5,8 @@ const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../..
 
 #[test]
 fn flow_graph_node_status_is_localized() {
-    let english = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
-    let german = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() });
+    let english = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let german = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) });
     for (tag, en, de) in [("queued", "Queued", "In Warteschlange"), ("computing", "Computing", "Berechnen"), ("error", "Error", "Fehler"), ("blocked", "Blocked", "Blockiert"), ("ok", "Evaluated", "Ausgewertet")] {
         let status = format!(r#"{{"height":{{"status":"{tag}"}}}}"#);
         assert_eq!(node_status_label(Some(&status), "height", english), Some(en), "{tag}");
@@ -38,7 +38,7 @@ fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
     let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
-    let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("outline builds");
     fixture.retire_cold();
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("outline projects");

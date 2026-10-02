@@ -39,13 +39,13 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for DragWork
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (super::super::offset_text(self.dx), super::super::offset_text(self.dy));
         let (items_en, items_de) = match self.targets.len() {
             1 => ("1 node".to_string(), "1 Knoten".to_string()),
             count => (format!("{count} nodes"), format!("{count} Knoten")),
         };
-        protocol::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by ({dx_en}, {dy_en})"), &format!("{items_de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

@@ -1,0 +1,209 @@
+{
+  "dialect": "s.norm.en1999@1/*",
+  "snapshot": {
+    "annex": "De",
+    "materials": [
+      {
+        "id": "duplicate material 日本\u0000",
+        "designation": "unrecognized retained alloy"
+      },
+      {
+        "id": "duplicate material 日本\u0000",
+        "designation": "different ordered designation"
+      }
+    ],
+    "sections": [
+      {
+        "id": "section",
+        "kind": "authored shape",
+        "height": 1.1,
+        "width": 2.2,
+        "flangeThickness": 3.3,
+        "webThickness": 4.4,
+        "outerDiameter": 5.5,
+        "elements": [
+          {
+            "id": "plate",
+            "width": 6.6,
+            "thickness": 7.7,
+            "outstand": true,
+            "welded": false,
+            "weldPosition": 8.8
+          }
+        ]
+      }
+    ],
+    "members": [
+      {
+        "id": "member",
+        "sectionId": "missing section reference",
+        "materialId": "missing alloy reference",
+        "length": 9.9,
+        "support": "authored support",
+        "bucklingLengthY": 10.1,
+        "bucklingLengthZ": 11.2,
+        "bucklingLengthT": 12.3,
+        "ltbLength": 13.4,
+        "c1": 14.5,
+        "restrainedLtb": true,
+        "actions": [
+          {
+            "id": "member action",
+            "kind": "unknown kind",
+            "category": "authored category",
+            "source": "authored source",
+            "gKLine": 15.6,
+            "qKLine": 16.7,
+            "nK": 17.8,
+            "vYK": 18.9,
+            "vZK": 19.1,
+            "mYK": 20.2,
+            "mZK": 21.3
+          }
+        ]
+      }
+    ],
+    "connections": [
+      {
+        "id": "connection",
+        "memberId": "unresolved member",
+        "materialId": "unresolved material",
+        "kind": "authored connection",
+        "actions": [
+          {
+            "id": "connection action",
+            "kind": "kind",
+            "category": "category",
+            "source": "source",
+            "gKLine": 22.4,
+            "qKLine": 23.5,
+            "nK": 24.6,
+            "vYK": 25.7,
+            "vZK": 26.8,
+            "mYK": 27.9,
+            "mZK": 28.1
+          }
+        ],
+        "bolts": {
+          "material": "bolt material",
+          "diameter": 29.2,
+          "rows": 4294967295,
+          "boltsPerRow": 0,
+          "edgeDistance": 30.3,
+          "pitch": 31.4,
+          "gauge": 32.5,
+          "plateThickness": 33.6
+        },
+        "welds": {
+          "fillerAlloy": "filler alloy",
+          "throat": 34.7,
+          "length": 35.8,
+          "betaW": 36.9,
+          "hazExtent": 37.1
+        }
+      }
+    ],
+    "fireScenarios": [
+      {
+        "id": "fire",
+        "memberId": "unresolved fire member",
+        "thetaA": 38.2,
+        "durationS": 39.3
+      }
+    ],
+    "fatigueDetails": [
+      {
+        "id": "fatigue",
+        "memberId": "unresolved fatigue member",
+        "detailCategory": "authored detail",
+        "deltaSigmaC": 40.4,
+        "deltaSigmaEd": 41.5,
+        "nCycles": 42.6,
+        "m1": 43.7,
+        "m2": 44.8
+      }
+    ],
+    "coldFormed": [
+      {
+        "id": "sheet",
+        "materialId": "unresolved sheet material",
+        "thickness": 45.9,
+        "width": 46.1,
+        "span": 47.2,
+        "welded": true,
+        "actions": [
+          {
+            "id": "sheet action",
+            "kind": "kind",
+            "category": "category",
+            "source": "source",
+            "gKLine": 48.3,
+            "qKLine": 49.4,
+            "nK": 50.5,
+            "vYK": 51.6,
+            "vZK": 52.7,
+            "mYK": 53.8,
+            "mZK": 54.9
+          }
+        ]
+      }
+    ],
+    "shells": [
+      {
+        "id": "shell",
+        "materialId": "unresolved shell material",
+        "radius": 55.1,
+        "thickness": 56.2,
+        "length": 57.3,
+        "actions": [
+          {
+            "id": "shell action",
+            "kind": "kind",
+            "category": "category",
+            "source": "source",
+            "gKLine": 58.4,
+            "qKLine": 59.5,
+            "nK": 60.6,
+            "vYK": 61.7,
+            "vZK": 62.8,
+            "mYK": 63.9,
+            "mZK": 64.1
+          }
+        ]
+      }
+    ]
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000001",
+    "7ff0000000000001",
+    "0000000000000001",
+    "ffffffffffffffff"
+  ],
+  "tableNames": [
+    "en1999_document",
+    "en1999_material",
+    "en1999_section",
+    "en1999_plate_element",
+    "en1999_member",
+    "en1999_member_action",
+    "en1999_connection",
+    "en1999_connection_action",
+    "en1999_bolt_group",
+    "en1999_weld_group",
+    "en1999_fire_scenario",
+    "en1999_fatigue_detail",
+    "en1999_cold_formed_sheet",
+    "en1999_sheet_action",
+    "en1999_shell",
+    "en1999_shell_action"
+  ],
+  "controlledOutput": {
+    "textBytes": 100000,
+    "cancelAfter": 65536,
+    "tinyBytes": 16
+  }
+}

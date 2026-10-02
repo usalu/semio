@@ -93,64 +93,417 @@
   },
   "$defs": {
     "BlockKindIdentity": {
-      "title": "BlockKindIdentity",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "label"
+      ]
     },
     "Block5dPart2d": {
-      "title": "Block5dPart2d",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iconKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
     },
     "Block5dPart3d": {
-      "title": "Block5dPart3d",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockVector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockVector3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
     },
     "BlockRepresentation": {
-      "title": "BlockRepresentation",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
     },
     "Block5dGripKind": {
-      "title": "Block5dGripKind",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "defaultRopeKind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "label",
+        "color",
+        "defaultRopeKind"
+      ]
     },
     "Block5dGripTemplate": {
-      "title": "Block5dGripTemplate",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "gripKind": {
+          "type": "string"
+        },
+        "angle": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "radius2d": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "position": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "direction": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "radius3d": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": [
+        "id",
+        "gripKind"
+      ]
     },
     "BlockCompatibilityRule": {
-      "title": "BlockCompatibilityRule",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "bidirectional": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ]
     },
     "BlockAttribute": {
-      "title": "BlockAttribute",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
     },
     "BlockAuthor": {
-      "title": "BlockAuthor",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
     },
     "BlockCamera2d": {
-      "title": "BlockCamera2d",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "y": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
     },
     "BlockCamera3d": {
-      "title": "BlockCamera3d",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "target": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
     },
     "BlockMeta": {
-      "title": "BlockMeta",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      },
+      "required": [
+        "bits"
+      ]
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "BlockVector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
+    },
+    "BlockVector4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
     }
   }
 }

@@ -1,0 +1,97 @@
+{
+  "dialect": {
+    "artifactKind": "s.gis.gismap",
+    "standard": "1",
+    "subset": "*"
+  },
+  "child": {
+    "childId": "map child ! @ /",
+    "target": {
+      "artifactId": "map artifact ! @ /",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "arbitrary owned child"
+      }
+    }
+  },
+  "deep": 600,
+  "value": {
+    "kind": "object",
+    "members": [
+      {
+        "name": "same",
+        "value": {
+          "kind": "null"
+        }
+      },
+      {
+        "name": "same",
+        "value": {
+          "kind": "boolean",
+          "value": false
+        }
+      },
+      {
+        "name": "u64",
+        "value": {
+          "kind": "unsigned",
+          "value": "18446744073709551615"
+        }
+      },
+      {
+        "name": "i64",
+        "value": {
+          "kind": "signed",
+          "value": "-9223372036854775808"
+        }
+      },
+      {
+        "name": "nan",
+        "value": {
+          "kind": "float",
+          "bits": "7ff0000000001234"
+        }
+      },
+      {
+        "name": "negative zero",
+        "value": {
+          "kind": "float",
+          "bits": "8000000000000000"
+        }
+      },
+      {
+        "name": "text",
+        "value": {
+          "kind": "text",
+          "value": "世界\u0000 editable"
+        }
+      },
+      {
+        "name": "bytes",
+        "value": {
+          "kind": "bytes",
+          "value": [
+            0,
+            255,
+            128
+          ]
+        }
+      },
+      {
+        "name": "empty array",
+        "value": {
+          "kind": "array",
+          "items": []
+        }
+      },
+      {
+        "name": "empty object",
+        "value": {
+          "kind": "object",
+          "members": []
+        }
+      }
+    ]
+  }
+}

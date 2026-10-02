@@ -15,20 +15,68 @@ use crate::editor::remodeling::modes::{analyze, capture, model};
 use crate::editor::remodeling::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
 use crate::editor::remodeling::reconstruction_session::{ReconstructionRevalidateJob, ReconstructionRunJob};
 use crate::editor::remodeling::terminology::remodeling_labels;
+use crate::editor::remodeling::transient::{self, RemodelingWindowTransient};
 use crate::op::RemodelingMutation;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp,
-    Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, UtilityCategory,
-    UtilityDefinition, WindowMeasure,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::GlbExporter;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaPortDirection;
+use semio_framework_plugin::MediaPortSpec;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::MeshExporter;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const REMODELING_PLAY_APP_ID: &str = "remodeling-play";
@@ -87,8 +135,8 @@ pub fn remodeling_window_action(action: &str, args: Option<dsl::DslValue>) -> se
 /// 🏷️ Admits one dynamic string as a semantic-contract `Label` — the SECOND `Label` type in scope
 /// (`plugin_app_close_prelude::Label`, what `PanelTreeBuilder::section`/`tree_item` take), never the
 /// retained `ui_wgpu` `Label` the SDK root's glob also re-exports and this file imports unqualified.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
@@ -226,13 +274,29 @@ semio_framework_plugin::app_commands! {
         "exportQcReport" as "export-qc-report" => export_qc_report::ExportQcReport,
         // 🎬️ Example picker.
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+        // 🛑️ Import cancellation.
+        "importAbort" as "import-abort" => import_abort::ImportAbort,
+    }
+}
+
+impl RemodelingCommand {
+    /// 📥️ An import verb through the dispatching window's tool state (`🫧️transient`): its emission and the window's next
+    /// partition; `None` for every other verb.
+    fn import_in_window(&self, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, window: &RemodelingWindowTransient) -> Option<Result<(Emit<RemodelingMutation, NoConfigMutation>, RemodelingWindowTransient), Fault>> {
+        match self {
+            Self::ImportFramePayload(payload) => Some(import_frame_payload::handle_in_window(payload, doc, cfg, window)),
+            Self::ImportVideoFramePayload(payload) => Some(import_video_frame_payload::handle_in_window(payload, doc, window)),
+            Self::ImportVideoDone(payload) => Some(import_video_done::handle_in_window(payload, doc, window)),
+            Self::ImportAbort(payload) => Some(import_abort::handle_in_window(payload, doc, window)),
+            _ => None,
+        }
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
-use crate::editor::remodeling::commands::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
+use crate::editor::remodeling::commands::{add_stream, import_abort, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
 use crate::editor::remodeling::commands::{set_active_example, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
@@ -285,7 +349,7 @@ mod args_bridge {
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
         Ok(match action {
-            "importFramePayload" => RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: text_or("payload", ""), name: text_or("name", ""), index: u32_or("index", 0) }),
+            "importFramePayload" => RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: text_or("payload", ""), name: text_or("name", ""), index: u32_or("index", 0), total: u32_or("total", u32_or("index", 0).saturating_add(1)) }),
             "importVideoFramePayload" => RemodelingCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload {
                 payload: text_or("payload", ""),
                 name: text_or("name", ""),
@@ -421,6 +485,7 @@ mod args_bridge {
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
             "setActiveExample" => RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_or("exampleId", crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID) }),
+            "importAbort" => RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: None }),
             _ => return Err(unknown(action)),
         })
     }
@@ -474,22 +539,24 @@ const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "importVideo",
     "exportQcReport",
     "setActiveExample",
+    "importAbort",
 ];
 const REMODELING_RETAINED_PAYLOAD_SCHEMA: &str = "remodeling.scene.tool-command.v1";
 const REMODELING_RETAINED_RAW_BYTES: usize = 65_536;
 const REMODELING_RETAINED_WORK_ITEMS: usize = 4_096;
 
-/// 🛣️ One publication lane per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs`:
+/// 🛣️ The publication lanes per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs`:
 /// every ingestion, calibration, parameter and clear verb builds
 /// `Emit::mutations(..)`/`Emit { artifact_mutations, .. }` over `RemodelingMutation`
-/// (`Artifact`); the four view verbs publish to their exact concrete `WindowConfig` owner; the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
+/// (`Artifact`); the four streamed-import verbs (`importFramePayload`, `importVideoFramePayload`, `importVideoDone`,
+/// `importAbort`) also write the importing window's tool state (`WindowTransient`); the four view verbs publish to their
+/// exact concrete `WindowConfig` owner; the three shell verbs build `Emit::effect(..)` only — `RequestFileOpen`,
 /// `RequestMediaFrames`, `DownloadMediaExport` — and never touch a store (`HostOnly`). No remodeling
-/// handler emits two store lanes, a draft, a presence or a transient mutation, so no route declares
-/// more than one lane.
+/// handler emits a draft, a presence or an app transient mutation.
 const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
-    artifact_route("importFramePayload"),
-    artifact_route("importVideoFramePayload"),
-    artifact_route("importVideoDone"),
+    import_route("importFramePayload"),
+    import_route("importVideoFramePayload"),
+    import_route("importVideoDone"),
     artifact_route("importVideoBytesPayload"),
     artifact_route("addStream"),
     artifact_route("removeStream"),
@@ -522,7 +589,13 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     host_route("importVideo"),
     host_route("exportQcReport"),
     artifact_route("setActiveExample"),
+    import_route("importAbort"),
 ];
+
+/// 📥️ One import-lane publication row: the streamed document edit plus the importing window's tool state.
+const fn import_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] }
+}
 
 /// 📄️ One document-lane publication row.
 const fn artifact_route(tool_id: &'static str) -> semio_framework_plugin::ArtifactToolPublicationContract {
@@ -621,6 +694,16 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         let window = input.context.and_then(|context| context.window_config.as_ref());
         let config_view = ConfigView { snapshot: input.config, window };
         let document = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let resting = transient::current(input.context.and_then(|context| context.window_transient.as_ref()));
+        if let Some(imported) = input.command.import_in_window(&document, &config_view, &resting) {
+            let (emit, next) = imported?;
+            let window_transient = match next == resting {
+                true => Vec::new(),
+                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("remodeling-import-window-required"))?, next)?],
+            };
+            self.completed = true;
+            return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
+        }
         let mut emit = input.command.dispatch(&document, &config_view)?;
         if matches!(input.command, RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) | RemodelingCommand::SetFrameCursor(_) | RemodelingCommand::SetReportTable(_)) {
             let view = input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("remodeling-window-view-required"))?;
@@ -761,6 +844,19 @@ impl ArtifactEditor for RemodelingPlayApp {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
+    /// 🫧️ Every window kind's transient partition — where the import a window started lives between its dispatches.
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        transient::register(registry)
+    }
+
+    /// 📨️ A closing window aborts the import it started with zero trace; every other host fact leaves an import running.
+    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<RemodelingCommand> {
+        match event {
+            semio_framework_plugin::HostEvent::Retiring { .. } => Some(RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: Some("retired".to_string()) })),
+            _ => None,
+        }
+    }
+
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<model::windows::model::config::RemodelingModelWindowConfigOwner>()?;
         registry.register::<capture::windows::frames::config::RemodelingFramesWindowConfigOwner>()?;
@@ -782,7 +878,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             "setIngestParams", "setFeatureParams", "setMatchParams", "setSfmParams", "setDenseParams", "setMeshParams", "setMotionParams", "setGeoParams",
             "resetPlaceholderMesh", "clearSparse", "clearDense", "clearMeshResult", "clearTracks", "clearGeoProducts", "clearResult",
             "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "importFrames", "importVideo", "exportQcReport",
-            "setActiveExample"
+            "setActiveExample", "importAbort"
         ]
     }
 
@@ -1040,6 +1136,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
+            .action_with(ActionDefinition::bounded_catalog("importAbort", LocalizedLabel::native("Abort Import", "Import abbrechen"), ActionKind::Mutation))
             .mutation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
             .action_args("addStream", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"Stream"),
@@ -1213,6 +1310,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_interactive_job("importVideoFramePayload", InteractiveJobClassification::Migrated)
             .action_interactive_job("importVideoDone", InteractiveJobClassification::Migrated)
             .action_interactive_job("importVideoBytesPayload", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importAbort", InteractiveJobClassification::Migrated)
             .action_interactive_job("addStream", InteractiveJobClassification::Migrated)
             .action_interactive_job("removeStream", InteractiveJobClassification::Migrated)
             .action_interactive_job("setStreamSync", InteractiveJobClassification::Migrated)
@@ -1259,6 +1357,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_describe("importFramePayload", LocalizedLabel::native("Adds one image (name and data-URL payload) as a frame; the first image of a batch starts a new image-sequence stream, later ones join it.", "Fügt ein Bild (Name und Data-URL-Inhalt) als Einzelbild hinzu; das erste Bild eines Stapels beginnt einen neuen Bildsequenz-Stream, weitere schließen sich an."))
             .action_describe("importVideo", LocalizedLabel::native("Opens the host's video picker; the chosen video is sampled into frames according to the ingest parameters (stride, frame limit, downscaling).", "Öffnet die Videoauswahl des Hosts; das gewählte Video wird gemäß den Ingest-Parametern (Schrittweite, Bildgrenze, Verkleinerung) in Einzelbilder zerlegt."))
             .action_describe("importVideoFramePayload", LocalizedLabel::native("Adds one sampled video frame (data URL) to the current video stream, skipping frames too blurry for the ingest sharpness threshold.", "Fügt dem aktuellen Video-Stream ein abgetastetes Videobild (Data-URL) hinzu und überspringt Bilder, die für die Schärfeschwelle des Ingests zu unscharf sind."))
+            .action_describe("importAbort", LocalizedLabel::native("Reverts the import that is still streaming frames into the last stream, leaving no edit, no history row and no trace.", "Verwirft den Import, der noch Bilder in den letzten Stream streamt, ohne Bearbeitung, Verlaufszeile oder Spur."))
             .action_describe("importVideoDone", LocalizedLabel::native("Records the imported video's source metadata (name, duration, frame count, size and codec) on the last stream once sampling has finished.", "Hält nach Abschluss der Abtastung die Quelldaten des importierten Videos (Name, Dauer, Bildanzahl, Größe und Codec) am letzten Stream fest."))
             .action_describe("importVideoBytesPayload", LocalizedLabel::native("Imports a whole video file as bytes when the host cannot sample frames itself; the plugin decodes and samples it.", "Importiert eine ganze Videodatei als Bytes, wenn der Host keine Einzelbilder abtasten kann; das Plugin dekodiert und tastet sie selbst ab."))
             .action_describe("addStream", LocalizedLabel::native("Adds an empty media stream (image sequence or video) with the given name, optionally bound to a calibrated camera by id.", "Fügt einen leeren Medien-Stream (Bildsequenz oder Video) mit dem angegebenen Namen hinzu, optional an eine kalibrierte Kamera gebunden."))

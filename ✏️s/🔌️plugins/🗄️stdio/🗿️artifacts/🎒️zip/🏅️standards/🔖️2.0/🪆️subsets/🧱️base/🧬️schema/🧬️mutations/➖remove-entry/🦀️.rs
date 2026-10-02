@@ -22,8 +22,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RemoveEntry {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::RemoveEntry(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

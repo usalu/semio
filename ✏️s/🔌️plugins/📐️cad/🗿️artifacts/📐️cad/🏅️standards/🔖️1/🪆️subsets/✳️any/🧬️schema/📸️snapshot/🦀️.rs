@@ -5,6 +5,13 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted cad document snapshot (persistent fields of the artifact). Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the four per-pane object/geometry field
@@ -55,23 +62,20 @@ pub struct CadSnapshot {
 }
 
 //#region 🔖️ExactChildren
-fn exact_child<S>(child_id: String, target: store::os_io::ArtifactRef, subset: &str) -> Result<store::ArtifactChild<S>, String> {
-    if child_id != target.artifact_id {
-        return Err("cad child id must equal target artifact id".into());
-    }
+fn exact_child(target: &store::os_io::ArtifactRef, subset: &str) -> Result<(), String> {
     if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != subset {
         return Err(format!("cad child must target s.stdio.semio@v1/{subset}"));
     }
-    Ok(store::ArtifactChild::new(child_id, target))
+    Ok(())
 }
 
-/// 🛡️ Every composed child handle must name its own target and the exact `s.stdio.semio@v1` subset.
+/// 🛡️ Every literal child handle retains its independent local identity and exact declared domain.
 fn require_exact_children(s: &CadSnapshot) -> Result<(), String> {
     for child in [&s.shape_model, &s.building_model, &s.energy_model, &s.structure_classic_model].into_iter().flatten() {
-        exact_child::<()>(child.child_id.clone(), child.target.clone(), "model")?;
+        exact_child(&child.target, "model")?;
     }
     for child in &s.drawings {
-        exact_child::<()>(child.child_id.clone(), child.target.clone(), "drawing")?;
+        exact_child(&child.target, "drawing")?;
     }
     Ok(())
 }
@@ -103,6 +107,9 @@ impl store::ArtifactDsl for CadSnapshot {
 }
 
 impl store::ArtifactPack for CadSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -124,4 +131,3 @@ impl store::ArtifactPack for CadSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
-

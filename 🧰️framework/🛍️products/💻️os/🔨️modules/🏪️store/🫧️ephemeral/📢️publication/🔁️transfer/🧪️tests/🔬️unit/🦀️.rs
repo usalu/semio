@@ -30,7 +30,7 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
 fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
-    let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(super::super::retirement::OwnedValueRetirementFactory::<String>::default());
+    let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, std::convert::identity, retirement.clone(), retirement.clone());
     for hand_off in [false, true] {
         let request = ArtifactEphemeralOneItemPreparationRequest {
@@ -59,7 +59,7 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
 
 #[test]
 fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
-    let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(super::super::retirement::OwnedValueRetirementFactory::<String>::default());
+    let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, std::convert::identity, retirement.clone(), retirement);
     let mut mutation = String::with_capacity(super::super::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
     mutation.push_str("retained rejection");
@@ -76,7 +76,7 @@ fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
 #[test]
 fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let state: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(super::super::retirement::OwnedValueRetirementFactory::<String>::default());
+    let state: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, transfer, state.clone(), state.clone());
     for row in fixture["cases"].as_array().unwrap() {
         let mutation = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);

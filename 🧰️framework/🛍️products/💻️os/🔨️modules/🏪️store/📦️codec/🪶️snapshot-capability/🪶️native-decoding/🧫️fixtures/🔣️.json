@@ -1,9 +1,13 @@
 {
   "schema": "semio.framework.sqlite-native-decoding-admission/v1",
+  "metadataAdmission": {"domainRows": 3, "fileRows": 4},
+  "erasedDispatch": {"bufferBytes": 4096, "cancelAt": 256, "ordinaryCalls": 0, "controlledCalls": 1},
   "cases": [
     {"id": "single-expansion", "bufferBytes": [131072], "emptyBuffers": 0, "maximumBytes": 100000, "decoded": false},
     {"id": "aggregate-expansion", "bufferBytes": [61440, 61440], "emptyBuffers": 0, "maximumBytes": 100000, "decoded": false},
     {"id": "array-expansion", "bufferBytes": [], "emptyBuffers": 2048, "maximumBytes": 16384, "decoded": false},
-    {"id": "admitted-buffers", "bufferBytes": [16384, 16384], "emptyBuffers": 0, "maximumBytes": 100000, "decoded": true}
+    {"id": "simultaneous-body-and-values", "bufferBytes": [2048, 2048, 2048, 2048, 2048, 2048], "emptyBuffers": 0, "maximumBytes": 20000, "decoded": false},
+    {"id": "retained-inflater-working-storage", "bufferBytes": [16384, 16384], "emptyBuffers": 0, "maximumBytes": 100000, "decoded": false},
+    {"id": "admitted-buffers", "bufferBytes": [16384, 16384], "emptyBuffers": 0, "maximumBytes": 262144, "decoded": true}
   ]
 }

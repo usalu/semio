@@ -22,5 +22,8 @@
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tsv/iana/any/mutation/set-cell/schema.json"
     }
+  ],
+  "required": [
+    "mutation"
   ]
 }

@@ -54,23 +54,6 @@ pub enum LowpolySelectionMotion {
 }
 
 impl LowpolySelectionMotion {
-    /// 🧪️ The payload-intrinsic breach a selection leaf refuses as `mutation.invariant`: a vertex named twice, a
-    /// non-finite number, the zero rotation axis (`x-semio-invariant` `axis-nonzero`) or a non-positive factor.
-    pub fn invariant_violation(&self, vertex_ids: &[u32]) -> Option<String> {
-        let finite = |values: &[f32]| values.iter().all(|value| value.is_finite());
-        let mut seen = std::collections::BTreeSet::new();
-        if let Some(twice) = vertex_ids.iter().find(|id| !seen.insert(**id)) {
-            return Some(format!("Vertex {twice} is named more than once."));
-        }
-        match self {
-            Self::Offset(offset) if !finite(offset) => Some("The offset must be finite.".into()),
-            Self::Turn { pivot, axis, angle } if !finite(pivot) || !finite(axis) || !angle.is_finite() => Some("The pivot, axis and angle must be finite.".into()),
-            Self::Turn { axis, .. } if axis.iter().all(|value| *value == 0.0) => Some("The rotation axis must not be the zero vector.".into()),
-            Self::Stretch { pivot, factor } if !finite(pivot) || !factor.iter().all(|value| value.is_finite() && *value > 0.0) => Some("The pivot must be finite and every factor positive and finite.".into()),
-            _ => None,
-        }
-    }
-
     /// 🫥️ Whether the motion leaves every vertex where it is: no offset, no angle, unit factors.
     pub fn is_identity(&self) -> bool {
         match self {
@@ -91,7 +74,7 @@ impl LowpolySelectionMotion {
 
     /// 🏷️ The history label of moving `vertices` (every vertex when 0) of `object_id`: "Move 2 vertices of "obj-1" by
     /// (0.5, 0, 0)" / "2 Eckpunkte von "obj-1" um (0,5; 0; 0) verschieben", and the rotate and scale twins.
-    pub fn label(&self, object_id: &str, vertices: usize) -> protocol::LocalizedLabel {
+    pub fn label(&self, object_id: &str, vertices: usize) -> semio_framework_ui_locale::LocalizedLabel {
         let number = |value: f32, german: bool| {
             let text = format!("{}", (f64::from(value) * 1_000.0).round() / 1_000.0);
             if german { text.replace('.', ",") } else { text }
@@ -103,26 +86,30 @@ impl LowpolySelectionMotion {
             count => (format!("{count} vertices of \"{object_id}\""), format!("{count} Eckpunkte von \"{object_id}\"")),
         };
         match self {
-            Self::Offset(offset) => protocol::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
+            Self::Offset(offset) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
             Self::Turn { axis, angle, .. } => {
                 let degrees = angle.to_degrees();
-                protocol::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
+                semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
             }
-            Self::Stretch { factor, .. } => protocol::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
+            Self::Stretch { factor, .. } => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
         }
     }
 }
 
-/// 🔺️ The sparse diff of applying `motion` to `vertex_ids` (every vertex when empty) of `object_id`'s persisted mesh,
-/// read off the BASE mesh: the object's re-encoded mesh content and the content-addressed handle it hashes to. Fatal
-/// `invariant` for a payload no mesh can satisfy, Fatal `apply.invalid-base` for mesh content that does not decode,
-/// Error `target-missing` when the object, its mesh or every named vertex is absent, Warning `partial` for the named
-/// vertices it skips and Warning `no-op` when nothing moves.
+/// 🪪️ The vertex-set half of every selection leaf's own invariant: each vertex named at most once.
+pub fn lowpoly_selection_vertex_violation(vertex_ids: &[u32]) -> Option<String> {
+    let mut seen = std::collections::BTreeSet::new();
+    vertex_ids.iter().find(|id| !seen.insert(**id)).map(|twice| format!("Vertex {twice} is named more than once."))
+}
+
+/// 🔺️ The sparse diff of applying an invariant-clean `motion` to `vertex_ids` (every vertex when empty) of
+/// `object_id`'s persisted mesh, read off the BASE mesh: the object's re-encoded mesh content and the content-addressed
+/// handle it hashes to. Each leaf's diff refuses its own payload invariant first; here Fatal `invariant` is a motion
+/// that degenerates the mesh, Fatal `apply.invalid-base` mesh content that does not decode, Error `target-missing` an
+/// absent object, mesh or every named vertex, Warning `partial` the named vertices it skips and Warning `no-op` a motion
+/// that moves nothing.
 pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, vertex_ids: &[u32], motion: &LowpolySelectionMotion) -> protocol::MutationOutcome<LowpolyDiff> {
     use semio_framework_3d::mesh::{HalfedgeMesh, VertexId};
-    if let Some(reason) = motion.invariant_violation(vertex_ids) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, [object_id.to_string()]);
-    }
     let Some(object) = base.objects.iter().find(|object| object.id == object_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" does not exist."), [object_id.to_string()]);
     };
@@ -156,11 +143,11 @@ pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, ve
     protocol::MutationOutcome::new(crate::diff::diff_objects_patch(object_id.to_string(), patch)).absorb_messages(partial)
 }
 
-/// ↩️ The exact undo of a selection motion on `base`: ONE `create-mesh` restoring the object's prior handle and mesh
-/// content (point-invertible however many vertices moved, never a negated motion that would accumulate float error);
-/// nothing when the motion moves nothing.
-pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str, vertex_ids: &[u32], motion: &LowpolySelectionMotion) -> Vec<LowpolyMutation> {
-    if lowpoly_selection_motion_diff(base, object_id, vertex_ids, motion).diff().objects.is_none() {
+/// ↩️ The exact undo of a selection leaf whose own `diff` on `base` it is handed: ONE `create-mesh` restoring the
+/// object's prior handle and mesh content (point-invertible however many vertices moved, never a negated motion that
+/// would accumulate float error); nothing when the diff moves nothing.
+pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str, diff: &protocol::MutationOutcome<LowpolyDiff>) -> Vec<LowpolyMutation> {
+    if diff.diff().objects.is_none() {
         return Vec::new();
     }
     let Some((object, handle)) = base.objects.iter().find(|object| object.id == object_id).and_then(|object| object.mesh.as_ref().map(|handle| (object, handle))) else {

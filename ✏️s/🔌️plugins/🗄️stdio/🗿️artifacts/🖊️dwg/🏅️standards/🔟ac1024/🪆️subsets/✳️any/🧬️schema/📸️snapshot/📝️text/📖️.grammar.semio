@@ -5,7 +5,7 @@ comment none
 
 document = IDENT field*
 field = IDENT field-value?
-field-value = "=" value
+field-value = "=" value?
 value = scalar value-tail? | list | record
 scalar = field | TEXT | INT | FLOAT | "-" "inf"
 value-tail = "," value

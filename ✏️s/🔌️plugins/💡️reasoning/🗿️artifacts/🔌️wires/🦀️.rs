@@ -300,7 +300,7 @@ pub fn wires_working_board(snapshot: &WiresSnapshot) -> DslValue {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "graph.wires".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Wires Graph", "Leitungsgraph"),
         source_format: MINDMAP_WIRES_SCHEMA.into(),
         component_kind: "wires".into(),
         dimension: "graph".into(),
@@ -482,6 +482,32 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-node/🧪️tests/🧪️reports/🦀️.rs"]
                             mod tests_reports_a_no_op_when_a_y_less_node_is_moved_to_y_zero;
+                        }
+                        #[path = "."]
+                        pub mod move_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🧪️reports/🦀️.rs"]
+                            mod tests_reports_a_no_op_when_the_drag_offset_is_zero;
+                        }
+                        #[path = "."]
+                        pub mod set_node_positions {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-node-positions/🧪️tests/🧪️reports/🦀️.rs"]
+                            mod tests_reports_a_no_op_when_every_node_already_sits_there;
                         }
                         #[path = "."]
                         pub mod resize_node {

@@ -33,6 +33,22 @@
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
+    },
+    "test-neutrality": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/../../**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🧱️neutrality/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test neutrality",
+        "forwardAllArgs": true
+      }
     }
   },
   "tags": [

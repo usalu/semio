@@ -3,7 +3,11 @@ use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::editor::fem2d::terminology::fem2d_labels;
 use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, render as render_body};
 use crate::editor::fem2d::Fem2dCommand;
-use semio_framework_plugin::{ComponentTree, Locale, Terminology, TreeWindows, ViewModel};
+use semio_framework_plugin::ComponentTree;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::ViewModel;
 use store::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
@@ -20,7 +24,7 @@ fn panel(doc: &Fem2dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
 }
 
 fn english(doc: &Fem2dSnapshot, ids: &[&str]) -> String {
-    panel(doc, ids, &ViewModel::default())
+    panel(doc, ids, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🔎️ The projected node carrying `key`, anywhere under the body — the projection keys every node by
@@ -197,7 +201,7 @@ async fn an_id_no_collection_owns_falls_back_to_the_summary_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_resolves_every_field_label_the_inspector_binds_2d() {
-    let view_state = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..Default::default() };
+    let view_state = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(Locale::De, Terminology::Native) };
     let doc = demo();
     assert!(panel(&doc, &["timber"], &view_state).contains("Querdehnzahl"));
     assert!(panel(&doc, &["r1"], &view_state).contains("Netzweite"));

@@ -1,6 +1,6 @@
 //! 🗣️ Remodeling play app — the complete UI label set. ONE `app_labels!` block, never split (TEMPLATE §4).
 
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 
 app_labels! {
     /// 🗣️ Complete UI label set for the remodeling play app; one field per label makes every locale

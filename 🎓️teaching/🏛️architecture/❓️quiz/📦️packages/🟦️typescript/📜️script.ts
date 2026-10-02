@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `@teaching/architecture-quiz` task router: `bun ./📜️script.ts <dev|build|test [quick|long|exhaustive]|check|publish|docker-image-build [--tag <tag>] [--jobs <n>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]>`. */
-import { BundleScript, ScriptRouter, playgroundDevPortString, playgroundPortEnv, resolveTestLevel, runBundleScriptMain, runViteBunxDev, runViteBuild, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, playgroundDevPortString, playgroundPortEnv, runBundleScriptMain, runViteBunxDev, runViteBuild, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { buildQuizImage, checkQuizCatalog, checkQuizImage, checkQuizStack, publishQuizImage, publishQuizSite } from "../../🚀️deploy/🟦️.ts";
 
 const VITE_CONFIG = "../../🏗️builder/🌐️vite/🟦️.ts";

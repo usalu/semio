@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create room air model assignment {}", self.zone_id.0), &format!("Raumluftmodellzuordnung {} erstellen", self.zone_id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create room air model assignment {}", self.zone_id.0), &format!("Raumluftmodellzuordnung {} erstellen", self.zone_id.0))
     }
 
     fn target(&self) -> Vec<String> {

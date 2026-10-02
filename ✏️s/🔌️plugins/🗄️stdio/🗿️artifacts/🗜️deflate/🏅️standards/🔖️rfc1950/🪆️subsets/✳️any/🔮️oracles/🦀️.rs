@@ -101,7 +101,7 @@ fn level_hint_bits(name: &str) -> Result<u8, String> {
 /// replaced by `header.write()`, since the typed CMF/FLG/DICTID fields are this subset's own.
 #[cfg(feature = "oracles")]
 fn encode(header: &Header, payload: &[u8]) -> Result<Vec<u8>, String> {
-    let reference = crate::archive::oracle_zlib_compress(payload)?;
+    let reference = semio_s_plugin_stdio_archive_test_oracle::oracle_zlib_compress(payload)?;
     if reference.len() < 6 {
         return Err("reference zlib wrap produced a truncated stream".to_string());
     }

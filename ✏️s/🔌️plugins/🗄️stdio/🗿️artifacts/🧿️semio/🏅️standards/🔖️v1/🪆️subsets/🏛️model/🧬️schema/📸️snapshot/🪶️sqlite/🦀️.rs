@@ -15,6 +15,9 @@ fn relation(value:&RelationKind)->(&'static str,Option<&str>){match value{Relati
 fn placement(id:i64,t:SemioTransform,p:&mut Projection<'_,'_>)->Result<(),String>{p.insert_key_float("semio_model_placement",id,&[Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)])}
 fn restore_placement(row:SqliteRow<'_>)->Result<SemioTransform,String>{Ok(SemioTransform{translation:SemioPoint3{x:row.real(1)?,y:row.real(2)?,z:row.real(3)?},rotation:SemioQuaternion{x:row.real(4)?,y:row.real(5)?,z:row.real(6)?,w:row.real(7)?},scale:SemioPoint3{x:row.real(8)?,y:row.real(9)?,z:row.real(10)?}})}
 impl ArtifactSqliteSnapshot for SemioModelSnapshot{
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+
+fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

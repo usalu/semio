@@ -102,8 +102,8 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Attach \"{}\" to a folder on this device", self.document_id), &format!("\"{}\" mit einem Ordner auf diesem Gerät verbinden", self.document_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Attach \"{}\" to a folder on this device", self.document_id), &format!("\"{}\" mit einem Ordner auf diesem Gerät verbinden", self.document_id))
     }
 
     fn target(&self) -> Vec<String> {

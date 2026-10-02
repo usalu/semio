@@ -1,13 +1,13 @@
 
 use super::*;
-use crate::law::feature_rows;
+use semio_repo_test_host::law::feature_rows;
 
 /// 🧫️ The real committed package `🧱️mutate-pptx-ecma-376` runs on — the seven-slide subset derived
 /// once from a real 62-slide conference deck, with real titles, real placeholders and real
 /// `a:xfrm` geometry in EMUs.
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📽️.pptx");
 
-/// 🧾️ The case's own `Examples` rows, read rather than restated — see [`crate::law::feature_rows`].
+/// 🧾️ The case's own `Examples` rows, read rather than restated — see [`semio_repo_test_host::law::feature_rows`].
 const FEATURE: &str = include_str!("../../../🧪️tests/🧱️mutate-pptx-ecma-376/🥒️.feature");
 
 fn spec(kind: &str, params: &Json) -> Json {

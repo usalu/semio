@@ -20,7 +20,7 @@
 //   bun 📜️script.ts png-project --input <a.png>
 //   bun 📜️script.ts png-compare --input <expected.png> --input <actual.png>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the
 //      sibling probe suite this file's CLI/dispatch/compare shape is mirrored from
 // @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls

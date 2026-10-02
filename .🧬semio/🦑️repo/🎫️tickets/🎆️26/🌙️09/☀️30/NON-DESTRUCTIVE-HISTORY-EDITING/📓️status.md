@@ -260,3 +260,176 @@ Sub-ticket `PAGED-ARTIFACT-HISTORY-LEDGER` (64-slot ledger ceiling) is owned by 
   still running (`twins.py`, 12:57: moves schema-side leaf dirs onto the shortened fixture names + rewrites refs) and has
   made the taxonomy invalid since 12:41 (188 `semanticDirectoryMemberKinds collide for owner "tests"`). Decision: its
   repo-wide policy wins; we fix only refs still dangling after it settles and report kind/dir identity mismatches.
+- ~13:30 account usage limit cut all 20 agents (reset 16:30). Before the cut: W1-E props literals fixed (Default +
+  `..Default::default()`, workspace compiles against the new props), INFRA item 1 done, CODES fixed the `DslValue::Bytes`
+  dag arm, `📓️api-transaction-amend.md` (§15 API) written, W2-B shared corpora extended (20 refusal rows, `transitions`,
+  local-folder-bindings schema), REPO-PATH-BUDGET finished its renames (no apply/rewrite/twins process at 16:32).
+- 16:35 resumed all 20 agents by SendMessage (transcripts intact) with their last progress lines; told them to write
+  their report sections first and keep them current (next cut expected ~21:30). Swap 15.7/16.4 GB → one heavy command at a time.
+- 16:45 decision §18 (number-control keyboard law) after a W2-B staged-arg red from W1-E's number rework (PageUp → detent 1.5, not 1.2); W1-E fixes + corpus; React time-travel 31/31, local-folders 9/9, folder archive restore 5/5.
+- 17:00 S2-INFRA I1/I3/I4 landed (`📓️s2-infra-report.md`): owned commands valid; root `verify mutation-outcome-law` reaches a
+  verdict (3 breaches, lowpoly 🌀️rotate/🔍️scale/🚚️move-selection diffs → S2-SPATIAL); bun segfault = bare relative path is a
+  filter walking 7.9 M files (bun bug) → fleet rule 25; generated plugins 🟦️.ts re-emitted via the template's own
+  `emitTypeScript` (module loads; React band 31/31; TS2554 0). Stale `🤖️generated/🔌️plugins.json` still lacks
+  `directoryName` → dev boot throws until the real generate (rebuild chain).
+- 17:10 S2-W2B DONE (`📓️w2-b-report.md` Session 2): React green without shim (W2-B suites 80/80; engine set 953/967, 14
+  peer/pre-existing), 10 refusal codes localized + byte-equality law, local-folder-bindings schema + React assertion, G13
+  reveal/focus (13 transitions in band corpus), interpreter a11y fixes (row tone, stepper name, slider valuetext), R2-2/R2-4/
+  R2-6 proven at React + worker level (not live). Owed: live re-probe; R2-2 Rust law (S2-W2A); axe-core not installed
+  (used aria-query + dom-accessibility-api; no repo-wide install for now). Launched S2-E2E aedc386a1c1a9f857 (probe phase 1:
+  G3/G4/G5/G6/G13/keep-editing verdicts both renderers; phase 2 after serve).
+- 17:15 rebuild chain run #2 (`rebuild-all --from components --to components`, detached PID 67530, log `🗑️generated/act/rebuild-components-2.log`): 51 committed descriptors still at appChannelVersion 19 (all compositions + flow/imperative/process/sourcing extensions + stdio extensions); nx continues past failures, successes are cached → iterate on failures, then `--from generate --to check`, then activation.
+- 17:25 run #2 stopped: os-kernel E0277 (`PendingReprojection<P, Mutation>` missing `Mutation: protocol::Mutation<P>` bound, store 🦀️.rs:3140, W1-G G9 WIP 17:04) → told W1-G. New guarded wrapper `🔁️rebuild-retry.sh` (detached PID 74572): `rebuild-all --from guest-framework --to components`, retries every 15 min while the guest-framework gate fails, stops once components ran (events `🗑️generated/act/rebuild-retry.events`).
+- 17:30 W2-B final (shim gone, 80/80). Fleet still 20 (E2E took W2-B's slot). QUEUE (launch on next free slot, prompt ready): S2-NORM (WP-1 + WP-6), then STDIO WP-2/WP-3, residuals WP-4, CLOSURE, GATES, Sonnet audits W3-R.
+- 17:45 S2-E2E phase 1 done (`📓️w3-e2e-report.md` Run 3 R3.1, strict tsc 0): steps 10 (G6 dial/log), 11 (keep editing),
+  12 (G3 edit targets), 13 (G4 warning), strict G5 reload, 14 (375 px touch), G13 focus/reveal checks, paged history reads,
+  wgpu `--explore` calibration. Predicted FAILs routed: G6 editor Dial/Slider arms (S2-W1E), G3 chip labels (`entity_label`)
+  + wgpu `dumpBoard2d.highlighted` (S2-W2D), wgpu browser folder transport for G5 (S2-W2C). E2E told to end its turn; resume
+  when 6012 serves. Guest gate blocked by S2-W1E's wgpu UI feature-gated module refs (`wgpu::layout`/`wgpu::stepper`).
+- 17:40 S2-W1E: UI guest gate green (no gated-module refs; Default on ActionDescriptor/UiSliderNode/UiNumberStepperNode/UiInputNode); G6 mapping done in `🔌️plugin/⏪️time-travel/🦀️.rs` (dial rad→°, detents, log slider, limits with localized refusal); React Slider 20/20, Stepper 3/3, Interpreter 79/79; wgpu painting in progress. Last gate red: wgpu shell E0609 `ShellState.document_execution_target_lease` (peer execution-target lease rollout, 17:21) → INFRA watch, fix after 18:00 if persistent.
+- 17:50 S2-E2E ended its turn after phase 1 (resume aedc386a1c1a9f857 when 6012 serves). Launched S2-NORM aa5f21aeab13a30c7 (WP-1 + WP-6). Fleet 20. Queue: STDIO WP-2/WP-3, residuals WP-4, CLOSURE, GATES, W3-R audits.
+- ~18:00 usage limit cut the fleet again (reset 21:30). Before the cut: S2-W1G §15 LANDED + verified (store 12/12, plugin
+  2/2, TS twin 5/5, replication 316/0; plugin per-test 940/12 peer/baseline) and the G9 store half (deferred reprojection,
+  `step_reprojection`, `reprojection_progress`, `cancel_reprojection`); `.ops` lacks the viewer head (PER-VIEWER ticket's) →
+  2 supersede-replay laws blocked by that ticket. W1-E: UI guest gate green at 17:4x, G6 mapping in `⏪️time-travel`.
+- 18:00–21:30 (fleet down): rebuild retries 3–15 all red at the guest gate — `semio-framework-ui` (W1-E WIP) until ~19:00,
+  then a PEER moved the retirement macros to `semio_framework_value::artifact_retire_struct!` and left
+  `semio-framework-artifact-workflow-workflow` broken (E0432/E0599) since 19:11.
+- 21:38 resumed all 20 agents (E2E stays idle until 6012 serves); INFRA top priority = workflow gate fix; relayed G9
+  runtime adoption to W2-A and "§15 landed, convert remodel" to STROKES. Retry wrapper PID 74572 continues (9 attempts left).
+- 21:50 orphan cargos from the 18:00 cut (8852, 11200, 11618, 11633, 12817, 13531, 44978, 85768, 93147; reported by S2-CONTROLS) were already gone at check; installed `🧹️orphan-cargo-guard.sh` (detached, every 5 min: kill ppid-1 cargo/nextest at 0 % CPU without children on two consecutive sweeps; log `🗑️generated/coord/orphan-cargo-guard.txt`).
+- 22:00 S2-INFRA I8: guest gate wasip2 part green (267 s, 0 errors): peer's 19:18 move of the retirement macros to `semio_framework_value` left 3 modules importing from `store::` (workflow + 2 space) → import lines fixed. Remaining possible red: wgpu `ShellState.document_execution_target_lease` (peer touched 21:43; INFRA rechecks after 22:15). Retry 16 running.
+- 22:30 retry 17: all framework guest checks GREEN (wasip2 framework set, wasm32 kernel, wgpu renderer — W2-C fixed the value dep); only the stale 4th check `semio-s-plugin-stdio` fails (package moved into the `✏️s` workspace by a peer's 09:11 split) → INFRA I9 (schema-first `workspace` per check row). Stopped the retry wrapper; launched `rebuild-all --from components --to components` (run 3, detached PID 87074, log `🗑️generated/act/rebuild-components-3.log`).
+- 22:40 DISK FULL (325 MiB free; cargo ENOSPC across the fleet). Paused rebuild run 3; pruned idle incremental sessions;
+  removed two idle regenerable build caches after recency (24 h) + open-file checks: `⚡️cache/cargo/build-fleet-b` (55 GB,
+  peer build dir untouched since 09-27) and `26/09/09/PROCEDURAL-3D-END-TO-END/🗑️generated/{native-build,preview-build}`
+  (50 GB, idle open ticket; its logs kept) → 107 GiB free. Other large consumers left alone: CLEAN-ARCHITECTURE generated 48 GB
+  (active), SQLITE ticket 24 GB (active), Docker 55 GB, ~/Library/Caches 30 GB. Restarted components (run 4, log
+  `rebuild-components-4.log`).
+- 22:40 S2-TAX DONE (`📓️w3-tax-report.md` Session 2): structural leaf identity extended (members-of-fixtures 240→221),
+  49/49 sealed files match + drift test, package-move coverage on an authored bundle (projection 22/24, CAD+Draw
+  normalization 6/12 — peer lazy-loading + new routing break the fixture prep), 164 scopes / 4,183 findings (REPO-PATH-BUDGET
+  3,211, path budget 542, sqlite 394, other WPs 36). Coordinator: launch.json regeneration for two session-1 test rows.
+- 22:45 launched S2-STDIO-A aba2fb25d4ed45cc8 (WP-2 document/text/office evidence) in TAX's slot. Fleet 20 (E2E idle not counted). Queue: STDIO-B (WP-3), residuals WP-4, CLOSURE, GATES, W3-R audits.
+- ~23:00 usage cut #3 (reset 02:30). Components run 4 kept running detached for ~4 h at load ~246 (VS Code vitest ×12 +
+  peers): ~10 component build failures from transient kernel/actor/value-macro breaks, but ALL committed descriptors are now at
+  appChannelVersion 20 (0 stale) → the strict registry check is satisfied.
+- 02:40 stopped run 4 (only materialize-dev staging of other plugins left); launched ACTIVATION #7 =
+  `nx run-many -t activate-puzzle2d-react-dev activate-puzzle2d-wgpu-dev -p @semio-tech/framework-os-dev` (detached PID
+  47682, log `🗑️generated/e2e/activate-7.log`).
+- 02:47 resumed all 20 agents under fleet rule 26 (CARGO HOLD until 'hold lifted': source/report work only while activation #7 compiles). S2-E2E stays idle until 6012 serves.
+- 03:00 activation #7: plugin-registry:generate PASSED (registry + launch.json regenerated). W2-C S2.10: wgpu probe contract (dumpBoard2d.highlighted, shell.notice, focus targets, panel reveal, folder attach/reconnect via dev backbone route → E2E drops the wgpu reload exemption).
+- 03:10 activation #7 FAILED (stopped): (a) peer switched to `await buildRepositoryWasmWebV1` in non-async `run()` (puzzle composition, trinity jack lsp, os host script) → INFRA fixed (async run; Bun.Transpiler parse of 9,206 TS files = 0 failures); (b) wgpu `generate-frame-worker`: undeclared browser imports (peer mesh catalog; W1-E `🛡️limits` → `🧩️component`) → INFRA adds to the taxonomy browser profile `sourceModulePaths`. INFRA I9 landed (guest-framework-check exit 0, 23:34). Re-run activation after (b).
+- 03:12 activation #8 (React only, detached) started; log `🗑️generated/e2e/activate-8-react.log`.
+- 03:20 S2-CODES DONE (source; `📓️w3-codes-report.md` S2.1–S2.8): no "warn" alias anywhere, gate checks levels at every
+  position, generation2d refused-as-success bug fixed + law, root outcome-law gate 0 breaches (7 rules); post-hold reruns
+  owed (layout/lowpoly readers, gltf/zip/wfc-bitmap/media/energy-model, os-kernel rejection, remodel parity) → resume CODES
+  after the hold. Routed: forms registry `$ref` gap (schema-unavailable) → S2-AGNOSTIC (G8 generic fix); peer DSL
+  record-list brace change → INFRA watch. Launched Sonnet audit a60c3e3483aebf2db → `📓️audit-s2-wave-a.md` (W2-B, TAX,
+  CODES, INFRA fixes).
+- 03:30 INFRA: wgpu browser profile +3 sourceModulePaths (mesh catalog, ui contract component, number-format; static walk 151/151, 0 undeclared). Activation #9 (wgpu) queued to start after #8's puzzle materialize-dev (shared staging).
+- 02:55 activation #8 FAILED twice on S2-AGNOSTIC's non-atomic G8 edits (semio-framework-schema E0432 missing registry fns; dsl-derive E0425 missing `mutation_leaf_referenced_documents`); told AGNOSTIC to write callees before callers and report green. wgpu #9 not launched (React staging never completed). NOTE: earlier status lines stamped 03:xx were estimates; real clock 02:55.
+- 03:00 AGNOSTIC: G8 callees on disk (schema-registry + dsl-derive compile); os-kernel now red from a PEER's in-progress `RecordSpecProducer` dsl refactor (45 errors; 🗣️dsl, 🎒️pack, store variants, 🚪️io; 02:58). Installed `🔁️activate-retry.sh` (detached): every 15 min gated `cargo check -p semio-framework-os-kernel -p semio-framework-schema --lib`, when green → run-many React + wgpu activation; stops on first success (events `🗑️generated/e2e/activate-retry.events`).
+- 03:01 cargo hold LIFTED (activation waits on a peer's kernel refactor anyway); rule 27: framework edits compile-atomic at all times, activation auto-starts.
+- 03:15 peer RecordSpecProducer refactor settled (kernel + schema compile; AGNOSTIC G8: leaves publish referenced schemas by $id via the derive, every app instance registers them). Activation retry attempt 2: precheck green → React + wgpu activation running (log `activate-retry-2.log`). W2-C: wgpu laws 52/52.
+- 03:20 audit wave A (`📓️audit-s2-wave-a.md`): all four "accept with changes", no critical. W2-B B-1 (§18 law on staged
+  vector axes) + B-2 (ShellHost reveal/focus test) majors → W2-B resumed. TAX T-1 (sealed CAD golden re-sealed; move
+  liveBindings out) + T-2 (draw-destination-observation red) majors → QUEUED (resume TAX on next free slot). CODES C-1 (commit
+  the gate's planted-violation proofs as a repo test) major + C-2..C-5 minors + post-hold reruns → QUEUED (resume CODES).
+  INFRA I-1..I-3 minors → INFRA. Note: HEAD advanced to 25bb77059d6 (auto-commit 14:31).
+- 03:25 activation attempt 2 FAILED: peer's RecordSpecProducer refactor not propagated to consumers (infinite dag 🌿️vcs 797/808 E0618) → INFRA finishes the sweep workspace-wide. Loop retries every 15 min.
+
+## Session 3 — coordinator `⚪b7db773a22674b59903080ec92d603db` (2026-10-02 10:50)
+
+Session 2's fleet was cut ~03:45. Repo MCP `ticket_reopen` still returns a malformed result (`structuredContent` not a
+record) → bookkeeping stays manual (session appended to `🎫️ticket.json`). Still alive from session 2: disk guard (PID 94966,
+45 GiB free), orphan-cargo guard (45488), fingerprint guard (83223), `🔁️activate-retry.sh` (66499; attempt 18 running). No serve
+(6012/6112 → 000). Machine: load 62, swap 16.0/17.4 GB, 18 rustc from Codex peers (ChatGPT codex app-server PID 19523).
+- 10:55 activation attempts 2–17 all exit 130 at the same two tasks: (a) `@semio-tech/framework-renderer-wgpu:generate-frame-worker`
+  — "WGPU browser import is not schema-owned": `🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts` (from `🧰️framework/📦️packages/🟦️typescript/🟦️.ts`)
+  and `🎠️kernel/🫧️transient/🟦️.ts` (from `🎠️kernel/🟦️.ts`); (b) `@semio-tech/puzzle-plugin:materialize-dev` — descriptor probe
+  panics in puzzle 3d `📚️examples/🌲️concrete-forest/🦀️.rs:31:125` (wasm unreachable). → S3-INFRA (a), S3-PUZZLE (b).
+- State at the cut (from the report tails): almost every WP is SOURCE-COMPLETE with verification owed (cargo was blocked by the
+  CARGO HOLD and the peer RecordSpecProducer refactor). Session 3 = verify → fix → close, then activation, live e2e (React 6012 +
+  wgpu 6112), CLOSURE, gates, audits, central regenerations (schema generate, describe, launch.json).
+- 11:05 session-3 fleet (20 = cap), resume any cut agent by SendMessage to its id. Executors (opus): S3-INFRA af59d91fc58481b65,
+  S3-PUZZLE ae2c5ea66399a96a2, S3-W2A a636b4d488c628fff, S3-W1G ab2ce365da140021e, S3-W1E a1ec1feacc1c1a7a8, S3-W2B a7540b8ceecfc2d74,
+  S3-W2C a6ff26ababc09d11b, S3-W2D a54fc34b46439be3b, S3-AGNOSTIC a3fd83a822d05cc72, S3-DRAW ae6a118ffee8903b5, S3-SPATIAL
+  a4676a90af2c4ffa0, S3-FLOWCAD a2efa010fa47ad1e6, S3-LAYOUT ad760987e38ac27db, S3-CONTROLS a76cc9076c802938c, S3-TEXT
+  a5305c01e71e95e3f, S3-STROKES a1c366ea92bfd9eac, S3-PROCEDURAL a7fd2aa4782869ebd, S3-GRAPHS a7c8ca31b8a28e95d. Auditors (sonnet):
+  S3-GAP acd4fc389bde54443 → `📓️s3-gap.md`, S3-CLOSURE-CENSUS a37c78a2ce0281631 → `📓️s3-closure-census.md`. Queue: S3-CODES-TAX,
+  S3-NORM, S3-STDIO, S3-E2E (after serve), S3-CLOSURE, S3-GATES, audit wave B.
+- 11:10 S3-INFRA: blocker (a) fixed — 3 legitimate peer imports declared in the wgpu browser profile (🎠️kernel/🫧️transient, 🌱️value/🧬️schema/🌳️intrinsic, 🧬️schema/🧾️record); static walk 154/154, taxonomy 0 problems, generate-frame-worker exit 0. Blocker (b) (puzzle 3d concrete-forest panic) with S3-PUZZLE.
+- 11:12 root `📜️script.ts` routing red (peer architect program project.json:11 one-word workspaceCommand "test-snapshot-sqlite", 08:00; reported by S3-LAYOUT) → S3-INFRA (mechanical 2-word rename, keep the running Codex nx target intact).
+- 11:20 S3-INFRA: root routing green (architect-program/forms/cad sqlite rollout: 3 one-word + 4 duplicate owned commands → `["verify","<scope>-…"]`, nx targets unchanged; 120 rows / 0 invalid / 0 duplicates).
+- 11:28 decisions §19 (design): (1) transaction row label = declared intent leaf via `ArtifactApp::tool_intent_kinds(tool)` (S3-W2A runtime, S3-PROCEDURAL adopts for gen3d); (2) generation3d `change-widget-input` typed absolute leaf (P8 blur commit; P9 insert with default params + appended inputs) approved.
+- 11:28 S3-W2C: renderer laws 52/52, wider 177/178 (peer: dag demo DSL parse panic → S3-GRAPHS), vitest 90/90 + 26/29 (generated drift + deps pin); waiting for S3-W1E's staged-arg facet helper (asked).
+- 11:50 S3-GAP done (`📓️s3-gap.md`): all live evidence is Run 2 (React, 09-30 build); wgpu never live; 18 new gaps N1–N18. Routed:
+  N1 (8-row cap → mutations 9+ unreachable, P1) + N15 + N3 generic `entity_label` default → S3-W2A; N2 editor limits (input cap,
+  chip overflow, array item add/remove, option cap) → S3-W1E; N17 (sync `dry_run`/`reprojection_replay`, P1) + PER-VIEWER now closed
+  → S3-W1G; N7/N8/N10 → S3-TEXT; N12 lowpoly color + N9 wgpu world3d streaming/paint blur → S3-SPATIAL; N12 os.config folder
+  widget → S3-W2B; N6 NodeGraph snapshot edits → S3-FLOWCAD; N13 DSL brace carrier sweep → S3-INFRA; N14/N16 → S3-E2E.
+  Decisions: a11y oracle stays aria-query + dom-accessibility-api (no axe-core install); tablet 768×1024 is in scope.
+- 11:52 launched S3-E2E a1c94a2bea9527edb (phase A: probe holes N14 + permanent home N16; phase B after "serve up"). Fleet 20.
+- 11:58 S3-AGNOSTIC routed G7/G8 plugin findings (its report "Session 3"): stdio xml relative `$ref` (6 editability) + `prologPosition`
+  label (12 labelMissing, xml/svg/docx/xlsx/pptx) + wav fixture chunkOrder (2 payload) → queued S3-EVIDENCE; norm en1995 options/
+  fixtures (2 + 8), din18599 labels (2), vdi3805 option labels (2) → queued S3-EVIDENCE; lowpoly color → S3-SPATIAL (sent);
+  os.config folder → S3-W2B (sent); note label → S3-DRAW (in brief); trinity `fn mutation_label` re-added by a peer 05:41 → deleted by
+  AGNOSTIC. Coordinator action: central `schema generate` (trinity `delete-working-nodes` uncatalogued + the others listed in s3-gap §d).
+  AGNOSTIC wired the G12 law into wfc 2d, draw, flow (+ wfc 2d dev-dep `artifact-app-testing`).
+- QUEUE (next free slots, in order): S3-CLOSURE (after the census), S3-EVIDENCE (norm + stdio: owed cargo, 47 rule-1 breaches, the
+  findings above, STDIO-A WP-2/WP-3, cases-2 verification, media follow-up), S3-CODES-TAX (C-1..C-5, T-1, T-2), S3-GATES, audit wave B.
+- 12:02 S3-GRAPHS: dag demo assets braced (peer SQ-LITE-I-O braced List<Record> rule, 04:17); 12 bare plugin assets left → S3-INFRA N13 sweep; peer DslEnum derive not hygienic (`let field` shadows variant fields) → S3-INFRA.
+- 12:06 decision §19.3 (static records per field; energy site/ground-temperature/run-period) → S3-CONTROLS go.
+- 11:58 (real clock; the 12:0x stamps above are estimates, ~10 min early) S3-PUZZLE: blocker (b) fixed in data — peer DSL grammar
+  (braced `List<Record>`, since 10-01 ~20:08) broke all 7 puzzle example DSLs; migrated + new law `every_registered_example_builds_its_document`
+  (3d 4/4; 2d/5d running). The retry loop was stuck at its rustc < 12 gate since 11:05 (18 rustc from fleet + Codex) → killed
+  `🔁️activate-retry.sh` (66499); launched activation directly (detached PID 59405, log `🗑️generated/e2e/activate-s3-1.log`, exit file
+  `activate-s3-1.exit`), React 6012 + wgpu 6112 targets.
+- 12:15 S3-CLOSURE-CENSUS done (`📓️s3-closure-census.md`): `Emit::amend` 0 production callers, document-lane AmendLast 0 callers,
+  config lanes 13 view sites, 80 hand footprints (2 suspect), UNOWNED: reasoning/wires drag, 73 stdio non-text SetSnapshot, 10 E-literals.
+  Decisions §20 (design): no amend on ANY lane (view/config gestures stream in window transient, commit one config edit at end;
+  AmendLast*/Edit.coalesce_key deleted), D2 wires drag → S3-GRAPHS, D3 snapshot editors → path-scoped `snapshot_edit_patch`,
+  D4 literal commit labels banned (G7), §20.5 derived footprint `x-semio-inverse-rows`.
+- 12:16 launched S3-CLOSURE a6c9e47458014a4e8 (report `📓️s3-closure-report.md`). Blockers routed: SPATIAL (shooting amend_config,
+  fem playback, lowpoly label), FLOWCAD (flow SetSnapshot ×10, guard key), CONTROLS (forms try-value, gis/energy camera keys), TEXT
+  (stdio text SetSnapshot ×6, note accumulator), GRAPHS (wires drag), DRAW (10 labels), STROKES (process3d cursor/engagement),
+  AGNOSTIC (G7 literal-label gate). Fleet 20.
+- 12:20 S3-W1E: staged-arg facet helper `ActionArgDef::number_facets` / TS `actionArgNumberFacets` (region 🔖️ActionArgFacets, corpus 🧫️number-facets 9 cases, bun 13/13) → relayed to S3-W2C (wgpu staged_arg_row) and S3-W2B (React renderStagedArgValueControl).
+- 12:25 S3-STROKES: no amend/coalesce callers left in raster/wfc/process3d/remodel (source); 5 Edit literals left for CLOSURE's next_edit sweep → relayed.
+- 12:32 S3-FLOWCAD: N6 node-graph contract `nodeGraphEdit{operations}` (connect/disconnect/move/setSlider/insertPort/delete; setHostSnapshot + deleteSelection DELETED; one encoder for both hosts) → relayed to GRAPHS (dag/sequence), TEXT (trinity), STROKES (wfc), PROCEDURAL (gen2d/3d); flow SetSnapshot gesture sites 10 → 0 (only setActiveExample replace intent). Coordinator actions later: framework-surface wasm bindings + flow-core wasm rebuild, describe flow.
+- 12:36 wgpu renderer red: EngineCanvas wgpu 🦀️.rs:6485 E0596 in `end_every_text_editor_typing` (12:08, S3-TEXT N8 edit) → S3-TEXT urgent (reported by S3-LAYOUT).
+- 12:40 S3-AGNOSTIC: G7 gate class `labelHandwritten` (37/0 gate tests); repo-wide 220 findings: stdio 178 (→ S3-STDIO queued; text ones S3-TEXT), wfc 30 (S3-STROKES), energy 6 + gis 1 (S3-CONTROLS), puzzle 3d 1 (S3-PUZZLE), runtime 1 'Set Active Example' (S3-W2A), lowpoly 1 (S3-SPATIAL), norm 2 (S3-NORM queued). Decision §20.6: delete Emit.description + commit label param after the sites go (S3-CLOSURE).
+- 12:44 S3-W2A: §19.1 `tool_intent_kinds` landed (plugin lib check green 12:10) → relayed to S3-PROCEDURAL; N1 (paged tree windows over all mutations), N15 (Edit disabled with reason), N3 (generic chip labels) source-complete → relayed to S3-W2B/S3-W2C for host verification; N3 hook to plugin WPs next.
+- 12:50 rule 32: WPs may delete dead files in their own trees (zero-reference proof, same wave, listed) — asked by S3-SPATIAL (shooting SetCameraDraftLabel leaf + fixture).
+- 12:55 activation s3-1 FAILED (exit 130, 37 min): (a) `@semio-tech/puzzle-plugin:wasm` — `🧬️schema/⚛️component/🦀️.rs` imports
+  registry items + crate `semio_framework_schema_state` that a PEER is relocating right now (`🧬️schema/📇️registry/🦀️.rs` 12:20 duplicate
+  `ArtifactSchemaRegistry`, `📡️replication/🎮️mutation/🦀️.rs:219` 12:24 uses the unlinked crate; kernel red since ~12:24, owner guess
+  Codex schema-registry/state-class relocation); (b) `deps-cargo`: `cargo fetch --locked` cannot update `🌎️hub/Cargo.lock` and
+  `✏️s/Cargo.lock` (manifest edges changed). S3-INFRA killed 16 deadlocked cargos at 12:30 (fine-grain flock cycle after its DslEnum
+  derive-hygiene fix invalidated every derive unit); owners re-run. S3-TEXT fixed the wgpu E0596.
+- 12:55 S3-E2E phase A done: probe moved to `🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts` (`verify time-travel`, nx
+  `@semio-tech/framework-os-dev:time-travel`, 2 seed rows), N14 holes closed (en chords, stepper hard-min, rotate/scale finalize, tablet
+  step 15, 200+ history step 16, two-context step 17 [presence needs a hub]), structural a11y checks; strict tsc 0. Waiting for serve.
+  Coordinator: regenerate `.vscode/launch.json` from the seed; peer TS errors `📇️directory/🧪️testkit/📡️client-probe/🟦️.ts:144`,
+  `🔌️plugin/🏗️build/📥️installation/🟦️.ts:51` → S3-INFRA watch.
+- (real clock 12:36; earlier "12:4x/12:5x" stamps in this section ran ~20 min fast) FRAMEWORK RED since 12:20 from a Codex peer's
+  schema-state/registry extraction (`🧬️schema/📇️registry/🦀️.rs` duplicate `ArtifactSchemaRegistry`/`SchemaDescriptorRegistryError`,
+  new crate `semio-framework-schema-state` (`🧬️schema/📶️state`), replication Cargo.toml 12:32, draw/note/stdio Cargo.toml 12:25–12:33 —
+  peer still active). Reported by W1E, W1G, TEXT, DRAW, FLOWCAD, CONTROLS, AGNOSTIC, INFRA. Everyone continues source work.
+  Activation: new `🔁️activate-retry.sh` (detached PID 95494; precheck = ✏️s + 🌎️hub `cargo metadata --locked` + kernel/schema check,
+  every 10 min, gate rustc < 30), watcher bgnjfch2g.
+- S3-W1G: §15 PROVEN (store 8/8, TS twin + oracles 7/7, plugin 2/2; API `📓️api-transaction-amend.md`) → S3-STROKES converts remodel.
+  N17 store half written (defer_local_replays, 3 laws ≥ 240 mutations), API after its kernel test build.
+- S3-W1E N2 proposal (edit insert/remove on historyEditInput + view-only `historyEditView`) → agreed in substance; W1E and W2A agree
+  directly (ids exchanged) on one paging mechanism shared with N1.
+- launched S3-STDIO add9702e6f8e9cf14 (§20.3 patch leaves, §20.6 labels, AGNOSTIC stdio findings, owed case verification). Fleet 20
+  (E2E idle, waiting for serve).
+- 12:37 framework helper `node_graph_delete_selection_spec` (🔌️plugin ~15314) still emits the deleted `deleteSelection` row (reported by S3-PROCEDURAL; gen2d context-menu delete refused) → S3-FLOWCAD (contract owner) fixes at the root (resolve selection ids at dispatch → `delete` row). S3-GRAPHS added the shared `node_graph_edit_rows` decoder in 🛠️tool-machine → all node-graph guests told to use it.
+- 12:37 N2 agreed (W1E + W2A): no new verb; `historyEditInput{path, value?, edit?: insert|remove, generation?}`; inputs/chips/long option lists become tree-window rows (one paging mechanism with N1); option search deferred (all reachable). Relayed to W2B/W2C.
+- 12:38 S3-SPATIAL (source): shooting no amend (draft label deleted, rule 32), lowpoly hand label gone, N12 colour = sRGB [f32;3], World3dHost `worldGumballStep` + fixture. Scrub glue must hold config/window-config ticks as provisional overlay (one config edit on release, abort zero trace) → S3-CONTROLS (scrub glue owner); fem playback keys removed on discrete transitions meanwhile.
+- 12:39 S3-FLOWCAD: `node_graph_delete_selection_spec` fixed at root (ids resolved at menu open → `delete` row; 6 callers updated; law 🧪️node-graph-delete-row); flow on the shared decoder → relayed to PROCEDURAL, GRAPHS, TEXT.
+- 12:47 S3-PUZZLE: perf regression — puzzle 3d `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` red (22 vs 1590 publication units, O(document) per mutation) → S3-W1G. PUZZLE: G7 label removed, N3 chips + highlight for 3d/5d written. Framework still red (peer schema-registry split; registry 12:40, manifest callers pending).
+- 12:53 S3-CONTROLS: config-lane press on disk (`settle_press_config`, overlays at 4 render seams, release = 1 config edit, abort = 0; energy law) → SPATIAL drops fem PLAYBACK_COALESCE_KEY; CLOSURE informed. Peer break owner = schema-crate split sweep (CLEAN-ARCHITECTURE-LAYERING peer, 161 plugin files rewritten to `::semio_framework_schema_registry`), still converging.
+- 12:57 still red (manifest :1266 imports moved items; derive emits ::semio_framework_schema_state in crates without the dep). S3-INFRA standing instruction: at 13:10, if the peer's files are ≥ 30 min untouched, complete the peer's direction mechanically (imports → new crate, add schema-state deps), never revert.
+- 13:00 S3-W2C: wgpu UI tree treats only materialised items as disclosures → closed N1 history rows not openable by keyboard/AT on wgpu → S3-W1E (`🖱️ui/🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs` disclosure_open/disclosure_is_interactive: also window.total > 0).

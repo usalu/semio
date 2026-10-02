@@ -43,8 +43,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextMutation
         vec![super::SvgMutation::SetText(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Text", "Text setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-text".to_string()]

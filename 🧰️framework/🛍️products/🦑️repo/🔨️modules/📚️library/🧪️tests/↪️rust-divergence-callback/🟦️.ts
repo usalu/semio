@@ -144,7 +144,7 @@ for (const registration of vector.registration.execution) test("closed divergenc
   visit(router); expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(router)).toContain(JSON.stringify(contract.testPath));
   const calls: ts.CallExpression[] = [];
-  const callVisit = (node: ts.Node): void => { if (ts.isCallExpression(node) && node.expression.getText(router) === "runTestBudgeted") calls.push(node); ts.forEachChild(node, callVisit); };
+  const callVisit = (node: ts.Node): void => { if (ts.isCallExpression(node) && node.expression.getText(router) === "runRepositoryTestCommand") calls.push(node); ts.forEachChild(node, callVisit); };
   callVisit(branches[0]!.thenStatement); expect(calls).toHaveLength(1);
   expect(calls[0]!.arguments[0]!.getText(router)).toBe("process.execPath");
   const arguments_ = calls[0]!.arguments[1]; expect(arguments_ && ts.isArrayLiteralExpression(arguments_)).toBe(true);

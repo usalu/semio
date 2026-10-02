@@ -33,8 +33,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation 
         }
         vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-pixels".into()]

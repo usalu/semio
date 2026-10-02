@@ -7,7 +7,7 @@ fn stroke_gesture(object_id: &str, u: f32) -> LowpolyPaintGesture {
         authoring_seed: "seed".into(),
         base_revision: "00".into(),
         transaction: protocol::TransactionRef { id: "tx-0000000000000001".into(), tool: "s.lowpoly.lowpoly@1/*#editor#paint".into() },
-        leaf: LowpolyMutation::ApplyPaintStroke(crate::mutations::apply_paint_stroke::ApplyPaintStroke { object_id: object_id.into(), layer_index: 0, eraser: false, color: [200, 30, 30, 255], radius: 4.0, hardness: 1.0, opacity: 1.0, points: vec![[u, 0.5]] }),
+        leaf: LowpolyMutation::ApplyPaintStroke(crate::mutations::apply_paint_stroke::ApplyPaintStroke { object_id: object_id.into(), layer_index: 0, eraser: false, color: [200.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0], radius: 4.0, hardness: 1.0, opacity: 1.0, points: vec![[u, 0.5]] }),
     }
 }
 

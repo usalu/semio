@@ -37,8 +37,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceQuantTableMutat
             None => vec![JpgMutation::RemoveQuantTable(crate::schema::mutations::RemoveQuantTableMutation { id: table.id })],
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace quant table", "Quantisierungstabelle ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace quant table", "Quantisierungstabelle ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-quant-table".into()]

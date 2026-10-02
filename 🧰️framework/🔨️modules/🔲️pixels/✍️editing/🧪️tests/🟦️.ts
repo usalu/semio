@@ -217,3 +217,11 @@ test("selection row grants match the shared contract and SVG oracle",async()=>{
 test("stroke bounds match the shared contract", () => {
   for (const row of fixtures.strokeBounds) expect(strokeBounds(row.points as PixelPoint[], row.size, row.width, row.height)).toEqual(row.expected);
 });
+
+test("flood selections match the shared contract (the Python BFS oracle that wrote it, and the Rust twin)", async () => {
+  for (const row of fixtures.floodSelections) {
+    const input = { ...row.image, pixels: Uint8Array.from(row.image.pixels) };
+    const selection = "selection" in row && row.selection ? Uint8Array.from(row.selection) : undefined;
+    expect([...await floodSelection(input, row.seed[0]!, row.seed[1]!, row.tolerance, { selection })], row.name).toEqual(row.expected);
+  }
+});

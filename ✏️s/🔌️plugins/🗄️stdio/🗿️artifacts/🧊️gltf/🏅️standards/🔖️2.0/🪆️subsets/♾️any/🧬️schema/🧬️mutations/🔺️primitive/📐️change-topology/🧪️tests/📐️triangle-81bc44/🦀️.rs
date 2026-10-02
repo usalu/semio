@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangePrimitiveTopologyModeMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-primitive-topology-mode");
-    super::super::component::fixture_corpus_tests::assert_case("🔺️primitive/📐️change-topology/📐️triangle");
+    super::super::component::fixture_corpus_tests::assert_case("🔺️primitive/📐️change/📐️triangle");
 }

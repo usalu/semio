@@ -145,7 +145,7 @@ fn index_codecs_reject_overflow() {
         let value = record.fields.values_mut().find(|value| matches!(value, crate::os_dsl::FieldValue::UInt(_))).expect("direct index field");
         *value = crate::os_dsl::FieldValue::UInt(u64::from(u32::MAX) + 1);
         assert!(<FlowMutation as crate::os_dsl::DslVariants>::from_named_record(&keyword, &record).is_err());
-        let spec = (<FlowMutation as crate::os_dsl::DslVariants>::variants()[index].1)();
+        let spec = (<FlowMutation as crate::os_dsl::DslVariants>::variants()[index].1.ordinary)();
         let text = crate::os_dsl::print(&record, &spec, crate::os_dsl::JoinMode::Inline);
         assert!(FlowMutation::parse_op(&text).is_err());
         let mut bytes = vec![1, u8::try_from(index).expect("ten leaves")];
@@ -325,11 +325,11 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     let encoded = crate::os_store::ArtifactPack::encode_pack(&snapshot);
     let decoded = <FlowHostSnapshot as crate::os_store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded, snapshot, "the opener's decode round-trips the exact member snapshot");
-    let mut cursor = crate::os_store::retirement::RetireOwned::retirement(decoded);
+    let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
     for turn in 0..1_000_000 {
         match cursor.close_step(4_096) {
-            crate::os_store::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
-            crate::os_store::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
+            semio_framework_value::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
+            semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
             _ => {}
         }
         assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");

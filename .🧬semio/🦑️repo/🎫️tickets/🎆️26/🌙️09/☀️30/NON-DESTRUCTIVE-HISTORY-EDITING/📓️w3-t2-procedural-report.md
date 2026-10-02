@@ -121,3 +121,173 @@ Completion:
     `x-semio-invariant` and refused by the parser alone); `G2/🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🟦️.ts` (new,
     registered as twin `generation2d-gesture-leaves` in `G2/../📦️packages/🦀️rust/📜️script.ts`): witnesses meet their schema
     and parse identically, out-of-bounds payloads refused by both.
+
+### S2.4 Blockers met and environment repair (12:00–16:40)
+
+- 12:05–12:47 compile blocked by peers (os-kernel store `HistoryPageStack`/`line_id` rollout, ui-contract `InputProps`/
+  `SliderProps` fields, then `DslValue::Bytes` non-exhaustive match in `♾️infinite/🗿️artifacts/🕸️dag/🧵️retained/🦀️.rs:229`).
+- 12:18–13:35 REPO-PATH-BUDGET (other session `⚪5dba80e6…`) rewrote references by basename and then moved schema twins
+  (`twins.py`); reported to the coordinator 12:55 (routed to S2-INFRA). Usage cut ~13:35 → 16:30.
+- 16:35 resume: the rename left 100 dangling references in my trees (crate-root `#[path]`s to `✂️disconnect`,
+  `🍄️hexagonal-mushroom`, `🧩️set`, `🏷️rename`, `🎨️set`, `🔬️set-lod`; editor/viewer config/presence/transient leaf modules
+  pointing at the long names `⚙️set`/`🕸️set`/`🧬️set-selected-generation`/`👁️set-generation-preview`/`📷️set-preview-camera`/
+  `👁️set-preview-eval` while the dirs are short; mutate-case fixture `include_str!`s; TS imports of `✂️disconnect`; DEV
+  example includes). Repaired by adopting the names on disk with `T/🧪️s2-procedural-dangling-refs.py --apply` (re-runnable,
+  dry run by default; resolves a missing segment to the ONE same-emoji sibling whose slug equals / extends / shortens it at a
+  hyphen boundary; never moves a directory; skips the sequence-runtime test, not mine): 100 fixed, 0 dangling left (the 15
+  "unresolved" rows are extension-less TS imports, not dangling).
+
+### S2.5 Verification so far (one gated cargo at a time; swap 92–96 %)
+
+| command | result |
+|---|---|
+| `cargo check -j 2 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-procedural-generation2d --features component-app-assembly --tests --message-format=short` (22:30) | **ok** (0 errors) after two lifetime repairs in the sqlite peer's `🫀️core/🧬️generation/🪶️sqlite/📥️reconstruction/🦀️.rs` (`order(t: &'a str)`, `expanded<'a>(…, table: &'a str)`), which failed only the `lib test` target (E0621 / "lifetime may not live long enough") |
+| `cargo check … -p semio-s-artifact-procedural-generation3d --features component-app-assembly` (16:40, 17:30) | NOT REACHED: first run SIGKILLed after 20 min under swap pressure (exit 137), second blocked by a peer's in-flight `🗄️stdio/🧊️gltf/…/📦️pack/🦀️.rs` (`to_value` on `Option`, mid-edit 17:36) |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s2-procedural cargo test -j 2 … -p semio-s-artifact-procedural-generation2d --features component-app-assembly --lib` (22:45) | 284 passed, 9 failed → triage below |
+| `bun ./📜️script.ts verify semantic-wire` (gen3d package) | **checks=32**, independent Ajv, pass |
+| `bun ./📜️script.ts canonical-architecture` (gen2d package) | `generation2d-gesture-leaves checks=18`, `generation2d-snapshot-fixture-asset checks=5`, pass |
+| `bun test ./✏️s/…/🧊️generation3d/…/✏️editor/🧪️tests/🔬️generate-interactions/🟦️.ts` | 1 pass, 0 fail |
+| `bun ./📜️script.ts verify taxonomy report --scope <dir>` for the 7 new leaf dirs, 2 new fixture leaf dirs, both `🧬️mutations/🧪️tests` trees and `🧭️transforms` | clean for every new dir; `🧭️transforms` itself and its `🧫️fixtures/🧷️gesture` report the pre-existing `directory-kind-unresolved` (dated 09-28) |
+
+Triage of the 9 gen2d failures (22:45 run) and what was done (no cargo since — fleet CARGO HOLD rule 26 at 02:45):
+1–3. my `✏️node-graph-edit` laws: `history_snapshot().upserts` is newest first, so `rows[before..]` read the setup row →
+   rows are now sorted by `seq` (also in gen3d and the DEV gumball law). The slider-press law already proved 2 rows / 2
+   transactions / absolute leaf before the ordering assertion tripped.
+4. my gen2d time-travel law: "ordered-map root must be explicitly retired before drop" — the `Arc` returned by
+   `state_before` was dropped bare → now unwrapped and retired cold when this law holds the last reference (also gen3d).
+5. `dispatch_registers_semantic_descriptors` hard-coded 14 kinds → `KINDS.len()`.
+6. `kinds_match_the_enum_and_the_catalog`: the new kinds were missing from the committed oracle manifests → both
+   `🔮️oracles/🔣️.json` catalogs gain `deferredKinds` (gen2d: `change-slider-value`, `move-nodes`; gen3d: the five gesture
+   leaves) — the CAD precedent for wire-witnessed leaves without quintets. gen3d's `every_mutation()` gains the five leaves.
+7. `vcs_artifact_app_non_empty_retained_maintenance_swap…`: the store's edit envelope now requires `line` (peer's
+   paged-ledger / per-viewer-head rollout) → `"line": null` added to the gen2d and gen3d production-envelope fixtures.
+8. `sqlite_snapshot_procedural_generation2d_erased_native_encodings…`: "snapshot owner has no controlled native decoding
+   implementation" — the SQLite-snapshot peer's lane, not touched.
+9. `generation2d_window_camera_ownership…`: expects a retained rejection, observes a framework `app.message` fault — runtime
+   fault-classification change by a peer, not touched.
+
+### S2.6 Open items (design questions raised, not improvised)
+
+1. **First gumball on a fresh shape labels its row from the splice**: the transaction is `[create-widget, synapse rows…,
+   drag-transforms]` (the operator must exist before the relative leaf applies), and the runtime labels a transaction row by
+   its FIRST leaf (`history_leaf_row_label`), so the row reads "Create widget … (+N)" instead of "Drag 1 shape(s) by …".
+   Re-grabs are the leaf alone and read correctly. Proposal for S2-W2A: let an `Emit::commit_transaction` name its primary
+   leaf (or label a transaction row by its last leaf), instead of every tool reordering around the rule.
+2. **P8/P9 leaf quality (O\*)**: `setWidgetInput` (operator input field, commits on blur) and the mesh edits
+   (`editMeshSelection`, `knifeMeshSelection`) are one edit each, but their leaves are the whole-operator `update-widget` /
+   the splice (`create-widget` with the parameters inside `params`), so a history edit edits a structured widget record rather
+   than "extrude distance = 0.1". A generic absolute `change-widget-input {id, channel, value: typed literal}` leaf would serve
+   P8 and, appended after an insert, P9; it needs a decision on the typed-literal union in `x-semio-ui` (number | text |
+   boolean | point | vector) — raised for the coordinator.
+3. **Stream ticks and session rows**: the plugin-side gumball stream (and every plugin-side streamed tool: puzzle, fem,
+   shooting) returns an empty emit per tick; `record_settled_typed_operation_command` logs a Mutation verb that published
+   nothing as a session row. The DEV law `a_streamed_gumball_drag_is_one_edit_and_an_abort_is_zero_trace` asserts no such
+   row appears; if it fails, the fix belongs to the runtime (S2-W2A), like the scrub glue's `command_logged`.
+4. Central regenerations (coordinator, rule 23): `schema generate` (the 7 new leaves are `leafUncatalogued`), `describe`
+   for the procedural composition (gen3d describe texts for translate/patchFlowWidgets changed; gen2d `moveMediaNode`
+   semantics), launch rows if any.
+
+## Session 3 — 2026-10-02
+
+Successor executor S3-PROCEDURAL (coordinator `⚪b7db773a…`). Status: IN PROGRESS; updated at every milestone.
+
+### S3.1 Repair-first diff (rule 28)
+
+Files in my trees newer than the S2 section (02:45): only peer sweeps — the `RecordSpecProducer` dsl refactor
+(`spec_fn()` → `(spec_fn.ordinary)()` in every config/transient/presence/binary codec), `store::EngineHandles` →
+`semio_framework_2d::compute::EngineHandles` (+ `semio-framework-2d` dependency in both crate manifests). My predecessor's
+S2.5 triage fixes 1–7 are on disk (rows sorted by `seq`, `retire_cold` of the `state_before` base, `KINDS.len()`,
+`deferredKinds`, `"line": null`). No half-finished edit found.
+
+### S3.2 Verification (one gated cargo at a time)
+
+| command | result |
+|---|---|
+| `cargo check -j 4 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-procedural-generation2d -p semio-s-artifact-procedural-generation3d --features <both>/component-app-assembly --lib --tests --keep-going --message-format=short` (check-1, 11:00–11:55; gen3d reached after my S3.3 + leaf wiring landed) | gen2d lib + lib test **ok**; gen3d lib **ok**; gen3d lib test **2 errors** — `🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs:8,9` `rotate_ids` (deleted by session 1, law never rewritten) → fixed (S3.5) |
+| `bun ./📜️script.ts verify semantic-wire` (gen3d `📦️packages/🦀️rust`) | before the new leaf **checks=32**; after **checks=58** (10 vectors × 5 + 8), independent Ajv, pass |
+| `bun ./📜️script.ts canonical-architecture` (gen2d package) | `generation2d-gesture-leaves checks=18`, `generation2d-snapshot-fixture-asset checks=5`, pass |
+| `bun ./📜️script.ts canonical-architecture` (gen3d package) | `widget-creation 334`, `terminology 2921`, `snapshot-fixture-asset 5`, `graph-keyboard 47`, pass |
+| `bun test ./…/🧊️generation3d/…/✏️editor/🧪️tests/🔬️generate-interactions/🟦️.ts` | 1 pass, 0 fail |
+| `node_modules/.bin/tsc -p 🗑️generated/s3-procedural/tsconfig.change-widget-input.json` (strict; new leaf twins, aggregate union, semantic-wire test) | 0 errors (after typing the corpus: the predecessor's test had 4 `TS18046` under strict) |
+| `bun ./📜️script.ts schema mutation-payloads --under ✏️s/🔌️plugins/🌀️procedural` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`) | before: 54/54 payloads, 52/52 witnessed, **0 findings**; after the new leaf: **55/55, 53/53, 0 findings** |
+| `bun ./📜️script.ts schema mutation-inputs --under ✏️s/🔌️plugins/🌀️procedural` | before: 80/80 inputs, **0 findings**; after: 1 finding = `change-widget-input` `leafUncatalogued` → central `schema generate` (coordinator). The TS reader `mutationInputDefs` reads the new root union without error (variant selector `/type` + per-variant inputs; probe `🗑️generated/s3-procedural/input-defs-probe.ts`) |
+| `bun ./📜️script.ts verify taxonomy report --scope <leaf dir>` / `<fixture dir>` for `🎛️change-widget-input` | both `clean=true errors=0 warnings=0` |
+
+### S3.3 Changes (item 3: generation3d as the `World3dHost` live consumer, audit C-5)
+
+Gap found: gen3d published `gumballLiveDispatch` only for mesh components, so a shape gumball (the neuron-param
+transforms `drag-`/`rotate-`/`scale-transforms`) was previewed by the host as a rigid local instance move — downstream
+operators (booleans, arrays, analysis) never followed the drag. And even for the live component gumball, the FIRST grab
+painted nothing: the flow evaluation folds the open gesture (overlay splices the transform operator and moves the
+`preview` flag onto it), but the preview bodies rendered the COMMITTED snapshot and the committed `graph` marks, so the
+spliced operator's output was never painted and the selection resolved to no instance.
+- `G3/✏️editor/🎮️commands/🧭️transforms/🦀️.rs`: new `GumballSelection {nodes, components}` (+ `writes()`, the commit's
+  replacing interaction writes) and `GumballPreview {rows, selections}`; `gumball_splice` returns the selection;
+  `GumballGestures::provisional` returns rows + selections and no longer clones the open leaf.
+- `G3/✏️editor/🦀️.rs`: `preview_selection_json` sets `gumballLiveDispatch: true` for every gumball (shapes too);
+  `render_with_request_context` paints the two preview bodies from `generation3d_gumball_preview` (committed ⊕ every open
+  gesture — the same overlay the flow evaluation reads — and `PreviewInteractionMarks::following` the gesture's
+  selection) while a gesture is open; overlay retired cold after the render.
+- C-5 (`📓️audit-s2-wave-a.md`): the discarded checked-adapter results in both editors are now one named fold each
+  (`generation3d_fold_provisional`, `generation2d_fold_provisional`) whose contract is documented: a refused provisional
+  leaf paints nothing; the commit of the same leaf reports the refusal as the row outcome.
+- Laws: `G3/…/🧭️transforms/🧪️tests/🔬️unit/🦀️.rs` `an_open_gesture_previews_exactly_what_its_release_commits` (the
+  preview overlay equals the committed snapshot after the release; marks follow onto the operator; committed untouched
+  while open; abort → nothing to paint); DEV `…/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs` asserts
+  `gumballLiveDispatch` on a shape selection.
+
+### S3.4 Design questions → coordinator decisions (design §19, 11:40)
+
+Q1 = §S2.6.1 → §19.1 `ArtifactApp::tool_intent_kinds` (runtime by S3-W2A, landed in `🔌️plugin/🦀️.rs`
+`history_intent_label`). Q2 = §S2.6.2 → §19.2 approved: `change-widget-input {id, channel, value}` with a discriminated root
+union over `type`; P9 inserts with DEFAULT params + one input leaf per user-set channel; whole-record paths deleted.
+
+### S3.5 Changes (design §19)
+
+- §19.1 adopter: `G3/✏️editor/🦀️.rs` `ArtifactEditor::tool_intent_kinds` — `…#editor#translateSelection` →
+  `drag-transforms`, `#rotateSelection` → `rotate-transforms`, `#scaleSelection` → `scale-transforms`. DEV law
+  `a_gumball_drag_is_one_transaction_of_the_relative_leaf` now asserts the FIRST grab row (splice + leaf) reads
+  "Drag 1 shape(s) by (1, 2, 3)…".
+- §19.2 new leaf `G3/🧬️schema/🧬️mutations/🎛️change-widget-input/` (binary tag 19): Rust leaf (`WidgetInputValue`
+  `#[value(tag = "type", content = "value")]` flattened into the payload — wire `{mutation, id, channel, type, value}`,
+  point/vector as `[x, y, z]`; `literal()`/`of_literal()` against the operator param literal `{"$schema", value|x,y,z}`;
+  `admissible()` = schema hard bounds; ONE `landing()` shared by the diff and the retained replay), `🔺️diff` (invariant /
+  target-missing / target-mismatch {wired, no such input, untyped, other type} / no-op), `↩️inverse` (base widget whole), TS
+  twins (`parseChangeWidgetInput`, diff/inverse mirrors), descriptor + payload schema (root `oneOf` over `type`, member
+  labels en/de, per-variant widget: stepper / multiline / toggle / vector) and wire witness — the schema-first surfaces are
+  generated by `T/🧪️s3-procedural-change-widget-input.py` (re-runnable byte for byte). Wired into the aggregate (`mod`,
+  variant, `KINDS`, aggregate `🔣️.json` + `🟦️.ts`), `💾️binary/📡️.protocol.semio`, the binary codec (DSL mirror with the
+  input as one dynamic value, retained decoder ordinal 19 reusing the dynamic-value slot of ordinal 13, retained replay via
+  `landing()`, initialization digest, variant count 20), oracle `deferredKinds`.
+- P8 `🎚️set-widget-input`: `input_leaf()` validates against the declared port (unconnected, scalar, declared literal type)
+  and emits ONE `change-widget-input` (a text source's `text` is a text input; an unchanged field is no edit);
+  `apply_to_host` + the whole-operator `update-widget` diff path deleted.
+- P9 `🥽️edit-mesh-selection` / `🔪️knife-mesh-selection`: `inputs()` + `edit_rows()` / `cut_rows()` — the splice inserts the
+  operator with DEFAULT params (`insert_mesh_operation` no longer sets params), then one `change-widget-input` per input
+  (components text list, offset, cuts, distance/amount; face, start, end); the host-level `insert_operation` deleted.
+- Laws: gesture-leaves region `🎛️WidgetInput` (every literal type sets + inverts; vocabulary codes; literal round trip),
+  witness + label rows, time-travel law gains an edited `change-widget-input` (downstream input overrides it); semantic-wire
+  corpus +5 vectors (one per type; schema 10 cases, tag ≤ 19, `expected.input`), Rust semantic-wire arm, TS twin test (parser,
+  out-of-bounds, every type covered; schemas compiled once per `$id`); retained-authority fixtures assert distinct variants
+  (`every_variant_decodes_through_retained_structural_grants`); unit `every_mutation()`; set-widget-input law rewritten;
+  DEV mesh-edit and knife laws fold the new rows and re-evaluate; `rotate-selection` law rewritten (the deleted
+  `rotate_ids` was still referenced: the only gen3d lib-test compile error in check-1).
+- Warnings fixed in my files: unused `serde_json::Value` import and dead `owe_attached_previews` in `G3/✏️editor/🦀️.rs`,
+  no-op `.clone()` in `import_media`.
+
+### S3.6 Node-graph row contract (coordinator 12:3x, S3-FLOWCAD/S3-GRAPHS schema `🔣️node-graph-edit-rows`)
+
+- gen2d + gen3d `✏️node-graph-edit`: rows decoded by the ONE shared decoder (`🛠️tool-machine`
+  `node_graph_edit_rows` / `NodeGraphEditRow`) — at admission (`command_from_action` refuses a bad batch) and at authoring
+  (`rows()`); `setHostSnapshot` and the ambient `deleteSelection` row are gone with their whole-fixture / ambient paths;
+  `connect` / `disconnect` / `insertPort` / `delete {nodeIds, synapseIds}` edit by id and a refused host edit refuses the batch
+  (gen2d keeps its document-level `disconnect-synapse` fallback for wires an uncontributed-kind rebuild dropped);
+  `setSlider` → absolute `change-slider-value`; `move` → node-drag machine. The interaction-reading `apply` /
+  `apply_selected` entry points are deleted (one `handle` for every route; gen2d `handle` / retained reduce no longer read
+  the selection). Context menus use FLOWCAD's fixed `node_graph_delete_selection_spec(.., &nodes, &edges, ViaNodeGraphEdit)`
+  (explicit ids); gen3d's own `deleteSelection` verb (keyboard) now also cuts selected wires.
+- Laws: both crates `node_graph_edit_takes_exactly_the_shared_row_vocabulary` (renderer fixture: accepted rows decode, every
+  refused row refuses the whole batch at admission and authoring); gen3d `a_delete_row_deletes_exactly_the_named_widget_and_wire_as_one_edit`;
+  gen2d context-menu law asserts the delete row is `Delete {nodeIds: ["slider"]}`; drag-law setup uses `reorganize` (no
+  whole-fixture placement) with base-relative expectations; gen3d interactions fixture + TS twin + DEV law list the six rows.
+- §19.1 law `every_gumball_tool_declares_the_leaf_it_yields_as_its_intent` (transforms unit tests).

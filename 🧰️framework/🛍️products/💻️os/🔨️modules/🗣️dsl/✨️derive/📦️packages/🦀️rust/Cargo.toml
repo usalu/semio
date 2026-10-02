@@ -19,6 +19,9 @@ proc-macro = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"

@@ -31,8 +31,12 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridVisible {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change grid visible to {:?}", self.new_visible), &format!("Rastersichtbarkeit auf {:?} ändern", self.new_visible))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match self.new_visible {
+            Some(true) => semio_framework_ui_locale::LocalizedLabel::native("Show grid", "Raster einblenden"),
+            Some(false) => semio_framework_ui_locale::LocalizedLabel::native("Hide grid", "Raster ausblenden"),
+            None => crate::schema::mutations::note_setting_label(("grid visibility", "Rastersichtbarkeit"), None),
+        }
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

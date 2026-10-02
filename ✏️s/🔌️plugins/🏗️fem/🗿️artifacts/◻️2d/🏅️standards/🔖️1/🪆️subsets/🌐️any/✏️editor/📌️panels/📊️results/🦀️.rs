@@ -11,7 +11,17 @@ use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_action, ui_label};
 use crate::Fem2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

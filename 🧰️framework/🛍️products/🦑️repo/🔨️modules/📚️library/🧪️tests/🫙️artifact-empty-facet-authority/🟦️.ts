@@ -21,15 +21,18 @@ const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
 const taxonomy = loadCatalogTaxonomy();
-const functionNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", "leadingEmojiIdentity", "canonicalSemanticDirectoryName", "semanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
+const functionNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
   const path = join(libraryRoot, "🔍️discovery/🟦️.ts"), source = readFileSync(path, "utf8");
   const syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const segmenters = syntax.statements.filter((node) => ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === "PATH_EMOJI_SEGMENTER"));
+  const identityPath = resolve(libraryRoot, "../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts"), identitySource = readFileSync(identityPath, "utf8"), identitySyntax = ts.createSourceFile(identityPath, identitySource, ts.ScriptTarget.Latest, true);
+  const segmenters = identitySyntax.statements.filter((node) => ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === "PATH_EMOJI_SEGMENTER"));
+  const identities = identitySyntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity");
+  expect(identities).toHaveLength(1);
   expect(segmenters).toHaveLength(1);
-  const code = segmenters[0]!.getText(syntax) + "\n" + functionNames.map((name) => {
+  const code = segmenters[0]!.getText(identitySyntax) + "\n" + identities[0]!.getText(identitySyntax).replace(/^export\s+/u, "") + "\n" + functionNames.map((name) => {
     const matches = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
     expect(matches.length, name).toBe(1);
     return matches[0]!.getText(syntax).replace(/^export\s+/u, "");
@@ -114,7 +117,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
     class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-    const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Empty-facet authority fell through to generic routing"); });
+    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Empty-facet authority fell through to generic routing"); });
     await router.run([vector.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, vector.source)], options: { cwd: repoRoot } }]);
   }

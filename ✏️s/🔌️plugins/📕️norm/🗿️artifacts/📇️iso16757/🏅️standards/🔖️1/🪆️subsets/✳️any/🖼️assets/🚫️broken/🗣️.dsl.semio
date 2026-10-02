@@ -10,7 +10,7 @@ alternatives [locale:TEXT text:TEXT] {
 dictionary=id=hvac-dict version="2025-01" accessories={
 }
 compositions={
-  product-cv=[ component-product-id=product-cv quantity=1 ]
+  product-cv=[ { component-product-id=product-cv quantity=1 } ]
 }
 extensions=fields={
 }
@@ -42,21 +42,21 @@ products [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST 
   alternatives [locale:TEXT text:TEXT] {
     fr CV-50
   }
-  } [ parameter-id=dn allowed-values=[ {
+  } [ { parameter-id=dn allowed-values=[ {
     kind="decimal" value=50.0
   }
   ] default-value={
     kind="decimal" value=50.0
   }
-  ] [ id=variant-50 article-number=CV-50 geometry-id=geom.missing parameter-values={
+  } ] [ { id=variant-50 article-number=CV-50 geometry-id=geom.missing parameter-values={
     dn={
       kind="decimal" value=999.0
     }
   }
-  property-values=[ definition-id=prop-dn value={
+  property-values=[ { definition-id=prop-dn value={
     kind="decimal" value=50.0
   }
-  ] ] [ ]
+  } ] } ] [ ]
 }
 product-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {
   index-cv50 product-cv variant-50 [ CV-50 product-cv dn50 ]
@@ -88,7 +88,7 @@ properties [id:TEXT names:REC kind:ENUM data-type:TEXT unit:REC applicable-subje
   alternatives [locale:TEXT text:TEXT] {
     de Nennweite
   }
-  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject-valve ] [ min=15 max=300 allowed-values=[ ] ]
+  } static decimal {symbol=mm si-factor=0.001 dimension=length=1 mass=0 time=0 temperature=0} [ subject-valve ] [ { min=15 max=300 allowed-values=[ ] } ]
 }
 controlled-lists [id:TEXT values:LIST context-subject-ids:LIST] {
   dn-list [ "50" "80" "100" ] [ subject-valve ]
@@ -104,7 +104,7 @@ geometry=objects={
   }
   symbolic {
   }
-  spaces=[ id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 ] surfaces=[ ] ports=[ id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet ] parameter-bindings={
+  spaces=[ { id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 } ] surfaces=[ ] ports=[ { id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet } ] parameter-bindings={
     width=prop-dn
   }
 }
@@ -113,10 +113,10 @@ primitive-registry [id:TEXT parameters:LIST] {
   cylinder [ radius height ]
   sphere [ radius ]
 }
-selection=class-id=class-valve series-id=series-cv constraints=[ id=constraint-dn property-id=prop-dn operator=equal value={
+selection=class-id=class-valve series-id=series-cv constraints=[ { id=constraint-dn property-id=prop-dn operator=equal value={
   kind="decimal" value=999.0
 }
-] part-number-rule={
+} ] part-number-rule={
   function_id="partno" kind="script" source="dn * 10 + 50"
 }
 part-number-inputs={

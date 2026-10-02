@@ -7,7 +7,7 @@
 //! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
 //! never compiles the local implementation.
 
-use semio_s_plugin_stdio_test_oracle::document::{oracle_delete_page, oracle_replace_metadata, project_pdf};
+use semio_s_plugin_stdio_document_test_oracle::{oracle_delete_page, oracle_replace_metadata, project_pdf};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
@@ -38,7 +38,7 @@ fn delete_page_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::mutable_input;
-    use semio_s_plugin_stdio_test_oracle::document::project_pdf;
+    use semio_s_plugin_stdio_document_test_oracle::project_pdf;
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
 

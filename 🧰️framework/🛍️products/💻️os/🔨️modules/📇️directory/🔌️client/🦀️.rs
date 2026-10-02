@@ -28,7 +28,6 @@ use super::schema::{
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
-use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 
 /// 🧩 Manifest topic carrying owner-authored document HTTP schemas and routes.
@@ -479,7 +478,7 @@ impl DirectoryEventPageBootstrapV1 {
 }
 
 #[derive(FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with = "std::mem::drop")]
 pub struct SocketGrantReceiptV1 {
     pub schema: String,
     pub protocol: String,
@@ -2395,3 +2394,6 @@ pub use execution_target_module::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🌐️document-http/🦀️.rs"]
+pub mod document_http;

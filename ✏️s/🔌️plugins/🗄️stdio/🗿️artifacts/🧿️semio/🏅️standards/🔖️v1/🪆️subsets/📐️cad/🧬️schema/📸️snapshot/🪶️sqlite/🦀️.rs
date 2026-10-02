@@ -25,6 +25,9 @@ CadEntity::Solid{p1,p2,p3,p4}=>p.insert_key_float("semio_cad_solid",id,&[Cell::R
 CadEntity::Dimension{def_point,text_position,measurement,text}=>p.insert_key_float("semio_cad_dimension",id,&[Cell::Real(def_point.x),Cell::Real(def_point.y),Cell::Real(text_position.x),Cell::Real(text_position.y),Cell::Real(*measurement),Cell::Text(text)])?}
 Ok(())}
 impl ArtifactSqliteSnapshot for SemioCadSnapshot{
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+
+ fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

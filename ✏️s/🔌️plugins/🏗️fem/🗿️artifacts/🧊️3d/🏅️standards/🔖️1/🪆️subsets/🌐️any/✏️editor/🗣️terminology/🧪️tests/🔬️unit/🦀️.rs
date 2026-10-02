@@ -1,18 +1,20 @@
 use super::*;
-use semio_framework_plugin::{Locale, Terminology, ViewModel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::ViewModel;
 
 fn view(locale: Locale, terminology: Terminology) -> ViewModel {
-    ViewModel { locale, terminology, ..Default::default() }
+    ViewModel { locale, terminology, ..ViewModel::new(locale, terminology) }
 }
 
 #[test]
 fn labels_resolve_every_locale_and_terminology_axis_from_the_shared_view_state() {
-    assert_eq!(fem3d_labels(&ViewModel::default()).nodes.as_str(), "Nodes");
+    assert_eq!(fem3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).nodes.as_str(), "Nodes");
     assert_eq!(fem3d_labels(&view(Locale::De, Terminology::Native)).nodes.as_str(), "Knoten");
     assert_eq!(fem3d_labels(&view(Locale::En, Terminology::Reuse)).load_cases.as_str(), "Load Cases");
     assert_eq!(fem3d_labels(&view(Locale::De, Terminology::Reuse)).load_cases.as_str(), "Lastfälle");
     assert!(fem3d_is_de_locale(&view(Locale::De, Terminology::Native)));
-    assert!(!fem3d_is_de_locale(&ViewModel::default()));
+    assert!(!fem3d_is_de_locale(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
 }
 
 /// 🗣️ Every declared label carries a non-empty spelling on all four axes, and `reuse` repeats

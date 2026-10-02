@@ -12,11 +12,11 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_generation3d_m
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::Generation3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect/✂️cuts/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect/✂️cuts/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect/✂️cuts/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect/✂️cuts/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect/✂️cuts/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-synapse/✂️cuts/🎯️outcome/🔣️.json");
 
 fn before() -> Generation3dSnapshotRead {
     Generation3dSnapshotRead::new(dsl::json::from_json_str(BEFORE).expect("before snapshot decodes"))

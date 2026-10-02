@@ -13,7 +13,7 @@
 //! repeat. The plan pins each file's digest, so a silently edited vector changes the plan rather
 //! than the answer.
 //!
-//! **What is asserted, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.**
+//! **What is asserted, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module.**
 //! `law::divergence` names the first divergence by JSON path, `law::mutation_is_observable` refuses
 //! a kind that moved nothing, `law::inverse_restores` is the inverse law itself, and
 //! `law::round_trip_preserves` plus `law::carrier_is_exact` are the identity law's two halves.
@@ -367,7 +367,7 @@ const INVERSE_SCENARIOS: &[&str] = &[
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::schema::mutations::{apply_remodeling_mutation_json, round_trip_remodeling_dsl, undo_remodeling_mutation_json};
 
     /// 🧫️ One specification vector, addressed entirely by the scenario's own doc string. The three

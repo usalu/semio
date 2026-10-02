@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/repo/fixture-law-ownership.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "generalOwner",
+    "generalLaw",
+    "generalLawSha256",
+    "generalInputs",
+    "productRoots",
+    "moved",
+    "directoryKinds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "generalOwner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generalLaw": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generalLawSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "generalInputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "productRoots": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "moved": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "law",
+          "owner",
+          "target",
+          "script",
+          "project",
+          "command",
+          "sha256",
+          "inputs"
+        ],
+        "properties": {
+          "law": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "script": {
+            "type": "string",
+            "minLength": 1
+          },
+          "project": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "inputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "directoryKinds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "emoji",
+          "member",
+          "parents"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "emoji": {
+            "type": "string",
+            "minLength": 1
+          },
+          "member": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parents": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "tests",
+                "fixtures",
+                "schema"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

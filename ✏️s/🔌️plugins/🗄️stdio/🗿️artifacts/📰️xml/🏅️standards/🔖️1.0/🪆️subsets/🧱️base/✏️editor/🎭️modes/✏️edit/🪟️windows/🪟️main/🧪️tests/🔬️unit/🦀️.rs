@@ -39,7 +39,7 @@ fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
             epilog: Vec::new(),
         },
     };
-    let node = render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").expect("editor render");
+    let node = render_editor(&document, semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").expect("editor render");
     let source = node.children.get(0).expect("source surface");
     let semio_framework_plugin::Component::Surface(props) = &source.component else { panic!("expected text editor surface") };
     let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
@@ -58,7 +58,7 @@ fn editor_render_exposes_natural_xml_as_an_explicit_whole_document_draft() {
 fn editor_render_refuses_invalid_declaration_without_panicking() {
     let mut document = XmlSnapshot::default();
     document.doc.declaration = Some(crate::schema::snapshot::XmlDeclaration::new("1.0", Some("ISO-8859-1".into()), None));
-    assert!(render_editor(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").is_err());
+    assert!(render_editor(&document, semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted(), "s.stdio.xml@1.0/*#editor", "revision").is_err());
 }
 
 //#region 🪟️WindowLaws
@@ -98,7 +98,7 @@ fn oversized_document(children: usize) -> XmlSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &XmlSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render(document, &TreeWindows::for_body(&view, BODY_KEY)).expect("render the xml tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the xml tree")
 }

@@ -5,7 +5,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { runArtifactRustPackageMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { runAssemblyChecks } from "../../🧪️tests/📦️assembly/🟦️.ts";
@@ -107,7 +107,7 @@ class DeletionProofScript extends BundleScript {
     if (!artifactsAbsent) throw new Error("deletion-proof copied concrete Stdio artifacts");
     const env = devToolingEnv({ CARGO_TARGET_DIR: join(workspaceRoot, "target"), CARGO_BUILD_BUILD_DIR: join(workspaceRoot, "cargo-build"), CARGO_INCREMENTAL: "0" });
     const checkedPackages = [...new Set(["semio-s-plugin-stdio", ...(closure.has("semio-framework-3d") ? ["semio-framework-3d"] : []), ...requestedOwners])];
-    await runOwnedCommand("cargo", ["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"], workspaceRoot, "stdio-deletion-proof", undefined, { env });
+    await runRepositoryCommand("cargo", ["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"], workspaceRoot, "stdio-deletion-proof", undefined, { env });
     const probeRoot = join(workspaceRoot, "🧪️sqlite-required");
     mkdirSync(probeRoot);
     writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-framework-os-kernel.workspace = true\n');

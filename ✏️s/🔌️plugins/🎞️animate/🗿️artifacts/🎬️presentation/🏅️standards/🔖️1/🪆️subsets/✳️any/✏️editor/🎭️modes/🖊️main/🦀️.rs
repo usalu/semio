@@ -1,7 +1,10 @@
 //! 🖊️ Animate presentation app — the `main` mode: the single tile-editor authoring layout.
 
 use crate::editor::animate::modes::main::windows::tile_editor;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const PRESENTATION_PLAY_MODE_MAIN: &str = "main";
 

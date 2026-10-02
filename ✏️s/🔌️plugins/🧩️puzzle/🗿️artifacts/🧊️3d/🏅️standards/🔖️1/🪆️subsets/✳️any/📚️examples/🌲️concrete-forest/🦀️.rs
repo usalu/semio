@@ -2,7 +2,8 @@
 
 use std::sync::LazyLock;
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 /// 🏷️ Stable example id for the navbar picker / `setActiveExample`.
 pub const ID: &str = "concrete-forest";

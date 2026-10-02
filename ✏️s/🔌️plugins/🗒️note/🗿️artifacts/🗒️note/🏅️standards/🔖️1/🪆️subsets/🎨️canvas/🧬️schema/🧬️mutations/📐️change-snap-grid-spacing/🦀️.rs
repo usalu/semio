@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapGridSpacing {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change snap grid spacing to {:?}", self.new_spacing), &format!("Fangrasterabstand auf {:?} ändern", self.new_spacing))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::mutations::note_setting_label(("snap grid spacing", "Fangrasterabstand"), self.new_spacing.map(crate::schema::mutations::note_label_number))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

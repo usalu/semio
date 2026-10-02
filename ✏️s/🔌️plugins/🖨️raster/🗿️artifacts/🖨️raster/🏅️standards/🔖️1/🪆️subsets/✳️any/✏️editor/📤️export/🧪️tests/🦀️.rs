@@ -130,7 +130,10 @@ async fn cancelled_png_command_never_publishes_a_download_or_changes_history() {
 
 #[semio_framework_async_macros::async_test]
 async fn png_progress_control_cancels_its_exact_visible_operation() {
-    use semio_framework_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane,Locale};
+    use semio_framework_plugin::PluginApp;
+    use semio_framework_plugin::artifact_app_laws;
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_ui_locale::Locale;
     use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png},panels::document::RASTER_PLAY_BODY_LAYERS};
     fn find_identity(value:&serde_json::Value)->Option<serde_json::Value> {match value{serde_json::Value::Object(map)=>{if map.get("operationId").is_some_and(serde_json::Value::is_string)&&map.get("generation").is_some_and(serde_json::Value::is_string){return Some(value.clone());}map.values().find_map(find_identity)},serde_json::Value::Array(items)=>items.iter().find_map(find_identity),_=>None}}
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;

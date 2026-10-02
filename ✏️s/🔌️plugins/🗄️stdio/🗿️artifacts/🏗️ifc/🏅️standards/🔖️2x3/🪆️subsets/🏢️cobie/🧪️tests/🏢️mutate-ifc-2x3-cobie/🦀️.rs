@@ -11,7 +11,7 @@
 //! compares them — real third-party evidence about structure, never a byte-level differential claim.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cobie};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cobie::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cobie};
 
 
 //#region 🔖️Input
@@ -176,8 +176,8 @@ mod subject {
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3CobieMutation;
     use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::cobie::project_ifc_2x3_cobie;
+    use semio_repo_test_host::law::wire_operation;
+    use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cobie::project_ifc_2x3_cobie;
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<Ifc2x3CobieMutation, String> {

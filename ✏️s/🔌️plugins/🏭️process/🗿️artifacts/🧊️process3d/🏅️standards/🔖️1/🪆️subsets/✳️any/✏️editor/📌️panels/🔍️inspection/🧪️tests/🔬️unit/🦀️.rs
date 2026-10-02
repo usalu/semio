@@ -132,7 +132,7 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
             }],
         }],
     };
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::default());
+    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let section = "process3d-play-inspector.capability.cut";
     let project = |windows: &TreeWindows<'_>| {
         let node = render(&fixture, &["machine:saw".to_string()], labels, windows).expect("inspector renders");
@@ -149,7 +149,7 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
 
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(), node_key: section.into(), open: Some(true), offset: 0, rows: 32 }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let opened = project(&TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_INSPECTION));
     assert!(opened.contains("Kerf: 0.05"), "opening the section materialises its parameters: {opened}");

@@ -13,10 +13,19 @@
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::{
-    tree_item_with_action_draggable, tree_window_item, ActionFactory, HasBase, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::HasBase;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";

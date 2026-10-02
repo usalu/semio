@@ -1,7 +1,8 @@
 //! 📚️ Example demo for stdio.mp3. 🚧 scaffolded by W1b — a trivial hex-encoded instance,
 //! matching gif's own demo convention (a short marker, not a fully worked-out document).
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -4,7 +4,7 @@ import { open } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
-import { withResourceLeases } from "../../../🔒️leases/🟦️.ts";
+import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { runTool } from "../../📦️dependencies/📜️script.ts";
 import binaryenManifest from "./🔣️.json";
 

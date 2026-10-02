@@ -7,7 +7,20 @@
 use crate::viewer::wfc2d::modes::view;
 use crate::viewer::wfc2d::modes::view::windows::preview;
 use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DIALECT, WFC_2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.
@@ -98,7 +111,7 @@ impl ArtifactViewer for Wfc2dViewer {
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }

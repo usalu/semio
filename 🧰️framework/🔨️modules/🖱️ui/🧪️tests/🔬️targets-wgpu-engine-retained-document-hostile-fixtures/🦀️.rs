@@ -61,7 +61,7 @@ fn max_plus_one_stale_aba_interrupted_close_nested_depth_lost_handle_device_drop
     drop(leases);
     while !ui_contract::close_ui_document_page_one() {}
 
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let first = lease(101, &[(1, &[])]);
     let header = first.header().expect("first header");
     let mut preview = 0;

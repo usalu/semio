@@ -21,8 +21,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::InsertSlide(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert slide", "Folie einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert slide", "Folie einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

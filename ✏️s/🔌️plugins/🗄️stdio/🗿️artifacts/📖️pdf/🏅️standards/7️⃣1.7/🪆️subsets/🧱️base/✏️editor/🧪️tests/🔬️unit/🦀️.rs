@@ -106,3 +106,5 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
     assert_eq!(app.snapshot().unwrap(), edited);
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", Pdf17Editor, || semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() }, "../..");

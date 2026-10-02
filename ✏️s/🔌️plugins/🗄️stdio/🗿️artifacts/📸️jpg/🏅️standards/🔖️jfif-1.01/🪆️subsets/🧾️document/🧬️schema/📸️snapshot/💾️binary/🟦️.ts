@@ -1,2 +1,2 @@
-/** 💾️ Jpg representation for `stdio.jpg` (snapshot). */
-export type JpgSnapshotJpg = Uint8Array;
+/** 🎒️ Complete owned JPG snapshot semio.pack document. */
+export type JpgSnapshotPack = Uint8Array;

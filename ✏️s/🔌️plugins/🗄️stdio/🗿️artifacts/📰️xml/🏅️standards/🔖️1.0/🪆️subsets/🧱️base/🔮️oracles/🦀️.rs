@@ -172,7 +172,7 @@ mod oracles {
                 other => Err(format!("doctype: unrecognised declaration kind {other:?}")),
             })
             .collect::<Result<Vec<_>, String>>()?;
-        Ok(Some(XDoctype { prolog_position: usize_field(value, "prologPosition"), name: value.str("name"), external_id, entities }))
+        Ok(Some(XDoctype { prolog_position: value.str("prologPosition").parse().map_err(|_|"invalid exact prolog position")?, name: value.str("name"), external_id, entities }))
     }
     //#endregion 🔖️JsonValue
 
@@ -697,7 +697,7 @@ mod oracles {
         match doctype {
             None => Json::Null,
             Some(dt) => Json::Object(vec![
-                ("prologPosition".to_string(), Json::Number(dt.prolog_position as f64)),
+                ("prologPosition".to_string(), Json::String(dt.prolog_position.to_string())),
                 ("name".to_string(), Json::String(dt.name.clone())),
                 (
                     "externalId".to_string(),

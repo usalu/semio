@@ -8,11 +8,23 @@ use crate::op::ProgramMutation;
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
 use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

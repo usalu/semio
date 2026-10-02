@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_plugin::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
 const RUN_SCHEMA: &str = include_str!("../../../✏️editor/🧵️simulation-session/🔣️.json");

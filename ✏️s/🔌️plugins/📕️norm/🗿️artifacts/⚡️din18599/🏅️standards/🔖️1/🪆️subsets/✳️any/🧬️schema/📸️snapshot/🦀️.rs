@@ -60,6 +60,11 @@ pub struct Din18599Snapshot {
 }
 
 //#region 🔖️HandcraftedArtifactCodecs
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 /// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec, composed child included.
 impl store::ArtifactDsl for Din18599Snapshot {
     const EXTENSION: &'static str = "din18599";
@@ -97,6 +102,9 @@ impl store::ArtifactPack for Din18599Snapshot {
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
+    }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(sqlite::sqlite_codec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

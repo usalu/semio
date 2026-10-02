@@ -23,8 +23,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for RemovePoint {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::RemovePoint(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove point", "Punkt entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove point", "Punkt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

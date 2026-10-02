@@ -20,7 +20,7 @@ async fn commit_job_test_contribution(artifact_kind: &str, target_artifact_schem
 
 async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
     let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue"))
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&request))
 }
 
 /// 🧬️ Registers a real contributed mutation kind (not mocked away) and drives
@@ -50,7 +50,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
     match step_job(300, FULL_GRANT).await {
         JobStep::Done(bytes) => {
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
-            let result: crate::app::WireArtifactMutationPlanResult = dsl::from_dsl_value(value).expect("result decodes");
+            let result: crate::app::WireArtifactMutationPlanResult = semio_framework_value::FromValue::from_value(value).expect("result decodes");
             assert_eq!(result.mutation_id, mutation_id);
             assert_eq!(result.label, protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the job wire, not a pre-resolved string");
             assert_eq!(result.owner_ops.len(), 1);

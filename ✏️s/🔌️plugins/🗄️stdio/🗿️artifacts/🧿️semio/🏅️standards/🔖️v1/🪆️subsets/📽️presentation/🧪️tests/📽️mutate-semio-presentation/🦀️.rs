@@ -42,7 +42,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};

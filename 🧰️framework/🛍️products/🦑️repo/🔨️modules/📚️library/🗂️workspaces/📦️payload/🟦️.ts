@@ -1,5 +1,6 @@
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { createRequire } from "node:module";
 export interface PackagePayloadOwner { readonly absDir: string; readonly name?: string; readonly exports?: unknown; }
 export interface PackagePayloadEntry {
   readonly kind: "directory" | "file" | "symlink" | "other";
@@ -51,39 +52,8 @@ export const NATIVE_DISCOVERY_OPERATIONS: PackagePayloadOperations = {
   state: nativeState,
 };
 
-/** 📦️ Enumerates explicit export targets across package subpaths and conditions. */
-function exportTargets(value: unknown, subpaths = true): string[] {
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.flatMap((entry) => exportTargets(entry, false));
-  if (!value || typeof value !== "object") return [];
-  const entries = Object.entries(value);
-  if (entries.some(([key]) => key.startsWith("."))) {
-    if (!subpaths || entries.some(([key]) => key !== "." && (!key.startsWith(".") || key.includes("*")))) return [];
-    return entries.flatMap(([, entry]) => exportTargets(entry, false));
-  }
-  if (entries.some(([key]) => !key || /^\d+$/u.test(key))) return [];
-  const targets: string[] = [];
-  for (const [condition, entry] of entries) {
-    targets.push(...exportTargets(entry, false));
-    if (condition === "default") break;
-  }
-  return targets;
-}
+type PhysicalPayloadOwnership = (owner: PackagePayloadOwner, payload: PackagePayloadOwner, operations: Pick<PackagePayloadOperations, "state">) => boolean;
+const physical: { readonly ownsPayload: PhysicalPayloadOwnership } = createRequire(import.meta.url)("./🟨️.cjs");
 
 /** 🔗️ Binds a payload to its nearest package owner through a concrete physical export. */
-export function ownsPayload(owner: PackagePayloadOwner, payload: PackagePayloadOwner, operations: Pick<PackagePayloadOperations, "state">): boolean {
-  if (!owner.name || owner.name !== payload.name) return false;
-  const prefix = relative(owner.absDir, payload.absDir).replaceAll("\\", "/") + "/";
-  return exportTargets(owner.exports).some((target) => {
-    if (!target.startsWith(".") || /[\\:*?%#\u0000]/u.test(target)) return false;
-    const segments = target.slice(2).split("/");
-    if (segments.some((segment) => !segment || segment === "." || segment === ".." || segment === "node_modules")) return false;
-    if (!segments.join("/").startsWith(prefix)) return false;
-    let path = owner.absDir;
-    return segments.every((segment, index) => {
-      path = join(path, segment);
-      return operations.state(path) === (index === segments.length - 1 ? "file" : "directory");
-    });
-  });
-}
-
+export const ownsPayload: PhysicalPayloadOwnership = physical.ownsPayload;

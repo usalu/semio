@@ -24,7 +24,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 use store::os_store::test_support::assert_op_line_round_trip;
 
 fn node(id: &str, text: &str) -> DslValue {
-    dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
+    semio_framework_value::ToValue::to_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] }))
 }
 
 fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
@@ -96,8 +96,8 @@ async fn connect_disconnect_nodes_round_trip() {
     let mut snapshot = empty_wires_snapshot();
     snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).expect("valid mutation").0;
     snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).expect("valid mutation").0;
-    let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
-    let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
+    let edge = semio_framework_value::ToValue::to_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" }));
+    let relationship = semio_framework_value::ToValue::to_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 }));
     let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));
     assert_eq!(crate::wires_working_board(&with_edge).get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     assert_eq!(with_edge.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
@@ -206,8 +206,8 @@ async fn connect_and_disconnect_nodes_outcomes_obey_the_policy_matrix() {
     let mut snapshot = empty_wires_snapshot();
     snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).expect("valid mutation").0;
     snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).expect("valid mutation").0;
-    let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
-    let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
+    let edge = semio_framework_value::ToValue::to_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" }));
+    let relationship = semio_framework_value::ToValue::to_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 }));
     let connect = connect_nodes(edge, relationship);
     let with_edge = round_trip(&snapshot, &connect);
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&snapshot, &connect).await;
@@ -217,7 +217,7 @@ async fn connect_and_disconnect_nodes_outcomes_obey_the_policy_matrix() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_registers_semantic_descriptors() {
-    register_wires_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_wires_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     assert_eq!(WiresMutation::kinds().len(), 10);
     for kind in WiresMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);

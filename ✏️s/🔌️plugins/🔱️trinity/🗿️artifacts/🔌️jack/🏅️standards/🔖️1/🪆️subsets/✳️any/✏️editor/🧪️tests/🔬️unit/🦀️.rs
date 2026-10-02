@@ -45,7 +45,7 @@ fn query_windows() -> ViewModel {
             semio_framework_plugin::ViewWindowInstance { id: "editor-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_EDITOR.into() },
             semio_framework_plugin::ViewWindowInstance { id: "results-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
         ],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 
@@ -228,14 +228,14 @@ async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semi
 #[semio_framework_async_macros::async_test]
 async fn renders_node_graph_scene() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("node-graph"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn renders_jack_editor() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
     assert!(json.contains("text-editor"));
     // 🚚️ The buffer rides an out-of-doc payload lane, never the projected doc spine — read the
@@ -269,7 +269,7 @@ async fn node_graph_select_updates_selection_and_document_tree() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0);
     select_ast(&mut app, &[&node_id]).await;
-    let tree = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render");
+    let tree = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project semantic UI test tree");
     assert!(json.contains(&node_id));
     // 🕹️ Rows carry no `selected` flag of their own any more: the tree binds the framework-owned
@@ -287,7 +287,7 @@ async fn nakagin_fixture_has_nodes() {
 #[semio_framework_async_macros::async_test]
 async fn editor_scene_has_tokens_and_diagnostics() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.tokens_json.is_some_and(|tokens| !tokens.is_empty()));
@@ -363,7 +363,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
 #[semio_framework_async_macros::async_test]
 async fn graph_scene_has_lod_json() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
     assert!(scene.lod_json.as_deref().is_some_and(|lod| lod.contains("automatic")), "lodJson lane: {:?}", scene.lod_json);
@@ -372,7 +372,7 @@ async fn graph_scene_has_lod_json() {
 #[semio_framework_async_macros::async_test]
 async fn set_lod_mode_reflects_in_window_measures() {
     let mut app = new_app().await;
-    let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
     app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }).await.expect("lod");
     // 📬️ `settle` drains the completion outbox too — a page-only loop spins forever on it.
@@ -385,7 +385,7 @@ async fn set_lod_mode_reflects_in_window_measures() {
 #[semio_framework_async_macros::async_test]
 async fn catalogue_tree_renders() {
     let mut app = new_app().await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("trinity-jack-catalogue"));
 }
 
@@ -394,7 +394,7 @@ async fn inspection_panel_renders_the_selection_prompt() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0);
     select_ast(&mut app, &[&node_id]).await;
-    let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
     // build per-selection fields, so it always renders the static prompt.
     assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("trinity-inspector.empty"));
@@ -403,7 +403,7 @@ async fn inspection_panel_renders_the_selection_prompt() {
 #[semio_framework_async_macros::async_test]
 async fn document_tree_de_locale_translates_labels() {
     let mut app = new_app().await;
-    let view = ViewModel { locale: semio_framework_plugin::Locale::De, ..ViewModel::default() };
+    let view = ViewModel { locale: semio_framework_ui_locale::Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &view).await.expect("render");
     assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("Stücke"));
 }
@@ -456,7 +456,7 @@ async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::default()).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
@@ -576,7 +576,7 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
             semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
             semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_RESULTS.into() },
         ],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let editor_left = view.for_window_instance("editor-left").unwrap();
     let editor_right = view.for_window_instance("editor-right").unwrap();
@@ -889,7 +889,7 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
     let patch = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "patchNodes").expect("declared");
     let node_ids = patch.args.iter().find(|arg| arg.id == "nodeIds").expect("nodeIds");
     assert!(!node_ids.required, "the rail may leave nodeIds empty to act on the selection");
-    let schema = node_ids.json_schema(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En);
+    let schema = node_ids.json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
     let items = schema.get("items").expect("nodeIds is a list");
     assert_eq!(
         (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),

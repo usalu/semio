@@ -4,7 +4,8 @@
 //! (`crate::energy_simulation_session::EnergySimulationRunJob`).
 
 use crate::energy_simulation_session::energy_simulation_run_definition;
-use semio_framework_plugin::{LocalizedLabel, ToolDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "energySimulation";

@@ -1220,6 +1220,9 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
   /** 📚️ Captures the complete drawing, history and owned members before a surface transfer. */
   readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
+  /** 🧾️ The instance's whole history projection (`AppCommand::ReadHistory` → `HistorySnapshot`), the browser twin of the
+   * native shell's `read_history` — what a restored document archive re-reads its rows and head from. */
+  readonly readHistory: (instanceId: number) => Promise<unknown>;
   /** 🗃️ Restores one `(pack, spr)` pair (`AppCommand::LoadDocument`). */
   readonly loadAppDocumentPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🧬️ Calls this program's component `codec` interface on a live instance's actor, serialized with
@@ -1908,6 +1911,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     },
     loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(decodeDocumentArchiveBytes(archive)),
     readAppDocumentArchive: async (instanceId) => encodeDocumentArchiveBytes(await requireChannel(instanceId).readDocumentArchive()),
+    readHistory: async (instanceId) => {
+      const frames = await requireChannel(instanceId).readHistory();
+      const snapshot = frames.find((frame): frame is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in frame);
+      if (snapshot) return decodePackWire(new Uint8Array(snapshot.HistorySnapshot.history_patch), "readHistory.historyPatch");
+      const failed = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      throw new Error(failed ? faultDisplayMessage(failed.Error.fault, decodePackValue) : `readHistory(${instanceId}): no HistorySnapshot among ${frames.length} reply frame(s)`);
+    },
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const failed = frames.find((frame) => "Error" in frame);
@@ -1968,6 +1978,8 @@ export interface WgpuJsBridge {
   readonly applyMutations: (instanceId: number, operations: Uint8Array) => Promise<void>;
   readonly loadAppDocumentArchive: (instanceId: number, archive: Uint8Array) => Promise<void>;
   readonly readAppDocumentArchive: (instanceId: number) => Promise<Uint8Array>;
+  /** 🧾️ The history projection as JSON (`u64` carriers as numbers, `invocationResponseJson`'s rule). */
+  readonly readHistory: (instanceId: number) => Promise<string>;
   readonly loadAppArtifactPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🧬️ `codec.pack-schema-hash(artifactKind)`: the kind's 32-byte structural fingerprint. */
   readonly codecPackSchemaHash: (artifactKind: string) => Promise<Uint8Array>;
@@ -2034,6 +2046,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     applyMutations: (instanceId, operations) => handle.applyMutations(instanceId, operations),
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
     readAppDocumentArchive: (instanceId) => handle.readAppDocumentArchive(instanceId),
+    readHistory: (instanceId) => handle.readHistory(instanceId).then((patch) => JSON.stringify(patch, (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value))),
     readAppDocumentIdentity: (instanceId) => handle.readAppDocumentIdentity(instanceId).then((identity) => JSON.stringify(identity)),
     loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),

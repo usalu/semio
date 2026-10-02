@@ -178,3 +178,10 @@ Scratch and logs: `🗑️generated/w2w-office/` (kept for the coordinator's swe
   `…/🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/` (5 files),
   `…/🧪️tests/📽️mutate-semio-presentation/🥒️.feature`.
 - **Ticket scripts (kept):** `🧪️w2-w-office-align.py`, `🧪️w2-w-office-conformance.py`, `🧪️w2-w-office-xlsx-conformance-authority.py`.
+
+## Session 2 — 2026-10-01 (S2-STDIO-A, WP-2)
+
+Status: **IN PROGRESS**. The authoritative WP-2 record is `📓️w3-stdio-cases-2-report.md` § Session 2.
+
+- §6, oracle crate `cargo test --features oracles --lib`, which session 1 could not run: queued behind the coordinator's CARGO HOLD (rule 26).
+- The pptx diff copy of `deserialize_double_option` moves to the stdio contract crate (in progress).

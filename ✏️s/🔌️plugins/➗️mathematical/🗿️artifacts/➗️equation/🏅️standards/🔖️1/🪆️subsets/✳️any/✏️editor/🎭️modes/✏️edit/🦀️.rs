@@ -2,7 +2,10 @@
 //! geometry).
 
 use crate::editor::equation::modes::edit::windows::{geometry, graph};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const MATH_PLAY_MODE_EDIT: &str = "edit";
 

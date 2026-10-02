@@ -106,44 +106,8 @@ fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
 //#endregion 🔖️CodecPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_gis_map_snapshot_body(s: &GisMapSnapshot) -> String {
-    format!("positions={}\nroutes={}\nregions={}\ndrawing={}\nimage={}\nvalue={}", enc_json(&s.positions), enc_json(&s.routes), enc_json(&s.regions), enc_child(&s.drawing), enc_child_opt(&s.image), enc_child(&s.value),)
-}
-fn parse_gis_map_snapshot_body(body: &str) -> Result<GisMapSnapshot, String> {
-    let mut snapshot = GisMapSnapshot::default();
-    let mut saw_drawing = false;
-    let mut saw_value = false;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("positions=") {
-            snapshot.positions = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("routes=") {
-            snapshot.routes = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("regions=") {
-            snapshot.regions = dec_json(rest)?;
-        } else if let Some(rest) = line.strip_prefix("drawing=") {
-            snapshot.drawing = dec_child(rest)?;
-            saw_drawing = true;
-        } else if let Some(rest) = line.strip_prefix("image=") {
-            snapshot.image = dec_child_opt(rest)?;
-        } else if let Some(rest) = line.strip_prefix("value=") {
-            snapshot.value = dec_child(rest)?;
-            saw_value = true;
-        } else {
-            return Err(format!("gis map snapshot: unknown line {line:?}"));
-        }
-    }
-    if !saw_drawing {
-        return Err("gis map snapshot: missing drawing line".to_string());
-    }
-    if !saw_value {
-        return Err("gis map snapshot: missing value line".to_string());
-    }
-    Ok(snapshot)
-}
+
+
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
@@ -195,92 +159,12 @@ pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Op
     }
 }
 
-fn encode_gis_map_snapshot_binary(s: &GisMapSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.positions));
-    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.routes));
-    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.regions));
-    write_child(&mut out, &s.drawing);
-    write_child_opt(&mut out, &s.image);
-    write_child(&mut out, &s.value);
-    out
-}
-fn decode_gis_map_snapshot_binary(bytes: &[u8]) -> Result<GisMapSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let positions = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let routes = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let regions = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let drawing = read_child(&mut reader)?;
-    let image = read_child_opt(&mut reader)?;
-    let value = read_child(&mut reader)?;
-    Ok(GisMapSnapshot { positions, routes, regions, drawing, image, value })
-}
+
+
 //#endregion 🔖️BinaryPrimitives
 
-//#region 🔹HandcraftedArtifactCodecs
-/// 🧬 Describes the six fields owned by the handcrafted GIS map pack body.
-fn gis_map_pack_record_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        Some("gismap"),
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(1, "positions", <Vec<MapFeature> as dsl::DslField>::shape()),
-            dsl::FieldSpec::new(2, "routes", <Vec<MapFeature> as dsl::DslField>::shape()),
-            dsl::FieldSpec::new(3, "regions", <Vec<MapFeature> as dsl::DslField>::shape()),
-            dsl::FieldSpec::new(4, "drawing", <GisMapDrawingChild as dsl::DslField>::shape()),
-            dsl::FieldSpec::new(5, "image", <GisMapImageChild as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "value", <GisMapValueChild as dsl::DslField>::shape()),
-        ],
-    )
-}
-
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits — see this
-/// file's module doc comment).
-impl store::ArtifactDsl for GisMapSnapshot {
-    const EXTENSION: &'static str = "gismap";
-    fn envelope_id() -> &'static str {
-        "gis.gismap"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_gis_map_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let body = print_gis_map_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for GisMapSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_gis_map_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        decode_gis_map_snapshot_binary(&inner).map_err(store::PackError::Schema)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(gis_map_pack_record_spec())
-    }
-}
-//#endregion 🔹HandcraftedArtifactCodecs
+#[path="📦️pack/🦀️.rs"]
+mod owned_pack;
 
 //#region 🌉️IdentityBridge
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
@@ -311,3 +195,10 @@ pub fn gis_map_identity_report_json(dsl_text: &str) -> Result<String, String> {
     Ok(dsl::os_pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

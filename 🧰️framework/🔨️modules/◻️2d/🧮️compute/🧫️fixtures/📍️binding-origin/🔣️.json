@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "ownerManifest": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+  "ownerRoot": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
+  "declarationSource": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
+  "modulePath": [
+    "compute"
+  ],
+  "externName": "semio_framework_2d",
+  "packageName": "semio-framework-2d",
+  "symbols": [
+    "EngineKey",
+    "EngineHandle",
+    "EngineFault",
+    "EngineHandles",
+    "EngineCache",
+    "EngineRep"
+  ],
+  "traitName": "Engine"
+}

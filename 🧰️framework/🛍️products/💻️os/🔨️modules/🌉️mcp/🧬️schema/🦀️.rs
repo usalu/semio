@@ -1439,7 +1439,10 @@ pub const SCHEMA_MIRROR_ID: &str = "https://json.schemas.assets.semio-tech.com/o
 
 //#region 🔖️ScopeSchemaExports
 
-use semio_framework_schema::{register_scope_schema_exports as register_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
+use semio_framework_schema_registry::register_scope_schema_exports as register_exports;
+use semio_framework_schema_registry::FacetLeaves;
+use semio_framework_schema_registry::SchemaExport;
+use semio_framework_schema_registry::ScopeSchemaExports;
 
 /// 🍃 The three format leaves `os.mcp` publishes. One `🧬️schema/` module carries every named
 /// export, so all of them resolve to the same documents; this scope ships no GraphQL or proto leaf.
@@ -1524,7 +1527,7 @@ const EXPORTS: [SchemaExport; 72] = [
 ];
 
 /// 📌️ Registers `os.mcp`'s named exports into the OS-wide export catalog.
-/// See `📋️execution-contract.md` §C and `semio_framework_schema::resolve_schema_export`.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
 // 🚫️async: E1 pure registration helper (no I/O) — see R9
 pub fn register_scope_exports() {
     register_exports(ScopeSchemaExports { scope: "os.mcp", exports: &EXPORTS }).expect("os.mcp scope schema exports");

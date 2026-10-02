@@ -31,8 +31,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplaceKindC
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
     }
 }
 //#endregion 🔖️Mutation

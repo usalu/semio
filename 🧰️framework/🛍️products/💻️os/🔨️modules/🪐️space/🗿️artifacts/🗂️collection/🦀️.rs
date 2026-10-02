@@ -48,9 +48,55 @@ fn artifact_body_blob_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(Some("blob"), dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "hash", dsl::Shape::Text), dsl::FieldSpec::new(1, "size", dsl::Shape::UInt), dsl::FieldSpec::new(2, "media-type", dsl::Shape::Text)])
 }
 
+fn artifact_body_document_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(2)?;
+        let mut fields=control.allocate_vec(2)?;
+        fields.push(dsl::schema::producer::field(0,"schema",dsl::Shape::Text,control)?);
+        control.step()?;
+        fields.push(dsl::schema::producer::field(1,"document-id",dsl::Shape::Text,control)?);
+        control.step()?;
+        dsl::schema::producer::record(Some("document"),dsl::RecordLayout::Inline,fields,control)
+    })
+}
+
+fn artifact_body_blob_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(3)?;
+        let mut fields=control.allocate_vec(3)?;
+        fields.push(dsl::schema::producer::field(0,"hash",dsl::Shape::Text,control)?);
+        control.step()?;
+        fields.push(dsl::schema::producer::field(1,"size",dsl::Shape::UInt,control)?);
+        control.step()?;
+        fields.push(dsl::schema::producer::field(2,"media-type",dsl::Shape::Text,control)?);
+        control.step()?;
+        dsl::schema::producer::record(Some("blob"),dsl::RecordLayout::Inline,fields,control)
+    })
+}
+
+fn artifact_body_document_producer()->dsl::RecordSpecProducer{
+    dsl::RecordSpecProducer{ordinary:artifact_body_document_spec,decoding:|control|artifact_body_document_spec_controlled(control),encoding:|control|artifact_body_document_spec_controlled(control)}
+}
+
+fn artifact_body_blob_producer()->dsl::RecordSpecProducer{
+    dsl::RecordSpecProducer{ordinary:artifact_body_blob_spec,decoding:|control|artifact_body_blob_spec_controlled(control),encoding:|control|artifact_body_blob_spec_controlled(control)}
+}
+
 impl dsl::DslVariants for ArtifactBody {
-    fn variants() -> Vec<(String, fn() -> dsl::RecordSpec)> {
-        vec![("document".to_string(), artifact_body_document_spec as fn() -> dsl::RecordSpec), ("blob".to_string(), artifact_body_blob_spec as fn() -> dsl::RecordSpec)]
+    fn variants() -> Vec<(String, dsl::RecordSpecProducer)> {
+        vec![("document".to_string(), artifact_body_document_producer()), ("blob".to_string(), artifact_body_blob_producer())]
+    }
+
+    fn variants_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,dsl::RecordSpecProducer)>,String>{
+        control.scoped_stage(|control|{
+            control.begin_stage(2)?;
+            let mut variants=control.allocate_vec(2)?;
+            variants.push((control.copy_text("document")?,artifact_body_document_producer()));
+            control.step()?;
+            variants.push((control.copy_text("blob")?,artifact_body_blob_producer()));
+            control.step()?;
+            Ok(variants)
+        })
     }
 
     fn to_named_record(&self) -> (String, dsl::RecordValue) {
@@ -256,7 +302,7 @@ impl protocol::OpText for CollectionMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -266,7 +312,7 @@ impl protocol::OpText for CollectionMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

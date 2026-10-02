@@ -23,8 +23,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPointsByReturn {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::SetPointsByReturn(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

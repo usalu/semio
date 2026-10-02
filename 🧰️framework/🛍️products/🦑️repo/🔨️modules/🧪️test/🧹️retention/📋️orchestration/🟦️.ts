@@ -1,5 +1,5 @@
 import { type RetentionClass, cleanTestOutputs, collectGarbage, discoverTestCases, formatCleanReport, formatGcReport, isExcludedTestPath, loadOracleRegistry } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🧹️ Marker-guarded removal of generated test state. Never descends into an excluded area. */
 export class CleanScript extends Script {

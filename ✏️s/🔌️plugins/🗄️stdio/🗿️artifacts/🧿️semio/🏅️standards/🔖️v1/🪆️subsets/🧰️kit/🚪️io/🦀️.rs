@@ -109,7 +109,7 @@ pub mod derived_composition {
     //#region 🔖️Register
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor());
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor()).expect("schema descriptor publication");
         semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("kit") }, store::ArtifactCodec::of::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -135,7 +135,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::kit::schema::inferences::semio_kit_artifact_inference_descriptor());
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::kit::schema::inferences::semio_kit_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 

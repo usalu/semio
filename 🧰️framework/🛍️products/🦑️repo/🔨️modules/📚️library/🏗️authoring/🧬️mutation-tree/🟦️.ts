@@ -4,6 +4,7 @@ import { dirname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import {
   canonicalPrimaryFilenameForKind,
   inspectRustModuleGraphFacts,
+  rustModuleScopeProof,
   inspectRustMutationAggregateSpan,
   inspectRustStructure,
   loadCatalogTaxonomy as loadTaxonomy,
@@ -183,6 +184,8 @@ export function newMutationUpdateAggregate(repoRoot: string, mutationsRel: strin
   if (!existsSync(rootAbs)) throw new Error(`new mutation: missing aggregate ${rootRel}`);
   if (!lstatSync(rootAbs).isFile()) throw new Error(`new mutation: aggregate ${rootRel} is not a regular file.`);
   const source = readFileSync(rootAbs, "utf8");
+  const moduleFacts = inspectRustModuleGraphFacts(source);
+  if (rustModuleScopeProof(moduleFacts, []).state === "unresolved") throw new Error(`new mutation: ${rootRel} module scope is unproved.`);
   const span = inspectRustMutationAggregateSpan(source);
   if (!span) throw new Error(`new mutation: ${rootRel} must contain exactly one public aggregate Mutation enum.`);
   const facts = inspectRustStructure(source);
@@ -191,10 +194,10 @@ export function newMutationUpdateAggregate(repoRoot: string, mutationsRel: strin
   const mount = `#[path = "${name}/${POLICY_RS_COMPONENT_LEAF_NAME}"]\npub mod ${parts.moduleName};`;
   const edits: string[] = [];
   let next = source;
-  const existingMounts = inspectRustModuleGraphFacts(source).modules.filter((item) => item.modulePath.length === 1 && item.name === parts.moduleName);
+  const existingMounts = moduleFacts.modules.filter((item) => item.modulePath.length === 1 && item.name === parts.moduleName);
   if (existingMounts.length > 1) throw new Error(`new mutation: existing mount ${parts.moduleName} is ambiguous.`);
   const existingMount = existingMounts[0];
-  if (existingMount && (existingMount.visibility !== "pub" || existingMount.inline || existingMount.pathTarget !== `${name}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) {
+  if (existingMount && (existingMount.unresolved || existingMount.visibility !== "pub" || existingMount.inline || existingMount.pathTarget !== `${name}/${POLICY_RS_COMPONENT_LEAF_NAME}`)) {
     throw new Error(`new mutation: existing mount ${parts.moduleName} does not target ${name}/${POLICY_RS_COMPONENT_LEAF_NAME}.`);
   }
   if (!existingMount) {

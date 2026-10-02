@@ -1,0 +1,66 @@
+[workspace]
+
+[package]
+name = "semio-hub-stdio-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🧩️ Complete owned Stdio oracle provider assembly"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_hub_stdio_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["semio-s-artifact-stdio-las-test-oracle/oracles", "semio-s-artifact-stdio-html-test-oracle/oracles", "semio-s-artifact-stdio-epw-test-oracle/oracles", "semio-s-artifact-stdio-zip-test-oracle/oracles", "semio-s-artifact-stdio-gif-test-oracle/oracles", "semio-s-artifact-stdio-mp4-test-oracle/oracles", "semio-s-artifact-stdio-svg-test-oracle/oracles", "semio-s-artifact-stdio-mp3-test-oracle/oracles", "semio-s-artifact-stdio-ifc-test-oracle/oracles", "semio-s-artifact-stdio-bcf-test-oracle/oracles", "semio-s-artifact-stdio-binary-test-oracle/oracles", "semio-s-artifact-stdio-csv-test-oracle/oracles", "semio-s-artifact-stdio-step-test-oracle/oracles", "semio-s-artifact-stdio-tsv-test-oracle/oracles", "semio-s-artifact-stdio-xlsx-test-oracle/oracles", "semio-s-artifact-stdio-pdf-test-oracle/oracles", "semio-s-artifact-stdio-docx-test-oracle/oracles", "semio-s-artifact-stdio-md-test-oracle/oracles", "semio-s-artifact-stdio-xml-test-oracle/oracles", "semio-s-artifact-stdio-png-test-oracle/oracles", "semio-s-artifact-stdio-jpg-test-oracle/oracles", "semio-s-artifact-stdio-avi-test-oracle/oracles", "semio-s-artifact-stdio-pptx-test-oracle/oracles", "semio-s-artifact-stdio-wav-test-oracle/oracles", "semio-s-artifact-stdio-txt-test-oracle/oracles", "semio-s-artifact-stdio-stl-test-oracle/oracles", "semio-s-artifact-stdio-dwg-test-oracle/oracles", "semio-s-artifact-stdio-dxf-test-oracle/oracles", "semio-s-artifact-stdio-tiff-test-oracle/oracles", "semio-s-artifact-stdio-deflate-test-oracle/oracles", "semio-s-artifact-stdio-obj-test-oracle/oracles", "semio-s-artifact-stdio-gltf-test-oracle/oracles", "semio-s-artifact-stdio-ply-test-oracle/oracles", "semio-s-artifact-stdio-json-test-oracle/oracles", "semio-s-artifact-stdio-semio-test-oracle/oracles", "semio-s-artifact-stdio-bmp-test-oracle/oracles", "semio-s-artifact-note-note-test-oracle/oracles", "semio-s-plugin-stdio-archive-test-oracle/oracles", "semio-s-plugin-stdio-document-test-oracle/oracles", "semio-s-plugin-stdio-tabular-test-oracle/oracles", "semio-s-plugin-stdio-markup-test-oracle/oracles", "semio-s-plugin-stdio-audio-test-oracle/oracles", "semio-s-plugin-stdio-raster-test-oracle/oracles", "semio-s-plugin-stdio-mesh-test-oracle/oracles", "semio-s-plugin-stdio-part21-test-oracle/oracles", "semio-s-plugin-stdio-drawing-test-oracle/oracles"]
+
+[dependencies]
+"semio-s-artifact-stdio-las-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-html-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-epw-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-zip-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-gif-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-mp4-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-svg-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-mp3-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-ifc-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-bcf-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-binary-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-csv-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-step-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-tsv-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-xlsx-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-pdf-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-docx-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-md-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-xml-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-png-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-jpg-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-avi-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-pptx-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-wav-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-txt-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-stl-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-dwg-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-dxf-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-tiff-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-deflate-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-obj-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-gltf-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-ply-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-json-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-semio-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-stdio-bmp-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-artifact-note-note-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-archive-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-tabular-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-markup-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-audio-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-raster-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-mesh-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-part21-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-drawing-test-oracle" = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust", default-features = false }

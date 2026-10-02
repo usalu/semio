@@ -13,14 +13,18 @@ op = move-object | rotate-object | scale-object | create-brep | delete-brep | cr
 move-object = "moveObject" ":" number "," number "," number
 rotate-object = "rotateObject" ":" number "," number "," number "," number
 scale-object = "scaleObject" ":" number "," number "," number
-create-brep = "createBrep" ":" hex "," hex
+create-brep = "createBrep" ":" hex "," reference
 delete-brep = "deleteBrep"
-create-mesh = "createMesh" ":" hex "," hex
+create-mesh = "createMesh" ":" hex "," reference
 delete-mesh = "deleteMesh"
-create-properties = "createProperties" ":" hex "," hex
+create-properties = "createProperties" ":" hex "," reference
 delete-properties = "deleteProperties"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare, deliberately NOT defined as a production here) is the framework's built-in `hex`
 # MACRO — child-handle `child_id`/`target` fields route through it.
+
+reference = "[" hex "," hex "," hex "," hex "]"
+
+# 🔢️ Numeric identifiers are inf or nan64_ followed by exactly sixteen hexadecimal IEEE754 bits of NaN class.

@@ -15,7 +15,7 @@ fn oversized_state(nodes: usize) -> RewritingSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(state: &RewritingSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render(state, &NoConfig::default(), &TrinityRewritingLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_REWRITING_PLAY_BODY_ARTIFACT)).expect("render the rewriting document tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the rewriting document tree")
 }

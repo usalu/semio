@@ -63,7 +63,7 @@ export function parseFigureTileSource(value: unknown, at = "$"): FigureTileSourc
   const source: FigureTileSource = { src: parseString(row.src, `${at}.src`), kind: parseString(row.kind, `${at}.kind`), frame: parseFigureTileFrame(row.frame, `${at}.frame`) };
   if (Object.hasOwn(row, "sourceAspect")) source.sourceAspect = parseNumber(row.sourceAspect, `${at}.sourceAspect`);
   if (Object.hasOwn(row, "pdfPage")) {
-    if (!Number.isInteger(row.pdfPage) || (row.pdfPage as number) < 0) throw new Error(`${at}.pdfPage: value must be a non-negative integer`);
+    if (!Number.isInteger(row.pdfPage) || (row.pdfPage as number) < 0 || (row.pdfPage as number) > 4294967295) throw new Error(`${at}.pdfPage: value must be an unsigned 32-bit integer`);
     source.pdfPage = row.pdfPage as number;
   }
   return source;

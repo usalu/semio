@@ -266,6 +266,19 @@ describe("browser frame worker transport", () => {
     ]);
   });
 
+  it("posts the hidden page to the Worker at once, outside any batch, and nothing once closed", () => {
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    subject.setHostPageHidden();
+    expect(worker.messages.at(-1)).toEqual({ kind: "host-page-hidden", lifecycle: 1 });
+    expect(worker.messages.filter((message) => message.kind === "batch")).toEqual([]);
+    subject.close();
+    const posted = worker.messages.length;
+    subject.setHostPageHidden();
+    expect(worker.messages.length).toBe(posted);
+  });
+
   it("coalesces pointer, wheel, and resize storms into one bounded batch", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);

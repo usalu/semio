@@ -23,6 +23,9 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-s-plugin-flow-extension-math.workspace = true
 semio-s-plugin-flow-extension-brep.workspace = true

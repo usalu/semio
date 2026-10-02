@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ The kernel module's contribution to the repository test platform. `semver` is the published contract this module's own versionSatisfies() implements a deliberate subset of, so it belongs to this owner rather than to the test framework.",
   "oracles": [

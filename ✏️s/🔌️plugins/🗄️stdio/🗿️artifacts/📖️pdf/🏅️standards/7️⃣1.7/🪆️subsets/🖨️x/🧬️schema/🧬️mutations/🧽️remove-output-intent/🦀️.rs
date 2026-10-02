@@ -23,8 +23,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveOutputIntent {
         support::output_intent_identifier(base).map(|identifier| PdfXMutation::SetOutputIntent(SetOutputIntent { identifier })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/X output intent", "PDF/X-Ausgabebedingung entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/X output intent", "PDF/X-Ausgabebedingung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "bun",
+      "node"
+    ],
+    "incremental": false
+  },
+  "include": [
+    "📜️script.ts",
+    "../../🧪️tests/🧭️native-command/**/*.ts",
+    "../../🧪️tests/🧊️feature-ownership/**/*.ts",
+    "../../🧪️tests/🎚️ring-press/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/🗑️generated/**"
+  ]
+}

@@ -27,7 +27,7 @@
         "command": "bun ./📜️script.ts test artifact-files"
       }
     },
-    "test-test-budget": {
+    "test-owned-execution": {
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [],
@@ -37,7 +37,174 @@
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
-        "command": "bun ./📜️script.ts test test-budget"
+        "command": "bun ./📜️script.ts test owned-execution"
+      }
+    },
+    "test-process-tree-termination": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test process-tree-termination"
+      }
+    },
+    "test-budget": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test budget"
+      }
+    },
+    "test-execution-budget": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test execution-budget"
+      }
+    },
+    "test-test-command": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test test-command"
+      }
+    },
+    "test-cargo-driver": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test cargo-driver"
+      }
+    },
+    "test-resource-leases": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test resource-leases"
+      }
+    },
+    "test-vitest-driver": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test vitest-driver"
+      }
+    },
+    "test-artifact-publication": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test artifact-publication"
+      }
+    },
+    "test-owner-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test owner-context"
+      }
+    },
+    "test-capture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test capture"
+      }
+    },
+    "test-exact-cargo-laws": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test exact-cargo-laws"
+      }
+    },
+    "test-native-artifacts": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test native-artifacts"
+      }
+    },
+    "test-wasm-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test wasm-build"
       }
     }
   },

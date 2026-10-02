@@ -124,6 +124,22 @@ fn the_typing_protocol_constants_are_the_tool_machine_owners() {
     assert_eq!((law["args"]["buffer"].as_str(), law["args"]["commit"].as_str(), law["idleMs"].as_u64()), (Some(TEXT_EDITOR_TYPING_BUFFER_ARG), Some(TEXT_EDITOR_TYPING_COMMIT_ARG), Some(TEXT_EDITOR_TYPING_IDLE_MS)));
 }
 
+/// ⚖️ LAW: every host signal of the corpus appears once and ends the run with a reason the tool machine knows (typing-law
+/// `reasons`), so a host commit signal is never refused.
+#[test]
+fn every_host_signal_commits_with_a_tool_machine_reason() {
+    let law: Value = serde_json::from_str(include_str!("../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json")).expect("typing law");
+    let reasons: Vec<&str> = law["reasons"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
+    let rows = fixture()["hostSignals"].as_array().unwrap().clone();
+    let mut signals: Vec<&str> = rows.iter().map(|row| row["signal"].as_str().unwrap()).collect();
+    signals.sort_unstable();
+    signals.dedup();
+    assert_eq!(signals.len(), rows.len(), "every host signal appears once");
+    for row in &rows {
+        assert!(reasons.contains(&row["commit"].as_str().unwrap()), "host signal {} commits with an unknown reason", row["signal"]);
+    }
+}
+
 #[test]
 fn every_host_rebase_matches_the_fixture() {
     for row in fixture()["rebases"].as_array().unwrap() {

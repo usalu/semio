@@ -1,39 +1,14 @@
 /** 🧬️ Puzzle5d direct-mutation discriminated union — TS mirror of `Puzzle5dMutation` (see the
  * sibling `🦀️.rs` union enum and each variant's `<slug>/🦠️mutation/🦀️.rs`
  * payload struct). */
-import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dTargetVolume } from "../📸️snapshot/🟦️.ts";
-
-/** 🔘️ One rim grip's 2D-projection presentation (board handle). */
-export interface Puzzle5dGrip2d {
-  angle: number;
-  gripKind?: string;
-  radius?: number;
-}
-
-/** 🟢️ One rim grip's 3D-projection presentation (world vortex). */
-export interface Puzzle5dGrip3d {
-  position: [number, number, number];
-  direction?: [number, number, number];
-  radius?: number;
-  label?: string;
-}
-
-/** 🔘️ One rim grip on a part, unified across both projections. */
-export interface Puzzle5dGrip {
-  id: string;
-  gripKind?: string;
-  "2d": Puzzle5dGrip2d;
-  "3d": Puzzle5dGrip3d;
-}
-
-/** 📐️ A part's freeform 3D scale — a bare number scales all three axes uniformly, an `[x, y, z]`
- * tuple scales each axis independently. */
-export type Puzzle5dScale = number | [number, number, number];
+import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dTargetVolume, Puzzle5dGrip, Puzzle5dScale, Puzzle5dVector3, Puzzle5dVector4 } from "../📸️snapshot/🟦️.ts";
+import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type { Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGrip, Puzzle5dScale } from "../📸️snapshot/🟦️.ts";
 
 /** 🌱 `create-part` payload — full initial payload at an optional FINAL-state index (`null` appends). */
 export interface CreatePart {
   part: Puzzle5dPart;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** 🗑️ `delete-part` payload. */
@@ -44,17 +19,17 @@ export interface DeletePart {
 /** 📍 `move-part2d` payload — absolute reposition of a part's 2D-projection anchor point. */
 export interface MovePart2d {
   id: string;
-  newX: number;
-  newY: number;
+  newX: Binary64;
+  newY: Binary64;
 }
 
 /** 🧊 `replace-part2d-geometry` payload — whole-value swap of a part's 2D shape/extent. */
 export interface ReplacePart2dGeometry {
   id: string;
   newShape: string | null;
-  newRadius: number | null;
-  newWidth: number | null;
-  newHeight: number | null;
+  newRadius: Binary64 | null;
+  newWidth: Binary64 | null;
+  newHeight: Binary64 | null;
 }
 
 /** ✏️ `edit-part2d-text` payload — replaces a part's 2D-projection authored display text. */
@@ -84,13 +59,13 @@ export interface ChangePart2dLocked {
 /** 🚀 `move-part3d` payload — absolute reposition of a part's 3D-projection origin. */
 export interface MovePart3d {
   id: string;
-  newOrigin: [number, number, number];
+  newOrigin: Puzzle5dVector3;
 }
 
 /** 🔃 `rotate-part3d` payload — changes a part's 3D-projection orientation quaternion. */
 export interface RotatePart3d {
   id: string;
-  newOrientation: [number, number, number, number] | null;
+  newOrientation: Puzzle5dVector4 | null;
 }
 
 /** 📏 `scale-part3d` payload — changes a part's 3D-projection freeform scale. */
@@ -129,7 +104,7 @@ export interface ChangePartAnchor {
 export interface AddPartGrip {
   partId: string;
   grip: Puzzle5dGrip;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** ➖ `remove-part-grip` payload — detaches a rim grip from a part. */
@@ -152,14 +127,14 @@ export interface ConnectGrips {
   source: string;
   target: string;
   fastenerKind: string | null;
-  gap: number;
-  shift: number;
-  rise: number;
-  rotation: number;
-  turn: number;
-  tilt: number;
-  x: number;
-  y: number;
+  gap: Binary64;
+  shift: Binary64;
+  rise: Binary64;
+  rotation: Binary64;
+  turn: Binary64;
+  tilt: Binary64;
+  x: Binary64;
+  y: Binary64;
 }
 
 /** ✂️ `disconnect-grips` payload — removes a fastener between two grips. */
@@ -171,14 +146,14 @@ export interface DisconnectGrips {
  * pose. */
 export interface ReplaceFastenerGeometry {
   id: string;
-  newGap: number;
-  newShift: number;
-  newRise: number;
-  newRotation: number;
-  newTurn: number;
-  newTilt: number;
-  newX: number;
-  newY: number;
+  newGap: Binary64;
+  newShift: Binary64;
+  newRise: Binary64;
+  newRotation: Binary64;
+  newTurn: Binary64;
+  newTilt: Binary64;
+  newX: Binary64;
+  newY: Binary64;
 }
 
 /** 🎯 `change-fastener-kind` payload — changes a fastener's `fastener_kind` catalog reference. */
@@ -229,7 +204,7 @@ export interface ReplaceKindCatalogs {
  * required with a nullable value. */
 export interface CreateTargetVolume {
   targetVolume: Puzzle5dTargetVolume;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** 🪦 `delete-target-volume` payload. */
@@ -240,14 +215,14 @@ export interface DeleteTargetVolume {
 /** 🚀 `move-target-volume` payload — absolute reposition of a target volume's origin. */
 export interface MoveTargetVolume {
   id: string;
-  newOrigin: [number, number, number];
+  newOrigin: Puzzle5dVector3;
 }
 
 /** 🌀 `rotate-target-volume` payload — `new_orientation: Option<[f64; 4]>` carries no
  * `skip_serializing_if`, so the key stays required with a nullable value. */
 export interface RotateTargetVolume {
   id: string;
-  newOrientation: [number, number, number, number] | null;
+  newOrientation: Puzzle5dVector4 | null;
 }
 
 /** 📐 `scale-target-volume` payload — `new_scale: Option<Puzzle5dScale>` carries no
@@ -316,25 +291,25 @@ export type Puzzle5dMutation =
 /** ✋️ `drag-selection2d` payload — part ids moved on the board by one relative flat offset. */
 export interface DragSelection2d {
   targets: string[];
-  dx: number;
-  dy: number;
+  dx: Binary64;
+  dy: Binary64;
 }
 
 /** 🚚️ `drag-selection3d` payload — part and target-volume ids moved in the world by one relative offset. */
 export interface DragSelection3d {
   targets: string[];
-  offset: [number, number, number];
+  offset: Puzzle5dVector3;
 }
 
 /** 🔄️ `rotate-selection3d` payload — part and target-volume ids turned, each about its own origin, by `angle` radians about the world `axis`. */
 export interface RotateSelection3d {
   targets: string[];
-  axis: [number, number, number];
-  angle: number;
+  axis: Puzzle5dVector3;
+  angle: Binary64;
 }
 
 /** 🔍️ `scale-selection3d` payload — part and target-volume ids whose scales are multiplied per axis by `factors`. */
 export interface ScaleSelection3d {
   targets: string[];
-  factors: [number, number, number];
+  factors: Puzzle5dVector3;
 }

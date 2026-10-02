@@ -26,8 +26,8 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetVectorStyle {
     fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
         vec![Self { value: base.vector_style.clone() }.into()]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set vector style", "Vektorstil setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set vector style", "Vektorstil setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["vectorStyle".into()]

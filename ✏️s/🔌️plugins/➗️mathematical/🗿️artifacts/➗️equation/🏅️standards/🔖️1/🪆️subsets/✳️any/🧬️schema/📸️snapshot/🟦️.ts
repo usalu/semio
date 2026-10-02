@@ -1,19 +1,11 @@
-/** 📸️ Persisted Equation document snapshot. */
-import { parseDslValue, type DslValue } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+/** 📸️ Persisted Equation handles and explicitly labeled expression vocabulary. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-
-export interface EquationSnapshot {
-  /** @state artifact */ notation: ArtifactChild;
-  /** @state artifact */ results: ArtifactChild;
-  /** @state artifact */ computed: ArtifactChild;
-  /** @state artifact */ equation: DslValue;
-}
-
-/** 🪪️ Validates the exact persisted Equation snapshot boundary. */
-export function parseEquationSnapshot(value: unknown, at = "$" ): EquationSnapshot {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: Equation snapshot must be an object`);
-  const row = value as Record<string, unknown>;
-  const keys = ["notation", "results", "computed", "equation"];
-  if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: Equation snapshot fields do not match its schema`);
-  return { notation: parseArtifactChild(row.notation), results: parseArtifactChild(row.results), computed: parseArtifactChild(row.computed), equation: parseDslValue(row.equation) };
-}
+export type EquationNodeKind = { kind:"integer";lexeme:string } | {kind:"rational";numer:string;denom:string} | {kind:"symbol";name:string} | {kind:"add";terms:EquationNode[]} | {kind:"mul";factors:EquationNode[]} | {kind:"pow";base:EquationNode;exponent:EquationNode};
+export interface EquationNode { label:bigint;kind:EquationNodeKind }
+export interface EquationExprSnapshot { expr:EquationNode;nextLabel:bigint }
+export interface EquationSnapshot { notation:ArtifactChild;results:ArtifactChild;computed:ArtifactChild;equation:EquationExprSnapshot }
+function row(value:unknown,keys:readonly string[]):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Equation object required");const result=value as Record<string,unknown>;if(Object.keys(result).length!==keys.length||keys.some(key=>!Object.hasOwn(result,key)))throw Error("Equation fields differ");return result;}
+function word(value:unknown):bigint{if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)throw Error("Equation label requires u64 bigint");return value;}
+function text(value:unknown):string{if(typeof value!=="string")throw Error("Equation string required");return value;}
+/** 🪪️ Validate the six owned variants iteratively without CAS normalization. */
+export function parseEquationSnapshot(value:unknown):EquationSnapshot{const input=row(value,["notation","results","computed","equation"]),expression=row(input.equation,["expr","nextLabel"]);const nextLabel=word(expression.nextLabel),pending:unknown[]=[expression.expr],seen=new Set<object>();while(pending.length){const node=row(pending.pop(),["label","kind"]);if(seen.has(node))throw Error("Equation node ownership repeats");seen.add(node);word(node.label);const k=node.kind as Record<string,unknown>;switch(k?.kind){case"integer":row(k,["kind","lexeme"]);text(k.lexeme);break;case"rational":row(k,["kind","numer","denom"]);text(k.numer);text(k.denom);break;case"symbol":row(k,["kind","name"]);text(k.name);break;case"add":row(k,["kind","terms"]);if(!Array.isArray(k.terms))throw Error("Equation terms required");for(const child of k.terms)pending.push(child);break;case"mul":row(k,["kind","factors"]);if(!Array.isArray(k.factors))throw Error("Equation factors required");for(const child of k.factors)pending.push(child);break;case"pow":row(k,["kind","base","exponent"]);pending.push(k.base,k.exponent);break;default:throw Error("Equation variant differs");}}return{notation:parseArtifactChild(input.notation),results:parseArtifactChild(input.results),computed:parseArtifactChild(input.computed),equation:{expr:expression.expr as EquationNode,nextLabel}};}

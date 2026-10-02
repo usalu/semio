@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveMediaAnnotation {
         support::media_annotation(base, &self.subtype, &self.title).map(|_| PdfXMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove {} media annotation", self.subtype), &format!("{} Medienanmerkung entfernen", self.subtype))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} media annotation", self.subtype), &format!("{} Medienanmerkung entfernen", self.subtype))
     }
 
     fn target(&self) -> Vec<String> {

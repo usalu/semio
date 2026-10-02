@@ -36,7 +36,7 @@ const columns: Readonly<Partial<Record<Table, readonly Ieee754Column[]>>> = {
 function flag(value: boolean): bigint { if (typeof value !== "boolean") throw new Error("Note boolean required"); return value ? 1n : 0n; }
 function optionalFlag(value: boolean | null | undefined): bigint | null { return value == null ? null : flag(value); }
 function size(value: bigint): bigint { if (typeof value !== "bigint" || value < 0n || value > 18446744073709551615n) throw new Error("Note blob size exceeds u64"); return value; }
-function rowLimit(count: number, options: ArtifactSqliteOptions): void { if (!Number.isSafeInteger(count) || count + 1 > (options.maxRows ?? 1_000_000)) throw new Error("Note SQLite row limit"); }
+function rowLimit(count: number, options: ArtifactSqliteOptions): void { if (!Number.isSafeInteger(count) || count > (options.maxRows ?? 1_000_000)) throw new Error("Note SQLite row limit"); }
 
 /** 📤️ Project the canonical Note snapshot through explicit entity and relation rows. */
 export async function noteSnapshotToSqliteDatabase(snapshot: NoteSnapshot, options: ArtifactSqliteOptions = {}): Promise<SqliteDatabase> {

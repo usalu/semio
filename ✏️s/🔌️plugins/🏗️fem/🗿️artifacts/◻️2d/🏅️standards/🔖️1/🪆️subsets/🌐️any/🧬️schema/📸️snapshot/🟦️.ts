@@ -1,11 +1,14 @@
+import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ Fem2d snapshot schema — artifact-lane fields only. */
 
 //#region 🔖️Entities
 /** 📍️ A structural node in plan (x, y in meters). Mirrors Rust `FemNode` (`🗿️artifacts/◻️2d/🦀️.rs`). */
 export interface FemNode {
   id: string;
-  x: number;
-  y: number;
+  x: Binary64;
+  y: Binary64;
 }
 
 /** 🔒️ A DOF tag mirroring the FEM 2D degrees of freedom. Mirrors Rust `FemDof`
@@ -23,9 +26,9 @@ export type FemElement =
 export interface FemMaterial {
   id: string;
   name: string;
-  e: number;
-  nu: number;
-  rho: number;
+  e: Binary64;
+  nu: Binary64;
+  rho: Binary64;
 }
 
 /** 📏️ A cross-section — area (m2) and strong-axis moment of inertia `iy` (m4). Mirrors Rust
@@ -33,8 +36,8 @@ export interface FemMaterial {
 export interface FemSection {
   id: string;
   name: string;
-  area: number;
-  iy: number;
+  area: Binary64;
+  iy: Binary64;
 }
 
 /** 🛡️ A support: the subset of a node's DOFs restrained to zero displacement. Mirrors Rust
@@ -48,9 +51,9 @@ export interface FemSupport {
 /** 🏋️ A load — a concentrated nodal force/moment, a member UDL, or a pressure over a meshed region.
  * Mirrors Rust `FemLoad` (`🗿️artifacts/◻️2d/🦀️.rs`), tagged on `kind`. */
 export type FemLoad =
-  | { kind: "nodal"; id: string; nodeId: string; dof: FemDof; value: number }
-  | { kind: "memberUdl"; id: string; elementId: string; wx: number; wy: number }
-  | { kind: "area"; id: string; regionId: string; pressure: number };
+  | { kind: "nodal"; id: string; nodeId: string; dof: FemDof; value: Binary64 }
+  | { kind: "memberUdl"; id: string; elementId: string; wx: Binary64; wy: Binary64 }
+  | { kind: "area"; id: string; regionId: string; pressure: Binary64 };
 
 /** 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
  * Mirrors Rust `FemLoadCase` (`🗿️artifacts/◻️2d/🦀️.rs`). */
@@ -66,18 +69,18 @@ export interface FemLoadCase {
 export interface FemRegion {
   id: string;
   name: string;
-  outline: [number, number][];
-  holes: [number, number][][];
-  thickness: number;
+  outline: [Binary64, Binary64][];
+  holes: [Binary64, Binary64][][];
+  thickness: Binary64;
   materialId: string;
-  meshSize: number;
+  meshSize: Binary64;
 }
 
 /** 🔗️ One combination term — a referenced load case id and its scale factor. Mirrors Rust
  * `FemCombinationTerm` (`🗿️artifacts/◻️2d/🦀️.rs`). */
 export interface FemCombinationTerm {
   caseId: string;
-  factor: number;
+  factor: Binary64;
 }
 
 /** 🧮️ A linear combination of load cases — terms superposed at solve time. Mirrors Rust
@@ -91,9 +94,9 @@ export interface FemCombination {
 /** ⚙️ Analysis settings — modal/buckling mode counts and the viewport deformation scale factor.
  * Mirrors Rust `FemAnalysisSettings` (`🗿️artifacts/◻️2d/🦀️.rs`). */
 export interface FemAnalysisSettings {
-  modalCount: number;
-  bucklingCount: number;
-  deformationScale: number;
+  modalCount: bigint;
+  bucklingCount: bigint;
+  deformationScale: Binary64;
 }
 //#endregion 🔖️Entities
 
@@ -118,58 +121,141 @@ export interface Fem2dSnapshot {
   analysis: FemAnalysisSettings;
 }
 
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class femFem2dSnapshotGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
+/** 🛂️ Admit every unsigned native count without floating-point coercion. */
+export function parseFemCount(value:unknown,at="$"):bigint{if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)throw Error(`${at}: unsigned64 count required`);return value}
+const femFem2dSnapshotGuardObject=(v:unknown,at:string):Record<string,unknown>=>parseSchemaRecord(v,Object.keys(v!==null&&typeof v==="object"?v:{}),at);
+const femFem2dSnapshotGuardArray=(v:unknown,at:string,b:{minItems?:number;maxItems?:number}={}):unknown[]=>{if(!Array.isArray(v)||b.minItems!==undefined&&v.length<b.minItems||b.maxItems!==undefined&&v.length>b.maxItems)throw Error(`${at}: array width differs`);return v};
+const femFem2dSnapshotGuardString=(v:unknown,at:string):string=>{if(typeof v!=="string")throw Error(`${at}: text required`);return v};
+const femFem2dSnapshotGuardBoolean=(v:unknown,at:string):boolean=>{if(typeof v!=="boolean")throw Error(`${at}: boolean required`);return v};
+const femFem2dSnapshotGuardMember=<T extends string>(v:unknown,at:string,m:readonly T[]):T=>{if(typeof v!=="string"||!m.includes(v as T))throw Error(`${at}: variant differs`);return v as T};
+const femFem2dSnapshotGuardWord=(v:unknown,at:string):Binary64=>parseBinary64(parseSchemaRecord(v,["bits"],at));
+
+function parseFemPoint(value: unknown, at: string): [Binary64, Binary64] {
+  const point = femFem2dSnapshotGuardArray(value, at, { minItems: 2, maxItems: 2 });
+  return [femFem2dSnapshotGuardWord(point[0], `${at}[0]`), femFem2dSnapshotGuardWord(point[1], `${at}[1]`)];
 }
 
-const femFem2dSnapshotGuardReject = (at: string, why: string): never => {
-  throw new femFem2dSnapshotGuardRefusal(at, why);
-};
+export function parseFemElement(value: unknown, at = "$"): FemElement {
+  const kind = femFem2dSnapshotGuardMember(femFem2dSnapshotGuardObject(value, at)["kind"], `${at}.kind`, ["bar", "beam"] as const);
+  const row = parseSchemaRecord(value, ["kind", "id", "start", "end", "materialId", "sectionId"], at);
+  const base = {
+    id: femFem2dSnapshotGuardString(row.id, `${at}.id`),
+    start: femFem2dSnapshotGuardString(row.start, `${at}.start`),
+    end: femFem2dSnapshotGuardString(row.end, `${at}.end`),
+    materialId: femFem2dSnapshotGuardString(row.materialId, `${at}.materialId`),
+    sectionId: femFem2dSnapshotGuardString(row.sectionId, `${at}.sectionId`),
+  };
+  return { ...base, kind };
+}
 
-type femFem2dSnapshotGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type femFem2dSnapshotGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type femFem2dSnapshotGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+export function parseFemLoad(value: unknown, at = "$"): FemLoad {
+  const kind = femFem2dSnapshotGuardMember(femFem2dSnapshotGuardObject(value, at)["kind"], `${at}.kind`, ["nodal", "memberUdl", "area"] as const);
+  const fields = kind === "nodal" ? ["nodeId", "dof", "value"] : kind === "memberUdl" ? ["elementId", "wx", "wy"] : ["regionId", "pressure"];
+  const row = parseSchemaRecord(value, ["kind", "id", ...fields], at);
+  const id = femFem2dSnapshotGuardString(row.id, `${at}.id`);
+  if (kind === "nodal") return { kind, id, nodeId: femFem2dSnapshotGuardString(row.nodeId, `${at}.nodeId`), dof: femFem2dSnapshotGuardMember(row.dof, `${at}.dof`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const), value: femFem2dSnapshotGuardWord(row.value, `${at}.value`) };
+  if (kind === "memberUdl") return { kind, id, elementId: femFem2dSnapshotGuardString(row.elementId, `${at}.elementId`), wx: femFem2dSnapshotGuardWord(row.wx, `${at}.wx`), wy: femFem2dSnapshotGuardWord(row.wy, `${at}.wy`) };
+  return { kind, id, regionId: femFem2dSnapshotGuardString(row.regionId, `${at}.regionId`), pressure: femFem2dSnapshotGuardWord(row.pressure, `${at}.pressure`) };
+}
 
-export const femFem2dSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : femFem2dSnapshotGuardReject(at, "value is not an object");
-export const femFem2dSnapshotGuardArray = (value: unknown, at: string, bounds: femFem2dSnapshotGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return femFem2dSnapshotGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) femFem2dSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) femFem2dSnapshotGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const femFem2dSnapshotGuardString = (value: unknown, at: string, bounds: femFem2dSnapshotGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return femFem2dSnapshotGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) femFem2dSnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) femFem2dSnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) femFem2dSnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const femFem2dSnapshotGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : femFem2dSnapshotGuardReject(at, "value is not a boolean"));
-export const femFem2dSnapshotGuardNumber = (value: unknown, at: string, bounds: femFem2dSnapshotGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return femFem2dSnapshotGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) femFem2dSnapshotGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) femFem2dSnapshotGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const femFem2dSnapshotGuardInteger = (value: unknown, at: string, bounds: femFem2dSnapshotGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? femFem2dSnapshotGuardNumber(value, at, bounds) : femFem2dSnapshotGuardReject(at, "value is not an integer");
-export const femFem2dSnapshotGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : femFem2dSnapshotGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const femFem2dSnapshotGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : femFem2dSnapshotGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseFemAnalysisSettings(value: unknown, at = "$"): FemAnalysisSettings {
-  const row = femFem2dSnapshotGuardObject(value, at);
+export function parseFemLoadCase(value: unknown, at = "$"): FemLoadCase {
+  const row = parseSchemaRecord(value, ["id", "name", "loads", "selfWeight"], at);
   return {
-    modalCount: femFem2dSnapshotGuardInteger(row["modalCount"], `${at}.modalCount`, {"minimum": 1}),
-    bucklingCount: femFem2dSnapshotGuardInteger(row["bucklingCount"], `${at}.bucklingCount`, {"minimum": 1}),
-    deformationScale: femFem2dSnapshotGuardNumber(row["deformationScale"], `${at}.deformationScale`),
+    id: femFem2dSnapshotGuardString(row.id, `${at}.id`),
+    name: femFem2dSnapshotGuardString(row.name, `${at}.name`),
+    loads: femFem2dSnapshotGuardArray(row.loads, `${at}.loads`).map((load, index) => parseFemLoad(load, `${at}.loads[${index}]`)),
+    selfWeight: femFem2dSnapshotGuardBoolean(row.selfWeight, `${at}.selfWeight`),
   };
 }
+
+export function parseFemCombination(value: unknown, at = "$"): FemCombination {
+  const row = parseSchemaRecord(value, ["id", "name", "terms"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row.id, `${at}.id`),
+    name: femFem2dSnapshotGuardString(row.name, `${at}.name`),
+    terms: femFem2dSnapshotGuardArray(row.terms, `${at}.terms`).map((value, index) => {
+      const termAt = `${at}.terms[${index}]`;
+      const term = parseSchemaRecord(value, ["caseId", "factor"], termAt);
+      return { caseId: femFem2dSnapshotGuardString(term.caseId, `${termAt}.caseId`), factor: femFem2dSnapshotGuardWord(term.factor, `${termAt}.factor`) };
+    }),
+  };
+}
+
+export function parseFem2dSnapshot(value: unknown, at = "$"): Fem2dSnapshot {
+  const row = parseSchemaRecord(value, ["nodes", "elements", "materials", "sections", "supports", "loadCases", "combinations", "regions", "analysis"], at);
+  return {
+    nodes: femFem2dSnapshotGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseFemNode(item, `${at}.nodes[${index}]`)),
+    elements: femFem2dSnapshotGuardArray(row["elements"], `${at}.elements`).map((item, index) => parseFemElement(item, `${at}.elements[${index}]`)),
+    regions: femFem2dSnapshotGuardArray(row["regions"], `${at}.regions`).map((item, index) => parseFemRegion(item, `${at}.regions[${index}]`)),
+    materials: femFem2dSnapshotGuardArray(row["materials"], `${at}.materials`).map((item, index) => parseFemMaterial(item, `${at}.materials[${index}]`)),
+    sections: femFem2dSnapshotGuardArray(row["sections"], `${at}.sections`).map((item, index) => parseFemSection(item, `${at}.sections[${index}]`)),
+    supports: femFem2dSnapshotGuardArray(row["supports"], `${at}.supports`).map((item, index) => parseFemSupport(item, `${at}.supports[${index}]`)),
+    loadCases: femFem2dSnapshotGuardArray(row["loadCases"], `${at}.loadCases`).map((item, index) => parseFemLoadCase(item, `${at}.loadCases[${index}]`)),
+    combinations: femFem2dSnapshotGuardArray(row["combinations"], `${at}.combinations`).map((item, index) => parseFemCombination(item, `${at}.combinations[${index}]`)),
+    analysis: parseFemAnalysisSettings(row["analysis"], `${at}.analysis`),
+  };
+}
+
+
+export function parseFemAnalysisSettings(value: unknown, at = "$"): FemAnalysisSettings {
+  const row = parseSchemaRecord(value, ["modalCount", "bucklingCount", "deformationScale"], at);
+  return {
+    modalCount: parseFemCount(row["modalCount"], `${at}.modalCount`),
+    bucklingCount: parseFemCount(row["bucklingCount"], `${at}.bucklingCount`),
+    deformationScale: femFem2dSnapshotGuardWord(row["deformationScale"], `${at}.deformationScale`),
+  };
+}
+
+export function parseFemNode(value: unknown, at = "$"): FemNode {
+  const row = parseSchemaRecord(value, ["id", "x", "y"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
+    x: femFem2dSnapshotGuardWord(row["x"], `${at}.x`),
+    y: femFem2dSnapshotGuardWord(row["y"], `${at}.y`),
+  };
+}
+
+export function parseFemRegion(value: unknown, at = "$"): FemRegion {
+  const row = parseSchemaRecord(value, ["id", "name", "outline", "holes", "thickness", "materialId", "meshSize"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
+    name: femFem2dSnapshotGuardString(row["name"], `${at}.name`),
+    outline: femFem2dSnapshotGuardArray(row.outline, `${at}.outline`).map((point, index) => parseFemPoint(point, `${at}.outline[${index}]`)),
+    holes: femFem2dSnapshotGuardArray(row.holes, `${at}.holes`).map((hole, index) => femFem2dSnapshotGuardArray(hole, `${at}.holes[${index}]`).map((point, pointIndex) => parseFemPoint(point, `${at}.holes[${index}][${pointIndex}]`))),
+    thickness: femFem2dSnapshotGuardWord(row["thickness"], `${at}.thickness`),
+    materialId: femFem2dSnapshotGuardString(row["materialId"], `${at}.materialId`),
+    meshSize: femFem2dSnapshotGuardWord(row["meshSize"], `${at}.meshSize`),
+  };
+}
+
+export function parseFemMaterial(value: unknown, at = "$"): FemMaterial {
+  const row = parseSchemaRecord(value, ["id", "name", "e", "nu", "rho"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
+    name: femFem2dSnapshotGuardString(row["name"], `${at}.name`),
+    e: femFem2dSnapshotGuardWord(row["e"], `${at}.e`),
+    nu: femFem2dSnapshotGuardWord(row["nu"], `${at}.nu`),
+    rho: femFem2dSnapshotGuardWord(row["rho"], `${at}.rho`),
+  };
+}
+
+export function parseFemSection(value: unknown, at = "$"): FemSection {
+  const row = parseSchemaRecord(value, ["id", "name", "area", "iy"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
+    name: femFem2dSnapshotGuardString(row["name"], `${at}.name`),
+    area: femFem2dSnapshotGuardWord(row["area"], `${at}.area`),
+    iy: femFem2dSnapshotGuardWord(row["iy"], `${at}.iy`),
+  };
+}
+
+export function parseFemSupport(value: unknown, at = "$"): FemSupport {
+  const row = parseSchemaRecord(value, ["id", "nodeId", "fixed"], at);
+  return {
+    id: femFem2dSnapshotGuardString(row["id"], `${at}.id`),
+    nodeId: femFem2dSnapshotGuardString(row["nodeId"], `${at}.nodeId`),
+    fixed: femFem2dSnapshotGuardArray(row["fixed"], `${at}.fixed`).map((item, index) => femFem2dSnapshotGuardMember(item, `${at}.fixed[${index}]`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const)),
+  };
+}
+
+export {fem2dSnapshotToSqliteDatabase,fem2dSnapshotFromSqliteDatabase,FEM2D_SQLITE_SCHEMA} from "./🪶️sqlite/🟦️.ts";

@@ -11,7 +11,7 @@ use super::*;
 const EXTERNAL_CHANGE_REPOKE_INTERVAL: std::time::Duration = std::time::Duration::from_millis(250);
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`

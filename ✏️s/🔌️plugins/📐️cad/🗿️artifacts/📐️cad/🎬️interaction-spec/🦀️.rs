@@ -126,6 +126,7 @@ fn expr_value_truthy(value: &DslValue) -> bool {
         DslValue::Bool(b) => *b,
         DslValue::Number(_) => value.as_f64().is_some_and(|v| v != 0.0),
         DslValue::String(s) => !s.is_empty(),
+        DslValue::Bytes(b) => !b.is_empty(),
         DslValue::Array(a) => !a.is_empty(),
         DslValue::Object(o) => !o.is_empty(),
     }

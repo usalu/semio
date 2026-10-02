@@ -51,8 +51,8 @@ fn split_pane_app() -> AppDefinition {
 
 pub(super) fn split_pane_shell() -> ShellState {
     let app = split_pane_app();
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    shell.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell.sync_dock();
     shell.active_window_id = Some("pane-top".into());
     shell
@@ -439,8 +439,8 @@ fn window_caps_read_the_authored_instance_title() {
     let bare = {
         let mut app = split_pane_app();
         app.default_layout = None;
-        let mut shell = ShellState::new(Vec::new(), String::new());
-        shell.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::default() });
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        shell.session = Some(ActiveSession { plugin_id: "pane".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         shell.sync_dock();
         shell.dock_chrome_maps().0
     };
@@ -503,8 +503,8 @@ fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
     }));
     app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children }) });
     let ids: Vec<&str> = fixture["instances"].as_array().unwrap().iter().map(|instance| instance["id"].as_str().unwrap()).chain(std::iter::once(fixture["singleton"]["id"].as_str().unwrap())).collect();
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession { plugin_id: "instance-title-fixture".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    shell.session = Some(ActiveSession { plugin_id: "instance-title-fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     for transition in fixture["transitions"].as_array().unwrap() {
         shell.locale_id = transition["locale"].as_str().unwrap().into();
         shell.sync_dock();

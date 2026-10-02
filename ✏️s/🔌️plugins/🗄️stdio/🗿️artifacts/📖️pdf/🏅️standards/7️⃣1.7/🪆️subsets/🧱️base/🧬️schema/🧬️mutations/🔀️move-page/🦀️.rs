@@ -31,8 +31,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move page {} to {}", self.from, self.to), &format!("Seite {} nach {} verschieben", self.from, self.to))
     }
 
     fn target(&self) -> Vec<String> {

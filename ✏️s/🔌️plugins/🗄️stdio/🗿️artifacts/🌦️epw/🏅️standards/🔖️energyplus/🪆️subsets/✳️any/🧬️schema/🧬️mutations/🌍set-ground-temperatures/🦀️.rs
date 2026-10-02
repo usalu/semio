@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures 
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetGroundTemperatures(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

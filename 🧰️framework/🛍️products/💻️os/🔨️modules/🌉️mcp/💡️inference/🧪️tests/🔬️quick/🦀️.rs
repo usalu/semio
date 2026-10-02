@@ -3,7 +3,8 @@ use super::*;
 use crate::catalog::{CapabilityAudience, Catalog, CatalogSource, compile};
 use crate::protocol::ToolRegistry;
 use crate::protocol::is_valid_tool_name;
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 fn empty_catalog() -> Arc<Catalog> {
     Arc::new(compile(&CatalogSource::default(), Locale::En, Terminology::Native).expect("empty catalog compiles"))

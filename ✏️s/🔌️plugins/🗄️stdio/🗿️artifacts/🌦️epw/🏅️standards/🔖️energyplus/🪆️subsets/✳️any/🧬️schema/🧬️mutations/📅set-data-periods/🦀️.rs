@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDataPeriods {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetDataPeriods(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set data periods", "Datenperioden setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set data periods", "Datenperioden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

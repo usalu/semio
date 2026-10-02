@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "$comment": "🔮 Test-only third-party references of the 🗣️languages owner. Every entry is a devDependency of 📦️packages/🟦️typescript and is imported only from 🧪️tests/**; no runtime code may depend on one. `@oracle-<id>` and `@no-oracle-<id>` tags in the Gherkin features name these ids.",
   "schemaVersion": 2,
   "oracles": [

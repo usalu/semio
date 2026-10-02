@@ -18,7 +18,7 @@ fn close_publication(publication: &mut store::ArtifactEphemeralOneItemPublicatio
 
 #[test]
 fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️bounded/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️bounded-publication/🔣️.json")).unwrap();
     let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     assert!(payload.len() > fixture["payload"]["minimumUtf8Bytes"].as_u64().unwrap() as usize);
     let payload_pointer = payload.as_ptr();

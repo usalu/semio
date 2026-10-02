@@ -19,7 +19,7 @@ fn tagged() -> SetResultAnimation {
 }
 
 fn results_view() -> ViewModel {
-    ViewModel { window_id: Some(WINDOW.into()), window_instances: vec![ViewWindowInstance { id: WINDOW.into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }], ..Default::default() }
+    ViewModel { window_id: Some(WINDOW.into()), window_instances: vec![ViewWindowInstance { id: WINDOW.into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🎚️ The transport the addressed results window ended up with, read back off its own config partition.
@@ -149,23 +149,55 @@ async fn tagged_transport_gestures_rest_where_the_clock_runs() {
     close(&mut app);
 }
 
-/// 🪢️ LAW: a transport gesture amends the previous playback edit — the window-config store's
-/// applied-edit capacity is fixed — and a running tick re-arms through the retained route.
+/// 🎚️ One wire dispatch of `setResultAnimation` at the results window, `args` as the host sends them (a dragged slider
+/// adds its press's `gesture` and `commit`, a host cancel its `abort` reason); a cancel is settled by the runtime itself.
+async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
+    use semio_framework_plugin::PluginApp as _;
+    let aborting = args.get("abort").is_some();
+    let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    meta.view_state = Some(results_view());
+    let args = semio_framework_plugin::DslValue::from(&args);
+    app.handle_action("setResultAnimation", Some(&args), &meta).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
+    if !aborting {
+        settle(app).await;
+    }
+}
+
+/// 🧾️ The history rows that carry an applied edit.
+async fn history_rows(app: &mut Fem3dApp) -> usize {
+    app.history_snapshot().await.expect("history").upserts.iter().filter(|row| row.applied && !row.op_lines.is_empty()).count()
+}
+
+/// 🪢️ LAW (design §20.1, no amend on any lane): a transport press is ONE plain window-config edit; a dragged phase slider
+/// (a `gesture` press over the wire) publishes nothing per tick and ONE edit on its release; a cancelled press publishes
+/// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
-async fn playback_publications_coalesce_and_the_retained_tick_rearms() {
+async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
     let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let model = ViewModel { window_id: Some("results-law".into()), window_instances: vec![ViewWindowInstance { id: "results-law".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }], ..Default::default() };
-    let started = crate::editor::fem3d::commands::set_result_animation::handle_window(&SetResultAnimation { playing: Some(true), ..blank() }, &view, &cfg, &model).expect("play");
-    assert_eq!(started.coalesce_key.as_deref(), Some(PLAYBACK_COALESCE_KEY), "a gesture amends the previous playback edit");
-    assert!(handle_window(&ResultAnimationTick { window_id: "results-law".into() }, &view, &cfg, &model).is_err(), "the batch route has no transient to land a frame in");
+    assert!(handle_window(&ResultAnimationTick { window_id: WINDOW.into() }, &view, &cfg, &results_view()).is_err(), "the batch route has no transient to land a frame in");
     let mut app = fem3d_app();
-    dispatch(&mut app, Fem3dCommand::SetResultAnimation(SetResultAnimation { playing: Some(true), ..blank() })).await;
-    let ticked = dispatch(&mut app, Fem3dCommand::ResultAnimationTick(ResultAnimationTick { window_id: WINDOW.into() })).await;
-    assert!(ticked.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == TICK_ACTION)), "a running tick re-arms");
+    let rows = history_rows(&mut app).await;
+    let generation = app.window_config_generation(&results_view()).await.expect("config generation");
+    play(&mut app, SetResultAnimation { playing: Some(true), ..tagged() }).await;
+    play(&mut app, SetResultAnimation { playing: Some(false), ..tagged() }).await;
+    let pressed = app.window_config_generation(&results_view()).await.expect("config generation");
+    assert_eq!(pressed, generation + 2, "every transport press is ONE edit of its own");
+    for value in ["0.25", "0.4"] {
+        transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": value, "windowId": WINDOW, "gesture": "fem3d-play-results.phase:1", "commit": false })).await;
+    }
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed, "slider ticks publish no edit");
+    transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": "0.5", "windowId": WINDOW, "gesture": "fem3d-play-results.phase:1", "commit": true })).await;
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed + 1, "the release publishes ONE edit");
+    assert_eq!(published(&mut app).await.phase, 0.5);
+    transport_wire(&mut app, serde_json::json!({ "field": "phase", "value": "0.75", "windowId": WINDOW, "gesture": "fem3d-play-results.phase:2", "commit": false })).await;
+    transport_wire(&mut app, serde_json::json!({ "windowId": WINDOW, "gesture": "fem3d-play-results.phase:2", "abort": "blur" })).await;
+    assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), pressed + 1, "a cancelled press publishes nothing");
+    assert_eq!(published(&mut app).await.phase, 0.5, "the cancelled seek left zero trace");
+    assert_eq!(history_rows(&mut app).await, rows, "playback edits are never history rows");
     close(&mut app);
 }
 

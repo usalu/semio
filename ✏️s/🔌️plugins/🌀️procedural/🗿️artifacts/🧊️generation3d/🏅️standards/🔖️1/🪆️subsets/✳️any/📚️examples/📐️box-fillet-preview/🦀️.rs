@@ -1,6 +1,7 @@
 //! 📚️ Example `box-fillet-preview`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "box-fillet-preview";
 pub fn label() -> LocalizedLabel {

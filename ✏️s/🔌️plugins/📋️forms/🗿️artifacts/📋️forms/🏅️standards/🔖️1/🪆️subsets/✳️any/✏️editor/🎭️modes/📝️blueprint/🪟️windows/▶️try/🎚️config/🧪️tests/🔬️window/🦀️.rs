@@ -57,7 +57,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                     .into_iter()
                     .map(|id| ViewWindowInstance { id: id.into(), window_kind_id: FormsTryWindowConfigOwner::WINDOW_KIND_ID.into() })
                     .collect(),
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
             let left = all.for_window_instance("forms-try-left").expect("left Forms Try window");
             let right = all.for_window_instance("forms-try-right").expect("right Forms Try window");

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🕸️ This subset's own contribution — the node/edge graph and its algorithm (10 of s.mathematical.equation's 15 mutation kinds; the other 5 split to ✳️geometry's point cloud and ✳️equation's inline AST, ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). Five of these ten (the id/label/x/y node edits) are discharged by the csv-rfc4180-equation-1-mutate carrier oracle below; the remaining five (directed/algorithm/seed and the edge verbs) have no exported carrier and fall to the noOracleDecision recorded here.",
   "oracles": [
@@ -219,7 +219,13 @@
         "change-node-label",
         "move-node",
         "connect-nodes",
-        "disconnect-nodes"
+        "disconnect-nodes",
+        "move-nodes",
+        "set-node-positions"
+      ],
+      "deferredKinds": [
+        "move-nodes",
+        "set-node-positions"
       ]
     }
   ],
@@ -690,6 +696,64 @@
             "operation": "disconnect-nodes",
             "bridgeVersion": 1,
             "variant": "DisconnectNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "move-nodes",
+          "capability": "equation-1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-nodes",
+            "bridgeVersion": 1,
+            "variant": "MoveNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "equation-1-mutate-uncarried",
+              "qualifyingKind": "third-party-library"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "node-identity-preserved-across-untouched-rows"
+            ]
+          }
+        },
+        {
+          "id": "set-node-positions",
+          "capability": "equation-1-graph-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-positions",
+            "bridgeVersion": 1,
+            "variant": "SetNodePositions"
           },
           "oracleRequirements": [
             {

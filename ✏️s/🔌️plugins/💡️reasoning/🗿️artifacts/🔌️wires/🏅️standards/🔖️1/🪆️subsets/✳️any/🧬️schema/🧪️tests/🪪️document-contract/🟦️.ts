@@ -15,6 +15,7 @@ import snapshot from "../../../🧫️fixtures/🧬️mutations/🧭move-node/�
 import diff from "../../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports/🔺️diff/🔣️.json" with { type: "json" };
 import { parseWiresArtifact } from "../../🟦️.ts";
 import { parseWiresSnapshot } from "../../📸️snapshot/🟦️.ts";
+import {decodeWiresJsonSnapshot}from"../../../🚪️io/📸️snapshot/🔣️json/🟦️.ts";
 
 export function testWiresDocumentContractOracle(): void {
   const expectedChildKind = "s.stdio.semio";
@@ -23,7 +24,8 @@ export function testWiresDocumentContractOracle(): void {
   for (const [schema, parse] of [[artifactSchema, parseWiresArtifact], [snapshotSchema, parseWiresSnapshot]] as const) {
     const validate = ajv.compile(schema);
     assert.equal(validate(snapshot), true, JSON.stringify(validate.errors));
-    assert.deepEqual(parse(snapshot), snapshot);
+    const canonical=decodeWiresJsonSnapshot(snapshot);
+    assert.deepEqual(parse(canonical), canonical);
     assert.equal(validate({ ...snapshot, boardFixture: {} }), false);
     assert.throws(() => parse({ ...snapshot, boardFixture: {} }));
   }
@@ -38,7 +40,7 @@ export function testWiresDocumentContractOracle(): void {
     .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
   assert.equal(snapshotFixtures.length, 20);
   for (const path of snapshotFixtures) {
-    const parsed = parseWiresSnapshot(JSON.parse(readFileSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations", path), "utf8")));
+    const parsed = parseWiresSnapshot(decodeWiresJsonSnapshot(JSON.parse(readFileSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations", path), "utf8"))));
     assert.equal(parsed.content.target.dialect.artifactKind, expectedChildKind, path);
     assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
   }

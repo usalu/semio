@@ -52,8 +52,8 @@ fn details_definition_owns_all_snapshot_actions_in_both_languages() {
     assert_eq!(definition.id, SNAPSHOT_DETAILS_WINDOW_KIND_ID);
     assert_eq!(definition.body_key, SNAPSHOT_DETAILS_BODY_KEY);
     assert_eq!(definition.actions.len(), super::super::SNAPSHOT_EDIT_ACTION_IDS.len());
-    assert_ne!(definition.label.resolve(semio_framework_plugin::Terminology::Native, Locale::En), "");
-    assert_ne!(definition.label.resolve(semio_framework_plugin::Terminology::Native, Locale::De), "");
+    assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::En), "");
+    assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De), "");
 }
 
 struct NativeLazySnapshot;
@@ -240,7 +240,7 @@ fn nested_collection_honours_an_explicit_second_page_without_counting_controls_a
     let pixels_path = [SnapshotDetailPathSegment::Key("pixels".into())];
     let pixels_id = path_id(&pixels_path);
     let node_key = [ROOT_SECTION_ID, &format!("{pixels_id}-children")].join(TREE_WINDOW_PATH_SEPARATOR);
-    let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }], tree_viewport_rows: Some(4), ..Default::default() };
+    let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: SNAPSHOT_DETAILS_BODY_KEY.into(), node_key, open: Some(true), offset: 100, rows: 3 }], tree_viewport_rows: Some(4), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
     let node = render_snapshot_details_provider(&provider, Locale::En, "s.stdio.png@test/*#editor", &windows).expect("nested details page");
     for index in 100..103 {
@@ -324,7 +324,7 @@ fn derived_schema_controls_render_only_the_requested_pages() {
             },
         ],
         tree_viewport_rows: Some(128),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, SNAPSHOT_DETAILS_BODY_KEY);
     let rendered = render_snapshot_details_provider(&provider, Locale::En, "test.derived-controls#editor", &windows).expect("windowed derived controls");
@@ -749,15 +749,15 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
     const ENVELOPE: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/✉️envelope/🔣️.json");
     const MODEL: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/🏛️model/🔣️.json");
     const TEXT: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/📝️text/🔣️.json");
-    let empty = semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
+    let empty = semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
     for (id, source) in [("s.test.details-envelope", ENVELOPE), ("s.test.details-model", MODEL), ("s.test.details-text", TEXT)] {
-        semio_framework_schema::register_artifact_schema_descriptor(semio_framework_schema::ArtifactSchemaDescriptor {
+        semio_framework_schema_registry::register_artifact_schema_descriptor(semio_framework_schema_registry::ArtifactSchemaDescriptor {
             id,
             artifact: empty,
-            snapshot: semio_framework_schema::FacetLeaves { json_schema: source, ..empty },
+            snapshot: semio_framework_schema_registry::FacetLeaves { json_schema: source, ..empty },
             diff: empty,
             mutations: empty,
-        });
+        }).expect("schema descriptor publication");
     }
     let value = crate::pack::json::from_json_str(include_str!("../../🧫️fixtures/🔗️external-all-of/⬅️current/🔣️.json")).expect("language-agnostic value fixture");
     let provider = DslSnapshotDetailsProvider::<EnvelopeFixture>::from_value(value);

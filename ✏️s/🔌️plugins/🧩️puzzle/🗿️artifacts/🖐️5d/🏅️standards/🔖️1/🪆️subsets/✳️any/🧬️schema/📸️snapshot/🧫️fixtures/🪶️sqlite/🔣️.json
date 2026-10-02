@@ -1,0 +1,110 @@
+{
+  "dialect": "s.puzzle.puzzle5d@1/*",
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000042",
+    "fff0000000000042"
+  ],
+  "kindCatalogChild": {
+    "childId": "local\u0000😀",
+    "target": {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "arbitrary!@/",
+        "standard": "",
+        "subset": "*"
+      }
+    }
+  },
+  "childSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "childId",
+      "target"
+    ],
+    "properties": {
+      "childId": {
+        "type": "string"
+      },
+      "target": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifactId",
+          "dialect"
+        ],
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "dialect": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "artifactKind",
+              "standard",
+              "subset"
+            ],
+            "properties": {
+              "artifactKind": {
+                "type": "string"
+              },
+              "standard": {
+                "type": "string"
+              },
+              "subset": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tableRowCounts": {
+    "puzzle5_document": 1,
+    "puzzle5_catalog_child": 1,
+    "puzzle5_catalog_extra": 1,
+    "puzzle5_part_kind": 1,
+    "puzzle5_part_kind_base": 2,
+    "puzzle5_representation": 1,
+    "puzzle5_representation_tag": 2,
+    "puzzle5_grip_template": 1,
+    "puzzle5_attribute": 1,
+    "puzzle5_author": 1,
+    "puzzle5_grip_kind": 1,
+    "puzzle5_grip_kind_compatible": 2,
+    "puzzle5_fastener_kind": 1,
+    "puzzle5_rope_kind": 1,
+    "puzzle5_compatibility": 1,
+    "puzzle5_part": 1,
+    "puzzle5_part_board": 1,
+    "puzzle5_part_world": 1,
+    "puzzle5_part_scale": 1,
+    "puzzle5_grip": 1,
+    "puzzle5_grip_board": 1,
+    "puzzle5_grip_world": 1,
+    "puzzle5_fastener": 1,
+    "puzzle5_target_volume": 1,
+    "puzzle5_target_scale": 1
+  },
+  "persistedFields": [
+    "schema",
+    "domain",
+    "label",
+    "meta",
+    "kindCatalogs",
+    "kindCatalogsExtra",
+    "kindCompatibility",
+    "parts",
+    "fasteners",
+    "targetVolumes"
+  ],
+  "snapshotAssetCount": 138
+}

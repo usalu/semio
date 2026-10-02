@@ -23,11 +23,11 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLayer {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_layer(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_create_layer(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         if self.remove {
-            protocol::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.name), &format!("Ebene \"{}\" löschen", self.name))
         } else {
-            protocol::LocalizedLabel::native(&format!("Add layer \"{}\"", self.name), &format!("Ebene \"{}\" hinzufügen", self.name))
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Add layer \"{}\"", self.name), &format!("Ebene \"{}\" hinzufügen", self.name))
         }
     }
     fn target(&self) -> Vec<String> { vec![self.page_id.clone()] }

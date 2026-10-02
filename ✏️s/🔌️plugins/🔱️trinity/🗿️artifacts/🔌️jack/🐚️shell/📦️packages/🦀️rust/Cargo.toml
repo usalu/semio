@@ -17,6 +17,9 @@ workspace = true
 role = "tool"
 
 [dependencies]
+semio-framework-schema-composition = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 

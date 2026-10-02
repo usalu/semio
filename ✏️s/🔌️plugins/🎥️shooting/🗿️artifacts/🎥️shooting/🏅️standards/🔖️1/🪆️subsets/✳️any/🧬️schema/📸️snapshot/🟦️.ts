@@ -91,5 +91,7 @@ export interface ShootingSceneLighting {
   ambient: ShootingAmbient;
   shadow: ShootingShadow;
   material: ShootingMaterial;
-  emblemBase64?: string;
 }
+
+export {SHOOTING_SQLITE_SCHEMA,shootingSnapshotToSqliteDatabase,shootingSnapshotFromSqliteDatabase} from "./🪶️sqlite/🟦️.ts";
+export type {ShootingSqliteSnapshot,ShootingSqliteAsset,ShootingSqliteCamera,ShootingSqliteScene,ShootingSqliteVector3,ShootingSqliteVector4} from "./🪶️sqlite/🟦️.ts";

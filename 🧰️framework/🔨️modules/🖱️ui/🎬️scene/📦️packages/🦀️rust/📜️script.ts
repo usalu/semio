@@ -1,4 +1,9 @@
 #!/usr/bin/env bun
+import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-scene` test suite and the guest-target compile gates.
  *
  * This crate carries the pack-encoded `SurfaceDoc` payload every wasm32-wasip2 plugin component and
@@ -7,7 +12,7 @@
  * header for why native `cargo check` cannot see that on its own. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -15,9 +20,9 @@ const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
 //#region 🔖️test
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env));
   }
 }
 //#endregion 🔖️test
@@ -25,10 +30,10 @@ class TestScript extends BundleScript {
 //#region 🔖️check-wasm
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
-  run(): void {
-    const check = (args: string[]) => runCmd("cargo", ["check", "-p", "semio-framework-ui-scene", ...args], { cwd: packageRoot, budgetMs: buildBudgetMs() });
-    check(["--target", "wasm32-wasip2"]);
-    check(["--target", "wasm32-unknown-unknown"]);
+  async run(): Promise<void> {
+    const check = (args: string[]) => runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-scene", ...args], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
+    await check(["--target", "wasm32-wasip2"]);
+    await check(["--target", "wasm32-unknown-unknown"]);
   }
 }
 //#endregion 🔖️check-wasm

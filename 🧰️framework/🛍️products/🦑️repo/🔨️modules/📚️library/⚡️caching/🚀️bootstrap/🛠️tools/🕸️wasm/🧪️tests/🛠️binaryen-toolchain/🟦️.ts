@@ -27,7 +27,7 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   assert.ok(project.targets["deps-wasm"].dependsOn.includes(fixture.target));
   const { cacheInternals } = await import("../../../../../../🟨️.mjs");
   const targets = { wasm: { cache: true, dependsOn: ["declarations"] } };
-  assert.deepEqual(cacheInternals.withWasmTooling(targets, "runWasmPackWebBuild({})").wasm.dependsOn, ["declarations", `workspace:${fixture.target}`]);
+  assert.deepEqual(cacheInternals.withWasmTooling(targets, "buildWasmWebV1({})").wasm.dependsOn, ["declarations", `workspace:${fixture.target}`]);
   assert.deepEqual(cacheInternals.withWasmTooling(targets, "runOtherBuild({})"), targets);
   if (output) {
     mkdirSync(output, { recursive: true });

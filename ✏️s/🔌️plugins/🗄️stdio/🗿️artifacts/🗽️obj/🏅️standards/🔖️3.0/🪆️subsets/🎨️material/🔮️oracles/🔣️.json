@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. Wavefront OBJ 3.0 (obj_spec.pdf, 1995) defines no conformance classes, but its `mtllib`/`usemtl` statements are the only real scope split: they REFERENCE a companion .mtl material library rather than declaring OBJ geometry (v/vt/vn/f/g/o/s) -- the one line-type family whose meaning is resolved against a different file, not this one's own vertex/face state. `set-mtllib`/`set-usemtl` are owned here rather than by `📐️geometry`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `ObjMutation` enum, its diff dispatch and the real text codec they compile into remain in `📐️geometry` (one shared, always-co-resident implementation -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `three-obj-3-0-document-reader` (declared by `../../📐️geometry/🔮️oracles/🔣️.json`, merged into the shared registry) already reads these two statements back.",
   "oracles": [],
@@ -117,5 +117,6 @@
         "set-mtllib"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

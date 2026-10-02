@@ -436,3 +436,19 @@ pub mod sqlite;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path="🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;
+
+semio_framework_value::artifact_retire_struct!(SemioSnapshot{schema,subset});
+impl semio_framework_value::retirement::RetireOwned for SemioSubsetSnapshot{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{
+ Self::Brep(v)=>v.retirement(),Self::Mesh(v)=>v.retirement(),Self::Model(v)=>v.retirement(),Self::Value(v)=>v.retirement(),Self::Document(v)=>v.retirement(),Self::Cad(v)=>v.retirement(),Self::Drawing(v)=>v.retirement(),Self::Image(v)=>v.retirement(),Self::Video(v)=>v.retirement(),Self::Audio(v)=>v.retirement(),Self::Animation(v)=>v.retirement(),Self::Presentation(v)=>v.retirement(),Self::Flow(v)=>v.retirement(),Self::Text(v)=>v.retirement(),Self::Table(v)=>v.retirement(),Self::Graph(v)=>v.retirement(),Self::Object(v)=>v.retirement(),Self::Kit(v)=>v.retirement()
+ }}
+}
+
+#[cfg(test)]
+#[path="🧪️tests/🛫️native/🦀️.rs"]
+pub(crate) mod native_output_tests;

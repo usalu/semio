@@ -1,0 +1,13 @@
+{
+  "note": "🫧️ CAD world-window transient contract (design §17.4): every `valid` row validates against `../../🔣️.json` under Ajv, parses through the TypeScript twin and decodes through the Rust `CadWorldWindowTransient` to itself; every `invalid` row is refused by the schema and the TypeScript twin.",
+  "valid": [
+    { "engagementInput": "", "engagementStep": "Idle", "engagementPane": null, "engagementSessionJson": null, "lastFinalizedInteractionId": null },
+    { "engagementInput": "b", "engagementStep": "first_corner", "engagementPane": "shape", "engagementSessionJson": "{\"interactionId\":\"primitive.box\"}", "lastFinalizedInteractionId": "primitive.box" }
+  ],
+  "invalid": [
+    { "id": "unknown-field", "value": { "engagementInput": "", "engagementStep": "Idle", "engagementPane": null, "engagementSessionJson": null, "lastFinalizedInteractionId": null, "engagementPreviewGeneration": 1 } },
+    { "id": "missing-step", "value": { "engagementInput": "", "engagementPane": null, "engagementSessionJson": null, "lastFinalizedInteractionId": null } },
+    { "id": "empty-step", "value": { "engagementInput": "", "engagementStep": "", "engagementPane": null, "engagementSessionJson": null, "lastFinalizedInteractionId": null } },
+    { "id": "numeric-pane", "value": { "engagementInput": "", "engagementStep": "Idle", "engagementPane": 3, "engagementSessionJson": null, "lastFinalizedInteractionId": null } }
+  ]
+}

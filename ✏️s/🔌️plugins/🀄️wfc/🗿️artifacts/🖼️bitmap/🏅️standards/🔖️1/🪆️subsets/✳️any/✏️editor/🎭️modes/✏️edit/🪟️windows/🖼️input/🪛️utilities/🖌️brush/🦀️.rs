@@ -12,7 +12,9 @@ use crate::mutations::{apply_bitmap_mutation, stroke_extent, BitmapMutation, Bit
 use crate::schema::mutations::paint_input_stroke::PaintInputStroke;
 use crate::BitmapSnapshot;
 use machine::Command;
-use semio_framework_plugin::{LocalizedLabel, UtilityCategory, UtilityDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 
 pub const UTILITY_ID: &str = "brush";

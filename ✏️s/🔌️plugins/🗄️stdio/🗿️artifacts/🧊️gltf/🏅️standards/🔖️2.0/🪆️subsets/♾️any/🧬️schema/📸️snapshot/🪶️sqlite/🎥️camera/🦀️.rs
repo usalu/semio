@@ -7,9 +7,9 @@ pub(super) fn project(write:&mut Write<'_,'_>,cameras:&[GltfCamera])->Result<(),
  }Ok(())
 }
 pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>)->Result<Vec<GltfCamera>,String>{
- let rows=read.rows("gltf_camera",1,1,2)?;let mut result=Vec::with_capacity(rows.len());for row in rows{let projection=match row.text(3)?{
-  "perspective"=>{let row=read.key("gltf_camera_perspective",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;GltfCameraProjection::Perspective(GltfPerspective{aspect_ratio:if value.is_null(1)?{None}else{Some(value.real(1)?)},yfov:value.real(2)?,zfar:if value.is_null(3)?{None}else{Some(value.real(3)?)},znear:value.real(4)?,extensions:read.json(row,5)?,extras:read.json(row,6)?})},
-  "orthographic"=>{let row=read.key("gltf_camera_orthographic",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;GltfCameraProjection::Orthographic(GltfOrthographic{xmag:value.real(1)?,ymag:value.real(2)?,zfar:value.real(3)?,znear:value.real(4)?,extensions:read.json(row,5)?,extras:read.json(row,6)?})},
+ let rows=read.rows("gltf_camera",1,1,2)?;let mut result=owned(Vec::with_capacity(rows.len()));for row in rows{let projection=match row.text(3)?{
+  "perspective"=>{let row=read.key("gltf_camera_perspective",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;GltfCameraProjection::Perspective(GltfPerspective{aspect_ratio:if value.is_null(1)?{None}else{Some(value.real(1)?)},yfov:value.real(2)?,zfar:if value.is_null(3)?{None}else{Some(value.real(3)?)},znear:value.real(4)?,extensions:extensions.take(),extras:extras.take()})},
+  "orthographic"=>{let row=read.key("gltf_camera_orthographic",row.rowid)?;let value=FloatRow::new(row,FLOATS)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;GltfCameraProjection::Orthographic(GltfOrthographic{xmag:value.real(1)?,ymag:value.real(2)?,zfar:value.real(3)?,znear:value.real(4)?,extensions:extensions.take(),extras:extras.take()})},
   _=>return Err("GLTF camera projection differs".into())
- };result.push(GltfCamera{projection,name:read.optional_text(row,4)?,extensions:read.json(row,5)?,extras:read.json(row,6)?});}Ok(result)
+ };let projection=owned(projection);let name=read.optional_text(row,4)?;let extensions=read.json_owned(row,5)?;let extras=read.json_owned(row,6)?;result.as_mut().push(GltfCamera{projection:projection.take(),name,extensions:extensions.take(),extras:extras.take()});}Ok(result.take())
 }

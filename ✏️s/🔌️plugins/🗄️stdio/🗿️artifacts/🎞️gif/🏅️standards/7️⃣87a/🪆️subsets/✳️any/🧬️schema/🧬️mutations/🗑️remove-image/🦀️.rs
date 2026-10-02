@@ -21,8 +21,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveImage {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::RemoveImage(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove image", "Bild entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove image", "Bild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

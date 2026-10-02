@@ -33,10 +33,9 @@ type Fixture = {
 const ownKeys = (value: object, expected: string[]): boolean =>
   Object.keys(value).sort().join("\u0000") === [...expected].sort().join("\u0000");
 
-/** 🧮️ Every classified lowpoly verb: 51 until 2026-10-01, when the gumball and paint brackets (`transformBegin`/
- * `transformEnd`/`paintStrokeBegin`/`paintStrokeEnd`) gave way to tool-machine phases and `canvasPointerUp` joined the
- * paint verbs. The source's `.action_interactive_job` count is checked against the fixture below, so this literal only
- * pins the fixture's own shape. */
+/** 🧮️ Every classified lowpoly verb; gestures carry tool-machine phases, so no gesture bracket verb exists. The
+ * source's `.action_interactive_job` count is checked against the fixture below, so this literal only pins the
+ * fixture's own shape. */
 const LOWPOLY_CLASSIFIED_ROUTES = 48;
 
 const validateOwnedFixture = (value: unknown): value is Fixture => {

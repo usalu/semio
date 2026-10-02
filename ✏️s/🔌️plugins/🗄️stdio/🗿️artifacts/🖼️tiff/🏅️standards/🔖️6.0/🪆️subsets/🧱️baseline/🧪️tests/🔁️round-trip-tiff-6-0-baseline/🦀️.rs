@@ -20,8 +20,8 @@ mod subject {
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{encode_tiff_baseline_projection_json, tiff_baseline_conformance_codes};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::document::project_tiff;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::project_tiff;
+    use semio_repo_test_host::law;
 
     fn projection(snapshot: &TiffSnapshot) -> Result<Json, String> {
         parse_json(&encode_tiff_baseline_projection_json(snapshot))

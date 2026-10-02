@@ -14,7 +14,8 @@
         "pairing",
         "feedback",
         "wireEmptyPatchPayloadBytes",
-        "outerReceiptOrder"
+        "outerReceiptOrder",
+        "patchIdentity"
       ],
       "properties": {
         "version": {
@@ -107,6 +108,34 @@
             "lifecycleReceipt",
             "uiPatchReceipt"
           ]
+        },
+        "patchIdentity": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "references",
+              "accepted"
+            ],
+            "properties": {
+              "references": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 15
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
         }
       }
     },
@@ -124,6 +153,17 @@
         "patchSequence": {
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         }
+      }
+    },
+    "PatchIdentityReferences": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 15
       }
     }
   }

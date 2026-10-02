@@ -252,15 +252,15 @@ where
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 };
                 if source.id.is_empty() || source.id.len() > self.maximum_value_bytes || maximum_bytes < source.id.len().saturating_mul(2) {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(source));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(source));
                     return self.reject(ConfigStoreHydrationDiagnostic::Capacity);
                 }
                 let Some(metadata) = source.meta else {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: None, ..source }));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: None, ..source }));
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 };
                 if metadata.len() != source.ops.len() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source }));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source }));
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
                 let edit = Edit { line: source.line,
@@ -318,7 +318,7 @@ where
                         edit.inverse.push(operation);
                     }
                     let payload = self.pending_payload.take().expect("decoded config payload remains retained");
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(payload));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(payload));
                     self.operation_index += 1;
                 } else {
                     if self.phase == Phase::DecodeForward {
@@ -480,11 +480,11 @@ where
             }
             Phase::RetireHistory => {
                 if let Some(history) = self.history.take() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(history));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
                 if let Some(index) = self.edit_lookup.take() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(index));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
                     return ConfigStoreHydrationStep::Pending(self.progress());
                 }
                 self.phase = Phase::Finish;
@@ -565,19 +565,19 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(index) = self.edit_lookup.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(index));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(index));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(expected_id) = self.expected_id.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(expected_id));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(expected_id));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(schema) = self.schema.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(schema));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(schema));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         let owners = self.owners.as_mut().expect("config hydration owner catalog remains retained");

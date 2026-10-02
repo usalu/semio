@@ -24,6 +24,7 @@ mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-
      / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
      / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter / change-layer-transform
      / paint-stroke
+     / fill-region
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -77,4 +78,5 @@ expected-transform-block = "expected" "{" "x=" number SP "y=" number SP "a=" num
 # opacity, then the four unit colour channels), the points split into their x and y columns in drawing order, and the
 # optional selection runs as their JSON text.
 paint-stroke = "paint-stroke" SP "id=" id SP text SP text SP number SP number SP number SP numbers SP numbers SP numbers SP ("selection=" TEXT)?
+fill-region = "fill-region" SP "id=" id SP text SP number SP number SP number SP numbers SP ("selection=" TEXT)?
 numbers = "[" (number ("," number)*)? "]"

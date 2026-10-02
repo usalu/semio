@@ -38,8 +38,8 @@ fn actor_return_wire_invalid_drives_leave_the_destination_untouched() {
     for value in [
         ActorReturnDrive::Execute { origin: ActorReturnOrigin { activation_generation: 0, ..origin } },
         ActorReturnDrive::Execute { origin: ActorReturnOrigin { request_sequence: 9_007_199_254_740_992, ..origin } },
-        ActorReturnDrive::Control { control: ActorReturnControl::InputAck { receipt: ActorReturnPageReceipt { length: 4097, ..receipt } } },
-        ActorReturnDrive::Control { control: ActorReturnControl::InputAck { receipt: ActorReturnPageReceipt { length: 0, final_page: false, ..receipt } } },
+        ActorReturnDrive::Control { signal: ActorReturnControl::InputAck { receipt: ActorReturnPageReceipt { length: 4097, ..receipt } } },
+        ActorReturnDrive::Control { signal: ActorReturnControl::InputAck { receipt: ActorReturnPageReceipt { length: 0, final_page: false, ..receipt } } },
     ] {
         let mut bytes = [73; ACTOR_RETURN_DRIVE_MAXIMUM_BYTES];
         assert!(value.encode(&mut bytes).is_err());

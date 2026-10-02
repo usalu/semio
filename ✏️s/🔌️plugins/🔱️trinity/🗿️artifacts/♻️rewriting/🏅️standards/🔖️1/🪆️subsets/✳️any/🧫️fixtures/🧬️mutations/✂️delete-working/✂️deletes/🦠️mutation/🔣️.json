@@ -1,0 +1,6 @@
+{
+  "mutation": "deleteWorkingNodes",
+  "targets": [
+    "a"
+  ]
+}

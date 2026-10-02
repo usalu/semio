@@ -385,7 +385,7 @@ test("Draw destination observation has the closed default-budget canonical regis
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(source), ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
       class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-      const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Draw observation fell through to generic routing"); });
+      const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", javascript)(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Draw observation fell through to generic routing"); });
       await router.run([registration.command]);
       expect(invocations).toEqual([{ executable: process.execPath, args: ["test", import.meta.filename], options: { cwd: repoRoot } }]);
     }

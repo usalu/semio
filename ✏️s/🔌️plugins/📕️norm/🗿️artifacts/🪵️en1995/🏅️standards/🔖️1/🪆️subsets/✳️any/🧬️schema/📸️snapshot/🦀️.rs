@@ -6,6 +6,12 @@ use crate::{
 };
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1995 timber-structure document.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -27,7 +33,7 @@ pub struct En1995Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1995Snapshot, extension = "en1995", envelope_id = "norm.en1995");
+crate::impl_norm_artifact_record!(En1995Snapshot, extension = "en1995", envelope_id = "norm.en1995", sqlite = sqlite::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1995Snapshot {

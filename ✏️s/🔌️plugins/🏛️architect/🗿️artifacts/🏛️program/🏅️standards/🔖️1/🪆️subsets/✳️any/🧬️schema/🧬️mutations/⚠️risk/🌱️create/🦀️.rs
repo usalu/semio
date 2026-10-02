@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateRisk {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create risk \"{}\"", self.risk.header.name), &format!("Risiko \"{}\" erstellen", self.risk.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create risk \"{}\"", self.risk.header.name), &format!("Risiko \"{}\" erstellen", self.risk.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.risk.header.id.0.clone()]

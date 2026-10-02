@@ -21,7 +21,18 @@
 
 use crate::viewer::generation3d::config::Generation3dViewConfig;
 use dsl::json::{Object, Value};
-use semio_framework_plugin::{app::InteractionView, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::world3d_sun_measures;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 use crate::Generation3dSnapshot;
 

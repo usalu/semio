@@ -9,7 +9,7 @@ async fn home_op_text_round_trips_every_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_registers_semantic_descriptors() {
-    register_s_home_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_s_home_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in <SHomeMutation as protocol::SemanticMutation<SHomeSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }

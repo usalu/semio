@@ -9,9 +9,9 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 
 // 🌿️ See the sibling `🛡️deny-unknown-fields-enums.rs` test file's identical docstring for why
-// `semio_framework_os_kernel` alone (not a separate `semio_framework_value_derive` import) is the
+// `semio_framework_value` alone (not a separate `semio_framework_value_derive` import) is the
 // correct single import here.
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 
 //#region 🔖️NewtypeU32
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ToValue, FromValue)]

@@ -4,7 +4,15 @@ use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, Map
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{ui_label, Gis2dInteractionSnapshot, GIS2D_FEATURE_GRANULARITY, GIS_MAP_LAYER_IDS};
 use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";

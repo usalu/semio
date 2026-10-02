@@ -245,3 +245,86 @@ rename of the remodel case directories (746 paths moved at 12:16, feature rows n
 
 Rule-1 breaches by owner: **none remain**. The 47 📕️norm `🔺️diff` leaves of session 1 are fixed (norm-2/norm-3).
 
+### S2.6 Verification log (updated at every milestone)
+
+Milestone 1 (12:20–13:30, before the usage cut):
+
+| check | result |
+|---|---|
+| `cargo test --lib -p semio-framework-artifact-workflow-run` | **21/21** (incl. `checked_run_admission_matches_the_typed_diff_rejection`) |
+| replication TS package (`📡️replication/📦️packages/🟦️typescript`, `bun ./📜️script.ts test`) | 20/21; the outcome-code vocabulary tests pass; 1 failure is a peer's `document-backbone-envelope-batch` (`trailing-flags` vs `truncated`) |
+| os TS `CommandRejection` (`bun ./📜️script.ts test -t CommandRejection`, after the fixture change) | **4/4** |
+| ui-react `translation-totality` (vitest direct; the 15 s budget wrapper killed it under load) | **2/2** |
+| ShellHelpers `command rejection notice` (react engine config, `SEMIO_TEST_LEVEL=long`) | NOT RUN: suite import fails in `🔌️plugin/📇️registry/🤖️generated/🧩️plugins` (`inventory.filter` of undefined) — generated registry, coordinator chain |
+| `cargo test -p semio-framework-os-kernel -- command_rejection_tests persisted_messages_admit…` | BLOCKED: lib-test target did not compile — peer test sources (`🏪️store/🧪️tests/🧪️tool-transaction`, `📡️spr/🎮️command/🧪️tests/🧬️mutation-laws` fixture paths) |
+| generation2d + generation3d lib tests | BLOCKED twice by peer breaks (os-kernel `HistoryLog.viewer_*`, then dag `DslValue::Bytes`), then a shared build-dir race (`error writing dependencies … semio-framework-number … .d: No such file`), then a 3 h idle lock wait cut by the usage limit |
+
+I did NOT add the `DslValue::Bytes` arm in `♾️infinite/🗿️artifacts/🕸️dag/🧵️retained` — a peer (S2-INFRA) did, at ~13:00.
+
+Milestone 2 (16:35–17:10, after the resume): every session-2 edit re-read and intact (peer renames carried the layout/lowpoly
+changes; a peer's new generation2d editor caller `generation2d_provisional_snapshot` ignores the result — compatible).
+Root `bun ./📜️script.ts verify mutation-outcome-law` runs again (153 s): **3 breaches, all rule 1, all S2-SPATIAL**
+(new lowpoly gesture leaves `🚚️move-selection`, `🌀️rotate-selection`, `🔍️scale-selection` `🔺️diff` never reference a
+vocabulary code); rule 2 (codes + levels, incl. the new alias checks): 0.
+
+Milestone 3 (21:37–22:25, after the second resume): edits re-read again, intact (a peer's new generation3d editor overlay
+also ignores the checked result — compatible). generation2d/3d lib tests still NOT RUN: two runs SIGKILLed (exit 137,
+20–38 min, swap 92–96 %, no guard log entry), one 3 h lock wait (cargos of cut agents, since gone), and the latest
+(22:23) stopped at a peer's in-flight `u64` migration of `🗄️stdio/🗿️artifacts/🗽️obj` (8 `E0308` in `🔺️diff` /
+`🧬️mutations`, edited 22:09).
+
+Milestone 4 (run started 22:50, finished before the 23:00 cut; read 02:40): `cargo test -j 2 --manifest-path ✏️s/Cargo.toml
+--no-fail-fast --lib -p semio-s-artifact-procedural-generation2d -p semio-s-artifact-procedural-generation3d` (private
+`target-nde-s2-codes`, 1838 s):
+
+| crate | result | this WP's tests |
+|---|---|---|
+| generation2d | 184 passed / 4 failed | `checked_apply_propagates_the_vocabulary_outcome_unchanged` ok, `delete_widget_on_unknown_id_is_rejected_with_no_inverse` ok |
+| generation3d | 174 passed / 4 failed | `checked_apply_propagates_the_vocabulary_outcome_unchanged` ok, `move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouched` ok |
+
+The 4+4 failures are peers' in-flight work, none touches an outcome code or the checked adapters: (1) S2-PROCEDURAL's new
+`🧪️gesture-leaves` law panics `ordered-map root must be explicitly retired before drop` (its own fold drops a snapshot; the
+adapter retires every owner on all three paths); (2) S2-PROCEDURAL's new gesture kinds are not yet in the descriptors /
+oracle catalog (`dispatch_registers_semantic_descriptors` 16≠14, gen3d `every_variant_registers…` 19≠14,
+`kinds_match_the_enum_and_the_catalog`: `change-slider-value` missing); (3) the SQLite snapshot peer's
+`sqlite_snapshot_procedural_generation{2,3}d_erased_native_encodings…` (`snapshot owner has no controlled native decoding
+implementation`). Fleet rule 26 (CARGO HOLD, 02:45) now blocks the remaining Rust runs (S2.7).
+
+Milestone 5 (02:45–02:55, CARGO HOLD): root `bun ./📜️script.ts verify mutation-outcome-law` → **passed** (0 breaches,
+all 7 rules, 172 s — the 3 lowpoly rule-1 leaves are fixed by S2-SPATIAL). `🧪️w3-codes-outcome-law.ts --with-leaves`
+→ 0 breaches (62 s). `🧪️w3-codes-gate-negatives.ts` → 13 reported, missing [], unexpected []. `🧪️s2-codes-level-alias-negatives.ts`
+→ 6 reported, missing [], unexpected []. Remaining rule-1 breaches by owner: **none**.
+
+### S2.7 Still open (cargo hold; run when lifted, one gated command each)
+
+1. `cargo test -j 2 --manifest-path ✏️s/Cargo.toml --no-fail-fast --lib -p semio-s-artifact-layout-layout -p semio-s-artifact-lowpoly-lowpoly`
+   (17 layout readers + lowpoly laws now read the level from `protocol::outcome_code_level`).
+2. Session-1 deferred reruns: `-p semio-s-artifact-stdio-gltf -p semio-s-artifact-stdio-zip -p semio-s-artifact-wfc-bitmap` and the
+   media lane `-p semio-s-artifact-stdio-{png,jpg,wav,tiff,mp4,gif,mp3,avi,bmp,pptx}`, `-p semio-s-artifact-energy-model`.
+3. `cargo test --lib -p semio-framework-os-kernel -- command_rejection_tests persisted_messages_admit_exactly_the_outcome_vocabulary`
+   (blocked at 12:56 by peer lib-test compile errors).
+4. Remodel `parity exhaustive --case 📸️mutate-remodeling-1` (Python oracle vs Rust subject; needs the remodel Rust subject build).
+
+Milestone 6 (03:00, CARGO HOLD): the remodel oracle's 2 errors were a REPO-PATH-BUDGET leftover — feature rows 173/385
+still named `🛠️update-camera/🔍️refines-the-cam-0eaef0`, which the rename filed as `🔍️refines2` (proved by identical
+`🦠️mutation` digests against `fa3fdf76eb7`). Re-pointed both rows (`📸️mutate-remodeling-1/🥒️.feature`); a static audit of
+every `✏️s/**/🥒️.feature` vector against its `🧫️fixtures/🧬️mutations` now finds 0 dangling remodel rows and **one other
+leftover, not this WP's**: `🧱️block/🗿️artifacts/🖐️5d` feature + `🔮️oracles` name `🖌️update-part2d/🧪️circle`, the
+directory (and its Rust per-case test dir) is still `🧪️circle-to-rectangle` → coordinator / S2-PUZZLE.
+
+### S2.8 Hand-over (02:50, turn ends under fleet rule 26; resume me with "hold lifted" to run S2.7)
+
+Files changed this session:
+- `📜️script.ts` (rule-2 region: `warn` matched in TS/Python level patterns, new `POLICY_OUTCOME_FEATURE_MESSAGE_RE`,
+  `POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE` + breach, docstring).
+- generation2d `🧬️schema/🧬️mutations/🦀️.rs` (checked `apply_generation2d_mutation`) + `🧪️tests/🔬️unit/🦀️.rs` (rejection test, law).
+- layout: 6 `🎯️outcome` docs + 17 per-case readers (`warning`; vocabulary level for rejected outcomes) — now under the
+  §14 short-slug directories; lowpoly `🧬️mutations/🦀️.rs` laws (vocabulary level; moved there by S2-SPATIAL).
+- `🏪️store/🧫️fixtures/🧫️command-rejection/🔣️.json` (`mutation.cascade`); remodel `📸️mutate-remodeling-1/🥒️.feature` (2 rows).
+- Ticket inputs: `🧪️w1-f-author-selection-vectors.py`, `🧪️w3-t-puzzle-author-vectors.py`, `🧪️w3-t-layout-author-vectors.py`
+  (`warning`, vocabulary level); new `🧪️s2-codes-vocabulary-level-readers.py`, `🧪️s2-codes-level-alias-negatives.ts`,
+  `🧪️s2-codes-outcome-law-bundle.ts`. Outputs: `🗑️generated/s2-codes/`.
+
+Coordinator actions: none needed for this WP (no activation, describe or schema generate). Notes for others: layout author
+script slugs predate the §14 rename (a dry run would rewrite 79 files — S2-LAYOUT); block-5d `🧪️circle` vs
+`🧪️circle-to-rectangle` (S2-PUZZLE / path budget); generation2d/3d peer reds listed in milestone 4.

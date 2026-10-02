@@ -25,10 +25,10 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for DragAssets {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
-            1 => protocol::LocalizedLabel::native("Drag 1 asset", "1 Asset ziehen"),
-            count => protocol::LocalizedLabel::native(&format!("Drag {count} assets"), &format!("{count} Assets ziehen")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Drag 1 asset", "1 Asset ziehen"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {count} assets"), &format!("{count} Assets ziehen")),
         }
     }
     fn target(&self) -> Vec<String> {

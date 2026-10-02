@@ -16,7 +16,7 @@ fn params_for(kind: &str) -> Json {
         "set-relationships-namespace" => json_object(vec![("namespace", Json::String("http://purl.oclc.org/ooxml/officeDocument/relationships".to_string()))]),
         "set-conformance-attribute" => json_object(vec![("value", Json::String("strict".to_string()))]),
         "remove-conformance-attribute" => json_object(vec![]),
-        "insert-vml-part" => json_object(vec![("path", Json::String("xl/drawings/vmlDrawing1.vml".to_string())), ("markup", Json::String(crate::document::ooxml::VML_MARKUP.to_string()))]),
+        "insert-vml-part" => json_object(vec![("path", Json::String("xl/drawings/vmlDrawing1.vml".to_string())), ("markup", Json::String(semio_s_plugin_stdio_document_test_oracle::ooxml::VML_MARKUP.to_string()))]),
         "remove-vml-part" => json_object(vec![("path", Json::String("xl/drawings/vmlDrawing1.vml".to_string()))]),
         "set-worksheet-content-type" => json_object(vec![("path", Json::String("xl/worksheets/sheet1.xml".to_string())), ("content_type", Json::String("application/xml".to_string()))]),
         other => panic!("no test parameters for kind {other:?}"),

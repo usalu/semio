@@ -9,7 +9,7 @@ import fixture from "../../🧫️fixtures/✂️text-splice/🔣️.json";
 import schema from "../../🧬️schema/✂️text-splice/🔣️.json";
 import fc from "fast-check";
 import typingLaw from "../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json";
-import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
+import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {
   test("the schema admits the fixture and pins the constants", () => {
@@ -437,6 +437,23 @@ describe("text editor typing run (host side)", () => {
 
   test("the protocol constants are the tool-machine owner's (typing-law fixture)", () => {
     expect([TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_IDLE_MS]).toEqual([typingLaw.args.buffer, typingLaw.args.commit, typingLaw.idleMs]);
+  });
+
+  test("every host signal ends the run with the corpus reason, once, and every reason is the tool machine's", () => {
+    const rows = fixture.hostSignals as readonly { readonly signal: keyof typeof TEXT_EDITOR_TYPING_HOST_SIGNALS; readonly commit: string }[];
+    expect(Object.fromEntries(rows.map((row) => [row.signal, row.commit]))).toEqual(TEXT_EDITOR_TYPING_HOST_SIGNALS);
+    for (const row of rows) {
+      expect(typingLaw.reasons).toContain(row.commit);
+      const timers = fakeTimers();
+      const sent: [string, string][] = [];
+      const run = createTextEditorTypingRunV1((verb, reason) => sent.push([verb, reason]), timers.schedule);
+      run.typed("textSplice", "Hello");
+      if (row.signal === "idle") timers.advance(TEXT_EDITOR_TYPING_IDLE_MS);
+      else run.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS[row.signal]);
+      timers.advance(TEXT_EDITOR_TYPING_IDLE_MS);
+      run.dispose();
+      expect(sent).toEqual([["textSplice", row.commit]]);
+    }
   });
 
   test("a run commits once on idle, a pause starts a new run, and the preview is the run's one splice", () => {

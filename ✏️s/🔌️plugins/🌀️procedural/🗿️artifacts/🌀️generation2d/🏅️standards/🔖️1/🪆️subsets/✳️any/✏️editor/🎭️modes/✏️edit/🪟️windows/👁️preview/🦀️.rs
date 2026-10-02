@@ -5,7 +5,12 @@ use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

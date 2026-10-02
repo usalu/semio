@@ -34,7 +34,7 @@ fn jack_graph_window_config_command_uses_the_trusted_concrete_window() {
             ViewWindowInstance { id: "graph-left".into(), window_kind_id: JackGraphWindowConfigOwner::WINDOW_KIND_ID.into() },
             ViewWindowInstance { id: "graph-right".into(), window_kind_id: JackGraphWindowConfigOwner::WINDOW_KIND_ID.into() },
         ],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let emit = crate::editor::jack::commands::set_lod_mode("compact", Some(&view)).unwrap();
     assert!(emit.artifact_mutations.is_empty());

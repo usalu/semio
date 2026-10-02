@@ -3,7 +3,12 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/📏️scoring/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+/** 🕸️ Subject adapter of the profile-similarity case: `scoreTask` of `@semio-tech/quiz` for every committed classification answer.
+ *
+ * @see ./🥒️.feature
+ * @see ../../🔨️modules/📏️scoring/🟦️.ts
+ */
+import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type Answer, type SheetTask, type Task, scoreTask } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🕸️profile-similarity/🔣️.json";

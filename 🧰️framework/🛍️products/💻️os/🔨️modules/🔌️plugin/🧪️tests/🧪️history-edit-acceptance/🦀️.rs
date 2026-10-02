@@ -1,5 +1,6 @@
 //! ⏪️ The cross-plugin history-edit acceptance law (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §16.3, gap G12):
-//! for a representative editable leaf of any app, read from the app's own committed mutation fixtures, the real verbs run
+//! for a representative editable leaf of any app, read from the app's own committed mutation fixtures (on their own documents,
+//! else on the documents the app ships: its initial document and its examples), the real verbs run
 //! `historyEditBegin` → `historyEditInput` (a schema-valid change derived from the leaf's input descriptors) → `historyEditAccept`
 //! → the Report replay → `historyEditFinalize` → `historyEditCommit` as an overwrite and, on a second instance, as a new
 //! alternative; each head must equal a fresh fold of the edited log, and the edited mutation's history row must carry its leaf
@@ -19,8 +20,8 @@ const ACCEPTANCE_CHANGES_PER_LEAF: usize = 16;
 /// 🌿️ Downstream operations tried per leaf before the leaf runs alone.
 const ACCEPTANCE_DOWNSTREAM_PER_LEAF: usize = 2;
 
-/// 🧫️ One committed fixture case the law can seed: its directory, the DSL text of the document before it, the canonical JSON
-/// of that document (cases sharing it can follow each other downstream) and its operation.
+/// 🧫️ One case the law can seed: where it comes from, the DSL text of the document before it, the key of that document (cases
+/// sharing it can follow each other downstream) and its operation.
 pub struct AcceptanceCase<Mu> {
     pub directory: String,
     pub base: String,
@@ -28,18 +29,51 @@ pub struct AcceptanceCase<Mu> {
     pub op: Mu,
 }
 
-/// ⚖️ The outcome of one acceptance scenario: it passed (with its summary), its data cannot exercise the flow (`Skip`, the next
-/// case is tried) or the generic mechanism broke (`Fail`, the law fails at once).
+/// ⚖️ The outcome of one acceptance scenario: it passed (with its summary), its data cannot exercise the flow (`Skip`: the next
+/// variant is tried; `SkipCase`: the case's own operation does not seed, so no variant of it can; `SkipBase`: its document does not
+/// load, so no case on it can) or the generic mechanism broke (`Fail`, the law fails at once).
 enum AcceptanceVerdict {
     Pass(String),
     Skip(String),
+    SkipCase(String),
+    SkipBase(String),
     Fail(String),
 }
 
-/// 🧫️ Every committed fixture case under `root` whose outcome applies, whose document decodes as `A::Snapshot`, whose operation
-/// decodes as `A::Mutation`, and whose operation the generic editor edits (an input schema and no foreign-step capability) — in
-/// path order. A `{mutation, before, after}` case record carries its own document.
-pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<AcceptanceCase<A::Mutation>> {
+/// 🌱️ Why a document cannot be seeded: its base does not load, or the operation at that index of the seed does not apply cleanly.
+enum AcceptanceSeedFault {
+    Base(String),
+    Operation(usize, String),
+}
+
+impl AcceptanceSeedFault {
+    /// 💬️ The fault in words.
+    fn reason(&self) -> String {
+        match self {
+            Self::Base(reason) => reason.clone(),
+            Self::Operation(index, reason) => format!("seed operation #{index}: {reason}"),
+        }
+    }
+}
+
+/// 🔍️ Where two document texts first disagree (line number and both lines, clipped), or that only their values disagree.
+fn acceptance_text_difference(left: &str, right: &str) -> String {
+    if left == right {
+        return "the canonical value (the document texts agree)".into();
+    }
+    let clip = |line: Option<&str>| line.map(|line| line.chars().take(240).collect::<String>());
+    let (mut lefts, mut rights) = (left.lines(), right.lines());
+    let mut number = 1;
+    loop {
+        match (lefts.next(), rights.next()) {
+            (Some(one), Some(other)) if one == other => number += 1,
+            (one, other) => return format!("document text line {number}: {:?} vs {:?}", clip(one), clip(other)),
+        }
+    }
+}
+
+/// 🗂️ Every directory under `root` that commits a mutation wire (`🦠️mutation/🔣️.json`), in path order.
+fn acceptance_fixture_directories(root: &std::path::Path) -> Vec<std::path::PathBuf> {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
         for entry in entries.flatten() {
@@ -54,33 +88,92 @@ pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<Acceptanc
             walk(&path, found);
         }
     }
-    fn json(path: &std::path::Path) -> Option<DslValue> {
-        let text = std::fs::read_to_string(path).ok()?;
-        dsl::os_pack::json::parse(&text).ok().map(|json| dsl::os_pack::json::to_dsl_value(&json))
-    }
     let mut directories = Vec::new();
     walk(root, &mut directories);
     directories.sort();
+    directories
+}
+
+/// 📄️ The JSON document at `path` as a DSL value.
+fn acceptance_json(path: &std::path::Path) -> Option<DslValue> {
+    let text = std::fs::read_to_string(path).ok()?;
+    dsl::os_pack::json::parse(&text).ok().map(|json| dsl::os_pack::json::to_dsl_value(&json))
+}
+
+/// 📇️ Whether a committed wire is a `{mutation, before, after}` case record (which carries its own document).
+fn acceptance_record(wire: &DslValue) -> bool {
+    wire.get("before").is_some() && wire.get("after").is_some() && wire.get("mutation").and_then(DslValue::as_object).is_some()
+}
+
+/// 🦠️ The operation a committed wire names, when it decodes as `A::Mutation` and the generic editor edits it (an input schema
+/// and no foreign-step capability).
+fn acceptance_operation<A: ArtifactApp>(wire: &DslValue) -> Option<A::Mutation> {
+    let value = if acceptance_record(wire) { wire.get("mutation").cloned().unwrap_or(DslValue::Null) } else { wire.clone() };
+    let op = <A::Mutation as protocol::FromValue>::from_value(value).ok()?;
+    if ::protocol::Mutation::<A::Snapshot>::input_schema(&op).is_none() || ::protocol::Mutation::<A::Snapshot>::may_emit_foreign_steps(&op) {
+        ::protocol::Mutation::<A::Snapshot>::retire_cold(op);
+        return None;
+    }
+    Some(op)
+}
+
+/// 🗣️ The DSL text of a document given as a JSON value; the snapshot is never dropped, so a fail-closed root never trips.
+fn acceptance_dsl_of<A: ArtifactApp>(document: DslValue) -> Option<String> {
+    let snapshot = <A::Snapshot as protocol::FromValue>::from_value(document).ok()?;
+    let text = store::ArtifactDsl::print_dsl(&snapshot);
+    std::mem::forget(snapshot);
+    Some(text)
+}
+
+/// 🧫️ Every committed fixture case under `root` whose outcome is no refusal (applied, or a no-op an edit can turn into a change),
+/// whose document is given (`📸️snapshot/⬅️before/🗣️.dsl.semio` verbatim — the only form a composed parent's owned children
+/// survive in — else its JSON twin decoded as `A::Snapshot`) and whose operation the generic editor edits — in path order. A
+/// `{mutation, before, after}` case record carries its own document.
+pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<AcceptanceCase<A::Mutation>> {
     let mut cases = Vec::new();
-    for directory in directories {
-        let Some(wire) = json(&directory.join("🦠️mutation").join("🔣️.json")) else { continue };
-        let record = wire.get("before").is_some() && wire.get("after").is_some() && wire.get("mutation").and_then(DslValue::as_object).is_some();
-        let applied = record || json(&directory.join("🎯️outcome").join("🔣️.json")).is_some_and(|outcome| outcome.get("status").and_then(DslValue::as_str) == Some("applied"));
-        let before = if record { wire.get("before").cloned() } else { json(&directory.join("📸️snapshot").join("⬅️before").join("🔣️.json")) };
-        let (Some(before), true) = (before, applied) else { continue };
-        let Ok(op) = <A::Mutation as protocol::FromValue>::from_value(if record { wire.get("mutation").cloned().unwrap_or(DslValue::Null) } else { wire }) else { continue };
-        if ::protocol::Mutation::<A::Snapshot>::input_schema(&op).is_none() || ::protocol::Mutation::<A::Snapshot>::may_emit_foreign_steps(&op) {
-            ::protocol::Mutation::<A::Snapshot>::retire_cold(op);
+    for directory in acceptance_fixture_directories(root) {
+        let Some(wire) = acceptance_json(&directory.join("🦠️mutation").join("🔣️.json")) else { continue };
+        let record = acceptance_record(&wire);
+        let applied = record || acceptance_json(&directory.join("🎯️outcome").join("🔣️.json")).is_some_and(|outcome| outcome.get("status").and_then(DslValue::as_str).is_some_and(|status| status != "rejected"));
+        if !applied {
             continue;
         }
-        let base_key = format!("{before:?}");
-        let Ok(snapshot) = <A::Snapshot as protocol::FromValue>::from_value(before) else {
-            ::protocol::Mutation::<A::Snapshot>::retire_cold(op);
-            continue;
+        let before = directory.join("📸️snapshot").join("⬅️before");
+        let base = match std::fs::read_to_string(before.join("🗣️.dsl.semio")) {
+            Ok(text) => Some(text),
+            Err(_) => (if record { wire.get("before").cloned() } else { acceptance_json(&before.join("🔣️.json")) }).and_then(acceptance_dsl_of::<A>),
         };
-        let base = store::ArtifactDsl::print_dsl(&snapshot);
-        std::mem::forget(snapshot);
-        cases.push(AcceptanceCase { directory: directory.to_string_lossy().into_owned(), base, base_key, op });
+        let Some(base) = base else { continue };
+        let Some(op) = acceptance_operation::<A>(&wire) else { continue };
+        cases.push(AcceptanceCase { directory: directory.to_string_lossy().into_owned(), base_key: base.clone(), base, op });
+    }
+    cases
+}
+
+/// 📚️ The derived cases the law falls back to when no committed case exercises the flow: every committed operation under `root`
+/// (whatever its own outcome — a refusal on its fixture document may apply elsewhere) on every document the app itself ships —
+/// its initial document and each of `examples` (a DSL body verbatim, a JSON body decoded as `A::Snapshot`). Cases on one
+/// document share its key, so they can follow each other downstream.
+pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, examples: &[ExampleSource]) -> Vec<AcceptanceCase<A::Mutation>> {
+    let initial = A::initial_snapshot().await;
+    let mut documents = vec![("initial".to_string(), store::ArtifactDsl::print_dsl(&initial))];
+    std::mem::forget(initial);
+    for example in examples {
+        let body = example.document();
+        let text = if body.trim_start().starts_with('{') { dsl::os_pack::json::parse(&body).ok().and_then(|json| acceptance_dsl_of::<A>(dsl::os_pack::json::to_dsl_value(&json))) } else { Some(body) };
+        if let Some(text) = text.filter(|text| documents.iter().all(|(_, known)| known != text)) {
+            documents.push((format!("example {}", example.id()), text));
+        }
+    }
+    let operations: Vec<(String, A::Mutation)> = acceptance_fixture_directories(root).into_iter().filter_map(|directory| Some((directory.to_string_lossy().into_owned(), acceptance_operation::<A>(&acceptance_json(&directory.join("🦠️mutation").join("🔣️.json"))?)?))).collect();
+    let mut cases = Vec::new();
+    for (name, base) in &documents {
+        for (directory, op) in &operations {
+            cases.push(AcceptanceCase { directory: format!("{directory} on the {name} document"), base: base.clone(), base_key: name.clone(), op: op.clone() });
+        }
+    }
+    for (_, op) in operations {
+        ::protocol::Mutation::<A::Snapshot>::retire_cold(op);
     }
     cases
 }
@@ -147,7 +240,7 @@ pub fn acceptance_changes(inputs: &[ActionArgDef], value: &DslValue) -> Vec<(Str
 
 /// 🪪️ The acceptance actor's action meta on the registered instance.
 fn acceptance_meta() -> ActionMeta {
-    ActionMeta { view_state: Some(ViewModel::default()), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
+    ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
 }
 
 /// ⏯️ Runs one framework history-edit verb; `Err` carries its refusal code or fault.
@@ -192,8 +285,9 @@ where
 }
 
 /// 🌱️ A registered instance whose document is `base` (loaded through the document text path) followed by one clean edit per op
-/// of `ops`; `Err` names why the data cannot be seeded, after closing the instance.
-async fn acceptance_seeded<A, M>(manifest: fn() -> App, base: &str, ops: &[&A::Mutation]) -> Result<VcsArtifactApp<A, M>, String>
+/// of `ops` (each leaving an applied operation when `strict`); `Err` names why the data cannot be seeded (the base, or the index
+/// of the first op that does not apply cleanly), after closing the instance.
+async fn acceptance_seeded<A, M>(manifest: fn() -> App, base: &str, ops: &[&A::Mutation], strict: bool) -> Result<VcsArtifactApp<A, M>, AcceptanceSeedFault>
 where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
@@ -201,17 +295,21 @@ where
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        app.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| format!("the actor is refused: {error:?}"))?;
-        let mut files = app.document_text().await.map_err(|fault| format!("the document does not print: {fault:?}"))?;
+        app.store.set_local_actor_id(Some(ACCEPTANCE_ACTOR.to_string())).map_err(|error| AcceptanceSeedFault::Base(format!("the actor is refused: {error:?}")))?;
+        let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Base(format!("the document does not print: {fault:?}")))?;
         files.dsl = base.to_string();
-        app.load_document_text(&files).await.map_err(|fault| format!("the base document does not load: {fault:?}"))?;
-        for op in ops {
-            let receipt = app.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], description: None, transaction: None }).await.map_err(|error| format!("the seed edit is refused: {error:?}"))?;
+        app.load_document_text(&files).await.map_err(|fault| AcceptanceSeedFault::Base(format!("the base document does not load: {fault:?}")))?;
+        for (index, op) in ops.iter().enumerate() {
+            let applied = app.store.mutation_ops().map_or(0, |applied| applied.len());
+            let receipt = app.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], description: None, transaction: None }).await.map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(dsl::Severity::Error | dsl::Severity::Fatal)) {
-                return Err(format!("the seed edit does not apply cleanly: {:?}", receipt.messages));
+                return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
+            }
+            if strict && app.store.mutation_ops().map_or(0, |applied| applied.len()) <= applied {
+                return Err(AcceptanceSeedFault::Operation(index, "the seed edit leaves no applied operation".into()));
             }
         }
-        app.refresh_cache().await.map_err(|fault| format!("the history does not backfill: {fault:?}"))
+        app.refresh_cache().await.map_err(|fault| AcceptanceSeedFault::Operation(ops.len().saturating_sub(1), format!("the history does not backfill: {fault:?}")))
     }
     .await;
     match seeded {
@@ -223,14 +321,15 @@ where
     }
 }
 
-/// 🧾️ The document head as its canonical value; the clone is never dropped, so a fail-closed root never trips.
-fn acceptance_head<A, M>(app: &VcsArtifactApp<A, M>) -> Result<DslValue, String>
+/// 🧾️ The document head as its canonical value and its DSL text (the text also carries what a composed parent's value form
+/// only references — its owned children); the clone is never dropped, so a fail-closed root never trips.
+fn acceptance_head<A, M>(app: &VcsArtifactApp<A, M>) -> Result<(DslValue, String), String>
 where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let head = app.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
-    let value = protocol::ToValue::to_value(&head);
+    let value = (protocol::ToValue::to_value(&head), store::ArtifactDsl::print_dsl(&head));
     std::mem::forget(head);
     Ok(value)
 }
@@ -320,9 +419,11 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let seed: Vec<&A::Mutation> = std::iter::once(&case.op).chain(downstream).collect();
-    let mut overwrite = match acceptance_seeded::<A, M>(manifest, &case.base, &seed).await {
+    let mut overwrite = match acceptance_seeded::<A, M>(manifest, &case.base, &seed, true).await {
         Ok(app) => app,
-        Err(reason) => return AcceptanceVerdict::Skip(reason),
+        Err(AcceptanceSeedFault::Base(reason)) => return AcceptanceVerdict::SkipBase(reason),
+        Err(AcceptanceSeedFault::Operation(0, reason)) => return AcceptanceVerdict::SkipCase(reason),
+        Err(AcceptanceSeedFault::Operation(_, reason)) => return AcceptanceVerdict::Skip(format!("the downstream edit does not seed: {reason}")),
     };
     let session = acceptance_session(&mut overwrite, None, None).await;
     let (change, edited) = match session {
@@ -336,20 +437,21 @@ where
     let head = acceptance_head(&overwrite);
     acceptance_close(&mut overwrite).await;
     let edited_seed: Vec<&A::Mutation> = std::iter::once(&edited).chain(downstream).collect();
-    let mut fresh = match acceptance_seeded::<A, M>(manifest, &case.base, &edited_seed).await {
+    let mut fresh = match acceptance_seeded::<A, M>(manifest, &case.base, &edited_seed, false).await {
         Ok(app) => app,
-        Err(reason) => {
+        Err(fault) => {
             ::protocol::Mutation::<A::Snapshot>::retire_cold(edited);
-            return AcceptanceVerdict::Fail(format!("a fresh fold of the edited log does not seed: {reason}"));
+            return AcceptanceVerdict::Fail(format!("a fresh fold of the edited log does not seed: {}", fault.reason()));
         }
     };
     let fold = acceptance_head(&fresh);
     acceptance_close(&mut fresh).await;
     let verdict = match (label, head, fold) {
         (Err(reason), _, _) | (_, Err(reason), _) | (_, _, Err(reason)) => AcceptanceVerdict::Fail(reason),
-        (Ok(_), Ok(head), Ok(fold)) if head != fold => AcceptanceVerdict::Fail(format!("the overwrite head differs from a fresh fold of the edited log after {} = {:?}", change.0, change.1)),
-        (Ok(label), Ok(_), Ok(fold)) => match acceptance_seeded::<A, M>(manifest, &case.base, &seed).await {
-            Err(reason) => AcceptanceVerdict::Fail(format!("the alternative instance does not seed: {reason}")),
+        (Ok(_), Ok(head), Ok(fold)) if head.0 != fold.0 => AcceptanceVerdict::Fail(format!("the overwrite head differs from a fresh fold of the edited log after {} = {:?}", change.0, change.1)),
+        (Ok(_), Ok(head), Ok(fold)) if head.1 != fold.1 => AcceptanceVerdict::Fail(format!("the overwrite head's document text differs from a fresh fold of the edited log after {} = {:?} at {}", change.0, change.1, acceptance_text_difference(&head.1, &fold.1))),
+        (Ok(label), Ok(_), Ok(fold)) => match acceptance_seeded::<A, M>(manifest, &case.base, &seed, true).await {
+            Err(fault) => AcceptanceVerdict::Fail(format!("the alternative instance does not seed: {}", fault.reason())),
             Ok(mut branched) => {
                 let verdict = match acceptance_session(&mut branched, Some(&change), Some(ACCEPTANCE_ALTERNATIVE)).await {
                     Err(AcceptanceVerdict::Skip(reason)) => AcceptanceVerdict::Fail(format!("the change the overwrite accepted fails as a new alternative: {reason}")),
@@ -359,7 +461,7 @@ where
                         ::protocol::Mutation::<A::Snapshot>::retire_cold(alternative_edit);
                         match head {
                             Ok(head) if head == fold => AcceptanceVerdict::Pass(format!("{} = {:?}, row \"{label}\"{}", change.0, change.1, if downstream.is_some() { ", one downstream edit replayed" } else { "" })),
-                            Ok(_) => AcceptanceVerdict::Fail("the new alternative's head differs from a fresh fold of the edited log".into()),
+                            Ok(head) => AcceptanceVerdict::Fail(format!("the new alternative's head differs from a fresh fold of the edited log at {}", acceptance_text_difference(&head.1, &fold.1))),
                             Err(reason) => AcceptanceVerdict::Fail(reason),
                         }
                     }
@@ -373,38 +475,159 @@ where
     verdict
 }
 
-/// ⚖️ LAW (design §16.3): the app's committed fixtures under `fixtures` hold a representative editable leaf whose history edit
-/// runs end to end through the generic mechanism — overwrite and new alternative, each head a fresh fold of the edited log, the
-/// row labelled in every locale. Cases whose data cannot exercise the flow are skipped (a downstream edit is tried first, then
-/// the leaf alone); the first passing case is the representative; a broken mechanism fails at once. Answers the passing case's
-/// summary; panics naming `plugin`, the leaf and the case otherwise.
-pub async fn assert_history_edits_end_to_end<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path) -> String
+/// 🔁️ Runs `cases` in order until one passes: each case with up to [`ACCEPTANCE_DOWNSTREAM_PER_LEAF`] downstream edits from cases
+/// on the same document, then alone; a case whose own operation does not seed, and every case on a document that does not load,
+/// is skipped at once. `Ok(Some)` names the passing case, `Ok(None)` means every case was skipped (reasons appended to `skipped`),
+/// `Err` is a broken mechanism.
+async fn acceptance_first_pass<A, M>(plugin: &str, manifest: fn() -> App, cases: &[AcceptanceCase<A::Mutation>], skipped: &mut Vec<String>) -> Result<Option<String>, String>
 where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let cases = acceptance_cases::<A>(fixtures);
-    let mut skipped = Vec::new();
-    let mut passed = None;
-    'cases: for case in &cases {
+    let mut unloadable = BTreeSet::new();
+    for case in cases {
+        if unloadable.contains(&case.base_key) {
+            continue;
+        }
         let leaf = protocol::SemanticMutation::<A::Snapshot>::semantics(&case.op).kind;
         let downstream: Vec<&A::Mutation> = cases.iter().filter(|other| other.base_key == case.base_key && other.directory != case.directory).map(|other| &other.op).take(ACCEPTANCE_DOWNSTREAM_PER_LEAF).collect();
         for next in downstream.into_iter().map(Some).chain(std::iter::once(None)) {
             match acceptance_scenario::<A, M>(manifest, case, next).await {
-                AcceptanceVerdict::Pass(summary) => {
-                    passed = Some(format!("{plugin}: {leaf} ({}) — {summary}", case.directory));
-                    break 'cases;
-                }
+                AcceptanceVerdict::Pass(summary) => return Ok(Some(format!("{plugin}: {leaf} ({}) — {summary}", case.directory))),
                 AcceptanceVerdict::Skip(reason) => skipped.push(format!("{leaf} ({}): {reason}", case.directory)),
-                AcceptanceVerdict::Fail(reason) => panic!("{plugin}: the history edit of {leaf} ({}) breaks the generic mechanism: {reason}", case.directory),
+                AcceptanceVerdict::SkipCase(reason) => {
+                    skipped.push(format!("{leaf} ({}): {reason}", case.directory));
+                    break;
+                }
+                AcceptanceVerdict::SkipBase(reason) => {
+                    skipped.push(format!("{leaf} ({}): {reason}", case.directory));
+                    unloadable.insert(case.base_key.clone());
+                    break;
+                }
+                AcceptanceVerdict::Fail(reason) => return Err(format!("{plugin}: the history edit of {leaf} ({}) breaks the generic mechanism: {reason}", case.directory)),
             }
         }
     }
-    let count = cases.len();
-    for case in cases {
+    Ok(None)
+}
+
+/// ⚖️ LAW (design §16.3): a representative editable leaf of the app is edited in history end to end through the generic
+/// mechanism — overwrite and new alternative, each head (value and document text) a fresh fold of the edited log, the row
+/// labelled in every locale. The committed fixture cases under `fixtures` are tried first ([`acceptance_cases`]); when none
+/// exercises the flow, every committed operation on every document the app ships ([`acceptance_example_cases`] over its initial
+/// document and `examples`). The first passing case is the representative; a broken mechanism fails at once. Answers the passing
+/// case's summary; panics naming `plugin`, the leaf and the case otherwise.
+pub async fn assert_history_edits_end_to_end<A, M>(plugin: &str, manifest: fn() -> App, fixtures: &std::path::Path, examples: &[ExampleSource]) -> String
+where
+    A: ArtifactApp + Default,
+    M: SpaceMember + MemberFactory + Send + 'static,
+{
+    let mut skipped = Vec::new();
+    let committed = acceptance_cases::<A>(fixtures);
+    let mut counts = vec![committed.len()];
+    let mut outcome = acceptance_first_pass::<A, M>(plugin, manifest, &committed, &mut skipped).await;
+    for case in committed {
         ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
     }
-    passed.unwrap_or_else(|| panic!("{plugin}: none of the {count} editable fixture case(s) under {} exercises a history edit end to end:\n{}", fixtures.display(), skipped.join("\n")))
+    if matches!(outcome, Ok(None)) {
+        let derived = acceptance_example_cases::<A>(fixtures, examples).await;
+        counts.push(derived.len());
+        outcome = acceptance_first_pass::<A, M>(plugin, manifest, &derived, &mut skipped).await;
+        for case in derived {
+            ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
+        }
+    }
+    match outcome {
+        Ok(Some(summary)) => summary,
+        Err(failure) => panic!("{failure}"),
+        Ok(None) => {
+            let shown = skipped.len().min(40);
+            panic!("{plugin}: none of the {} committed and {} derived editable case(s) under {} exercises a history edit end to end ({} skip(s), first {shown}):\n{}", counts[0], counts.get(1).copied().unwrap_or(0), fixtures.display(), skipped.len(), skipped[..shown].join("\n"))
+        }
+    }
+}
+
+/// 🔗️ Every breach of complete input-schema resolution among `A`'s document leaves, through the resolver the history editor uses
+/// (`registered_input_schema_document`): a leaf whose input descriptors the reader refuses, a `$id` its payload schema references
+/// (transitively) that nothing published, or a payload validator that does not compile. One line per breach, naming the leaf.
+pub fn input_schema_resolution_failures<A: ArtifactApp>() -> Vec<String> {
+    fn references(value: &DslValue, into: &mut Vec<String>) {
+        match value {
+            DslValue::Object(entries) => {
+                for (key, value) in entries {
+                    match (key.as_str(), value) {
+                        ("$ref", DslValue::String(reference)) if !reference.starts_with('#') => into.push(reference.split('#').next().unwrap_or_default().to_string()),
+                        _ => references(value, into),
+                    }
+                }
+            }
+            DslValue::Array(items) => items.iter().for_each(|item| references(item, into)),
+            _ => {}
+        }
+    }
+    let descriptors = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS;
+    let schemas = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMAS;
+    let mut failures = Vec::new();
+    for (descriptor, schema) in descriptors.iter().zip(schemas) {
+        let kind = descriptor.semantic_kind;
+        if let Err(error) = semio_framework::mutation_input_defs(schema, &semio_framework::registered_input_schema_document) {
+            failures.push(format!("{kind}: the input reader refuses its payload schema: {error:?}"));
+        }
+        let Ok(root) = dsl::os_pack::json::parse(schema) else {
+            failures.push(format!("{kind}: its payload schema is not JSON"));
+            continue;
+        };
+        let mut pending = Vec::new();
+        references(&dsl::os_pack::json::to_dsl_value(&root), &mut pending);
+        let (mut seen, mut documents, mut unresolved) = (BTreeSet::new(), Vec::new(), Vec::new());
+        while let Some(id) = pending.pop() {
+            if id.is_empty() || !seen.insert(id.clone()) {
+                continue;
+            }
+            match semio_framework::registered_input_schema_document(&id) {
+                Some(document) => {
+                    references(&document, &mut pending);
+                    documents.push(dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&document)));
+                }
+                None => unresolved.push(id),
+            }
+        }
+        if !unresolved.is_empty() {
+            failures.push(format!("{kind}: nothing publishes the referenced schema document(s) {unresolved:?}"));
+        }
+        if let Err(error) = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(schema, &documents.iter().map(String::as_str).collect::<Vec<_>>()) {
+            failures.push(format!("{kind}: its payload validator does not compile: {error}"));
+        }
+    }
+    failures
+}
+
+/// ⚖️ LAW (design §16.3, the editable-everything gate at runtime): on a registered instance — which publishes every document its
+/// leaves reference, as in production — every document leaf's payload schema resolves completely. Answers the number of leaves
+/// read; panics naming `plugin` and every breaching leaf otherwise.
+pub async fn assert_input_schemas_resolve<A, M>(plugin: &str, manifest: fn() -> App) -> usize
+where
+    A: ArtifactApp + Default,
+    M: SpaceMember + MemberFactory + Send + 'static,
+{
+    let mut app = artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest).await;
+    let failures = input_schema_resolution_failures::<A>();
+    acceptance_close(&mut app).await;
+    assert!(failures.is_empty(), "{plugin}: {} leaf payload schema(s) do not resolve through the runtime resolver:\n{}", failures.len(), failures.join("\n"));
+    <A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMAS.len()
+}
+
+/// ⏳️ Polls the law's future to completion on the calling thread, yielding between polls — the dependency-free executor every
+/// fixture app is driven by, so a plugin crate needs no async test macro to run the law.
+pub fn block_on_acceptance<F: Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
 }
 
 /// ⏪️ Wires [`assert_history_edits_end_to_end`] into a plugin crate's test target for one editor: `plugin` names the failure,
@@ -414,10 +637,19 @@ where
 macro_rules! history_edit_acceptance_law {
     ($plugin:literal, $editor:ty, $manifest:expr, $fixtures:literal) => {
         /// ⏪️ LAW (design §16.3): a representative editable leaf of this editor is edited in history end to end.
-        #[semio_framework_async_macros::async_test]
-        async fn history_edits_end_to_end() {
-            let summary = $crate::app::history_edit_acceptance::assert_history_edits_end_to_end::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>($plugin, $manifest, &::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures)).await;
+        #[test]
+        fn history_edits_end_to_end() {
+            let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
+            let examples = <$editor as $crate::ArtifactEditor>::examples();
+            let summary = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_history_edits_end_to_end::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>($plugin, $manifest, &fixtures, &examples));
             ::std::println!("[history-edit-acceptance] {summary}");
+        }
+
+        /// 🔗️ LAW (design §16.3): every document leaf payload schema of this editor resolves through the runtime resolver.
+        #[test]
+        fn history_edit_inputs_resolve() {
+            let leaves = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_input_schemas_resolve::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>($plugin, $manifest));
+            ::std::println!("[history-edit-inputs] {}: {leaves} leaf payload schema(s) resolve", $plugin);
         }
     };
 }

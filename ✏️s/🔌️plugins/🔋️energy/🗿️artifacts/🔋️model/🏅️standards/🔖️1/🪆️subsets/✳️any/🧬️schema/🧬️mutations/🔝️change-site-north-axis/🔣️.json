@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔝️change-site-north-axis",
+  "semanticKind": "change-site-north-axis",
+  "displayName": "Change Site North Axis",
+  "emoji": "🔝️",
+  "aggregateVariant": "ChangeSiteNorthAxis",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-site-north-axis",
+  "binaryTag": 291,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::SetRunText(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

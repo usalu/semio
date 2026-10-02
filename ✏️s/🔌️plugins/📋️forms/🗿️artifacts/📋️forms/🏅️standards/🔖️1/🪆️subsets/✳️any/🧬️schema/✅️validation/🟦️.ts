@@ -1,9 +1,9 @@
 /** ✅️ Answer validation shared by preview, navigation and submission. */
 import type { DslValue, FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
+import{formsValueNumber}from"../🌱️value/🟦️.ts";
 export type AnswerErrorCode = "required" | "type" | "range" | "step" | "option" | "date" | "color" | "vector";
 export interface FormsAnswerError { questionId: string; code: AnswerErrorCode }
-const object = (value: DslValue): value is { [key: string]: DslValue } => typeof value === "object" && value !== null && !Array.isArray(value);
-const empty = (value: DslValue) => value === null || typeof value === "string" && value.trim() === "" || Array.isArray(value) && value.length === 0 || object(value) && Object.keys(value).length === 0;
+const empty = (value: DslValue) => value.kind==="null"||value.kind==="text"&&value.value.trim()===""||value.kind==="array"&&value.items.length===0||value.kind==="object"&&value.members.length===0;
 function validDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split("-").map(Number);
@@ -14,22 +14,22 @@ export function answerError(question: FormQuestion, value: DslValue): AnswerErro
   if (question.kind === "note" || question.kind === "image") return null;
   if (empty(value)) return question.required ? "required" : null;
   switch (question.kind) {
-    case "text": case "longText": case "file": return typeof value === "string" ? null : "type";
-    case "boolean": return typeof value === "boolean" ? null : "type";
+    case "text": case "longText": case "file": return value.kind==="text" ? null : "type";
+    case "boolean": return value.kind==="boolean" ? null : "type";
     case "number": case "slider": {
-      if (typeof value !== "number" || !Number.isFinite(value)) return "type";
-      if (question.min !== undefined && value < question.min || question.max !== undefined && value > question.max) return "range";
+      const number=formsValueNumber(value);if(number===undefined||!Number.isFinite(number))return"type";
+      if (question.min !== undefined && number < question.min || question.max !== undefined && number > question.max) return "range";
       if (question.step !== undefined) {
-        const ticks = (value - (question.min ?? 0)) / question.step;
+        const ticks = (number - (question.min ?? 0)) / question.step;
         if (!Number.isFinite(ticks) || Math.abs(ticks - Math.round(ticks)) > 1e-9) return "step";
       }
       return null;
     }
-    case "single": return typeof value !== "string" ? "type" : question.options?.some(option => option.value === value) ? null : "option";
-    case "multi": return !Array.isArray(value) ? "type" : new Set(value).size !== value.length || value.some(item => typeof item !== "string" || !question.options?.some(option => option.value === item)) ? "option" : null;
-    case "date": return typeof value !== "string" ? "type" : validDate(value) ? null : "date";
-    case "color": return typeof value !== "string" ? "type" : /^#[0-9a-fA-F]{6}$/.test(value) ? null : "color";
-    case "vector": return !Array.isArray(value) || value.length !== (question.fields?.length ?? 0) || value.some(item => typeof item !== "number" || !Number.isFinite(item)) ? "vector" : null;
-    default: return object(value) ? null : "type";
+    case "single": return value.kind!=="text" ? "type" : question.options?.some(option => option.value === value.value) ? null : "option";
+    case "multi":{if(value.kind!=="array")return"type";const seen=new Set<string>();return value.items.some(item=>item.kind!=="text"||seen.has(item.value)||!question.options?.some(option=>option.value===item.value)||(seen.add(item.value),false))?"option":null;}
+    case "date": return value.kind!=="text" ? "type" : validDate(value.value) ? null : "date";
+    case "color": return value.kind!=="text" ? "type" : /^#[0-9a-fA-F]{6}$/.test(value.value) ? null : "color";
+    case "vector": return value.kind!=="array" || value.items.length !== (question.fields?.length ?? 0) || value.items.some(item => {const number=formsValueNumber(item);return number===undefined||!Number.isFinite(number);}) ? "vector" : null;
+    default: return value.kind==="object" ? null : "type";
   }
 }

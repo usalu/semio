@@ -14,6 +14,8 @@ pub(crate) mod context {
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("note", NotePlayApp, note_manifest_for_tests, "../..");
+
     /// 🧪️ An app instance bound to instance 1. The registry-LESS `artifact_app_laws::new_app` is
     /// unusable for this app: `VcsArtifactApp::with_registry_on_bus` joins
     /// `NotePlayApp::bounded_first_step_tool_proofs()` against the registry's `Migrated` tool ids, and
@@ -79,7 +81,7 @@ pub(crate) mod context {
                 ViewWindowInstance { id: id.into(), window_kind_id: NOTE_PLAY_WINDOW_COMPOSITE.into() },
                 ViewWindowInstance { id: NOTE_PLAY_WINDOW_NAVIGATOR.into(), window_kind_id: NOTE_PLAY_WINDOW_NAVIGATOR.into() },
             ],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
         .for_window_instance(id)
         .expect("Note composite test window roster")

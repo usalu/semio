@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { resolveFixtures, repoRootFromHere, TAXONOMY_REL_PATH, type DiscoveredCase } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../../🧬️schema/🔣️.json";
+import schema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 import vectors from "../../🧫️fixtures/🧭️fixture-resolution/🔣️.json";
 
 describe("fixture and asset resolution", () => {
@@ -15,7 +15,7 @@ describe("fixture and asset resolution", () => {
     expect(validate.errors).toBeNull();
   });
   for (const row of vectors.cases) test(row.id, () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-fixture-resolution-"));
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "semio-fixture-resolution-")));
     const owner = "domain";
     const discovered: DiscoveredCase = { owner, ownerName: owner, case: "🧪️case", caseDir: `${owner}/🧪️tests/🧪️case`, featurePath: `${owner}/🧪️tests/🧪️case/🥒️.feature`, adapters: {}, sharedFixtureDir: `${owner}/🧫️fixtures`, projectName: "fixture-resolution" };
     try {

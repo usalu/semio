@@ -4,7 +4,9 @@
 //! `ToolYield`s, driven by the `🛠️tool-machine` runner: one release is ONE `ToolTransaction` holding ONE parametric
 //! `paint-stroke` leaf — the layer, the target and brush the session holds, the points and the pixel selection the
 //! stroke is clipped to — published as one edit, one history row, whose brush and points time travel edits. Tool state
-//! is never history; the yielded leaf is (design §5, §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
+//! is never history; the yielded leaf is (design §5, §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). The
+//! one-shot pixel tool, the layer refusals and the session colour and selection readers are shared with the bucket
+//! (`🪣️fill-region`).
 #![allow(unexpected_cfgs)]
 
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
@@ -38,8 +40,26 @@ fn fault(code: &'static str) -> Fault {
     Fault::from(code)
 }
 
+/// 🚫️ Why `layer_id` cannot take a repaint of the session's paint target on `document`: no such layer, a hidden or
+/// locked one, a layer without pixels or, painting the mask, without a mask; `None` when it can.
+pub(crate) fn paint_target_refusal(layer_id: &str, document: &RasterSnapshot, config: &RasterConfig) -> Option<Fault> {
+    let Some(layer) = find_layer(&document.layers, layer_id) else { return Some(fault("raster-layer-not-found")) };
+    if !layer_visible(layer) {
+        return Some(fault("raster-paint-layer-hidden"));
+    }
+    if !layer_protection(&document.layers, layer_id).is_some_and(|protection| protection.editable) {
+        return Some(fault("raster-layer-locked"));
+    }
+    let paints = match (config.paint_target.as_str(), layer) {
+        ("mask", RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) => mask.is_some(),
+        ("pixels", RasterLayerNode::Pixel { .. }) => true,
+        _ => false,
+    };
+    (!paints).then(|| fault("raster-paint-target-missing"))
+}
+
 /// 🎨️ `#rrggbb` as four unit channels, opaque.
-fn hex_color(value: &str) -> Option<Vec<f64>> {
+pub(crate) fn hex_color(value: &str) -> Option<Vec<f64>> {
     crate::editor::raster::config::valid_brush_color(value).then(|| {
         let rgb = u32::from_str_radix(&value[1..], 16).unwrap_or(0);
         vec![f64::from((rgb >> 16) & 0xff) / 255.0, f64::from((rgb >> 8) & 0xff) / 255.0, f64::from(rgb & 0xff) / 255.0, 1.0]
@@ -47,7 +67,7 @@ fn hex_color(value: &str) -> Option<Vec<f64>> {
 }
 
 /// ✂️ The session's pixel selection as the leaf's runs, when it selects THIS layer's target.
-fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
+pub(crate) fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
     let Some(selection) = config.pixel_selection.as_ref().filter(|selection| selection.layer_id == layer_id && selection.target == config.paint_target) else { return Ok(None) };
     let count = selection.validate()?;
     let spans = crate::editor::raster::selection::selection_spans(&selection.spans, count)?;
@@ -64,22 +84,10 @@ pub fn paint_stroke_leaf(payload: &PaintStroke, document: &RasterSnapshot, confi
     if payload.xs.len() != payload.ys.len() || payload.xs.is_empty() || payload.xs.len() > RASTER_STROKE_MAXIMUM_POINTS || !payload.xs.iter().chain(&payload.ys).all(|value| value.is_finite()) {
         return Err(fault("raster-paint-points-invalid"));
     }
-    let layer = find_layer(&document.layers, &payload.layer_id).ok_or_else(|| fault("raster-layer-not-found"))?;
-    if !layer_visible(layer) {
-        return Err(fault("raster-paint-layer-hidden"));
-    }
-    if !layer_protection(&document.layers, &payload.layer_id).is_some_and(|protection| protection.editable) {
-        return Err(fault("raster-layer-locked"));
+    if let Some(refusal) = paint_target_refusal(&payload.layer_id, document, config) {
+        return Err(refusal);
     }
     let target = config.paint_target.as_str();
-    let paints = match (target, layer) {
-        ("mask", RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) => mask.is_some(),
-        ("pixels", RasterLayerNode::Pixel { .. }) => true,
-        _ => false,
-    };
-    if !paints {
-        return Err(fault("raster-paint-target-missing"));
-    }
     let color = match target {
         "mask" => {
             let grey = f64::from(config.mask_value.min(255)) / 255.0;
@@ -148,10 +156,10 @@ impl machine::Host<paint_tool::PaintTool> for PaintToolHost {
     }
 }
 
-/// 🛠️ Runs one released stroke through a paint tool at rest as ONE transaction of [`RASTER_PAINT_TOOL_ID`], its ref
-/// minted from the admission's `authoring_seed` and the host clock.
-pub fn raster_paint_commit(authoring_seed: &str, stroke: RasterMutation) -> Option<(protocol::TransactionRef, Vec<RasterMutation>)> {
-    let mut runner = ToolMachineRunner::<paint_tool::PaintTool, PaintToolHost>::start(RASTER_PAINT_TOOL_ID, protocol::ActorId(authoring_seed.to_string()), PaintToolContext, PaintToolHost).ok()?;
+/// 🛠️ Runs one released gesture's leaf (a brush stroke, a bucket fill) through the one-shot pixel tool at rest as ONE
+/// transaction of `tool`, its ref minted from the admission's `authoring_seed` and the host clock.
+pub fn raster_tool_commit(tool: &str, authoring_seed: &str, stroke: RasterMutation) -> Option<(protocol::TransactionRef, Vec<RasterMutation>)> {
+    let mut runner = ToolMachineRunner::<paint_tool::PaintTool, PaintToolHost>::start(tool, protocol::ActorId(authoring_seed.to_string()), PaintToolContext, PaintToolHost).ok()?;
     let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
     match runner.send(paint_tool::Event::Stroke(PaintToolRequest { stroke }), clock).ok()? {
         ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
@@ -165,7 +173,7 @@ pub fn raster_paint_commit(authoring_seed: &str, stroke: RasterMutation) -> Opti
 pub fn handle(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let stroke = paint_stroke_leaf(payload, doc.snapshot, cfg.snapshot)?;
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
-    Ok(match raster_paint_commit(seed, stroke) {
+    Ok(match raster_tool_commit(RASTER_PAINT_TOOL_ID, seed, stroke) {
         Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),
         Some((_, mutations)) => Emit::mutations(mutations),
         None => Emit::default(),

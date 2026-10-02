@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for DeleteCo
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete column {}", self.name), &format!("Spalte {} löschen", self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete column {}", self.name), &format!("Spalte {} löschen", self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.name.clone()]

@@ -124,7 +124,7 @@ test("registry JSON parsers agree and its schema link names the current regular 
   const schemaBytes = readOwned(target), schemaErrors: ParseError[] = [];
   expect(parseJson(schemaBytes.toString("utf8"), schemaErrors, { disallowComments: true, allowTrailingComma: false })).toEqual(JSON.parse(schemaBytes.toString("utf8")));
   expect(schemaErrors).toEqual([]);
-  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://json.schemas.assets.semio-tech.com/repo/test/schema.json");
+  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://json.schemas.assets.semio-tech.com/framework/test/schema.json");
 });
 
 test("documentation correction leaves the original forty-row authority and baseline preimage immutable", () => {
@@ -153,7 +153,7 @@ test("documentation gate registration matches the declared Nx route and both lau
   visit(tree);
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
-  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
+  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const errors: ParseError[] = [], configurations = parseJson(readOwned(path).toString("utf8"), errors).configurations;
     expect(errors, path).toEqual([]);

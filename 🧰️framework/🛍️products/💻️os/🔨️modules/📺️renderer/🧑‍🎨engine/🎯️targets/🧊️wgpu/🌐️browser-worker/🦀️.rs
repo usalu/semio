@@ -742,7 +742,8 @@ impl BrowserRendererBootstrap {
                 BootPhase { stage: "plugin-parse", progress: 0.55, shell_boot: false, complete: false }
             }
             5 => {
-                let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone());
+                let (locale, terminology) = crate::shell::shell_language_axes().map_err(|error| js_error("language-authority", &error))?;
+                let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone(), locale, terminology);
                 shell.screen_w = self.width.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
                 shell.screen_h = self.height.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
                 self.shell = Some(shell);

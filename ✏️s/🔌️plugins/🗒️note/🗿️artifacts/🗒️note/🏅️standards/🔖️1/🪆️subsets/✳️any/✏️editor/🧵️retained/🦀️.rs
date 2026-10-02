@@ -170,14 +170,11 @@ impl NoteCommandWork {
         if self.accumulated.description.is_some() && emit.description.is_some() && self.accumulated.description != emit.description {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.description"), "Note semantic units produced incompatible edit descriptions"));
         }
-        if self.accumulated.coalesce_key.is_some() && emit.coalesce_key.is_some() && self.accumulated.coalesce_key != emit.coalesce_key {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.coalesce"), "Note semantic units produced incompatible coalescing owners"));
+        if emit.coalesce_key.is_some() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.coalesce"), "a Note semantic unit never amends an earlier edit"));
         }
         if self.accumulated.description.is_none() {
             self.accumulated.description = emit.description.take();
-        }
-        if self.accumulated.coalesce_key.is_none() {
-            self.accumulated.coalesce_key = emit.coalesce_key.take();
         }
         if let Some(transaction) = emit.transaction.take() {
             if self.accumulated.transaction.is_some() || self.units.len() != 1 {
@@ -212,7 +209,6 @@ impl NoteCommandWork {
             || self.ephemeral.transient.pop().is_some()
             || self.ephemeral.window_transient.pop().is_some()
             || self.accumulated.description.take().is_some()
-            || self.accumulated.coalesce_key.take().is_some()
             || self.accumulated.transaction.take().is_some()
         {
             return true;
@@ -355,7 +351,6 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
             && self.ephemeral.transient.is_empty()
             && self.ephemeral.window_transient.is_empty()
             && self.accumulated.description.is_none()
-            && self.accumulated.coalesce_key.is_none()
             && self.accumulated.transaction.is_none()
             && self.projection.is_none()
             && self.id_owner.is_none()

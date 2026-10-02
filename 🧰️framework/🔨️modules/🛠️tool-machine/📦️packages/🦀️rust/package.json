@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "bun nx run @semio-tech/framework-tool-machine-rs:test",
-    "check": "bun nx run @semio-tech/framework-tool-machine-rs:check"
+    "check": "bun nx run @semio-tech/framework-tool-machine-rs:check",
+    "test-node-graph-row-ownership": "bun nx run @semio-tech/framework-tool-machine-rs:test-node-graph-row-ownership"
   },
   "bundleKind": "library",
   "nx": {

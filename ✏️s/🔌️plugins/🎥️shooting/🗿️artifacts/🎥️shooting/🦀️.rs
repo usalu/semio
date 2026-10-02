@@ -36,7 +36,7 @@ pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shoot
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.shooting".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Shooting", "2D-Aufnahme"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Shooting", "2D-Aufnahme"),
         source_format: "shooting.scene".into(),
         component_kind: "shooting".into(),
         dimension: "2d".into(),
@@ -257,14 +257,14 @@ pub struct ShootingAsset {
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     /// 🪄️ Uniform-vs-per-axis is a JSON-authoring shorthand only, not a persisted distinction —
     /// callers wanting a uniform scale write `[s, s, s]` (see `shooting_asset_scale`, the sole
     /// reader, which never distinguished the two shapes anyway).
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<[f64; 3]>,
 }
 

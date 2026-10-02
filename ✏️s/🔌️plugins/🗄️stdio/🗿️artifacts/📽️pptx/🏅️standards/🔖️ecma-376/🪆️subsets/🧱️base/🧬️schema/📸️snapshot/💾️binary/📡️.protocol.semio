@@ -2,7 +2,77 @@ dialect protocol
 protocol stdio.pptx.snapshot
 version 1
 schema stdio.pptx
-start record
-framing record
-header fixed 0
-chain logical_model_json bytes
+start PptxSnapshot
+framing literal
+
+enum Revision { V1=1 }
+enum Boolean { False=0 True=1 }
+enum ShapeKind { TextBox=0 Picture=1 Placeholder=2 Other=3 }
+enum XmlNodeKind { Element=0 Text=1 CData=2 Comment=3 ProcessingInstruction=4 }
+enum ExternalKind { Absent=0 System=1 Public=2 }
+enum DtdKind { Entity=1 }
+
+record PptxSnapshot {
+ revision Ref(Revision)
+ schema utf8
+ opc Ref(OpcPackage)
+ xml_parts Array(Ref(PptxXmlPart),Varint)
+ presentation Ref(Presentation)
+}
+record PptxXmlPart { path utf8 content_type utf8 document Ref(XmlDocument) }
+record Presentation { slides Array(Ref(Slide),Varint) }
+record Slide { shapes Array(Ref(Shape),Varint) }
+record Shape {
+ kind Ref(ShapeKind)
+ text_frame Array(Ref(Paragraph),Varint) if kind eq 0
+ text_position Ref(Transform) if kind eq 0
+ blip_rel_id utf8 if kind eq 1
+ picture_position Ref(Transform) if kind eq 1
+ placeholder_kind utf8 if kind eq 2
+ placeholder_frame Array(Ref(Paragraph),Varint) if kind eq 2
+ placeholder_position Ref(Transform) if kind eq 2
+ node Ref(XmlNode) if kind eq 3
+}
+record Paragraph { runs Array(Ref(Run),Varint) }
+record Run { text utf8 bold Ref(Boolean) italic Ref(Boolean) font_size Ref(OptionalFontSize) }
+record OptionalFontSize { present Ref(Boolean) value varint if present eq 1 }
+record Transform { x varint y varint cx varint cy varint }
+record OpcPackage {
+ parts Array(Ref(OpcPart),Varint)
+ defaults Array(Ref(ContentTypePair),Varint)
+ overrides Array(Ref(ContentTypePair),Varint)
+ relationship_owners Array(Ref(RelationshipOwner),Varint)
+ comment utf8
+}
+record OpcPart { path utf8 content_type utf8 bytes bytes }
+record ContentTypePair { key utf8 value utf8 }
+record RelationshipOwner { owner utf8 relationships Array(Ref(Relationship),Varint) }
+record Relationship { id utf8 rel_type utf8 target utf8 target_mode Ref(Boolean) }
+record XmlDocument {
+ root Ref(OptionalNode)
+ doctype Ref(OptionalDoctype)
+ declaration Ref(OptionalDeclaration)
+ prolog Array(Ref(XmlNode),Varint)
+ epilog Array(Ref(XmlNode),Varint)
+}
+record OptionalNode { present Ref(Boolean) value Ref(XmlNode) if present eq 1 }
+record OptionalDoctype { present Ref(Boolean) value Ref(XmlDoctype) if present eq 1 }
+record OptionalDeclaration { present Ref(Boolean) value Ref(XmlDeclaration) if present eq 1 }
+record OptionalText { present Ref(Boolean) value utf8 if present eq 1 }
+record OptionalBoolean { present Ref(Boolean) value Ref(Boolean) if present eq 1 }
+record XmlNode {
+ kind Ref(XmlNodeKind)
+ name utf8 if kind eq 0
+ attrs Array(Ref(XmlAttribute),Varint) if kind eq 0
+ children Array(Ref(XmlNode),Varint) if kind eq 0
+ text utf8 if kind eq 1
+ cdata utf8 if kind eq 2
+ comment utf8 if kind eq 3
+ target utf8 if kind eq 4
+ data utf8 if kind eq 4
+}
+record XmlAttribute { name utf8 value utf8 }
+record XmlDeclaration { version utf8 encoding Ref(OptionalText) standalone Ref(OptionalBoolean) quote Ref(Boolean) }
+record XmlDoctype { prolog_position varint name utf8 external Ref(XmlExternal) declarations Array(Ref(XmlEntity),Varint) }
+record XmlExternal { kind Ref(ExternalKind) system_id utf8 if kind eq 1 public_id utf8 if kind eq 2 public_system_id utf8 if kind eq 2 }
+record XmlEntity { kind Ref(DtdKind) parameter Ref(Boolean) name utf8 value utf8 }

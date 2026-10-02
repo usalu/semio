@@ -48,7 +48,12 @@ enum DagMutationDsl {
     DisconnectNodes { id: String },
     MoveNodes { ids: Vec<String>, dx: f64, dy: f64 },
     SetNodePositions { positions_json: String },
-    SetSlider { id: String, field: DagSliderField, value: f64 },
+    SetSlider {
+        id: String,
+        #[dsl(key = "field")]
+        slider_field: DagSliderField,
+        value: f64,
+    },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -59,7 +64,7 @@ impl OpText for DagMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -69,7 +74,7 @@ impl OpText for DagMutationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -105,7 +110,7 @@ fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
         DagMutation::DisconnectNodes(payload) => DagMutationDsl::DisconnectNodes { id: payload.id.clone() },
         DagMutation::MoveNodes(payload) => DagMutationDsl::MoveNodes { ids: payload.ids.clone(), dx: payload.dx, dy: payload.dy },
         DagMutation::SetNodePositions(payload) => DagMutationDsl::SetNodePositions { positions_json: json_of(&payload.positions) },
-        DagMutation::SetSlider(payload) => DagMutationDsl::SetSlider { id: payload.id.clone(), field: payload.field, value: payload.value },
+        DagMutation::SetSlider(payload) => DagMutationDsl::SetSlider { id: payload.id.clone(), slider_field: payload.field, value: payload.value },
     }
 }
 
@@ -129,7 +134,7 @@ fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
         DagMutationDsl::DisconnectNodes { id } => disconnect_nodes(id),
         DagMutationDsl::MoveNodes { ids, dx, dy } => move_nodes(ids, dx, dy),
         DagMutationDsl::SetNodePositions { positions_json } => set_node_positions(dsl::json::from_json_str::<Vec<DagNodePosition>>(&positions_json).expect("dag mutation dsl `positions_json` must decode")),
-        DagMutationDsl::SetSlider { id, field, value } => set_slider(id, field, value),
+        DagMutationDsl::SetSlider { id, slider_field, value } => set_slider(id, slider_field, value),
     }
 }
 

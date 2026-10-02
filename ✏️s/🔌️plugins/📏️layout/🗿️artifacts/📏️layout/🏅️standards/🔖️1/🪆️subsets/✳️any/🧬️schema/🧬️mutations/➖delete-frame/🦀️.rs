@@ -26,8 +26,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteFrame {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_frame(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" löschen", self.frame_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" löschen", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

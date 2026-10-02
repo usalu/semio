@@ -1247,15 +1247,7 @@
           ],
           "target": "component-release"
         }
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "hub-component-codec-check"
-          ]
-        }
-      }
+      ]
     },
     "component-codec-budget-check": {
       "executor": "nx:run-commands",
@@ -1272,15 +1264,7 @@
           ],
           "target": "component-release"
         }
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "hub-component-codec-budget-check"
-          ]
-        }
-      }
+      ]
     }
   }
 }

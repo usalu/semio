@@ -4,7 +4,7 @@ use crate::engine::space::S_PLAY_PARAMETERS_BODY_KEY;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn labels() -> &'static SStudioLabels {
-    semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::default())
+    semio_framework_plugin::resolve_labels::<SStudioLabels>(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 fn project(node: BuiltNode) -> String {

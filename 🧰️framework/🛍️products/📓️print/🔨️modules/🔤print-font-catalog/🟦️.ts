@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { stageArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 export type PrintFontDescriptor = { readonly family: string; readonly directory: string; readonly filename: string; readonly texFilename: string };
 const product = "🧰️framework/🛍️products/📓️print";
@@ -24,6 +24,6 @@ export async function stagePrintFonts(workspace = getWorkspaceRoot()): Promise<{
     if (files.has(font.texFilename)) throw new Error(`Duplicate print font: ${font.texFilename}`);
     files.set(font.texFilename, source);
   }
-  await stageArtifacts(printFontSearchPaths(workspace)[0]!, "@semio-tech/print:fonts", files);
+  await stageRepositoryArtifacts(printFontSearchPaths(workspace)[0]!, "@semio-tech/print:fonts", files);
   return { total: files.size };
 }

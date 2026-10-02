@@ -190,7 +190,7 @@ fn the_volume_brush_is_bound_to_the_world_window_with_its_three_voxel_sliders() 
     let bound = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).expect("a declared window").utilities.iter().any(|utility| utility.as_str() == world3d::utilities::volume_brush::UTILITY_ID);
     assert!(bound(world3d::WINDOW_KIND_ID), "the world window must bind the volume brush");
     assert!(!bound(board2d::WINDOW_KIND_ID), "the board pane paints projections, it does not paint volumes");
-    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("labels");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("labels");
     let measures = world3d::utilities::volume_brush::voxel_dim_measures(&crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), labels);
     assert_eq!(measures.len(), 3, "width, depth and height");
 }

@@ -15,7 +15,7 @@ impl protocol::Mutation<Snapshot> for Mutation {
 impl semio_framework_os_kernel::SemanticMutation<Snapshot> for Mutation {
     fn kinds()->&'static[semio_framework_os_kernel::SemanticDescriptor]{&[]}
     fn semantics(&self)->&'static semio_framework_os_kernel::SemanticDescriptor{match *self{}}
-    fn label(&self)->semio_framework_os_kernel::LocalizedLabel{match *self{}}
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel{match *self{}}
     fn target(&self)->Vec<String>{match *self{}}
 }
 impl protocol::OpText for Mutation {

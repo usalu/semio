@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-run-period-year",
+  "semanticKind": "change-run-period-year",
+  "displayName": "Change Run Period Year",
+  "emoji": "📅️",
+  "aggregateVariant": "ChangeRunPeriodYear",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-run-period-year",
+  "binaryTag": 299,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePattern {
         base.patterns.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetPattern(super::set_pattern::SetPattern { pattern: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove pattern {}", self.id), &format!("Muster {} entfernen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove pattern {}", self.id), &format!("Muster {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

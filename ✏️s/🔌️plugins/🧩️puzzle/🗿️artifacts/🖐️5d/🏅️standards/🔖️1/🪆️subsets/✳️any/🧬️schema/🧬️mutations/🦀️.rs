@@ -545,6 +545,7 @@ impl Mutation<Value> for Puzzle5dMutation {
     /// rather than hand-authoring a duplicate 28-entry table here.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
     const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMAS;
+    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
 
     fn input_schema(&self) -> Option<&'static str> {
         Mutation::<Puzzle5dSnapshot>::input_schema(self)
@@ -625,7 +626,7 @@ impl Puzzle5dPlaySnapshot {
     }
 
     /// 🧬️ A root produced by typed mutation application; its `Value` projection is deferred.
-    fn from_typed(typed: Puzzle5dSnapshot) -> Self {
+    pub(crate) fn from_typed(typed: Puzzle5dSnapshot) -> Self {
         Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
     }
 
@@ -666,13 +667,13 @@ impl PartialEq for Puzzle5dPlaySnapshot {
 /// maintain.
 impl dsl::ToValue for Puzzle5dPlaySnapshot {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::from(self.value())
+        dsl::ToValue::to_value(self.typed())
     }
 }
 
 impl dsl::FromValue for Puzzle5dPlaySnapshot {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        Ok(Self::new(Value::from(value)))
+        <Puzzle5dSnapshot as dsl::FromValue>::from_value(value).map(Self::from_typed)
     }
 }
 
@@ -680,18 +681,18 @@ impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(Self::new).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(self.value()).unwrap_or_default()
+        <Puzzle5dSnapshot as store::ArtifactDsl>::print_dsl(self.typed())
     }
 }
 
-/// 🧒️ Composition view of the play snapshot: a puzzle 5d document owns no child artifacts.
-impl semio_framework_schema::ArtifactCompositionFields for Puzzle5dPlaySnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
-        Ok(())
+/// 🧒️ Visits the literal persisted child owned by the typed Puzzle5d parent.
+impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle5dPlaySnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        semio_framework_schema_composition::ArtifactCompositionFields::visit_child_refs(self.typed(),visitor)
     }
 }
 
@@ -708,6 +709,9 @@ impl store::ArtifactPack for Puzzle5dPlaySnapshot {
 
     fn record_spec() -> Option<dsl::RecordSpec> {
         <Puzzle5dSnapshot as store::ArtifactPack>::record_spec()
+    }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 }
 
@@ -728,6 +732,7 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     /// `may_emit_foreign_steps` already does immediately below.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle5dSnapshot>>::DESCRIPTORS;
     const INPUT_SCHEMAS: &'static [&'static str] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMAS;
+    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = <Self as Mutation<Puzzle5dSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
 
     fn input_schema(&self) -> Option<&'static str> {
         Mutation::<Puzzle5dSnapshot>::input_schema(self)
@@ -776,7 +781,7 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {

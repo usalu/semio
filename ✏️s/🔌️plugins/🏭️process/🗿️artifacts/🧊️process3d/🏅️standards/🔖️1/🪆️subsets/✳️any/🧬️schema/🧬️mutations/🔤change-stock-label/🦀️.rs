@@ -25,8 +25,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStoc
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename stock to \"{}\"", self.new_label), &format!("Rohteil in \"{}\" umbenennen", self.new_label))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename stock to \"{}\"", self.new_label), &format!("Rohteil in \"{}\" umbenennen", self.new_label))
     }
 }
 //#endregion 🔖️ChangeStockLabel

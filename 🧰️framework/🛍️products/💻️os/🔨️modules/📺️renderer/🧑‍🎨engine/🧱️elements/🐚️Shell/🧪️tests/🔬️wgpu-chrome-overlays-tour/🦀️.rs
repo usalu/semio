@@ -123,7 +123,7 @@ fn tooltip_ready_respects_hover_delay() {
 /// documented "no animation-clock scaffolding" gap) rather than leaving a stale tooltip painted.
 #[test]
 fn tooltip_closes_immediately_on_hover_out() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -167,7 +167,7 @@ fn dialog_stack_supports_nesting_close_order() {
 /// A click far in the top-left corner, well outside the centered ~360x168 box on an 800x600 viewport.
 #[test]
 fn dialog_scrim_click_dismisses_without_confirm_action() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -200,7 +200,7 @@ fn dialog_choices_fixture() -> serde_json::Value {
 fn dialog_choices_request(locale: Locale) -> (serde_json::Value, ChromeDialogRequest) {
     let fixture = dialog_choices_fixture();
     let dialog: semio_framework::DialogDefinition = serde_json::from_value(fixture["dialog"].clone()).expect("fixture dialog");
-    let request = ChromeDialogRequest::from_definition("test", &dialog, Some(DslValue::from(fixture["seed"].clone())), Terminology::default(), locale);
+    let request = ChromeDialogRequest::from_definition("test", &dialog, Some(DslValue::from(fixture["seed"].clone())), Terminology::Native, locale);
     (fixture, request)
 }
 
@@ -276,7 +276,7 @@ fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
 /// seed context and its id, and Escape cancels with the declared cancel action; every dismissal closes the dialog.
 #[test]
 fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_cancels() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
     let draft = request.fields[0].draft.clone();
     shell.chrome_build.open_dialog(request);
@@ -311,7 +311,7 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
 #[test]
 fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_controls() {
     for locale in [Locale::En, Locale::De] {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
         let (fixture, mut request) = dialog_choices_request(locale);
         let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
         stage_dialog_case(&mut request, cleared);
@@ -345,7 +345,7 @@ fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_c
 /// field, activating the gated submit does nothing, and activating the choice dispatches it and closes the dialog.
 #[test]
 fn the_dialog_accessibility_tree_is_operable_like_its_keyboard() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
     shell.chrome_build.open_dialog(request);
     let key = |suffix: &str| format!("shell.dialog.finalizeHistoryEdit.{suffix}");
@@ -377,9 +377,9 @@ fn color_and_vector_dialog() -> semio_framework::DialogDefinition {
 #[test]
 fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
     for (locale, opacity) in [(Locale::En, "Fill Opacity"), (Locale::De, "Füllung Deckkraft")] {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
         let seed = DslValue::from(serde_json::json!({ "fill": [1.0, 0.0, 0.0, 0.5] }));
-        let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::default(), locale);
+        let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::Native, locale);
         assert_eq!(request.fields.iter().map(|field| field.label.as_str()).take(2).collect::<Vec<_>>(), [if locale == Locale::En { "Fill" } else { "Füllung" }, opacity]);
         assert_eq!(request.fields[0].draft, "#ff000080");
         let theme = Theme::light();
@@ -412,9 +412,9 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
 /// its bounds clamp a typed value, its detents are what the page keys jump to, and its arrows walk its step ladder.
 #[test]
 fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let seed = DslValue::from(serde_json::json!({ "turn": [0.25, 1.0] }));
-    let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::default(), Locale::En);
+    let request = ChromeDialogRequest::from_definition("test", &color_and_vector_dialog(), Some(seed), Terminology::Native, Locale::En);
     let axes: Vec<&str> = request.fields.iter().filter(|field| field.id == "turn").map(|field| field.draft.as_str()).collect();
     assert_eq!(axes, ["0.3", "1.0"], "each axis shows the vector's precision");
     let x = request.fields.iter().position(|field| field.id == "turn").expect("the x axis");
@@ -523,7 +523,7 @@ fn tour_advance_and_back_reset_completed_interactions() {
 /// Repeating zoom after it's already completed is a no-operation.
 #[test]
 fn chrome_tour_complete_interaction_respects_order_and_dedups() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.chrome_build.start_introduction();
     let step = semio_framework::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
         .interact_ordered(vec![semio_framework_async::block_on(semio_framework::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::IntroductionInteraction::pan("main", "Pan"))]);

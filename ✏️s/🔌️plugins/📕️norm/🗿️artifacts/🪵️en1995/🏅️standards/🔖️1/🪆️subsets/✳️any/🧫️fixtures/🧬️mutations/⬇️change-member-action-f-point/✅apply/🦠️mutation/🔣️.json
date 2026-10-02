@@ -1,7 +1,7 @@
 {
   "ChangeMemberActionFPoint": {
-    "actionId": "g",
     "memberId": "beam-B1",
+    "actionId": "g",
     "newValue": 2000.0
   }
 }

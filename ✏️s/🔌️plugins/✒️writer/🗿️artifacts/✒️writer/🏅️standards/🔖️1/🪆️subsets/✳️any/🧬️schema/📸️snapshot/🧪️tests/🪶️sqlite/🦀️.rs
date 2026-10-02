@@ -8,3 +8,75 @@ fn sqlite_snapshot_writer_actual_erased_codec_and_request_bounds(){use semio_fra
 
 #[test]
 fn sqlite_snapshot_writer_neutral_exact_coordinates_fixed_identity_and_request_limits(){let(f,snapshot)=fixture();let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();for value in f["invalidDialects"].as_array().unwrap(){let dialect=store::os_io::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}let dialect=store::os_io::ArtifactDialect{artifact_kind:"s.writer.writer".into(),standard:"1".into(),subset:"*".into()};let mut changed=database.clone();changed.table_mut("writer_document").unwrap().rows[0].values[1]=store::sqlite_snapshot::SqliteValue::Text("foreign schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&changed,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());for limited in[SqliteDatabaseLimits{max_rows:f["limitedRows"].as_u64().unwrap()as usize,..limits},SqliteDatabaseLimits{max_value_bytes:f["limitedValueBytes"].as_u64().unwrap()as usize,..limits}]{assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());assert!(WriterSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());}
+
+use semio_framework_plugin::{PluginApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+semio_framework_dispatch_macros::dyn_enum_close!{
+ enum WriterSqliteApps:PluginApp{
+  Editor(semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),
+  Viewer(semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::writer::WriterViewer>,semio_s_artifact_stdio_semio::SemioMembers>),
+ }
+}
+fn independent_writer_database(snapshot:&WriterSnapshot,statements:&serde_json::Value)->store::sqlite_snapshot::SqliteDatabase{
+ use std::{process::{Command,Stdio},io::Write};
+ let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
+ let script=format!("import{{Database}}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));for(const sql of {statements})d.run(sql);if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');await Bun.write(Bun.stdout,d.serialize());d.close();");
+ let mut child=Command::new("bun").args(["-e",&script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
+ import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()
+}
+#[test]
+fn sqlite_snapshot_writer_signed_aliases_and_complete_owned_field_guard(){
+ let(f,snapshot)=fixture();let limits=SqliteDatabaseLimits::default();
+ let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.writer.writer".into(),standard:"1".into(),subset:"*".into()};
+ let database=independent_writer_database(&snapshot,&f["renumberSql"]);
+ assert_eq!(WriterSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+ snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ for statement in f["mismatchSql"].as_array().unwrap(){
+  let database=independent_writer_database(&snapshot,&serde_json::json!([statement]));
+  assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());
+ }
+}
+#[test]
+fn sqlite_snapshot_writer_whole_controlled_native_stages_child_identity_and_limits(){
+ use store::sqlite_snapshot::SqliteSnapshotPhase;
+ let(f,mut snapshot)=fixture();snapshot.schema="nondefault Writer owned schema".into();snapshot.text="世界".repeat(65536);let limits=SqliteDatabaseLimits::default();
+ let mut states=vec![snapshot];for reference in f["referenceCases"].as_array().unwrap(){let mut state=states[0].clone();state.document=dsl::os_pack::json::from_json_str(&reference.to_string()).unwrap();states.push(state);}
+ for snapshot in states{
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};
+  let restored=WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored,snapshot);
+  for limited in[SqliteDatabaseLimits{max_rows:1,..limits},SqliteDatabaseLimits{max_value_bytes:64,..limits}]{assert!(WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}
+  let mut cancelled=false;assert!(WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>0&&event.total>0{cancelled=true;false}else{true}},limits)).is_err());assert!(cancelled);
+ }
+ }
+}
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_writer_real_owned_declaration_public_and_erased_io(){
+ use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control}};
+ semio_framework_plugin::Plugin::<WriterSqliteApps>::builder("writer").label("Writer SQLite owned declaration").version("0.0.1").package_id("semio:writer").declare_artifact(crate::artifact()).try_build().unwrap();
+ let(_,mut snapshot)=fixture();snapshot.schema="registered Writer owned state".into();let limits=SqliteDatabaseLimits::default();let dialect=ArtifactDialect{artifact_kind:"s.writer.writer".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
+ let export=io_route(&dialect,&sqlite,1).await.unwrap().value;let import=io_route(&sqlite,&dialect,1).await.unwrap().value;
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let file=io_export_sqlite_snapshot(&dialect,&snapshot,encoding,limits,&mut |_|true).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<WriterSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value,snapshot);
+  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};
+  let file=io_run_with_snapshot_control(&export,payload,limits,&mut |_|true).await.unwrap().value;let payload=io_run_with_snapshot_control(&import,file,limits,&mut |_|true).await.unwrap().value;assert_eq!(WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+ }
+}
+#[test]
+fn sqlite_snapshot_writer_authored_native_text_boundary_is_complete(){
+ let grammar=dsl::parse_grammar(crate::standards::v1::subsets::any::io::snapshot::text::COMPONENT_GRAMMAR_SEMIO).unwrap();
+ let recognizer=dsl::Recognizer::compile(&grammar);let(_,snapshot)=fixture();
+ for snapshot in[snapshot,WriterSnapshot::default()]{
+  let text=store::ArtifactDsl::print_dsl(&snapshot);
+  assert!(recognizer.recognize(&text).unwrap(),"Writer grammar must recognize its complete actual native state:\n{text}");
+  assert!(!recognizer.recognize(&format!("{text}\nopaque=[]")).unwrap(),"Writer grammar must reject undeclared carrier fields");
+ }
+}
+
+#[test]
+fn sqlite_snapshot_writer_controlled_output_preserves_literal_handles_and_cancels_inside_text(){
+ use store::sqlite_snapshot::SqliteSnapshotPhase;
+ let(f,mut base)=fixture();base.schema="independent owned schema".into();base.text="世界 🪐\0".repeat(30000);let limits=SqliteDatabaseLimits::default();
+ let mut cases=vec![base];for reference in f["referenceCases"].as_array().unwrap(){let mut state=cases[0].clone();state.document=dsl::os_pack::json::from_json_str(&reference.to_string()).unwrap();cases.push(state);}
+ for snapshot in cases{for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).expect("Writer genuine controlled output owner");assert_eq!(WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);let mut interior=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.text.len()&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:1,..limits},SqliteDatabaseLimits{max_value_bytes:128,..limits}]{assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}}}
+}

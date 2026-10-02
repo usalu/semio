@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
         agg_inverse(&SemioPresentationMutation::SetSlideLayout(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set slide layout", "Folienlayout setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set slide layout", "Folienlayout setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

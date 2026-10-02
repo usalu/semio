@@ -22,7 +22,7 @@ import { describe, expect, it } from "vitest";
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 7_200_000;
 
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   let dir = start;
   for (;;) {
     if (existsSync(join(dir, "AGENTS.md")) && existsSync(join(dir, "nx.json"))) return dir;
@@ -38,7 +38,7 @@ function pick(parent: string, pred: (n: string) => boolean): string {
   return join(parent, hit);
 }
 
-const repoRoot = findRepoRoot(dirname(fileURLToPath(import.meta.url)));
+const repoRoot = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
 const hubRoot = pick(repoRoot, (n) => n.endsWith("hub") && !n.startsWith("."));
 const fixture = JSON.parse(readFileSync(join(pick(pick(hubRoot, (n) => n.includes("fixtures")), (n) => n.includes("document-growth")), "🔣️.json"), "utf8"));
 const scenarioSchema = JSON.parse(readFileSync(join(pick(pick(hubRoot, (n) => n.includes("schema")), (n) => n.includes("document-growth")), "🔣️.json"), "utf8"));

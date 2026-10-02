@@ -10,6 +10,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
+use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
@@ -351,7 +352,7 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    crate::standards::v1::subsets::base::schema::geometry::native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_u32(s: &str) -> Result<u32, String> {
@@ -384,7 +385,7 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point3(p: &SemioPoint3) -> String {
-    format!("[{},{},{}]", p.x, p.y, p.z)
+    format!("[{},{},{}]", NativeF64(p.x), NativeF64(p.y), NativeF64(p.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
@@ -400,11 +401,11 @@ fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 fn enc_curve(c: &BrepCurve) -> String {
     match c {
         BrepCurve::Line { origin, direction } => format!("L[{},{}]", enc_point3(origin), enc_point3(direction)),
-        BrepCurve::Circle { center, axis, radius } => format!("C[{},{},{}]", enc_point3(center), enc_point3(axis), radius),
+        BrepCurve::Circle { center, axis, radius } => format!("C[{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*radius)),
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
-            format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), radius_major, radius_minor)
+            format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*radius_major), NativeF64(*radius_minor))
         }
-        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
+        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| NativeF64(*w).to_string()), degree, enc_list(knots, |k: &f64| NativeF64(*k).to_string()),),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -440,20 +441,20 @@ fn dec_curve(s: &str) -> Result<BrepCurve, String> {
 fn enc_surface(s: &BrepSurface) -> String {
     match s {
         BrepSurface::Plane { origin, normal } => format!("P[{},{}]", enc_point3(origin), enc_point3(normal)),
-        BrepSurface::Cylinder { origin, axis, radius } => format!("C[{},{},{}]", enc_point3(origin), enc_point3(axis), radius),
-        BrepSurface::Cone { origin, axis, radius, half_angle } => format!("O[{},{},{},{}]", enc_point3(origin), enc_point3(axis), radius, half_angle),
-        BrepSurface::Sphere { center, radius } => format!("S[{},{}]", enc_point3(center), radius),
-        BrepSurface::Torus { center, axis, major_radius, minor_radius } => format!("T[{},{},{},{}]", enc_point3(center), enc_point3(axis), major_radius, minor_radius),
+        BrepSurface::Cylinder { origin, axis, radius } => format!("C[{},{},{}]", enc_point3(origin), enc_point3(axis), NativeF64(*radius)),
+        BrepSurface::Cone { origin, axis, radius, half_angle } => format!("O[{},{},{},{}]", enc_point3(origin), enc_point3(axis), NativeF64(*radius), NativeF64(*half_angle)),
+        BrepSurface::Sphere { center, radius } => format!("S[{},{}]", enc_point3(center), NativeF64(*radius)),
+        BrepSurface::Torus { center, axis, major_radius, minor_radius } => format!("T[{},{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*major_radius), NativeF64(*minor_radius)),
         BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => format!(
             "N[{},{},{},{},{},{},{},{}]",
             enc_list(control_points, enc_point3),
-            enc_list(weights, |w: &f64| w.to_string()),
+            enc_list(weights, |w: &f64| NativeF64(*w).to_string()),
             u_count,
             v_count,
             degree_u,
             degree_v,
-            enc_list(knots_u, |k: &f64| k.to_string()),
-            enc_list(knots_v, |k: &f64| k.to_string()),
+            enc_list(knots_u, |k: &f64| NativeF64(*k).to_string()),
+            enc_list(knots_v, |k: &f64| NativeF64(*k).to_string()),
         ),
     }
 }
@@ -504,7 +505,7 @@ fn dec_surface(s: &str) -> Result<BrepSurface, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point2(p: &SemioPoint2) -> String {
-    format!("[{},{}]", p.x, p.y)
+    format!("[{},{}]", NativeF64(p.x), NativeF64(p.y))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
@@ -519,9 +520,9 @@ fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 fn enc_curve2(c: &BrepCurve2) -> String {
     match c {
         BrepCurve2::Line { origin, direction } => format!("L[{},{}]", enc_point2(origin), enc_point2(direction)),
-        BrepCurve2::Circle { center, radius } => format!("C[{},{}]", enc_point2(center), radius),
-        BrepCurve2::Ellipse { center, x_axis, radius_major, radius_minor } => format!("E[{},{},{},{}]", enc_point2(center), enc_point2(x_axis), radius_major, radius_minor),
-        BrepCurve2::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point2), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
+        BrepCurve2::Circle { center, radius } => format!("C[{},{}]", enc_point2(center), NativeF64(*radius)),
+        BrepCurve2::Ellipse { center, x_axis, radius_major, radius_minor } => format!("E[{},{},{},{}]", enc_point2(center), enc_point2(x_axis), NativeF64(*radius_major), NativeF64(*radius_minor)),
+        BrepCurve2::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point2), enc_list(weights, |w: &f64| NativeF64(*w).to_string()), degree, enc_list(knots, |k: &f64| NativeF64(*k).to_string()),),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -569,7 +570,7 @@ fn dec_opt_curve2(s: &str) -> Result<Option<BrepCurve2>, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_prange(r: &(f64, f64)) -> String {
-    format!("[{},{}]", r.0, r.1)
+    format!("[{},{}]", NativeF64(r.0), NativeF64(r.1))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_prange(s: &str) -> Result<(f64, f64), String> {
@@ -624,7 +625,7 @@ fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(in super::super) fn enc_vertex(v: &BrepVertex) -> String {
-    format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), v.tol)
+    format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), NativeF64(v.tol))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(in super::super) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
@@ -635,7 +636,7 @@ pub(in super::super) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(in super::super) fn enc_edge(e: &BrepEdge) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), e.tol)
+    format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), NativeF64(e.tol))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(in super::super) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
@@ -656,14 +657,16 @@ fn dec_loop(s: &str) -> Result<BrepLoop, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_loop_id(value:&str)->String{format!("[{}]",enc_str(value))}
+pub(crate) fn dec_loop_id(value:&str)->Result<String,String>{dec_str(strip_brackets(value)?)}
 pub(in super::super) fn enc_face(f: &BrepFace) -> String {
-    format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation), f.tol)
+    format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_loop_id(s)), enc_surface(&f.surface), enc_bool(f.orientation), NativeF64(f.tol))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(in super::super) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face: expected 6 fields, got {}", parts.len())) };
-    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })
+    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_loop_id)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1432,3 +1435,8 @@ mod sqlite;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

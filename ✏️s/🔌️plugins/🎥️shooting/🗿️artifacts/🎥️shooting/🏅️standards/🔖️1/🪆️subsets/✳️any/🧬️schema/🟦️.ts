@@ -33,6 +33,7 @@ export interface ShootingCamera {
 export interface ShootingSavedCamera {
   id: string;
   label: string;
+  camera: ShootingCamera;
 }
 
 export interface ShootingAsset {
@@ -90,7 +91,6 @@ export interface ShootingSceneLighting {
   ambient: ShootingAmbient;
   shadow: ShootingShadow;
   material: ShootingMaterial;
-  emblemBase64?: string;
 }
 
 //#region 🚪️Parsers
@@ -150,18 +150,30 @@ export function parseShootingArtifact(value: unknown, at = "$"): ShootingArtifac
     shots: shootingShootingArtifactGuardArray(row["shots"], `${at}.shots`).map((item, index) => parseShootingShot(item, `${at}.shots[${index}]`)),
     activeShotId: shootingShootingArtifactGuardString(row["activeShotId"], `${at}.activeShotId`),
     activeAssetId: shootingShootingArtifactGuardString(row["activeAssetId"], `${at}.activeAssetId`),
-    emblem: row["emblem"] === undefined ? undefined : parseArtifactChild(row["emblem"], `${at}.emblem`),
+    emblem: row["emblem"] === undefined ? undefined : parseArtifactChild(row["emblem"]),
   };
+}
+
+/** 📐️ Validates all three persisted coordinates before constructing their fixed tuple. */
+function parseShootingVector3(value: unknown, at: string): [number, number, number] {
+  const row = shootingShootingArtifactGuardArray(value, at, {minItems: 3, maxItems: 3});
+  return [0, 1, 2].map(index => shootingShootingArtifactGuardNumber(row[index], `${at}[${index}]`)) as [number, number, number];
+}
+
+/** 🧭️ Validates the four persisted quaternion components before constructing their fixed tuple. */
+function parseShootingQuaternion(value: unknown, at: string): [number, number, number, number] {
+  const row = shootingShootingArtifactGuardArray(value, at, {minItems: 4, maxItems: 4});
+  return [0, 1, 2, 3].map(index => shootingShootingArtifactGuardNumber(row[index], `${at}[${index}]`)) as [number, number, number, number];
 }
 
 export function parseShootingCamera(value: unknown, at = "$"): ShootingCamera {
   const row = shootingShootingArtifactGuardObject(value, at);
   return {
-    position: shootingShootingArtifactGuardArray(row["position"], `${at}.position`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.position[${index}]`)),
-    target: shootingShootingArtifactGuardArray(row["target"], `${at}.target`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.target[${index}]`)),
+    position: parseShootingVector3(row["position"], `${at}.position`),
+    target: parseShootingVector3(row["target"], `${at}.target`),
     zoom: shootingShootingArtifactGuardNumber(row["zoom"], `${at}.zoom`),
     fov: shootingShootingArtifactGuardNumber(row["fov"], `${at}.fov`),
-    up: row["up"] === undefined ? undefined : shootingShootingArtifactGuardArray(row["up"], `${at}.up`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.up[${index}]`)),
+    up: row["up"] === undefined ? undefined : parseShootingVector3(row["up"], `${at}.up`),
     projection: row["projection"] === undefined ? undefined : shootingShootingArtifactGuardString(row["projection"], `${at}.projection`),
   };
 }
@@ -171,6 +183,7 @@ export function parseShootingSavedCamera(value: unknown, at = "$"): ShootingSave
   return {
     id: shootingShootingArtifactGuardString(row["id"], `${at}.id`),
     label: shootingShootingArtifactGuardString(row["label"], `${at}.label`),
+    camera: parseShootingCamera(row["camera"], `${at}.camera`),
   };
 }
 
@@ -181,9 +194,9 @@ export function parseShootingAsset(value: unknown, at = "$"): ShootingAsset {
     name: shootingShootingArtifactGuardString(row["name"], `${at}.name`),
     url: shootingShootingArtifactGuardString(row["url"], `${at}.url`),
     format: shootingShootingArtifactGuardString(row["format"], `${at}.format`),
-    origin: shootingShootingArtifactGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.origin[${index}]`)),
-    orientation: row["orientation"] === undefined ? undefined : shootingShootingArtifactGuardArray(row["orientation"], `${at}.orientation`, {"minItems": 4, "maxItems": 4}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.orientation[${index}]`)),
-    scale: row["scale"] === undefined ? undefined : shootingShootingArtifactGuardArray(row["scale"], `${at}.scale`, {"minItems": 3, "maxItems": 3}).map((item, index) => shootingShootingArtifactGuardNumber(item, `${at}.scale[${index}]`)),
+    origin: parseShootingVector3(row["origin"], `${at}.origin`),
+    orientation: row["orientation"] === undefined ? undefined : parseShootingQuaternion(row["orientation"], `${at}.orientation`),
+    scale: row["scale"] === undefined ? undefined : parseShootingVector3(row["scale"], `${at}.scale`),
   };
 }
 
@@ -192,8 +205,8 @@ export function parseShootingShot(value: unknown, at = "$"): ShootingShot {
   return {
     id: shootingShootingArtifactGuardString(row["id"], `${at}.id`),
     label: shootingShootingArtifactGuardString(row["label"], `${at}.label`),
-    width: shootingShootingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
-    height: shootingShootingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
+    width: shootingShootingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0, "maximum": 4294967295}),
+    height: shootingShootingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0, "maximum": 4294967295}),
     format: shootingShootingArtifactGuardString(row["format"], `${at}.format`),
     shape: shootingShootingArtifactGuardString(row["shape"], `${at}.shape`),
     background: row["background"] === undefined ? undefined : shootingShootingArtifactGuardString(row["background"], `${at}.background`),
@@ -243,13 +256,13 @@ export function parseShootingMaterial(value: unknown, at = "$"): ShootingMateria
 
 export function parseShootingSceneLighting(value: unknown, at = "$"): ShootingSceneLighting {
   const row = shootingShootingArtifactGuardObject(value, at);
+  if(Object.keys(row).some(key=>!["background","sun","ambient","shadow","material"].includes(key)))shootingShootingArtifactGuardReject(at,"scene contains an undeclared persisted field");
   return {
     background: shootingShootingArtifactGuardString(row["background"], `${at}.background`),
     sun: parseShootingSun(row["sun"], `${at}.sun`),
     ambient: parseShootingAmbient(row["ambient"], `${at}.ambient`),
     shadow: parseShootingShadow(row["shadow"], `${at}.shadow`),
     material: parseShootingMaterial(row["material"], `${at}.material`),
-    emblemBase64: row["emblemBase64"] === undefined ? undefined : shootingShootingArtifactGuardString(row["emblemBase64"], `${at}.emblemBase64`),
   };
 }
 

@@ -20,8 +20,10 @@ edgeList: edge (',' edge)*;
 edge: '[' HEX ',' port ',' port ',' HEX ']';
 port: '[' HEX ',' HEX ']';
 
-number: INT | FLOAT;
+number: INT | FLOAT | NAN64 | 'inf' | '-' 'inf';
 
+NAN64: 'nan64_' HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT HEXDIGIT;
+fragment HEXDIGIT: [0-9a-fA-F];
 HEX: [0-9a-f]*;
 INT: '-'? [0-9]+;
 FLOAT: '-'? [0-9]+ '.' [0-9]+;

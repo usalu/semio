@@ -23,7 +23,8 @@ shell face = '[', hex, ',', bool, ']' ;
 shell face list = '[', [ shell face, { ',', shell face } ], ']' ;
 solid shell = '[', hex, ',', bool, ']' ;
 solid shell list = '[', [ solid shell, { ',', solid shell } ], ']' ;
-hex list = '[', [ hex, { ',', hex } ], ']' ;
+hex list = '[', [ loop id, { ',', loop id } ], ']' ;
+loop id = '[', hex, ']' ;
 
 curve = ( 'L', '[', point3, ',', point3, ']' )
       | ( 'C', '[', point3, ',', point3, ',', number, ']' )
@@ -41,8 +42,11 @@ point3 list = '[', [ point3, { ',', point3 } ], ']' ;
 number list = '[', [ number, { ',', number } ], ']' ;
 bool = '0' | '1' ;
 
-number = int | float ;
+number = int | float | infinity | nan64 ;
 int = [ '-' ], digit, { digit } ;
 float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
 digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+
+infinity = [ "-" ], "inf" ;
+nan64 = "nan64_", hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit ;

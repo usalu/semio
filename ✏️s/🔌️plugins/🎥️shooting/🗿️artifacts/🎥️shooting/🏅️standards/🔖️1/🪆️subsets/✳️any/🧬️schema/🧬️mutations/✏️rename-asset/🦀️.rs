@@ -23,8 +23,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameAsset {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename asset to \"{}\"", self.new_name), &format!("Asset in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename asset to \"{}\"", self.new_name), &format!("Asset in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

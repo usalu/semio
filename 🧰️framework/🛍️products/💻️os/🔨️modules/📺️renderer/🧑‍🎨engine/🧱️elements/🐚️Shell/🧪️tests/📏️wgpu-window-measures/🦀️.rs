@@ -36,7 +36,7 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
     let measures: Vec<WindowMeasure> = serde_json::from_value(law["measures"].clone()).unwrap();
     let body = &law["body"];
     let body = Rect::new(body["x"].as_f64().unwrap() as f32, body["y"].as_f64().unwrap() as f32, body["width"].as_f64().unwrap() as f32, body["height"].as_f64().unwrap() as f32);
-    let mut shell = ShellState::new(vec![], "test".into());
+    let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.screen_w = 1_000.0;
     shell.screen_h = 900.0;
     shell.measures_folded.insert(window.into(), false);
@@ -163,7 +163,7 @@ fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
 fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
     let fixture = fixture();
     let measures = section_measures();
-    let mut shell = ShellState::new(vec![], "test".into());
+    let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.active_utility_by_window.insert("puzzle3d-main".into(), "fill".into());
     for gesture in fixture["gestures"].as_array().expect("fixture gestures") {
         let name = gesture["name"].as_str().expect("gesture name");

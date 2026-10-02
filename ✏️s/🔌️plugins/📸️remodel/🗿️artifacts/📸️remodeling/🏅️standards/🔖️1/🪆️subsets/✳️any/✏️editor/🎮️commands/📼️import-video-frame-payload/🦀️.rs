@@ -1,4 +1,9 @@
-//! 📥️ 📥️ Remodeling play app commands command — `import-video-frame-payload`.
+//! 📥️ Remodeling play app commands — `import-video-frame-payload`: one tick of a host-decoded video import. Every import
+//! is ONE streamed tool transaction (design §15) whose tool state lives in the importing window's transient
+//! (`✏️editor/🫧️transient`): tick `0` starts it, the first accepted frame mints its stream and opens the edit (the
+//! document shows the frames at once), `import-video-done` commits it as one edit and one history row, `import-abort` (or
+//! the window closing) reverts it with zero trace, and a tick arriving after that is dropped. The transaction is minted
+//! from the stream the import builds.
 
 #[cfg(test)]
 use crate::editor::remodeling::commands::import_frame_payload;
@@ -7,13 +12,25 @@ use crate::editor::remodeling::engine::images as remodeling_image;
 #[cfg(test)]
 use crate::editor::remodeling::engine::video as remodeling_video;
 use crate::editor::remodeling::payload_from_data_url;
+use crate::editor::remodeling::transient::{RemodelingImport, RemodelingWindowTransient};
 use crate::mutations::{add_stream_frame, create_asset, create_stream};
 use crate::op::RemodelingMutation;
-use crate::schema::next_remodeling_id;
+use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::VecDeque;
+
+//#region 🧾️ImportTransaction
+/// 🪪️ The tool every import transaction is stamped with: `<appId>#import`.
+pub const REMODELING_IMPORT_TOOL_ID: &str = "s.remodel.remodeling@1/*#editor#import";
+
+/// 🧾️ The ONE transaction an import building `stream_id` streams into, minted from that stream: every tick of the import,
+/// its commit and its abort name the same ref.
+pub fn import_transaction(stream_id: &str) -> protocol::TransactionRef {
+    protocol::TransactionRef::mint(&protocol::ActorId(stream_id.to_string()), &protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, REMODELING_IMPORT_TOOL_ID)
+}
+//#endregion 🧾️ImportTransaction
 
 //#region 🔖️VideoImportScratch
 /// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
@@ -89,16 +106,6 @@ fn rebuild_video_import_scratch(scene: &RemodelingSnapshot, stream_id: &str) -> 
     scratch
 }
 
-/// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
-/// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
-/// prior call's already-committed mutations, since dispatches within one batch are sequential).
-fn batch_stream_id(scene: &RemodelingSnapshot, index: u32) -> String {
-    if index == 0 {
-        next_remodeling_id("stream")
-    } else {
-        scene.streams.last().map_or_else(|| next_remodeling_id("stream"), |stream| stream.id.clone())
-    }
-}
 //#endregion 🔖️VideoImportScratch
 
 //#region 🔖️ImportFramePayload
@@ -131,7 +138,7 @@ pub(crate) async fn verify_import_checker_stream(app: &mut crate::editor::remode
     use crate::editor::remodeling::unit_tests::context::dispatch;
     use crate::editor::remodeling::RemodelingCommand;
     for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index })).await;
+        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index, total: n })).await;
     }
 }
 
@@ -186,39 +193,48 @@ pub struct ImportVideoFramePayload {
     pub timestamp_ms: f64,
 }
 
-/// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
-/// sampled JPEG, runs it through the relative blur gate (rebuilt from persisted frames each tick —
-/// see `rebuild_video_import_scratch`), and amends it into the active stream.
-pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
-    let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
-    let Ok(image) = remodeling_image::decode_jpeg(&bytes) else { return Ok(Emit::default()) };
+/// 🎞️ Host-decoded video frame tick through the importing window's tool state `window`: decodes the sampled JPEG, runs it
+/// through the relative blur gate (rebuilt from the stream's frames each tick — see `rebuild_video_import_scratch`) and
+/// streams it into the import's open transaction; the emission and the window's next partition.
+pub fn handle_in_window(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, window: &RemodelingWindowTransient) -> Result<(Emit<RemodelingMutation, NoConfigMutation>, RemodelingWindowTransient), Fault> {
     let scene = doc.snapshot;
-    let stream_id = batch_stream_id(scene, payload.index);
-
-    let score = local_sharpness_score(&image);
-    let min_sharpness = scene.params.ingest.min_sharpness;
-    let mut scratch = rebuild_video_import_scratch(scene, &stream_id);
-    if blur_gate_reject(&mut scratch, score, min_sharpness) {
-        return Ok(Emit::default());
+    let started = match payload.index {
+        0 => Some(RemodelingImport::default()),
+        _ => window.import.clone(),
+    };
+    let Some(mut import) = started else { return Ok((Emit::default(), window.clone())) };
+    if import.stream_id.as_ref().is_some_and(|stream_id| !scene.streams.iter().any(|stream| stream.id == *stream_id)) {
+        return Ok((Emit::default(), RemodelingWindowTransient::default()));
     }
-
+    import.done = import.done.saturating_add(1);
+    let accepted = payload_from_data_url(&payload.payload).and_then(|(_mime, bytes)| remodeling_image::decode_jpeg(&bytes).ok().map(|image| (bytes, image)));
+    let Some((bytes, image)) = accepted else { return Ok((Emit::default(), RemodelingWindowTransient { import: Some(import) })) };
+    let stream_id = import.stream_id.clone().unwrap_or_else(|| mint_remodeling_id(doc.operation_optional(), "stream"));
+    let mut scratch = rebuild_video_import_scratch(scene, &stream_id);
+    if blur_gate_reject(&mut scratch, local_sharpness_score(&image), scene.params.ingest.min_sharpness) {
+        return Ok((Emit::default(), RemodelingWindowTransient { import: Some(import) }));
+    }
     let asset_key = format!("{stream_id}-frame-{}", payload.frame_index);
     let asset = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(&bytes), width: image.width, height: image.height };
-    let mut mutations = vec![create_asset(asset_key.clone(), asset)];
+    let frame = FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key.clone() };
+    let mut mutations = vec![create_asset(asset_key, asset)];
     match scene.streams.iter().any(|stream| stream.id == stream_id) {
-        true => mutations.push(add_stream_frame(stream_id.clone(), FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key }, MediaKind::Video)),
-        false => mutations.push(create_stream(MediaStream {
-            id: stream_id.clone(),
-            name: payload.name.clone(),
-            kind: MediaKind::Video,
-            camera_id: None,
-            sync_offset_ms: 0.0,
-            fps_hint: 0.0,
-            frames: vec![FrameRef { index: payload.frame_index, timestamp_ms: payload.timestamp_ms, asset_id: asset_key }],
-            source: None,
-        })),
+        true => mutations.push(add_stream_frame(stream_id.clone(), frame, MediaKind::Video)),
+        false => mutations.push(create_stream(MediaStream { id: stream_id.clone(), name: payload.name.clone(), kind: MediaKind::Video, camera_id: None, sync_offset_ms: 0.0, fps_hint: 0.0, frames: vec![frame], source: None })),
     }
-    Ok(Emit::amend(mutations, format!("remodeling-import:{stream_id}")))
+    import.stream_id = Some(stream_id.clone());
+    Ok((Emit::stream_transaction(import_transaction(&stream_id), mutations), RemodelingWindowTransient { import: Some(import) }))
+}
+
+/// 🎞️ A video frame tick dispatched without a window: refused at the first tick (an import's tool state needs the
+/// importing window), a later tick is dropped.
+pub fn handle(payload: &ImportVideoFramePayload, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
+    let resting = RemodelingWindowTransient::default();
+    let (emit, next) = handle_in_window(payload, doc, &resting)?;
+    match next == resting {
+        true => Ok(emit),
+        false => Err(Fault::from("remodeling-import-window-required")),
+    }
 }
 
 //#region 🧪️Tests

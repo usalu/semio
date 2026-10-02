@@ -41,12 +41,15 @@
     "constants": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutationId", "store", "path", "value", "generation", "name", "choice", "overwrite", "dialogId"],
+      "required": ["mutationId", "store", "path", "value", "edit", "insert", "remove", "generation", "name", "choice", "overwrite", "dialogId"],
       "properties": {
         "mutationId": { "const": "mutationId" },
         "store": { "const": "store" },
         "path": { "const": "path" },
         "value": { "const": "value" },
+        "edit": { "const": "edit" },
+        "insert": { "const": "insert" },
+        "remove": { "const": "remove" },
         "generation": { "const": "generation" },
         "name": { "const": "name" },
         "choice": { "const": "choice" },

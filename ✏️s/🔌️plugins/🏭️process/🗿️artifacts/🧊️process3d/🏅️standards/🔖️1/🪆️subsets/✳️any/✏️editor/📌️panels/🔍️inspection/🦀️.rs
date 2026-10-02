@@ -10,7 +10,17 @@
 
 use crate::editor::process3d::terminology::{process3d_measure_label, Process3dLabels};
 use crate::{Capability, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, Stock, WorkingSolid, WorkshopMachine};
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";

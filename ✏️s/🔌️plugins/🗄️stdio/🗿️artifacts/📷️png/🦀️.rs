@@ -72,7 +72,7 @@ pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standar
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.png".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Png", "Png"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Png", "Png"),
         source_format: STDIO_PNG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
@@ -195,8 +195,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     io_registry::register();
-    ::framework_schema::register_artifact_schema_descriptor(standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor());
-    ::framework_schema::register_artifact_inference_descriptor(standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor()).expect("schema descriptor publication");
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()).expect("schema descriptor publication");
     for lang in pilot_languages() {
         dsl::register_language(*lang);
     }

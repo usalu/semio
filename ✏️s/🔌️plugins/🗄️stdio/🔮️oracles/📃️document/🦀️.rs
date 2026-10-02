@@ -982,18 +982,8 @@ pub mod ooxml {
         if kind.is_empty() {
             return Err("mutation spec carries no `kind`".to_string());
         }
-        if kind == "no-mutation" {
-            return Ok(input.to_vec());
-        }
         let mut parts = read_parts(input)?;
         match kind.as_str() {
-            "set-snapshot" => {
-                let class = text(&params, "conformanceClass");
-                if class != "strict" && class != "transitional" {
-                    return Err(format!("set-snapshot: conformanceClass must be \"strict\" or \"transitional\", got {class:?}"));
-                }
-                stamp_conformance_class(&mut parts, profile, class == "strict")?;
-            }
             "set-main-namespace" => rewrite_namespaces(&mut parts, &profile.main_namespaces, &text(&params, "namespace"))?,
             "set-drawing-namespace" => {
                 let pair = profile.drawing_namespaces.ok_or("set-drawing-namespace: this artifact declares no DrawingML namespace pair")?;
@@ -1109,12 +1099,6 @@ pub mod ooxml {
             root_attribute(bytes, "conformance")
         };
         Ok(match forward.str("kind").as_str() {
-            "no-mutation" => kind_spec("no-mutation", vec![]),
-            "set-snapshot" => {
-                let forward_class = text(&params, "conformanceClass");
-                let back = if forward_class == "strict" { "transitional" } else { "strict" };
-                kind_spec("set-snapshot", vec![("conformanceClass", Json::String(back.to_string()))])
-            }
             "set-main-namespace" => kind_spec("set-main-namespace", vec![("namespace", Json::String(declared_pair_member(&parts, &profile.main_namespaces)?))]),
             "set-drawing-namespace" => {
                 let pair = profile.drawing_namespaces.ok_or("set-drawing-namespace: this artifact declares no DrawingML namespace pair")?;
@@ -1222,18 +1206,11 @@ pub mod pdf_conformance {
     //#region 🔖️Profile
     /// 🏅️ One subset's conformance coordinates: which marker its OutputIntent axis demands, whether
     /// that intent must carry a `/DestOutputProfile`, and exactly which axes its own checker reads.
-    /// `axes` is both the projection's field list and the stamp recipe `set-snapshot` executes, so a
-    /// subset can never project an axis its checker does not read, nor stamp one it does not own.
+    /// `axes` is the projection's field list, so a subset never projects an axis its checker does not read.
     pub struct PdfConformanceProfile {
         pub subset: &'static str,
         pub output_intent_subtype: &'static str,
         pub output_intent_dest_profile: bool,
-        /// 📇️ The `/Info /Title` a class stamp writes, spelled with the conformance class's OWN name
-        /// — `A PDF/UA-1 conformant document`, not a mechanical `A UA conformant document`. A stamp
-        /// text is a shared VOCABULARY constant, not an observation, so it must be carried here
-        /// verbatim next to the subset's own `CONFORMANT_TITLE`; deriving it from `subset` made
-        /// `set-snapshot` a different mutation on each side and diverged `✳️h` and `✳️ua`.
-        pub conformant_title: &'static str,
         pub axes: &'static [&'static str],
     }
     //#endregion 🔖️Profile
@@ -1433,7 +1410,7 @@ pub mod pdf_conformance {
     /// byte-identical program to byte counts that differ by a byte or two, which is exactly what the
     /// first full differential run of the six PDF 1.7 conformance classes observed — all 23 embedded
     /// programs of the real thesis decoded byte-identically while five of their compressed streams
-    /// differed by 1–2 bytes, failing 188 comparisons including `no-mutation`. The `✳️any` subset's
+    /// differed by 1–2 bytes, failing 188 comparisons including the identity round trip. The `✳️any` subset's
     /// `semantic-pdf-v1` profile already committed to that reading by listing `streamLength` as
     /// writer freedom. Measuring the decoded program restores what the profile description always
     /// claimed to measure — "how many bytes that program is" — and the digest makes the axis
@@ -1573,9 +1550,6 @@ pub mod pdf_conformance {
         if kind.is_empty() {
             return Err("mutation spec carries no `kind`".to_string());
         }
-        if kind == "no-mutation" {
-            return Ok(input.to_vec());
-        }
         let mut document = load(input)?;
         apply_in_place(&mut document, &kind, &params_of(spec), profile)?;
         save(&mut document)
@@ -1583,15 +1557,6 @@ pub mod pdf_conformance {
 
     fn apply_in_place(document: &mut Document, kind: &str, params: &Json, profile: &PdfConformanceProfile) -> Result<(), String> {
         match kind {
-            "no-mutation" => Ok(()),
-            "set-snapshot" => {
-                let conformance = required(params, "conformance")?;
-                match conformance.as_str() {
-                    "stamped" => stamp(document, profile, true),
-                    "stripped" => stamp(document, profile, false),
-                    other => Err(format!("set-snapshot: `conformance` must be \"stamped\" or \"stripped\", got {other:?}")),
-                }
-            }
             "insert-encryption-dictionary" => {
                 let version = number(params, "version").unwrap_or(2.0) as i64;
                 let revision = number(params, "revision").unwrap_or(3.0) as i64;
@@ -1966,97 +1931,6 @@ pub mod pdf_conformance {
         Ok((num, generation))
     }
 
-    /// 🏅️ Stamps every axis this profile OWNS into (or out of) its conformant state. Only the axes
-    /// whose conformant state is the PRESENCE of something are stamped: an axis whose conformant
-    /// state is the ABSENCE of a forbidden construct (encryption, JavaScript, launch actions, media
-    /// annotations, unrelated embedded files) is already conformant on any document that does not
-    /// carry it, and adding one to be able to remove it again would be theatre, not a stamp.
-    fn stamp(document: &mut Document, profile: &PdfConformanceProfile, stamped: bool) -> Result<(), String> {
-        for axis in profile.axes {
-            match *axis {
-                "outputIntents" => {
-                    let present = !output_intents(document).is_empty();
-                    if stamped && !present {
-                        apply_in_place(document, "set-output-intent", &json_object(vec![("identifier", Json::String("sRGB IEC61966-2.1".to_string()))]), profile)?;
-                    } else if !stamped && present {
-                        apply_in_place(document, "remove-output-intent", &Json::Null, profile)?;
-                    }
-                }
-                "markInfo" => {
-                    let present = catalog_dict(document).map(|catalog| catalog.has(b"MarkInfo")).unwrap_or(false);
-                    if stamped {
-                        apply_in_place(document, "set-mark-info", &json_object(vec![("marked", Json::Bool(true))]), profile)?;
-                    } else if present {
-                        apply_in_place(document, "remove-mark-info", &Json::Null, profile)?;
-                    }
-                }
-                "structTreeRoot" => {
-                    let present = catalog_dict(document).map(|catalog| catalog.has(b"StructTreeRoot")).unwrap_or(false);
-                    if stamped && !present {
-                        apply_in_place(document, "set-struct-tree-root", &Json::Null, profile)?;
-                    } else if !stamped && present {
-                        apply_in_place(document, "remove-struct-tree-root", &Json::Null, profile)?;
-                    }
-                }
-                "lang" => {
-                    let present = catalog_dict(document).map(|catalog| catalog.has(b"Lang")).unwrap_or(false);
-                    if stamped {
-                        apply_in_place(document, "set-lang", &json_object(vec![("lang", Json::String("en-GB".to_string()))]), profile)?;
-                    } else if present {
-                        apply_in_place(document, "remove-lang", &Json::Null, profile)?;
-                    }
-                }
-                "displayDocTitle" => {
-                    let present = catalog_dict(document).map(|catalog| catalog.has(b"ViewerPreferences")).unwrap_or(false);
-                    if stamped {
-                        apply_in_place(document, "set-display-doc-title", &json_object(vec![("display", Json::Bool(true))]), profile)?;
-                    } else if present {
-                        apply_in_place(document, "remove-display-doc-title", &Json::Null, profile)?;
-                    }
-                }
-                "infoTitle" => {
-                    let title = if stamped { profile.conformant_title.to_string() } else { String::new() };
-                    set_info_entry(document, "Title", &title)?;
-                }
-                "infoAuthor" => {
-                    let author = if stamped { "semio stdio conformance stamp".to_string() } else { String::new() };
-                    set_info_entry(document, "Author", &author)?;
-                }
-                "signatureFields" => {
-                    let present = signature_fields(document).iter().any(|(_, title)| title == "Signature1");
-                    if stamped && !present {
-                        apply_in_place(document, "insert-signature-field", &json_object(vec![("name", Json::String("Signature1".to_string()))]), profile)?;
-                    } else if !stamped && present {
-                        apply_in_place(document, "remove-signature-field", &json_object(vec![("name", Json::String("Signature1".to_string()))]), profile)?;
-                    }
-                }
-                "dpartRoot" => {
-                    let present = dpart_nodes(document).is_some();
-                    if stamped && !present {
-                        apply_in_place(document, "set-dpart-root", &json_object(vec![("job", Json::String("variable-data job 1".to_string()))]), profile)?;
-                    } else if !stamped && present {
-                        apply_in_place(document, "remove-dpart-root", &Json::Null, profile)?;
-                    }
-                }
-                "pageBoxes" => {
-                    let pages = document.get_pages().len();
-                    for index in 0..pages {
-                        let page = page_at(document, index)?;
-                        let present = box_of(document, page, "TrimBox").is_some();
-                        if stamped {
-                            let media = box_of(document, page, "MediaBox").unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
-                            let trim = Json::Array(media.iter().map(|value| Json::Number(*value as f64)).collect());
-                            apply_in_place(document, "set-trim-box", &Json::Object(vec![("pageIndex".to_string(), Json::Number(index as f64)), ("trimBox".to_string(), trim)]), profile)?;
-                        } else if present {
-                            apply_in_place(document, "remove-trim-box", &json_object(vec![("pageIndex", Json::Number(index as f64))]), profile)?;
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-        Ok(())
-    }
     //#endregion 🔖️Forward
 
     //#region 🔖️Arrange
@@ -2116,11 +1990,6 @@ pub mod pdf_conformance {
         let document = load(base)?;
         let carry = |key: &str| Json::String(params.str(key));
         Ok(match forward.str("kind").as_str() {
-            "no-mutation" => kind_spec("no-mutation", vec![]),
-            "set-snapshot" => {
-                let back = if params.str("conformance") == "stamped" { "stripped" } else { "stamped" };
-                kind_spec("set-snapshot", vec![("conformance", Json::String(back.to_string()))])
-            }
             "insert-encryption-dictionary" => kind_spec("remove-encryption-dictionary", vec![("version", params.get("version").cloned().unwrap_or(Json::Number(2.0))), ("revision", params.get("revision").cloned().unwrap_or(Json::Number(3.0)))]),
             "remove-encryption-dictionary" => kind_spec("insert-encryption-dictionary", vec![("version", params.get("version").cloned().unwrap_or(Json::Number(2.0))), ("revision", params.get("revision").cloned().unwrap_or(Json::Number(3.0)))]),
             "insert-javascript-action" => kind_spec("remove-javascript-action", vec![("script", carry("script"))]),

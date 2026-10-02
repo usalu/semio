@@ -1,49 +1,37 @@
+import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — deterministic taxonomy inventory, planning, verification and transaction engine.
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
+import { type TaxonomyNodeKind, type TaxonomyScopedGitPathspec, taxonomyScopedGitPathspec, type TaxonomySourceIndexEntry, sourceAdmissionRecord, sourceAdmissionSafePath, sourceAdmissionRepositoryFences, sourceAdmissionByteCompare, sourceAdmissionContainingRepository } from "./🚪️source-admission/🟦️.ts";
+import { type TaxonomyProgress, TaxonomyCancellationError, report } from "./🏃️operation/🟦️.ts";
+import { type SemanticExactDescendantContract, type SemanticDescendantKindNode, type LoadedTaxonomy, type FileKindSpec, type GeneratorContractSpec, type PackageBoundaryRule, type FixedFilenameContract, type FixedDirectoryContract, type FixedContractScope, type ConfigurableEntryContract, type PackageGlueGrammar, type SemanticDistributedJsonManifestCatalogContract, type SemanticExactOwnerVectorsCatalogContract, type SemanticProjectionCaptureField, type SemanticPathProjectionContract, loadTaxonomy, type GeneratorInputTaxonomy, type SemanticPathProjectionReferenceConsumerContract, TAXONOMY_RELATIVE_PATH } from "./🔣️taxonomy/🟦️.ts";
+import { normalizeRelative, splitLeadingEmoji, sourceRelative, SEGMENTER, isEmojiGrapheme, emojiFold, inScope } from "./🛣️path/🟦️.ts";
+import { sha256, assertLexicalInputOutsideOpaque, lstatOrNull, assertNoFollowAncestors, LEXICAL_OPAQUE_ROOTS, noFollowDirectoryChain } from "./📁️input/🟦️.ts";
+import { sourceAdmissionPrepareOptions, sourceAdmissionCheckCancellation, collectTaxonomySourceAdmission, sourceAdmissionAssertLexical, sourceAdmissionGitRows } from "./🚪️source-admission/📁️io/🟦️.ts";
 import { execFileSync, spawnSync } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
-import {
-  chmodSync,
-  closeSync,
-  copyFileSync,
-  existsSync,
-  fsyncSync,
-  linkSync,
-  lstatSync,
-  mkdirSync,
-  mkdtempSync,
-  openSync,
-  readFileSync,
-  readdirSync,
-  readlinkSync,
-  renameSync,
-  rmdirSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-  writeSync,
-} from "node:fs";
+import { randomUUID } from "node:crypto";
+import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, linkSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, readlinkSync, renameSync, rmdirSync, rmSync, symlinkSync, writeFileSync, writeSync } from "node:fs";
 import type { Stats } from "node:fs";
-import { canonicalPrimaryFilenameForKind } from "../🔍️discovery/🟦️.ts";
-import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
-import { tmpdir } from "node:os";
+import { canonicalJson } from "../🧾️serialization/🔣️json/🟦️.ts";
+
+import { generatorPreviewResourceLimits, generatorPreviewScriptArguments, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
+
 import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
-import { parseFixedDirectoryContractSetScope, parseNamedFixedDirectoryContractSetScope } from "../🔍️discovery/🟦️.ts";
-import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
+
+import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
 import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
-import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, pathEmojiStatuteFindings, reservedDocumentationBasename, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
-import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
-import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️.ts";
+import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📜️Contracts
 export type TaxonomySeverity = "warning" | "error";
-export type TaxonomyNodeKind = "directory" | "file" | "symlink";
 export type TaxonomyPackageRole = "configuration" | "declaration" | "registration" | "bootstrap" | "thin-delegation" | "implementation" | "unresolved" | "not-package";
 export type TaxonomyReferenceAdapter = "rust" | "typescript" | "go" | "python" | "dotnet" | "native" | "json" | "jsonc" | "toml" | "yaml" | "xml" | "markdown" | "gherkin";
 
@@ -265,14 +253,6 @@ export interface TaxonomyPlan {
   readonly planDigest: string;
 }
 
-export interface TaxonomyProgress {
-  readonly operation: "inventory" | "plan" | "apply" | "verify" | "digest";
-  readonly phase: string;
-  readonly current: number;
-  readonly total: number;
-  readonly path?: string;
-}
-
 export interface TaxonomyInventoryOptions {
   readonly repoRoot: string;
   readonly scope?: string;
@@ -287,65 +267,6 @@ export interface TaxonomyInventoryOptions {
 }
 
 export type TaxonomyCapturedSourceRead = (absolutePath: string) => Uint8Array;
-
-export type TaxonomySourceOrigin = "tracked" | "nonignored-untracked" | "ignored-generator" | "explicit-ticket";
-export type TaxonomySourceObservedKind = TaxonomyNodeKind | "absent" | "unobserved" | "other";
-
-export interface TaxonomySourceIndexEntry {
-  readonly stage: number;
-  readonly mode: string;
-  readonly objectId: string;
-}
-
-export interface TaxonomySourceGeneratorOutput {
-  readonly contractId: string;
-  readonly rootPath: string;
-  readonly inclusion: "tracked" | "ignored";
-}
-
-export interface TaxonomySourceCandidateObservation {
-  readonly sourcePath: string;
-  readonly observedKind: TaxonomySourceObservedKind;
-  readonly worktreeMode: string | null;
-  readonly explicitDirectory: boolean;
-  readonly origins: readonly TaxonomySourceOrigin[];
-  readonly indexEntries: readonly TaxonomySourceIndexEntry[];
-  readonly unsafeAncestor: boolean;
-}
-
-export interface TaxonomySourceAdmissionInput {
-  readonly scope: string | null;
-  readonly cancelledDuring?: string | null;
-  readonly opaquePrefixes: readonly string[];
-  readonly generatorOutputRoots: readonly TaxonomySourceGeneratorOutput[];
-  readonly candidates: readonly TaxonomySourceCandidateObservation[];
-}
-
-export interface TaxonomySourceObservation extends Omit<TaxonomySourceCandidateObservation, "unsafeAncestor"> {
-  readonly generatorOutputs: readonly TaxonomySourceGeneratorOutput[];
-  readonly repositoryBoundary: "gitlink" | null;
-}
-
-export interface TaxonomySourceAdmissionDiagnostic {
-  readonly code: string;
-  readonly path: string;
-  readonly message: string;
-}
-
-export interface TaxonomySourceAdmission {
-  readonly schemaVersion: 1;
-  readonly scope: string | null;
-  readonly status: "complete" | "rejected";
-  readonly observations: readonly TaxonomySourceObservation[];
-  readonly diagnostics: readonly TaxonomySourceAdmissionDiagnostic[];
-}
-
-export interface TaxonomySourceInventory extends TaxonomySourceAdmission {
-  readonly repoRoot: string;
-  readonly taxonomyPath: string;
-  readonly taxonomyContentHash: string;
-  readonly membershipDigest: string;
-}
 
 export interface TaxonomyPlanOptions {
   readonly baselineCommit: string;
@@ -439,431 +360,11 @@ export interface TaxonomyApplyResult {
   readonly appliedEdits: number;
   readonly appliedRegenerations: number;
 }
-//#endregion 📜️Contracts
-
-//#region 🔣️Schema
-type JsonRecord = Record<string, unknown>;
-
-interface FileKindSpec {
-  readonly emoji: string;
-  readonly extensionChains: readonly string[];
-  readonly role: string;
-}
-
-interface SemanticDirectoryKindSpec {
-  readonly emoji: string;
-  readonly slugPattern: string;
-  readonly allowEmojiOnly: boolean;
-  readonly inferWithoutEmoji?: boolean;
-  readonly projectionOnly?: boolean;
-  readonly parentKindIds?: readonly string[];
-}
-
-interface SemanticLifecycleOwnedFileProjectionContract {
-  readonly contractKind: "owner-sibling-manifest-file";
-  readonly ownerFixedDirectoryContractId: string;
-  readonly requiredSiblingFixedFilenameContractId: string;
-  readonly manifestAdapter: "json";
-  readonly manifestStatusLocation: "status";
-  readonly allowedStatuses: readonly ["closed", "open"];
-  readonly sourceFileKindId: string;
-  readonly sourceFilename: string;
-  readonly destinationDirectoryKindId: string;
-  readonly destinationDirectoryName: string;
-  readonly destinationFilename: string;
-  readonly emptyContentRule: "zero-byte";
-  readonly statusDispositions: Readonly<{ readonly open: "project"; readonly "closed-empty": "remove"; readonly "closed-nonempty": "problem"; readonly invalid: "problem" }>;
-  readonly rationaleRule: "ticket-important-markdown-projection-v1";
-}
-
-interface SemanticHistoryOwnedFileProjectionContract {
-  readonly contractKind: "owner-optional-sibling-manifest-file";
-  readonly ownerFixedDirectoryContractId: string;
-  readonly optionalSiblingFixedFilenameContractId: string;
-  readonly manifestAdapter: "json";
-  readonly manifestStatusLocation: "status";
-  readonly sourceFileKindId: string;
-  readonly sourceFilename: string;
-  readonly destinationDirectoryKindId: string;
-  readonly destinationDirectoryName: string;
-  readonly destinationFilename: string;
-  readonly admittedDispositions: readonly ["closed-nonzero", "invalid-manifest", "missing-manifest"];
-  readonly rationaleRule: "ticket-important-history-markdown-v1";
-}
-
-interface SemanticExactOwnedFileProjectionContract {
-  readonly contractKind: "exact-owner-path-catalog";
-  readonly authorityCatalogPath: string;
-  readonly authorityCatalogSha256: string;
-  readonly sourceFileKindId: "markdown";
-  readonly sourceBasenames: readonly ["LICENSE.md", "README.md"];
-  readonly destinationDirectoryKinds: Readonly<{
-    readonly license: Readonly<{ readonly directoryKindId: "owner-license"; readonly directoryName: "⚖️license"; readonly filename: "📝️.md" }>;
-    readonly readme: Readonly<{ readonly directoryKindId: "owner-readme"; readonly directoryName: "📃️readme"; readonly filename: "📝️.md" }>;
-  }>;
-  readonly allowedDispositions: readonly ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"];
-  readonly ownerEvidenceKinds: readonly ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"];
-  readonly referenceOwnerIds: readonly ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"];
-  readonly generatorOwnerIds: readonly ["assets-build"];
-  readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
-  readonly authoredDocumentCorrections: ReturnType<typeof parseSemanticOwnedDocumentCorrections>;
-  readonly currentSourceRevisions?: ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions>;
-  readonly rationaleRule: "readme-license-owner-projection-v1";
-}
-
-interface SemanticPrimaryOwnedFileProjectionContract {
-  readonly contractKind: "owner-primary-file";
-  readonly ownerFixedDirectoryContractId: string;
-  readonly sourceFileKindId: string;
-  readonly sourceFilename: string;
-  readonly destinationFilename: string;
-  readonly rationaleRule: "ticket-document-primary-markdown-v1";
-}
-
-type SemanticOwnedFileProjectionContract = SemanticExactOwnedFileProjectionContract | SemanticFacetPrimaryFileProjectionContract | SemanticHistoryOwnedFileProjectionContract | SemanticLifecycleOwnedFileProjectionContract | SemanticPrimaryOwnedFileProjectionContract;
-
-type FixedContractScope = Readonly<
-  | { kind: "exact-path"; path: string }
-  | { kind: "repository-root" }
-  | { kind: "package-root"; ecosystemId: string }
-  | { kind: "directory-kind"; directoryKindId: string }
-  | { kind: "fixed-directory-contract"; fixedDirectoryContractId: string }
-  | { kind: "fixed-directory-contract-set"; fixedDirectoryContractIds: readonly string[] }
-  | { kind: "sibling-fixed-filename-contract"; fixedFilenameContractId: string }
-  | { kind: "path-pattern" }
->;
-
-interface FixedFilenameContract {
-  readonly pathPattern: string;
-  readonly authority: string;
-  readonly reason: string;
-  readonly configurability: "unconfigurable";
-  readonly scope: FixedContractScope;
-  readonly verification: string;
-  readonly expires: string | null;
-}
-
-interface FixedDirectoryContract {
-  readonly pathPattern: string;
-  readonly authority: string;
-  readonly reason: string;
-  readonly configurability: "unconfigurable";
-  readonly scope: Exclude<FixedContractScope, { readonly kind: "package-root" }>;
-  readonly verification: string;
-  readonly expires: string | null;
-}
-
-interface FixedFilenameRejectionContract {
-  readonly sourcePathIdentities: readonly string[];
-  readonly disposition: "normalize" | "relocate";
-  readonly reason: string;
-}
-
-interface ConfigurableEntryContract {
-  readonly filename: string;
-  readonly fileKindId: string;
-  readonly ecosystemId: string;
-  readonly role: string;
-  readonly configurationSources: readonly string[];
-}
-
-interface FileKindResolutionRuleSpec {
-  readonly extensionChain: string;
-  readonly fileKindId: string;
-  readonly priority: number;
-  readonly filenamePattern?: string;
-  readonly pathPattern?: string;
-  readonly parentKindIds?: readonly string[];
-  readonly ancestorKindIds?: readonly string[];
-}
-
-interface ScopedFileKindSpec {
-  readonly pathPattern: string;
-  readonly parentDirectoryKindId?: string;
-  readonly emoji: string;
-  readonly extensionChains: readonly string[];
-  readonly role: string;
-  readonly sourceFilenamePattern: string;
-  readonly authority: string;
-  readonly reason: string;
-  readonly verification: string;
-  readonly expires: string | null;
-}
-
-interface SemanticDirectoryMemberKindSpec {
-  readonly ownerKindIds: readonly string[];
-  readonly memberNames: readonly string[];
-  readonly source: "registry";
-}
-
-interface SemanticProjectedMemberKindSpec {
-  readonly ownerKindIds: readonly string[];
-  readonly projectionContractId: string;
-  readonly sourceMemberKindId: string;
-  readonly identityField: "mutationDirectoryName" | "commandDirectoryName";
-}
-
-type SemanticProjectionCaptureField = "standardVersion" | "subsetId" | "mutationId" | "scenarioId" | "commandDirectoryName";
-type SemanticProjectionSourceSegment = Readonly<{ kindId: string; literal: string } | { kindId: string; capture: SemanticProjectionCaptureField } | { memberKindId: string; literal: string } | { projectedMemberKindId: string; capture: SemanticProjectionCaptureField }>;
-type SemanticProjectionDestinationSegment = Readonly<{ kindId: string; literal: string } | { kindId: string; render: "profile" } | { kindId: string; copy: SemanticProjectionCaptureField } | { projectedMemberKindId: string; copy: SemanticProjectionCaptureField }>;
-
-interface SemanticPathProjectionProfileRenderer {
-  readonly direction: "forward-only";
-  readonly captureFields: readonly ["standardVersion", "subsetId"];
-  readonly directoryKindId: string;
-  readonly template: "🪆️{standardVersion}-{subsetId}";
-  readonly tupleCollisionFields: readonly ["artifactId", "standardVersion", "subsetId"];
-}
-
-interface SemanticDescendantKindNode {
-  readonly pathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly nodeType: "directory" | "file";
-  readonly kindId: string;
-  readonly sourceFilename?: string;
-}
-
-interface SemanticDescendantFixedFileNode {
-  readonly pathSegments: readonly Readonly<{ kindId: string; literal: string }>[];
-  readonly nodeType: "file";
-  readonly fixedFilenameContractId: string;
-}
-
-type SemanticDescendantNode = SemanticDescendantKindNode | SemanticDescendantFixedFileNode;
-
-interface SemanticDescendantAlternative {
-  readonly id: string;
-  readonly mode: "exactly-one";
-  readonly nodes: readonly SemanticDescendantNode[];
-}
-
-interface SemanticExactDescendantContract {
-  readonly rootDirectoryKindId: string;
-  readonly requiredNodes: readonly SemanticDescendantNode[];
-  readonly exclusiveAlternatives: readonly SemanticDescendantAlternative[];
-  readonly realizedNodeCount: number;
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; bytes: number }>;
-}
 
 type SemanticKindDescendantContract = Omit<SemanticExactDescendantContract, "requiredNodes" | "exclusiveAlternatives"> & Readonly<{
   requiredNodes: readonly SemanticDescendantKindNode[];
   exclusiveAlternatives: readonly Readonly<{ id: string; mode: "exactly-one"; nodes: readonly SemanticDescendantKindNode[] }>[];
 }>;
-
-interface SemanticCatalogDescendantContract {
-  readonly contractKind: "catalog";
-  readonly rootDirectoryKindId: string;
-  readonly catalogContractId: string;
-  readonly leafFileKindId: string;
-  readonly rendering: "semantic-member-directory-and-physical-kind-leaf";
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-rendered-catalog-descendant-suffix"; bytes: number }>;
-}
-
-type SemanticDescendantContract = SemanticExactDescendantContract | SemanticCatalogDescendantContract;
-
-interface SemanticMutationPathProjectionCatalogContract {
-  readonly registryField: "vectors";
-  readonly required: true;
-  readonly allowEmpty: true;
-  readonly runtimeKindsField: "kinds";
-  readonly runtimeKindsRelation: "independent";
-  readonly mutationIdField: "mutationId";
-  readonly sourceMutationDirectoryNameField: "sourceMutationDirectoryName";
-  readonly mutationDirectoryNameField: "mutationDirectoryName";
-  readonly scenariosField: "scenarios";
-  readonly scenarioIdField: "id";
-  readonly scenarioDirectoryNameField: "directoryName";
-  readonly sourceBundleUniquenessFields: readonly ["mutationId", "sourceMutationDirectoryName", "scenarioId"];
-  readonly canonicalBundleUniquenessFields: readonly ["mutationId", "mutationDirectoryName", "scenarioId"];
-  readonly coverage: "every-physical-bundle-exactly-once";
-}
-
-interface SemanticDistributedJsonManifestCatalogContract {
-  readonly contractKind: "distributed-json-manifest-catalog";
-  readonly ownerArtifactMemberName: string;
-  readonly profileVectors: readonly Readonly<{ artifactId: string; standardVersion: string; subsetId: string }>[];
-  readonly modelManifestSchema: string;
-  readonly modelManifestSourceFilename: string;
-  readonly modelIdentityField: "id";
-  readonly memberIdentityField: "id";
-  readonly memberVersionField: "version";
-  readonly requiredMemberVersion: string;
-  readonly requiredModelManifest: true;
-  readonly categoryRules: readonly Readonly<{ sourceDirectoryName: string; directoryKindId: string; sourceShape: "direct-semantic-json"; manifestSchema: string; memberDirectoryEmoji: string } | { sourceDirectoryName: string; directoryKindId: string; sourceShape: "nested-fixed-json"; manifestSchema: string; fixedSourceFilename: string }>[];
-  readonly coverage: "every-source-file-and-destination-node-exactly-once";
-  readonly unknownCategoryPolicy: "problem";
-  readonly unownedModelPolicy: "problem";
-}
-
-interface SemanticExactOwnerVectorsCatalogContract {
-  readonly contractKind: "exact-owner-vectors";
-  readonly required: true;
-  readonly allowEmpty: false;
-  readonly identityFields: readonly ["artifactId", "standardVersion", "subsetId", "commandDirectoryName"];
-  readonly coverage: "every-physical-command-bundle-exactly-once";
-  readonly vectors: readonly Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>[];
-}
-
-type SemanticPathProjectionCatalogContract = SemanticMutationPathProjectionCatalogContract | SemanticDistributedJsonManifestCatalogContract | SemanticExactOwnerVectorsCatalogContract;
-
-interface SemanticPathProjectionContract {
-  readonly sourceOwnerKindId: string;
-  readonly sourceArtifactMemberName?: string;
-  readonly sourceSegments: readonly SemanticProjectionSourceSegment[];
-  readonly profileRendererId: string;
-  readonly destinationOwnerKindId: string;
-  readonly destinationSegments: readonly SemanticProjectionDestinationSegment[];
-  readonly descendantContractId: string;
-  readonly catalogContractId: string;
-  readonly rationaleRule: "artifact-example-model-catalog-projection-v1" | "artifact-editor-command-projection-v1";
-}
-
-interface SemanticPathProjectionReferenceConsumerContract {
-  readonly projectionContractId: string;
-  readonly consumerIdentity: string;
-  readonly ownership: "external";
-  readonly sourcePathPattern: string;
-  readonly sourcePathIdentities: readonly string[];
-  readonly adapters: readonly ("rust" | "typescript" | "json" | "toml")[];
-  readonly supportedForms: readonly SemanticPathProjectionReferenceConsumerForm[];
-  readonly staleMarkers: readonly string[];
-}
-
-interface MutationCatalogProjectionContractIds {
-  readonly contractKind: "canonical-mutation-case-pair";
-  readonly contractId: "canonical-mutation-case-pair-v1";
-  readonly sourceOwnerKindId: string;
-  readonly projectedMemberKindId: string;
-  readonly implementationSegments: readonly SemanticProjectionSourceSegment[];
-  readonly fixtureSegments: readonly SemanticProjectionSourceSegment[];
-  readonly implementationDescendantContractId: string;
-  readonly fixtureDescendantContractId: string;
-  readonly catalogContractId: string;
-  readonly coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle";
-}
-
-type GeneratorOwnership = "owned" | "external";
-
-interface GeneratorOutputRootSpec {
-  readonly path: string;
-  readonly inclusion: "tracked" | "ignored";
-}
-
-interface GeneratorContractSpec {
-  readonly ownership: GeneratorOwnership;
-  readonly ownerPath: string | null;
-  readonly target: string | null;
-  readonly previewTarget?: string;
-  readonly previewArguments?: readonly string[];
-  readonly previewLimits?: { readonly maxOutputBytes: number; readonly timeoutMs: number };
-  readonly compilerInputManifest?: { readonly kind: "compiler-input-manifest-v1"; readonly manifestOutputPath: string; readonly manifestSchemaPath: string; readonly staticAuthorityPath: string; readonly maxFiles: number };
-  readonly checkTarget?: string;
-  readonly inputPatterns: readonly string[];
-  readonly inputDiscovery?: RegistryCatalogInputDiscovery;
-  readonly packageGeneration?: SemanticPackageGeneration;
-  readonly projectionActivation?: GeneratorProjectionActivation;
-  readonly outputRoots: readonly GeneratorOutputRootSpec[];
-  readonly reason: string;
-}
-
-interface PackageBoundaryRule {
-  readonly manifestContractId: string | null;
-  readonly entryContractIds: readonly string[];
-  readonly allowedFixedContractIds: readonly string[];
-  readonly allowedFileKindIds: readonly string[];
-  readonly allowedDirectoryKindIds: readonly string[];
-  readonly glueGrammarId: string;
-  readonly recursive: true;
-  readonly uncertainRole: "problem";
-  readonly implementationRole: "problem";
-}
-
-interface PackageBoundaryProfile {
-  readonly admission: "blocked-until-language-directory-registered";
-  readonly allowedFileKindIds: readonly string[];
-  readonly allowedDirectoryKindIds: readonly string[];
-  readonly allowedFixedContractIds: readonly string[];
-  readonly glueGrammarId: string;
-  readonly recursive: true;
-  readonly uncertainRole: "problem";
-  readonly implementationRole: "problem";
-  readonly reason: string;
-}
-
-interface PackageSourceDisposition {
-  readonly contractKind: "fixed" | "configurable";
-  readonly disposition: "adapter-source" | "tool-metadata";
-  readonly validator: "package-glue" | "command-router" | "vitest-configuration" | "tool-config-vitest" | "tool-config-tailwind" | "tool-config-postcss" | "tool-config-eslint" | "tool-config-dependency-cruiser" | "pytest-configuration" | "eslint-configuration" | "vscode-test-configuration";
-  readonly grammarId?: string;
-  readonly authority: string;
-  readonly verification: string;
-}
-
-interface EcosystemSpec {
-  readonly packageIdentity: "manifest" | "boundary-only";
-  readonly manifestContractId: string | null;
-}
-
-interface PackageGlueGrammar {
-  readonly analyzer: "rust" | "typescript" | "javascript" | "go" | "python" | "dotnet" | "c-cpp" | "tex";
-  readonly allowedRoles: readonly ("declaration" | "registration" | "bootstrap" | "thin-delegation")[];
-  readonly maxDelegationStatements: number;
-}
-
-interface TaxonomyV7 {
-  readonly schemaVersion: 7;
-  readonly windowEmptyFacetFileKindId: string;
-  readonly fileKinds: Readonly<Record<string, FileKindSpec>>;
-  readonly semanticDirectoryKinds: Readonly<Record<string, SemanticDirectoryKindSpec>>;
-  readonly fixedFilenameContracts: Readonly<Record<string, FixedFilenameContract>>;
-  readonly fixedFilenameRejectionContracts: Readonly<Record<string, FixedFilenameRejectionContract>>;
-  readonly fixedDirectoryContracts: Readonly<Record<string, FixedDirectoryContract>>;
-  readonly configurableEntryContracts: Readonly<Record<string, ConfigurableEntryContract>>;
-  readonly fileKindResolutionRules: Readonly<Record<string, FileKindResolutionRuleSpec>>;
-  readonly scopedFileKinds: Readonly<Record<string, ScopedFileKindSpec>>;
-  readonly semanticDirectoryMemberKinds: Readonly<Record<string, SemanticDirectoryMemberKindSpec>>;
-  readonly semanticProjectedMemberKinds: Readonly<Record<string, SemanticProjectedMemberKindSpec>>;
-  readonly semanticPathProjectionProfileRenderers: Readonly<Record<string, SemanticPathProjectionProfileRenderer>>;
-  readonly semanticDescendantContracts: Readonly<Record<string, SemanticDescendantContract>>;
-  readonly semanticPathProjectionCatalogContracts: Readonly<Record<string, SemanticPathProjectionCatalogContract>>;
-  readonly semanticPathProjectionContracts: Readonly<Record<string, SemanticPathProjectionContract>>;
-  readonly semanticOwnedFileProjectionContracts: Readonly<Record<string, SemanticOwnedFileProjectionContract>>;
-  readonly semanticPackageProjectionContracts: DiscoveryTaxonomy["semanticPackageProjectionContracts"];
-  readonly semanticPathProjectionReferenceConsumerContracts: Readonly<Record<string, SemanticPathProjectionReferenceConsumerContract>>;
-  readonly mutationCatalogProjection: MutationCatalogProjectionContractIds;
-  readonly generatorContracts: Readonly<Record<string, GeneratorContractSpec>>;
-  readonly ecosystems: Readonly<Record<string, EcosystemSpec>>;
-  readonly packageBoundaryRules: Readonly<Record<string, PackageBoundaryRule>>;
-  readonly packageBoundaryProfiles: Readonly<Record<string, PackageBoundaryProfile>>;
-  readonly packageGlueGrammar: Readonly<Record<string, PackageGlueGrammar>>;
-  readonly packageSourceDispositions: Readonly<Record<string, PackageSourceDisposition>>;
-  readonly pathExclusions: Readonly<Record<string, { readonly path: string; readonly mode: "opaque"; readonly reason: string }>>;
-  readonly unicodeNormalization: { readonly form: "NFC"; readonly caseFold: "lower"; readonly locale: "und" };
-  readonly variationSelectorPolicy: { readonly selector: "\uFE0F"; readonly requiredAfterEmoji: true; readonly comparison: "ignore-selector" };
-  readonly collisionPolicy: {
-    readonly comparisons: readonly ("byte" | "nfc" | "case-fold" | "vs16-fold" | "same-kind")[];
-    readonly maxPathBytes: number;
-    readonly rejectWindowsReservedNames: boolean;
-    readonly rejectTrailingDotsAndSpaces: boolean;
-  };
-  readonly areaEnforcement: {
-    readonly requiredState: "clean";
-    readonly undeclaredAreas: "enforce";
-    readonly opaquePathExclusionIds: readonly string[];
-  };
-}
-
-interface LoadedTaxonomy {
-  readonly path: string;
-  readonly pathMatcher: TaxonomyPathMatcher;
-  readonly input?: SemanticOwnedInputFileSnapshot;
-  readonly schema: TaxonomyV7;
-  readonly discoverySchema: DiscoveryTaxonomy;
-  readonly exclusions: readonly { readonly id: string; readonly path: string }[];
-  readonly fileKinds: readonly (FileKindSpec & { readonly id: string })[];
-  readonly directoryKinds: readonly (SemanticDirectoryKindSpec & { readonly id: string; readonly slugRegex: RegExp })[];
-}
-
-const TAXONOMY_RELATIVE_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const TRANSACTION_SENTINEL_CASES_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🚨️transaction-sentinel-cases/🔣️.json";
 const TICKET_IMPORTANT_EXACT_MUTATIONS_CATALOG_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/💉️ticket-important-exact-mutations/🔣️.json";
 const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
@@ -871,893 +372,16 @@ const TICKET_IMPORTANT_EXACT_GOVERNED_SOURCES = [
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP/📌️important.md",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📌️important.md",
 ] as const;
-const LEXICAL_OPAQUE_ROOTS = ["compose", "temp/compose"] as const;
 const GENERIC_SEMANTIC_STEMS = new Set(["asset", "assets", "component", "components", "descriptor", "glue", "test", "tests", "implementation", "impl", "index", "cases", "vectors"]);
 const WINDOWS_RESERVED = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
-const SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
-
-function record(value: unknown, name: string): JsonRecord {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Taxonomy v7 field ${name} must be an object`);
-  return value as JsonRecord;
-}
-
-function stringArray(value: unknown, name: string): readonly string[] {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) throw new Error(`Taxonomy v7 field ${name} must be a string array`);
-  return value;
-}
-
-/** 🔒️ Narrows a parsed field to one of the exact literals its contract declares. */
-function requiredLiteral<T extends string>(value: unknown, name: string, allowed: readonly T[]): T {
-  const text = requiredString(value, name);
-  if (!allowed.includes(text as T)) throw new Error(`${name} must be one of ${allowed.join(", ")}`);
-  return text as T;
-}
-
-function requiredString(value: unknown, name: string): string {
-  if (typeof value !== "string" || value.length === 0) throw new Error(`Taxonomy v7 field ${name} must be a non-empty string`);
-  return value;
-}
-
-function requireExactKeys(value: JsonRecord, keys: readonly string[], name: string): void {
-  const actual = Object.keys(value).sort();
-  const expected = [...keys].sort();
-  if (canonicalJson(actual) !== canonicalJson(expected)) throw new Error(`Taxonomy v7 field ${name} must contain exactly ${expected.join(", ")}`);
-}
-
-function fixedExpiry(value: unknown, name: string): string | null {
-  if (value === null) return null;
-  const expires = requiredString(value, name);
-  if (!/^\d{4}-\d{2}-\d{2}$/u.test(expires)) throw new Error(`Taxonomy v7 ${name} must be null or YYYY-MM-DD`);
-  return expires;
-}
-
-/** 🚧️ The exact opaque subtrees `🔣️taxonomy.json` may declare, in order: two user-owned scratch
- * trees plus the one tracked nested-repository gitlink (`git ls-files -s` mode `160000`), which must be
- * filtered lexically here or `inventoryTaxonomyWithSourceParentPruning` refuses to classify anything at
- * all. Mirrors `🔍️discovery/🟦️.ts`'s `OPAQUE_PATH_EXCLUSIONS`; the two files are separate bundles with
- * no shared import path for a three-row table. The gitlink is named, never its parent `♻️mit-bestand/`,
- * whose `📋️bericht`/`🖼️asset` subtrees are generator-contract outputs and may not sit inside an opaque
- * subtree. */
-const TAXONOMY_OPAQUE_PATH_EXCLUSIONS: readonly (readonly [string, string])[] = [
-  ["compose", "compose/"],
-  ["temp-compose", "temp/compose/"],
-  ["mit-bestand-recherche", "♻️mit-bestand/🔎️recherche/"],
-];
-
-
-function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
-  const root = record(raw, "root");
-  if (root.schemaVersion !== 7) throw new Error(`Taxonomy schemaVersion must be 7 at ${path}`);
-  const discoveryProblems = validateTaxonomy(root as unknown as DiscoveryTaxonomy);
-  if (discoveryProblems.length > 0) throw new Error(`Taxonomy v7 discovery contract validation failed at ${path}: ${discoveryProblems.join(" | ")}`);
-  const pathMatcher = createTaxonomyPathMatcher();
-  function validatedContractPattern(value: unknown, name: string, exactBasename: boolean): string {
-    const pattern = requiredString(value, name);
-    if (pattern !== pattern.normalize("NFC") || pattern.startsWith("/") || pattern.endsWith("/") || pattern.includes("\\") || pattern.includes("//") || pattern.includes("\u0000")) throw new Error(`Taxonomy v7 ${name} must be one NFC workspace-relative POSIX pattern`);
-    if (/[{}]/u.test(pattern) || /^!/u.test(pattern) || /[!@+?*]\(/u.test(pattern)) throw new Error(`Taxonomy v7 ${name} uses unsupported glob syntax`);
-    for (const segment of pattern.split("/")) {
-      if (segment.includes("**") && segment !== "**") throw new Error(`Taxonomy v7 ${name} may use ** only as a whole segment`);
-      for (const match of segment.matchAll(/\[([^\]]*)\]/gu)) if (!/^[A-Za-z0-9-]+$/u.test(match[1]) || /^[!^]/u.test(match[1])) throw new Error(`Taxonomy v7 ${name} has an invalid character class`);
-      if ((segment.match(/\[/gu)?.length ?? 0) !== (segment.match(/\]/gu)?.length ?? 0)) throw new Error(`Taxonomy v7 ${name} has an unclosed character class`);
-    }
-    const filename = pattern.slice(pattern.lastIndexOf("/") + 1);
-    if (exactBasename && /[*?\[\]{}]/u.test(filename)) throw new Error(`Taxonomy v7 ${name} must end in one exact literal basename`);
-    pathMatcher.matches("", pattern);
-    return pattern;
-  }
-  const fileKindRows = record(root.fileKinds, "fileKinds");
-  const directoryKindRows = record(root.semanticDirectoryKinds, "semanticDirectoryKinds");
-  const fixedRows = record(root.fixedFilenameContracts, "fixedFilenameContracts");
-  const fixedRejectionRows = record(root.fixedFilenameRejectionContracts, "fixedFilenameRejectionContracts");
-  const fixedDirectoryRows = record(root.fixedDirectoryContracts, "fixedDirectoryContracts");
-  const configurableRows = record(root.configurableEntryContracts, "configurableEntryContracts");
-  const fileResolutionRows = record(root.fileKindResolutionRules, "fileKindResolutionRules");
-  const scopedFileRows = record(root.scopedFileKinds, "scopedFileKinds");
-  const directoryMemberRows = record(root.semanticDirectoryMemberKinds, "semanticDirectoryMemberKinds");
-  const projectedMemberRows = record(root.semanticProjectedMemberKinds, "semanticProjectedMemberKinds");
-  const projectionRendererRows = record(root.semanticPathProjectionProfileRenderers, "semanticPathProjectionProfileRenderers");
-  const descendantContractRows = record(root.semanticDescendantContracts, "semanticDescendantContracts");
-  const projectionCatalogRows = record(root.semanticPathProjectionCatalogContracts, "semanticPathProjectionCatalogContracts");
-  const projectionRows = record(root.semanticPathProjectionContracts, "semanticPathProjectionContracts");
-  const ownedFileProjectionRows = record(root.semanticOwnedFileProjectionContracts, "semanticOwnedFileProjectionContracts");
-  const projectionConsumerRows = record(root.semanticPathProjectionReferenceConsumerContracts, "semanticPathProjectionReferenceConsumerContracts");
-  const mutationCatalogProjectionRow = record(root.mutationCatalogProjection, "mutationCatalogProjection");
-  const generatorRows = record(root.generatorContracts, "generatorContracts");
-  const ecosystemRows = record(root.ecosystems, "ecosystems");
-  const boundaryRows = record(root.packageBoundaryRules, "packageBoundaryRules");
-  const boundaryProfileRows = record(root.packageBoundaryProfiles, "packageBoundaryProfiles");
-  const grammarRows = record(root.packageGlueGrammar, "packageGlueGrammar");
-  const sourceDispositionRows = record(root.packageSourceDispositions, "packageSourceDispositions");
-  const exclusionRows = record(root.pathExclusions, "pathExclusions");
-  const unicode = record(root.unicodeNormalization, "unicodeNormalization");
-  const selector = record(root.variationSelectorPolicy, "variationSelectorPolicy");
-  const collision = record(root.collisionPolicy, "collisionPolicy");
-  const enforcement = record(root.areaEnforcement, "areaEnforcement");
-  if (unicode.form !== "NFC" || unicode.caseFold !== "lower" || unicode.locale !== "und") throw new Error("Taxonomy v7 unicodeNormalization must select NFC/lower/und");
-  if (selector.selector !== "\uFE0F" || selector.requiredAfterEmoji !== true || selector.comparison !== "ignore-selector") throw new Error("Taxonomy v7 variationSelectorPolicy is not canonical");
-  const requiredComparisons = ["byte", "nfc", "case-fold", "vs16-fold", "same-kind"];
-  if (canonicalJson(collision.comparisons) !== canonicalJson(requiredComparisons) || !Number.isSafeInteger(collision.maxPathBytes) || (collision.maxPathBytes as number) < 1 || collision.rejectWindowsReservedNames !== true || collision.rejectTrailingDotsAndSpaces !== true) throw new Error("Taxonomy v7 collisionPolicy is incomplete");
-  if (enforcement.requiredState !== "clean" || enforcement.undeclaredAreas !== "enforce") throw new Error("Taxonomy v7 areaEnforcement must enforce clean undeclared areas");
-
-  const fileKinds: Record<string, FileKindSpec> = {};
-  for (const [id, value] of Object.entries(fileKindRows)) {
-    const spec = record(value, `fileKinds.${id}`);
-    const emoji = requiredString(spec.emoji, `fileKinds.${id}.emoji`).normalize("NFC");
-    const extensionChains = stringArray(spec.extensionChains, `fileKinds.${id}.extensionChains`);
-    if (extensionChains.length === 0 || extensionChains.some((chain) => !chain.startsWith("."))) throw new Error(`Taxonomy v7 fileKinds.${id}.extensionChains must contain dotted chains`);
-    fileKinds[id] = { emoji, extensionChains: [...new Set(extensionChains)].sort((a, b) => b.length - a.length || a.localeCompare(b)), role: requiredString(spec.role, `fileKinds.${id}.role`) };
-  }
-  if (Object.keys(fileKinds).length === 0) throw new Error("Taxonomy v7 fileKinds must not be empty");
-
-  const semanticDirectoryKinds: Record<string, SemanticDirectoryKindSpec> = {};
-  for (const [id, value] of Object.entries(directoryKindRows)) {
-    const spec = record(value, `semanticDirectoryKinds.${id}`);
-    const emoji = requiredString(spec.emoji, `semanticDirectoryKinds.${id}.emoji`).normalize("NFC");
-    const slugPattern = requiredString(spec.slugPattern, `semanticDirectoryKinds.${id}.slugPattern`);
-    new RegExp(slugPattern, "u");
-    if (typeof spec.allowEmojiOnly !== "boolean") throw new Error(`Taxonomy v7 semanticDirectoryKinds.${id}.allowEmojiOnly must be boolean`);
-    if (spec.inferWithoutEmoji !== undefined && typeof spec.inferWithoutEmoji !== "boolean") throw new Error(`Taxonomy v7 semanticDirectoryKinds.${id}.inferWithoutEmoji must be boolean when present`);
-    if (spec.projectionOnly !== undefined && typeof spec.projectionOnly !== "boolean") throw new Error(`Taxonomy v7 semanticDirectoryKinds.${id}.projectionOnly must be boolean when present`);
-    semanticDirectoryKinds[id] = { emoji, slugPattern, allowEmojiOnly: spec.allowEmojiOnly, ...(spec.inferWithoutEmoji === undefined ? {} : { inferWithoutEmoji: spec.inferWithoutEmoji }), ...(spec.projectionOnly === undefined ? {} : { projectionOnly: spec.projectionOnly }), ...(spec.parentKindIds === undefined ? {} : { parentKindIds: stringArray(spec.parentKindIds, `semanticDirectoryKinds.${id}.parentKindIds`) }) };
-  }
-  if (Object.keys(semanticDirectoryKinds).length === 0) throw new Error("Taxonomy v7 semanticDirectoryKinds must not be empty");
-
-  const fixedFilenameContracts: Record<string, FixedFilenameContract> = {};
-  for (const [id, value] of Object.entries(fixedRows)) {
-    const spec = record(value, `fixedFilenameContracts.${id}`);
-    if (spec.configurability !== "unconfigurable") throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.configurability must be unconfigurable`);
-    const inputScopeRow = record(spec.scope, `fixedFilenameContracts.${id}.scope`);
-    const namedScope = inputScopeRow.kind === "named-fixed-directory-contract-set" ? parseNamedFixedDirectoryContractSetScope(inputScopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"], (root.fixedDirectoryContractSets ?? {}) as NonNullable<DiscoveryTaxonomy["fixedDirectoryContractSets"]>) : undefined;
-    const scopeRow: JsonRecord = namedScope ? { kind: namedScope.kind, fixedDirectoryContractIds: [...namedScope.fixedDirectoryContractIds] } : inputScopeRow;
-    const scopeKind = requiredString(scopeRow.kind, `fixedFilenameContracts.${id}.scope.kind`) as FixedContractScope["kind"];
-    if (!["exact-path", "repository-root", "package-root", "directory-kind", "fixed-directory-contract", "fixed-directory-contract-set", "sibling-fixed-filename-contract", "path-pattern"].includes(scopeKind)) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.kind is invalid`);
-    const scope: FixedContractScope = scopeKind === "exact-path"
-      ? (requireExactKeys(scopeRow, ["kind", "path"], `fixedFilenameContracts.${id}.scope`), { kind: "exact-path", path: normalizeRelative(requiredString(scopeRow.path, `fixedFilenameContracts.${id}.scope.path`)) })
-      : scopeKind === "package-root"
-        ? (requireExactKeys(scopeRow, ["kind", "ecosystemId"], `fixedFilenameContracts.${id}.scope`), { kind: "package-root", ecosystemId: requiredString(scopeRow.ecosystemId, `fixedFilenameContracts.${id}.scope.ecosystemId`) })
-        : scopeKind === "directory-kind"
-          ? (requireExactKeys(scopeRow, ["kind", "directoryKindId"], `fixedFilenameContracts.${id}.scope`), { kind: "directory-kind", directoryKindId: requiredString(scopeRow.directoryKindId, `fixedFilenameContracts.${id}.scope.directoryKindId`) })
-          : scopeKind === "fixed-directory-contract"
-            ? (requireExactKeys(scopeRow, ["kind", "fixedDirectoryContractId"], `fixedFilenameContracts.${id}.scope`), { kind: "fixed-directory-contract", fixedDirectoryContractId: requiredString(scopeRow.fixedDirectoryContractId, `fixedFilenameContracts.${id}.scope.fixedDirectoryContractId`) })
-            : scopeKind === "fixed-directory-contract-set"
-              ? parseFixedDirectoryContractSetScope(scopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"])
-            : scopeKind === "sibling-fixed-filename-contract"
-              ? (requireExactKeys(scopeRow, ["kind", "fixedFilenameContractId"], `fixedFilenameContracts.${id}.scope`), { kind: "sibling-fixed-filename-contract", fixedFilenameContractId: requiredString(scopeRow.fixedFilenameContractId, `fixedFilenameContracts.${id}.scope.fixedFilenameContractId`) })
-          : (requireExactKeys(scopeRow, ["kind"], `fixedFilenameContracts.${id}.scope`), { kind: scopeKind });
-    if (scope.kind === "directory-kind" && !semanticDirectoryKinds[scope.directoryKindId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.directoryKindId is invalid`);
-    fixedFilenameContracts[id] = {
-      pathPattern: validatedContractPattern(spec.pathPattern, `fixedFilenameContracts.${id}.pathPattern`, true),
-      authority: requiredString(spec.authority, `fixedFilenameContracts.${id}.authority`),
-      reason: requiredString(spec.reason, `fixedFilenameContracts.${id}.reason`),
-      configurability: "unconfigurable",
-      scope,
-      verification: requiredString(spec.verification, `fixedFilenameContracts.${id}.verification`),
-      expires: fixedExpiry(spec.expires, `fixedFilenameContracts.${id}.expires`),
-    };
-  }
-
-  const fixedDirectoryContracts: Record<string, FixedDirectoryContract> = {};
-  for (const [id, value] of Object.entries(fixedDirectoryRows)) {
-    const spec = record(value, `fixedDirectoryContracts.${id}`);
-    if (spec.configurability !== "unconfigurable") throw new Error(`Taxonomy v7 fixedDirectoryContracts.${id}.configurability must be unconfigurable`);
-    const scopeRow = record(spec.scope, `fixedDirectoryContracts.${id}.scope`);
-    const scopeKind = requiredString(scopeRow.kind, `fixedDirectoryContracts.${id}.scope.kind`);
-    if (!["exact-path", "repository-root", "directory-kind", "path-pattern"].includes(scopeKind)) throw new Error(`Taxonomy v7 fixedDirectoryContracts.${id}.scope.kind is invalid`);
-    const scope: FixedDirectoryContract["scope"] = scopeKind === "exact-path"
-      ? (requireExactKeys(scopeRow, ["kind", "path"], `fixedDirectoryContracts.${id}.scope`), { kind: "exact-path", path: normalizeRelative(requiredString(scopeRow.path, `fixedDirectoryContracts.${id}.scope.path`)) })
-      : scopeKind === "directory-kind"
-        ? (requireExactKeys(scopeRow, ["kind", "directoryKindId"], `fixedDirectoryContracts.${id}.scope`), { kind: "directory-kind", directoryKindId: requiredString(scopeRow.directoryKindId, `fixedDirectoryContracts.${id}.scope.directoryKindId`) })
-        : (requireExactKeys(scopeRow, ["kind"], `fixedDirectoryContracts.${id}.scope`), { kind: scopeKind as "repository-root" | "path-pattern" });
-    if (scope.kind === "directory-kind" && !semanticDirectoryKinds[scope.directoryKindId]) throw new Error(`Taxonomy v7 fixedDirectoryContracts.${id}.scope.directoryKindId is invalid`);
-    fixedDirectoryContracts[id] = {
-      pathPattern: validatedContractPattern(spec.pathPattern, `fixedDirectoryContracts.${id}.pathPattern`, false),
-      authority: requiredString(spec.authority, `fixedDirectoryContracts.${id}.authority`),
-      reason: requiredString(spec.reason, `fixedDirectoryContracts.${id}.reason`),
-      configurability: "unconfigurable",
-      scope,
-      verification: requiredString(spec.verification, `fixedDirectoryContracts.${id}.verification`),
-      expires: fixedExpiry(spec.expires, `fixedDirectoryContracts.${id}.expires`),
-    };
-  }
-  if (Object.keys(fixedDirectoryContracts).length === 0) throw new Error("Taxonomy v7 fixedDirectoryContracts must not be empty");
-  for (const [id, contract] of Object.entries(fixedFilenameContracts)) {
-    if (contract.scope.kind === "fixed-directory-contract" && !fixedDirectoryContracts[contract.scope.fixedDirectoryContractId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.fixedDirectoryContractId is invalid`);
-    if (contract.scope.kind === "sibling-fixed-filename-contract" && !fixedFilenameContracts[contract.scope.fixedFilenameContractId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.fixedFilenameContractId is invalid`);
-  }
-
-  const fixedFilenameRejectionContracts: Record<string, FixedFilenameRejectionContract> = {};
-  const rejectedFixedPaths = new Set<string>();
-  for (const [id, value] of Object.entries(fixedRejectionRows)) {
-    const spec = record(value, `fixedFilenameRejectionContracts.${id}`);
-    requireExactKeys(spec, ["sourcePathIdentities", "disposition", "reason"], `fixedFilenameRejectionContracts.${id}`);
-    if (spec.disposition !== "normalize" && spec.disposition !== "relocate") throw new Error(`Taxonomy v7 fixedFilenameRejectionContracts.${id}.disposition is invalid`);
-    const sourcePathIdentities = stringArray(spec.sourcePathIdentities, `fixedFilenameRejectionContracts.${id}.sourcePathIdentities`).map(normalizeRelative);
-    if (sourcePathIdentities.length === 0 || sourcePathIdentities.some((path) => rejectedFixedPaths.has(path))) throw new Error(`Taxonomy v7 fixedFilenameRejectionContracts.${id}.sourcePathIdentities are empty or duplicated`);
-    for (const path of sourcePathIdentities) rejectedFixedPaths.add(path);
-    fixedFilenameRejectionContracts[id] = { sourcePathIdentities, disposition: spec.disposition, reason: requiredString(spec.reason, `fixedFilenameRejectionContracts.${id}.reason`) };
-  }
-  if (Object.keys(fixedFilenameRejectionContracts).length === 0) throw new Error("Taxonomy v7 fixedFilenameRejectionContracts must not be empty");
-
-  const configurableEntryContracts: Record<string, ConfigurableEntryContract> = {};
-  for (const [id, value] of Object.entries(configurableRows)) {
-    const spec = record(value, `configurableEntryContracts.${id}`);
-    const fileKindId = requiredString(spec.fileKindId, `configurableEntryContracts.${id}.fileKindId`);
-    if (!fileKinds[fileKindId]) throw new Error(`Taxonomy v7 configurableEntryContracts.${id} references unknown file kind ${fileKindId}`);
-    configurableEntryContracts[id] = {
-      filename: requiredString(spec.filename, `configurableEntryContracts.${id}.filename`),
-      fileKindId,
-      ecosystemId: requiredString(spec.ecosystemId, `configurableEntryContracts.${id}.ecosystemId`),
-      role: requiredString(spec.role, `configurableEntryContracts.${id}.role`),
-      configurationSources: stringArray(spec.configurationSources, `configurableEntryContracts.${id}.configurationSources`),
-    };
-  }
-
-  const fileKindResolutionRules: Record<string, FileKindResolutionRuleSpec> = {};
-  for (const [id, value] of Object.entries(fileResolutionRows)) {
-    const spec = record(value, `fileKindResolutionRules.${id}`);
-    const extensionChain = requiredString(spec.extensionChain, `fileKindResolutionRules.${id}.extensionChain`);
-    const fileKindId = requiredString(spec.fileKindId, `fileKindResolutionRules.${id}.fileKindId`);
-    if (!fileKinds[fileKindId]?.extensionChains.includes(extensionChain)) throw new Error(`Taxonomy v7 fileKindResolutionRules.${id} does not reference an owned extension chain`);
-    if (!Number.isSafeInteger(spec.priority)) throw new Error(`Taxonomy v7 fileKindResolutionRules.${id}.priority must be an integer`);
-    const filenamePattern = typeof spec.filenamePattern === "string" ? spec.filenamePattern : undefined;
-    const pathPattern = typeof spec.pathPattern === "string" ? validatedContractPattern(spec.pathPattern, `fileKindResolutionRules.${id}.pathPattern`, false) : undefined;
-    if (filenamePattern) new RegExp(filenamePattern, "u");
-    const parentKindIds = spec.parentKindIds === undefined ? undefined : stringArray(spec.parentKindIds, `fileKindResolutionRules.${id}.parentKindIds`);
-    const ancestorKindIds = spec.ancestorKindIds === undefined ? undefined : stringArray(spec.ancestorKindIds, `fileKindResolutionRules.${id}.ancestorKindIds`);
-    for (const kindId of [...(parentKindIds ?? []), ...(ancestorKindIds ?? [])]) if (!semanticDirectoryKinds[kindId]) throw new Error(`Taxonomy v7 fileKindResolutionRules.${id} references unknown directory kind ${kindId}`);
-    fileKindResolutionRules[id] = { extensionChain, fileKindId, priority: spec.priority as number, filenamePattern, pathPattern, parentKindIds, ancestorKindIds };
-  }
-  if (Object.keys(fileKindResolutionRules).length === 0) throw new Error("Taxonomy v7 fileKindResolutionRules must not be empty");
-
-  const scopedFileKinds: Record<string, ScopedFileKindSpec> = {};
-  for (const [id, value] of Object.entries(scopedFileRows)) {
-    const spec = record(value, `scopedFileKinds.${id}`);
-    const extensionChains = stringArray(spec.extensionChains, `scopedFileKinds.${id}.extensionChains`);
-    if (extensionChains.length === 0 || extensionChains.some((chain) => !chain.startsWith("."))) throw new Error(`Taxonomy v7 scopedFileKinds.${id}.extensionChains must contain dotted chains`);
-    const sourceFilenamePattern = requiredString(spec.sourceFilenamePattern, `scopedFileKinds.${id}.sourceFilenamePattern`);
-    new RegExp(sourceFilenamePattern, "u");
-    const role = requiredString(spec.role, `scopedFileKinds.${id}.role`);
-    if (!["source", "schema", "specification", "configuration", "documentation", "test", "asset", "generated", "marker", "evidence"].includes(role)) throw new Error(`Taxonomy v7 scopedFileKinds.${id}.role is invalid`);
-    const parentDirectoryKindId = spec.parentDirectoryKindId === undefined ? undefined : requiredString(spec.parentDirectoryKindId, `scopedFileKinds.${id}.parentDirectoryKindId`);
-    if (parentDirectoryKindId && !semanticDirectoryKinds[parentDirectoryKindId]) throw new Error(`Taxonomy v7 scopedFileKinds.${id} references unknown parent directory kind ${parentDirectoryKindId}`);
-    scopedFileKinds[id] = {
-      pathPattern: validatedContractPattern(spec.pathPattern, `scopedFileKinds.${id}.pathPattern`, false),
-      parentDirectoryKindId,
-      emoji: requiredString(spec.emoji, `scopedFileKinds.${id}.emoji`).normalize("NFC"),
-      extensionChains: [...new Set(extensionChains)].sort((left, right) => right.length - left.length || left.localeCompare(right)),
-      role,
-      sourceFilenamePattern,
-      authority: requiredString(spec.authority, `scopedFileKinds.${id}.authority`),
-      reason: requiredString(spec.reason, `scopedFileKinds.${id}.reason`),
-      verification: requiredString(spec.verification, `scopedFileKinds.${id}.verification`),
-      expires: fixedExpiry(spec.expires, `scopedFileKinds.${id}.expires`),
-    };
-  }
-
-  const semanticDirectoryMemberKinds: Record<string, SemanticDirectoryMemberKindSpec> = {};
-  for (const [id, value] of Object.entries(directoryMemberRows)) {
-    const spec = record(value, `semanticDirectoryMemberKinds.${id}`);
-    if (spec.source !== "registry") throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id}.source must be registry`);
-    const ownerKindIds = stringArray(spec.ownerKindIds, `semanticDirectoryMemberKinds.${id}.ownerKindIds`);
-    const memberNames = stringArray(spec.memberNames, `semanticDirectoryMemberKinds.${id}.memberNames`);
-    if (ownerKindIds.length === 0 || memberNames.length === 0) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} must declare owners and members`);
-    if (memberNames.some((name) => name !== name.normalize("NFC") || !splitLeadingEmoji(name).emoji)) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} member names must be NFC emoji-leading evidence`);
-    semanticDirectoryMemberKinds[id] = { ownerKindIds: [...new Set(ownerKindIds)].sort(), memberNames: [...new Set(memberNames)].sort(), source: "registry" };
-  }
-  const directoryContextIds = new Set([...Object.keys(semanticDirectoryKinds), ...Object.keys(semanticDirectoryMemberKinds)]);
-  for (const [id, spec] of Object.entries(semanticDirectoryMemberKinds)) for (const ownerId of spec.ownerKindIds) if (!directoryContextIds.has(ownerId)) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} references unknown owner kind ${ownerId}`);
-
-  const semanticProjectedMemberKinds: Record<string, SemanticProjectedMemberKindSpec> = {};
-  for (const [id, value] of Object.entries(projectedMemberRows)) {
-    const spec = record(value, `semanticProjectedMemberKinds.${id}`);
-    if (spec.identityField !== "mutationDirectoryName" && spec.identityField !== "commandDirectoryName") throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id}.identityField is invalid`);
-    const ownerKindIds = stringArray(spec.ownerKindIds, `semanticProjectedMemberKinds.${id}.ownerKindIds`);
-    if (ownerKindIds.length === 0) throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id}.ownerKindIds must not be empty`);
-    semanticProjectedMemberKinds[id] = { ownerKindIds: [...new Set(ownerKindIds)].sort(), projectionContractId: requiredString(spec.projectionContractId, `semanticProjectedMemberKinds.${id}.projectionContractId`), sourceMemberKindId: requiredString(spec.sourceMemberKindId, `semanticProjectedMemberKinds.${id}.sourceMemberKindId`), identityField: spec.identityField };
-  }
-  if (Object.keys(semanticProjectedMemberKinds).length === 0) throw new Error("Taxonomy v7 semanticProjectedMemberKinds must not be empty");
-  const allDirectoryContextIds = new Set([...directoryContextIds, ...Object.keys(semanticProjectedMemberKinds), ...Object.keys(fixedDirectoryContracts)]);
-  for (const [id, spec] of Object.entries(semanticDirectoryKinds)) for (const parentId of spec.parentKindIds ?? []) if (!allDirectoryContextIds.has(parentId)) throw new Error(`Taxonomy v7 semanticDirectoryKinds.${id} references unknown parent kind ${parentId}`);
-  for (const [id, spec] of Object.entries(semanticProjectedMemberKinds)) {
-    if (!semanticDirectoryMemberKinds[spec.sourceMemberKindId]) throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id} references unknown source member kind ${spec.sourceMemberKindId}`);
-    for (const ownerId of spec.ownerKindIds) if (!allDirectoryContextIds.has(ownerId)) throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id} references unknown owner kind ${ownerId}`);
-  }
-
-  const semanticPathProjectionProfileRenderers: Record<string, SemanticPathProjectionProfileRenderer> = {};
-  for (const [id, value] of Object.entries(projectionRendererRows)) {
-    const spec = record(value, `semanticPathProjectionProfileRenderers.${id}`);
-    if (spec.direction !== "forward-only" || canonicalJson(spec.captureFields) !== canonicalJson(["standardVersion", "subsetId"]) || spec.template !== "🪆️{standardVersion}-{subsetId}" || canonicalJson(spec.tupleCollisionFields) !== canonicalJson(["artifactId", "standardVersion", "subsetId"])) throw new Error(`Taxonomy v7 semanticPathProjectionProfileRenderers.${id} is not the forward-only standard/subset contract`);
-    const directoryKindId = requiredString(spec.directoryKindId, `semanticPathProjectionProfileRenderers.${id}.directoryKindId`);
-    if (!semanticDirectoryKinds[directoryKindId]) throw new Error(`Taxonomy v7 semanticPathProjectionProfileRenderers.${id} references unknown directory kind ${directoryKindId}`);
-    semanticPathProjectionProfileRenderers[id] = { direction: "forward-only", captureFields: ["standardVersion", "subsetId"], directoryKindId, template: "🪆️{standardVersion}-{subsetId}", tupleCollisionFields: ["artifactId", "standardVersion", "subsetId"] };
-  }
-  if (Object.keys(semanticPathProjectionProfileRenderers).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionProfileRenderers must not be empty");
-
-  const parseDescendantNode = (value: unknown, name: string): SemanticDescendantNode => {
-    const spec = record(value, name);
-    if (spec.nodeType !== "directory" && spec.nodeType !== "file") throw new Error(`Taxonomy v7 ${name}.nodeType is invalid`);
-    const parseSegments = (value: unknown, key: string): readonly Readonly<{ kindId: string; literal: string }>[] => {
-      if (!Array.isArray(value)) throw new Error(`Taxonomy v7 ${key} must be an array`);
-      return value.map((value, index) => {
-        const segment = record(value, `${key}[${index}]`);
-        const kindId = requiredString(segment.kindId, `${key}[${index}].kindId`);
-        const literal = requiredString(segment.literal, `${key}[${index}].literal`).normalize("NFC");
-        const kind = semanticDirectoryKinds[kindId];
-        const leading = splitLeadingEmoji(literal);
-        if (!kind || emojiFold(leading.emoji) !== emojiFold(kind.emoji) || !new RegExp(kind.slugPattern, "u").test(leading.rest)) throw new Error(`Taxonomy v7 ${key} has an invalid semantic path segment ${literal}`);
-        return { kindId, literal };
-      });
-    };
-    const pathSegments = parseSegments(spec.pathSegments, `${name}.pathSegments`);
-    if (spec.nodeType === "directory") {
-      const kindId = requiredString(spec.kindId, `${name}.kindId`);
-      if (!allDirectoryContextIds.has(kindId) || spec.sourceFilename !== undefined || spec.fixedFilenameContractId !== undefined || spec.packageGlue !== undefined) throw new Error(`Taxonomy v7 ${name} references an invalid directory kind ${kindId}`);
-      return { pathSegments, nodeType: "directory", kindId };
-    }
-    const authorities = [spec.kindId !== undefined, spec.fixedFilenameContractId !== undefined].filter(Boolean).length;
-    if (authorities !== 1) throw new Error(`Taxonomy v7 ${name} must declare exactly one file authority`);
-    if (spec.kindId !== undefined) {
-      const kindId = requiredString(spec.kindId, `${name}.kindId`);
-      if (!fileKinds[kindId]) throw new Error(`Taxonomy v7 ${name} references unknown file kind ${kindId}`);
-      const sourceFilename = spec.sourceFilename === undefined ? undefined : requiredString(spec.sourceFilename, `${name}.sourceFilename`).normalize("NFC");
-      if (sourceFilename !== undefined && (kindId !== "rust-source" || sourceFilename !== "🦀️.rs")) throw new Error(`Taxonomy v7 ${name}.sourceFilename is not the frozen Draw Rust source leaf`);
-      return { pathSegments, nodeType: "file", kindId, ...(sourceFilename ? { sourceFilename } : {}) };
-    }
-    if (spec.fixedFilenameContractId !== undefined) {
-      const fixedFilenameContractId = requiredString(spec.fixedFilenameContractId, `${name}.fixedFilenameContractId`);
-      if (!fixedFilenameContracts[fixedFilenameContractId]) throw new Error(`Taxonomy v7 ${name} references unknown fixed filename contract ${fixedFilenameContractId}`);
-      return { pathSegments, nodeType: "file", fixedFilenameContractId };
-    }
-    throw new Error(`Taxonomy v7 ${name} has no file authority`);
-  };
-  const semanticDescendantContracts: Record<string, SemanticDescendantContract> = {};
-  for (const [id, value] of Object.entries(descendantContractRows)) {
-    const spec = record(value, `semanticDescendantContracts.${id}`);
-    const rootDirectoryKindId = requiredString(spec.rootDirectoryKindId, `semanticDescendantContracts.${id}.rootDirectoryKindId`);
-    if (!allDirectoryContextIds.has(rootDirectoryKindId)) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} references unknown root directory kind ${rootDirectoryKindId}`);
-    if (spec.contractKind === "catalog") {
-      const catalogContractId = requiredString(spec.catalogContractId, `semanticDescendantContracts.${id}.catalogContractId`);
-      const leafFileKindId = requiredString(spec.leafFileKindId, `semanticDescendantContracts.${id}.leafFileKindId`);
-      const reserve = record(spec.pathBudgetReserve, `semanticDescendantContracts.${id}.pathBudgetReserve`);
-      if (!fileKinds[leafFileKindId] || spec.rendering !== "semantic-member-directory-and-physical-kind-leaf" || reserve.derivation !== "longest-rendered-catalog-descendant-suffix" || !Number.isSafeInteger(reserve.bytes) || (reserve.bytes as number) <= 0) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} is not a valid catalog descendant contract`);
-      semanticDescendantContracts[id] = { contractKind: "catalog", rootDirectoryKindId, catalogContractId, leafFileKindId, rendering: "semantic-member-directory-and-physical-kind-leaf", pathBudgetReserve: { derivation: "longest-rendered-catalog-descendant-suffix", bytes: reserve.bytes as number } };
-      continue;
-    }
-    if (!Array.isArray(spec.requiredNodes) || !Array.isArray(spec.exclusiveAlternatives)) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} node lists must be arrays`);
-    const requiredNodes = spec.requiredNodes.map((node, index) => parseDescendantNode(node, `semanticDescendantContracts.${id}.requiredNodes[${index}]`));
-    const exclusiveAlternatives = spec.exclusiveAlternatives.map((value, index) => {
-      const alternative = record(value, `semanticDescendantContracts.${id}.exclusiveAlternatives[${index}]`);
-      if (alternative.mode !== "exactly-one" || !Array.isArray(alternative.nodes) || alternative.nodes.length < 2) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} alternative must contain exactly-one candidates`);
-      return { id: requiredString(alternative.id, `semanticDescendantContracts.${id}.exclusiveAlternatives[${index}].id`), mode: "exactly-one" as const, nodes: alternative.nodes.map((node, nodeIndex) => parseDescendantNode(node, `semanticDescendantContracts.${id}.exclusiveAlternatives[${index}].nodes[${nodeIndex}]`)) };
-    });
-    if (!Number.isSafeInteger(spec.realizedNodeCount) || spec.realizedNodeCount !== requiredNodes.length + exclusiveAlternatives.length) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id}.realizedNodeCount is invalid`);
-    const reserve = record(spec.pathBudgetReserve, `semanticDescendantContracts.${id}.pathBudgetReserve`);
-    const suffix = (node: SemanticDescendantNode): string => {
-      const segments = node.pathSegments.map((segment) => segment.literal);
-      if (node.nodeType === "file") {
-        if ("kindId" in node) {
-          segments.push(canonicalPrimaryFilenameForKind(node.kindId, root as unknown as DiscoveryTaxonomy));
-        } else if ("fixedFilenameContractId" in node) segments.push(posix.basename(fixedFilenameContracts[node.fixedFilenameContractId].pathPattern));
-        else throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} file authority is invalid`);
-      }
-      return segments.length === 0 ? "" : `/${segments.join("/")}`;
-    };
-    const reserveBytes = Math.max(...[...requiredNodes, ...exclusiveAlternatives.flatMap((alternative) => alternative.nodes)].map((node) => Buffer.byteLength(suffix(node), "utf8")));
-    if (reserve.derivation !== "longest-canonical-descendant-suffix" || reserve.bytes !== reserveBytes) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id}.pathBudgetReserve is not derived from its longest suffix`);
-    semanticDescendantContracts[id] = { rootDirectoryKindId, requiredNodes, exclusiveAlternatives, realizedNodeCount: spec.realizedNodeCount as number, pathBudgetReserve: { derivation: "longest-canonical-descendant-suffix", bytes: reserveBytes } };
-  }
-  if (Object.keys(semanticDescendantContracts).length === 0) throw new Error("Taxonomy v7 semanticDescendantContracts must not be empty");
-
-  const semanticPathProjectionCatalogContracts: Record<string, SemanticPathProjectionCatalogContract> = {};
-  const expectedCatalogContract: SemanticMutationPathProjectionCatalogContract = { registryField: "vectors", required: true, allowEmpty: true, runtimeKindsField: "kinds", runtimeKindsRelation: "independent", mutationIdField: "mutationId", sourceMutationDirectoryNameField: "sourceMutationDirectoryName", mutationDirectoryNameField: "mutationDirectoryName", scenariosField: "scenarios", scenarioIdField: "id", scenarioDirectoryNameField: "directoryName", sourceBundleUniquenessFields: ["mutationId", "sourceMutationDirectoryName", "scenarioId"], canonicalBundleUniquenessFields: ["mutationId", "mutationDirectoryName", "scenarioId"], coverage: "every-physical-bundle-exactly-once" };
-  for (const [id, value] of Object.entries(projectionCatalogRows)) {
-    const spec = record(value, `semanticPathProjectionCatalogContracts.${id}`);
-    if (spec.contractKind === undefined) {
-      if (canonicalJson(value) !== canonicalJson(expectedCatalogContract)) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} is not the independent required vector registry contract`);
-      semanticPathProjectionCatalogContracts[id] = expectedCatalogContract;
-      continue;
-    }
-    if (spec.contractKind === "distributed-json-manifest-catalog") {
-      if (spec.modelIdentityField !== "id" || spec.memberIdentityField !== "id" || spec.memberVersionField !== "version" || spec.requiredModelManifest !== true || spec.coverage !== "every-source-file-and-destination-node-exactly-once" || spec.unknownCategoryPolicy !== "problem" || spec.unownedModelPolicy !== "problem" || !Array.isArray(spec.categoryRules) || spec.categoryRules.length === 0) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} is not a strict distributed manifest catalog`);
-      if (!Array.isArray(spec.profileVectors) || spec.profileVectors.length === 0) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id}.profileVectors must be non-empty`);
-      const profileVectors = spec.profileVectors.map((value, index) => {
-        const vector = record(value, `semanticPathProjectionCatalogContracts.${id}.profileVectors[${index}]`);
-        const profile = { artifactId: requiredString(vector.artifactId, "profile artifactId"), standardVersion: requiredString(vector.standardVersion, "profile standardVersion"), subsetId: requiredString(vector.subsetId, "profile subsetId") };
-        if (canonicalJson(Object.keys(vector).sort()) !== canonicalJson(["artifactId", "standardVersion", "subsetId"]) || profile.artifactId !== spec.ownerArtifactMemberName || Object.values(profile).some((field) => field !== field.normalize("NFC") || /[\\/]/u.test(field))) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id}.profileVectors[${index}] is not an exact NFC owner tuple`);
-        return profile;
-      });
-      if (new Set(profileVectors.map((vector) => canonicalJson(vector))).size !== profileVectors.length) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} repeats a profile vector`);
-      const categoryRules = spec.categoryRules.map((value, index) => {
-        const rule = record(value, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}]`);
-        const sourceDirectoryName = requiredString(rule.sourceDirectoryName, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].sourceDirectoryName`).normalize("NFC");
-        const directoryKindId = requiredString(rule.directoryKindId, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].directoryKindId`);
-        const manifestSchema = requiredString(rule.manifestSchema, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].manifestSchema`);
-        if (!semanticDirectoryKinds[directoryKindId]) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}] references an unknown directory kind`);
-        if (rule.sourceShape === "direct-semantic-json") return { sourceDirectoryName, directoryKindId, sourceShape: "direct-semantic-json" as const, manifestSchema, memberDirectoryEmoji: requiredString(rule.memberDirectoryEmoji, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].memberDirectoryEmoji`).normalize("NFC") };
-        if (rule.sourceShape === "nested-fixed-json") return { sourceDirectoryName, directoryKindId, sourceShape: "nested-fixed-json" as const, manifestSchema, fixedSourceFilename: requiredString(rule.fixedSourceFilename, `semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].fixedSourceFilename`).normalize("NFC") };
-        throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id}.categoryRules[${index}].sourceShape is invalid`);
-      });
-      if (new Set(categoryRules.map((rule) => rule.sourceDirectoryName)).size !== categoryRules.length) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} repeats a catalog category`);
-      semanticPathProjectionCatalogContracts[id] = { contractKind: "distributed-json-manifest-catalog", ownerArtifactMemberName: requiredString(spec.ownerArtifactMemberName, `semanticPathProjectionCatalogContracts.${id}.ownerArtifactMemberName`).normalize("NFC"), profileVectors, modelManifestSchema: requiredString(spec.modelManifestSchema, `semanticPathProjectionCatalogContracts.${id}.modelManifestSchema`), modelManifestSourceFilename: requiredString(spec.modelManifestSourceFilename, `semanticPathProjectionCatalogContracts.${id}.modelManifestSourceFilename`).normalize("NFC"), modelIdentityField: "id", memberIdentityField: "id", memberVersionField: "version", requiredMemberVersion: requiredString(spec.requiredMemberVersion, `semanticPathProjectionCatalogContracts.${id}.requiredMemberVersion`), requiredModelManifest: true, categoryRules, coverage: "every-source-file-and-destination-node-exactly-once", unknownCategoryPolicy: "problem", unownedModelPolicy: "problem" };
-      continue;
-    }
-    if (spec.contractKind === "exact-owner-vectors") {
-      if (spec.required !== true || spec.allowEmpty !== false || canonicalJson(spec.identityFields) !== canonicalJson(["artifactId", "standardVersion", "subsetId", "commandDirectoryName"]) || spec.coverage !== "every-physical-command-bundle-exactly-once" || !Array.isArray(spec.vectors) || spec.vectors.length === 0) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} is not a strict exact-owner vector registry`);
-      const vectors = spec.vectors.map((value, index) => {
-        const vector = record(value, `semanticPathProjectionCatalogContracts.${id}.vectors[${index}]`);
-        return { artifactId: requiredString(vector.artifactId, `semanticPathProjectionCatalogContracts.${id}.vectors[${index}].artifactId`).normalize("NFC"), standardVersion: requiredString(vector.standardVersion, `semanticPathProjectionCatalogContracts.${id}.vectors[${index}].standardVersion`), subsetId: requiredString(vector.subsetId, `semanticPathProjectionCatalogContracts.${id}.vectors[${index}].subsetId`), commandDirectoryName: requiredString(vector.commandDirectoryName, `semanticPathProjectionCatalogContracts.${id}.vectors[${index}].commandDirectoryName`).normalize("NFC") };
-      });
-      if (new Set(vectors.map((vector) => canonicalJson(vector))).size !== vectors.length) throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id} repeats an owner vector`);
-      semanticPathProjectionCatalogContracts[id] = { contractKind: "exact-owner-vectors", required: true, allowEmpty: false, identityFields: ["artifactId", "standardVersion", "subsetId", "commandDirectoryName"], coverage: "every-physical-command-bundle-exactly-once", vectors };
-      continue;
-    }
-    throw new Error(`Taxonomy v7 semanticPathProjectionCatalogContracts.${id}.contractKind is invalid`);
-  }
-  if (Object.keys(semanticPathProjectionCatalogContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionCatalogContracts must not be empty");
-  for (const [id, contract] of Object.entries(semanticDescendantContracts)) if ("contractKind" in contract && !semanticPathProjectionCatalogContracts[contract.catalogContractId]) throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} references an unknown catalog contract`);
-
-  const captureFields = new Set<SemanticProjectionCaptureField>(["standardVersion", "subsetId", "mutationId", "scenarioId", "commandDirectoryName"]);
-  const parseProjectionSegment = (value: unknown, name: string, destination: boolean): SemanticProjectionSourceSegment | SemanticProjectionDestinationSegment => {
-    const spec = record(value, name);
-    const kindId = typeof spec.kindId === "string" ? spec.kindId : undefined;
-    const memberKindId = typeof spec.memberKindId === "string" ? spec.memberKindId : undefined;
-    const projectedMemberKindId = typeof spec.projectedMemberKindId === "string" ? spec.projectedMemberKindId : undefined;
-    if ((kindId ? 1 : 0) + (memberKindId ? 1 : 0) + (projectedMemberKindId ? 1 : 0) !== 1) throw new Error(`Taxonomy v7 ${name} must identify exactly one kind`);
-    if (kindId && !allDirectoryContextIds.has(kindId)) throw new Error(`Taxonomy v7 ${name} references unknown directory kind ${kindId}`);
-    if (memberKindId && !semanticDirectoryMemberKinds[memberKindId]) throw new Error(`Taxonomy v7 ${name} references unknown semantic member kind ${memberKindId}`);
-    if (projectedMemberKindId && !semanticProjectedMemberKinds[projectedMemberKindId]) throw new Error(`Taxonomy v7 ${name} references unknown projected member kind ${projectedMemberKindId}`);
-    if (destination) {
-      if (memberKindId) throw new Error(`Taxonomy v7 ${name} cannot render a source member kind`);
-      if (spec.literal !== undefined && kindId) return { kindId, literal: requiredString(spec.literal, `${name}.literal`) };
-      if (spec.render === "profile" && kindId) return { kindId, render: "profile" };
-      if (typeof spec.copy === "string" && captureFields.has(spec.copy as SemanticProjectionCaptureField)) return projectedMemberKindId ? { projectedMemberKindId, copy: spec.copy as SemanticProjectionCaptureField } : { kindId: kindId!, copy: spec.copy as SemanticProjectionCaptureField };
-    } else {
-      if (spec.literal !== undefined && kindId) return { kindId, literal: requiredString(spec.literal, `${name}.literal`) };
-      if (spec.literal !== undefined && memberKindId) {
-        const literal = requiredString(spec.literal, `${name}.literal`).normalize("NFC");
-        if (!semanticDirectoryMemberKinds[memberKindId].memberNames.includes(literal)) throw new Error(`Taxonomy v7 ${name}.literal is not registered by ${memberKindId}`);
-        return { memberKindId, literal };
-      }
-      if (typeof spec.capture === "string" && captureFields.has(spec.capture as SemanticProjectionCaptureField)) return projectedMemberKindId ? { projectedMemberKindId, capture: spec.capture as SemanticProjectionCaptureField } : { kindId: kindId!, capture: spec.capture as SemanticProjectionCaptureField };
-    }
-    throw new Error(`Taxonomy v7 ${name} has an invalid ${destination ? "destination" : "source"} operation`);
-  };
-  const semanticPathProjectionContracts: Record<string, SemanticPathProjectionContract> = {};
-  for (const [id, value] of Object.entries(projectionRows)) {
-    const spec = record(value, `semanticPathProjectionContracts.${id}`);
-    if (!Array.isArray(spec.sourceSegments) || !Array.isArray(spec.destinationSegments) || !["artifact-example-model-catalog-projection-v1", "artifact-editor-command-projection-v1"].includes(String(spec.rationaleRule))) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} is invalid`);
-    const sourceOwnerKindId = requiredString(spec.sourceOwnerKindId, `semanticPathProjectionContracts.${id}.sourceOwnerKindId`);
-    const destinationOwnerKindId = requiredString(spec.destinationOwnerKindId, `semanticPathProjectionContracts.${id}.destinationOwnerKindId`);
-    if (!semanticDirectoryMemberKinds[sourceOwnerKindId] || !semanticDirectoryMemberKinds[destinationOwnerKindId]) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} owner kind is invalid`);
-    const profileRendererId = requiredString(spec.profileRendererId, `semanticPathProjectionContracts.${id}.profileRendererId`);
-    const descendantContractId = requiredString(spec.descendantContractId, `semanticPathProjectionContracts.${id}.descendantContractId`);
-    const catalogContractId = requiredString(spec.catalogContractId, `semanticPathProjectionContracts.${id}.catalogContractId`);
-    if (!semanticPathProjectionProfileRenderers[profileRendererId] || !semanticDescendantContracts[descendantContractId] || !semanticPathProjectionCatalogContracts[catalogContractId]) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} references an unknown registry`);
-    const rationaleRule = spec.rationaleRule as SemanticPathProjectionContract["rationaleRule"];
-    const sourceArtifactMemberName = spec.sourceArtifactMemberName === undefined ? undefined : requiredString(spec.sourceArtifactMemberName, `semanticPathProjectionContracts.${id}.sourceArtifactMemberName`).normalize("NFC");
-    const expectedArtifact = rationaleRule === "artifact-example-model-catalog-projection-v1" ? "📐️cad" : rationaleRule === "artifact-editor-command-projection-v1" ? "🖍️drawing" : undefined;
-    if (sourceArtifactMemberName !== expectedArtifact) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id}.sourceArtifactMemberName does not match its rationale`);
-    const sourceSegments = spec.sourceSegments.map((segment, index) => parseProjectionSegment(segment, `semanticPathProjectionContracts.${id}.sourceSegments[${index}]`, false) as SemanticProjectionSourceSegment);
-    const destinationSegments = spec.destinationSegments.map((segment, index) => parseProjectionSegment(segment, `semanticPathProjectionContracts.${id}.destinationSegments[${index}]`, true) as SemanticProjectionDestinationSegment);
-    const captures = sourceSegments.flatMap((segment) => "capture" in segment ? [segment.capture] : []);
-    const expectedCaptures: readonly SemanticProjectionCaptureField[] = rationaleRule === "artifact-editor-command-projection-v1" ? ["standardVersion", "subsetId", "commandDirectoryName"] : ["standardVersion", "subsetId"];
-    if (canonicalJson(captures) !== canonicalJson(expectedCaptures)) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid captures for ${rationaleRule}`);
-    const descendant = semanticDescendantContracts[descendantContractId];
-    const catalog = semanticPathProjectionCatalogContracts[catalogContractId];
-    if (rationaleRule === "artifact-example-model-catalog-projection-v1" ? !("contractKind" in descendant && descendant.contractKind === "catalog" && "contractKind" in catalog && catalog.contractKind === "distributed-json-manifest-catalog") : "contractKind" in descendant || !("contractKind" in catalog && catalog.contractKind === "exact-owner-vectors")) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} references incompatible descendant/catalog authorities`);
-    const descendantNodes = "contractKind" in descendant ? [] : [...descendant.requiredNodes, ...descendant.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)];
-    const sourceNamedNodes = descendantNodes.filter((node): node is SemanticDescendantKindNode & { readonly sourceFilename: string } => "kindId" in node && node.sourceFilename !== undefined);
-    if (rationaleRule === "artifact-editor-command-projection-v1" ? sourceNamedNodes.length !== descendantNodes.filter((node) => "kindId" in node && node.nodeType === "file" && node.kindId === "rust-source").length || sourceNamedNodes.filter((node) => node.pathSegments.length === 0).length !== 1 : sourceNamedNodes.length !== 0) throw new Error(`Taxonomy v7 semanticPathProjectionContracts.${id} has invalid source-filename descendant authority`);
-    semanticPathProjectionContracts[id] = { sourceOwnerKindId, ...(sourceArtifactMemberName ? { sourceArtifactMemberName } : {}), sourceSegments, profileRendererId, destinationOwnerKindId, destinationSegments, descendantContractId, catalogContractId, rationaleRule };
-  }
-  if (Object.keys(semanticPathProjectionContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionContracts must not be empty");
-  for (const [id, spec] of Object.entries(semanticProjectedMemberKinds)) if (!semanticPathProjectionContracts[spec.projectionContractId] && spec.projectionContractId !== "canonical-mutation-case-pair-v1") throw new Error(`Taxonomy v7 semanticProjectedMemberKinds.${id} references unknown projection contract ${spec.projectionContractId}`);
-  const semanticOwnedFileProjectionContracts: Record<string, SemanticOwnedFileProjectionContract> = {};
-  for (const [id, value] of Object.entries(ownedFileProjectionRows)) {
-    const name = `semanticOwnedFileProjectionContracts.${id}`;
-    const spec = record(value, name);
-    if (spec.contractKind === "exact-owner-path-catalog") {
-      requireExactKeys(spec, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(spec, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], name);
-      const authorityCatalogPath = normalizeRelative(requiredString(spec.authorityCatalogPath, name + ".authorityCatalogPath"));
-      const authorityCatalogSha256 = requiredString(spec.authorityCatalogSha256, name + ".authorityCatalogSha256");
-      const sourceBasenames = stringArray(spec.sourceBasenames, name + ".sourceBasenames");
-      const allowedDispositions = stringArray(spec.allowedDispositions, name + ".allowedDispositions");
-      const ownerEvidenceKinds = stringArray(spec.ownerEvidenceKinds, name + ".ownerEvidenceKinds");
-      const referenceOwnerIds = stringArray(spec.referenceOwnerIds, name + ".referenceOwnerIds");
-      const generatorOwnerIds = stringArray(spec.generatorOwnerIds, name + ".generatorOwnerIds");
-      const destinations = record(spec.destinationDirectoryKinds, name + ".destinationDirectoryKinds");
-      requireExactKeys(destinations, ["license", "readme"], name + ".destinationDirectoryKinds");
-      const parseDestination = (kind: "license" | "readme"): { readonly directoryKindId: "owner-license" | "owner-readme"; readonly directoryName: "⚖️license" | "📃️readme"; readonly filename: "📝️.md" } => {
-        const destination = record(destinations[kind], name + ".destinationDirectoryKinds." + kind);
-        requireExactKeys(destination, ["directoryKindId", "directoryName", "filename"], name + ".destinationDirectoryKinds." + kind);
-        return { directoryKindId: requiredString(destination.directoryKindId, name + ".destinationDirectoryKinds." + kind + ".directoryKindId") as "owner-license" | "owner-readme", directoryName: requiredString(destination.directoryName, name + ".destinationDirectoryKinds." + kind + ".directoryName") as "⚖️license" | "📃️readme", filename: requiredString(destination.filename, name + ".destinationDirectoryKinds." + kind + ".filename") as "📝️.md" };
-      };
-      const destinationDirectoryKinds = { license: parseDestination("license"), readme: parseDestination("readme") };
-      const expectedCounts = record(spec.expectedCounts, name + ".expectedCounts");
-      requireExactKeys(expectedCounts, ["fixed", "license", "projected", "readme", "referenceBindings", "total"], name + ".expectedCounts");
-      const counts = { fixed: expectedCounts.fixed, license: expectedCounts.license, projected: expectedCounts.projected, readme: expectedCounts.readme, referenceBindings: expectedCounts.referenceBindings, total: expectedCounts.total };
-      if (id !== "readme-license-owner-leaves-v1"
-        || !/^[a-f0-9]{64}$/u.test(authorityCatalogSha256)
-        || spec.sourceFileKindId !== "markdown"
-        || canonicalJson(sourceBasenames) !== canonicalJson(["LICENSE.md", "README.md"])
-        || canonicalJson(destinationDirectoryKinds) !== canonicalJson({ license: { directoryKindId: "owner-license", directoryName: "⚖️license", filename: "📝️.md" }, readme: { directoryKindId: "owner-readme", directoryName: "📃️readme", filename: "📝️.md" } })
-        || canonicalJson(allowedDispositions) !== canonicalJson(["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"])
-        || canonicalJson(ownerEvidenceKinds) !== canonicalJson(["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"])
-        || canonicalJson(referenceOwnerIds) !== canonicalJson(["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"])
-        || canonicalJson(generatorOwnerIds) !== canonicalJson(["assets-build"])
-        || canonicalJson(counts) !== canonicalJson({ fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 })
-        || spec.rationaleRule !== "readme-license-owner-projection-v1"
-        || !fileKinds.markdown
-        || semanticDirectoryKinds["owner-license"]?.projectionOnly !== true
-        || semanticDirectoryKinds["owner-readme"]?.projectionOnly !== true
-        || !generatorRows["assets-build"]) throw new Error("Taxonomy v7 " + name + " does not use the exact README/LICENSE owner catalog grammar");
-      semanticOwnedFileProjectionContracts[id] = {
-        contractKind: "exact-owner-path-catalog",
-        authorityCatalogPath,
-        authorityCatalogSha256,
-        sourceFileKindId: "markdown",
-        sourceBasenames: ["LICENSE.md", "README.md"],
-        destinationDirectoryKinds: { license: { directoryKindId: "owner-license", directoryName: "⚖️license", filename: "📝️.md" }, readme: { directoryKindId: "owner-readme", directoryName: "📃️readme", filename: "📝️.md" } },
-        allowedDispositions: ["attribution-relocate", "configurable-owner-license-relocate", "fixed", "generated-evidence-relocate", "owner-documentation-relocate"],
-        ownerEvidenceKinds: ["configurable-owner-license", "ordinary-owner-doc", "package-publication", "third-party-attribution", "ticket-evidence", "ticket-scratch"],
-        referenceOwnerIds: ["asset-distribution-owner", "bun-package-publisher", "commonmark-scratch-rust-reader", "markdown-relative-reference-adapter", "repo-cli-dev-docs-go", "vscode-package-ignore"],
-        generatorOwnerIds: ["assets-build"],
-        expectedCounts: { fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 },
-        authoredDocumentCorrections: parseSemanticOwnedDocumentCorrections(spec.authoredDocumentCorrections),
-        ...(Object.hasOwn(spec, "currentSourceRevisions") ? { currentSourceRevisions: parseSemanticOwnedCurrentSourceRevisions(spec.currentSourceRevisions) } : {}),
-        rationaleRule: "readme-license-owner-projection-v1",
-      };
-      continue;
-    }
-    if (spec.contractKind === "semantic-facet-primary-file") {
-      requireExactKeys(spec, ["contractKind", "sourceRoot", "sourceFilename", "fileKindAuthority", "sourceDisposition", "directoryCaptures", "ownerPathPatterns", "authoringCommand", "referenceConsumer", "rationaleRule"], name);
-      const directoryCaptures: Record<string, { kindIds: readonly string[]; names?: readonly string[] }> = {};
-      for (const [capture, row] of Object.entries(record(spec.directoryCaptures, `${name}.directoryCaptures`))) {
-        const captureSpec = record(row, `${name}.directoryCaptures.${capture}`);
-        directoryCaptures[capture] = { kindIds: stringArray(captureSpec.kindIds, `${name}.directoryCaptures.${capture}.kindIds`), ...(captureSpec.names ? { names: stringArray(captureSpec.names, `${name}.directoryCaptures.${capture}.names`) } : {}) };
-      }
-      const ownerPathPatterns = Object.fromEntries(Object.entries(record(spec.ownerPathPatterns, `${name}.ownerPathPatterns`)).map(([form, pattern]) => [form, requiredString(pattern, `${name}.ownerPathPatterns.${form}`)]));
-      const authoring = record(spec.authoringCommand, `${name}.authoringCommand`), consumer = record(spec.referenceConsumer, `${name}.referenceConsumer`);
-      semanticOwnedFileProjectionContracts[id] = { contractKind: "semantic-facet-primary-file", sourceRoot: requiredString(spec.sourceRoot, `${name}.sourceRoot`), sourceFilename: requiredString(spec.sourceFilename, `${name}.sourceFilename`), fileKindAuthority: "windowEmptyFacetFileKindId", sourceDisposition: "authored", directoryCaptures, ownerPathPatterns, authoringCommand: { scriptPath: requiredString(authoring.scriptPath, `${name}.authoringCommand.scriptPath`), command: ["new", "surface"], writeDisposition: "create-if-absent" }, referenceConsumer: { path: requiredString(consumer.path, `${name}.referenceConsumer.path`), ownerRoot: requiredString(consumer.ownerRoot, `${name}.referenceConsumer.ownerRoot`), adapter: "rust", region: "✏️👁️Surfaces", lineTemplate: requiredString(consumer.lineTemplate, `${name}.referenceConsumer.lineTemplate`) }, rationaleRule: "artifact-empty-facet-primary-markdown-v1" };
-      continue;
-    }
-    if (spec.contractKind === "owner-primary-file") {
-      requireExactKeys(spec, ["contractKind", "ownerFixedDirectoryContractId", "sourceFileKindId", "sourceFilename", "destinationFilename", "rationaleRule"], name);
-      const contract = { contractKind: "owner-primary-file" as const, ownerFixedDirectoryContractId: requiredString(spec.ownerFixedDirectoryContractId, `${name}.ownerFixedDirectoryContractId`), sourceFileKindId: requiredString(spec.sourceFileKindId, `${name}.sourceFileKindId`), sourceFilename: requiredString(spec.sourceFilename, `${name}.sourceFilename`), destinationFilename: requiredString(spec.destinationFilename, `${name}.destinationFilename`), rationaleRule: "ticket-document-primary-markdown-v1" as const };
-      if (id !== contract.rationaleRule || spec.rationaleRule !== contract.rationaleRule || contract.ownerFixedDirectoryContractId !== "ticket-slug" || !fixedDirectoryRows[contract.ownerFixedDirectoryContractId] || contract.sourceFileKindId !== "markdown" || !fileKinds.markdown || fileKinds.markdown.extensionChains.length !== 1 || contract.sourceFilename !== "ticket.md" || contract.destinationFilename !== `${fileKinds.markdown.emoji}${fileKinds.markdown.extensionChains[0]}`) throw new Error(`Taxonomy v7 ${name} does not use the exact ticket document primary-leaf grammar`);
-      semanticOwnedFileProjectionContracts[id] = contract;
-      continue;
-    }
-    const ownerFixedDirectoryContractId = requiredString(spec.ownerFixedDirectoryContractId, `${name}.ownerFixedDirectoryContractId`);
-    const sourceFileKindId = requiredString(spec.sourceFileKindId, `${name}.sourceFileKindId`);
-    const destinationDirectoryKindId = requiredString(spec.destinationDirectoryKindId, `${name}.destinationDirectoryKindId`);
-    if (!fixedDirectoryRows[ownerFixedDirectoryContractId] || !fileKinds[sourceFileKindId] || semanticDirectoryKinds[destinationDirectoryKindId]?.projectionOnly !== true) throw new Error(`Taxonomy v7 ${name} references unknown or non-projection authority`);
-    const common = { ownerFixedDirectoryContractId, sourceFileKindId, sourceFilename: requiredString(spec.sourceFilename, `${name}.sourceFilename`), destinationDirectoryKindId, destinationDirectoryName: requiredString(spec.destinationDirectoryName, `${name}.destinationDirectoryName`), destinationFilename: requiredString(spec.destinationFilename, `${name}.destinationFilename`) };
-    if (spec.contractKind === "owner-sibling-manifest-file") {
-      requireExactKeys(spec, ["contractKind", "ownerFixedDirectoryContractId", "requiredSiblingFixedFilenameContractId", "manifestAdapter", "manifestStatusLocation", "allowedStatuses", "sourceFileKindId", "sourceFilename", "destinationDirectoryKindId", "destinationDirectoryName", "destinationFilename", "emptyContentRule", "statusDispositions", "rationaleRule"], name);
-      const allowedStatuses = stringArray(spec.allowedStatuses, `${name}.allowedStatuses`);
-      const statusDispositions = record(spec.statusDispositions, `${name}.statusDispositions`);
-      requireExactKeys(statusDispositions, ["open", "closed-empty", "closed-nonempty", "invalid"], `${name}.statusDispositions`);
-      const requiredSiblingFixedFilenameContractId = requiredString(spec.requiredSiblingFixedFilenameContractId, `${name}.requiredSiblingFixedFilenameContractId`);
-      if (spec.manifestAdapter !== "json" || spec.manifestStatusLocation !== "status" || canonicalJson(allowedStatuses) !== canonicalJson(["closed", "open"]) || spec.emptyContentRule !== "zero-byte" || spec.rationaleRule !== "ticket-important-markdown-projection-v1" || canonicalJson(statusDispositions) !== canonicalJson({ open: "project", "closed-empty": "remove", "closed-nonempty": "problem", invalid: "problem" }) || !fixedFilenameContracts[requiredSiblingFixedFilenameContractId]) throw new Error(`Taxonomy v7 ${name} does not use the exact active owner-file projection grammar`);
-      semanticOwnedFileProjectionContracts[id] = { contractKind: "owner-sibling-manifest-file", ...common, requiredSiblingFixedFilenameContractId, manifestAdapter: "json", manifestStatusLocation: "status", allowedStatuses: ["closed", "open"], emptyContentRule: "zero-byte", statusDispositions: { open: "project", "closed-empty": "remove", "closed-nonempty": "problem", invalid: "problem" }, rationaleRule: "ticket-important-markdown-projection-v1" };
-    } else if (spec.contractKind === "owner-optional-sibling-manifest-file") {
-      requireExactKeys(spec, ["contractKind", "ownerFixedDirectoryContractId", "optionalSiblingFixedFilenameContractId", "manifestAdapter", "manifestStatusLocation", "sourceFileKindId", "sourceFilename", "destinationDirectoryKindId", "destinationDirectoryName", "destinationFilename", "admittedDispositions", "rationaleRule"], name);
-      const optionalSiblingFixedFilenameContractId = requiredString(spec.optionalSiblingFixedFilenameContractId, `${name}.optionalSiblingFixedFilenameContractId`);
-      const admittedDispositions = stringArray(spec.admittedDispositions, `${name}.admittedDispositions`);
-      if (spec.manifestAdapter !== "json" || spec.manifestStatusLocation !== "status" || spec.rationaleRule !== "ticket-important-history-markdown-v1" || canonicalJson(admittedDispositions) !== canonicalJson(["closed-nonzero", "invalid-manifest", "missing-manifest"]) || !fixedFilenameContracts[optionalSiblingFixedFilenameContractId]) throw new Error(`Taxonomy v7 ${name} does not use the exact historical owner-file projection grammar`);
-      semanticOwnedFileProjectionContracts[id] = { contractKind: "owner-optional-sibling-manifest-file", ...common, optionalSiblingFixedFilenameContractId, manifestAdapter: "json", manifestStatusLocation: "status", admittedDispositions: ["closed-nonzero", "invalid-manifest", "missing-manifest"], rationaleRule: "ticket-important-history-markdown-v1" };
-    } else throw new Error(`Taxonomy v7 ${name}.contractKind is invalid`);
-  }
-  if (canonicalJson(Object.keys(semanticOwnedFileProjectionContracts)) !== canonicalJson(["artifact-empty-facet-primary-markdown-v1", "readme-license-owner-leaves-v1", "ticket-document-primary-markdown-v1", "ticket-important-history-markdown-v1", "ticket-important-markdown-v1"])) throw new Error("Taxonomy v7 semanticOwnedFileProjectionContracts must contain the exact artifact-facet, README/LICENSE, ticket-document, active, and history contracts");
-  const semanticPathProjectionReferenceConsumerContracts: Record<string, SemanticPathProjectionReferenceConsumerContract> = {};
-  const referenceConsumerForms = new Set<SemanticPathProjectionReferenceConsumerForm>(["path-reference", "artifact-catalog-glob", "artifact-catalog-prose:root-marker", "artifact-catalog-prose:relative-root", "artifact-catalog-prose:category-glob", "artifact-catalog-prose:catalog-grammar"]);
-  const referenceConsumerAdapters = new Set<SemanticPathProjectionReferenceConsumerContract["adapters"][number]>(["rust", "typescript", "json", "toml"]);
-  const referenceConsumerIdentities = new Set<string>();
-  for (const [id, value] of Object.entries(projectionConsumerRows)) {
-    const spec = record(value, `semanticPathProjectionReferenceConsumerContracts.${id}`);
-    requireExactKeys(spec, ["projectionContractId", "consumerIdentity", "ownership", "sourcePathPattern", "sourcePathIdentities", "adapters", "supportedForms", "staleMarkers"], `semanticPathProjectionReferenceConsumerContracts.${id}`);
-    const projectionContractId = requiredString(spec.projectionContractId, `semanticPathProjectionReferenceConsumerContracts.${id}.projectionContractId`);
-    if (!semanticPathProjectionContracts[projectionContractId]) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id} references an unknown projection contract`);
-    if (spec.ownership !== "external") throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.ownership must be external`);
-    const consumerIdentity = requiredString(spec.consumerIdentity, `semanticPathProjectionReferenceConsumerContracts.${id}.consumerIdentity`);
-    if (referenceConsumerIdentities.has(consumerIdentity)) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts repeats consumer identity ${consumerIdentity}`);
-    referenceConsumerIdentities.add(consumerIdentity);
-    const sourcePathPattern = requiredString(spec.sourcePathPattern, `semanticPathProjectionReferenceConsumerContracts.${id}.sourcePathPattern`);
-    if (!sourcePathPattern.startsWith("^") || !sourcePathPattern.endsWith("$")) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.sourcePathPattern must be a full-match expression`);
-    const sourcePathRegex = new RegExp(sourcePathPattern, "u");
-    const sourcePathIdentities = stringArray(spec.sourcePathIdentities, `semanticPathProjectionReferenceConsumerContracts.${id}.sourcePathIdentities`);
-    const adapters = stringArray(spec.adapters, `semanticPathProjectionReferenceConsumerContracts.${id}.adapters`) as readonly SemanticPathProjectionReferenceConsumerContract["adapters"][number][];
-    const supportedForms = stringArray(spec.supportedForms, `semanticPathProjectionReferenceConsumerContracts.${id}.supportedForms`) as readonly SemanticPathProjectionReferenceConsumerForm[];
-    const staleMarkers = stringArray(spec.staleMarkers, `semanticPathProjectionReferenceConsumerContracts.${id}.staleMarkers`);
-    if (sourcePathIdentities.length === 0 || adapters.length === 0 || supportedForms.length === 0 || staleMarkers.length === 0) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id} must be nonempty`);
-    if (new Set(sourcePathIdentities).size !== sourcePathIdentities.length || sourcePathIdentities.some((path) => path !== normalizeRelative(path) || !sourcePathRegex.test(path))) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.sourcePathIdentities are invalid`);
-    if (new Set(adapters).size !== adapters.length || adapters.some((adapter) => !referenceConsumerAdapters.has(adapter))) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.adapters are invalid`);
-    if (new Set(supportedForms).size !== supportedForms.length || supportedForms.some((form) => !referenceConsumerForms.has(form))) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.supportedForms are invalid`);
-    if (new Set(staleMarkers).size !== staleMarkers.length || staleMarkers.some((marker) => !marker || marker !== marker.normalize("NFC"))) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id}.staleMarkers are invalid`);
-    semanticPathProjectionReferenceConsumerContracts[id] = { projectionContractId, consumerIdentity, ownership: "external", sourcePathPattern, sourcePathIdentities: [...sourcePathIdentities], adapters: [...adapters], supportedForms: [...supportedForms], staleMarkers: [...staleMarkers] };
-  }
-  if (Object.keys(semanticPathProjectionReferenceConsumerContracts).length === 0) throw new Error("Taxonomy v7 semanticPathProjectionReferenceConsumerContracts must not be empty");
-  if (mutationCatalogProjectionRow.contractKind !== "canonical-mutation-case-pair" || mutationCatalogProjectionRow.contractId !== "canonical-mutation-case-pair-v1" || mutationCatalogProjectionRow.coverage !== "every-catalog-vector-has-one-implementation-and-one-fixture-bundle" || !Array.isArray(mutationCatalogProjectionRow.implementationSegments) || !Array.isArray(mutationCatalogProjectionRow.fixtureSegments)) throw new Error("Taxonomy v7 mutationCatalogProjection must be the canonical mutation case pair contract");
-  const mutationCatalogProjection: MutationCatalogProjectionContractIds = {
-    contractKind: "canonical-mutation-case-pair",
-    contractId: "canonical-mutation-case-pair-v1",
-    sourceOwnerKindId: requiredString(mutationCatalogProjectionRow.sourceOwnerKindId, "mutationCatalogProjection.sourceOwnerKindId"),
-    projectedMemberKindId: requiredString(mutationCatalogProjectionRow.projectedMemberKindId, "mutationCatalogProjection.projectedMemberKindId"),
-    implementationSegments: mutationCatalogProjectionRow.implementationSegments.map((value, index) => parseProjectionSegment(value, `mutationCatalogProjection.implementationSegments[${index}]`, false) as SemanticProjectionSourceSegment),
-    fixtureSegments: mutationCatalogProjectionRow.fixtureSegments.map((value, index) => parseProjectionSegment(value, `mutationCatalogProjection.fixtureSegments[${index}]`, false) as SemanticProjectionSourceSegment),
-    implementationDescendantContractId: requiredString(mutationCatalogProjectionRow.implementationDescendantContractId, "mutationCatalogProjection.implementationDescendantContractId"),
-    fixtureDescendantContractId: requiredString(mutationCatalogProjectionRow.fixtureDescendantContractId, "mutationCatalogProjection.fixtureDescendantContractId"),
-    catalogContractId: requiredString(mutationCatalogProjectionRow.catalogContractId, "mutationCatalogProjection.catalogContractId"),
-    coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle",
-  };
-  if (!semanticDirectoryMemberKinds[mutationCatalogProjection.sourceOwnerKindId] || !semanticProjectedMemberKinds[mutationCatalogProjection.projectedMemberKindId] || !semanticDescendantContracts[mutationCatalogProjection.implementationDescendantContractId] || !semanticDescendantContracts[mutationCatalogProjection.fixtureDescendantContractId] || !semanticPathProjectionCatalogContracts[mutationCatalogProjection.catalogContractId]) throw new Error("Taxonomy v7 mutationCatalogProjection references unknown canonical pair registries");
-
-  const generatorContracts: Record<string, GeneratorContractSpec> = {};
-  const generatorRoots: { readonly id: string; readonly path: string }[] = [];
-  for (const [id, value] of Object.entries(generatorRows)) {
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id)) throw new Error(`Taxonomy v7 generatorContracts.${id} has an invalid identifier`);
-    const spec = record(value, `generatorContracts.${id}`);
-    if (spec.ownership !== "owned" && spec.ownership !== "external") throw new Error(`Taxonomy v7 generatorContracts.${id}.ownership is invalid`);
-    const ownership = spec.ownership as GeneratorOwnership;
-    const ownerPath = spec.ownerPath === null ? null : normalizeRelative(requiredString(spec.ownerPath, `generatorContracts.${id}.ownerPath`));
-    const target = spec.target === null ? null : requiredString(spec.target, `generatorContracts.${id}.target`);
-    const previewTarget = spec.previewTarget === undefined ? undefined : requiredString(spec.previewTarget, `generatorContracts.${id}.previewTarget`);
-    const checkTarget = spec.checkTarget === undefined ? undefined : requiredString(spec.checkTarget, `generatorContracts.${id}.checkTarget`);
-    if ((ownership === "owned") !== (ownerPath !== null && target !== null)) throw new Error(`Taxonomy v7 generatorContracts.${id} owner and target do not match ownership`);
-    if (target && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(target)) throw new Error(`Taxonomy v7 generatorContracts.${id}.target must be one exact Nx target`);
-    if (ownership === "owned" ? !previewTarget : previewTarget !== undefined) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewTarget does not match ownership`);
-    if (previewTarget && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(previewTarget)) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewTarget must be one exact Nx target`);
-    const previewArguments = spec.previewArguments === undefined ? undefined : stringArray(spec.previewArguments, `generatorContracts.${id}.previewArguments`);
-    if (target) generatorPreviewScriptArguments({ ownership, target, previewTarget, previewArguments });
-    else if (previewArguments !== undefined) throw new Error(`Taxonomy v7 generatorContracts.${id}.previewArguments requires owned output authority`);
-    const previewLimits = spec.previewLimits === undefined ? undefined : generatorPreviewResourceLimits({ ownership, previewTarget, previewLimits: spec.previewLimits as GeneratorContractSpec["previewLimits"] });
-    const compilerInputManifest = spec.compilerInputManifest === undefined ? undefined : record(spec.compilerInputManifest, `generatorContracts.${id}.compilerInputManifest`) as unknown as GeneratorContractSpec["compilerInputManifest"];
-    if (checkTarget && !/^@?[a-z0-9][a-z0-9@._/-]*:[a-z0-9][a-z0-9._-]*$/u.test(checkTarget)) throw new Error(`Taxonomy v7 generatorContracts.${id}.checkTarget must be one exact Nx target`);
-    const inputPatterns = stringArray(spec.inputPatterns, `generatorContracts.${id}.inputPatterns`).map((pattern, index) => validatedContractPattern(pattern, `generatorContracts.${id}.inputPatterns[${index}]`, false));
-    if (ownership === "owned" ? inputPatterns.length === 0 : inputPatterns.length !== 0) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputPatterns do not match ownership`);
-    const outputRows = spec.outputRoots;
-    if (!Array.isArray(outputRows) || outputRows.length === 0) throw new Error(`Taxonomy v7 generatorContracts.${id}.outputRoots must not be empty`);
-    const outputRoots = outputRows.map((value, index) => {
-      const output = record(value, `generatorContracts.${id}.outputRoots[${index}]`);
-      const outputPath = requiredString(output.path, `generatorContracts.${id}.outputRoots[${index}].path`);
-      if (outputPath !== normalizeRelative(outputPath) || /[*?\[\]]/u.test(outputPath)) throw new Error(`Taxonomy v7 generatorContracts.${id} output path must be one literal NFC repository path`);
-      if (output.inclusion !== "tracked" && output.inclusion !== "ignored") throw new Error(`Taxonomy v7 generatorContracts.${id} output inclusion is invalid`);
-      generatorRoots.push({ id, path: outputPath });
-      return { path: outputPath, inclusion: output.inclusion } as GeneratorOutputRootSpec;
-    }).sort((left, right) => left.path.localeCompare(right.path));
-    if (new Set(outputRoots.map((output) => output.path)).size !== outputRoots.length) throw new Error(`Taxonomy v7 generatorContracts.${id} repeats an output root`);
-    const inputDiscovery = spec.inputDiscovery === undefined ? undefined : record(spec.inputDiscovery, `generatorContracts.${id}.inputDiscovery`) as unknown as RegistryCatalogInputDiscovery;
-    if (inputDiscovery && (id !== "plugin-registry" || ownership !== "owned" || inputDiscovery.kind !== "registry-catalog")) throw new Error(`Taxonomy v7 generatorContracts.${id}.inputDiscovery has no exact catalog authority`);
-    const projectionActivation = spec.projectionActivation === undefined ? undefined : record(spec.projectionActivation, `generatorContracts.${id}.projectionActivation`) as unknown as GeneratorProjectionActivation;
-    const packageGeneration = spec.packageGeneration === undefined ? undefined : record(spec.packageGeneration, `generatorContracts.${id}.packageGeneration`) as unknown as SemanticPackageGeneration;
-    generatorContracts[id] = { ownership, ownerPath, target, previewTarget, previewArguments, previewLimits, checkTarget, inputPatterns: [...new Set(inputPatterns)].sort(), inputDiscovery, compilerInputManifest, packageGeneration, projectionActivation, outputRoots, reason: requiredString(spec.reason, `generatorContracts.${id}.reason`) };
-  }
-  if (Object.keys(generatorContracts).length === 0) throw new Error("Taxonomy v7 generatorContracts must not be empty");
-  for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {
-    const a = generatorRoots[left];
-    const b = generatorRoots[right];
-    if (a.path === b.path || a.path.startsWith(`${b.path}/`) || b.path.startsWith(`${a.path}/`)) throw new Error(`Taxonomy v7 generator output roots overlap: ${a.id}:${a.path} and ${b.id}:${b.path}`);
-  }
-
-  const ecosystems: Record<string, EcosystemSpec> = {};
-  for (const [id, value] of Object.entries(ecosystemRows)) {
-    const spec = record(value, `ecosystems.${id}`);
-    if (spec.packageIdentity !== "manifest" && spec.packageIdentity !== "boundary-only") throw new Error(`Taxonomy v7 ecosystems.${id}.packageIdentity is invalid`);
-    const manifestContractId = spec.manifestContractId === null ? null : requiredString(spec.manifestContractId, `ecosystems.${id}.manifestContractId`);
-    if ((spec.packageIdentity === "manifest") !== (manifestContractId !== null)) throw new Error(`Taxonomy v7 ecosystems.${id} manifest identity is incomplete`);
-    ecosystems[id] = { packageIdentity: spec.packageIdentity, manifestContractId };
-  }
-  if (Object.keys(ecosystems).length === 0) throw new Error("Taxonomy v7 ecosystems must not be empty");
-
-  const packageGlueGrammar: Record<string, PackageGlueGrammar> = {};
-  for (const [id, value] of Object.entries(grammarRows)) {
-    const spec = record(value, `packageGlueGrammar.${id}`);
-    if (!["rust", "typescript", "javascript", "go", "python", "dotnet", "c-cpp", "tex"].includes(String(spec.analyzer))) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.analyzer is invalid`);
-    const allowedRoles = stringArray(spec.allowedRoles, `packageGlueGrammar.${id}.allowedRoles`) as PackageGlueGrammar["allowedRoles"];
-    if (allowedRoles.some((role) => !["declaration", "registration", "bootstrap", "thin-delegation"].includes(role)) || new Set(allowedRoles).size !== allowedRoles.length) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.allowedRoles is invalid`);
-    if (!Number.isSafeInteger(spec.maxDelegationStatements) || (spec.maxDelegationStatements as number) < 0) throw new Error(`Taxonomy v7 packageGlueGrammar.${id}.maxDelegationStatements is invalid`);
-    packageGlueGrammar[id] = { analyzer: spec.analyzer as PackageGlueGrammar["analyzer"], allowedRoles, maxDelegationStatements: spec.maxDelegationStatements as number };
-  }
-
-  const packageBoundaryRules: Record<string, PackageBoundaryRule> = {};
-  for (const [id, value] of Object.entries(boundaryRows)) {
-    const spec = record(value, `packageBoundaryRules.${id}`);
-    const glueGrammarId = requiredString(spec.glueGrammarId, `packageBoundaryRules.${id}.glueGrammarId`);
-    if (!packageGlueGrammar[glueGrammarId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown grammar ${glueGrammarId}`);
-    if (spec.recursive !== true || spec.uncertainRole !== "problem" || spec.implementationRole !== "problem") throw new Error(`Taxonomy v7 packageBoundaryRules.${id} must be recursive and fail closed`);
-    packageBoundaryRules[id] = {
-      manifestContractId: spec.manifestContractId === null ? null : requiredString(spec.manifestContractId, `packageBoundaryRules.${id}.manifestContractId`),
-      entryContractIds: stringArray(spec.entryContractIds, `packageBoundaryRules.${id}.entryContractIds`),
-      allowedFixedContractIds: stringArray(spec.allowedFixedContractIds, `packageBoundaryRules.${id}.allowedFixedContractIds`),
-      allowedFileKindIds: stringArray(spec.allowedFileKindIds, `packageBoundaryRules.${id}.allowedFileKindIds`),
-      allowedDirectoryKindIds: stringArray(spec.allowedDirectoryKindIds, `packageBoundaryRules.${id}.allowedDirectoryKindIds`),
-      glueGrammarId,
-      recursive: true,
-      uncertainRole: "problem",
-      implementationRole: "problem",
-    };
-    const rule = packageBoundaryRules[id];
-    if (rule.manifestContractId && !fixedFilenameContracts[rule.manifestContractId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown manifest contract ${rule.manifestContractId}`);
-    for (const contractId of rule.entryContractIds) if (!configurableEntryContracts[contractId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown entry contract ${contractId}`);
-    for (const contractId of rule.allowedFixedContractIds) if (!fixedFilenameContracts[contractId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown fixed contract ${contractId}`);
-    for (const kindId of rule.allowedFileKindIds) if (!fileKinds[kindId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown file kind ${kindId}`);
-    for (const kindId of rule.allowedDirectoryKindIds) if (!semanticDirectoryKinds[kindId]) throw new Error(`Taxonomy v7 packageBoundaryRules.${id} references unknown directory kind ${kindId}`);
-  }
-  const packageBoundaryProfiles: Record<string, PackageBoundaryProfile> = {};
-  for (const [id, value] of Object.entries(boundaryProfileRows)) {
-    const spec = record(value, `packageBoundaryProfiles.${id}`);
-    requireExactKeys(spec, ["admission", "allowedFileKindIds", "allowedDirectoryKindIds", "allowedFixedContractIds", "glueGrammarId", "recursive", "uncertainRole", "implementationRole", "reason"], `packageBoundaryProfiles.${id}`);
-    if (spec.admission !== "blocked-until-language-directory-registered" || spec.recursive !== true || spec.uncertainRole !== "problem" || spec.implementationRole !== "problem") throw new Error(`Taxonomy v7 packageBoundaryProfiles.${id} must remain fail-closed`);
-    const glueGrammarId = requiredString(spec.glueGrammarId, `packageBoundaryProfiles.${id}.glueGrammarId`);
-    if (!packageGlueGrammar[glueGrammarId]) throw new Error(`Taxonomy v7 packageBoundaryProfiles.${id} references unknown grammar`);
-    packageBoundaryProfiles[id] = { admission: "blocked-until-language-directory-registered", allowedFileKindIds: stringArray(spec.allowedFileKindIds, `packageBoundaryProfiles.${id}.allowedFileKindIds`), allowedDirectoryKindIds: stringArray(spec.allowedDirectoryKindIds, `packageBoundaryProfiles.${id}.allowedDirectoryKindIds`), allowedFixedContractIds: stringArray(spec.allowedFixedContractIds, `packageBoundaryProfiles.${id}.allowedFixedContractIds`), glueGrammarId, recursive: true, uncertainRole: "problem", implementationRole: "problem", reason: requiredString(spec.reason, `packageBoundaryProfiles.${id}.reason`) };
-  }
-  if (Object.keys(packageBoundaryProfiles).length === 0) throw new Error("Taxonomy v7 packageBoundaryProfiles must not be empty");
-  /** 🔖️ Each externally-mandated tool-config validator token is reserved for exactly one contract id, mirroring the pre-existing vitest-configuration/vitest-config-entry pinning. */
-  const TOOL_CONFIG_VALIDATORS: Readonly<Record<string, string>> = { "vitest-configuration": "vitest-config-entry", "tool-config-tailwind": "tailwind-config", "tool-config-postcss": "postcss-config", "tool-config-eslint": "eslint-config", "tool-config-dependency-cruiser": "dependency-cruiser-config", "pytest-configuration": "root-pytest-config", "eslint-configuration": "root-eslint-config", "vscode-test-configuration": "vscode-test-cli-config" };
-  const packageSourceDispositions: Record<string, PackageSourceDisposition> = {};
-  for (const [id, value] of Object.entries(sourceDispositionRows)) {
-    const spec = record(value, `packageSourceDispositions.${id}`);
-    requireExactKeys(spec, ["contractKind", "disposition", "validator", ...(spec.grammarId === undefined ? [] : ["grammarId"]), "authority", "verification"], `packageSourceDispositions.${id}`);
-    const configValidatorOwner = TOOL_CONFIG_VALIDATORS[spec.validator as string];
-    if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && configValidatorOwner === undefined || (configValidatorOwner !== undefined && id !== configValidatorOwner)) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
-    const grammarId = spec.grammarId === undefined ? undefined : requiredString(spec.grammarId, `packageSourceDispositions.${id}.grammarId`);
-    if (grammarId !== undefined && !packageGlueGrammar[grammarId]) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} references unknown grammar ${grammarId}`);
-    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: requiredLiteral(spec.validator, `packageSourceDispositions.${id}.validator`, ["package-glue", "command-router", "vitest-configuration", "tool-config-vitest", "tool-config-tailwind", "tool-config-postcss", "tool-config-eslint", "tool-config-dependency-cruiser", "pytest-configuration", "eslint-configuration", "vscode-test-configuration"] as const), ...(grammarId === undefined ? {} : { grammarId }), authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
-  }
-  if (Object.keys(packageSourceDispositions).length === 0) throw new Error("Taxonomy v7 packageSourceDispositions must not be empty");
-  for (const [id, contract] of Object.entries(fixedFilenameContracts)) if (contract.scope.kind === "package-root" && !packageBoundaryRules[contract.scope.ecosystemId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id} references unknown ecosystem ${contract.scope.ecosystemId}`);
-
-  const pathExclusions: Record<string, { path: string; mode: "opaque"; reason: string }> = {};
-  const exclusions: { id: string; path: string }[] = [];
-  for (const [id, value] of Object.entries(exclusionRows)) {
-    const spec = record(value, `pathExclusions.${id}`);
-    if (spec.mode !== "opaque") throw new Error(`Taxonomy v7 pathExclusions.${id}.mode must be opaque`);
-    const excludedPath = normalizeRelative(requiredString(spec.path, `pathExclusions.${id}.path`));
-    pathExclusions[id] = { path: excludedPath, mode: "opaque", reason: requiredString(spec.reason, `pathExclusions.${id}.reason`) };
-    exclusions.push({ id, path: excludedPath });
-  }
-  if (canonicalJson(Object.entries(pathExclusions).map(([id, spec]) => [id, spec.path])) !== canonicalJson(TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id, path]) => [id, normalizeRelative(path)]))) throw new Error(`Taxonomy v7 pathExclusions must contain exactly opaque ${TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([, path]) => path).join(", ")}`);
-  for (const id of stringArray(enforcement.opaquePathExclusionIds, "areaEnforcement.opaquePathExclusionIds")) {
-    if (!pathExclusions[id]) throw new Error(`Taxonomy v7 areaEnforcement references unknown opaque exclusion ${id}`);
-  }
-  if (canonicalJson(enforcement.opaquePathExclusionIds) !== canonicalJson(TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id]) => id))) throw new Error(`Taxonomy v7 areaEnforcement must require ${TAXONOMY_OPAQUE_PATH_EXCLUSIONS.map(([id]) => id).join(", ")} in order`);
-  const opaquePaths = Object.values(pathExclusions).map((entry) => entry.path);
-  const crossesOpaque = (value: string): boolean => opaquePaths.some((opaque) => value === opaque || value.startsWith(`${opaque}/`) || opaque.startsWith(`${value}/`));
-  for (const [id, contract] of Object.entries(semanticPathProjectionReferenceConsumerContracts)) {
-    if (contract.sourcePathIdentities.some(crossesOpaque)) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id} crosses an opaque path`);
-    const pattern = new RegExp(contract.sourcePathPattern, "u");
-    if (opaquePaths.some((opaque) => pattern.test(opaque) || pattern.test(`${opaque}/probe`))) throw new Error(`Taxonomy v7 semanticPathProjectionReferenceConsumerContracts.${id} admits an opaque path`);
-  }
-  for (const [id, contract] of Object.entries(generatorContracts)) {
-    if (contract.ownerPath && crossesOpaque(contract.ownerPath)) throw new Error(`Taxonomy v7 generatorContracts.${id}.ownerPath crosses an opaque path`);
-    for (const pattern of contract.inputPatterns) if (opaquePaths.some((opaque) => pathMatcher.matches(opaque, pattern) || pathMatcher.matches(`${opaque}/probe`, pattern))) throw new Error(`Taxonomy v7 generatorContracts.${id} input pattern admits an opaque path`);
-    for (const output of contract.outputRoots) if (crossesOpaque(output.path)) throw new Error(`Taxonomy v7 generatorContracts.${id} output root crosses an opaque path`);
-  }
-
-  const schema: TaxonomyV7 = {
-    schemaVersion: 7,
-    windowEmptyFacetFileKindId: requiredString(root.windowEmptyFacetFileKindId, "windowEmptyFacetFileKindId"),
-    fileKinds,
-    semanticDirectoryKinds,
-    fixedFilenameContracts,
-    fixedFilenameRejectionContracts,
-    fixedDirectoryContracts,
-    configurableEntryContracts,
-    fileKindResolutionRules,
-    scopedFileKinds,
-    semanticDirectoryMemberKinds,
-    semanticProjectedMemberKinds,
-    semanticPathProjectionProfileRenderers,
-    semanticDescendantContracts,
-    semanticPathProjectionCatalogContracts,
-    semanticPathProjectionContracts,
-    semanticOwnedFileProjectionContracts,
-    semanticPackageProjectionContracts: root.semanticPackageProjectionContracts as DiscoveryTaxonomy["semanticPackageProjectionContracts"],
-    semanticPathProjectionReferenceConsumerContracts,
-    mutationCatalogProjection,
-    generatorContracts,
-    ecosystems,
-    packageBoundaryRules,
-    packageBoundaryProfiles,
-    packageGlueGrammar,
-    packageSourceDispositions,
-    pathExclusions,
-    unicodeNormalization: { form: "NFC", caseFold: "lower", locale: "und" },
-    variationSelectorPolicy: { selector: "\uFE0F", requiredAfterEmoji: true, comparison: "ignore-selector" },
-    collisionPolicy: {
-      comparisons: collision.comparisons as TaxonomyV7["collisionPolicy"]["comparisons"],
-      maxPathBytes: collision.maxPathBytes as number,
-      rejectWindowsReservedNames: collision.rejectWindowsReservedNames === true,
-      rejectTrailingDotsAndSpaces: collision.rejectTrailingDotsAndSpaces === true,
-    },
-    areaEnforcement: { requiredState: "clean", undeclaredAreas: "enforce", opaquePathExclusionIds: [...(enforcement.opaquePathExclusionIds as string[])] },
-  };
-  return {
-    path,
-    pathMatcher,
-    schema,
-    discoverySchema: root as unknown as DiscoveryTaxonomy,
-    exclusions: exclusions.sort((a, b) => a.path.localeCompare(b.path)),
-    fileKinds: Object.entries(fileKinds).map(([id, spec]) => ({ id, ...spec })).sort((a, b) => a.id.localeCompare(b.id)),
-    directoryKinds: Object.entries(semanticDirectoryKinds).map(([id, spec]) => ({ id, ...spec, slugRegex: new RegExp(`^(?:${spec.slugPattern})$`, "u") })).sort((a, b) => a.id.localeCompare(b.id)),
-  };
-}
-
-/** 🧭️ What a generator-input walk reads from a loaded taxonomy: the discovery vocabulary it classifies with and
- * the matcher it excludes with. Narrower than [[LoadedTaxonomy]] so a caller can build one without the walk's
- * private loading state. */
-export type GeneratorInputTaxonomy = Pick<LoadedTaxonomy, "discoverySchema" | "pathMatcher" | "exclusions">;
-
-/** 🧭️ Loads the taxonomy in the form the normalization walk uses — the only public way to obtain a
- * [[GeneratorInputTaxonomy]] for the repository's own schema. */
-export function loadNormalizationTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): GeneratorInputTaxonomy {
-  return loadTaxonomy(options);
-}
-
-/** 🧠️ Parsed taxonomies by content digest. Parsing is a pure function of the bytes (the path only names errors and the
- * loaded copy), so each distinct taxonomy is parsed and validated once per process instead of once per source admission —
- * measured ~0.9 s per admission under fleet load, paid once per direct-mutation law vector. Bounded to the few most recent
- * contents, since laws load many synthetic variants. */
-const PARSED_TAXONOMIES = new Map<string, Omit<LoadedTaxonomy, "path" | "input">>();
-const PARSED_TAXONOMY_CAPACITY = 8;
-
-function loadTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): LoadedTaxonomy {
-  const path = assertLexicalInputOutsideOpaque(options.repoRoot, options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath", true);
-  const input = semanticOwnedInputFileSnapshot(options.repoRoot, relative(resolve(options.repoRoot), path).replaceAll("\\", "/"));
-  if (!input) throw new Error("Taxonomy schema is absent: " + path);
-  const cached = PARSED_TAXONOMIES.get(input.contentHash);
-  if (cached) return { ...cached, path, input };
-  const bytes = Buffer.from(input.bytes), text = bytes.toString("utf8");
-  if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path);
-  const { path: _path, input: _input, ...parsed } = parseTaxonomy(JSON.parse(text) as unknown, path);
-  if (PARSED_TAXONOMIES.size >= PARSED_TAXONOMY_CAPACITY) PARSED_TAXONOMIES.delete(PARSED_TAXONOMIES.keys().next().value!);
-  PARSED_TAXONOMIES.set(input.contentHash, parsed);
-  return { ...parsed, path, input };
-}
-//#endregion 🔣️Schema
-
-//#region 🧮️Canonicalization
-function sha256(value: string | Uint8Array): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function canonicalArrayKey(value: unknown): string | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const row = value as JsonRecord;
-  const keys = ["operationId", "sourcePath", "path", "id", "destinationPath", "code", "relativeRoot", "structuredLocation"];
-  const parts = keys.filter((key) => typeof row[key] === "string").map((key) => `${key}:${row[key] as string}`);
-  return parts.length > 0 ? parts.join("\u0000") : null;
-}
-
-function canonicalValue(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    const rows = value.map(canonicalValue);
-    if (rows.every((row) => canonicalArrayKey(row) !== null)) return [...rows].sort((a, b) => Buffer.from(canonicalArrayKey(a) as string).compare(Buffer.from(canonicalArrayKey(b) as string)));
-    return rows;
-  }
-  if (!value || typeof value !== "object") return value;
-  const source = value as JsonRecord;
-  const target: JsonRecord = {};
-  for (const key of Object.keys(source).sort()) {
-    if (source[key] !== undefined) target[key] = canonicalValue(source[key]);
-  }
-  return target;
-}
-
-/** 🧾️ Serializes repository-owned records with recursively sorted keys and contract-identifier arrays. */
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(canonicalValue(value));
-}
 
 const PLAN_HASH = /^[a-f0-9]{64}$/u;
 const PLAN_OPERATION_ID = /^[a-f0-9]{24}$/u;
 const PLAN_COMMIT_ID = /^[a-f0-9]{40}$/u;
 
-function planRecord(value: unknown, name: string, requiredKeys: readonly string[], optionalKeys: readonly string[] = []): JsonRecord {
+function planRecord(value: unknown, name: string, requiredKeys: readonly string[], optionalKeys: readonly string[] = []): UnknownRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object`);
-  const row = value as JsonRecord;
+  const row = value as UnknownRecord;
   const allowed = new Set([...requiredKeys, ...optionalKeys]);
   const keys = Object.keys(row);
   if (requiredKeys.some((key) => !(key in row)) || keys.some((key) => !allowed.has(key))) throw new Error(`${name} has missing or unknown keys`);
@@ -1838,7 +462,7 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "packageId", "generatorContractId", "destinationPath", "sourcePreimage", "authorityDigest"]);
     const sourcePreimage = parseLeafPreimage(row.sourcePreimage, name + ".sourcePreimage");
     if (sourcePreimage.nodeKind !== "file") throw new Error(name + " requires the exact generated WGPU source file");
-    const result = { kind: "nested-cargo-generated-source" as const, catalogPath: planPath(row.catalogPath, name + ".catalogPath"), catalogContentHash: planString(row.catalogContentHash, name + ".catalogContentHash", PLAN_HASH), packageId: requiredLiteral(row.packageId, name + ".packageId", ["wgpu-renderer"] as const), generatorContractId: planString(row.generatorContractId, name + ".generatorContractId"), destinationPath: planPath(row.destinationPath, name + ".destinationPath"), sourcePreimage, authorityDigest: planString(row.authorityDigest, name + ".authorityDigest", PLAN_HASH) };
+    const result = { kind: "nested-cargo-generated-source" as const, catalogPath: planPath(row.catalogPath, name + ".catalogPath"), catalogContentHash: planString(row.catalogContentHash, name + ".catalogContentHash", PLAN_HASH), packageId: requireLiteral(row.packageId, name + ".packageId", ["wgpu-renderer"] as const), generatorContractId: planString(row.generatorContractId, name + ".generatorContractId"), destinationPath: planPath(row.destinationPath, name + ".destinationPath"), sourcePreimage, authorityDigest: planString(row.authorityDigest, name + ".authorityDigest", PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(name + ".authorityDigest does not match nested Cargo generated source authority");
     return result;
@@ -1871,7 +495,7 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     const row = planRecord(value, name, ["kind", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "authorityDigest"]);
     const manifestPreimage = parseLeafPreimage(row.manifestPreimage, `${name}.manifestPreimage`);
     if (manifestPreimage.nodeKind !== "file") throw new Error(`${name} does not use the exact closed-empty ticket authority`);
-    const result = { kind: "owner-manifest-status" as const, contractId: requiredLiteral(row.contractId, `${name}.contractId`, ["ticket-important-markdown-v1"] as const), ownerPath: planPath(row.ownerPath, `${name}.ownerPath`), manifestPath: planPath(row.manifestPath, `${name}.manifestPath`), manifestPreimage, status: requiredLiteral(row.status, `${name}.status`, ["closed"] as const), contentState: requiredLiteral(row.contentState, `${name}.contentState`, ["zero-byte"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
+    const result = { kind: "owner-manifest-status" as const, contractId: requireLiteral(row.contractId, `${name}.contractId`, ["ticket-important-markdown-v1"] as const), ownerPath: planPath(row.ownerPath, `${name}.ownerPath`), manifestPath: planPath(row.manifestPath, `${name}.manifestPath`), manifestPreimage, status: requireLiteral(row.status, `${name}.status`, ["closed"] as const), contentState: requireLiteral(row.contentState, `${name}.contentState`, ["zero-byte"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
@@ -1880,7 +504,7 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "authorityDigest"]);
     const sourcePreimage = parseLeafPreimage(row.sourcePreimage, `${name}.sourcePreimage`);
     if (sourcePreimage.nodeKind !== "file" || sourcePreimage.size !== 0) throw new Error(`${name} does not use exact empty-file removal evidence`);
-    const result = { kind: "exact-path-mutation" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), sourcePreimage, disposition: requiredLiteral(row.disposition, `${name}.disposition`, ["remove"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
+    const result = { kind: "exact-path-mutation" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), sourcePreimage, disposition: requireLiteral(row.disposition, `${name}.disposition`, ["remove"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
@@ -1962,7 +586,7 @@ function parseRegeneration(value: unknown, name: string): TaxonomyRegeneration {
   if (preview.schemaVersion !== 1 || preview.contractId !== row.contractId || !Array.isArray(preview.nodes) || !Array.isArray(preview.staleRemovals)) throw new Error(`${name}.preview is invalid`);
   const previewNodes = preview.nodes.map((value, index) => {
     const node = planRecord(value, `${name}.preview.nodes[${index}]`, ["bytesBase64", "mode", "nodeKind", "path"]);
-    return { bytesBase64: planString(node.bytesBase64, `${name}.preview.nodes[${index}].bytesBase64`), mode: planInteger(node.mode, `${name}.preview.nodes[${index}].mode`, 0o7777), nodeKind: requiredLiteral(node.nodeKind, `${name}.preview.nodes[${index}].nodeKind`, ["directory", "file"] as const), path: planPath(node.path, `${name}.preview.nodes[${index}].path`) };
+    return { bytesBase64: planString(node.bytesBase64, `${name}.preview.nodes[${index}].bytesBase64`), mode: planInteger(node.mode, `${name}.preview.nodes[${index}].mode`, 0o7777), nodeKind: requireLiteral(node.nodeKind, `${name}.preview.nodes[${index}].nodeKind`, ["directory", "file"] as const), path: planPath(node.path, `${name}.preview.nodes[${index}].path`) };
   });
   const result: TaxonomyRegeneration = { id: planString(row.id, `${name}.id`, PLAN_OPERATION_ID), contractId: planString(row.contractId, `${name}.contractId`), cwd: planPath(row.cwd, `${name}.cwd`), command: command as unknown as TaxonomyRegeneration["command"], verifyCommand: verifyCommand as TaxonomyRegeneration["verifyCommand"], outputRoots: (row.outputRoots as unknown[]).map((entry, index) => planPath(entry, `${name}.outputRoots[${index}]`)), inputs: (row.inputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.inputs[${index}]`)), preOutputs: (row.preOutputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.preOutputs[${index}]`)), outputs: (row.outputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.outputs[${index}]`)), preview: { contractId: preview.contractId as string, nodes: previewNodes, schemaVersion: 1, staleRemovals: (preview.staleRemovals as unknown[]).map((entry, index) => planPath(entry, `${name}.preview.staleRemovals[${index}]`)) }, previewManifestDigest: planString(row.previewManifestDigest, `${name}.previewManifestDigest`, PLAN_HASH), staleRemovals: (row.staleRemovals as unknown[]).map((entry, index) => planPath(entry, `${name}.staleRemovals[${index}]`)) };
   const provisional = { contractId: result.contractId, cwd: result.cwd, command: result.command, verifyCommand: result.verifyCommand, outputRoots: result.outputRoots, inputs: result.inputs, preOutputs: result.preOutputs, outputs: result.outputs, preview: result.preview, previewManifestDigest: result.previewManifestDigest, staleRemovals: result.staleRemovals };
@@ -1994,7 +618,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
     return { path: planPath(entry.path, `${name}.path`), state: entry.state } as TaxonomyDestinationAncestorPreimage;
   });
   if (destinationAncestorPreimages.some((entry, index) => index > 0 && generatorPathCompare(destinationAncestorPreimages[index - 1].path, entry.path) >= 0)) throw new Error("Taxonomy plan destinationAncestorPreimages must be unique and bytewise sorted");
-  const parseOperationId = (entry: JsonRecord, name: string): string => planString(entry.operationId, `${name}.operationId`, PLAN_OPERATION_ID);
+  const parseOperationId = (entry: UnknownRecord, name: string): string => planString(entry.operationId, `${name}.operationId`, PLAN_OPERATION_ID);
   const embeddedTicketRootRelocations = (row.embeddedTicketRootRelocations as unknown[]).map((value, index) => {
     const name = `taxonomy plan embeddedTicketRootRelocations[${index}]`;
     const entry = planRecord(value, name, ["operationId", "embeddedTicketRootId", "sourcePath", "destinationPath", "relativeEvidencePath", "preimage", "ownerId", "rationaleRule"], ["fixedContractId"]);
@@ -2058,7 +682,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
     if (operationId !== dispositionOperationId("embedded-ticket-root", digestible)) throw new Error(`${name}.operationId does not match its fields`);
     return result;
   });
-  const allOperationIds = [...(row.moves as JsonRecord[]).map((entry, index) => planString(entry.operationId, `taxonomy plan moves[${index}].operationId`, PLAN_OPERATION_ID)), ...embeddedTicketRoots.map((entry) => entry.operationId), ...embeddedTicketRootRelocations.map((entry) => entry.operationId), ...symlinkTargetEdits.map((entry) => entry.operationId), ...evidenceRemovals.map((entry) => entry.operationId), ...(row.regenerations as JsonRecord[]).map((entry, index) => planString(entry.id, `taxonomy plan regenerations[${index}].id`, PLAN_OPERATION_ID))];
+  const allOperationIds = [...(row.moves as UnknownRecord[]).map((entry, index) => planString(entry.operationId, `taxonomy plan moves[${index}].operationId`, PLAN_OPERATION_ID)), ...embeddedTicketRoots.map((entry) => entry.operationId), ...embeddedTicketRootRelocations.map((entry) => entry.operationId), ...symlinkTargetEdits.map((entry) => entry.operationId), ...evidenceRemovals.map((entry) => entry.operationId), ...(row.regenerations as UnknownRecord[]).map((entry, index) => planString(entry.id, `taxonomy plan regenerations[${index}].id`, PLAN_OPERATION_ID))];
   if (new Set(allOperationIds).size !== allOperationIds.length) throw new Error("Taxonomy plan operation IDs are not globally unique");
   const relocationIds = new Set(embeddedTicketRootRelocations.map((entry) => entry.operationId));
   const removalIds = new Set(evidenceRemovals.map((entry) => entry.operationId));
@@ -2122,7 +746,7 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
   } catch {
     throw new Error(`Generator preview stdout is not one canonical JSON document: bytes=${Buffer.byteLength(content)}, sha256=${sha256(content)}`);
   }
-  const root = record(value, "generator preview");
+  const root = requireRecord(value, "generator preview");
   if (Object.keys(root).join("\u0000") !== "contractId\u0000nodes\u0000schemaVersion\u0000staleRemovals") throw new Error("Generator preview has noncanonical top-level keys or order");
   if (root.schemaVersion !== 1) throw new Error("Generator preview schemaVersion must be 1");
   if (root.contractId !== expectedContractId) throw new Error(`Generator preview contractId does not match ${expectedContractId}`);
@@ -2133,9 +757,9 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
   const withinRoot = (path: string): boolean => roots.some((candidate) => path === candidate || path.startsWith(`${candidate}/`));
   const excluded = (path: string): boolean => exclusions.some((candidate) => path === candidate || path.startsWith(`${candidate}/`));
   const nodes: TaxonomyGeneratorPreviewNode[] = root.nodes.map((value, index) => {
-    const node = record(value, `generator preview nodes[${index}]`);
+    const node = requireRecord(value, `generator preview nodes[${index}]`);
     if (Object.keys(node).join("\u0000") !== "bytesBase64\u0000mode\u0000nodeKind\u0000path") throw new Error(`Generator preview node ${index} has noncanonical keys or order`);
-    const path = requiredString(node.path, `generator preview nodes[${index}].path`);
+    const path = requireString(node.path, `generator preview nodes[${index}].path`);
     if (path !== normalizeRelative(path) || path !== path.normalize("NFC") || !withinRoot(path) || excluded(path)) throw new Error(`Generator preview node path is unsafe or outside registered roots: ${path}`);
     if (node.nodeKind !== "directory" && node.nodeKind !== "file") throw new Error(`Generator preview nodeKind is invalid at ${path}`);
     if (!Number.isSafeInteger(node.mode) || (node.mode as number) < 0 || (node.mode as number) > 0o7777) throw new Error(`Generator preview mode is invalid at ${path}`);
@@ -2163,7 +787,7 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
     if (node.nodeKind === "file" && nodes.some((candidate) => candidate.path.startsWith(`${node.path}/`))) throw new Error(`Generator preview file has descendants at ${node.path}`);
   }
   const staleRemovals = root.staleRemovals.map((value, index) => {
-    const path = requiredString(value, `generator preview staleRemovals[${index}]`);
+    const path = requireString(value, `generator preview staleRemovals[${index}]`);
     if (path !== normalizeRelative(path) || path !== path.normalize("NFC") || !withinRoot(path) || excluded(path)) throw new Error(`Generator preview stale removal is unsafe or outside registered roots: ${path}`);
     if (nodeByPath.has(path) || nodes.some((node) => node.path.startsWith(`${path}/`))) throw new Error(`Generator preview stale removal overlaps expected output ${path}`);
     return path;
@@ -2174,18 +798,6 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
   return manifest;
 }
 
-function normalizeRelative(value: string): string {
-  return sourceRelative(value).normalize("NFC");
-}
-
-function sourceRelative(value: string): string {
-  const slash = value.replaceAll("\\", "/").replace(/^\.\//, "");
-  const normalized = posix.normalize(slash);
-  if (normalized === ".") return "";
-  if (normalized === ".." || normalized.startsWith("..") || normalized.startsWith("/") || normalized.includes("\u0000")) throw new Error(`Path escapes repository scope: ${value}`);
-  return normalized.replace(/\/$/, "");
-}
-
 function absolutePath(repoRoot: string, path: string): string {
   const root = resolve(repoRoot);
   const result = resolve(root, ...sourceRelative(path).split("/").filter(Boolean));
@@ -2194,41 +806,9 @@ function absolutePath(repoRoot: string, path: string): string {
   return result;
 }
 
-function assertNoFollowAncestors(repoRoot: string, target: string, label: string, rejectLeafSymlink = false): void {
-  const root = resolve(repoRoot);
-  const relativeTarget = relative(root, target);
-  const segments = relativeTarget.split(sep).filter(Boolean);
-  let current = root;
-  const end = segments.length - (rejectLeafSymlink ? 0 : 1);
-  for (let index = 0; index < end; index++) {
-    current = join(current, segments[index]);
-    const stat = lstatOrNull(current);
-    const leaf = rejectLeafSymlink && index === segments.length - 1;
-    if (stat?.isSymbolicLink() || (!leaf && stat && !stat.isDirectory())) throw new Error(`${label} has a non-directory or symlink ancestor: ${segments.slice(0, index + 1).join("/")}`);
-  }
-}
-
-function assertLexicalInputOutsideOpaque(repoRoot: string, path: string, label: string, rejectLeafSymlink = false): string {
-  const root = resolve(repoRoot);
-  const target = isAbsolute(path) ? resolve(path) : resolve(root, path);
-  const nativeRelative = relative(root, target);
-  if (nativeRelative === ".." || nativeRelative.startsWith(`..${sep}`) || nativeRelative.startsWith("..") || nativeRelative.startsWith("..\\") || isAbsolute(nativeRelative)) throw new Error(`${label} must be repository-local`);
-  const repositoryRelative = posix.normalize(nativeRelative.replaceAll("\\", "/"));
-  if (LEXICAL_OPAQUE_ROOTS.some((opaque) => repositoryRelative === opaque || repositoryRelative.startsWith(`${opaque}/`))) throw new Error(`${label} is inside an opaque path: ${repositoryRelative}`);
-  assertNoFollowAncestors(root, target, label, rejectLeafSymlink);
-  return target;
-}
-
 function isExcluded(path: string, taxonomy: Pick<LoadedTaxonomy, "exclusions">): boolean {
   const normalized = normalizeRelative(path);
   return taxonomy.exclusions.some((entry) => normalized === entry.path || normalized.startsWith(`${entry.path}/`));
-}
-
-function inScope(path: string, scope?: string): boolean {
-  if (!scope) return true;
-  const normalizedScope = normalizeRelative(scope);
-  const normalizedPath = normalizeRelative(path);
-  return normalizedPath === normalizedScope || normalizedPath.startsWith(`${normalizedScope}/`) || normalizedScope.startsWith(`${normalizedPath}/`);
 }
 
 function isProperScopeAncestor(path: string, scope?: string): boolean {
@@ -2236,24 +816,6 @@ function isProperScopeAncestor(path: string, scope?: string): boolean {
   const normalizedScope = normalizeRelative(scope);
   const normalizedPath = normalizeRelative(path);
   return normalizedPath !== normalizedScope && normalizedScope.startsWith(`${normalizedPath}/`);
-}
-
-function emojiFold(value: string): string {
-  return value.normalize("NFC").replaceAll("\uFE0F", "");
-}
-
-function graphemes(value: string): readonly string[] {
-  return [...SEGMENTER.segment(value)].map((entry) => entry.segment);
-}
-
-function isEmojiGrapheme(value: string): boolean {
-  return /[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u20E3]/u.test(value);
-}
-
-function splitLeadingEmoji(value: string): { emoji: string; rest: string } {
-  const first = SEGMENTER.segment(value)[Symbol.iterator]().next().value?.segment;
-  if (!first || !isEmojiGrapheme(first)) return { emoji: "", rest: value };
-  return { emoji: first, rest: value.slice(first.length) };
 }
 
 function splitLeadingEmojiIdentity(value: string): { sequence: string; first: string; rest: string } {
@@ -2440,16 +1002,6 @@ function stableViolations(rows: readonly TaxonomyViolation[]): readonly Taxonomy
   return [...new Map(rows.map((entry) => [`${entry.path}\u0000${entry.code}\u0000${entry.severity}\u0000${entry.message}`, entry])).values()].sort((a, b) => a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || a.message.localeCompare(b.message));
 }
 
-function report(progress: TaxonomyInventoryOptions["progress"] | TaxonomyPlanOptions["progress"] | TaxonomyApplyOptions["progress"], operation: TaxonomyProgress["operation"], phase: string, current: number, total: number, path?: string): void {
-  progress?.({ operation, phase, current, total, path });
-}
-
-class TaxonomyCancellationError extends Error {
-  constructor() {
-    super("Taxonomy operation cancelled");
-  }
-}
-
 function checkCancellation(repoRoot: string, cancelFile?: string): void {
   if (!cancelFile) return;
   const path = assertLexicalInputOutsideOpaque(repoRoot, cancelFile, "cancelFile", true);
@@ -2460,136 +1012,6 @@ function cancellationRequested(repoRoot: string, cancelFile?: string): boolean {
   if (!cancelFile) return false;
   return existsSync(assertLexicalInputOutsideOpaque(repoRoot, cancelFile, "cancelFile", true));
 }
-//#endregion 🧮️Canonicalization
-
-//#region 📚️Inventory
-//#region 🧾️Source Admission
-const SOURCE_ADMISSION_ORIGINS: readonly TaxonomySourceOrigin[] = ["tracked", "nonignored-untracked", "ignored-generator", "explicit-ticket"];
-const sourceAdmissionByteCompare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
-
-function sourceAdmissionSafePath(path: string): boolean {
-  return path.length > 0 && !path.startsWith("/") && !/^[A-Za-z]:/u.test(path) && !path.includes("\\") && !/[\u0000-\u001f\u007f]/u.test(path) && Buffer.from(path).toString("utf8") === path && path.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
-}
-
-function sourceAdmissionOpaque(path: string, prefixes: readonly string[]): boolean {
-  const normalized = path.normalize("NFC");
-  return prefixes.some((prefix) => {
-    const expected = prefix.normalize("NFC");
-    return expected === "compose" ? normalized.split("/").some((part) => part.toLowerCase() === "compose") : normalized === expected || normalized.startsWith(expected + "/");
-  });
-}
-
-function sourceAdmissionRecord(value: unknown, required: readonly string[], optional: readonly string[] = []): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value) && required.every((key) => Object.hasOwn(value, key)) && Object.keys(value).every((key) => required.includes(key) || optional.includes(key));
-}
-
-function sourceAdmissionInputShape(value: unknown): value is TaxonomySourceAdmissionInput {
-  if (!sourceAdmissionRecord(value, ["scope", "opaquePrefixes", "generatorOutputRoots", "candidates"], ["cancelledDuring"])) return false;
-  if (value.scope !== null && typeof value.scope !== "string") return false;
-  if (value.cancelledDuring !== undefined && value.cancelledDuring !== null && typeof value.cancelledDuring !== "string") return false;
-  if (!Array.isArray(value.opaquePrefixes) || value.opaquePrefixes.some((prefix) => typeof prefix !== "string" || prefix.length === 0) || new Set(value.opaquePrefixes).size !== value.opaquePrefixes.length) return false;
-  if (!Array.isArray(value.generatorOutputRoots) || value.generatorOutputRoots.some((root) => !sourceAdmissionRecord(root, ["contractId", "rootPath", "inclusion"]) || typeof root.contractId !== "string" || !root.contractId || typeof root.rootPath !== "string" || !root.rootPath || (root.inclusion !== "tracked" && root.inclusion !== "ignored"))) return false;
-  if (!Array.isArray(value.candidates)) return false;
-  return value.candidates.every((row) => {
-    if (!sourceAdmissionRecord(row, ["sourcePath", "observedKind", "worktreeMode", "explicitDirectory", "origins", "indexEntries", "unsafeAncestor"])) return false;
-    if (typeof row.sourcePath !== "string" || !row.sourcePath || !["file", "directory", "symlink", "absent", "unobserved", "other"].includes(row.observedKind as string) || ![null, "100644", "100755", "120000", "160000", "040000"].includes(row.worktreeMode as string | null) || typeof row.explicitDirectory !== "boolean" || typeof row.unsafeAncestor !== "boolean") return false;
-    if (!Array.isArray(row.origins) || row.origins.some((origin) => !SOURCE_ADMISSION_ORIGINS.includes(origin)) || new Set(row.origins).size !== row.origins.length || !Array.isArray(row.indexEntries)) return false;
-    return row.indexEntries.every((entry) => sourceAdmissionRecord(entry, ["stage", "mode", "objectId"]) && Number.isInteger(entry.stage) && Number(entry.stage) >= 0 && Number(entry.stage) <= 3 && ["100644", "100755", "120000", "160000"].includes(entry.mode as string) && typeof entry.objectId === "string" && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(entry.objectId));
-  });
-}
-
-function sourceAdmissionPhysicalConsistent(row: TaxonomySourceCandidateObservation): boolean {
-  return (row.observedKind === "file" && (row.worktreeMode === "100644" || row.worktreeMode === "100755") && !row.explicitDirectory)
-    || (row.observedKind === "directory" && row.worktreeMode === "040000" && row.explicitDirectory)
-    || (row.observedKind === "symlink" && row.worktreeMode === "120000" && !row.explicitDirectory)
-    || (["absent", "unobserved", "other"].includes(row.observedKind) && row.worktreeMode === null && !row.explicitDirectory);
-}
-
-function sourceAdmissionRepositoryFences(rows: readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[]): readonly string[] {
-  return [...new Set(rows.filter((row) => row.entry.mode === "160000" && sourceAdmissionSafePath(row.path)).map((row) => row.path))].sort(sourceAdmissionByteCompare);
-}
-
-function sourceAdmissionContainingRepository(path: string, fences: readonly string[], includeRoot: boolean): string | null {
-  const normalized = path.normalize("NFC");
-  return fences.find((fence) => {
-    const root = fence.normalize("NFC");
-    return (includeRoot && normalized === root) || normalized.startsWith(root + "/");
-  }) ?? null;
-}
-
-function sourceAdmissionAssertRepositoryPath(path: string, fences: readonly string[], label: string, allowRoot: boolean): void {
-  const boundary = sourceAdmissionContainingRepository(path, fences, !allowRoot);
-  if (boundary !== null) throw new Error(`${label} crosses an index-owned repository boundary: ${path} (${boundary})`);
-}
-
-/** 🧾️ Projects supplied source observations; only inventoryTaxonomySources performs filesystem admission. */
-export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAdmission {
-  if (!sourceAdmissionInputShape(value)) return { schemaVersion: 1, scope: null, status: "rejected", observations: [], diagnostics: [{ code: "invalid-admission-input", path: "$", message: "Source admission input does not satisfy its closed schema" }] };
-  const input = value;
-  if (input.cancelledDuring !== undefined && input.cancelledDuring !== null) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "cancelled", path: input.cancelledDuring || "$", message: "Cancellation prevents a partial-success admission result" }] };
-  if (input.scope !== null && !sourceAdmissionSafePath(input.scope)) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "invalid-scope", path: input.scope || "$", message: "Scope is not a safe repository-relative slash path" }] };
-  const repositoryFences = sourceAdmissionRepositoryFences(input.candidates.flatMap((row) => row.indexEntries.filter((entry) => entry.mode === "160000").map((entry) => ({ path: row.sourcePath, entry }))));
-  if (input.scope !== null && sourceAdmissionContainingRepository(input.scope, repositoryFences, false) !== null) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "scope-inside-repository-boundary", path: input.scope, message: "Scope is below an index-owned repository boundary" }] };
-  const diagnostics: TaxonomySourceAdmissionDiagnostic[] = [];
-  const diagnose = (code: string, path: string, message: string): void => { diagnostics.push({ code, path, message }); };
-  for (const prefix of input.opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) diagnose("invalid-opaque-prefix", prefix, "Opaque prefix is not a safe repository-relative slash path");
-  for (const output of input.generatorOutputRoots) if (!sourceAdmissionSafePath(output.rootPath)) diagnose("invalid-generator-root", output.rootPath, "Generator output root is not a safe repository-relative slash path");
-  for (const output of input.generatorOutputRoots) if (sourceAdmissionSafePath(output.rootPath) && sourceAdmissionContainingRepository(output.rootPath, repositoryFences, false) !== null) diagnose("generator-root-inside-repository-boundary", output.rootPath, "Generator output root is below an index-owned repository boundary");
-  const generatorPolicies = new Map<string, TaxonomySourceGeneratorOutput[]>();
-  for (const output of input.generatorOutputRoots) {
-    const key = JSON.stringify([output.contractId, output.rootPath]);
-    const group = generatorPolicies.get(key) ?? [];
-    group.push(output);
-    generatorPolicies.set(key, group);
-  }
-  for (const group of generatorPolicies.values()) if (new Set(group.map((output) => output.inclusion)).size > 1) diagnose("contradictory-generator-output", group[0].rootPath, "One generator contract/root identity declares conflicting inclusion policies");
-  const groups = new Map<string, TaxonomySourceCandidateObservation[]>();
-  for (const row of input.candidates) {
-    if (!sourceAdmissionSafePath(row.sourcePath)) { diagnose("invalid-source-path", row.sourcePath, "Candidate sourcePath is not a safe repository-relative slash path"); continue; }
-    if (sourceAdmissionContainingRepository(row.sourcePath, repositoryFences, false) !== null) diagnose("repository-boundary-descendant", row.sourcePath, "Candidate is below an index-owned repository boundary");
-    if (!inScope(row.sourcePath, input.scope ?? undefined)) continue;
-    const group = groups.get(row.sourcePath) ?? [];
-    group.push(row);
-    groups.set(row.sourcePath, group);
-  }
-  const observations = [...groups].map(([sourcePath, rows]): TaxonomySourceObservation => {
-    const first = rows[0], normalized = sourcePath.normalize("NFC");
-    const physical = new Set(rows.map((row) => JSON.stringify([row.observedKind, row.worktreeMode, row.explicitDirectory])));
-    const indexEntries = [...new Map(rows.flatMap((row) => row.indexEntries).map((entry) => [JSON.stringify([entry.stage, entry.mode, entry.objectId]), entry])).values()].sort((left, right) => left.stage - right.stage || sourceAdmissionByteCompare(left.mode, right.mode) || sourceAdmissionByteCompare(left.objectId, right.objectId));
-    const generatorOutputs = [...new Map(input.generatorOutputRoots.filter((root) => normalized === root.rootPath.normalize("NFC") || normalized.startsWith(root.rootPath.normalize("NFC") + "/")).map((root) => [JSON.stringify([root.contractId, root.rootPath, root.inclusion]), root])).values()].sort((left, right) => sourceAdmissionByteCompare(left.contractId, right.contractId) || sourceAdmissionByteCompare(left.rootPath, right.rootPath) || sourceAdmissionByteCompare(left.inclusion, right.inclusion));
-    const supplied = new Set(rows.flatMap((row) => row.origins)), hasIgnored = generatorOutputs.some((root) => root.inclusion === "ignored");
-    const opaque = sourceAdmissionOpaque(sourcePath, input.opaquePrefixes), unsafe = rows.some((row) => row.unsafeAncestor);
-    const stageZero = indexEntries.some((entry) => entry.stage === 0), conflicted = indexEntries.some((entry) => entry.stage !== 0);
-    const repositoryBoundary = !opaque && !unsafe && physical.size === 1 && supplied.has("tracked") && indexEntries.length === 1 && indexEntries[0].stage === 0 && indexEntries[0].mode === "160000" && sourceAdmissionPhysicalConsistent(first) && (first.observedKind === "directory" || first.observedKind === "absent") ? "gitlink" as const : null;
-    if (physical.size > 1) diagnose("contradictory-physical-observation", sourcePath, "Duplicate rows disagree on observed physical kind, mode, or directory status");
-    if (new Set(indexEntries.map((entry) => entry.stage)).size !== indexEntries.length) diagnose("contradictory-index-entry", sourcePath, "Duplicate rows disagree on an exact Git index stage identity");
-    if (supplied.has("ignored-generator") && !hasIgnored) diagnose("untrusted-generator-origin", sourcePath, "Ignored-generator authority is derived only from declared ignored output roots");
-    if (opaque) diagnose("opaque-path", sourcePath, "Configured opaque prefix rejected before candidate projection");
-    if (unsafe) diagnose("unsafe-ancestor", sourcePath, "A symlink or non-directory ancestor prevented observation");
-    if (rows.some((row) => !sourceAdmissionPhysicalConsistent(row) && row.worktreeMode !== "160000")) diagnose("inconsistent-physical-observation", sourcePath, "Observed kind, worktree mode, and explicit-directory status are inconsistent");
-    if (rows.some((row) => row.observedKind === "other" || row.worktreeMode === "160000") || (repositoryBoundary === null && indexEntries.some((entry) => entry.mode === "160000"))) diagnose("nonregular-node", sourcePath, "Gitlink and other nonregular nodes cannot be admitted as authored source");
-    if (stageZero && !supplied.has("tracked")) diagnose("index-without-tracked-origin", sourcePath, "Stage-zero index identity requires tracked admission provenance");
-    if (supplied.has("tracked") && !stageZero && !conflicted) diagnose("tracked-origin-without-stage-zero", sourcePath, "Tracked admission requires an exact stage-zero index identity");
-    if (conflicted) diagnose("conflicted-index", sourcePath, "Nonzero Git index stages prevent unambiguous source admission");
-    if (rows.some((row) => row.observedKind === "unobserved") && !opaque && !unsafe && !conflicted) diagnose("unobserved-without-error", sourcePath, "Unobserved candidates require an explicit unsafe, opaque, conflict, or cancellation cause");
-    if (rows.some((row) => row.observedKind === "absent") && stageZero) diagnose("tracked-path-absent", sourcePath, "Stage-zero index identity is retained although the worktree path is absent");
-    if (hasIgnored) supplied.add("ignored-generator");
-    const origins = opaque ? [] : SOURCE_ADMISSION_ORIGINS.filter((origin) => supplied.has(origin) && (origin !== "ignored-generator" || hasIgnored));
-    if (!opaque && origins.length === 0 && !conflicted && !stageZero && !supplied.has("ignored-generator")) diagnose("no-admission-origin", sourcePath, "Candidate has no admitted source authority");
-    return {
-      sourcePath,
-      observedKind: physical.size === 1 && !opaque && !unsafe ? first.observedKind : "unobserved",
-      worktreeMode: physical.size === 1 && !opaque && !unsafe ? first.worktreeMode : null,
-      explicitDirectory: physical.size === 1 && !opaque && !unsafe && first.explicitDirectory,
-      origins,
-      indexEntries: opaque ? [] : indexEntries,
-      generatorOutputs: opaque ? [] : generatorOutputs,
-      repositoryBoundary,
-    };
-  }).sort((left, right) => sourceAdmissionByteCompare(left.sourcePath, right.sourcePath));
-  diagnostics.sort((left, right) => sourceAdmissionByteCompare(left.path, right.path) || sourceAdmissionByteCompare(left.code, right.code) || sourceAdmissionByteCompare(left.message, right.message));
-  return { schemaVersion: 1, scope: input.scope, status: diagnostics.some((row) => row.code !== "tracked-path-absent") ? "rejected" : "complete", observations, diagnostics };
-}
 //#endregion 🧾️Source Admission
 
 interface CandidatePath {
@@ -2597,13 +1019,6 @@ interface CandidatePath {
   readonly mode: string;
   readonly objectId?: string;
   readonly explicitDirectory?: boolean;
-}
-
-export interface TaxonomyScopedGitPathspec {
-  readonly normalizedScope: string | null;
-  readonly conservativePrefix: string;
-  readonly positivePathspec: string;
-  readonly exclusionPathspecs: readonly string[];
 }
 
 interface MutableInventoryEntry {
@@ -2623,28 +1038,6 @@ interface MutableInventoryEntry {
   mode: number;
   size: number;
   symlinkTarget?: string;
-}
-
-/** 🧲️ Renders a byte-literal Git candidate prefix while retaining NFC scope authority in memory. */
-export function taxonomyScopedGitPathspec(inputScope: string | null | undefined, opaqueExclusions: readonly string[]): TaxonomyScopedGitPathspec {
-  const normalizedScope = inputScope === null || inputScope === undefined ? null : normalizeRelative(inputScope) || null;
-  const stable: string[] = [];
-  for (const segment of normalizedScope?.split("/") ?? []) {
-    if (segment.normalize("NFD") !== segment) break;
-    stable.push(segment);
-  }
-  const conservativePrefix = normalizedScope && stable.length > 0 ? stable.join("/") : ".";
-  const intersects = (exclusion: string): boolean => conservativePrefix === "." || exclusion === conservativePrefix || exclusion.startsWith(`${conservativePrefix}/`) || conservativePrefix.startsWith(`${exclusion}/`);
-  const exclusionPathspecs = [...new Set(opaqueExclusions.map(normalizeRelative))]
-    .filter(intersects)
-    .sort((left, right) => Buffer.from(left).compare(Buffer.from(right)))
-    .map((path) => `:(exclude,top,literal)${path}`);
-  return {
-    normalizedScope,
-    conservativePrefix,
-    positivePathspec: conservativePrefix === "." ? "." : `:(top,literal)${conservativePrefix}`,
-    exclusionPathspecs,
-  };
 }
 
 function scopedGitPathspec(repoRoot: string, scope: string | undefined, taxonomy: LoadedTaxonomy): TaxonomyScopedGitPathspec {
@@ -2755,303 +1148,6 @@ function ignoredGeneratorRows(repoRoot: string, taxonomy: LoadedTaxonomy, scope?
   };
   for (const contract of Object.values(taxonomy.schema.generatorContracts)) for (const root of contract.outputRoots) if (root.inclusion === "ignored") walk(root.path);
   return [...rows.values()].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
-}
-
-//#region 🔐️Source Admission IO
-class SourceAdmissionUnsafeAncestorError extends Error {}
-
-interface SourceAdmissionPreparedOptions {
-  readonly repoRoot: string;
-  readonly scope?: string;
-  readonly taxonomyPath: string;
-  readonly ticketDir?: string;
-  readonly cancelFile?: string;
-  readonly indexRows: readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[];
-  readonly repositoryFences: readonly string[];
-}
-
-function sourceAdmissionAssertLexical(value: string, label: string, allowAbsolute: boolean): void {
-  if (typeof value !== "string" || !value || /[\u0000-\u001f\u007f]/u.test(value) || Buffer.from(value).toString("utf8") !== value) throw new Error(`${label} is not a lossless path`);
-  if (value.replaceAll("\\", "/").split("/").some((segment) => segment.toLowerCase() === "compose")) throw new Error(`${label} is opaque`);
-  if (!allowAbsolute && !sourceAdmissionSafePath(value)) throw new Error(`${label} is not a safe repository-relative path`);
-  if (!allowAbsolute) return;
-  const nativeRoot = isAbsolute(value) ? parse(value).root : "";
-  const tail = value.slice(nativeRoot.length).split(sep).join("/");
-  if ((tail && !sourceAdmissionSafePath(tail)) || (!nativeRoot && !tail)) throw new Error(`${label} has ambiguous or escaping path segments`);
-}
-
-function sourceAdmissionDirectoryChain(repoRoot: string): readonly { readonly path: string; readonly stat: Stats }[] {
-  const root = parse(repoRoot).root;
-  const paths = [root];
-  for (const segment of repoRoot.slice(root.length).split(sep).filter(Boolean)) paths.push(join(paths[paths.length - 1], segment));
-  return paths.map((path) => {
-    const stat = lstatSync(path);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new SourceAdmissionUnsafeAncestorError(`Source admission root has unsafe ancestry: ${path}`);
-    return { path, stat };
-  });
-}
-
-function sourceAdmissionLstat(repoRoot: string, path: string): Stats | null {
-  sourceAdmissionAssertLexical(path, "Source admission candidate", false);
-  const ancestors = [...sourceAdmissionDirectoryChain(repoRoot)];
-  const segments = path.split("/");
-  let absolute = repoRoot;
-  for (let index = 0; index + 1 < segments.length; index++) {
-    absolute = join(absolute, segments[index]);
-    const stat = lstatOrNull(absolute);
-    if (!stat) return null;
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new SourceAdmissionUnsafeAncestorError(`Source admission candidate has unsafe ancestry: ${path}`);
-    ancestors.push({ path: absolute, stat });
-  }
-  const observed = lstatOrNull(join(absolute, segments[segments.length - 1]));
-  for (const ancestor of ancestors) {
-    const current = lstatOrNull(ancestor.path);
-    if (!current || current.isSymbolicLink() || !current.isDirectory() || current.dev !== ancestor.stat.dev || current.ino !== ancestor.stat.ino || current.mode !== ancestor.stat.mode) throw new Error(`Source admission ancestry changed during observation: ${path}`);
-  }
-  return observed;
-}
-
-function sourceAdmissionPrepareOptions(options: TaxonomyInventoryOptions): SourceAdmissionPreparedOptions {
-  if (options.repoRoot !== ".") sourceAdmissionAssertLexical(options.repoRoot, "repoRoot", true);
-  if (options.scope !== undefined) sourceAdmissionAssertLexical(options.scope, "scope", false);
-  for (const [label, value] of [["ticketDir", options.ticketDir], ["taxonomyPath", options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH], ["cancelFile", options.cancelFile]] as const) if (value !== undefined) sourceAdmissionAssertLexical(value, label, true);
-  const repoRoot = resolve(options.repoRoot);
-  sourceAdmissionAssertLexical(repoRoot, "repoRoot", true);
-  const local = (value: string, label: string): string => {
-    const path = relative(repoRoot, isAbsolute(value) ? value : join(repoRoot, value)).split(sep).join("/");
-    sourceAdmissionAssertLexical(path, label, false);
-    return path;
-  };
-  const taxonomyPath = local(options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath");
-  const ticketDir = options.ticketDir === undefined ? undefined : local(options.ticketDir, "ticketDir");
-  const cancelFile = options.cancelFile === undefined ? undefined : local(options.cancelFile, "cancelFile");
-  sourceAdmissionDirectoryChain(repoRoot);
-  report(options.progress, "inventory", "tracked-enumeration", 0, 1, options.scope);
-  const indexRows = sourceAdmissionGitRows(repoRoot, taxonomyScopedGitPathspec(undefined, ["compose"]));
-  const repositoryFences = sourceAdmissionRepositoryFences(indexRows);
-  if (options.scope !== undefined) sourceAdmissionAssertRepositoryPath(options.scope, repositoryFences, "Source admission scope", true);
-  if (ticketDir !== undefined) sourceAdmissionAssertRepositoryPath(ticketDir, repositoryFences, "Source admission ticket", true);
-  sourceAdmissionAssertRepositoryPath(taxonomyPath, repositoryFences, "Source admission taxonomy", false);
-  if (cancelFile !== undefined) sourceAdmissionAssertRepositoryPath(cancelFile, repositoryFences, "Source admission cancellation", false);
-  report(options.progress, "inventory", "tracked-enumeration", 1, 1, options.scope);
-  const schema = sourceAdmissionLstat(repoRoot, taxonomyPath);
-  if (!schema?.isFile() || schema.isSymbolicLink()) throw new Error("Taxonomy schema is not a no-follow regular file");
-  return { repoRoot, scope: options.scope?.normalize("NFC"), taxonomyPath: join(repoRoot, ...taxonomyPath.split("/")), ticketDir, cancelFile, indexRows, repositoryFences };
-}
-
-function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile: string | undefined, repositoryFences: readonly string[]): void {
-  if (!cancelFile) return;
-  sourceAdmissionAssertRepositoryPath(cancelFile, repositoryFences, "Source admission cancellation", false);
-  const stat = sourceAdmissionLstat(repoRoot, cancelFile);
-  if (stat?.isSymbolicLink()) throw new Error("Source admission cancellation path is a symlink");
-  if (stat) throw new TaxonomyCancellationError();
-}
-
-function sourceAdmissionGitRecords(bytes: Uint8Array, label: string): readonly string[] {
-  if (bytes.length === 0) return [];
-  if (bytes[bytes.length - 1] !== 0) throw new Error(`${label} is missing its terminal NUL`);
-  const rows = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes).slice(0, -1).split("\0");
-  if (rows.some((row) => !row)) throw new Error(`${label} contains an empty record`);
-  return rows;
-}
-
-function sourceAdmissionGitExclusions(pathspec: TaxonomyScopedGitPathspec): readonly string[] {
-  return [...pathspec.exclusionPathspecs, ":(exclude,icase,glob)**/compose", ":(exclude,icase,glob)**/compose/**"];
-}
-
-type SourceAdmissionIndexRows = readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[];
-const sourceAdmissionIndexObservations = new Map<string, { readonly receipt: string; readonly rows: SourceAdmissionIndexRows }>();
-
-function sourceAdmissionIndexObservation(repoRoot: string): string | undefined {
-  if (Object.keys(process.env).some((key) => key.startsWith("GIT_") && key !== "GIT_PAGER")) return undefined;
-  const directory = lstatOrNull(join(repoRoot, ".git"));
-  if (!directory?.isDirectory() || directory.isSymbolicLink()) return undefined;
-  if (readdirSync(join(repoRoot, ".git")).some((name) => name === "commondir" || name.startsWith("sharedindex."))) return undefined;
-  try {
-    const paths = [".git/index", ".git/config", ".git/HEAD", ".git/packed-refs", ".git/config.worktree", ".git/objects/info/alternates"];
-    const snapshots = paths.map((path) => semanticOwnedInputFileSnapshot(repoRoot, path, { maximumBytes: 64 * 1024 * 1024 }));
-    const index = snapshots[0], config = snapshots[1], head = snapshots[2];
-    if (!index || !config || !head || snapshots[5]) return undefined;
-    const indexBytes = Buffer.from(index.bytes.buffer, index.bytes.byteOffset, index.bytes.byteLength);
-    if (indexBytes.subarray(0, 4).toString() !== "DIRC" || indexBytes.includes(Buffer.from("sdir")) || indexBytes.includes(Buffer.from("link"))) return undefined;
-    if (/^\s*\[\s*include(?:if)?\b/imu.test(Buffer.from(config.bytes.buffer, config.bytes.byteOffset, config.bytes.byteLength).toString("utf8"))) return undefined;
-    const reference = /^ref: (refs\/[A-Za-z0-9_./-]+)\n$/u.exec(Buffer.from(head.bytes.buffer, head.bytes.byteOffset, head.bytes.byteLength).toString("utf8"));
-    if (reference) snapshots.push(semanticOwnedInputFileSnapshot(repoRoot, ".git/" + reference[1], { maximumBytes: 64 * 1024 }));
-    const after = lstatSync(join(repoRoot, ".git"));
-    if (!after.isDirectory() || after.isSymbolicLink() || after.dev !== directory.dev || after.ino !== directory.ino) return undefined;
-    return sha256(canonicalJson({ directory: { dev: directory.dev, ino: directory.ino }, files: snapshots.map((row) => row ? { path: row.path, contentHash: row.contentHash, size: row.size } : null) }));
-  } catch { return undefined; }
-}
-
-function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec): SourceAdmissionIndexRows {
-  const key = canonicalJson({ repoRoot, pathspec }), receipt = sourceAdmissionIndexObservation(repoRoot), cached = sourceAdmissionIndexObservations.get(key);
-  if (receipt && cached?.receipt === receipt) return cached.rows;
-  const bytes = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
-  const rows = sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
-    const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
-    const path = row.slice(tab + 1);
-    if (tab < 1 || !match || !sourceAdmissionSafePath(path)) throw new Error("Git stage output has an invalid header or source path");
-    return { path, entry: { mode: match[1], objectId: match[2], stage: Number(match[3]) } };
-  });
-  if (receipt && sourceAdmissionIndexObservation(repoRoot) === receipt) {
-    if (sourceAdmissionIndexObservations.size >= 64) sourceAdmissionIndexObservations.delete(sourceAdmissionIndexObservations.keys().next().value!);
-    sourceAdmissionIndexObservations.set(key, { receipt, rows: Object.freeze(rows.map((row) => Object.freeze({ ...row, entry: Object.freeze({ ...row.entry }) }))) });
-  } else sourceAdmissionIndexObservations.delete(key);
-  return rows;
-}
-
-function sourceAdmissionUntrackedRows(repoRoot: string, pathspec: TaxonomyScopedGitPathspec, taxonomy: LoadedTaxonomy, repositoryFences: readonly string[]): readonly { readonly path: string; readonly directoryMarker: boolean }[] {
-  const literal = (path: string): string => path.replace(/[\\*?\[\]#! ]/gu, "\\$&");
-  const exclusions = [...taxonomy.exclusions.map((entry) => entry.path), ...repositoryFences].map((path) => `--exclude=/${literal(path)}`);
-  const boundaries = repositoryFences.map((path) => `:(exclude,top,literal)${path}`);
-  const bytes = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec), ...boundaries], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
-  return sourceAdmissionGitRecords(bytes, "Git untracked output").map((record) => {
-    const directoryMarker = record.endsWith("/"), path = directoryMarker ? record.slice(0, -1) : record;
-    if (!sourceAdmissionSafePath(path)) throw new Error("Git untracked output has an invalid source path");
-    return { path, directoryMarker };
-  }).sort((left, right) => sourceAdmissionByteCompare(left.path, right.path));
-}
-
-function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined, repositoryFences: readonly string[]): readonly string[] {
-  const rows: string[] = [];
-  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
-  const visit = (path: string): void => {
-    if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission walk has an invalid path: ${path}`);
-    if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
-    sourceAdmissionAssertRepositoryPath(path, repositoryFences, "Source admission walk", true);
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-    let stat: Stats | null;
-    try { stat = sourceAdmissionLstat(repoRoot, path); }
-    catch (error) {
-      if (!(error instanceof SourceAdmissionUnsafeAncestorError)) throw error;
-      rows.push(path);
-      return;
-    }
-    if (!stat) return;
-    rows.push(path);
-    if (!stat.isDirectory() || stat.isSymbolicLink()) return;
-    if (sourceAdmissionContainingRepository(path, repositoryFences, true) !== null) return;
-    const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
-    if (nestedGit && basename(path) === ".git" && taxonomy.pathMatcher.matches(path, nestedGit.pathPattern)) return;
-    const children = readdirSync(join(repoRoot, ...path.split("/")), { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(name));
-    const current = sourceAdmissionLstat(repoRoot, path);
-    if (!current?.isDirectory() || current.isSymbolicLink() || current.dev !== stat.dev || current.ino !== stat.ino || current.mode !== stat.mode || current.mtimeMs !== stat.mtimeMs || current.ctimeMs !== stat.ctimeMs) throw new Error(`Source admission directory changed during enumeration: ${path}`);
-    for (const child of children.sort(sourceAdmissionByteCompare)) visit(`${path}/${child}`);
-  };
-  visit(root);
-  return rows.sort(sourceAdmissionByteCompare);
-}
-
-function sourceAdmissionStructuralDirectories(repoRoot: string, names: readonly string[], taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined, repositoryFences: readonly string[]): readonly string[] {
-  const expected = new Set(names);
-  if (expected.size !== names.length || names.some((name) => !sourceAdmissionSafePath(name) || name.includes("/"))) throw new Error("Source admission structural directory names must be unique safe segments");
-  const found: string[] = [];
-  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
-  const visit = (path: string | null, stat: Stats): void => {
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-    const absolute = path === null ? repoRoot : join(repoRoot, ...path.split("/"));
-    const names = readdirSync(absolute, { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(name));
-    const dirents = new Map(readdirSync(absolute, { withFileTypes: true }).map((entry) => [entry.name, entry]));
-    if (names.length !== dirents.size || names.some((name) => !dirents.has(name))) throw new Error(`Source admission structural directory names changed during enumeration: ${path ?? "."}`);
-    const entries = names.map((name) => ({ name, directory: dirents.get(name)!.isDirectory(), symlink: dirents.get(name)!.isSymbolicLink() })).sort((left, right) => sourceAdmissionByteCompare(left.name, right.name));
-    const current = path === null ? lstatSync(repoRoot) : sourceAdmissionLstat(repoRoot, path);
-    if (!current?.isDirectory() || current.isSymbolicLink() || current.dev !== stat.dev || current.ino !== stat.ino || current.mode !== stat.mode || current.mtimeMs !== stat.mtimeMs || current.ctimeMs !== stat.ctimeMs) throw new Error(`Source admission structural directory changed during enumeration: ${path ?? "."}`);
-    for (const entry of entries) {
-      if (!entry.directory && !entry.symlink) continue;
-      const child = path === null ? entry.name : `${path}/${entry.name}`;
-      if (!sourceAdmissionSafePath(child)) throw new Error(`Source admission structural directory has an invalid path: ${child}`);
-      if (sourceAdmissionOpaque(child, opaquePrefixes) || !inScope(child, scope)) continue;
-      sourceAdmissionAssertRepositoryPath(child, repositoryFences, "Source admission structural directory", true);
-      if (entry.symlink) { if (expected.has(entry.name)) found.push(child); continue; }
-      const childStat = sourceAdmissionLstat(repoRoot, child);
-      if (!childStat) continue;
-      if (expected.has(entry.name)) found.push(child);
-      if (!childStat.isDirectory() || childStat.isSymbolicLink() || sourceAdmissionContainingRepository(child, repositoryFences, true) !== null) continue;
-      const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
-      if (nestedGit && entry.name === ".git" && taxonomy.pathMatcher.matches(child, nestedGit.pathPattern)) continue;
-      visit(child, childStat);
-    }
-  };
-  visit(null, sourceAdmissionDirectoryChain(repoRoot).at(-1)!.stat);
-  return found.sort(sourceAdmissionByteCompare);
-}
-
-function sourceAdmissionObservation(repoRoot: string, path: string, origins: readonly TaxonomySourceOrigin[], indexEntries: readonly TaxonomySourceIndexEntry[]): TaxonomySourceCandidateObservation {
-  try {
-    const stat = sourceAdmissionLstat(repoRoot, path);
-    if (!stat) return { sourcePath: path, observedKind: "absent", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
-    if (stat.isSymbolicLink()) return { sourcePath: path, observedKind: "symlink", worktreeMode: "120000", explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
-    if (stat.isDirectory()) return { sourcePath: path, observedKind: "directory", worktreeMode: "040000", explicitDirectory: true, origins, indexEntries, unsafeAncestor: false };
-    if (stat.isFile()) return { sourcePath: path, observedKind: "file", worktreeMode: (stat.mode & 0o111) !== 0 ? "100755" : "100644", explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
-    return { sourcePath: path, observedKind: "other", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
-  } catch (error) {
-    if (!(error instanceof SourceAdmissionUnsafeAncestorError)) throw error;
-    return { sourcePath: path, observedKind: "unobserved", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: true };
-  }
-}
-
-/** 🧭️ Collects source admission without reading admitted leaf content. */
-function collectTaxonomySourceAdmission(options: TaxonomyInventoryOptions, taxonomy: LoadedTaxonomy, prepared: SourceAdmissionPreparedOptions): CollectedTaxonomySourceAdmission {
-  const { repoRoot, scope, cancelFile, indexRows, repositoryFences } = prepared;
-  if (taxonomy.path !== prepared.taxonomyPath || !taxonomy.input) throw new Error("Source admission requires the exact loaded taxonomy input");
-  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
-  if (scope && sourceAdmissionOpaque(scope, opaquePrefixes)) throw new Error(`Source admission scope is opaque: ${scope}`);
-  for (const prefix of opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) throw new Error("Source admission has an invalid opaque prefix");
-  const generatorOutputRoots = Object.entries(taxonomy.schema.generatorContracts).flatMap(([contractId, contract]) => contract.outputRoots.map((root) => ({ contractId, rootPath: root.path, inclusion: root.inclusion === "ignored" ? "ignored" as const : "tracked" as const })));
-  for (const output of generatorOutputRoots) {
-    if (!sourceAdmissionSafePath(output.rootPath)) throw new Error("Source admission has an invalid generator output root");
-    sourceAdmissionAssertRepositoryPath(output.rootPath, repositoryFences, "Source admission generator output", true);
-  }
-  const pathspec = taxonomyScopedGitPathspec(scope, opaquePrefixes);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-  const rows = new Map<string, { origins: Set<TaxonomySourceOrigin>; indexEntries: TaxonomySourceIndexEntry[]; directoryMarker: boolean }>();
-  const add = (path: string, origin: TaxonomySourceOrigin, entry?: TaxonomySourceIndexEntry, directoryMarker = false): void => {
-    if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission has an invalid candidate: ${path}`);
-    if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
-    sourceAdmissionAssertRepositoryPath(path, repositoryFences, "Source admission candidate", true);
-    const row = rows.get(path) ?? { origins: new Set<TaxonomySourceOrigin>(), indexEntries: [], directoryMarker: false };
-    row.directoryMarker ||= directoryMarker;
-    row.origins.add(origin); if (entry) row.indexEntries.push(entry); rows.set(path, row);
-  };
-  for (const row of indexRows) add(row.path, "tracked", row.entry);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-  report(options.progress, "inventory", "untracked-enumeration", 0, 1, scope);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-  for (const row of sourceAdmissionUntrackedRows(repoRoot, pathspec, taxonomy, repositoryFences)) add(row.path, "nonignored-untracked", undefined, row.directoryMarker);
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
-  if (options.structuralDirectoryNames?.length) {
-    report(options.progress, "inventory", "structural-directory-admission", 0, 1, scope);
-    for (const path of sourceAdmissionStructuralDirectories(repoRoot, options.structuralDirectoryNames, taxonomy, scope, cancelFile, repositoryFences)) add(path, "nonignored-untracked", undefined, true);
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "structural-directory-admission", 1, 1, scope);
-  }
-  report(options.progress, "inventory", "ignored-generator-admission", 0, 1, scope);
-  for (const output of generatorOutputRoots) if (output.inclusion === "ignored") for (const path of sourceAdmissionWalk(repoRoot, output.rootPath, taxonomy, scope, cancelFile, repositoryFences)) add(path, "ignored-generator");
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);
-  report(options.progress, "inventory", "explicit-ticket-admission", 0, 1, scope);
-  if (prepared.ticketDir) for (const path of sourceAdmissionWalk(repoRoot, prepared.ticketDir, taxonomy, scope, cancelFile, repositoryFences)) add(path, "explicit-ticket");
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(options.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
-  const candidates: TaxonomySourceCandidateObservation[] = [];
-  report(options.progress, "inventory", "source-observation", 0, rows.size, scope);
-  for (const [path, row] of rows) {
-    sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-    const observation = sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries);
-    if (row.directoryMarker && (observation.observedKind !== "directory" || observation.unsafeAncestor)) throw new Error(`Git untracked directory marker no longer matches a directory: ${path}`);
-    candidates.push(observation);
-    report(options.progress, "inventory", "source-observation", candidates.length, rows.size, path);
-  }
-  sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-  const input: TaxonomySourceAdmissionInput = { scope: scope ?? null, opaquePrefixes: [...new Set(opaquePrefixes)], generatorOutputRoots, candidates };
-  const inputText = JSON.stringify(input);
-  const admission = projectTaxonomySourceAdmission(input);
-  const inventory: TaxonomySourceInventory = { ...admission, repoRoot, taxonomyPath: relative(repoRoot, prepared.taxonomyPath).split(sep).join("/"), taxonomyContentHash: taxonomy.input.contentHash, membershipDigest: sha256(canonicalJson(admission)) };
-  return { inventory, inputText };
-}
-
-/** 🧭️ Enumerates source admission without reading admitted leaf content. */
-export function inventoryTaxonomySources(options: TaxonomyInventoryOptions): TaxonomySourceInventory {
-  const prepared = sourceAdmissionPrepareOptions(options);
-  const taxonomy = loadTaxonomy({ repoRoot: prepared.repoRoot, taxonomyPath: prepared.taxonomyPath });
-  return collectTaxonomySourceAdmission(options, taxonomy, prepared).inventory;
 }
 //#endregion 🔐️Source Admission IO
 
@@ -3199,8 +1295,8 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
     const packageKinds = Object.keys(taxonomy.schema.packageBoundaryRules).filter((id) => emojiFold(id) === emojiFold(name));
     if (packageKinds.length > 1) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("package-language-ambiguous", path, `Package language boundary is ambiguous: ${packageKinds.join(", ")}`)] };
   }
-  const vectorOwner = `${dirname(dirname(path))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${name}`;
-  const leafKindId = mutationLeaves.has(path) || mutationLeaves.has(owned) ? "members-of-schema" : basename(dirname(path)) === taxonomy.discoverySchema.testFixturesDirName && mutationLeaves.has(vectorOwner) ? "members-of-fixtures" : null;
+  const fixturesDirName = taxonomy.discoverySchema.testFixturesDirName;
+  const leafKindId = basename(dirname(dirname(path))) === fixturesDirName && mutationLeaves.has(dirname(path)) && mutationLeaves.has(path) ? "members-of-members-of-fixtures" : basename(dirname(path)) === fixturesDirName && mutationLeaves.has(path) ? "members-of-fixtures" : mutationLeaves.has(path) || mutationLeaves.has(owned) ? "members-of-schema" : null;
   const leaf = leafKindId ? splitLeadingEmojiIdentity(name) : null;
   const match = leafKindId && leaf ? { kind: { id: leafKindId, emoji: leaf.first }, slug: leaf.rest, ambiguous: [] as readonly string[] } : matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
   if (!match.kind) {
@@ -3311,13 +1407,6 @@ function directoryHash(path: string, children: readonly Pick<TaxonomyInventoryEn
 
 function inventoryDigestOf(inventory: Omit<TaxonomyInventory, "inventoryDigest" | "repoRoot" | "taxonomyPath">): string {
   return sha256(canonicalJson(inventory));
-}
-//#endregion 📚️Inventory
-
-//#region 🔗️References
-interface CollectedTaxonomySourceAdmission {
-  readonly inventory: TaxonomySourceInventory;
-  readonly inputText: string;
 }
 
 interface RetainedSourceAdmission {
@@ -4563,16 +2652,21 @@ function rustFiniteManifestTargets(path: string, content: string, candidates: Re
         const source = context.sourceChain[chain]!, next = context.sourceChain[chain + 1]!;
         const owners = (view.graph.contexts.get(source) ?? []).filter((owner) => owner.manifestPath === context.manifestPath && owner.crateRoot === context.crateRoot && owner.sourceChain.length === chain + 1 && owner.sourceChain.every((item, index) => item === context.sourceChain[index]) && owner.modulePath.every((item, index) => item === context.modulePath[index]));
         let proven = 0;
-        for (const owner of owners) for (const module of facts.get(source)?.modules ?? []) {
+        for (const owner of owners) {
+          const sourceFacts = facts.get(source);
+          if (!sourceFacts || rustModuleScopeProof(sourceFacts, owner.sourceScope).state === "unresolved") return result;
+          for (const module of sourceFacts.modules) {
           if (module.modulePath.length !== owner.sourceScope.length + 1 || !owner.sourceScope.every((item, index) => item === module.modulePath[index])) continue;
           const modulePath = [...owner.modulePath, module.name];
           if (!modulePath.every((item, index) => item === context.modulePath[index])) continue;
+          if (module.unresolved) return result;
           if (module.inline) { if (module.pathTarget !== null) physicalPath(owner.moduleBase, [module.pathTarget], true); continue; }
           if (view.graph.targets.get(`${context.crateRoot}\0${modulePath.join("::")}`) !== next) continue;
           const base = module.pathTarget !== null && owner.sourceScope.length === 0 ? posix.dirname(source) : owner.moduleBase;
           const raw = module.pathTarget ?? (next === posix.join(base, `${module.name}.rs`) ? `${module.name}.rs` : `${module.name}/mod.rs`);
           if (physicalPath(base, [raw]) !== next) return result;
           proven++;
+        }
         }
         if (proven !== 1) return result;
       }
@@ -5227,19 +3321,19 @@ function dependencyPolicyStateTokens(repoRoot: string, path: string, content: st
   const finish = (): DependencyPolicyStateTokens => ({ contentHash: sha256(content), active, manifestSources: problems.length ? new Set() : manifestSources, tokens: problems.length ? [] : tokens, problems });
   if (!active) return finish();
   try {
-    const baseline = record(JSON.parse(content), "Dependency policy state"), coordinates = jsonStringCoordinates(content);
+    const baseline = requireRecord(JSON.parse(content), "Dependency policy state"), coordinates = jsonStringCoordinates(content);
     if (baseline.schemaVersion !== contract.stateSchemaVersion || typeof baseline.generatedAt !== "string" || typeof baseline.commit !== "string" || !Array.isArray(baseline.entries) || coordinates.length === 0) throw new Error("Dependency policy state requires exact schema, metadata, entries and unambiguous JSON coordinates");
     const identities = new Set<string>();
     const entries = baseline.entries.map((value, index) => {
-      const entry = record(value, `Dependency policy entry ${index}`), key = `${entry.ecosystem}:${entry.name}`;
+      const entry = requireRecord(value, `Dependency policy entry ${index}`), key = `${entry.ecosystem}:${entry.name}`;
       if (typeof entry.ecosystem !== "string" || typeof entry.name !== "string" || !entry.name || typeof entry.version !== "string" || !Array.isArray(entry.kinds) || entry.kinds.some((kind) => !["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"].includes(String(kind))) || typeof entry.productionReachable !== "boolean" || !Array.isArray(entry.users) || entry.users.some((user) => typeof user !== "string") || new Set(entry.users).size !== entry.users.length || identities.has(key)) throw new Error("Dependency policy state has missing users, duplicate identities/users or invalid classifications");
       identities.add(key);
-      return entry as JsonRecord & { users: string[]; kinds: string[] };
+      return entry as UnknownRecord & { users: string[]; kinds: string[] };
     });
     for (const row of owners) {
       const source = row.sourceRoot + "/" + contract.manifestFilename, destination = row.destinationRoot + "/" + contract.manifestFilename;
       const mapping = row.mappings.find((entry) => entry.sourcePath === source), approved = moves.filter((move) => move.sourcePath === source && move.destinationPath === destination);
-      const declaration = record(row.requiredManifestEvidence[contract.dependencyEvidenceField], "Dependency policy declaration");
+      const declaration = requireRecord(row.requiredManifestEvidence[contract.dependencyEvidenceField], "Dependency policy declaration");
       const bytes = readFileSync(assertLexicalInputOutsideOpaque(repoRoot, source, "Dependency policy manifest", true));
       if (!mapping || approved.length !== 1 || approved[0]!.sourcePreimage.nodeKind !== "file" || approved[0]!.sourcePreimage.contentHash !== mapping.sourceHash || approved[0]!.sourcePreimage.size !== mapping.sourceSize || sha256(bytes) !== mapping.sourceHash || bytes.byteLength !== mapping.sourceSize || typeof declaration.name !== "string" || typeof declaration.version !== "string") throw new Error("Dependency policy manifest is not one exact source-preimage-proven move");
       const owned = entries.flatMap((entry, index) => entry.users.includes(source) ? [{ entry, index }] : []);
@@ -5485,8 +3579,11 @@ function mutationFixtureMirrorOwnerPath(path: string, taxonomy: LoadedTaxonomy):
 /** 🧬️ Mutation leaf owners proven by their own canonical descriptor: the configured schema version naming exactly this
  * directory as its `owner`, with a semantic identity. This structural authority replaces per-name leaf registries; the
  * identity's agreement with the directory stays governed by the mutation payload authority law. A
- * `🧫️fixtures/🧬️mutations/<leaf>` mirror and a `🧫️fixtures/<leaf>` vector directory are proven through their schema-side
- * owner, whose descriptor is read from disk when the inventory scope excludes it. */
+ * `🧫️fixtures/🧬️mutations/<leaf>` mirror is proven through its schema-side owner, whose descriptor is read from disk when
+ * the inventory scope excludes it. A `🧫️fixtures/<leaf>` or `🧫️fixtures/<leaf>-<scenario>` vector directory (leaf names
+ * compared without U+FE0F) is proven through a sibling `🧬️schema/🧬️mutations/<leaf>` and returned itself, and so is each
+ * of its scenario children holding a fixture bundle (`🦠️mutation`, `📸️snapshot`, `🔺️diff`); the set holds proven leaf
+ * owners plus the vector and scenario directories they own. */
 function provenMutationLeafOwners(repoRoot: string, directories: readonly string[], admitted: ReadonlyMap<string, CandidatePath>, sourceRead: TaxonomyCapturedSourceRead, taxonomy: LoadedTaxonomy): ReadonlySet<string> {
   const contract = taxonomy.discoverySchema.mutationPayloadSchemaAuthority, descriptorKind = taxonomy.discoverySchema.fileKinds[contract.descriptorFileKindId]!;
   const descriptorName = `${descriptorKind.emoji}${descriptorKind.extensionChains[0]}`, proven = new Set<string>(), visited = new Set<string>();
@@ -5507,11 +3604,30 @@ function provenMutationLeafOwners(repoRoot: string, directories: readonly string
     if (fields.schemaVersion === contract.descriptorSchemaVersion && fields[contract.descriptorOwnerField] === owner && typeof fields[contract.descriptorIdentityField] === "string" && fields[contract.descriptorIdentityField] !== "") proven.add(owner);
   };
   for (const path of admitted.keys()) if (basename(path) === descriptorName) prove(dirname(path));
+  const leafNamesByRoot = new Map<string, readonly string[]>();
+  const leafNames = (root: string): readonly string[] => {
+    const cached = leafNamesByRoot.get(root);
+    if (cached) return cached;
+    const names = new Set(directories.filter((directory) => dirname(directory) === root).map((directory) => basename(directory)));
+    if (!isExcluded(root, taxonomy) && existsSync(absolutePath(repoRoot, root))) for (const entry of readdirSync(absolutePath(repoRoot, root), { withFileTypes: true })) if (entry.isDirectory()) names.add(entry.name.normalize("NFC"));
+    const sorted = [...names].sort();
+    leafNamesByRoot.set(root, sorted);
+    return sorted;
+  };
   for (const directory of directories) {
     const owned = mutationFixtureMirrorOwnerPath(directory, taxonomy);
     if (owned !== directory) prove(owned);
-    if (basename(dirname(directory)) === taxonomy.discoverySchema.testFixturesDirName) prove(`${dirname(dirname(directory))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations/${basename(directory)}`);
+    if (basename(dirname(directory)) !== taxonomy.discoverySchema.testFixturesDirName) continue;
+    const root = `${dirname(dirname(directory))}/${taxonomy.discoverySchema.mutationPayloadSchemaLocation.directoryName}/🧬️mutations`, vector = emojiFold(basename(directory));
+    for (const leaf of leafNames(root)) {
+      const folded = emojiFold(leaf);
+      if (vector !== folded && !vector.startsWith(`${folded}-`)) continue;
+      prove(`${root}/${leaf}`);
+      if (proven.has(`${root}/${leaf}`)) proven.add(directory);
+    }
   }
+  const known = new Set(directories);
+  for (const directory of directories) if (proven.has(dirname(directory)) && basename(dirname(dirname(directory))) === taxonomy.discoverySchema.testFixturesDirName && ["🦠️mutation", "📸️snapshot", "🔺️diff"].every((facet) => known.has(`${directory}/${facet}`))) proven.add(directory);
   return proven;
 }
 
@@ -5636,7 +3752,7 @@ function projectionSourceAt(
 function projectionCatalogVectors(path: string, source: Pick<MutationProjectionSource, "standardDirectoryName" | "subsetDirectoryName">): { readonly vectors: readonly MutationProjectionVector[]; readonly error?: string } {
   let root: Record<string, unknown>;
   try {
-    root = record(JSON.parse(readFileSync(path, "utf8")), "mutation projection catalog");
+    root = requireRecord(JSON.parse(readFileSync(path, "utf8")), "mutation projection catalog");
   } catch (error) {
     return { vectors: [], error: error instanceof Error ? error.message : String(error) };
   }
@@ -5646,26 +3762,26 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
   const seenCanonical = new Set<string>();
   try {
     for (let catalogIndex = 0; catalogIndex < root.mutationCatalogs.length; catalogIndex++) {
-      const catalog = record(root.mutationCatalogs[catalogIndex], `mutationCatalogs[${catalogIndex}]`);
-      requiredString(catalog.id, `mutationCatalogs[${catalogIndex}].id`);
-      requiredString(catalog.capability, `mutationCatalogs[${catalogIndex}].capability`);
-      if (requiredString(catalog.standardDirectoryName, `mutationCatalogs[${catalogIndex}].standardDirectoryName`) !== source.standardDirectoryName || requiredString(catalog.subsetDirectoryName, `mutationCatalogs[${catalogIndex}].subsetDirectoryName`) !== source.subsetDirectoryName) throw new Error(`mutationCatalogs[${catalogIndex}] owner identity does not match its physical standard/subset`);
-      stringArray(catalog.kinds, `mutationCatalogs[${catalogIndex}].kinds`);
+      const catalog = requireRecord(root.mutationCatalogs[catalogIndex], `mutationCatalogs[${catalogIndex}]`);
+      requireString(catalog.id, `mutationCatalogs[${catalogIndex}].id`);
+      requireString(catalog.capability, `mutationCatalogs[${catalogIndex}].capability`);
+      if (requireString(catalog.standardDirectoryName, `mutationCatalogs[${catalogIndex}].standardDirectoryName`) !== source.standardDirectoryName || requireString(catalog.subsetDirectoryName, `mutationCatalogs[${catalogIndex}].subsetDirectoryName`) !== source.subsetDirectoryName) throw new Error(`mutationCatalogs[${catalogIndex}] owner identity does not match its physical standard/subset`);
+      requireStringArray(catalog.kinds, `mutationCatalogs[${catalogIndex}].kinds`);
       if (!Array.isArray(catalog.vectors)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors must be an array`);
       for (let vectorIndex = 0; vectorIndex < catalog.vectors.length; vectorIndex++) {
-        const vector = record(catalog.vectors[vectorIndex], `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}]`);
-        const mutationId = requiredString(vector.mutationId, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].mutationId`);
-        const sourceMutationDirectoryName = requiredString(vector.sourceMutationDirectoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].sourceMutationDirectoryName`);
+        const vector = requireRecord(catalog.vectors[vectorIndex], `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}]`);
+        const mutationId = requireString(vector.mutationId, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].mutationId`);
+        const sourceMutationDirectoryName = requireString(vector.sourceMutationDirectoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].sourceMutationDirectoryName`);
         if (sourceMutationDirectoryName !== sourceMutationDirectoryName.normalize("NFC") || sourceMutationDirectoryName.includes("/")) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].sourceMutationDirectoryName is not one exact NFC basename`);
-        const mutationDirectoryName = requiredString(vector.mutationDirectoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].mutationDirectoryName`).normalize("NFC");
+        const mutationDirectoryName = requireString(vector.mutationDirectoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].mutationDirectoryName`).normalize("NFC");
         if (!Array.isArray(vector.scenarios)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}] has an invalid physical mutation identity`);
         const scenarioIds = new Set<string>();
         const scenarioDirectories = new Set<string>();
         for (let scenarioIndex = 0; scenarioIndex < vector.scenarios.length; scenarioIndex++) {
-          const scenario = record(vector.scenarios[scenarioIndex], `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}]`);
-          const scenarioId = requiredString(scenario.id, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].id`);
+          const scenario = requireRecord(vector.scenarios[scenarioIndex], `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}]`);
+          const scenarioId = requireString(scenario.id, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].id`);
           if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(scenarioId)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] has an invalid logical scenario identity`);
-          const physicalScenarioName = requiredString(scenario.directoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName`);
+          const physicalScenarioName = requireString(scenario.directoryName, `mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}].directoryName`);
           const scenarioDirectoryName = physicalScenarioName.normalize("NFC");
           const physicalScenarioId = splitLeadingEmoji(scenarioDirectoryName).rest;
           if (physicalScenarioName !== scenarioDirectoryName || physicalScenarioId === scenarioDirectoryName || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(physicalScenarioId) || /[\\/]/u.test(scenarioDirectoryName)) throw new Error(`mutationCatalogs[${catalogIndex}].vectors[${vectorIndex}].scenarios[${scenarioIndex}] has an invalid physical scenario identity`);
@@ -6221,8 +4337,8 @@ function exactOwnedEvidenceProblems(repoRoot: string, entry: SemanticExactOwnedF
       continue;
     }
     if (evidence.expectedPackageName && basename(path) === "package.json") {
-      let manifest: JsonRecord;
-      try { manifest = record(JSON.parse(readFileSync(absolute, "utf8")), "Exact publisher manifest"); } catch { problems.push("Exact publisher manifest is invalid: " + path); continue; }
+      let manifest: UnknownRecord;
+      try { manifest = requireRecord(JSON.parse(readFileSync(absolute, "utf8")), "Exact publisher manifest"); } catch { problems.push("Exact publisher manifest is invalid: " + path); continue; }
       if (manifest.name !== evidence.expectedPackageName || (manifest.private === true) !== evidence.private) problems.push("Exact publisher identity or private status drifted: " + path);
     }
   }
@@ -6334,7 +4450,7 @@ function ticketManifestState(content: string | undefined): "closed" | "invalid" 
   if (content === undefined) return "missing";
   try {
     const value = JSON.parse(content) as unknown;
-    const status = typeof value === "object" && value !== null && !Array.isArray(value) ? (value as JsonRecord).status : undefined;
+    const status = typeof value === "object" && value !== null && !Array.isArray(value) ? (value as UnknownRecord).status : undefined;
     return status === "closed" || status === "open" ? status : "invalid";
   } catch { return "invalid"; }
 }
@@ -6451,7 +4567,7 @@ function validateMutationPayloadSchemas(repoRoot: string, entries: Map<string, M
         try { other = JSON.parse(content(child.sourcePath)); } catch { continue; }
         if (other !== null && typeof other === "object" && !Array.isArray(other) && ["schemaVersion", contract.descriptorOwnerField, contract.descriptorIdentityField, contract.descriptorField].every((field) => Object.hasOwn(other, field))) throw new Error("Mutation owner contains a competing descriptor");
       }
-      const descriptorContent = content(descriptorPath), descriptor = record(JSON.parse(descriptorContent), "Mutation payload descriptor"), pointer = descriptor[contract.descriptorField];
+      const descriptorContent = content(descriptorPath), descriptor = requireRecord(JSON.parse(descriptorContent), "Mutation payload descriptor"), pointer = descriptor[contract.descriptorField];
       if (!(Array.isArray(descriptor.requiredLanguageSurfaces) && descriptor.requiredLanguageSurfaces.includes("json-schema")) && !(typeof pointer === "string" && pointer.endsWith(".json"))) continue;
       if (jsonDocumentDuplicateKeys(descriptorContent).length > 0) throw new Error("Mutation payload descriptor has duplicate JSON members");
       if (descriptor.schemaVersion !== contract.descriptorSchemaVersion || descriptor[contract.descriptorOwnerField] !== owner || descriptor[contract.descriptorIdentityField] !== identity) throw new Error("Descriptor version and semantic identity must belong to the exact source owner");
@@ -6480,6 +4596,8 @@ export function inventoryTaxonomyWithCapturedSourceRead(options: TaxonomyInvento
 
 /** 🪵️ Projects only transaction-proven empty source parents into package authority before final classification. */
 function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, sourceRead: TaxonomyCapturedSourceRead = (path) => readFileSync(path)): TaxonomyInventory {
+  const request = { ...options };
+  options = Object.freeze({ ...request, structuralDirectoryNames: request.structuralDirectoryNames && Object.freeze([...request.structuralDirectoryNames]) });
   const prepared = sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
   report(options.progress, "inventory", "setup", 0, 1, scope);
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
@@ -6488,7 +4606,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   sourceAdmissionCheckCancellation(repoRoot, prepared.cancelFile, prepared.repositoryFences);
   report(options.progress, "inventory", "setup", 1, 1, scope);
   const activeExclusions: string[] = [];
-  const collectedSourceAdmission = collectTaxonomySourceAdmission(options, taxonomy, prepared);
+  const collectedSourceAdmission = collectTaxonomySourceAdmission(taxonomy, prepared);
   const sourceAdmission = collectedSourceAdmission.inventory;
   const blockingAdmission = sourceAdmission.diagnostics.filter((row) => row.code !== "tracked-path-absent");
   if (blockingAdmission.length > 0) throw new Error(`Source admission rejected: ${blockingAdmission.map((row) => `${row.code}:${row.path}`).join(", ")}`);
@@ -6780,11 +4898,11 @@ function generatorTreeInventory(repoRoot: string, roots: readonly string[], taxo
 
 /** 📇️ Selects schema-owned generator inputs through physical or logical preimage membership. */
 function compilerInputManifestRows(value: unknown, authority: NonNullable<GeneratorContractSpec["compilerInputManifest"]>, label: string): readonly Readonly<{ path: string; bytes: number; sha256: string }>[] {
-  const manifest = record(value, label);
+  const manifest = requireRecord(value, label);
   if (Object.keys(manifest).sort().join("|") !== "contractId|inputs|layoutSha256|outputs|version" || manifest.version !== 1 || typeof manifest.contractId !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(manifest.contractId) || typeof manifest.layoutSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(manifest.layoutSha256) || !Array.isArray(manifest.outputs) || !Array.isArray(manifest.inputs) || manifest.inputs.length < 1 || manifest.inputs.length > authority.maxFiles) throw new Error(`${label} is not one bounded compiler input manifest`);
   const seen = new Set<string>();
   const rows = manifest.inputs.map((value, index) => {
-    const row = record(value, `${label}.inputs[${index}]`);
+    const row = requireRecord(value, `${label}.inputs[${index}]`);
     if (Object.keys(row).sort().join("|") !== "bytes|path|sha256" || typeof row.path !== "string" || row.path !== normalizeRelative(row.path) || typeof row.bytes !== "number" || !Number.isSafeInteger(row.bytes) || row.bytes < 0 || typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256) || seen.has(row.path)) throw new Error(`${label} contains an invalid compiler input witness`);
     seen.add(row.path);
     return { path: row.path, bytes: row.bytes, sha256: row.sha256 };
@@ -7606,11 +5724,11 @@ function serializedSentinelCases(repoRoot: string): { readonly catalogContentHas
   if (!stat) return null;
   if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Transaction sentinel cases authority catalog must be a regular no-follow file");
   const bytes = readFileSync(absolute);
-  const value = record(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases catalog");
+  const value = requireRecord(JSON.parse(bytes.toString("utf8")) as unknown, "transaction sentinel cases catalog");
   requireExactKeys(value, ["schemaVersion", "virtualPathPolicyCases", "symlinkFlavorCases"], "transaction sentinel cases catalog");
   if (value.schemaVersion !== 1 || !Array.isArray(value.virtualPathPolicyCases) || !Array.isArray(value.symlinkFlavorCases)) throw new Error("Transaction sentinel cases catalog has an invalid schema");
   const cases = value.virtualPathPolicyCases.map((item, index) => {
-    const row = record(item, `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
+    const row = requireRecord(item, `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
     requireExactKeys(row, ["id", "inputPath", "physicalSourcePath", "expectedViolationCode", "sourceContentHash"], `transaction sentinel cases catalog.virtualPathPolicyCases[${index}]`);
     if (row.expectedViolationCode !== "windows-reserved-name" && row.expectedViolationCode !== "trailing-dot-or-space") throw new Error("Transaction sentinel cases catalog has an invalid violation code");
     if (row.physicalSourcePath !== null && typeof row.physicalSourcePath !== "string") throw new Error("Transaction sentinel cases catalog has an invalid physical source path");
@@ -8684,15 +6802,6 @@ function reconcileJournalWal(repoRoot: string, path: string, current: MutableJou
   return next;
 }
 
-function lstatOrNull(path: string): Stats | null {
-  try {
-    return lstatSync(path);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
-}
-
 function hashPath(path: string): string {
   const stat = lstatSync(path);
   if (stat.isSymbolicLink()) return sha256(readlinkSync(path));
@@ -8783,15 +6892,15 @@ function assertGeneratorNodeRecords(records: readonly TaxonomyGeneratorNodeRecor
   if (records.some((record, index) => index > 0 && generatorPathCompare(records[index - 1].path, record.path) > 0)) throw new Error(`${label} must be path-sorted`);
 }
 
-function nxTargetRecord(repoRoot: string, ownerPath: string, target: string): JsonRecord {
+function nxTargetRecord(repoRoot: string, ownerPath: string, target: string): UnknownRecord {
   const manifestPath = absolutePath(repoRoot, `${ownerPath}/📋️project.json`);
-  const manifest = record(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown, `Nx manifest ${manifestPath}`);
+  const manifest = requireRecord(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown, `Nx manifest ${manifestPath}`);
   const separator = target.lastIndexOf(":");
   const project = target.slice(0, separator);
   const targetName = target.slice(separator + 1);
-  const targets = record(manifest.targets, `Nx manifest ${manifestPath}.targets`);
+  const targets = requireRecord(manifest.targets, `Nx manifest ${manifestPath}.targets`);
   if (manifest.name !== project || !Object.hasOwn(targets, targetName)) throw new Error(`Nx manifest ${manifestPath} does not own target ${target}`);
-  return record(targets[targetName], `Nx target ${target}`);
+  return requireRecord(targets[targetName], `Nx target ${target}`);
 }
 
 function assertNxTarget(repoRoot: string, ownerPath: string, target: string): void {
@@ -8802,7 +6911,7 @@ function assertGeneratorPreviewTarget(repoRoot: string, contract: GeneratorContr
   const { ownerPath, previewTarget: target } = contract;
   if (!ownerPath || !target) throw new Error("Generator lacks an exact owner JSON preview command");
   const preview = nxTargetRecord(repoRoot, ownerPath, target);
-  const options = record(preview.options, `Nx target ${target}.options`);
+  const options = requireRecord(preview.options, `Nx target ${target}.options`);
   if (preview.executor !== "nx:run-commands" || options.cwd !== ownerPath || options.command !== `bun ./📜️script.ts ${generatorPreviewScriptArguments(contract).join(" ")}`) throw new Error(`Nx target ${target} is not the exact owner JSON preview command`);
 }
 
@@ -10622,7 +8731,7 @@ function captureTransactionRepositoryAuthority(repoRoot: string): TransactionRep
   try {
     sourceAdmissionAssertLexical(repoRoot, "Transaction repository root", true);
     if (!isAbsolute(repoRoot) || resolve(repoRoot) !== repoRoot) throw new Error("Transaction repository root is not absolute and canonical");
-    sourceAdmissionDirectoryChain(repoRoot);
+    noFollowDirectoryChain(repoRoot);
   } catch (cause) {
     if (isTransactionRepositoryAuthorityError(cause)) throw cause;
     throw new TransactionRepositoryAuthorityError("invalid-access", cause);

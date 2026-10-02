@@ -343,7 +343,7 @@ pub fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<S
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Flow", "Fluss"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Flow", "Fluss"),
         source_format: "flow.artifact".into(),
         component_kind: "flow".into(),
         dimension: "graph".into(),
@@ -788,7 +788,7 @@ pub mod editor {
             pub mod replace_image;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-extension-action/🦀️.rs"]
             pub mod run_extension_action;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛍️set-catalogue-sections/🦀️.rs"]
             pub mod set_catalogue_sections;
@@ -800,7 +800,7 @@ pub mod editor {
             pub mod set_grid_snap_enabled;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
             pub mod set_grid_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
             pub mod set_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🙈️set-preview-off/🦀️.rs"]
             pub mod set_preview_off;
@@ -810,7 +810,7 @@ pub mod editor {
             pub mod spotlight_commit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🦀️.rs"]
             pub mod toggle_extension;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
         }
 
@@ -869,7 +869,7 @@ pub mod editor {
                     pub mod add_generation;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🗑️remove-generation/🦀️.rs"]
                     pub mod remove_generation;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🏷️rename/🦀️.rs"]
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🏷️rename-generation/🦀️.rs"]
                     pub mod rename_generation;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🎯️select-generation/🦀️.rs"]
                     pub mod select_generation;

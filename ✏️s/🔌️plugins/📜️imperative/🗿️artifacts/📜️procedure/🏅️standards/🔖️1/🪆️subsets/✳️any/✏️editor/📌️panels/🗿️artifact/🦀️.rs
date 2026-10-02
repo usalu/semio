@@ -3,7 +3,18 @@
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::{IMPERATIVE_INTERACTION_GRANULARITY, IMPERATIVE_INTERACTION_STEPS, IMPERATIVE_PLAY_APP_ID};
 use crate::ProcedureSnapshot;
-use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_ARTIFACT: &str = "imperative.play.artifact";

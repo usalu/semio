@@ -17,10 +17,10 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import type { PlaygroundAssetSpec } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 
-export type { PlaygroundAssetSpec };
+export type { AssetDeliveryDeclarationV1 };
 
 // #region 🔖️ScopeModel
 /** 🗂️ One composable Storybook slice. */
@@ -35,7 +35,7 @@ export type StoryScope = {
   /** Extra `optimizeDeps.exclude` entries beyond the workspace-package scan. */
   readonly optimizeDepsExclude?: readonly string[];
   /** Static-dir / tile-proxy / mesh-collection assets served via the existing `playgroundAssetVitePlugins` dispatcher. */
-  readonly assets?: readonly PlaygroundAssetSpec[];
+  readonly assets?: readonly AssetDeliveryDeclarationV1[];
   /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
   readonly vitePlugins?: () => Promise<OwnedBuildPlugin[]>;
   /**

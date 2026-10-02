@@ -1,0 +1,232 @@
+{
+  "snapshot": {
+    "schema": "\u0000世界!@/",
+    "id": "",
+    "shapeModel": {
+      "childId": "shape local\u0000",
+      "target": {
+        "artifactId": "target shape",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      }
+    },
+    "buildingModel": {
+      "childId": "",
+      "target": {
+        "artifactId": "target building",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      }
+    },
+    "energyModel": {
+      "childId": "energy local",
+      "target": {
+        "artifactId": "!@/\u0000世界",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      }
+    },
+    "structureClassicModel": {
+      "childId": "classic local",
+      "target": {
+        "artifactId": "classic target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      }
+    },
+    "drawings": [
+      {
+        "childId": "",
+        "target": {
+          "artifactId": "target drawing",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      {
+        "childId": "",
+        "target": {
+          "artifactId": "other target",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      },
+      {
+        "childId": "drawing local\u0000",
+        "target": {
+          "artifactId": "target drawing",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
+        }
+      }
+    ],
+    "referencesByModelDefinitionId": {
+      "": [
+        {
+          "id": "",
+          "sourceUrl": "!@/\u0000😀",
+          "mediaKind": "\u0000世界!@/",
+          "origin": [
+            0,
+            1,
+            2
+          ],
+          "orientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "scale": 0,
+          "widthWorld": 10,
+          "hidden": false,
+          "locked": true,
+          "opacity": 1
+        },
+        {
+          "id": "",
+          "sourceUrl": "",
+          "mediaKind": "\u0000世界!@/",
+          "origin": [
+            -1,
+            -2,
+            -3
+          ],
+          "orientation": null,
+          "scale": null,
+          "widthWorld": 0,
+          "hidden": true,
+          "locked": false,
+          "opacity": null
+        }
+      ],
+      "__proto__": [],
+      "世界\u0000!@/": [
+        {
+          "id": "same",
+          "sourceUrl": "opaque literal",
+          "mediaKind": "\u0000世界!@/",
+          "origin": [
+            4,
+            5,
+            6
+          ],
+          "orientation": [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ],
+          "scale": 2,
+          "widthWorld": 3,
+          "hidden": true,
+          "locked": true,
+          "opacity": 0
+        },
+        {
+          "id": "same",
+          "sourceUrl": "opaque literal",
+          "mediaKind": "\u0000世界!@/",
+          "origin": [
+            7,
+            8,
+            9
+          ],
+          "orientation": null,
+          "scale": 0,
+          "widthWorld": -1,
+          "hidden": false,
+          "locked": false,
+          "opacity": 0
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": "",
+        "label": "\u0000😀",
+        "kind": ""
+      },
+      {
+        "id": "",
+        "label": "",
+        "kind": "!@/"
+      },
+      {
+        "id": "node",
+        "label": "世界",
+        "kind": "unknown literal"
+      }
+    ]
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000011",
+    "fff8000000000022"
+  ],
+  "tableRows": {
+    "cad_document": 1,
+    "cad_model_child": 4,
+    "cad_drawing_child": 3,
+    "cad_reference_group": 3,
+    "cad_reference": 4,
+    "cad_node": 3
+  },
+  "malformedSql": [
+    "DELETE FROM cad_document",
+    "UPDATE cad_document SET id=2",
+    "UPDATE cad_model_child SET slot='unknown' WHERE id=1",
+    "UPDATE cad_model_child SET slot='shapeModel' WHERE id=2",
+    "UPDATE cad_model_child SET document_id=99 WHERE id=1",
+    "UPDATE cad_drawing_child SET document_id=99 WHERE id=1",
+    "UPDATE cad_drawing_child SET ordinal=0 WHERE ordinal=1",
+    "UPDATE cad_reference_group SET model_definition_id='' WHERE id=2",
+    "UPDATE cad_reference_group SET document_id=99 WHERE id=1",
+    "UPDATE cad_reference SET group_id=99 WHERE id=1",
+    "UPDATE cad_reference SET ordinal=99 WHERE id=1",
+    "UPDATE cad_reference SET hidden=2 WHERE id=1",
+    "UPDATE cad_reference SET locked=-1 WHERE id=1",
+    "UPDATE cad_reference SET orientation_present=0 WHERE id=1",
+    "UPDATE cad_reference SET orientation_x_bits=NULL WHERE id=1",
+    "UPDATE cad_reference SET scale_bits=NULL WHERE id=1",
+    "UPDATE cad_reference SET origin_x_class='nan' WHERE id=1",
+    "UPDATE cad_reference SET origin_y_bits='bad' WHERE id=1",
+    "UPDATE cad_node SET document_id=99 WHERE id=1",
+    "UPDATE cad_node SET ordinal=0 WHERE ordinal=1",
+    "ALTER TABLE cad_node ADD COLUMN accidental_state TEXT"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeCharacters": 65537,
+    "maxOwnedBytes": 200000,
+    "tinyFileBytes": 4096,
+    "cancelAt": 256
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "domains",
+      "fixture": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+      "schema": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json",
+      "former": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+      "sha256": "57053e1707ec1dea51bc28d4676ce4091b63a3d53e59383d4ed5d36be2e7cb4e",
+      "consumers": [
+        {
+          "source": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs",
+          "fixtureReference": "../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+          "fixtureReference": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
+          "fixtureReference": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+        }
+      ]
+    },
+    {
+      "id": "inline-controls",
+      "fixture": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+      "schema": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+      "former": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+      "sha256": "edd5cbfeccfdca052e17d4414a7d5789f4b924f77681bf89a61211365336b51d",
+      "consumers": [
+        {
+          "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️component-unit/🦀️.rs",
+          "fixtureReference": "../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx",
+          "fixtureReference": "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs",
+          "fixtureReference": "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "raster-residency",
+      "fixture": "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+      "schema": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+      "former": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+      "sha256": "0084e7365a81427ea8a5fd5a814ce4f19efb6b0ffe80fae5ff65e21456c7deb9",
+      "consumers": [
+        {
+          "source": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️raster-residency/🦀️.rs",
+          "fixtureReference": "../../🧫️fixtures/🖼️scene-raster-ownership/🔣️.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️scene-raster-ownership/🟦️.ts",
+          "fixtureReference": "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "paint-editing",
+      "fixture": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+      "schema": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
+      "former": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json",
+      "sha256": "95c6be9e2e39ba7c9dc9da515ecb5d8a079c88fd88b950cce5e253d91ee17133",
+      "consumers": [
+        {
+          "source": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+          "fixtureReference": "../../🧫️fixtures/✏️editing/🔣️.json"
+        },
+        {
+          "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts",
+          "fixtureReference": "../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
+        }
+      ]
+    }
+  ]
+}

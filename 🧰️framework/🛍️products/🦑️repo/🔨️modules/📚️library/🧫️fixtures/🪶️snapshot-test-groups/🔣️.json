@@ -1,0 +1,85 @@
+{
+  "sources": [
+    "owner-a.ts",
+    "owner-b.ts",
+    "owner-c.ts"
+  ],
+  "budgetMs": 120000,
+  "cases": [
+    {
+      "id": "explicit",
+      "groups": [
+        [
+          "owner-a.ts"
+        ],
+        [
+          "owner-b.ts",
+          "owner-c.ts"
+        ]
+      ],
+      "expected": [
+        [
+          "owner-a.ts"
+        ],
+        [
+          "owner-b.ts",
+          "owner-c.ts"
+        ]
+      ]
+    },
+    {
+      "id": "default",
+      "expected": [
+        [
+          "owner-a.ts",
+          "owner-b.ts",
+          "owner-c.ts"
+        ]
+      ]
+    }
+  ],
+  "invalidGroups": [
+    [
+      [
+        "owner-a.ts",
+        "owner-b.ts"
+      ]
+    ],
+    [
+      [
+        "owner-a.ts",
+        "owner-b.ts",
+        "owner-c.ts",
+        "outside.ts"
+      ]
+    ],
+    [
+      [
+        "owner-a.ts"
+      ],
+      [
+        "owner-a.ts",
+        "owner-b.ts",
+        "owner-c.ts"
+      ]
+    ],
+    [
+      [],
+      [
+        "owner-a.ts",
+        "owner-b.ts",
+        "owner-c.ts"
+      ]
+    ],
+    [],
+    [
+      [
+        "./owner-a.ts",
+        "owner-b.ts"
+      ],
+      [
+        "owner-a.ts"
+      ]
+    ]
+  ]
+}

@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, GetPromptRequestSchema, ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle

@@ -53,7 +53,7 @@ quaternion = "[" number "," number "," number "," number "]"
 rgba = "[" number "," number "," number "," number "]"
 bool = "0" | "1"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 option-hex = "[" "0" "]" | "[" "1" "," hex "]"
 option-rgba = "[" "0" "]" | "[" "1" "," rgba "]"

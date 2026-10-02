@@ -8,6 +8,10 @@
     "family:workflow"
   ],
   "targets": {
+"test-snapshot-sqlite":{"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
+"test-snapshot-sqlite-native":{"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
+"test-snapshot-sqlite-source":{"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
+"verify-snapshot-sqlite-source":{"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source","forwardAllArgs":true}},
     "build": {
       "executor": "nx:run-commands",
       "cache": true,

@@ -1,6 +1,10 @@
 //! 📚️ EN 1992 play app panel — examples plus Table 3.1 concrete and B500 reinforcing steel.
 
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use crate::{ConcreteGrade, ReinforcementGrade};
 
@@ -141,7 +145,7 @@ pub fn reference_tables() -> Vec<crate::app_surface::CatalogueTable> {
 //#region 🔖️Render
 pub fn render(
     examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

@@ -1,0 +1,47 @@
+{
+  "schema": "semio.process.cargo-artifacts.fixture/v1",
+  "policy": {
+    "version": 1,
+    "cwd": "/owner",
+    "buildDirectory": "/compiler",
+    "leaseDirectory": "/leases",
+    "captureDirectory": "/captures",
+    "budgetMs": 0
+  },
+  "files": [
+    {
+      "name": "fixture.bin",
+      "hex": "0061736d0100000001020304"
+    },
+    {
+      "name": "dep.rlib",
+      "hex": "01020408"
+    }
+  ],
+  "vectors": [
+    {
+      "id": "success",
+      "mode": "success",
+      "accepted": true
+    },
+    {
+      "id": "cancelled",
+      "mode": "wait",
+      "accepted": false
+    },
+    {
+      "id": "nonzero",
+      "mode": "fail",
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "mode": "empty",
+      "accepted": false
+    }
+  ],
+  "cargo": {
+    "name": "neutral-artifact-fixture",
+    "stdout": "Neutral artifact ready\\n"
+  }
+}

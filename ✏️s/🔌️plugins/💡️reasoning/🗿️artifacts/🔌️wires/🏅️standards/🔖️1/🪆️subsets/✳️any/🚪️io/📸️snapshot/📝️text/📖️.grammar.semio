@@ -1,9 +1,19 @@
 dialect grammar
-grammar wires.snapshot
+grammar reasoning.wires.snapshot
 extension wires
 start document
+comment none
 
-document = header body
-header = "schema" SP "reasoning.wires.snapshot" NL
-body = payload NL?
-payload = OCTET+
+document = envelope snapshot
+envelope = "semio" "reasoning.wires.dsl" "v1"
+snapshot = snapshot-field+
+snapshot-field = "fixture-root" "=" INT | "meta-root" "=" INT | "content" "=" child | "nodes" "=" "[" node* "]"
+child = "child_id" "=" text "target" "=" target
+target = "artifact-id" "=" text "artifact-kind" "=" text "standard" "=" text "subset" "=" text
+node = "{" "kind" "=" kind node-field* "}"
+kind = "null" | "boolean" | "unsigned" | "signed" | "float" | "text" | "bytes" | "array" | "object"
+node-field = "boolean" "=" boolean | "unsigned" "=" INT | "signed" "=" INT | "float" "=" number | "text" "=" text | "bytes" "=" TEXT | "items" "=" "[" INT* "]" | "members" "=" "[" member* "]"
+member = "{" "name" "=" text "value" "=" INT "}"
+boolean = "true" | "false"
+number = INT | FLOAT | IDENT | "-" IDENT
+text = IDENT | TEXT

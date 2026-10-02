@@ -38,14 +38,41 @@ use crate::mutations;
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit,
-    ExampleSource, Fault, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, Label, LocalizedLabel, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolRunJob, ToolRunJobPurpose,
-    ToolRunJobRequest, UiAssemblyResult,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::ExampleSource;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this editor, exactly once. `set-node`/`set-cell` come from the two
@@ -176,7 +203,7 @@ pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-thermostat-setpoints")]
     SetThermostatSetpoints { thermostat: u32, heating_schedule: u32, cooling_schedule: u32, heating_throttle_range_k: f64, cooling_throttle_range_k: f64 },
     #[dsl(key = "set-site")]
-    SetSite { latitude_deg: f64, longitude_deg: f64, elevation_m: f64, time_zone_hours: f64, north_axis_deg: f64 },
+    SetSite { latitude_deg: Option<f64>, longitude_deg: Option<f64>, elevation_m: Option<f64>, time_zone_hours: Option<f64>, north_axis_deg: Option<f64> },
     #[dsl(key = "set-run-period")]
     SetRunPeriod { start_month: u32, start_day: u32, end_month: u32, end_day: u32 },
     #[dsl(key = "setActiveExample")]
@@ -337,14 +364,12 @@ mod args_bridge {
             // record edited one scalar at a time.
             super::SET_SITE_ACTION_ID => {
                 let edited = text(args, "field");
-                let merged = |key: &str, fallback: f64| if edited.as_deref() == Some(key) { number(args, "value").unwrap_or(fallback) } else { f64_or(key, fallback) };
-                Command::SetSite {
-                    latitude_deg: merged("latitudeDeg", 0.0),
-                    longitude_deg: merged("longitudeDeg", 0.0),
-                    elevation_m: merged("elevationM", 0.0),
-                    time_zone_hours: merged("timeZoneHours", 0.0),
-                    north_axis_deg: merged("northAxisDeg", 0.0),
-                }
+                let field = |key: &str| match edited.as_deref() {
+                    Some(edited) if edited == key => number(args, "value"),
+                    Some(_) => None,
+                    None => number(args, key),
+                };
+                Command::SetSite { latitude_deg: field("latitudeDeg"), longitude_deg: field("longitudeDeg"), elevation_m: field("elevationM"), time_zone_hours: field("timeZoneHours"), north_axis_deg: field("northAxisDeg") }
             }
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
@@ -409,7 +434,7 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -427,7 +452,7 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -438,13 +463,13 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 
 //#region 🧬️MutationSeam
 /// 🧬️ THE single seam between an editor command and this artifact's semantic mutation vocabulary.
-/// `kind` is the ledger name from the ticket's `📓️mutation-tag-ledger.md`, kept for the description
-/// and for the fault a not-yet-landed group raises. The seam translates the edited `Model` into the
+/// `kind` is the ledger name from the ticket's `📓️mutation-tag-ledger.md`, kept for the fault a
+/// not-yet-landed group raises; every history row is labelled by its leaves (`SemanticMutation::label`). The seam translates the edited `Model` into the
 /// granular semantic steps that produced it — there is no whole-document replace to fall back on
 /// (`📓️derivation-rules.md` rule 6). Every field this vocabulary does not yet name is caught by the
 /// exhaustive `probe` comparison below and refused LOUDLY, so a group's missing kind can never be
 /// swallowed as a silent no-op.
-fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, description: String) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
+fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
     let mut steps = Vec::new();
     if base.name != model.name {
         steps.push(mutations::rename_model(model.name.clone()));
@@ -452,14 +477,29 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     if base.version != model.version {
         steps.push(mutations::change_model_version(model.version.clone()));
     }
-    if base.site != model.site {
-        steps.push(mutations::update_site(model.site.latitude_deg, model.site.longitude_deg, model.site.elevation_m, model.site.time_zone_hours, model.site.north_axis_deg));
+    let (was, now) = (&base.site, &model.site);
+    let site = [
+        (was.latitude_deg != now.latitude_deg).then(|| mutations::change_site_latitude(now.latitude_deg)),
+        (was.longitude_deg != now.longitude_deg).then(|| mutations::change_site_longitude(now.longitude_deg)),
+        (was.elevation_m != now.elevation_m).then(|| mutations::change_site_elevation(now.elevation_m)),
+        (was.time_zone_hours != now.time_zone_hours).then(|| mutations::change_site_time_zone(now.time_zone_hours)),
+        (was.north_axis_deg != now.north_axis_deg).then(|| mutations::change_site_north_axis(now.north_axis_deg)),
+    ];
+    steps.extend(site.into_iter().flatten());
+    steps.extend(run_period_steps(base.run_period, model.run_period));
+    let (was, now) = (&base.ground_temperature, &model.ground_temperature);
+    for (month, (before, after)) in (1u8..).zip(was.building_surface_c.iter().zip(&now.building_surface_c)) {
+        if before != after {
+            steps.push(mutations::change_ground_temperature_building_surface(month, *after));
+        }
     }
-    if base.run_period != model.run_period {
-        steps.push(mutations::update_run_period(model.run_period.start_month, model.run_period.start_day, model.run_period.end_month, model.run_period.end_day, model.run_period.year));
+    for (month, (before, after)) in (1u8..).zip(was.shallow_c.iter().zip(&now.shallow_c)) {
+        if before != after {
+            steps.push(mutations::change_ground_temperature_shallow(month, *after));
+        }
     }
-    if base.ground_temperature != model.ground_temperature {
-        steps.push(mutations::update_ground_temperature(model.ground_temperature.building_surface_c.to_vec(), model.ground_temperature.shallow_c.to_vec(), model.ground_temperature.deep_c));
+    if was.deep_c != now.deep_c {
+        steps.push(mutations::change_ground_temperature_deep(now.deep_c));
     }
     if base.airflow_network != model.airflow_network {
         steps.push(match &model.airflow_network {
@@ -511,7 +551,58 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     if probe != *model {
         return Err(kind_unavailable(kind, kind));
     }
-    Ok(Emit { artifact_mutations: steps, description: Some(description), ..Default::default() })
+    Ok(Emit { artifact_mutations: steps, ..Default::default() })
+}
+
+/// 📅️ The run-period field leaves that carry `was` to `now`, ordered so every intermediate period is a calendar interval
+/// whenever such an order exists — a field leaf refuses a period whose bounds disagree (`mutation.target-mismatch`), so
+/// moving a whole period later sets its end before its start.
+fn run_period_steps(was: crate::calendar::RunPeriod, now: crate::calendar::RunPeriod) -> Vec<EnergyModelMutation> {
+    let take = |period: &mut crate::calendar::RunPeriod, field: usize| match field {
+        0 => period.start_month = now.start_month,
+        1 => period.start_day = now.start_day,
+        2 => period.end_month = now.end_month,
+        3 => period.end_day = now.end_day,
+        _ => period.year = now.year,
+    };
+    let changed: Vec<usize> = (0..5)
+        .filter(|field| {
+            let mut probe = was;
+            take(&mut probe, *field);
+            probe != was
+        })
+        .collect();
+    let valid = |order: &Vec<usize>| {
+        let mut period = was;
+        order.iter().all(|field| {
+            take(&mut period, *field);
+            period.is_interval()
+        })
+    };
+    let order = orderings(&changed).into_iter().find(valid).unwrap_or(changed);
+    order
+        .into_iter()
+        .map(|field| match field {
+            0 => mutations::change_run_period_start_month(now.start_month),
+            1 => mutations::change_run_period_start_day(now.start_day),
+            2 => mutations::change_run_period_end_month(now.end_month),
+            3 => mutations::change_run_period_end_day(now.end_day),
+            _ => mutations::change_run_period_year(now.year),
+        })
+        .collect()
+}
+
+/// 🔀️ Every ordering of `items`, the given order first (at most 5! = 120 for the run period's fields).
+fn orderings(items: &[usize]) -> Vec<Vec<usize>> {
+    if items.len() < 2 {
+        return vec![items.to_vec()];
+    }
+    (0..items.len())
+        .flat_map(|index| {
+            let rest: Vec<usize> = items.iter().enumerate().filter(|(other, _)| *other != index).map(|(_, item)| *item).collect();
+            orderings(&rest).into_iter().map(move |tail| std::iter::once(items[index]).chain(tail).collect::<Vec<usize>>())
+        })
+        .collect()
 }
 
 /// 🏘️ Zones: a create/delete of the whole row plus the five per-field kinds. `create-zone`/
@@ -1034,14 +1125,14 @@ fn target_in_use(entity: &str, id: u32, blocker: &str) -> Fault {
 /// identical semantics on the interactive path and on the retained path by construction.
 fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
     let mut model = crate::energy_model(doc.snapshot);
-    let (kind, description) = match command {
+    let kind = match command {
         EnergyModelEditorCommand::SetStructureField { field, value } => {
             match field.as_str() {
                 "name" => model.name = value.clone(),
                 "version" => model.version = value.clone(),
                 _ => return Ok(Emit::default()),
             }
-            ("rename-model", format!("Set {field}"))
+            "rename-model"
         }
         EnergyModelEditorCommand::SetZoneCell { row, column, value } => {
             let Some(zone) = model.zones.get_mut(*row as usize) else { return Ok(Emit::default()) };
@@ -1065,7 +1156,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
                 },
                 _ => return Ok(Emit::default()),
             }
-            ("change-zone-volume", format!("Set zone {row} {column}"))
+            "change-zone-volume"
         }
         EnergyModelEditorCommand::CreateZone { name, volume_m3, multiplier, conditioned } => {
             if *volume_m3 <= 0.0 {
@@ -1073,12 +1164,12 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             }
             let id = next_entity_id(model.zones.iter().map(|zone| zone.id));
             model.zones.push(Zone { id, name: name.clone(), volume_m3: *volume_m3, multiplier: (*multiplier).max(1), conditioned: *conditioned, part_of_total_floor_area: true });
-            ("create-zone", format!("Create zone {name}"))
+            "create-zone"
         }
         EnergyModelEditorCommand::RenameZone { zone, new_name } => {
             let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
             target.name = new_name.clone();
-            ("rename-zone", format!("Rename zone {zone}"))
+            "rename-zone"
         }
         EnergyModelEditorCommand::DeleteZone { zone } => {
             let id = EntityId(*zone);
@@ -1095,7 +1186,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
                 return Err(target_in_use("zone", *zone, "thermostat"));
             }
             model.zones.retain(|entry| entry.id != id);
-            ("delete-zone", format!("Delete zone {zone}"))
+            "delete-zone"
         }
         EnergyModelEditorCommand::CreateSurface { name, zone, construction, class } => {
             let zone_id = EntityId(*zone);
@@ -1120,7 +1211,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
                 wind_exposed: true,
                 multiplier: 1,
             });
-            ("create-surface", format!("Create surface {name}"))
+            "create-surface"
         }
         EnergyModelEditorCommand::DeleteSurface { surface } => {
             let id = EntityId(*surface);
@@ -1130,7 +1221,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             model.fenestrations.retain(|fenestration| fenestration.surface_id != id);
             model.adjacency_pairs.retain(|pair| pair.surface_a_id != id && pair.surface_b_id != id);
             model.surfaces.retain(|entry| entry.id != id);
-            ("delete-surface", format!("Delete surface {surface}"))
+            "delete-surface"
         }
         EnergyModelEditorCommand::AssignSurfaceConstruction { surface, construction } => {
             let construction_id = EntityId(*construction);
@@ -1139,39 +1230,39 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             }
             let target = model.surfaces.iter_mut().find(|entry| entry.id.0 == *surface).ok_or_else(|| target_missing("surface", *surface))?;
             target.construction_id = construction_id;
-            ("change-surface-construction", format!("Assign construction {construction} to surface {surface}"))
+            "change-surface-construction"
         }
         EnergyModelEditorCommand::SetMaterialProperty { material, property, value } => {
             let target = model.materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;
             let kind = set_material_property(target, property, value)?;
-            (kind, format!("Set material {material} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetConstructionProperty { construction, property, value } => {
             let kind = set_construction_property(&mut model, *construction, property, value)?;
-            (kind, format!("Set construction {construction} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => {
             let kind = set_surface_property(&mut model, *surface, property, value, *partner_surface)?;
-            (kind, format!("Set surface {surface} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property, value } => {
             let kind = set_fenestration_property(&mut model, *fenestration, property, value)?;
-            (kind, format!("Set window {fenestration} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetGlazingMaterialProperty { material, property, value } => {
             let target = model.glazing_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
             let kind = set_glazing_material_property(target, property, value)?;
-            (kind, format!("Set glazing material {material} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetGasMaterialProperty { material, property, value } => {
             let target = model.gas_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
             let kind = set_gas_material_property(target, property, value)?;
-            (kind, format!("Set gas material {material} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetZoneProperty { zone, property, value } => {
             let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
             let kind = set_zone_property(target, property, value)?;
-            (kind, format!("Set zone {zone} {property}"))
+            kind
         }
         EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
             let schedules = &model.schedules;
@@ -1186,14 +1277,19 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             target.cooling_setpoint_schedule_id = ScheduleId(*cooling_schedule);
             target.heating_throttle_range_k = *heating_throttle_range_k;
             target.cooling_throttle_range_k = *cooling_throttle_range_k;
-            ("change-thermostat-heating-setpoint-schedule", format!("Set thermostat {thermostat} setpoints"))
+            "change-thermostat-heating-setpoint-schedule"
         }
         EnergyModelEditorCommand::SetSite { latitude_deg, longitude_deg, elevation_m, time_zone_hours, north_axis_deg } => {
-            if !(-90.0..=90.0).contains(latitude_deg) || !(-180.0..=180.0).contains(longitude_deg) {
+            if latitude_deg.is_some_and(|value| !(-90.0..=90.0).contains(&value)) || longitude_deg.is_some_and(|value| !(-180.0..=180.0).contains(&value)) {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the site latitude/longitude are outside their SI ranges"));
             }
-            model.site = Site { latitude_deg: *latitude_deg, longitude_deg: *longitude_deg, elevation_m: *elevation_m, time_zone_hours: *time_zone_hours, north_axis_deg: *north_axis_deg };
-            ("update-site", "Set site".to_string())
+            let site = &mut model.site;
+            for (field, value) in [(&mut site.latitude_deg, latitude_deg), (&mut site.longitude_deg, longitude_deg), (&mut site.elevation_m, elevation_m), (&mut site.time_zone_hours, time_zone_hours), (&mut site.north_axis_deg, north_axis_deg)] {
+                if let Some(value) = value {
+                    *field = *value;
+                }
+            }
+            "change-site"
         }
         EnergyModelEditorCommand::SetRunPeriod { start_month, start_day, end_month, end_day } => {
             let valid = (1..=12).contains(start_month) && (1..=12).contains(end_month) && (1..=31).contains(start_day) && (1..=31).contains(end_day);
@@ -1204,18 +1300,18 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             model.run_period.start_day = *start_day as u8;
             model.run_period.end_month = *end_month as u8;
             model.run_period.end_day = *end_day as u8;
-            ("update-run-period", "Set run period".to_string())
+            "change-run-period"
         }
         EnergyModelEditorCommand::SetActiveExample { example_id } => {
             let loaded = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
-            return Ok(Emit { effects: vec![load_document_effect(&loaded)], description: Some(format!("Load example {example_id}")), ..Default::default() });
+            return Ok(Emit { effects: vec![load_document_effect(&loaded)], ..Default::default() });
         }
         EnergyModelEditorCommand::SetSimulationSettings { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
             let settings = ChangeSimulationSettings { zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days };
             if !settings.config().is_valid() {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the simulation settings are outside the engine's admissible timestep and warmup ranges"));
             }
-            return Ok(Emit { config_mutations: vec![EnergyModelConfigMutation::ChangeSimulationSettings(settings)], description: Some("Set simulation settings".into()), ..Default::default() });
+            return Ok(Emit { config_mutations: vec![EnergyModelConfigMutation::ChangeSimulationSettings(settings)], ..Default::default() });
         }
         EnergyModelEditorCommand::SetResultField { field } => {
             let Some(selected) = crate::editor::model::results::ResultField::from_id(field) else {
@@ -1225,7 +1321,6 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             // derived inside its own `render`, and nothing else in the editor reads `resultField`.
             return Ok(Emit {
                 config_mutations: vec![EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: selected.id().to_string() })],
-                description: Some(format!("Colour surfaces by {}", selected.id())),
                 ui_scope: UiDirtyScope::Partial {
                     window_bodies: vec![crate::energy_simulation_session::ENERGY_MODEL_3D_WINDOW_KIND_ID.to_string(), simulation::BODY_KEY.to_string()],
                     panel_bodies: Vec::new(),
@@ -1245,7 +1340,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"));
         }
     };
-    model_edit(kind, &crate::energy_model(doc.snapshot), &model, description)
+    model_edit(kind, &crate::energy_model(doc.snapshot), &model)
 }
 
 /// 🎥️ The window-addressed half of the command set: `setCamera` writes the addressed
@@ -1271,8 +1366,6 @@ fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_fra
         let mutation = model_window::config::EnergyModelWindowConfigMutation::SetCamera(model_window::config::SetCamera { camera: pose });
         Ok(Emit {
             window_config_mutations: vec![model_window::config::addressed(view, mutation)?],
-            description: Some("Set camera".into()),
-            coalesce_key: Some(format!("energy.model.3d.camera:{}", view.window_id.as_deref().unwrap_or_default())),
             ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
             ..Default::default()
         })
@@ -2373,8 +2466,8 @@ fn example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
 pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
 
 /// 🏷️ Admits resolved energy text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
 }
 
 /// 🎛️ Mints one energy-editor action for a panel row or an inspector control binding.
@@ -2492,8 +2585,8 @@ pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
             "Set site",
             "Standort setzen",
             vec![
-                Arg::slider("latitudeDeg", LocalizedLabel::native("Latitude (°)", "Breitengrad (°)"), -90.0, 90.0).required(),
-                Arg::slider("longitudeDeg", LocalizedLabel::native("Longitude (°)", "Längengrad (°)"), -180.0, 180.0).required(),
+                Arg::slider("latitudeDeg", LocalizedLabel::native("Latitude (°)", "Breitengrad (°)"), -90.0, 90.0),
+                Arg::slider("longitudeDeg", LocalizedLabel::native("Longitude (°)", "Längengrad (°)"), -180.0, 180.0),
                 Arg::number("elevationM", LocalizedLabel::native("Elevation (m)", "Höhe (m)")),
                 Arg::number("timeZoneHours", LocalizedLabel::native("Time zone (h)", "Zeitzone (h)")),
                 Arg::number("northAxisDeg", LocalizedLabel::native("North axis (°)", "Nordachse (°)")),

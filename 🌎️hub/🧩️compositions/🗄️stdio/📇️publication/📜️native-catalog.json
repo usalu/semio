@@ -39,10 +39,10 @@
     {
       "artifactKind": "s.stdio.docx",
       "artifactSchema": "stdio.docx",
-      "packSchemaHash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
+      "packSchemaHash": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c",
       "factoryId": "stdio.native.docx.v1",
       "extension": "docx",
-      "protocolSourceSha256": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba"
+      "protocolSourceSha256": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c"
     },
     {
       "artifactKind": "s.stdio.dwg",
@@ -63,7 +63,7 @@
     {
       "artifactKind": "s.stdio.gltf",
       "artifactSchema": "stdio.gltf",
-      "packSchemaHash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
+      "packSchemaHash": "f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f",
       "factoryId": "stdio.native.gltf.v1",
       "extension": "gltf",
       "protocolSourceSha256": "61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb"
@@ -79,18 +79,18 @@
     {
       "artifactKind": "s.stdio.jpg",
       "artifactSchema": "stdio.jpg",
-      "packSchemaHash": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",
+      "packSchemaHash": "bacf1eb3e87697fa0d2dd1659effaf97aaba8f9496877c9b072a0e96151c683c",
       "factoryId": "stdio.native.jpg.v1",
       "extension": "jpg",
-      "protocolSourceSha256": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad"
+      "protocolSourceSha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22"
     },
     {
       "artifactKind": "s.stdio.json",
       "artifactSchema": "stdio.json",
-      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "packSchemaHash": "d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a",
       "factoryId": "stdio.native.json.v1",
       "extension": "json",
-      "protocolSourceSha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a"
+      "protocolSourceSha256": "6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5"
     },
     {
       "artifactKind": "s.stdio.las",
@@ -151,7 +151,7 @@
     {
       "artifactKind": "s.stdio.ply",
       "artifactSchema": "stdio.ply",
-      "packSchemaHash": "39e80b87806df5e3fd8d14d88429087482b47150ad186eafb877c439ec61ecab",
+      "packSchemaHash": "b68749fcf458b876c161121f83e4fddda3adea098a3d3defd280711c7bacb2ce",
       "factoryId": "stdio.native.ply.v1",
       "extension": "ply",
       "protocolSourceSha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8"
@@ -167,10 +167,10 @@
     {
       "artifactKind": "s.stdio.pptx",
       "artifactSchema": "stdio.pptx",
-      "packSchemaHash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
+      "packSchemaHash": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668",
       "factoryId": "stdio.native.pptx.v1",
       "extension": "pptx",
-      "protocolSourceSha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705"
+      "protocolSourceSha256": "a2d087ee150879f8e6aa463f1f307babc5edc3b51948d0227f80196295adf668"
     },
     {
       "artifactKind": "s.stdio.step",
@@ -223,10 +223,10 @@
     {
       "artifactKind": "s.stdio.xlsx",
       "artifactSchema": "stdio.xlsx",
-      "packSchemaHash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+      "packSchemaHash": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",
       "factoryId": "stdio.native.xlsx.v1",
       "extension": "xlsx",
-      "protocolSourceSha256": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea"
+      "protocolSourceSha256": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17"
     },
     {
       "artifactKind": "s.stdio.xml",
@@ -249,12 +249,12 @@
     {
       "artifactKind": "s.stdio.json",
       "artifactSchema": "stdio.json",
-      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
+      "packSchemaHash": "d6934119d75ee476e8935e7381ce17d6306238a8393cb47ade63a1ea5e5d362a",
       "factoryId": "stdio.native.json.v1",
       "extension": "json",
       "role": "editor",
       "surfaceId": "stdio.json.editor",
-      "protocolSourceSha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a"
+      "protocolSourceSha256": "6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5"
     }
   ],
   "publication": "committed",

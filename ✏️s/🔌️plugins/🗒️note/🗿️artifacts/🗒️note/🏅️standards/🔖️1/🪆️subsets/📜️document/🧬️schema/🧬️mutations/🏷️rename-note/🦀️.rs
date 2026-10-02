@@ -31,8 +31,11 @@ impl MutationKind<NoteSnapshot, NoteMutation> for RenameNote {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename note to {:?}", self.new_title), &format!("Notiz in {:?} umbenennen", self.new_title))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match &self.new_title {
+            Some(title) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename note to \"{title}\""), &format!("Notiz in \"{title}\" umbenennen")),
+            None => semio_framework_ui_locale::LocalizedLabel::native("Remove note title", "Notiztitel entfernen"),
+        }
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

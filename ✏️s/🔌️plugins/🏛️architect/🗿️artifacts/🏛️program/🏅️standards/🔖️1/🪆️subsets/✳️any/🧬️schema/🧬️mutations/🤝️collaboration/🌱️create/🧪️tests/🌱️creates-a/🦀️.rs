@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates-a/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates-a/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🤝️collaboration/🌱️create/🌱️creates-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("create-collaboration-record/creates-collaboration-record-a: before snapshot decodes")

@@ -108,7 +108,7 @@ fn op_codecs_round_trip() {
         assert_eq!(PdfMutation::parse_op(&step.print_op()).expect("the text op parses"), step, "move-page/round-trips-the-concrete-inverse: the text op form does not round-trip");
         assert_eq!(PdfMutation::decode_op(&step.encode_op().expect("the binary op encodes")).expect("the binary op decodes"), step, "move-page/round-trips-the-concrete-inverse: the binary op form does not round-trip");
         assert_eq!(
-            dsl::from_dsl_value::<PdfMutation>((serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&step)).expect("the payload encodes")).into()).expect("the payload decodes"),
+            <PdfMutation as semio_framework_value::FromValue>::from_value((serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&step)).expect("the payload encodes")).into()).expect("the payload decodes"),
             step,
             "move-page/round-trips-the-concrete-inverse: the JSON form does not round-trip"
         );

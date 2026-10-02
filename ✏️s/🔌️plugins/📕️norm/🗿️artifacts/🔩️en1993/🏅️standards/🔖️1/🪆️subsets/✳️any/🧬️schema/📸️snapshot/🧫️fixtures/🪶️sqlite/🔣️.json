@@ -1,0 +1,315 @@
+{
+  "capabilityExports": [
+    "EN1993_SQLITE_SCHEMA",
+    "en1993SnapshotToSqliteDatabase",
+    "en1993SnapshotFromSqliteDatabase"
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000001",
+    "0000000000000001",
+    "0010000000000000"
+  ],
+  "tableNames": [
+    "en1993_document",
+    "en1993_material",
+    "en1993_section",
+    "en1993_member",
+    "en1993_load_case",
+    "en1993_member_action",
+    "en1993_joint",
+    "en1993_joint_action",
+    "en1993_fatigue_detail",
+    "en1993_fatigue_band",
+    "en1993_fire_exposure",
+    "en1993_cold_formed_member",
+    "en1993_cold_formed_action",
+    "en1993_plated_panel",
+    "en1993_plated_action",
+    "en1993_silo_shell",
+    "en1993_tension_component",
+    "en1993_tension_action",
+    "en1993_bridge_fatigue",
+    "en1993_tower_leg",
+    "en1993_tower_action",
+    "en1993_pile",
+    "en1993_pile_action",
+    "en1993_crane_runway",
+    "en1993_crane_action"
+  ],
+  "snapshot": {
+    "annex": "De",
+    "materials": [
+      {
+        "id": "duplicate",
+        "grade": "arbitrary",
+        "fy": 0.5,
+        "fu": 0.5,
+        "eModulus": 0.5,
+        "gModulus": 0.5,
+        "subgrade": "arbitrary",
+        "kind": "arbitrary"
+      }
+    ],
+    "sections": [
+      {
+        "id": "duplicate",
+        "designation": "Section\u0000日本",
+        "kind": "arbitrary",
+        "h": 0.5,
+        "b": 0.5,
+        "tw": 0.5,
+        "tf": 0.5,
+        "r": 0.5,
+        "area": 0.5,
+        "shearAreaY": 0.5,
+        "shearAreaZ": 0.5,
+        "iy": 0.5,
+        "iz": 0.5,
+        "it": 0.5,
+        "iw": 0.5,
+        "wElY": 0.5,
+        "wElZ": 0.5,
+        "wPlY": 0.5,
+        "wPlZ": 0.5,
+        "areaNet": 0.5
+      }
+    ],
+    "members": [
+      {
+        "id": "member",
+        "label": "日本",
+        "memberType": "arbitrary",
+        "sectionId": "unknown",
+        "materialId": "unknown",
+        "length": 0.5,
+        "bucklingLengthY": 0.5,
+        "bucklingLengthZ": 0.5,
+        "ltbLength": 0.5,
+        "ltbRestraintSpacing": 0.5,
+        "loadApplication": "arbitrary",
+        "endMomentRatioPsi": 0.5,
+        "momentDiagram": "arbitrary",
+        "deflectionLimitRatio": 0.5,
+        "analysis": "arbitrary"
+      }
+    ],
+    "loadCases": [
+      {
+        "id": "case",
+        "name": "日本",
+        "kind": "arbitrary",
+        "category": "arbitrary"
+      }
+    ],
+    "memberActions": [
+      {
+        "id": "action",
+        "memberId": "unknown",
+        "loadCaseId": "unknown",
+        "action": {
+          "n": 0.5,
+          "vy": 0.5,
+          "vz": 0.5,
+          "my": 0.5,
+          "mz": 0.5,
+          "t": 0.5
+        }
+      }
+    ],
+    "joints": [
+      {
+        "id": "joint",
+        "kind": "arbitrary",
+        "memberId": "unknown",
+        "boltClass": "arbitrary",
+        "boltDiameter": 0.5,
+        "boltRows": 4294967295,
+        "boltsPerRow": 4294967295,
+        "pitch": 0.5,
+        "gauge": 0.5,
+        "endDistance": 0.5,
+        "edgeDistance": 0.5,
+        "shearPlanes": 4294967295,
+        "plateThickness": 0.5,
+        "plateFu": 0.5,
+        "weldThroat": 0.5,
+        "weldLength": 0.5,
+        "weldFu": 0.5,
+        "weldGrade": "arbitrary",
+        "actions": [
+          {
+            "id": "joint-action",
+            "loadCaseId": "unknown",
+            "shear": 0.5,
+            "tension": 0.5
+          }
+        ],
+        "category": "arbitrary",
+        "frictionMu": 0.5,
+        "preloadForce": 0.5,
+        "slipFactorKs": 0.5,
+        "frictionSurfaces": 4294967295
+      }
+    ],
+    "fatigueDetails": [
+      {
+        "id": "fatigue",
+        "memberId": "unknown",
+        "category": 255,
+        "method": "arbitrary",
+        "spectrum": [
+          {
+            "id": "band",
+            "deltaSigma": 0.5,
+            "cycles": 0.5
+          }
+        ]
+      }
+    ],
+    "fireExposures": [
+      {
+        "id": "fire",
+        "memberId": "unknown",
+        "rating": "arbitrary",
+        "protectionThickness": 0.5,
+        "sectionFactor": 0.5,
+        "mu0": 0.5,
+        "designTemperature": 0.5,
+        "protectionConductivity": 0.5,
+        "protectionDensity": 0.5,
+        "protectionSpecificHeat": 0.5
+      }
+    ],
+    "coldFormedMembers": [
+      {
+        "id": "cold",
+        "bBar": 0.5,
+        "thickness": 0.5,
+        "kSigma": 0.5,
+        "psi": 0.5,
+        "fy": 0.5,
+        "grossResistance": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ],
+    "platedPanels": [
+      {
+        "id": "plate",
+        "a": 0.5,
+        "b": 0.5,
+        "thickness": 0.5,
+        "fy": 0.5,
+        "kSigma": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ],
+    "siloShells": [
+      {
+        "id": "silo",
+        "thickness": 0.5,
+        "radius": 0.5,
+        "depth": 0.5,
+        "k": 0.5,
+        "gamma": 0.5,
+        "fy": 0.5
+      }
+    ],
+    "tensionComponents": [
+      {
+        "id": "tension",
+        "fUk": 0.5,
+        "fK": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ],
+    "bridgeFatigue": [
+      {
+        "id": "bridge",
+        "memberId": "unknown",
+        "lambda": 0.5,
+        "phi2": 0.5,
+        "deltaSigmaP": 0.5,
+        "category": 255,
+        "method": "arbitrary"
+      }
+    ],
+    "towerLegs": [
+      {
+        "id": "tower",
+        "memberId": "unknown",
+        "forceCoefficient": 0.5,
+        "dynamicFactor": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ],
+    "piles": [
+      {
+        "id": "pile",
+        "sectionId": "unknown",
+        "materialId": "unknown",
+        "drivingStress": 0.5,
+        "embeddedLength": 0.5,
+        "shaftPerimeter": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ],
+    "craneRunways": [
+      {
+        "id": "crane",
+        "memberId": "unknown",
+        "wheelContactLength": 0.5,
+        "dispersion": 0.5,
+        "webThickness": 0.5,
+        "fy": 0.5,
+        "phi": 0.5,
+        "actions": [
+          {
+            "id": "force\u0000日本",
+            "loadCaseId": "unknown",
+            "force": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  "controlledOutput": {
+    "textBytes": 100000,
+    "cancelAfter": 65536,
+    "tinyBytes": 16
+  }
+}

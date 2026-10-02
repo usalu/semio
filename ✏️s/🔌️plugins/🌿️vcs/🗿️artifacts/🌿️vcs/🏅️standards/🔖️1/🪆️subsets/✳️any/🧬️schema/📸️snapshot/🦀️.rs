@@ -3,6 +3,13 @@
 use crate::VCS_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted VCS demo document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema, dsl::DslRecord)]

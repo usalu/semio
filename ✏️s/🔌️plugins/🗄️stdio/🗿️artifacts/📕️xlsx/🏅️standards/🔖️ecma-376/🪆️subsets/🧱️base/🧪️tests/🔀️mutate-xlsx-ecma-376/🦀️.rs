@@ -9,7 +9,7 @@
 //! oracle-only run never compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{oracle_apply_inverse, oracle_apply_mutation, oracle_arrange, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook};
+use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_inverse, oracle_apply_mutation, oracle_arrange, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook};
 
 
 //#region 🔖️Input
@@ -178,8 +178,8 @@ mod subject {
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
     use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxMutation, XlsxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
+    use semio_repo_test_host::law::wire_operation;
 
     /// 📑️ The SAME projector choice the oracle half makes for the same scenario id: the three pool
     /// kinds read `xl/sharedStrings.xml` back with `zip` + `quick-xml`, every other kind reads the grid

@@ -1,3 +1,4 @@
+import{parseFormsJsonQuestion,parseFormsJsonValue,formsValueJsonProjection}from"../../../../🧬️schema/🌱️value/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import vectors from "../🧫️fixtures/🔣️.json";
@@ -12,9 +13,10 @@ import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧬️mu
 export function testFormsExtensionInputs(): void {
   const validate = new Ajv().compile(schema);
   for (const item of vectors.cases) {
-    const result = extensionRenderPayload(item.question as FormQuestion, item.values as Record<string, DslValue>, "forms-play", item.target as Parameters<typeof extensionRenderPayload>[3], item.interactive);
-    assert.equal(validate(result), true, JSON.stringify(validate.errors));
-    assert.deepEqual(result, item.expected, item.name);
+    const result = extensionRenderPayload(parseFormsJsonQuestion(item.question), Object.fromEntries(Object.entries(item.values).map(([key,value])=>[key,parseFormsJsonValue(value)])), "forms-play", item.target as Parameters<typeof extensionRenderPayload>[3], item.interactive);
+    const transport={...result,params:formsValueJsonProjection(result.params)};
+    assert.equal(validate(transport), true, JSON.stringify(validate.errors));
+    assert.deepEqual(transport, item.expected, item.name);
   }
   for (const item of vectors.invalid) assert.equal(validate(item.payload), false, item.name);
   const validateContribution = new Ajv().compile(contributionSchema);

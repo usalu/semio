@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { canonicalJson } from "../../🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { buildTaxonomyInventoryArtifactShards, type TaxonomyInventoryShardManifest, type TaxonomyInventoryShardProgress, TAXONOMY_INVENTORY_SHARD_MAX_BYTES } from "../🧩️shards/🟦️.ts";
 import { taxonomyCliByteCompare, taxonomyCliCanonicalArrayDigest, taxonomyCliCanonicalJson, taxonomyCliRecord, taxonomyCliSha256 } from "../🧾️serialization/🟦️.ts";
 

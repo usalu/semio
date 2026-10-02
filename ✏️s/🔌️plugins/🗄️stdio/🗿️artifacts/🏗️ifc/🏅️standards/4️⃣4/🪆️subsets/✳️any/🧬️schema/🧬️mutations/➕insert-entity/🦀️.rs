@@ -22,8 +22,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntity {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::InsertEntity(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert entity", "Entität einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert entity", "Entität einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

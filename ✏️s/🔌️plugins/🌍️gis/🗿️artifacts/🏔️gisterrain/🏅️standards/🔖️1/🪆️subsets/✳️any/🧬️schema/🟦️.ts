@@ -3,8 +3,9 @@ import { parseSchemaRecord } from "../../../../../../../../../../🧰️framewor
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
+import {parseBinary64,type Binary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export interface GisTerrainArtifact {
-  /** @state artifact */ exaggeration: number;
+  /** @state artifact */ exaggeration: Binary64;
   /** @state artifact */ importedFeaturesJson: string;
   /** @state artifact @child kind=s.stdio.semio */ mesh?: ArtifactChild;
 }
@@ -12,9 +13,9 @@ export interface GisTerrainArtifact {
 /** 🪪️ Parses the document boundary independently of window or OS settings. */
 export function parseGisTerrainArtifact(value: unknown, at = "$"): GisTerrainArtifact {
   const row = parseSchemaRecord(value, ["exaggeration", "importedFeaturesJson", "mesh"], at);
-  if (typeof row.exaggeration !== "number" || !Number.isFinite(row.exaggeration)) throw new Error(`${at}.exaggeration: finite number required`);
+  const exaggeration = parseBinary64(row.exaggeration);
   if (typeof row.importedFeaturesJson !== "string") throw new Error(`${at}.importedFeaturesJson: string required`);
-  const document: GisTerrainArtifact = { exaggeration: row.exaggeration, importedFeaturesJson: row.importedFeaturesJson };
+  const document: GisTerrainArtifact = { exaggeration, importedFeaturesJson: row.importedFeaturesJson };
   if (row.mesh != null) document.mesh = parseArtifactChild(row.mesh);
   return document;
 }

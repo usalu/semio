@@ -84,8 +84,8 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ChangeHeaderFieldsMuta
             colors_important: colors_important.map(|_| base.colors_important),
         })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change header fields", "Kopffelder ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change header fields", "Kopffelder ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-header-fields".into()]

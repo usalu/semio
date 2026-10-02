@@ -667,3 +667,280 @@ That defeated "a new alternative preserves the original".
 | replication TS | 21 passed |
 | os TS `👷️worker` | 14 passed: the browser-actor retraction law and the parity scenarios, `ack-rejected-transition-retracts` included |
 | renderer-react `test long` `🛠️ShellHelpers/🧪️tests/🧪️command-rejection` and `⏪️time-travel/🧪️tests/🧩️component` | 3/3 and 17/17 passed |
+
+## Session 2 — 2026-10-01
+
+Successor of W1-G (S2-W1G), coordinator `⚪552b484a…`. Scope: design §15 (transaction-scoped amend), the follow-up-4
+re-verifications, then §16.6 / G9. **Status (17:55): §15 done and verified (store 8/8, plugin 2/2, TS twin 5/5); G9 store
+half done and verified (4/4: deferred remote reprojection with progress + cancel, ring sizing, scoped finalize); runtime
+adoption of G9 handed to S2-W2A (below).** A usage cut interrupted 13:30–16:30.
+
+### Repair (rule 21)
+
+- The predecessor's follow-up 5 (§15 store half) was complete and compiling in HEAD (`4e36b2b5012`, 11:16): the three
+  commands, codecs, `VcsError::{TransactionOpen, UnknownTransaction}`, the dispatch gate. There were no tests, no fixture, no
+  persistence decision and no runtime route. No half-finished edit had to be repaired.
+- Three defects in that half were fixed (below): open edits leaked into every persisted form; a remote edit could quarantine
+  or reorder the unannounced open edit (lazy `keep_open_edit_at_tail` re-stamp, deleted); appended outcomes carried the op
+  index of their tick instead of their position in the edit (found by the N-appends == one-Apply law).
+
+### §15 store (`OS/🏪️store/🦀️.rs`, region `🔖️ToolTransactions` and the touched sites)
+
+- **The open transaction lives on the envelope** (`ArtifactEnvelopeOwners.open_transaction`, store field removed) with
+  `holds_committed_edit(edit_id)`. Every persisted form leaves the open edit, its messages and its lane out:
+  `print_ops_log` (`.ops`), `print_document_spr` (`.spr`/pack/archive), `event_log` (backbone attach), member
+  `announce_tail_edit_payload`. Decision: **a crash or reload mid-transaction leaves zero trace**.
+- **Append / commit / abort.** Append offsets every recorded message's `op_index` by the edit's length. Commit
+  (`commit_open_transaction`, pub, never suspends) stamps the primary identity of a one-op edit (as `apply_command` does), so
+  N appends + commit records exactly the edit one `Apply{transaction}` records, and queues all ops for one announcement
+  (`flush_announcements` sends; `dispatch` flushes itself). Abort (`abort_open_transaction`, pub, never suspends) retires the
+  edit and its messages and gives back the edit sequence it took. `reproject` delegates to the non-suspending `reproject_now`.
+- **Remote edits under an open transaction.** `ingest_remote` is a wrapper around `ingest_remote_merge` (the old body):
+  `lift_open_transaction` takes the open edit off the tail (tail-cache fast path), the merge runs without it,
+  `restore_open_transaction` re-stamps its ops after everything seen, gives it the next sequence and folds it back with a
+  Report replay (keep-and-record, never quarantined). The open edit is therefore always the applied tail, keeps its ids, and
+  commits in the order every replica folds. If the ledger cannot take it back, the transaction aborts with zero trace and the
+  refusal is answered.
+- **Guards.** `apply_command` refuses while open (covers `dispatch_apply_exact`/`apply_one`), `commit_finished_replay`
+  refuses while open; the dispatch gate stays as authored.
+- **Batched publication route** (migrated typed operations): `ArtifactStoreBatchPublication::set_transaction_open(bool)`,
+  `announce_items`. Admission refuses a batch that does not carry the open transaction. `batch_amend_target` targets the
+  open edit by transaction id (never a coalesce key); a streamed batch keeps the edit open and unannounced (`outbound`
+  cleared, ACK admitted); a closing batch appends, finishes and announces the whole edit once; a streamed batch with no open
+  transaction opens one.
+- **Typed refusals** (`OS/🌿️vcs/🦀️.rs`): `VcsError::HistoryFull { capacity }` and a hand-written `FaultFrom` giving
+  `toolTransaction.open`, `toolTransaction.unknown`, `history.full` their own fault codes (everything else stays
+  `module.vcs`). `reserve_edit_history_slot` and the batched preflight answer `HistoryFull`; the puzzle 2d ceiling law
+  (`PZ2D/✏️editor/🧪️tests/🔬️unit/🦀️.rs`) asserts the typed code. The paged ledger (other session) has landed, so the 65th edit
+  is admitted now and `HistoryFull` only answers address-space exhaustion; that session replaced my full-history law with
+  `a_history_past_one_page_keeps_admitting_edits` in my test file (it passes).
+- No replication codec changed: committed ops already carry `MutationEnvelope.transaction` (W1-A). There is no TS codec of
+  `ArtifactCommand` (the guest→store path is Rust-only), so the TS twin is the law twin below.
+
+### §15 runtime (`OS/🔌️plugin/🦀️.rs`, S2-W2A's file, §15 regions only; `⏪️time-travel/🦀️.rs` one guard)
+
+- `Emit.transaction_phase: TransactionPhase { Commit (default), Stream, Abort }`; `Emit::stream_transaction`,
+  `Emit::abort_transaction`; `Emit::commit_transaction` always carries its ref (an empty commit closes a streamed edit).
+- `tool_transaction_shape_fault` **refined, not lifted**: still refuses a transaction with a coalesce key; newly refuses a
+  stream/abort naming no transaction, a stream/abort with `child_emits`, a stream with foreign steps, an abort carrying
+  mutations (`toolTransaction.shape`).
+- Unmigrated `dispatch_emit_inner`: `artifact_lane_commands` maps the emission to `AppendTransaction`,
+  `Append + CommitTransaction`, `AbortTransaction`, `Apply{transaction}` or `AmendLast`; one row at the first tick, no row
+  for an empty stream, an abort retires its row (`retire_displaced_document_rows`).
+- Migrated route: `close_streamed_transaction_unit` (abort / empty commit through the non-suspending store calls — the
+  one-page publisher's no-suspend contract holds), `open_transaction_admission_fault` (typed `toolTransaction.open` before a
+  batch), `set_transaction_open(streams)`, `store_publication_fault` keeps the typed codes of batch refusals; the run loop
+  calls `flush_announcements` beside `flush_published_apply_batch`.
+- `historyEditBegin` answers `timeTravel.busy` while a transaction is open.
+
+### G9 / design §16.6 (store half, `OS/🏪️store/🦀️.rs` region `🔖️DeferredReprojection`)
+
+- **Resumable remote reprojection.** `defer_remote_replays(Some(operations))` turns the Report replay a remote history
+  change needs (supersession, undo, redo of another replica) into a job: `admit_remote_transitions` validates the prospective
+  fold at once (a broken change is still refused inside the ingest), then keeps the transitions outside the log
+  (`PendingReprojection`) while `step_reprojection()` (also every `tick()`) replays one budget per call; the adoption is
+  `reproject_replayed` of exactly the finished replay, so it equals the undeferred one. Progress `reprojection_progress()`
+  `{done,total}`; `cancel_reprojection()` drops the running replay (store untouched, change kept, the next step restarts);
+  the replay restarts whenever the content revision it started from changed (a local edit, another remote change). `None`
+  (default) keeps the synchronous behaviour through the same path.
+- **Resumable authored supersessions.** The interactive path already is the session replay (`begin_report_replay` +
+  steps + `commit_finished_replay`). New `HistoryFinalization::Scope { alternative_id }` lets the runtime author the undo/redo
+  of a finalize (today the synchronous `Supersede` in `⏪️time-travel/🦀️.rs::author_supersede`) the same resumable way. The
+  `Supersede` command itself stays the synchronous command API (agents, text, hub).
+- **Ring sizing.** The prefix-snapshot ring keeps ⌊√N⌋ projections between 8 and 16 (`prefix_ring_capacity`), stride
+  ⌈N / capacity⌉: a `state_before` or replay start folds at most ≈√N edits; memory grows with √N, capped at twice the old 8.
+- **65th edit.** Moot: the paged ledger landed. The typed `history.full` refusal stays for exhaustion.
+
+### Tests, fixture, oracle
+
+- `OS/🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs` (mounted from `🔬️unit`), 8 laws: corpus (every step: refusal, value,
+  ledger, open transaction + its tail position, announcements, persisted value from pack AND text, shared/persisted log
+  exclusion, ref on every committed op, live == replay); codec vectors; N appends + commit == one Apply (multi-op and one-op);
+  abort leaves no trace (state, revision, order, ledgers, outcomes, log, pack bytes, text, announcements, next sequence); open
+  transaction refuses every other command (`toolTransaction.open`) and `retire_command` retires every carried op (WitnessOp
+  tally, now `pub(super)` in `🧪️supersede-replay`); two-replica convergence with later- and earlier-clocked remote edits
+  landing under the open edit; batched streaming / closing / admission refusal / batch abort; the paged-ledger session's
+  past-one-page law.
+- `OS/🏪️store/🧫️fixtures/🧫️tool-transaction/🔣️.json` (6 cases, 32 steps, 3 command vectors) +
+  `🧬️schema/🔣️tool-transaction/🔣️.json`; `🧪️tests/🧪️tool-transaction/🟦️.ts`: Ajv, independent TS twin folded with
+  fast-json-patch, xstate lifecycle oracle, independent command encoder, fast-check (500 runs).
+- `OS/🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs`, 4 laws: every supersede-replay corpus case deferred (1 op/turn)
+  adopts exactly what the undeferred replica adopts (and the corpus state, whose oracle is the fast-json-patch TS replay),
+  showing the old history while waiting, progress monotonic; cancel after every step leaves the store untouched; a local
+  edit or a further remote change restarts the replay; the ring keeps √N strided live prefixes.
+- Plugin law `a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none` (`OS/🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs`).
+- Supersede-replay retract law adapted to per-viewer heads (switching no longer authors a `Checkout`).
+- API for S2-STROKES and CLOSURE: `📓️api-transaction-amend.md`.
+
+### Commands and counts
+
+| Command | Result |
+|---|---|
+| `bun test ./OS/🏪️store/🧪️tests/🧪️tool-transaction/🟦️.ts` | **5 pass, 0 fail** (3444 expects); negative control (abort keeps its ops): 2 fail as expected |
+| `cargo check -p semio-framework-os-kernel --lib` (17:20, 17:23) | Finished, 0 errors |
+| `cargo check -p semio-framework-plugin --lib` | Finished, 0 errors, no warning in §15 items |
+| kernel lib tests, private target `target-nde-s2-w1g`, `-- tool_transaction_tests deferred_reprojection_tests` (17:35) | **12 passed, 0 failed** |
+| kernel per-test runner (`🧪️w1-g/run-each-test.sh`, `os_store:: os_vcs:: os_spr::`) (17:26) | 889 ok / 21 FAIL, none from this work: durable-group ×15 (`wire value materialization exceeds max_total_alloc` — peer `🌱️value/🛬️decode` + `🎒️pack` edits after 16:41; 2 of them already failed at 16:41 on `Edit.line` canonical bytes), `os_spr::history::fold_falls_back…` (per-viewer fold), `sync::fixtures_replay_matches_expected_events` (`.ops` edit line format, per-viewer), supersede-replay ×2 (`assert_document_text_round_trip`: `.ops` does not persist the per-viewer head, `REC_VIEWER` is spr-only — PER-VIEWER-ALTERNATIVE-HEAD), and the ring law (fixed since: 12/12 above) |
+| plugin lib per test, `RUST_MIN_STACK=268435456` (17:48) | **940 ok / 12 FAIL**, none from this work: `merge_ui_values` ×4, `tool_run` ×4, `window_kits` ×2, `command_ingress_terminal` (baseline), `history_label_reload` (W2-A's new law: `renameDescribed` has no manifest declaration). Both transaction laws and the publisher contract pass |
+| `cargo test -p semio-framework-replication --lib` (FU4) | **316 passed, 0 failed** (the FU4 failure `envelope_transaction_round_trips…` is gone) |
+| replication TS `bun ./📜️script.ts test` (FU4) | blocked: `Explicit Vitest policy required` (peer change in `🏃️process/🧪️testing/🧪️vitest`) |
+
+### Open items / coordinator
+
+- **S2-W2A (runtime adoption of G9):** call `store.defer_remote_replays(Some(budget))` on the document store of a
+  `VcsArtifactApp`; drive `step_reprojection()` per reactor turn (≤ 4 ms, like `step_time_travel_replay`); show
+  `reprojection_progress()` in the history band (a remote change replaying) with Cancel → `cancel_reprojection()`; move
+  `author_supersede` (undo/redo of a finalize) to `begin_report_replay` + steps + `commit_finished_replay(…,
+  HistoryFinalization::Scope { alternative_id: active line } | Overwrite)`.
+- **Notice owners (S2-W2A / W2-B / W2-C):** en/de notices for `toolTransaction.open` ("A tool is still recording — finish or
+  cancel it first." / "Ein Werkzeug zeichnet noch auf — zuerst abschliessen oder abbrechen.") and `history.full` ("This
+  document's history is full ({n} edits)." / "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen).").
+- **PER-VIEWER-ALTERNATIVE-HEAD overlap:** its `Edit.line`/`HistoryLog.viewer_*`/`.ops` format changes break
+  `assert_document_text_round_trip` for non-trunk heads and two kernel fixtures; my retract law was adapted to its
+  "switching authors no Checkout". §15/G9 touch `ingest_remote` (wrapper), `admit_remote_transitions` and `tick` only.
+- `AmendLast` has the same tick-relative `op_index` defect for amended messages; CLOSURE deletes `AmendLast`, so it is left.
+- Hub re-verification of FU4 (`os-hub` bin, `semio-hub --lib`): not rerun yet (build budget); next.
+- No descriptor regeneration needed (no new verbs). The runtime change needs the next activation to reach the shells.
+
+### Update 21:55 (after the 18:00–21:30 usage cut)
+
+- Re-read: every §15/G9 edit is intact in `🏪️store/🦀️.rs` (peer write 20:54), `🔌️plugin/🦀️.rs` (19:43) and `🌿️vcs/🦀️.rs` (19:00).
+- **G9 checklist:** prefix ring sizing done (⌊√N⌋ in [8, 16], law `the_prefix_ring_grows_with_the_square_root_of_the_history`
+  passed 17:35); 65th-edit refusal: the paged ledger landed, so the 65th edit is admitted (law
+  `a_history_past_one_page_keeps_admitting_edits` passes) and exhaustion answers the typed `history.full`; notice texts
+  proposed to S2-W2A above. Resumable remote reprojection + cancel + progress: done (4 laws). Runtime adoption: S2-W2A is on
+  it (`HistoryPatch.remote_replay` in flight at 21:47).
+- **Blocked by PER-VIEWER-ALTERNATIVE-HEAD (not ours, not fixed here):**
+  `supersede_replay_tests::finished_replays_commit_atomically_and_refuse_stale_or_blocking_ones` and
+  `…::scoped_supersessions_follow_their_alternative_and_unscoped_ones_every_alternative` — `.ops` does not persist the
+  viewer head (`REC_VIEWER` is spr-only), so `assert_document_text_round_trip` fails on a non-trunk head.
+- **Reruns at 21:37–21:51 blocked by peers in flight:**
+  - kernel lib-test target: E0509 `cannot move out of type MapMutation, which implements Drop` at the `FromValue` derive
+    of the unchanged fixture `🏪️store/🧵️canonical-edit/🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs:22` — caused by the peer's
+    uncommitted `🌱️value/🦀️.rs`, `🌱️value/🛬️decode/🦀️.rs` and `🗣️dsl/✨️derive/🦀️.rs` edits (intrinsic bytes). Last green run
+    of my laws: 17:35, 12/12.
+  - FU4 hub (`cargo test --manifest-path 🌎️hub/📦️packages/🦀️rust/Cargo.toml -p semio-hub --bin os-hub`): the plugin lib
+    fails E0063 `missing field remote_replay in HistoryPatch` (S2-W2A's G9 adoption in flight).
+- FU4 status otherwise: replication 316/0 (the FU4 failure is gone); the kernel sync retract law and the rebootstrap-control
+  law pass; replication TS is blocked by the peer vitest policy requirement.
+- **Store TS oracles are a permanent target now:** `bun ./📜️script.ts test-store-oracles` (os TS package, nx target
+  `test-store-oracles` in `💻️os/📦️packages/🟦️typescript/📋️project.json`) runs the supersede-replay and tool-transaction
+  oracles: **7 pass, 0 fail** (3464 expects). The coordinator's central launch.json regeneration should pick the new target up.
+- `verify taxonomy report --scope` on `🧪️tests/🧪️tool-transaction`, `🧪️tests/🧪️deferred-reprojection`,
+  `🧫️fixtures/🧫️tool-transaction`, `🧬️schema/🔣️tool-transaction`: clean=true errors=0 warnings=0 ×4.
+
+### Update 02:50 (after the 23:00–02:30 usage cut; fleet rule 26 cargo hold active)
+
+- Re-read: all §15 / G9 / oracle-wiring edits intact (store written by peers 02:15, plugin 02:40). S2-W2A has started the G9
+  runtime adoption (`defer_remote_replays` used in `🔌️plugin/🦀️.rs`).
+- `cargo check -p semio-framework-plugin --lib` (23:14–23:19, before the cut): **Finished**, 0 errors (S2-W2A's
+  `remote_replay` had settled).
+- The kernel lib-test blocker (`MapMutation` E0509) was fixed by its peer at 22:45 (`#[value(retire_with = "std::mem::drop")]`).
+- Pending until "hold lifted": rerun of the kernel laws + per-test suite, the plugin suite, and the FU4 hub bin laws.
+
+## Session 3 — 2026-10-02
+
+Successor S3-W1G, coordinator `⚪b7db773a…`. Focus (rule 29): owed verification → fixes in W1-G regions → §15 proof →
+"§15 proven" to `main`. Scratch output: `🗑️generated/s3-w1g/`.
+
+### Repair (rule 28)
+
+- 10:56 re-read: every §15 / G9 item is intact — store regions `🔖️ToolTransactions` (`🏪️store/🦀️.rs` ~20068) and
+  `🔖️DeferredReprojection` (~20201), `ArtifactCommand::{AppendTransaction, CommitTransaction, AbortTransaction}` with both
+  codecs, `holds_committed_edit`, `set_transaction_open`; plugin `TransactionPhase`, `Emit::{stream,commit,abort}_transaction`,
+  `tool_transaction_shape_fault` (`🔌️plugin/🦀️.rs` ~24126) and its two call sites, `BoundedStoreInitializationPhase::FoldSupersessions`.
+  Peers wrote `🏪️store/🦀️.rs` at 10:38 and `🔌️plugin/🦀️.rs` at 07:56; `🌿️vcs/🦀️.rs` and `📡️spr/📜️history/🦀️.rs` unchanged since
+  session 2. No half-finished W1-G edit found.
+
+### Verification (running log)
+
+| When | Command | Result |
+|---|---|---|
+| 11:11 | `bun ./📜️script.ts test-store-oracles` (os TS package) | **7 pass, 0 fail** (3521 expects): supersede-replay + tool-transaction oracles (Ajv, fast-json-patch twin, xstate, fast-check) |
+| 11:13 | replication TS `bun ./📜️script.ts test --reporter=verbose` (needs `SEMIO_VITEST_POLICY` = `repositoryVitestPolicyV1(cwd)`, `SEMIO_TEST_BUDGET_MS=400000` under load ~75) | **20 pass / 1 fail**. FU4 twins pass: "admits a genesis rebootstrap baseline naming no head edit and refuses a later one", "sends exact envelopes as a Commands frame keeping every HLC field exact"; supersede fold twin ×2, transaction ref ×2, replay report pass. Fail = peer fixture, see Open items (R-1) |
+| 11:16 | os TS `bun ./📜️script.ts test 🏪️store/👷️worker` | **15 pass, 0 fail**, incl. "a mounted browser actor retracts a refused history step and rebuilds only for refused operations" and parity `ack-rejected-transition-retracts` |
+| 11:18 | renderer-react `bun ./📜️script.ts test long 🧪️command-rejection ⏪️time-travel/🧪️tests/🧩️component` | **39 pass, 0 fail** (FU4 refused-step text en/de: "names the refused history step", band corpus) |
+| 11:11–11:21 | `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-w1g cargo test -p semio-framework-os-kernel --lib --no-run` | Finished (10 m 03 s), 0 errors |
+| 11:23 | kernel lib tests `-- tool_transaction_tests deferred_reprojection_tests supersede_replay_tests dispatch_group_stamps_one_tool_transaction` | **35 passed / 2 failed** — the 2 are the PER-VIEWER-ALTERNATIVE-HEAD blockers (below). §15: 8/8 tool-transaction laws, G9 4/4 |
+| 11:24 | per-test runner `🧪️w1-g/run-each-test.sh … os_store:: os_vcs:: os_spr::` | **809 ok / 19 FAIL**: durable-group ×15 (peer pack, R-2), `os_spr::history::tests::fold_falls_back…` (stale for per-viewer heads — fixed, below), supersede-replay ×2 (blocked, below). `sync::fixtures_replay_matches_expected_events` passes again |
+
+| 11:56–12:29 | `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-w1g cargo test -p semio-framework-plugin --lib --no-run` (compiled the kernel WITH the N17 + viewer store edits) | Finished (27 m), 0 errors |
+| 12:30 | plugin lib, one process per test, `RUST_MIN_STACK=268435456` (959 tests) | **943 ok / 16 FAIL**. §15: `a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none` ok, `a_committed_tool_transaction_is_one_row…` ok; archive supersession / round-trip / reload laws ok; 35/37 time-travel laws ok. FAIL: baseline peers `merge_ui_values` ×4, `tool_run` ×5, `window_kits` ×2, `command_ingress_terminal` ×1; new peer `declarations::fixture::sqlite_snapshot_covers_*` ×2; S3-W2A in flight (test file + `⏪️time-travel/🦀️.rs` edited 12:24–12:29): `a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel` ("a paused remote replay is no driver work": `has_pending_work` counts `patch_due`/ui-dirty right after the cancel verb) and `a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload` (review body lacks "New since this edit") |
+| 12:31 | kernel lib-test rebuild for the new laws | **blocked by a peer** mid-refactor: `🧬️schema/📇️registry/🦀️.rs:349` E0428 duplicate `ArtifactSchemaRegistry` (+27), `📡️replication/🎮️mutation/🦀️.rs:219` unresolved `semio_framework_schema_state` (schema-state crate extraction, files written 12:20–12:24) |
+
+§15 status: **proven** (store 8/8, TS 7/7, plugin 2/2 on today's tree) — "§15 proven" sent to `main` 12:35.
+
+### Fixes
+
+- `OS/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs` `fold_falls_back_to_positional_mutation_ids_and_zero_clock_without_meta`: under per-viewer
+  heads a `Branch` registers the alternative and selects no replica's head (`fold_history_for`, `fold.alternative = None` on the
+  trunk). The law now asserts both halves: the sample log without a viewer line folds to the trunk tip (`alternative == None`),
+  and the same log viewed on `alt-1` (`viewer_line: Some("alt-1")`) folds to `alt-1` with `applied` / checkpoint chain as before.
+
+### Coordinator message 11:40 (handled first)
+
+1. PER-VIEWER-ALTERNATIVE-HEAD is closed → fix the two blocked supersede-replay laws properly.
+2. N17 (P1, `📓️s3-gap.md`): `dry_run` and `reprojection_replay` replay the whole applied history synchronously → resumable
+   jobs with progress + cancel (§16.6), API for S3-W2A, law with ≥ 200 mutations.
+
+### The `.ops` text carries the viewer head (fixes the two blocked laws)
+
+Decision: the text pair (`.dsl` + `.ops`) is a full persisted form ("replaces the JSON envelope as the canonical persisted
+form", and the `.ops` mirror of a pack/spr pair), so it carries this replica's head exactly like `.spr`'s `REC_VIEWER`
+(persisted local-only; check-in still clears it before printing the shared pair).
+- Store (`🏪️store/🦀️.rs`): `OpsHeaderLine::Viewer { line, checkpoint }` (keyword `viewer`, both optional, last variant so no
+  ordinal moves); `print_ops_log` prints it after `doc` unless the head is the canonical trunk tip; `replay_ops` admits one
+  `viewer` line (a repeat is refused) and sets `active_alternative_id` (trunk id filtered) and `viewer_checkpoint_id` before
+  `settle_parsed_envelope` folds.
+- History twin (`📡️spr/📜️history/🦀️.rs`): `viewer_spec()` + `parse_ops_text`/`print_ops_text` carry `HistoryLog::viewer_line`
+  / `viewer_checkpoint`; law `ops_text_round_trips_the_viewer_head` (no line on the trunk tip; line/checkpoint/both round-trip
+  and fold to the right alternative; a repeat is refused).
+
+### N17 — resumable local history steps (`🏪️store/🦀️.rs` region `🔖️DeferredReprojection`, `🌿️vcs/🦀️.rs`)
+
+- `ArtifactStore::defer_local_replays(Some(operations))` (beside `defer_remote_replays`): a local history step whose Report
+  replay is needed — interior undo/redo (`install_transitions`), checkout / alternative switch (`move_head`), and a
+  supersession (finalize) authored without a finished replay (`author_supersession`, the `dry_run` path) — is admitted as
+  `PendingLocalStep { envelopes, head, finalizing }` joined to the one `PendingReprojection` (remote transitions + at most one
+  local step + its replay). The dispatch replays one budget and answers; `step_reprojection()` (every `tick()`) steps the
+  rest; the adoption (`adopt_pending`) records remote + local transitions, moves the head, adopts the finished replay
+  (`reproject_replayed`), seeds the DAG, records the replay report and announces the step's transitions (flushed at once).
+  A finalizing step whose report blocks is refused `Rejected { policy: Normal }` with nothing recorded (remote transitions
+  wait again). Steps that need no replay (tail undo, commit, branch) stay synchronous. The clock advances past the step's
+  transitions at admission (no HLC reuse while it waits).
+- While a local step waits: every history-moving command (`ArtifactCommand::moves_history`) and `commit_finished_replay` are
+  refused `VcsError::HistoryReplaying` (fault code `history.replaying`); edits and remote changes restart its replay.
+- `local_step_pending()`, `discard_local_step()` (zero trace: nothing was logged/announced/shown), `reprojection_progress()`
+  covers both kinds, `cancel_reprojection()` keeps pausing (drops the replay only).
+- `dry_run` stays the synchronous verdict of the command API when local replays are not deferred (agents, text, hub).
+- Laws (`🏪️store/🧪️tests/🧪️deferred-reprojection/🦀️.rs`, region `🧪️DeferredLocalStepLaws`, 240-mutation history, budget 16,
+  `CountedOp` counts every fold): `long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferred_dispatch_adopts`
+  (interior undo, redo, overwrite finalize, new-alternative finalize, switch back to trunk: ≤ budget + 1 folds per dispatch
+  and per turn, nothing shown/logged while waiting, `history.replaying` for other history steps, adoption == undeferred),
+  `a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_it`,
+  `a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorded`.
+
+### Blocked (PER-VIEWER-ALTERNATIVE-HEAD ticket — documented, not worked around) — superseded by the fix above
+
+- `supersede_replay_tests::finished_replays_commit_atomically_and_refuse_stale_or_blocking_ones` and
+  `…::scoped_supersessions_follow_their_alternative_and_unscoped_ones_every_alternative` panic in
+  `assert_document_text_round_trip` (`🏪️store/🦀️.rs:26699`, "document-text round trip lost durable history"): the `.ops` text
+  form does not persist the viewer head (`HistoryLog.viewer_line/viewer_checkpoint` ride `REC_VIEWER`, `.spr` only —
+  `📡️spr/📜️history/🦀️.rs:1640`), so a store sitting on a non-trunk alternative does not round-trip through text. The fix
+  (a `.ops` viewer line or a text-form decision) belongs to PER-VIEWER-ALTERNATIVE-HEAD.
+
+### Open items (routed)
+
+- **R-1 (replication fixture, peer of PER-VIEWER-ALTERNATIVE-HEAD):** `📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json`
+  case `trailing-flags-invalid` still encodes flags `0x04`, which became valid (`line`, bit 2) in the 10-01 14:31 auto-commit
+  (`🟦️.ts:1491`, `🔗️causal/🦀️.rs:1161` accept `≤ 0b111`). TS decodes a `line` and fails `truncated` instead of `trailing-flags`;
+  the Rust law passes only because it does not compare the reason. Fix: flags byte `08` (rawHex `…030405 08`) and make the Rust
+  law compare `reason`.
+- **R-2 (pack, peer of the `RecordSpecProducer`/materialization refactor):** 15 `os_store::component::durable_group::tests::*` fail
+  `Codec("limit exceeded: wire value materialization exceeds max_total_alloc")` (`🎒️pack/🌱️value/🦀️.rs:1982`, uncommitted peer edit
+  10-02 03:53): the new 64-byte slot accounting exceeds the durable group's `max_total_alloc = 162 000`
+  (`🏪️store/🧩️composition/🗄️durable-group/🦀️.rs:2240,2344`). Not a W1-G change.
+
+### Status
+
+In progress: plugin suite, FU4 hub bin laws, replication lib, §15 end-to-end proof.

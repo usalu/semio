@@ -3,7 +3,8 @@ grammar sequence.snapshot
 extension sequence
 start document
 
-document = header body
-header = "schema" SP "sequence.sequence.snapshot" NL
-body = payload NL?
-payload = OCTET+
+document = preamble? "schema" "=" text "content" "=" child NL?
+preamble = "semio" SP "sequence.sequence.dsl" SP "v1" NL
+child = "child_id" "=" text "target" "=" reference
+reference = "artifact-id" "=" text "artifact-kind" "=" text "standard" "=" text "subset" "=" text
+text = STRING / IDENT / INT / FLOAT

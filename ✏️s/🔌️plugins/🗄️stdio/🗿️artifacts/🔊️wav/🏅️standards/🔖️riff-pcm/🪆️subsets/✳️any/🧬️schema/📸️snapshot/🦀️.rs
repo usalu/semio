@@ -106,10 +106,58 @@ fn wav_data_spec() -> dsl::RecordSpec {
     )
 }
 
+fn wav_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+}
+
+fn wav_data_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(5)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(5)?;
+        let kind=wav_enum_shape_controlled(&[("pcm16",0),("pcm8",1),("float32",2),("raw",3)],control)?;fields.push(dsl::schema::producer::field(1,"kind",kind,control)?);control.step()?;
+        let pcm16=<Vec<i16>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(2,"pcm16",pcm16,control)?.optional());control.step()?;
+        let pcm8=<Vec<u8>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(3,"pcm8",pcm8,control)?.optional());control.step()?;
+        let float32=<Vec<f32>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(4,"float32",float32,control)?.optional());control.step()?;
+        let raw=<Vec<u8>as dsl::DslField>::shape_controlled(control)?;fields.push(dsl::schema::producer::field(5,"raw",raw,control)?.optional());control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+
+fn wav_data_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:wav_data_spec,decoding:|control|wav_data_spec_controlled(control),encoding:|control|wav_data_spec_controlled(control)}}
+
 impl dsl::DslField for WavData {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(wav_data_spec)
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{self.to_record_controlled(control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            control.begin_stage(2)?;let mut record=dsl::native_encoding::EncodedRecord::new(2,control)?;
+            let(kind,id)=match self{Self::Pcm16(_)=>(0,2),Self::Pcm8(_)=>(1,3),Self::Float32(_)=>(2,4),Self::Raw(_)=>(3,5)};
+            record.insert(1,dsl::FieldValue::Enum(kind));control.step()?;
+            let values=match self{Self::Pcm16(values)=><Vec<i16>as dsl::DslField>::to_value_controlled(values,control)?,Self::Pcm8(values)|Self::Raw(values)=><Vec<u8>as dsl::DslField>::to_value_controlled(values,control)?,Self::Float32(values)=><Vec<f32>as dsl::DslField>::to_value_controlled(values,control)?};
+            record.insert(id,values);control.step()?;Ok(record.take())
+        }))
     }
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        let dsl::FieldValue::Record(record)=value else{return Err("WAV samples require a typed record".into());};
+        Self::from_record_controlled(record,control)
+    }
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.step()?;
+        if record.fields.len()>5{return Err("WAV sample record contains excess fields".into());}
+        let Some(dsl::FieldValue::Enum(kind))=record.get(1)else{return Err("WAV samples require a declared kind".into());};
+        let id=kind.checked_add(2).filter(|id|*id<=5).ok_or("WAV samples have an unknown kind")?as u16;
+        for(other,value)in &record.fields{control.step()?;if *other!=1&&*other!=id&&!matches!(value,dsl::FieldValue::Absent){return Err("WAV sample kind selects exactly one typed array".into());}}
+        let values=record.get(id).ok_or("WAV selected sample array is absent")?;
+        match kind{
+            0=><Vec<i16>as dsl::DslField>::from_value_controlled(values,control).map(Self::Pcm16),
+            1=><Vec<u8>as dsl::DslField>::from_value_controlled(values,control).map(Self::Pcm8),
+            2=><Vec<f32>as dsl::DslField>::from_value_controlled(values,control).map(Self::Float32),
+            3=><Vec<u8>as dsl::DslField>::from_value_controlled(values,control).map(Self::Raw),
+            _=>Err("WAV samples have an unknown kind".into()),
+        }
+    }
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(wav_data_spec_producer())
+    }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(wav_data_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         let (kind, id, value) = match self {
             Self::Pcm16(values) => (0, 2, dsl::DslField::to_value(values)),
@@ -204,10 +252,45 @@ fn wav_chunk_ref_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(1, "kind", dsl::Shape::Enum(vec![("format".into(), 0), ("samples".into(), 1), ("other".into(), 2)])), dsl::FieldSpec::new(2, "index", dsl::Shape::UInt).optional()])
 }
 
+fn wav_chunk_ref_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(2)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(2)?;
+        let kind=wav_enum_shape_controlled(&[("format",0),("samples",1),("other",2)],control)?;fields.push(dsl::schema::producer::field(1,"kind",kind,control)?);control.step()?;
+        fields.push(dsl::schema::producer::field(2,"index",dsl::Shape::UInt,control)?.optional());control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+
+fn wav_chunk_ref_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:wav_chunk_ref_spec,decoding:|control|wav_chunk_ref_spec_controlled(control),encoding:|control|wav_chunk_ref_spec_controlled(control)}}
+
 impl dsl::DslField for WavChunkRef {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Record(wav_chunk_ref_spec)
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{self.to_record_controlled(control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            let count=if matches!(self,Self::Other(_)){2}else{1};control.begin_stage(count)?;let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+            let kind=match self{Self::Format=>0,Self::Samples=>1,Self::Other(_)=>2};record.insert(1,dsl::FieldValue::Enum(kind));control.step()?;
+            if let Self::Other(index)=self{record.insert(2,dsl::FieldValue::UInt(*index));control.step()?;}Ok(record.take())
+        }))
     }
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        let dsl::FieldValue::Record(record)=value else{return Err("WAV chunk reference requires a typed record".into());};
+        Self::from_record_controlled(record,control)
+    }
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.step()?;
+        if record.fields.len()>2||record.fields.keys().any(|id|![1,2].contains(id)){return Err("WAV chunk reference contains an unknown field".into());}
+        let index=record.get(2).filter(|value|!matches!(value,dsl::FieldValue::Absent));
+        match(record.get(1),index){
+            (Some(dsl::FieldValue::Enum(0)),None)=>Ok(Self::Format),
+            (Some(dsl::FieldValue::Enum(1)),None)=>Ok(Self::Samples),
+            (Some(dsl::FieldValue::Enum(2)),Some(dsl::FieldValue::UInt(index)))=>Ok(Self::Other(*index)),
+            _=>Err("WAV chunk reference requires its exact declared kind and unsigned64 index".into()),
+        }
+    }
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(wav_chunk_ref_spec_producer())
+    }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(wav_chunk_ref_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let kind = match self {

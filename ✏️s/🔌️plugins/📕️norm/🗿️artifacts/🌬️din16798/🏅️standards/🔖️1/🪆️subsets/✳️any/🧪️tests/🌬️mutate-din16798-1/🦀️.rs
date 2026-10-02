@@ -3,7 +3,7 @@
 //! `din16798-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
 //! `Din16798Mutation` vocabulary — an indoor-environment building: zones and ventilation systems addressed by their native ids, plus the envelope and cellar scalars.
 //!
-//! ⚖️ Every law is asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module, reached
+//! ⚖️ Every law is asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module, reached
 //! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
 //! the SAME committed bytes: the feature is the single place a vector path is written down, and each handler resolves
 //! exactly the `(before, mutation, after, outcome)` URIs its own scenario's steps name.
@@ -16,7 +16,7 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::{apply_din16798_mutation, decode_din16798_mutation_json, inverse_din16798_mutation, Din16798Mutation};
     use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::snapshot::{decode_din16798_dsl, decode_din16798_pack, decode_din16798_snapshot_json, encode_din16798_dsl, encode_din16798_pack, encode_din16798_snapshot_json, Din16798Snapshot};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     /// 🗣️ The real committed DIN EN 16798 document, read where the domain already keeps it.
     const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";

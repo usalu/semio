@@ -3,6 +3,11 @@
 use crate::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+#[path = "🪶️sqlite/🦀️.rs"]
+mod sqlite;
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
@@ -61,6 +66,7 @@ impl store::ArtifactDsl for Fem2dSnapshot {
 }
 
 impl store::ArtifactPack for Fem2dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;

@@ -1,0 +1,10 @@
+{
+  "textUnit": "a世界🧬\u0000",
+  "textRepeats": 32768,
+  "textBytes": 393216,
+  "blobUnit": [0, 255, 128, 1],
+  "blobRepeats": 65536,
+  "blobBytes": 262144,
+  "combinedBytes": 655360,
+  "cancelAfter": 65536
+}

@@ -24,8 +24,13 @@ point3 = '[', number, ',', number, ',', number, ']' ;
 quat = '[', number, ',', number, ',', number, ',', number, ']' ;
 number list = '[', [ number, { ',', number } ], ']' ;
 
-number = int | float ;
+number = int | float | infinity | nan64 | nan32 ;
 int = [ '-' ], digit, { digit } ;
 float = [ '-' ], digit, { digit }, '.', digit, { digit } ;
 digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+
+infinity = [ "-" ], "inf" ;
+nan64 = "nan64_", hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit ;
+nan32 = "nan32_", hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit, hex digit ;
+hex digit = digit | "a" | "b" | "c" | "d" | "e" | "f" ;

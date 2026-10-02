@@ -1,3 +1,4 @@
+import{parseFormsJsonCondition,formsConditionJson,parseFormsJsonValue}from"../../../../../🧬️schema/🌱️value/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
@@ -10,14 +11,14 @@ import type { FormExpr } from "../../../../../🧬️schema/🧬️mutations/�
 export function testFormsVisibility(): void {
   const validate = new Ajv().compile(schema);
   for (const item of fixtures.cases) {
-    const before = structuredClone(item.before) as FormExpr | null;
+    const before = item.before===null?null:parseFormsJsonCondition(item.before);
     assert.equal(validate({ path: item.path, field: item.field, value: item.value }), true);
-    if ("error" in item) assert.throws(() => patchCondition(before, item.path, item.field, item.value), { message: item.error }, item.name);
+    if ("error" in item) assert.throws(() => patchCondition(before, item.path, item.field, item.field==="value"?parseFormsJsonValue(item.value):item.value), { message: item.error }, item.name);
     else {
-      const actual = patchCondition(before, item.path, item.field, item.value);
-      assert.deepEqual(actual, item.after, item.name);
-      assert.deepEqual({ condition: actual }, applyPatch({ condition: structuredClone(before) }, compare({ condition: before }, { condition: item.after })).newDocument, item.name);
+      const actual = patchCondition(before, item.path, item.field, item.field==="value"?parseFormsJsonValue(item.value):item.value);
+      assert.deepEqual(actual===null?null:formsConditionJson(actual), item.after, item.name);
+      assert.deepEqual({ condition: actual===null?null:formsConditionJson(actual) }, applyPatch({ condition: structuredClone(item.before) }, compare({ condition: item.before }, { condition: item.after })).newDocument, item.name);
     }
-    assert.deepEqual(before, item.before);
+    assert.deepEqual(before===null?null:formsConditionJson(before), item.before);
   }
 }

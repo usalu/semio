@@ -63,8 +63,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeChi
         vec![super::GltfMutation::UnbindNodeChild(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Node Child", "Bindung des Kindknotens aufheben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind Node Child", "Bindung des Kindknotens aufheben")
     }
 
     fn target(&self) -> Vec<String> {

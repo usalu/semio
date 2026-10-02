@@ -48,10 +48,10 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for SetRuleL
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.points.len() + self.cleared.len() {
-            1 => protocol::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),
-            count => protocol::LocalizedLabel::native(&format!("Place {count} rule nodes"), &format!("{count} Regelknoten platzieren")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Place 1 rule node", "1 Regelknoten platzieren"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Place {count} rule nodes"), &format!("{count} Regelknoten platzieren")),
         }
     }
     fn target(&self) -> Vec<String> {

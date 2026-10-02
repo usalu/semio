@@ -57,5 +57,5 @@ mod vector_remove_anchor;
 mod vector_remove_anchor_gone;
 #[path = "../../📍change-anchor-h-ef/🧪️tests/✅apply/🦀️.rs"]
 mod vector_change_anchor_h_ef;
-#[path = "../../🧷change-anchor-a-s/🧪️tests/✅apply/🦀️.rs"]
+#[path = "../../🧷change-anchor-as/🧪️tests/✅apply/🦀️.rs"]
 mod vector_change_anchor_as;

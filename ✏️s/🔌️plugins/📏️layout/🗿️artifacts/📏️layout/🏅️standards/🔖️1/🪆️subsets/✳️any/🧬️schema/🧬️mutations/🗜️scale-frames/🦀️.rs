@@ -31,10 +31,10 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ScaleFrames {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         layout_frame_selection_inverse(base, &self.page_id, diff_scale_frames(self, base))
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((sx_en, sx_de), (sy_en, sy_de)) = (layout_label_number(self.sx), layout_label_number(self.sy));
         let (en, de) = layout_label_frames(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Scale {en} by ({sx_en}, {sy_en})"), &format!("{de} um ({sx_de}; {sy_de}) skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({sx_en}, {sy_en})"), &format!("{de} um ({sx_de}; {sy_de}) skalieren"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]

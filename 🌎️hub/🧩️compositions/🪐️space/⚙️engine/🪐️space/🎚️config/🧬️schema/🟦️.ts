@@ -1,4 +1,4 @@
-/** 🧬️ SpaceConfig */
+/** 🎚️ Hub Studio configuration. @see https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/config/schema.json */
 export interface SpaceConfig {
   /** @state config */
   camera: Record<string, SpaceWindowCamera>;

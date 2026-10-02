@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }

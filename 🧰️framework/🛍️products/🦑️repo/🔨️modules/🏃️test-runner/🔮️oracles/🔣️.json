@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ Oracle contribution of the 🏃️test-runner module. Nothing third party implements this repository's scope→argv mapping, so the planning capabilities rest on frozen specification vectors; the transcript parsers rest on a second, independently written parser plus those vectors.",
   "oracles": [

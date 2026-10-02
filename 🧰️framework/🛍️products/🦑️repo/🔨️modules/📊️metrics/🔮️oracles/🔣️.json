@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ Oracle wiring for 📊️metrics. The numstat parser is checked against the real `git` CLI, which is a genuine third-party producer of the very stream under test: the TypeScript oracle rebuilds the recorded repository in a temporary directory, asks git for the log again, and compares. The unified per-file LOC counter has no third party at all — it is this repository's own definition — so the TypeScript library's `countUnifiedLocForFile` is registered honestly as a `cross-semio-implementation` supplement, and the aggregation, bucketing and benchmark shapes rest on recorded no-oracle decisions with specification vectors plus two independently written implementations.",
   "oracles": [

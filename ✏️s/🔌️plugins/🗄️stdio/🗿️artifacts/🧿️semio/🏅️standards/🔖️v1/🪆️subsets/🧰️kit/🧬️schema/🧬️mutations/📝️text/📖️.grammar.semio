@@ -11,14 +11,14 @@ start op
 # `📓️taxonomy.md`'s `APPROVED_VERBS`.
 op = create-object | delete-object | create-model | delete-model | create-properties | delete-properties | bind-representation | unbind-representation | change-representation-pin | add-type | remove-type | rename-type | add-design | remove-design | edit-design
 
-create-object = "createObject" ":" hex "," hex
+create-object = "createObject" ":" hex "," reference
 delete-object = "deleteObject" ":" hex
-create-model = "createModel" ":" hex "," hex
+create-model = "createModel" ":" hex "," reference
 delete-model = "deleteModel" ":" hex
-create-properties = "createProperties" ":" hex "," hex
+create-properties = "createProperties" ":" hex "," reference
 delete-properties = "deleteProperties"
 
-bind-representation = "bindRepresentation" ":" hex "," pin "," hex
+bind-representation = "bindRepresentation" ":" reference "," pin "," hex
 unbind-representation = "unbindRepresentation" ":" INT
 change-representation-pin = "changeRepresentationPin" ":" INT "," pin
 pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"
@@ -33,7 +33,11 @@ edit-design = "editDesign" ":" hex "," "[" {piece {"," piece}*}? "]" "," "[" {co
 piece = "[" hex "," hex "," transform "]"
 connection = "[" hex "," hex "," hex "," hex "," hex "]"
 transform = "[" number "," number "," number "," number "," number "," number "," number "," number "," number "," number "]"
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare, deliberately NOT defined as a production here) is the framework's built-in `hex`
-# MACRO — every id/name/uri/role string routes through it.
+# MACRO — every id/name/reference/role string routes through it.
+
+reference = "[" hex "," hex "," hex "," hex "]"
+
+# 🔢️ Numeric identifiers are inf or nan64_ followed by exactly sixteen hexadecimal IEEE754 bits of NaN class.

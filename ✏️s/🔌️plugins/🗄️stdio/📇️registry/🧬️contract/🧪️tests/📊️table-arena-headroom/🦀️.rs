@@ -9,7 +9,15 @@
 //! case's document, so a shortened window never binds a cell that is not there.
 
 use semio_framework_plugin::app::{editable_table_window_row_at, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{BuiltNode, Component, Locale, PluginAssemblyError, RowActionPlacement, TreeWindows, UiAssemblyResult, UiMapBuilder, UiValue};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Component;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
 use semio_s_artifact_stdio_contract::{render_structural_table, window_kit_indexed_revision_arguments, window_kit_revision_arguments, window_kit_revisioned_cell_arguments, REMOVE_TABLE_ROW_ACTION_ID};
 

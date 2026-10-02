@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "color-0",
+      "owner": "color",
+      "wire": {
+        "kind": "deviceRgb"
+      }
+    },
+    {
+      "id": "color-1",
+      "owner": "color",
+      "wire": {
+        "kind": "pattern",
+        "base": {
+          "kind": "deviceGray"
+        }
+      }
+    },
+    {
+      "id": "color-2",
+      "owner": "color",
+      "wire": {
+        "kind": "separation",
+        "name": "spot",
+        "alternate": {
+          "kind": "deviceRgb"
+        },
+        "tintTransform": {
+          "kind": "exponential",
+          "domain": [
+            0.0,
+            1.0
+          ],
+          "range": null,
+          "c0": [
+            0.0
+          ],
+          "c1": [
+            1.0
+          ],
+          "n": 1.0
+        }
+      }
+    },
+    {
+      "id": "color-3",
+      "owner": "color",
+      "wire": {
+        "kind": "deviceN",
+        "names": [
+          "spot"
+        ],
+        "alternate": {
+          "kind": "deviceGray"
+        },
+        "tintTransform": {
+          "kind": "array",
+          "functions": [
+            {
+              "kind": "exponential",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "range": null,
+              "c0": [
+                0.0
+              ],
+              "c1": [
+                1.0
+              ],
+              "n": 1.0
+            }
+          ]
+        },
+        "attributes": null
+      }
+    },
+    {
+      "id": "function-exponential",
+      "owner": "function",
+      "wire": {
+        "kind": "exponential",
+        "domain": [
+          0.0,
+          1.0
+        ],
+        "range": null,
+        "c0": [
+          0.0
+        ],
+        "c1": [
+          1.0
+        ],
+        "n": 1.0
+      }
+    },
+    {
+      "id": "function-array",
+      "owner": "function",
+      "wire": {
+        "kind": "array",
+        "functions": [
+          {
+            "kind": "exponential",
+            "domain": [
+              0.0,
+              1.0
+            ],
+            "range": null,
+            "c0": [
+              0.0
+            ],
+            "c1": [
+              1.0
+            ],
+            "n": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "action-chain",
+      "owner": "action",
+      "wire": {
+        "kind": {
+          "kind": "uri",
+          "uri": "https://example.invalid/",
+          "isMap": false
+        },
+        "next": [
+          {
+            "kind": {
+              "kind": "named",
+              "name": "Next"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "outline-tree",
+      "owner": "outline",
+      "wire": {
+        "title": "Root",
+        "italic": false,
+        "bold": false,
+        "open": false,
+        "children": [
+          {
+            "title": "Leaf",
+            "italic": false,
+            "bold": false,
+            "open": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "form-tree",
+      "owner": "form",
+      "wire": {
+        "name": "Root",
+        "kind": {
+          "kind": "container"
+        },
+        "flags": 0,
+        "children": [
+          {
+            "name": "Leaf",
+            "kind": {
+              "kind": "container"
+            },
+            "flags": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "scalar-date",
+      "owner": "date",
+      "wire": {
+        "year": 2026,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0
+      }
+    }
+  ]
+}

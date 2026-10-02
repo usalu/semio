@@ -6,10 +6,10 @@ export interface ObjTexCoord { u: Binary64; v: Binary64; w?: Binary64; }
 export interface ObjNormal { x: Binary64; y: Binary64; z: Binary64; }
 export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: number; }
 export interface ObjFace { vertices: ObjFaceVertex[]; }
-export interface ObjGroup { name: string; faces: number[]; }
-export interface ObjObject { name: string; faces: number[]; }
-export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
-export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
+export interface ObjGroup { name: string; faces: bigint[]; }
+export interface ObjObject { name: string; faces: bigint[]; }
+export interface ObjUsemtlRange { faceIndexFrom: bigint; material: string; }
+export interface ObjSmoothingRange { faceIndexFrom: bigint; group?: number; }
 export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
 export interface ObjArtifact {
@@ -121,9 +121,9 @@ export function parseObjNormal(value: unknown, at = "$"): ObjNormal {
 export function parseObjFaceVertex(value: unknown, at = "$"): ObjFaceVertex {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    vertex: stdioObj30GeometryArtifactGuardInteger(row["vertex"], `${at}.vertex`, {"minimum": 0}),
-    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["texcoord"], `${at}.texcoord`, {"minimum": 0}),
-    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["normal"], `${at}.normal`, {"minimum": 0}),
+    vertex: stdioObj30GeometryArtifactGuardInteger(row["vertex"], `${at}.vertex`, {"minimum": 0,"maximum":4294967295}),
+    texcoord: row["texcoord"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["texcoord"], `${at}.texcoord`, {"minimum": 0,"maximum":4294967295}),
+    normal: row["normal"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["normal"], `${at}.normal`, {"minimum": 0,"maximum":4294967295}),
   };
 }
 
@@ -138,7 +138,7 @@ export function parseObjGroup(value: unknown, at = "$"): ObjGroup {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
     name: stdioObj30GeometryArtifactGuardString(row["name"], `${at}.name`),
-    faces: stdioObj30GeometryArtifactGuardArray(row["faces"], `${at}.faces`).map((item, index) => stdioObj30GeometryArtifactGuardInteger(item, `${at}.faces[${index}]`, {"minimum": 0})),
+    faces: stdioObj30GeometryArtifactGuardArray(row["faces"], `${at}.faces`).map((item, index) => parseObjSourceIndex(item, `${at}.faces[${index}]`)),
   };
 }
 
@@ -146,14 +146,14 @@ export function parseObjObject(value: unknown, at = "$"): ObjObject {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
     name: stdioObj30GeometryArtifactGuardString(row["name"], `${at}.name`),
-    faces: stdioObj30GeometryArtifactGuardArray(row["faces"], `${at}.faces`).map((item, index) => stdioObj30GeometryArtifactGuardInteger(item, `${at}.faces[${index}]`, {"minimum": 0})),
+    faces: stdioObj30GeometryArtifactGuardArray(row["faces"], `${at}.faces`).map((item, index) => parseObjSourceIndex(item, `${at}.faces[${index}]`)),
   };
 }
 
 export function parseObjUsemtlRange(value: unknown, at = "$"): ObjUsemtlRange {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    faceIndexFrom: stdioObj30GeometryArtifactGuardInteger(row["faceIndexFrom"], `${at}.faceIndexFrom`, {"minimum": 0}),
+    faceIndexFrom: parseObjSourceIndex(row["faceIndexFrom"], `${at}.faceIndexFrom`),
     material: stdioObj30GeometryArtifactGuardString(row["material"], `${at}.material`),
   };
 }
@@ -161,8 +161,8 @@ export function parseObjUsemtlRange(value: unknown, at = "$"): ObjUsemtlRange {
 export function parseObjSmoothingRange(value: unknown, at = "$"): ObjSmoothingRange {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    faceIndexFrom: stdioObj30GeometryArtifactGuardInteger(row["faceIndexFrom"], `${at}.faceIndexFrom`, {"minimum": 0}),
-    group: row["group"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["group"], `${at}.group`, {"minimum": 0}),
+    faceIndexFrom: parseObjSourceIndex(row["faceIndexFrom"], `${at}.faceIndexFrom`),
+    group: row["group"] === undefined ? undefined : stdioObj30GeometryArtifactGuardInteger(row["group"], `${at}.group`, {"minimum": 0,"maximum":4294967295}),
   };
 }
 
@@ -174,4 +174,10 @@ export function parseObjUnknownStatement(value: unknown, at = "$"): ObjUnknownSt
     lineIndex: lineIndex as bigint,
     raw: stdioObj30GeometryArtifactGuardString(row["raw"], `${at}.raw`),
   };
+}
+
+/** 🔢️ Own exact unsigned source indices independently from occurrence availability. */
+export function parseObjSourceIndex(value:unknown,at="$"):bigint{
+  if(typeof value!=="bigint"||value<0n||value>18446744073709551615n)stdioObj30GeometryArtifactGuardReject(at,"value is not an unsigned 64-bit integer");
+  return value as bigint;
 }

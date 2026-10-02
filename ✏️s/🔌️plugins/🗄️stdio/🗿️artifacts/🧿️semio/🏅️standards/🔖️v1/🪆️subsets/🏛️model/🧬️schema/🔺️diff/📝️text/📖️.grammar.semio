@@ -75,7 +75,7 @@ option-psets = "[" "0" "]" | "[" "1" "," "[" pset-list? "]" "]"
 relation-diff = "[" option-relation-kind "," option-hex "," option-hex "]"
 option-relation-kind = "[" "0" "]" | "[" "1" "," relation-kind "]"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️.grammar.semio`'s own `hex` doc

@@ -3,7 +3,11 @@
 
 use crate::document::NormHost;
 use crate::editor::din18599::DinV18599Family;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_INSPECTION: &str = "norm.din18599.play.inspection";
@@ -16,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>, locale: semio_framework_plugin::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
 }
 //#endregion 🔖️Render

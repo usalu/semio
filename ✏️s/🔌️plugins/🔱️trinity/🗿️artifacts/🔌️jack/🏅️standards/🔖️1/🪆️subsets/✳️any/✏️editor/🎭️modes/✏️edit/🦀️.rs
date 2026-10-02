@@ -5,7 +5,15 @@
 
 use crate::editor::jack::modes::edit::tools::reorganize;
 use crate::editor::jack::{TRINITY_JACK_PLAY_WINDOW_EDITOR, TRINITY_JACK_PLAY_WINDOW_GRAPH, TRINITY_JACK_PLAY_WINDOW_RESULTS};
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, ToolRef, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const TRINITY_JACK_MODE_EDIT: &str = "edit";
 

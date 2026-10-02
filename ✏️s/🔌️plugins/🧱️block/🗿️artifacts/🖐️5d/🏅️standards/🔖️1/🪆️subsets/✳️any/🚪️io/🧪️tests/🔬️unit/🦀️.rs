@@ -11,7 +11,7 @@ use semio_framework::io_schema::IoPayload;
 /// 📄️ Every handcrafted `.semio` DSL example asset of this subset — the language-agnostic
 /// fixtures the TypeScript mirror's own test reads too.
 const EXAMPLES: &[(&str, &str)] = &[
-    ("hexagonal-cut-concrete-forest-left", include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio")),
+    ("hexagonal-cut-concrete-forest-left", include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio")),
     ("nakagin-capsule", include_str!("../../../📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio")),
 ];
 

@@ -23,12 +23,61 @@ use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_ui_contract as ui;
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::{
-    tree_group, tree_item_desc, tree_item_with_action, tree_window_section_or_placeholder, ui_node_list, ActionFactory, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, ExampleSource, Fault, FaultCode, FaultOrigin, Locale,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder,
-    PluginAssemblyError, PortMultiplicity, SurfaceKind, Terminology, TreeWindows, Trigger, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText, UiValue, WindowConfigOwner, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode,
-    WindowLayoutWindowNode, WindowOptions,
-};
+use semio_framework_plugin::tree_group;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_window_section_or_placeholder;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactPresentation;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::ExampleSource;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaPortDirection;
+use semio_framework_plugin::MediaPortSpec;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::PortMultiplicity;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowConfigOwner;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_framework_plugin::WindowOptions;
 
 /// 🧹️ Installs the exact bounded store owners and disposers shared by every Norm editor.
 #[macro_export]
@@ -1147,6 +1196,7 @@ fn render_value_editor(
                 control_row(&row_id, &label, bind_on(control, Trigger::Commit, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
             }
         }
+        dsl::DslValue::Bytes(bytes) => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(format!("{} {}", bytes.len(), chrome("bytes", "Bytes", locale)))),
         dsl::DslValue::Null => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(chrome("empty", "leer", locale))),
     }
 }
@@ -1459,7 +1509,7 @@ pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body
 pub fn artifact_kind_spec(variant: &str, label: &str, artifact_schema: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
-        label: semio_framework_plugin::LocalizedLabel::data(label),
+        label: semio_framework_ui_locale::LocalizedLabel::data(label),
         source_format: format!("norm.{variant}.document"),
         component_kind: "norm".into(),
         dimension: "data".into(),

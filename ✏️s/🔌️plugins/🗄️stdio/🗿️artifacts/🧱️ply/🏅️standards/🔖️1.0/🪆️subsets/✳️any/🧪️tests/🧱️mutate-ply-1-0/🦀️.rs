@@ -7,8 +7,8 @@
 //! by the INDEPENDENT `ply-rs` reader before the `semantic-ply-v1` profile compares them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_round_trip, ply_snapshot_wire, project_ply};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_artifact_stdio_ply_test_oracle::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_round_trip, ply_snapshot_wire, project_ply};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 
 //#region 🔖️Profile
@@ -137,11 +137,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_ply::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
     use semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::project_ply;
+    use semio_s_artifact_stdio_ply_test_oracle::standards::v1_0::subsets::any::project_ply;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<PlyMutation, String> {

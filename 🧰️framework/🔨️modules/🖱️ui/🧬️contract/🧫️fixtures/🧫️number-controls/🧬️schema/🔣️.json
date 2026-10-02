@@ -316,6 +316,21 @@
           },
           "expected": {
             "type": "number"
+          },
+          "precision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 15
+          },
+          "factor": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
           }
         }
       }

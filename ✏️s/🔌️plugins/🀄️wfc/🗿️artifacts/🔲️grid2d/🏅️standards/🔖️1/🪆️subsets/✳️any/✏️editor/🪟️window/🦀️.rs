@@ -184,11 +184,11 @@ impl store::ArtifactDsl for Grid2dWindowTransient {
 
 impl store::ArtifactPack for Grid2dWindowTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map_err(store::PackError::Schema)
+        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 
@@ -226,12 +226,12 @@ impl protocol::MutationDiff<Grid2dWindowTransient> for Grid2dWindowTransient {
     }
 }
 
-store::artifact_retire_struct!(Grid2dWindowTransient { hovered_cell });
+semio_framework_value::artifact_retire_struct!(Grid2dWindowTransient { hovered_cell });
 
-impl store::retirement::RetireOwned for Grid2dWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for Grid2dWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
         }
     }
 }
@@ -273,8 +273,8 @@ macro_rules! owners {
             type State = Grid2dWindowTransient;
             type Mutation = Grid2dWindowTransientMutation;
             fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-                let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-                let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(grid2d_window_transient_preflight, grid2d_window_transient_transfer, state.clone(), mutation.clone()));
                 semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }

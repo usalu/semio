@@ -8,7 +8,17 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{ui_label, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
-use semio_framework_plugin::{ui_node_list, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

@@ -58,6 +58,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     applyMutations: async () => {},
     loadAppDocumentArchive: async () => {},
     readAppDocumentArchive: async () => new Uint8Array(),
+    readHistory: async () => ({ cursor: 0 }),
     readAppDocumentIdentity: async (instanceId) => ({ appInstanceId: instanceId, parentDocumentId: null }),
     loadAppDocumentPack: async () => {},
     codec: async () => null,
@@ -85,6 +86,13 @@ describe("framework renderer wgpu plugin bridge", () => {
     await bridge.loadAppDocumentArchive(8, captured);
     expect(seen).toEqual([7, 8]);
     expect(decodeDocumentArchiveBytes(restored!)).toEqual(documentSurfaceFixture.archive);
+  });
+
+  it("hands Rust the instance's whole history projection as JSON, a u64 cursor as a number", async () => {
+    const seen: number[] = [];
+    const bridge = pluginHandleForBridge(fakeHandle({ readHistory: async (instanceId) => { seen.push(instanceId); return { cursor: 12n, currentCheckpointId: "cp-2", upserts: [{ seq: 3n, editId: "e-3" }] }; } }));
+    expect(JSON.parse(await bridge.readHistory(9))).toEqual({ cursor: 12, currentCheckpointId: "cp-2", upserts: [{ seq: 3, editId: "e-3" }] });
+    expect(seen).toEqual([9]);
   });
 
   it("hands the guest's last ephemeral frame to Rust as bytes, and nothing before the guest published one", async () => {

@@ -25,7 +25,7 @@ impl protocol::OpText for TestMutation {
             let prefix = format!("{keyword} ");
             if line == keyword || line.starts_with(&prefix) {
                 let body = line[keyword.len()..].trim_start();
-                return <Self as dsl::DslVariants>::from_named_record(&keyword, &dsl::parse(body, &spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?);
+                return <Self as dsl::DslVariants>::from_named_record(&keyword, &dsl::parse(body, &(spec.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
@@ -33,7 +33,7 @@ impl protocol::OpText for TestMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let spec = <Self as dsl::DslVariants>::variants().into_iter().find(|(candidate, _)| candidate == &keyword).expect("declared variant").1;
-        let body = dsl::print(&record, &spec(), dsl::JoinMode::Inline);
+        let body = dsl::print(&record, &(spec.ordinary)(), dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {

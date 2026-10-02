@@ -4,11 +4,19 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
+#[cfg(test)]
+#[path = "🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path = "🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;
+
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
 
 use semio_framework::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, PortMultiplicity};
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 use std::collections::{HashMap, HashSet};
 
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
@@ -150,12 +158,81 @@ fn media_form_variants() -> Vec<(String, u32)> {
         ("kit".to_string(), 11),
         ("flow".to_string(), 12),
         ("sequence".to_string(), 13),
-        ("imperative".to_string(), 14),
+        ("procedure".to_string(), 14),
         ("deck".to_string(), 15),
     ]
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
+fn workflow_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+}
+const MEDIA_CLASS_LABELS:&[(&str,u32)]=&[("twoD",0),("threeD",1),("text",2),("data",3),("graph",4),("kit",5),("computation",6),("presentation",7)];
+const MEDIA_FORM_LABELS:&[(&str,u32)]=&[("any",0),("vector",1),("raster",2),("brep",3),("mesh",4),("document",5),("value",6),("dag",7),("trinity",8),("type",9),("design",10),("kit",11),("flow",12),("sequence",13),("procedure",14),("deck",15)];
+const MEDIA_DIRECTION_LABELS:&[(&str,u32)]=&[("in",0),("out",1)];
+const MEDIA_MULTIPLICITY_LABELS:&[(&str,u32)]=&[("one",0),("many",1)];
+
+fn workflow_native_field<T:dsl::DslField>(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<T,String>{
+ let value=record.get(id).unwrap_or(&dsl::FieldValue::Absent);let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(value,control)})?;control.step()?;Ok(value)
+}
+fn workflow_native_optional_field<T:dsl::DslField>(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<Option<T>,String>{
+ match record.get(id){None|Some(dsl::FieldValue::Absent)=>{control.step()?;Ok(None)},Some(_)=>workflow_native_field(record,id,control).map(Some)}
+}
+fn workflow_native_enum<T>(record:&dsl::RecordValue,id:u16,bind:fn(u32)->Result<T,String>,control:&mut dsl::NativeDecodeControl<'_>)->Result<T,String>{
+ control.step()?;match record.get(id){Some(dsl::FieldValue::Enum(ordinal))=>bind(*ordinal),_=>Err("expected declared workflow enum".into())}
+}
+fn workflow_native_optional_enum(record:&dsl::RecordValue,id:u16,control:&mut dsl::NativeDecodeControl<'_>)->Result<Option<MediaForm>,String>{
+ control.step()?;match record.get(id){None|Some(dsl::FieldValue::Absent)=>Ok(None),Some(dsl::FieldValue::Enum(ordinal))=>media_form_from_ordinal(*ordinal).map(Some),_=>Err("expected optional workflow media form".into())}
+}
+fn workflow_native_project<T:dsl::DslField>(record:&mut dsl::native_encoding::EncodedRecord,id:u16,value:&T,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
+ let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;record.insert(id,value);control.step()
+}
+fn workflow_native_project_optional<T:dsl::DslField>(record:&mut dsl::native_encoding::EncodedRecord,id:u16,value:&Option<T>,control:&mut dsl::NativeEncodeControl<'_>)->Result<(),String>{
+ match value{Some(value)=>workflow_native_project(record,id,value,control),None=>{record.insert(id,dsl::FieldValue::Absent);control.step()}}
+}
+fn media_contract_to_record_controlled(value:&MediaContract,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+ control.scoped_stage(|control|{control.begin_stage(8)?;let mut record=dsl::native_encoding::EncodedRecord::new(8,control)?;
+ workflow_native_project(&mut record,0,&value.kind_id,control)?;record.insert(1,dsl::FieldValue::Enum(media_class_ordinal(value.media_type.class)));control.step()?;record.insert(2,dsl::FieldValue::Enum(media_form_ordinal(value.media_type.form)));control.step()?;
+ match &value.wire{
+ MediaWireFormat::Binary{format_kind}=>{record.insert(3,dsl::FieldValue::Text(control.copy_text("binary")?));control.step()?;workflow_native_project(&mut record,4,format_kind,control)?;record.insert(5,dsl::FieldValue::Absent);control.step()?;},
+ MediaWireFormat::Document{schema}=>{record.insert(3,dsl::FieldValue::Text(control.copy_text("document")?));control.step()?;record.insert(4,dsl::FieldValue::Absent);control.step()?;workflow_native_project(&mut record,5,schema,control)?;}
+ }
+ match value.conversion{Some((from,to))=>{record.insert(6,dsl::FieldValue::Enum(media_form_ordinal(from)));record.insert(7,dsl::FieldValue::Enum(media_form_ordinal(to)));},None=>{record.insert(6,dsl::FieldValue::Absent);record.insert(7,dsl::FieldValue::Absent);}}control.step()?;control.step()?;Ok(record.take())})
+}
+fn media_contract_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<MediaContract,String>{
+ control.scoped_stage(|control|{control.begin_stage(8)?;let kind_id=workflow_native_field(record,0,control)?;let class=workflow_native_enum(record,1,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,2,media_form_from_ordinal,control)?;
+ control.step()?;let kind=match record.get(3){Some(dsl::FieldValue::Text(value))=>value.as_str(),_=>return Err("expected workflow wire kind".into())};let format_kind:Option<String>=workflow_native_optional_field(record,4,control)?;let schema:Option<String>=workflow_native_optional_field(record,5,control)?;
+ let wire=match(kind,format_kind,schema){("binary",Some(format_kind),None)=>MediaWireFormat::Binary{format_kind},("document",None,Some(schema))=>MediaWireFormat::Document{schema},_=>return Err("invalid workflow wire fields".into())};
+ let from=workflow_native_optional_enum(record,6,control)?;let to=workflow_native_optional_enum(record,7,control)?;let conversion=match(from,to){(Some(from),Some(to))=>Some((from,to)),(None,None)=>None,_=>return Err("workflow conversion needs both forms".into())};Ok(MediaContract{kind_id,media_type:MediaType{class,form},wire,conversion})})
+}
+fn workflow_media_port_to_record_controlled(value:&WorkflowMediaPort,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+ control.scoped_stage(|control|{control.begin_stage(9)?;let mut record=dsl::native_encoding::EncodedRecord::new(9,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.spec.id,control)?;workflow_native_project(&mut record,2,&value.spec.label,control)?;record.insert(3,dsl::FieldValue::Enum(media_port_direction_ordinal(value.spec.direction)));control.step()?;record.insert(4,dsl::FieldValue::Enum(media_class_ordinal(value.spec.media_type.class)));control.step()?;record.insert(5,dsl::FieldValue::Enum(media_form_ordinal(value.spec.media_type.form)));control.step()?;workflow_native_project_optional(&mut record,6,&value.spec.kind_id,control)?;workflow_native_project(&mut record,7,&value.spec.required,control)?;record.insert(8,dsl::FieldValue::Enum(port_multiplicity_ordinal(value.spec.multiplicity)));control.step()?;Ok(record.take())})
+}
+fn workflow_media_port_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<WorkflowMediaPort,String>{
+ control.scoped_stage(|control|{control.begin_stage(9)?;let id=workflow_native_field(record,0,control)?;let port_id=workflow_native_field(record,1,control)?;let label=workflow_native_field(record,2,control)?;let direction=workflow_native_enum(record,3,media_port_direction_from_ordinal,control)?;let class=workflow_native_enum(record,4,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,5,media_form_from_ordinal,control)?;let kind_id=workflow_native_optional_field(record,6,control)?;let required=workflow_native_field(record,7,control)?;let multiplicity=workflow_native_enum(record,8,port_multiplicity_from_ordinal,control)?;Ok(WorkflowMediaPort{id,spec:MediaPortSpec{id:port_id,label,direction,media_type:MediaType{class,form},kind_id,required,multiplicity}})})
+}
+fn workflow_input_to_record_controlled(value:&WorkflowInput,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+ control.scoped_stage(|control|{control.begin_stage(5)?;let mut record=dsl::native_encoding::EncodedRecord::new(5,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.kind_id,control)?;workflow_native_project(&mut record,2,&value.selector,control)?;workflow_native_project(&mut record,3,&value.required,control)?;record.insert(4,dsl::FieldValue::Enum(port_multiplicity_ordinal(value.multiplicity)));control.step()?;Ok(record.take())})
+}
+fn workflow_input_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<WorkflowInput,String>{
+ control.scoped_stage(|control|{control.begin_stage(5)?;let id=workflow_native_field(record,0,control)?;let kind_id=workflow_native_field(record,1,control)?;let selector=workflow_native_field(record,2,control)?;let required=workflow_native_field(record,3,control)?;let multiplicity=workflow_native_enum(record,4,port_multiplicity_from_ordinal,control)?;Ok(WorkflowInput{id,kind_id,selector,required,multiplicity})})
+}
+
+fn media_contract_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(8)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(8)?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"kind_id",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(dsl::schema::producer::field(1,"class",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(2,"form",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(3,"wire_kind",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(4,"wire_format",shape,control)?.optional());control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(5,"wire_schema",shape,control)?.optional());control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(6,"conversion_from",shape,control)?.optional());control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(7,"conversion_to",shape,control)?.optional());control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn media_contract_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:media_contract_spec,decoding:|control|media_contract_spec_controlled(control),encoding:|control|media_contract_spec_controlled(control)}}
+
 fn media_contract_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
@@ -245,10 +322,15 @@ fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract
 }
 
 impl dsl::DslField for MediaContract {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{media_contract_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{media_contract_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>media_contract_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{media_contract_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(media_contract_spec)
+        dsl::Shape::Record(media_contract_spec_producer())
     }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(media_contract_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Record(media_contract_to_record(self))
     }
@@ -382,6 +464,22 @@ fn port_multiplicity_variants() -> Vec<(String, u32)> {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
+fn workflow_media_port_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(9)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(9)?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"id",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(1,"port_id",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(2,"label",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_DIRECTION_LABELS,control)?;fields.push(dsl::schema::producer::field(3,"direction",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_CLASS_LABELS,control)?;fields.push(dsl::schema::producer::field(4,"class",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_FORM_LABELS,control)?;fields.push(dsl::schema::producer::field(5,"form",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(6,"kind_id",shape,control)?.optional());control.step()?;
+        let shape=dsl::Shape::Bool;fields.push(dsl::schema::producer::field(7,"required",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(dsl::schema::producer::field(8,"multiplicity",shape,control)?);control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn workflow_media_port_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:workflow_media_port_spec,decoding:|control|workflow_media_port_spec_controlled(control),encoding:|control|workflow_media_port_spec_controlled(control)}}
+
 fn workflow_media_port_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
@@ -458,10 +556,15 @@ fn workflow_media_port_from_record(record: &dsl::RecordValue) -> Result<Workflow
 }
 
 impl dsl::DslField for WorkflowMediaPort {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{workflow_media_port_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{workflow_media_port_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>workflow_media_port_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{workflow_media_port_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(workflow_media_port_spec)
+        dsl::Shape::Record(workflow_media_port_spec_producer())
     }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(workflow_media_port_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Record(workflow_media_port_to_record(self))
     }
@@ -1049,6 +1152,18 @@ pub struct WorkflowInput {
 }
 
 // 🚫️async: E4 fn-pointer slot — value goes into `dsl::Shape::Record(fn() -> RecordSpec)`.
+fn workflow_input_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(5)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(5)?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(0,"id",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(1,"kind_id",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Text;fields.push(dsl::schema::producer::field(2,"selector",shape,control)?);control.step()?;
+        let shape=dsl::Shape::Bool;fields.push(dsl::schema::producer::field(3,"required",shape,control)?);control.step()?;
+        let shape=workflow_enum_shape_controlled(MEDIA_MULTIPLICITY_LABELS,control)?;fields.push(dsl::schema::producer::field(4,"multiplicity",shape,control)?);control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn workflow_input_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:workflow_input_spec,decoding:|control|workflow_input_spec_controlled(control),encoding:|control|workflow_input_spec_controlled(control)}}
+
 fn workflow_input_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
         None,
@@ -1068,10 +1183,15 @@ fn workflow_input_spec() -> dsl::RecordSpec {
 /// `WorkflowMediaPort`/`MediaContract` above; reuses their `port_multiplicity_ordinal`/`_from_ordinal`/
 /// `_variants` helpers directly.
 impl dsl::DslField for WorkflowInput {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{workflow_input_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{workflow_input_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>workflow_input_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{workflow_input_from_record_controlled(record,control)}
     // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(workflow_input_spec)
+        dsl::Shape::Record(workflow_input_spec_producer())
     }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(workflow_input_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         record.fields.insert(0, dsl::FieldValue::Text(self.id.clone()));
@@ -1180,6 +1300,7 @@ impl store::ArtifactDsl for WorkflowSnapshot {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for WorkflowSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -1202,8 +1323,8 @@ impl store::ArtifactPack for WorkflowSnapshot {
 }
 //#endregion 🔖️HandcraftedWorkflowSnapshotCodecs
 
-impl semio_framework_schema::ArtifactCompositionFields for WorkflowSnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for WorkflowSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -1542,7 +1663,7 @@ impl protocol::OpText for WorkflowMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -1553,7 +1674,7 @@ impl protocol::OpText for WorkflowMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| *spec).expect("variant spec");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

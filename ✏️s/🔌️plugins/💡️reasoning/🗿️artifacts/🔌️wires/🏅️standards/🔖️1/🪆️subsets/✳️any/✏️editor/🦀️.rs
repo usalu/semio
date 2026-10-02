@@ -17,13 +17,38 @@ use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor,
-    EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
-    INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
+use semio_framework_tool_machine::node_drag_commit;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -252,15 +277,29 @@ fn wires_retained_document_reduce(
     }
 }
 
+/// 🪪️ The verb a released canvas node drag commits its tool transaction under: `<appId>#canvasPointerUp`.
+pub const WIRES_NODE_DRAG_VERB: &str = "canvasPointerUp";
+
+/// ✋️ A released canvas drag of `node_id` by the board offset `(dx, dy)`: ONE relative `move-nodes` leaf committed through
+/// the node-drag machine as one tool transaction (one edit, one history row, one undo step); a zero offset is no edit.
+pub fn wires_node_drag_emit(operation: &AppOperationContext, gesture: &str, node_id: &str, dx: f64, dy: f64) -> Emit<WiresMutation, NoConfigMutation, NoDraftMutation> {
+    if (dx, dy) == (0.0, 0.0) {
+        return Emit::default();
+    }
+    let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
+    match node_drag_commit(format!("{WIRES_PLAY_APP_ID}#{WIRES_NODE_DRAG_VERB}"), protocol::ActorId(operation.authoring_seed.clone()), gesture, vec![crate::mutations::move_nodes(vec![node_id.to_string()], dx, dy)], clock) {
+        Some((transaction, leaves)) if !operation.authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
+        Some((_, leaves)) => Emit::mutations(leaves),
+        None => Emit::default(),
+    }
+}
+
 struct WiresWindowDragWork {
     tool_id: &'static str,
     node_cursor: usize,
     field_cursor: usize,
     visited: usize,
     consumed: bool,
-    matched_node: Option<bool>,
-    node_x: Option<f64>,
-    node_y: Option<f64>,
 }
 
 impl WiresWindowDragWork {
@@ -364,7 +403,6 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
             WiresCommand::CanvasPointerUp(payload) => {
                 let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
                 let transient = window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
-                // 🚫️ A cancelled release (design §2 D) only clears the drag: no `move_node`, no selection.
                 if payload.cancelled {
                     return Ok(self.complete_clear(window));
                 }
@@ -381,34 +419,24 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                 if let dsl::DslValue::Object(fields) = node {
                     if let Some((key, value)) = fields.get(self.field_cursor) {
                         self.field_cursor += 1;
-                        match key.as_str() {
-                            "id" if self.matched_node.is_none() => self.matched_node = Some(value.as_str() == Some(id.as_str())),
-                            "x" if self.node_x.is_none() => self.node_x = Some(value.as_f64().unwrap_or(0.0)),
-                            "y" if self.node_y.is_none() => self.node_y = Some(value.as_f64().unwrap_or(0.0)),
-                            _ => {}
+                        if key == "id" && value.as_str() == Some(id.as_str()) {
+                            let dx = (transient.drag_last_x - transient.drag_start_x) / transient.drag_zoom;
+                            let dy = (transient.drag_last_y - transient.drag_start_y) / transient.drag_zoom;
+                            if !dx.is_finite() || !dy.is_finite() {
+                                return Err(Fault::from("wires-drag-offset-non-finite"));
+                            }
+                            self.consumed = true;
+                            let gesture = format!("{}:{id}", window.window_id());
+                            return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+                                emit: wires_node_drag_emit(input.operation, &gesture, id, dx, dy),
+                                ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] },
+                            });
                         }
                         return Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-move-target", preview: &[] });
-                    }
-                    if self.matched_node == Some(true) {
-                        let current_x = self.node_x.ok_or_else(|| Fault::from("wires-drag-position-missing"))?;
-                        let current_y = self.node_y.ok_or_else(|| Fault::from("wires-drag-position-missing"))?;
-                        let x = current_x + (transient.drag_last_x - transient.drag_start_x) / transient.drag_zoom;
-                        let y = current_y + (transient.drag_last_y - transient.drag_start_y) / transient.drag_zoom;
-                        if !x.is_finite() || !y.is_finite() {
-                            return Err(Fault::from("wires-drag-position-non-finite"));
-                        }
-                        self.consumed = true;
-                        return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-                            emit: Emit { artifact_mutations: vec![crate::mutations::move_node(id.clone(), x, y)], ..Default::default() },
-                            ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![Self::clear(window)] },
-                        });
                     }
                 }
                 self.node_cursor += 1;
                 self.field_cursor = 0;
-                self.matched_node = None;
-                self.node_x = None;
-                self.node_y = None;
                 Ok(ArtifactCommandWorkStep::Progress { stage: "canvas-move-target", preview: &[] })
             }
             WiresCommand::NodeGraphViewport(payload) => {
@@ -593,7 +621,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {
                 Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
             }
-            _ => Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_cursor: 0, field_cursor: 0, visited: 0, consumed: false, matched_node: None, node_x: None, node_y: None }),
+            _ => Box::new(WiresWindowDragWork { tool_id: request.command.command_id(), node_cursor: 0, field_cursor: 0, visited: 0, consumed: false }),
         };
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,

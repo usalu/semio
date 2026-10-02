@@ -86,19 +86,6 @@ fn checkpoint_page_backpressure_cannot_advance_any_retained_cursor() {
     assert!(source.contains("self.checkpoint_pending = false;\n        StepOutcome::CheckpointReady"));
 }
 
-#[test]
-fn every_puzzle_factory_validates_and_adopts_the_exact_checkpoint_owner() {
-    for source in [include_str!("../../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), include_str!("../../../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs")]
-    {
-        assert!(source.contains("RetainedPuzzleCommandJob::validate_wire_checkpoint(operation, &payload, &input, &checkpoint)"));
-        assert!(source.contains("RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint)"));
-        assert!(!source.contains("if checkpoint.is_some() || input.declared_bytes()"));
-    }
-    let puzzle2d = include_str!("../../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-    assert!(!puzzle2d.contains("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory"));
-    assert!(!puzzle2d.contains("registry.register(BoundedFirstStepCommandJobFactory"));
-}
-
 #[derive(Debug, PartialEq, Eq)]
 struct PuzzleRetainedOracleOutput {
     owner: String,
@@ -229,11 +216,21 @@ fn language_neutral_fixtures_match_production_catalogs_through_the_owned_oracle(
 
 #[test]
 fn hostile_fixture_mutations_change_the_oracle_result_or_fail_closed() {
-    let fixture = include_str!("../../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json");
+    let (_, _, _, fixture) = crate::retained_command_test_catalog();
     let oracle = SerdeJsonFixtureOracle;
     let baseline = oracle.evaluate(fixture).expect("baseline");
-    for mutated in [fixture.replacen("8192", "8193", 1), fixture.replacen("addNode", "missingNode", 1), fixture.replacen("maxPlusOne", "maxPlusTwo", 1), fixture.replacen("\"de\":", "\"fr\":", 1), fixture.replacen("0:0:0:0:0:0", "9:9:9:9:9:9", 1)] {
+    for mutated in [fixture.replacen("8192", "8193", 1), fixture.replacen("maxPlusOne", "maxPlusTwo", 1), fixture.replacen("\"de\":", "\"fr\":", 1), fixture.replacen("0:0:0:0:0:0", "9:9:9:9:9:9", 1)] {
+        assert_ne!(mutated, fixture, "hostile mutation changes the actual fixture");
         assert_ne!(oracle.evaluate(&mutated).expect("mutation remains parseable"), baseline);
     }
-    assert!(oracle.evaluate(&fixture.replacen("\"fingerprint\": \"0:0:0:0:0:0\"", "\"missingFingerprint\": true", 1)).is_err());
+    for tool in &baseline.tool_ids {
+        let mutated = fixture.replacen(&format!("\"{tool}\""), "\"missingTool\"", 1);
+        assert_ne!(mutated, fixture, "hostile tool mutation changes the actual fixture");
+        let actual = oracle.evaluate(&mutated).expect("tool mutation remains parseable");
+        assert_ne!(actual.tool_ids, baseline.tool_ids);
+        assert_ne!(actual, baseline);
+    }
+    let mutated = fixture.replacen("\"fingerprint\": \"0:0:0:0:0:0\"", "\"missingFingerprint\": true", 1);
+    assert_ne!(mutated, fixture, "missing fingerprint changes the actual fixture");
+    assert!(oracle.evaluate(&mutated).is_err());
 }

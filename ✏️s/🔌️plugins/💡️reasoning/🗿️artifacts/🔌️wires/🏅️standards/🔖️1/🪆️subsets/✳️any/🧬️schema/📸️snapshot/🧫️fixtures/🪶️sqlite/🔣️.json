@@ -1,0 +1,75 @@
+{
+  "dialect": {
+    "artifactKind": "s.reasoning.wires",
+    "standard": "1",
+    "subset": "*"
+  },
+  "content": {
+    "childId": "independent child 🧬\u0000",
+    "target": {
+      "artifactId": "independent target",
+      "dialect": {
+        "artifactKind": "native intermediate kind",
+        "standard": "",
+        "subset": "*"
+      }
+    }
+  },
+  "unsigned": [
+    "0",
+    "9007199254740993",
+    "18446744073709551615"
+  ],
+  "signed": [
+    "-9223372036854775808",
+    "9007199254740993",
+    "9223372036854775807"
+  ],
+  "floatWords": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000001234",
+    "fff8000000005678"
+  ],
+  "byteValues": [
+    0,
+    1,
+    127,
+    128,
+    255
+  ],
+  "duplicateNames": [
+    "same",
+    "same",
+    "",
+    "Unicode 🪐\u0000"
+  ],
+  "texts": [
+    "",
+    "UTF8 ä 🪐\u0000"
+  ],
+  "editedText": "independent SQLite edit",
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.space.home",
+      "standard": "1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.reasoning.wires",
+      "standard": "2",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.reasoning.wires",
+      "standard": "1",
+      "subset": "named"
+    }
+  ],
+  "deepLevels": 1024,
+  "metadataItems": 500,
+  "metadataValueBudget": 200000
+}

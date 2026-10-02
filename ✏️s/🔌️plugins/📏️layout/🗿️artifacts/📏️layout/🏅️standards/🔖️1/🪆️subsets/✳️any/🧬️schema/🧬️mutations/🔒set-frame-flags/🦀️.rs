@@ -26,8 +26,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for SetFrameFlags {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_set_frame_flags(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set flags on frame \"{}\"", self.frame_id), &format!("Markierungen von Rahmen \"{}\" setzen", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

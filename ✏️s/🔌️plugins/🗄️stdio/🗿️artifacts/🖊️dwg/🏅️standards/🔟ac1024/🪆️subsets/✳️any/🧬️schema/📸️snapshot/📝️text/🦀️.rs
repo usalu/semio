@@ -8,3 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type DwgSnapshotText = String;
 //#endregion 🚚️Carrier
+
+#[cfg(test)]
+#[path = "🧪️tests/🏗️grammar/🦀️.rs"]
+mod grammar_shape_tests;

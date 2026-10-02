@@ -199,7 +199,7 @@ pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) ->
 /// included — is set back to the exact list `base` carries, after the row is back in place.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn restore_face_at(index: usize, face: &ObjFace, base: &ObjSnapshot) -> Vec<ObjMutation> {
-    let disturbed = |faces: &[usize]| faces.iter().any(|member| *member >= index);
+    let disturbed = |faces: &[u64]| u64::try_from(index).is_ok_and(|index| faces.iter().any(|member| *member >= index));
     let mut undo = vec![ObjMutation::InsertFace(insert_face::InsertFace { index, face: face.clone() })];
     undo.extend(base.groups.iter().filter(|group| disturbed(&group.faces)).map(|group| ObjMutation::SetGroup(set_group::SetGroup { name: group.name.clone(), faces: group.faces.clone() })));
     undo.extend(base.objects.iter().filter(|object| disturbed(&object.faces)).map(|object| ObjMutation::SetObject(set_object::SetObject { name: object.name.clone(), faces: object.faces.clone() })));
@@ -360,7 +360,7 @@ impl OpText for ObjMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -370,7 +370,7 @@ impl OpText for ObjMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

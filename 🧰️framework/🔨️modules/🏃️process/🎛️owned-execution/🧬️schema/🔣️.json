@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "progress"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mode",
+          "expectedLines",
+          "expectedError"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "lines",
+              "pre-abort",
+              "abort",
+              "failure"
+            ]
+          },
+          "expectedLines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expectedError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "intervalMs",
+        "pattern"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "intervalMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pattern": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

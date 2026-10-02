@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "directory": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements",
+      "scenarios": [
+        "exact-pins"
+      ],
+      "oracle": "semver"
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🚫️reject-malformed-version-input",
+      "scenarios": [
+        "malformed-input-is-unsatisfied-never-a-throw"
+      ]
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️tests/🧿️flatten-class-name-inputs",
+      "scenarios": [
+        "flattens-nested-arrays-and-objects",
+        "suppresses-every-falsey-value",
+        "preserves-unclassified-application-classes",
+        "flattens-deeply-nested-mixed-input"
+      ],
+      "oracle": "clsx"
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️tests/🔀️merge-conflicting-utilities",
+      "scenarios": [
+        "last-surface-fill-wins",
+        "last-utility-in-a-family-wins",
+        "modifiers-scope-the-conflict",
+        "independent-inset-edges-survive"
+      ]
+    },
+    {
+      "directory": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧬️style-variants/🧪️tests/🎨️compile-style-variants",
+      "scenarios": [
+        "base-only-and-caller-classes",
+        "single-variant-matrix",
+        "boolean-choices-and-compound-conjunctions"
+      ],
+      "oracle": "class-variance-authority"
+    }
+  ],
+  "removedFiles": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧬️schema-vendor-annotation-vocabulary-v1/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🧬️schema/🔣️.json"
+  ],
+  "removedExports": [
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "names": [
+        "parseFeature",
+        "ParsedFeature",
+        "defineTestAdapter",
+        "AdapterContext",
+        "TestAdapter",
+        "FixtureManifest",
+        "IMPLEMENTATIONS",
+        "TEST_MODES",
+        "TEST_ROLES",
+        "FIXTURE_CLASSES",
+        "MUTATION_OUTCOME_CLASSES"
+      ]
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+      "names": [
+        "TestLevel",
+        "TEST_LEVELS",
+        "TEST_LEVEL_BUDGET_MS"
+      ]
+    }
+  ]
+}

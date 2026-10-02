@@ -24,23 +24,24 @@ async fn send(app: &mut Generation2dApp, args: serde_json::Value) {
     settle_registered_typed_operation(app, action_meta.instance_id).await.expect("nodeGraphEdit settles");
 }
 
-/// 🧾️ Every applied history row that carries document operations.
+/// 🧾️ Every applied history row that carries document operations, oldest first.
 async fn edit_rows(app: &mut Generation2dApp) -> Vec<HistoryEntry> {
-    PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect()
+    let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
 }
 
-/// 📍️ Places every widget of the document on the canvas in ONE setup edit, so a drag has base positions; answers the
-/// placed ids.
-async fn place_every_widget(app: &mut Generation2dApp) -> Vec<String> {
-    let mut placed = snapshot_read(app).host_snapshot.clone();
-    let ids: Vec<String> = placed.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
-    for (index, id) in ids.iter().enumerate() {
-        let _ = placed.layout.insert(id.clone(), semio_framework_artifact_flow_flow::WidgetLayout { x: index as f64 * 100.0, y: 50.0 });
-    }
-    let json = dsl::json::to_json_string(&dsl::ToValue::to_value(&placed));
-    placed.retire_cold();
-    edit(app, serde_json::json!([{ "operation": "setHostSnapshot", "hostSnapshotJson": json }])).await;
-    ids
+/// 📍️ Lays every widget of the document out on the canvas (the `reorganize` verb, ONE setup edit), so a drag has base
+/// positions; answers the placed ids with their base positions.
+async fn place_every_widget(app: &mut Generation2dApp) -> Vec<(String, (f64, f64))> {
+    dispatch(app, Generation2dCommand::Reorganize(crate::editor::generation2d::commands::reorganize::Reorganize {})).await;
+    let read = snapshot_read(app);
+    read.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
+}
+
+/// 📐️ Whether `id` sits at `(x, y)` up to the rounding of a relative offset re-derived from an absolute drop.
+fn sits_at(app: &Generation2dApp, id: &str, (x, y): (f64, f64)) -> bool {
+    position(app, id).is_some_and(|(at_x, at_y)| (at_x - x).abs() < 1e-9 && (at_y - y).abs() < 1e-9)
 }
 
 /// 🔌️ One live wire of the current document: `(id, fromNode, fromPort, toNode, toPort)`.
@@ -103,10 +104,11 @@ async fn disconnect_then_connect_round_trips_one_wire() {
 #[semio_framework_async_macros::async_test]
 async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
     let mut app = app().await;
-    let ids = place_every_widget(&mut app).await;
+    let (id, (x, y)) = place_every_widget(&mut app).await.remove(0);
+    let ids = [id];
     let before = edit_rows(&mut app).await.len();
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [ids[0]], "dx": 40.0, "dy": -12.5 }])).await;
-    assert_eq!(position(&app, &ids[0]), Some((40.0, 37.5)));
+    assert_eq!(position(&app, &ids[0]), Some((x + 40.0, y - 12.5)));
     let rows = edit_rows(&mut app).await;
     let rows = &rows[before..];
     assert_eq!(rows.len(), 1, "one drag, one row: {rows:?}");
@@ -123,20 +125,21 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
 #[semio_framework_async_macros::async_test]
 async fn zero_trace_two_transactions_and_the_palette_drop() {
     let mut app = app().await;
-    let ids = place_every_widget(&mut app).await;
+    let (id, (x, y)) = place_every_widget(&mut app).await.remove(0);
+    let ids = [id];
     let before = edit_rows(&mut app).await.len();
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": [ids[0]], "dx": 0.0, "dy": 0.0 }])).await;
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": ["ghost"], "dx": 10.0, "dy": 0.0 }])).await;
     assert_eq!(edit_rows(&mut app).await.len(), before, "nothing moved, nothing recorded");
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [ids[0]], "dx": 10.0, "dy": 0.0 }])).await;
-    dispatch(&mut app, Generation2dCommand::MoveMediaNode(crate::editor::generation2d::commands::move_media_node::MoveMediaNode { node_id: ids[0].clone(), x: 30.0, y: 80.0 })).await;
+    dispatch(&mut app, Generation2dCommand::MoveMediaNode(crate::editor::generation2d::commands::move_media_node::MoveMediaNode { node_id: ids[0].clone(), x: x + 30.0, y: y + 30.0 })).await;
     let rows = edit_rows(&mut app).await;
     let rows = &rows[before..];
     assert_eq!(rows.len(), 2, "{rows:?}");
     assert_ne!(rows[0].transaction.as_ref().expect("first").id, rows[1].transaction.as_ref().expect("second").id, "two moves are two transactions");
     assert_eq!(rows[1].transaction.as_ref().expect("drop").tool, "s.procedural.generation2d@1/*#editor#moveMediaNode");
-    assert_eq!(english(&rows[1]), "Move 1 node(s) by (20, 30)", "the drop is the offset from the base position (10, 50)");
-    assert_eq!(position(&app, &ids[0]), Some((30.0, 80.0)));
+    assert_eq!(english(&rows[1]), "Move 1 node(s) by (20, 30)", "the drop is the offset from the base position after the first drag");
+    assert!(sits_at(&app, &ids[0], (x + 30.0, y + 30.0)), "{:?}", position(&app, &ids[0]));
     close(app);
 }
 //#endregion ✋️NodeDrag
@@ -180,3 +183,24 @@ fn a_slider_tick_declares_the_narrow_scope() {
     }
 }
 //#endregion 🎚️SliderPress
+
+//#region 🔗️EditRows
+const NODE_GRAPH_EDIT_ROWS_JSON: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
+
+/// ⚖️ LAW (shared row contract, design §13.3; fixture `🧫️node-graph-edit-rows`): every accepted renderer row decodes, and
+/// every refused one — a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute move, an unknown
+/// operation — refuses the whole `nodeGraphEdit` batch, both at admission and at authoring.
+#[test]
+fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
+    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS_JSON).expect("node-graph edit rows fixture");
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        assert!(rows(&NodeGraphEdit { operations_json: serde_json::json!([case["row"]]).to_string() }).is_ok(), "{} decodes", case["id"]);
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
+        assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
+        let args: dsl::DslValue = serde_json::json!({ "operations": batch }).into();
+        assert!(<crate::editor::generation2d::Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&args)).is_err(), "{} is refused at admission", case["id"]);
+    }
+}
+//#endregion 🔗️EditRows

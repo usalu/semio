@@ -24,8 +24,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Rota
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rotate node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} drehen", self.at.layer))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate node in layer #{}", self.at.layer), &format!("Knoten in Ebene #{} drehen", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

@@ -3,7 +3,14 @@
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::Generation2dSnapshot;
-use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_BODY_INSPECTION: &str = "generation2d.play.inspection";

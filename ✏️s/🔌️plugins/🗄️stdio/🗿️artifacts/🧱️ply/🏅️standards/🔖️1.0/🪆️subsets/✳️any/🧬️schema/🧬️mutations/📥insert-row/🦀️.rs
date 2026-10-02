@@ -23,8 +23,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertRow {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::InsertRow(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert row", "Zeile einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert row", "Zeile einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

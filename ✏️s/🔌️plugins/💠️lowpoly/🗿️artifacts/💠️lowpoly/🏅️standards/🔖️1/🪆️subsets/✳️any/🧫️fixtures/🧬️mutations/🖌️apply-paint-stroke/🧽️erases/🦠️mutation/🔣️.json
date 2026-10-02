@@ -1,10 +1,9 @@
 {
   "ApplyPaintStroke": {
     "color": [
-      200,
-      30,
-      30,
-      255
+      0.78431374,
+      0.11764706,
+      0.11764706
     ],
     "eraser": true,
     "hardness": 1.0,

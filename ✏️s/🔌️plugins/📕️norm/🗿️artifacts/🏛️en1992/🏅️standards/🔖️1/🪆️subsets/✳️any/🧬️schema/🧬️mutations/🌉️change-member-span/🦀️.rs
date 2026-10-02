@@ -18,8 +18,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberSpan
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-span", kind: "change-member-span", record: "ChangedChangeMemberSpan" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change span of member {}", self.member_id), &format!("Stützweite von Bauteil {} ändern", self.member_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change span of member {}", self.member_id), &format!("Stützweite von Bauteil {} ändern", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

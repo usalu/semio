@@ -454,3 +454,236 @@ Two verdicts differ by renderer, and each case is recorded as a note:
 - The mirror keys may differ from the React ids. `mirrorFind` matches exact keys, then a `/`- or `.`-delimited suffix, and
   never a bare substring. A missing key is logged as absent, so calibration from the `--explore` dump is a one-line change
   per key.
+
+---
+
+# Run 3 — Session 2 (2026-10-01)
+
+Successor of W3-E2E (Session 2). Repair-first check (rule 21): the probe was complete (2198 lines, `🔖️Main` closed, strict
+`tsc` clean at the start); S2-W2C had only adjusted the blocking-rule regex. No half-finished edit.
+
+## R3.1 Probe changes (Phase 1)
+
+`T/🔍️time-travel-probe.ts` keeps its structure (regions, the renderer branch in every helper, the same verdict names for
+steps 1–9). Strict typecheck: `bunx tsc --noEmit -p T/🗑️generated/e2e/probe-tsconfig.json` → 0 errors (the probe is in
+`--listFiles`, check time 5 s).
+
+**Run order per locale:** 1 → 8, 10, 11, 12, 13, the reload check (attributed to step 5), 14, 9. Steps 10, 12, 13 and 14 need
+no earlier step (they only exclude A/B/C); step 11 needs step 2.
+
+| Step | Gap | What it drives (real controls only) | Verdicts |
+|---|---|---|---|
+| 3 (added) | G13 | After Edit: focus and the reveal, read before any probe scroll | `focus-moves-to-the-editor`, `history-panel-reveals-on-session-start` |
+| 4 (added) | G13 | After Accept | `focus-moves-to-the-band-on-review` |
+| 5 (added) | G13 | Finalize prompt open | `focus-moves-into-the-finalize-prompt` |
+| 9 (added) | — | Console | `console-is-debug-free` (any line containing `[DEBUG] ` fails) |
+| 10 | G6 | Select 2 nodes → palette `mod+p` → "Rotate…" → command panel form (angle default 90) → Execute → Edit the `rotate-selection` row → angle control; then the same for "Scale…" (factor default 1.5) | `g6-rotate-command-turns-the-selection-by-90-degrees`, `g6-rotate-is-one-row-labelled-from-its-leaf`, `g6-angle-is-a-dial`, `g6-angle-dial-shows-ticks-at-0-90-180-degrees` (React; a note on wgpu), `g6-angle-reads-degrees`, `g6-arrow-keys-step-the-angle-by-one-degree` (preview at 91° then 90°), `g6-page-up-goes-to-the-next-detent` (preview at 180°), `g6-exit-leaves-the-rotation-as-it-was`, `g6-scale-command-spreads-the-selection-by-1.5`, `g6-scale-is-one-row-labelled-from-its-leaf`, `g6-factor-slider-has-ticks-at-its-snaps`, `g6-factor-ticks-sit-on-a-log-axis` (React: tick 1 at 50 % of 0.1…10), `g6-out-of-bounds-factor-is-refused-naming-the-bound` (typed `-5` → "Must be greater than 0" / "Muss größer als 0 sein"), `g6-refusal-keeps-the-draft`, `g6-exit-leaves-the-scaling-as-it-was` |
+| 11 | keep editing | Edit the A/B drag, dy+10 → Accept → `ready` → Edit the downstream C drag from the review, dx+15 → Accept → Finalize → Overwrite | `keep-editing-first-review-is-ready`, `keep-editing-begins-another-mutation-from-a-ready-review`, `keep-editing-second-review-is-ready-with-two-accepted-drafts` ("Accepted changes: 2"), `keep-editing-review-shows-both-drafts`, `keep-editing-finalize-overwrites-both-in-one-row` ("… overwrite: 2 mutations"), `keep-editing-head-carries-both-edits` |
+| 12 | G3 | mod+d clone + drag → Edit the upstream `create-node` → Withdraw → Accept → Next problem → select two remaining nodes on the board → Use selection → Accept → Finalize → Overwrite | `g3-the-review-is-blocked`, `g3-the-downstream-drag-reads-error-target-missing`, `g3-next-problem-opens-the-failing-drag`, `g3-board-selection-works-while-editing`, `g3-use-selection-replaces-the-targets`, `g3-chips-show-labels-not-raw-ids`, `g3-board-highlights-the-referenced-nodes` (React `data-board-highlighted-ids-json`, wgpu `dumpBoard2d.highlighted`), `g3-preview-moves-the-new-targets`, `g3-editing-the-targets-makes-the-review-ready`, `g3-finalize-overwrite-closes-the-session`, `g3-head-equals-the-expectation` (head = pre-session head without the clone, the two nodes moved by the drag offset) |
+| 13 | G4 | S2-W2D scenario `warning-from-an-upstream-edit` on the live example: select P → Inspection panel row `puzzle2d-play-inspector.node.locked` (lock) → again (unlock) → drag P+Q → Edit the unlock → Withdraw → Accept → Finalize → Overwrite | `g4-lock-in-the-inspector-is-a-history-row`, `g4-unlock-in-the-inspector-is-a-history-row`, `g4-the-review-is-ready-not-blocked`, `g4-the-band-names-the-warning`, `g4-the-drag-row-reads-warning-partially-applied`, `g4-the-warning-is-marked-new-since-this-edit` (§16.5 `introduced`), `g4-the-replay-skips-the-locked-member`, `g4-the-warning-stays-visible-after-finalize`, `g4-the-head-keeps-the-locked-member-in-place`; after the folder reload: `warning-row-survives-the-reload` (filed under 13) |
+| reload (5) | G5 | Folder reload + reconnect, as Run 2, after step 13 | strict `document-rows-survive-the-reload` (the descriptionless exemption is gone), `no-row-reads-op-text-after-reload`, `alternatives-survive-the-reload`, `main-line-listed-after-the-reload`, `current-alternative-restored-after-the-reload`; on a build with no folder route (browser wgpu, S2-W2C decision) one plain reload and `reload-restores-the-edited-document` |
+| 14 | G13 | A fresh 375 × 812 context (`isMobile`, `hasTouch`): tap + drag one node → Edit → dx by keyboard → Accept by touch → Finalize by touch → Tab/Shift+Tab in the prompt → Overwrite by touch | `mobile-boots-at-375-px`, `mobile-no-horizontal-page-scroll`, `mobile-tap-selects-and-a-drag-moves-the-node`, `mobile-edit-opens-the-band`, `mobile-band-inside-the-viewport`, `mobile-band-controls-are-touch-sized` (≥ 24 × 24 CSS px), `mobile-editor-input-reachable-by-keyboard`, `mobile-accept-by-touch-reviews-ready`, `mobile-finalize-prompt-inside-the-viewport`, `mobile-finalize-prompt-is-keyboard-reachable`, `mobile-overwrite-by-touch-closes-the-session` |
+
+**Helper changes:**
+- **History paging.** The Commands list now holds about 35 rows per locale. Reading only its start and end windows would miss
+  the middle, so `pageHistory(down|up)` pages through the windowed body (0.8 viewport per page, stops at the edge or after
+  two pages with nothing new). `allHistoryRows`, `documentEditIds` and the new `findMutationRow` (newest first, expanding the
+  collapsed rows of each page) use it. `beginDragEdit` now finds the drag by its stable mutation id through
+  `findMutationRow`; it no longer expands rows that the window has unmounted.
+- **New helpers.** `beginEditOf(mutationKey)` (also Begin from a review), `newMutation(seq, matches)`, `selectNodes`,
+  `runPaletteCommand`, `readNumberControl` (dial, ticks with their axis %, `aria-value*`, refusal), `typeSliderText`
+  (double-click the readout, type, Enter), `pressUseSelection`, `focusRead`, `editorRevealed`, and the phone helpers
+  `chromeBox`, `bandControlBoxes`, `tapBand`, `tapOverwrite` and `tabsStayInThePrompt`.
+- **Reach.** `openTab` / `closePanels` reach the merged mobile panel through `ui.mobilePanel.toggle`, and `waitForBoot`
+  takes a window count (1 at phone width).
+- **wgpu.** `MirrorNode` gains `focused`, `valueMin`, `valueText`; `Board2dSurface`/`Vitals` gain `highlighted`; the contract text
+  for `dumpBoard2d` names `highlighted:[id]`. `--explore` now also dumps the Inspection panel and the palette (query "Rotate"
+  / "Drehen") so the first wgpu run can calibrate those keys.
+
+**Readings recorded in the verdicts (not product failures):**
+- `history-panel-reveals-on-session-start`: in one tab a session can only begin from the History panel's own Edit row action.
+  The verdict therefore checks that the panel is open with the editor's first input in view and uncovered, without a probe
+  scroll. A closed-panel begin needs the agent/MCP gateway, which this serve does not run.
+- Rotate and scale have no board gesture that both shells expose: the gumball has move and rotate flags only, and wgpu
+  publishes no gumball geometry. Step 10 therefore uses the palette command, which yields one `rotateSelection` /
+  `scaleSelection` ToolTransaction (tool `#editor#rotateSelection`) like any gesture.
+- On wgpu the slider ticks are painted only: the mirror projects `<input type=range>` with `aria-value*`. The tick verdicts
+  are React's; wgpu records a note with a screenshot, and the detent law is proven by PageUp.
+
+**Expected FAILs from reading the current source (predictions, not run results):**
+
+| Verdict(s) | Source fact | Owner |
+|---|---|---|
+| `g6-angle-is-a-dial`, `…ticks-at-0-90-180-degrees`, `…reads-degrees`, `g6-page-up-goes-to-the-next-detent` | `time_travel_input_row` (`🔌️plugin/⏪️time-travel/🦀️.rs` 🔖️Panel, Dial arm) builds a track slider without `appearance`, `snaps`, `display_factor`/`display_unit` | S2-W1E (S2.4 "time-travel mapping", NOT STARTED in its report) |
+| `g6-factor-ticks-sit-on-a-log-axis`, `g6-out-of-bounds-factor-is-refused-naming-the-bound` | the Slider arm ignores `scale: log` and passes no `limits`; React `Slider.commitTyped` then refuses `-5` with a null message (no visible text) | S2-W1E |
+| `g3-chips-show-labels-not-raw-ids` | puzzle 2d implements no `ArtifactApp::entity_label`, so the framework default `None` shows the raw id | S2-W2D |
+| `g3-board-highlights-the-referenced-nodes` (wgpu only) | `DumpBoard2dSurface` has no `highlighted` field | S2-W2C |
+| `reload-restores-the-edited-document` (wgpu only) | the browser wgpu build serves no folder transport (`📓️w2-c-report.md` S2.1) | S2-W2C / coordinator decision |
+
+## R3.2 Phase 2 — runs
+
+Pending: neither 6012 nor 6112 was served when Phase 1 closed (`curl` → 000). The commands, in order:
+1. `bun T/🔍️time-travel-probe.ts --port=6012 --locales=en,de`
+2. `bun T/🔍️time-travel-probe.ts --renderer=wgpu --port=6112 --explore`
+3. `bun T/🔍️time-travel-probe.ts --renderer=wgpu --port=6112 --locales=en,de`
+
+Expect about 12–15 min per locale on React.
+
+---
+
+## Session 3 — 2026-10-02
+
+Successor S3-E2E. Repair-first check (rule 28): the probe `T/🔍️time-travel-probe.ts` (3170 lines, 17:34 Oct 1) is older than
+the last report section (17:35 Oct 1), so no half-finished edit was left. Phase A (no serve up): close the N14 probe holes,
+give the probe its permanent home (N16), adopt the structural a11y oracle, strict `tsc`, plan Run 4. Phase B (after the
+coordinator's "serve up: 6012 / 6112"): Run 4.
+
+### S3.1 Status (kept current)
+
+- 11:55 — Phase A started; the permanent home was created from the ticket probe.
+- 12:30 — **Phase A done** (WRITTEN, TYPE-CLEAN, NOT YET RUN: no serve is up). The probe lives at
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts`. It is routed by `verify time-travel`, the nx
+  target `@semio-tech/framework-os-dev:time-travel` and two seed rows. Every N14 hole has a step. The ticket copy
+  `T/🔍️time-travel-probe.ts` is deleted, because the permanent module replaces it fully. Run 4 waits for "serve up: 6012 / 6112".
+
+### S3.2 N16 — the permanent home
+
+| Piece | Where | What |
+|---|---|---|
+| Test module | `🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts` (3.9 k lines, regions as before plus `🔖️AriaOracle`, `🔖️ReplayArm`, `🔖️LongHistory`, `🔖️Peers`) | exports `runTimeTravelCli(repoRoot, defaultOutDir, segments)`; there is no module-level `process.argv` and no top-level await. Playwright loads the way the other dev harnesses load it (`PLAYWRIGHT_MODULE_SPECIFIER` and `ensureParityPlaywrightBrowsersPath`, so the repo cache's chromium-1234 matches the root playwright 1.62.1). The serve comes from `ensureDevServe({variant: "puzzle2d", renderer})`: it reuses a serve that answers, or starts one and stops it after the run (zero-touch for a dev). An acceptance record `time-travel` is written through `withAcceptanceRecord`/`publishAcceptanceCheckResult`: pass, fail, or blocked when no serve is reachable; en + de summary; evidence = report `.md` + `.ndjson`. Ctrl-C stops after the running step and still writes the report. |
+| Route | `🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts` | `verify time-travel …` → `runTimeTravelCli(repoRoot, 🧑‍💻dev/🤖️generated/🧪️time-travel, …)`, the same pattern as `verify two-human`. The package `📜️script.ts` was not touched: it already routes `verify` to this router. |
+| nx target | `🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json` → `time-travel` | `bun ./📜️script.ts verify time-travel`, `cache: false`, inputs `default` + external `playwright` (the parity-journey shape), `forwardAllArgs`. |
+| Launch rows | `.vscode/🧩️launch.seed.jsonc` (the seed; `.vscode/launch.json` is generated from it by `🔌️plugin/📇️registry/🚀️launch/🟦️.ts`) | `⚖️gate⏪️time-travel⚛️react` (411.2781, `--serve http://127.0.0.1:6012/ --renderer react --locales en,de --chords en,de`) and `⚖️gate⏪️time-travel🧊️wgpu` (411.2782, :6112, `--renderer wgpu`). Group `4_gate`, placed right after `⚖️gate⏱️interaction-latency⚛️react` (411.278). **Coordinator:** regenerate `.vscode/launch.json` (I did not hand-edit generated output). |
+| Output | default `🧑‍💻dev/🤖️generated/🧪️time-travel/` (gitignored); my runs use `--out T/🗑️generated/s3-e2e/run4` | `probe-<renderer>-<stamp>.md/.ndjson/-<locale>-s<step>-<tag>.png/json`; the folder-attach folders sit under the same `--out` |
+
+CLI: `verify time-travel [--serve <url>] [--renderer react|wgpu] [--locales en,de] [--chords en,de] [--only 1,2,…,reload]
+[--folder-at 1|5] [--long-history <mutations>] [--out <dir>] [--explore]`. Flags take the codebase's `--flag value` form, not the
+old `--flag=value` form, so the coordinator's Phase B lines translate to `--serve http://127.0.0.1:6012/ --locales en,de
+--chords en,de`. `--chords` now defaults to `en,de`. `--only` selects steps; each selection boots its own document. The token
+`reload` selects the reload check, which is no longer tied to step 5, so step 13's warning-after-reload can run without
+steps 2–7.
+
+### S3.3 N14 — probe holes closed (Phase A)
+
+| Hole | Step | Real controls driven | New verdicts |
+|---|---|---|---|
+| en chords never driven | all | `--chords` defaults to `en,de`. `pressBand(control, way)`: step 11's second Accept takes `otherWay()` (chord ↔ button), so both are driven per locale. Discard is now driven too (it never was before). | `keep-editing-discard-returns-to-the-review-keeping-the-accepted-draft`; the `via` in every Accept verdict |
+| hard-minimum refusal on a stepper | 8 (`hardMinimumRefusal`) | In the open `create-node` session: type `-1` into the `/index` stepper (schema `minimum: 0`), Enter, then Home | `stepper-below-its-hard-minimum-is-refused-naming-the-bound` ("Must be at least 0" / "Muss mindestens 0 sein", `role=alert` + `aria-invalid`), `stepper-refusal-keeps-the-draft` (nothing dispatched, preview unchanged), `stepper-home-reaches-the-hard-minimum` (design §18) |
+| rotate/scale edits (not only reads) | 10 | rotate: after the zero-trace Exit, Edit again → PageUp to 180° → Accept → Finalize overwrite. scale: after the refused `-5`, type `2` in the readout → Accept → Finalize overwrite | `g6-rotate-edit-finalizes-the-new-angle`, `g6-rotate-row-reads-the-edited-angle` ("Rotate 2 items by 180°"), `g6-typed-factor-previews-the-new-spread`, `g6-scale-edit-finalizes-the-new-factor`, `g6-scale-row-reads-the-edited-factor` (replaces `g6-exit-leaves-the-scaling-as-it-was`) |
+| keep editing from a clean `ready` | 11 | as in Run 3, plus Discard and a re-Begin in the middle | see the first row |
+| Use selection on `drag-selection.targets` | 12 | unchanged (G3 loop) | unchanged |
+| warning flow + reload | 13 + `reload` | unchanged; the reload check can now run with 13 alone (`--only 1,13,reload,9`) | `warning-row-survives-the-reload` |
+| tablet | 15 (`deviceJourney(TABLET)`) | Fresh 768 × 1024 touch context (`📱️device`: 768 is a tablet). Same journey as the phone (14), which is now the same function | `tablet-*` twins of the 12 `mobile-*` verdicts |
+| long history ≥ 200, progress, Cancel, Replay again | 16 | Fresh document. Its example load is one transaction (`Puzzle2dActiveExampleWork`: one create-node per node, one connect-handles per edge; Nakagin has 180 nodes and 179 edges, so 360+ mutations). The step edits the transaction's first listed mutation with a real change: manifest id (text) > a node's x (+10) > Withdraw. Accept with the page armed: in the first frame that shows `replaying`, Cancel is pressed (in-page, the way a person reacts to the progress bar). Then Replay again with the page armed to press Edit on another mutation row while it replays. Then Exit. If no frame ever shows a replay, the history grows by one palette Set Active Example per round (up to 2) and the step retries; per-round timings go to the ndjson record `long-history`. | `g9-fresh-document-boots`, `g9-every-mutation-of-the-long-transaction-is-reachable` (acceptance item 1 / N1), `g9-the-replay-shows-progress-over-the-long-history` (total ≥ `--long-history`, default 200), `g9-cancel-stops-the-replay` (review `needsReplay`, "Replay cancelled"), `g9-replay-again-is-offered-after-cancel`, `g9-edit-during-replay-is-refused` (the Edit control disabled, or the `timeTravel.illegal` notice; never an `editing` frame after the press), `g9-the-replay-completes-the-review`, `g9-exit-leaves-zero-trace` |
+| Edit-during-replay refusal | 16 | see the row above | `g9-edit-during-replay-is-refused` |
+| second peer | 17 | Two fresh contexts, both attached to ONE fresh local folder. A drags one node, and the archive is written. B attaches and reads A's document. A begins a history edit. B drags another node. A receives it over the dev serve's `backbone.folder` change stream as a base move. A changes dx, Accepts and Finalizes. B converges. | `g10-first-peer-boots`, `…-attaches-the-shared-folder`, `…-edit-is-written-to-the-folder`, `g10-second-peer-boots`, `g10-second-peer-opens-the-shared-document`, `g10-first-peer-begins-a-history-edit`, `g10-second-peer-drags-another-node`, `g10-a-remote-edit-arrives-while-editing`, `g10-the-session-survives-the-base-move`, `g10-the-remote-edit-stays-downstream-and-unapplied-while-editing`, `g10-accept-replays-the-remote-edit-too`, `g10-finalize-closes-the-session`, `g10-the-second-peer-sees-the-finalized-edit` |
+
+**Second peer — what the dev serve can and cannot do without a hub (read from source, 12:10):**
+
+- **What syncs.** The dev serve does sync two browser contexts on the same document over a shared local folder.
+  - The Vite plugin `semioBackboneVitePlugin` (`🧑‍💻dev/🔌️vite-plugins/🟦️.ts`) serves `GET|PUT /semio-backbone?uri=folder://…&documentId=…`.
+  - Each client also gets the `backbone.folder` route on the dev stream mux. It is a debounced (200 ms) `fs.watch` of the folder's `.semio`, emitting `changed`.
+  - On `changed`, the store worker (`🏪️store/👷️worker/🟦️.ts` `pollFolderOnce`) reads the archive and emits `documentArchiveReplaced` unless the bytes equal its own echo.
+- **What that means for history.** The folder route is whole-archive, last-writer-wins replacement, not a merge. It carries the other peer's history and edits, so the base moves while editing, and step 17 asserts exactly that.
+- **What does not sync: presence.** The roster's ⏪ badge and the "is editing" notes travel only in hub presence frames (presence bit 13). The worker sets `presenceAuthority` only from a hub socket (`🏪️store/👷️worker/🟦️.ts` around line 4140, `ServerFrame::Presence`), and a folder binding carries no presence.
+- **Consequence for the probe.** The positive presence case needs a hub-backed space serve (`🚀️local-hub` plus serves joined with `?space=`), which only the coordinator can start. Step 17 records it as the note `g10-presence-travels-only-through-a-hub`. The one-tab negative stays as `presence-roster-shows-no-editing-peer` (step 3).
+
+**Also changed in the probe:**
+
+- **wgpu notices.** The step-9 wgpu `rejection-notices-carry-their-code` verdict is now observable. W2-C projects the transient notice as the polite `shell.notice` mirror node, described by its code (`🧯️wgpu-transient-notice`). `installNoticeTrace` observes it on both renderers.
+- **Notice codes across pages.** Notice codes are harvested before every reload and before every fresh context closes (`harvestNotices`), so step 9 compares every code the locale showed.
+- **`dumpBoard2d`.** Its `camera` may be null, and the probe now tolerates that.
+- **Docstring emojis.** All 162 docstrings in the module start with a unique emoji (73 inherited duplicates were renamed).
+
+### S3.4 a11y oracle (coordinator decision 3)
+
+The structural oracle is the third-party pair the React laws already use, `aria-query` 5.3.0 and `dom-accessibility-api` 0.5.16.
+Both are installed at the repo root, transitively through `@testing-library/dom`; no `axe-core`.
+
+- **How the probe loads it.** It bundles the pair once per run with `Bun.build`: a virtual entry module, resolved from the test
+  directory to the root `node_modules`, output as one 116 KB IIFE. It then evaluates the bundle into the live page through CDP,
+  so no page CSP applies.
+- **What it checks.** `ariaFindings` applies the W2-B law's rules in the live DOM:
+  - an unknown `aria-*` attribute;
+  - an attribute the role does not support;
+  - a dangling `labelledby` or `describedby`;
+  - a control without an accessible name — widened to tree items, tabs, menu items, options, checkboxes, switches and links;
+  - a duplicate id.
+- **Verdicts.**
+  - `aria-band-editor-and-history-have-no-structural-findings` (step 3);
+  - `aria-finalize-prompt-has-no-structural-findings` (step 5);
+  - `<device>-aria-band-and-history-have-no-structural-findings` and `<device>-aria-finalize-prompt-has-no-structural-findings` (steps 14 and 15).
+- **Roots.** React: `[data-semio-time-travel]`, the History panel and `[role=dialog]`. wgpu: the whole ARIA mirror, which shows
+  only the prompt while one is open.
+- **Self-check.** I proved the bundling path in Chromium on a static page first (12:05): names were computed, and an
+  unsupported `aria-checked` on `role=link` was reported.
+
+### S3.5 Phase A verification (commands and counts)
+
+| Command | Result |
+|---|---|
+| `bunx tsc --noEmit -p T/🗑️generated/s3-e2e/probe-tsconfig.json` (strict; files: the module and, in the second run, the router plus a canary) | Run 1 (module only): exit 0, **0 errors**, the module confirmed in the 1221-file program (`--listFilesOnly`). Run 2 (module + router + canary `const canary: number = runTimeTravelCli`): 3 errors = the canary (expected, which proves the graph is checked) + 2 in peer files the router imports, none in mine (below). |
+| `bun ./📜️script.ts verify taxonomy report --scope 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel` | `clean=true errors=0 warnings=0` |
+| Run 3 (module only, after the last edits, 12:40) | exit 0, **0 errors** |
+| `bun -e 'await import(<module>); await import(<router>)'` | both load: `[runTimeTravelCli]`, `[VerifyScript]` (7 s) |
+| `Bun.resolveSync` from the test directory | `dom-accessibility-api`, `aria-query` and `playwright` (1.62.1, chromium-1234 present in the repo cache) resolve to the repo root |
+| `Bun.JSONC.parse(.vscode/🧩️launch.seed.jsonc)` | valid; the 2 new rows with orders 411.2781 and 411.2782 (the 88 duplicate names are pre-existing placeholders) |
+| `project.json` JSON parse | valid; `targets.time-travel.options.command = bun ./📜️script.ts verify time-travel` |
+
+Peer type errors reached through `✅️verification/🟦️.ts` (not mine; bun strips types, so `verify` still runs):
+- `📇️directory/🧪️testkit/📡️client-probe/🟦️.ts:144` TS2741: the `MutationEnvelope` literal lacks `line`. It is imported via two-human.
+- `🔌️plugin/🏗️build/📥️installation/🟦️.ts:51` TS2345: `string` → `InstallationDirectoryV1`.
+
+### S3.6 Run 4 plan
+
+**Constraint.** A Bash call ends at 10 min, and I may not detach. A full two-locale run takes about 50–60 min per renderer
+(steps 1–13 ≈ 12–15 min per locale, plus 14–17 ≈ 15 min). So I run Run 4 in batches of ≤ 9 min, each in the foreground:
+
+```
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript && \
+bun ./📜️script.ts verify time-travel --serve <url> --renderer <r> --locales <l> --chords en,de --only <batch> \
+  --out <T>/🗑️generated/s3-e2e/run4 > <T>/🗑️generated/s3-e2e/run4-<r>-<l>-<batch>.txt 2>&1; echo exit=$?
+```
+
+Before every batch I check that the port answers with `curl`, so `ensureDevServe` only ever reuses a serve.
+
+| Batch | `--only` | Covers |
+|---|---|---|
+| A | `1,2,3,4,5,6,7,9` | boot + folder, drag, Edit/preview/editor/ARIA, stepper + Accept, Finalize + prompt ARIA, Undo/Redo, alternatives |
+| B | `1,2,3,4,5,reload,9` | the G5 folder reload of the overwrite and of every row |
+| C | `1,8,10,9` | fatal path + hard-minimum stepper, G6 dial/log slider + rotate/scale edits |
+| D | `1,2,11,12,9` | keep editing (Discard, the other way), G3 Use selection |
+| E | `1,13,reload,9` | G4 warning + warning after reload |
+| F | `1,14,15,9` | phone + tablet |
+| G | `1,16,9` | long history: progress, Cancel, Replay again, Edit refused while replaying |
+| H | `1,17,9` | two peers over one folder |
+
+Order:
+1. React :6012 — batches A–H in `en`, then in `de` (the de pass drives the same chords).
+2. wgpu :6112 — `--explore --locales en`, calibrate the mirror keys (a one-line change per key), then batches A–H in `en` and `de`.
+
+Every FAIL is routed with this table shape: verdict → evidence → owner (S3-W2A runtime/history body, S3-W2B React, S3-W2C wgpu
+shell, S3-W2D puzzle board, S3-W1E controls). The table goes to `main` and into S3.7.
+
+For a single unbatched run, the coordinator can start it detached from the main session (≈ 1 h per renderer):
+
+```
+bun nx run @semio-tech/framework-os-dev:time-travel -- --serve http://127.0.0.1:6012/ --renderer react \
+  --locales en,de --chords en,de --out <T>/🗑️generated/s3-e2e/run4-full
+```
+
+Predictions from reading the current source (to compare against Run 4):
+
+| Verdict | Source fact | Expected | Owner if red |
+|---|---|---|---|
+| `g9-every-mutation-of-the-long-transaction-is-reachable` | `HISTORY_PANEL_MUTATION_ROWS = 8` (`🔌️plugin/🦀️.rs` ~12383), no "more" row (N1) | FAIL | S3-W2A |
+| `g9-edit-during-replay-is-refused` | `TimeTravelSession::begin_refusal` now disables the Edit action while replaying, choosing or finalizing (`🔌️plugin/🦀️.rs` ~12433, N15 fixed in source) | PASS via `disabled` | S3-W2A |
+| `g9-the-replay-shows-progress…`, `g9-cancel-stops-the-replay` | progress frames at ≥ 5 % or ≥ 100 ms of a replay stepped in 4 ms turns; a 360-mutation replay may finish inside a few frames | unknown, which is why there are growth rounds | S3-W2A (G9) / S3-W1G (N17) |
+| `g6-angle-*`, `g6-factor-*` | `time_travel_slider` carries appearance Dial, snaps, display factor, precision and limits | PASS | S3-W1E |
+| `g3-chips-show-labels-not-raw-ids` | puzzle 2d implements `entity_label` (`✏️editor/🦀️.rs` ~5072) | PASS | S3-W2D |
+| `g10-*` base move while editing | never tested anywhere: does the archive replacement reach an editing store as `BaseMoved`, or does the frozen artifact lane refuse it? | unknown | S3-W2A / S3-W2B |
+| step 9 `rejection-notices-carry-their-code` (wgpu) | `shell.notice` projection exists | PASS when no unannounced refusal | S3-W2C |
+
+### S3.7 Run 4 — results
+
+Pending: no serve was up when Phase A closed.

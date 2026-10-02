@@ -8,7 +8,8 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
 use crate::PdfSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_ui_contract::BuiltNode;
 
 //#region 🔖️Constants

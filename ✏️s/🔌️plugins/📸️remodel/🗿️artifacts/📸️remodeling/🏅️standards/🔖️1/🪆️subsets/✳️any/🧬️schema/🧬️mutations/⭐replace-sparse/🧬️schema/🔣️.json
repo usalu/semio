@@ -15,56 +15,7 @@
     "sparse": {
       "anyOf": [
         {
-          "type": "object",
-          "title": "SparseCloud",
-          "additionalProperties": false,
-          "required": [
-            "points",
-            "colors"
-          ],
-          "properties": {
-            "points": {
-              "type": "string",
-              "format": "base64",
-              "description": "base64 of little-endian f32 lanes (semio_hub_remodel PackedF32)",
-              "x-semio-ui": {
-                "widget": "hidden",
-                "role": "value",
-                "label": {
-                  "en": "Points",
-                  "de": "Punkte"
-                },
-                "description": {
-                  "en": "Packed float32 xyz triples (base64).",
-                  "de": "Gepackte float32-xyz-Tripel (Base64)."
-                },
-                "group": "result",
-                "order": 10
-              }
-            },
-            "colors": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "format": "base64",
-              "description": "base64 of raw u8 lanes (semio_hub_remodel PackedU8)",
-              "x-semio-ui": {
-                "widget": "hidden",
-                "role": "value",
-                "label": {
-                  "en": "Colours",
-                  "de": "Farben"
-                },
-                "description": {
-                  "en": "Packed 8-bit RGB triples (base64).",
-                  "de": "Gepackte 8-Bit-RGB-Tripel (Base64)."
-                },
-                "group": "result",
-                "order": 20
-              }
-            }
-          }
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/SparseCloud"
         },
         {
           "type": "null"

@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, 
 // through `app`, not yet in the crate-root re-export list (w0-f Gap 1 only closed the surface
 // traits/builders/adapters, not this pre-existing type).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -89,7 +89,7 @@ impl ArtifactViewer for SourcingViewer {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             pool::BODY_KEY => pool::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

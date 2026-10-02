@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.gis.gisterrain` persists exactly two fields — an `f64` exaggeration and an opaque imported-features string — plus a content-addressed `mesh` child handle derived from both. No third party reads `.dsl.semio`, and `geo`, `geojson` and `gdal` were surveyed and declined, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schema, grammar and specification vectors.",
   "oracles": [

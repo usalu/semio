@@ -8,7 +8,10 @@ mod result_mode;
 pub use result_mode::ResultMode;
 
 use crate::model::Dof;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, BuiltNode, LocalizedLabel};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_contract::{Buildable, HasBase};
 use std::collections::HashMap;
 

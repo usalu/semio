@@ -43,31 +43,31 @@ impl SHomeArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.space.home` — twenty handcrafted schema leaves.
-pub fn home_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
-    ::semio_framework_schema::ArtifactSchemaDescriptor {
+pub fn home_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.space.home",
-        artifact: ::semio_framework_schema::FacetLeaves {
+        artifact: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: ::semio_framework_schema::FacetLeaves {
+        snapshot: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: ::semio_framework_schema::FacetLeaves {
+        diff: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: ::semio_framework_schema::FacetLeaves {
+        mutations: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -203,7 +203,7 @@ pub fn empty_shome_snapshot() -> crate::SHomeSnapshot {
 /// 🔎 Returns whether `s.space.home` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `empty_shome_snapshot` (same rule).
 pub fn artifact_schema_registered() -> bool {
-    ::semio_framework_schema::artifact_schema_descriptor_registered("s.space.home")
+    ::semio_framework_schema_registry::artifact_schema_descriptor_registered("s.space.home")
 }
 //#endregion 🔖️DocumentHelpers
 

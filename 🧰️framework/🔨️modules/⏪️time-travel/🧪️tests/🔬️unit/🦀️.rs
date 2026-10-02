@@ -327,6 +327,18 @@ fn every_context_reviews_as_the_fixture_says() {
     }
 }
 
+/// ✏️ `begin_refusal` answers, in every fixture context, exactly what applying the canonical `Begin` answers — the query a
+/// host disables its Edit control by never disagrees with the reducer.
+#[test]
+fn begin_is_refused_exactly_where_the_reducer_refuses_it() {
+    let law = law();
+    for (name, context) in law["contexts"].as_object().expect("contexts") {
+        let mut applied = session(context);
+        let refusal = applied.begin_refusal();
+        assert_eq!(refusal, applied.apply(event(&law["events"]["begin"])).err(), "{name}");
+    }
+}
+
 #[test]
 fn text_limits_hold_at_their_edges() {
     let max = TIME_TRAVEL_TEXT_MAX_BYTES;

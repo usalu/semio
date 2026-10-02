@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-events-go` router: `bun ./📜️script.ts test`. */
-import { goLevelTestArgs, goCoverageArgs, resolveTestLevel, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goLevelTestArgs, goCoverageArgs, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const moduleRoot = import.meta.dir;
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    runTestBudgeted("go", ["test", "...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, moduleRoot), ...rest], { cwd: moduleRoot });
+    await runRepositoryTestCommand("go", ["test", "...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, moduleRoot), ...rest], { cwd: moduleRoot });
   }
 }
 

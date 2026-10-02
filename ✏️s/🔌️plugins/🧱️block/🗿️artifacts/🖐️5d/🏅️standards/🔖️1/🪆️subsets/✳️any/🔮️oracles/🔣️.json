@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `Block5dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
   "oracles": [

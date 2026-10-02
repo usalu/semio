@@ -26,6 +26,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import copy
 import json
+import math
 import re
 
 from semio_repo_test import Adapter, Context, Outcome
@@ -39,12 +40,32 @@ VECTOR_ROOTS = {
     "rename-model-refuses-a-blank-name": "shared://🧬️mutations/🏷️rename-model/⛔️refuses",
     "change-model-version-bumps-the-version": "shared://🧬️mutations/🔢️change-model-version/✅️bumps",
     "change-model-version-refuses-a-blank-version": "shared://🧬️mutations/🔢️change-model-version/⛔️refuses",
-    "update-site-relocates-to-denver": "shared://🧬️mutations/🌍️update-site/✅️relocates-to-denver",
-    "update-site-refuses-a-bad-latitude": "shared://🧬️mutations/🌍️update-site/⛔️refuses-a-bad-latitude",
-    "update-ground-temperature-sets-denver-ground": "shared://🧬️mutations/🌡️update-ground-temperature/✅️sets",
-    "update-ground-temperature-refuses-a-short-year": "shared://🧬️mutations/🌡️update-ground-temperature/⛔️refuses",
-    "update-run-period-shortens-to-january": "shared://🧬️mutations/📅️update-run-period/✅️shortens",
-    "update-run-period-refuses-month-13": "shared://🧬️mutations/📅️update-run-period/⛔️refuses-month-13",
+    "change-site-latitude-sets": "shared://🧬️mutations/🌍️change-site-latitude/✅️sets",
+    "change-site-latitude-refuses": "shared://🧬️mutations/🌍️change-site-latitude/⛔️refuses",
+    "change-site-longitude-sets": "shared://🧬️mutations/🌏️change-site-longitude/✅️sets",
+    "change-site-longitude-refuses": "shared://🧬️mutations/🌏️change-site-longitude/⛔️refuses",
+    "change-site-elevation-sets": "shared://🧬️mutations/⛰️change-site-elevation/✅️sets",
+    "change-site-elevation-refuses": "shared://🧬️mutations/⛰️change-site-elevation/⛔️refuses",
+    "change-site-time-zone-sets": "shared://🧬️mutations/🕰️change-site-time-zone/✅️sets",
+    "change-site-time-zone-refuses": "shared://🧬️mutations/🕰️change-site-time-zone/⛔️refuses",
+    "change-site-north-axis-sets": "shared://🧬️mutations/🔝️change-site-north-axis/✅️sets",
+    "change-site-north-axis-same": "shared://🧬️mutations/🔝️change-site-north-axis/🟰️same",
+    "change-ground-temperature-building-surface-sets": "shared://🧬️mutations/🌡️change-ground-temperature/✅️sets",
+    "change-ground-temperature-building-surface-refuses": "shared://🧬️mutations/🌡️change-ground-temperature/⛔️refuses",
+    "change-ground-temperature-shallow-sets": "shared://🧬️mutations/🌱️change-ground-temperature/✅️sets",
+    "change-ground-temperature-shallow-refuses": "shared://🧬️mutations/🌱️change-ground-temperature/⛔️refuses",
+    "change-ground-temperature-deep-sets": "shared://🧬️mutations/⛏️change-ground-temperature/✅️sets",
+    "change-ground-temperature-deep-refuses": "shared://🧬️mutations/⛏️change-ground-temperature/⛔️refuses",
+    "change-run-period-start-month-sets": "shared://🧬️mutations/🛫️change-run-period-start/✅️sets",
+    "change-run-period-start-month-refuses": "shared://🧬️mutations/🛫️change-run-period-start/⛔️refuses",
+    "change-run-period-start-day-sets": "shared://🧬️mutations/▶️change-run-period-start/✅️sets",
+    "change-run-period-start-day-refuses": "shared://🧬️mutations/▶️change-run-period-start/⛔️refuses",
+    "change-run-period-end-month-sets": "shared://🧬️mutations/🛬️change-run-period-end/✅️sets",
+    "change-run-period-end-month-refuses": "shared://🧬️mutations/🛬️change-run-period-end/⛔️refuses",
+    "change-run-period-end-day-sets": "shared://🧬️mutations/⏹️change-run-period-end/✅️sets",
+    "change-run-period-end-day-refuses": "shared://🧬️mutations/⏹️change-run-period-end/⛔️refuses",
+    "change-run-period-year-sets": "shared://🧬️mutations/📅️change-run-period-year/✅️sets",
+    "change-run-period-year-refuses": "shared://🧬️mutations/📅️change-run-period-year/⛔️refuses",
     "replace-airflow-network-attaches-a-network": "shared://🧬️mutations/🫧️replace-airflow-network/✅️attaches",
     "replace-airflow-network-refuses-unpaired-nodes": "shared://🧬️mutations/🫧️replace-airflow-network/⛔️refuses",
     "add-output-variable-adds-zone-air-temp": "shared://🧬️mutations/📊️add-output-variable/✅️adds",
@@ -715,56 +736,99 @@ def change_model_version(before, payload):
     return after, applied()
 
 
-def update_site(before, payload):
-    """🌍️ `update-site` — one inseparable five-field facet, all fields required every time."""
-    site = {
-        "latitude_deg": payload["latitudeDeg"],
-        "longitude_deg": payload["longitudeDeg"],
-        "elevation_m": payload["elevationM"],
-        "time_zone_hours": payload["timeZoneHours"],
-        "north_axis_deg": payload["northAxisDeg"],
-    }
-    if not -90.0 <= site["latitude_deg"] <= 90.0 or not -180.0 <= site["longitude_deg"] <= 180.0 or not -12.0 <= site["time_zone_hours"] <= 14.0:
-        return unchanged(before), rejected("mutation.invariant", [])
-    if before["model"]["site"] == site:
-        return unchanged(before), no_op()
-    after = copy.deepcopy(before)
-    after["model"]["site"] = site
-    return after, applied()
+def _run_period_is_interval(period):
+    """🗓️ Both bounds are real dates of the period's year and the start does not lie after the end."""
+    year = period["year"]
+    leap = (year % 4 == 0 and year % 100 != 0) or year % 400 == 0
+    lengths = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+    def exists(month, day):
+        return 1 <= month <= 12 and 1 <= day <= lengths[month - 1]
+
+    start, end = (period["start_month"], period["start_day"]), (period["end_month"], period["end_day"])
+    return exists(*start) and exists(*end) and start <= end
 
 
-def update_ground_temperature(before, payload):
-    """🌡️ `update-ground-temperature` — twelve monthly values per series, read together."""
-    building = payload["buildingSurfaceC"]
-    shallow = payload["shallowC"]
-    if len(building) != 12 or len(shallow) != 12:
-        return unchanged(before), rejected("mutation.invariant", [])
-    ground = {"building_surface_c": building, "shallow_c": shallow, "deep_c": payload["deepC"]}
-    if before["model"]["ground_temperature"] == ground:
-        return unchanged(before), no_op()
-    after = copy.deepcopy(before)
-    after["model"]["ground_temperature"] = ground
-    return after, applied()
+def _site_leaf(field, wire, admissible):
+    """🌍️ A `change-site-<field>` leaf: one scalar of the site facet, refused outside its range."""
+    def apply(before, payload):
+        value = payload[wire]
+        if not admissible(value):
+            return unchanged(before), rejected("mutation.invariant", [])
+        if before["model"]["site"][field] == value:
+            return unchanged(before), no_op()
+        after = copy.deepcopy(before)
+        after["model"]["site"][field] = value
+        return after, applied()
+    return apply
 
 
-def update_run_period(before, payload):
-    """📅️ `update-run-period` — start and end are one calendar interval."""
-    run_period = {
-        "start_month": payload["startMonth"],
-        "start_day": payload["startDay"],
-        "end_month": payload["endMonth"],
-        "end_day": payload["endDay"],
-        "year": payload["year"],
-    }
-    months_ok = 1 <= run_period["start_month"] <= 12 and 1 <= run_period["end_month"] <= 12
-    days_ok = 1 <= run_period["start_day"] <= 31 and 1 <= run_period["end_day"] <= 31
-    if not months_ok or not days_ok:
-        return unchanged(before), rejected("mutation.invariant", [])
-    if before["model"]["run_period"] == run_period:
-        return unchanged(before), no_op()
-    after = copy.deepcopy(before)
-    after["model"]["run_period"] = run_period
-    return after, applied()
+def _ground_leaf(series):
+    """🌡️ A monthly ground-temperature leaf (`series` = None: the deep value): nothing below absolute zero."""
+    def apply(before, payload):
+        value, month = payload["newTemperatureC"], payload.get("month")
+        if (series is not None and not 1 <= month <= 12) or not math.isfinite(value) or value < -273.15:
+            return unchanged(before), rejected("mutation.invariant", [])
+        ground = before["model"]["ground_temperature"]
+        if (ground[series][month - 1] if series else ground["deep_c"]) == value:
+            return unchanged(before), no_op()
+        after = copy.deepcopy(before)
+        if series:
+            after["model"]["ground_temperature"][series][month - 1] = value
+        else:
+            after["model"]["ground_temperature"]["deep_c"] = value
+        return after, applied()
+    return apply
+
+
+def _run_period_leaf(field, wire, low, high):
+    """📅️ A run-period field leaf: refused outside its range, and refused (`mutation.target-mismatch`) when the edited
+    period stops being a calendar interval with the current other bound."""
+    def apply(before, payload):
+        value = payload[wire]
+        if not low <= value <= high:
+            return unchanged(before), rejected("mutation.invariant", [])
+        if before["model"]["run_period"][field] == value:
+            return unchanged(before), no_op()
+        after = copy.deepcopy(before)
+        after["model"]["run_period"][field] = value
+        if not _run_period_is_interval(after["model"]["run_period"]):
+            return unchanged(before), rejected("mutation.target-mismatch", [])
+        return after, applied()
+    return apply
+
+
+change_site_latitude = _site_leaf("latitude_deg", "newLatitudeDeg", lambda value: -90.0 <= value <= 90.0)
+change_site_longitude = _site_leaf("longitude_deg", "newLongitudeDeg", lambda value: -180.0 <= value <= 180.0)
+change_site_elevation = _site_leaf("elevation_m", "newElevationM", lambda value: -300.0 <= value < 8900.0)
+change_site_time_zone = _site_leaf("time_zone_hours", "newTimeZoneHours", lambda value: -12.0 <= value <= 14.0)
+change_site_north_axis = _site_leaf("north_axis_deg", "newNorthAxisDeg", math.isfinite)
+change_ground_temperature_building_surface = _ground_leaf("building_surface_c")
+change_ground_temperature_shallow = _ground_leaf("shallow_c")
+change_ground_temperature_deep = _ground_leaf(None)
+change_run_period_start_month = _run_period_leaf("start_month", "newStartMonth", 1, 12)
+change_run_period_start_day = _run_period_leaf("start_day", "newStartDay", 1, 31)
+change_run_period_end_month = _run_period_leaf("end_month", "newEndMonth", 1, 12)
+change_run_period_end_day = _run_period_leaf("end_day", "newEndDay", 1, 31)
+change_run_period_year = _run_period_leaf("year", "newYear", 0, 65535)
+
+
+#: ↩️ The base value each field leaf's undo writes back, as that leaf's own payload.
+FIELD_LEAVES = {
+    "change-site-latitude": lambda before, payload: {"newLatitudeDeg": before["model"]["site"]["latitude_deg"]},
+    "change-site-longitude": lambda before, payload: {"newLongitudeDeg": before["model"]["site"]["longitude_deg"]},
+    "change-site-elevation": lambda before, payload: {"newElevationM": before["model"]["site"]["elevation_m"]},
+    "change-site-time-zone": lambda before, payload: {"newTimeZoneHours": before["model"]["site"]["time_zone_hours"]},
+    "change-site-north-axis": lambda before, payload: {"newNorthAxisDeg": before["model"]["site"]["north_axis_deg"]},
+    "change-ground-temperature-building-surface": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["building_surface_c"][payload["month"] - 1]},
+    "change-ground-temperature-shallow": lambda before, payload: {"month": payload["month"], "newTemperatureC": before["model"]["ground_temperature"]["shallow_c"][payload["month"] - 1]},
+    "change-ground-temperature-deep": lambda before, payload: {"newTemperatureC": before["model"]["ground_temperature"]["deep_c"]},
+    "change-run-period-start-month": lambda before, payload: {"newStartMonth": before["model"]["run_period"]["start_month"]},
+    "change-run-period-start-day": lambda before, payload: {"newStartDay": before["model"]["run_period"]["start_day"]},
+    "change-run-period-end-month": lambda before, payload: {"newEndMonth": before["model"]["run_period"]["end_month"]},
+    "change-run-period-end-day": lambda before, payload: {"newEndDay": before["model"]["run_period"]["end_day"]},
+    "change-run-period-year": lambda before, payload: {"newYear": before["model"]["run_period"]["year"]},
+}
 
 
 def replace_airflow_network(before, payload):
@@ -6894,9 +6958,19 @@ def _invert_change_material_roughness(before, payload):
 VOCABULARY = {
     "rename-model": rename_model,
     "change-model-version": change_model_version,
-    "update-site": update_site,
-    "update-ground-temperature": update_ground_temperature,
-    "update-run-period": update_run_period,
+    "change-site-latitude": change_site_latitude,
+    "change-site-longitude": change_site_longitude,
+    "change-site-elevation": change_site_elevation,
+    "change-site-time-zone": change_site_time_zone,
+    "change-site-north-axis": change_site_north_axis,
+    "change-ground-temperature-building-surface": change_ground_temperature_building_surface,
+    "change-ground-temperature-shallow": change_ground_temperature_shallow,
+    "change-ground-temperature-deep": change_ground_temperature_deep,
+    "change-run-period-start-month": change_run_period_start_month,
+    "change-run-period-start-day": change_run_period_start_day,
+    "change-run-period-end-month": change_run_period_end_month,
+    "change-run-period-end-day": change_run_period_end_day,
+    "change-run-period-year": change_run_period_year,
     "replace-airflow-network": replace_airflow_network,
     "add-output-variable": add_output_variable,
     "remove-output-variable": remove_output_variable,
@@ -7470,15 +7544,8 @@ def invert(kind, before, payload):
         return [("rename-model", {"newName": before["model"]["name"]})]
     if kind == "change-model-version":
         return [("change-model-version", {"newVersion": before["model"]["version"]})]
-    if kind == "update-site":
-        site = before["model"]["site"]
-        return [("update-site", {"latitudeDeg": site["latitude_deg"], "longitudeDeg": site["longitude_deg"], "elevationM": site["elevation_m"], "timeZoneHours": site["time_zone_hours"], "northAxisDeg": site["north_axis_deg"]})]
-    if kind == "update-ground-temperature":
-        ground = before["model"]["ground_temperature"]
-        return [("update-ground-temperature", {"buildingSurfaceC": ground["building_surface_c"], "shallowC": ground["shallow_c"], "deepC": ground["deep_c"]})]
-    if kind == "update-run-period":
-        run_period = before["model"]["run_period"]
-        return [("update-run-period", {"startMonth": run_period["start_month"], "startDay": run_period["start_day"], "endMonth": run_period["end_month"], "endDay": run_period["end_day"], "year": run_period["year"]})]
+    if kind in FIELD_LEAVES:
+        return [(kind, FIELD_LEAVES[kind](before, payload))]
     if kind == "replace-airflow-network":
         network = before["model"]["airflow_network"]
         if network is None:

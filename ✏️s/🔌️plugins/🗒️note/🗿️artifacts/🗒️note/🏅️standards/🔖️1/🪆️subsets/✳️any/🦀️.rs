@@ -14,8 +14,8 @@ fn examples() -> &'static [ExampleSource] {
     EXAMPLES.get_or_init(|| vec![crate::standards::v1::subsets::any::examples::demo::source()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: std::sync::OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = std::sync::OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: std::sync::OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = std::sync::OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::note_artifact_inference_descriptor()]).as_slice()
 }
 

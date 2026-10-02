@@ -6,7 +6,9 @@
     "schemaVersion",
     "features",
     "links",
-    "expected"
+    "expected",
+    "candidateCases",
+    "authorityCases"
   ],
   "properties": {
     "schemaVersion": {
@@ -42,6 +44,86 @@
           },
           "file": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "candidateCases": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "inputs",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "mutation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "operation"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "operation": {
+                "enum": [
+                  "add",
+                  "remove"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "authorityCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "path",
+          "authority"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "authority": {
+            "enum": [
+              "root",
+              "taxonomy",
+              "policy"
+            ]
           }
         }
       }

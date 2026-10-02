@@ -47,3 +47,5 @@ record change-layer-transform tag=16
 field payload bytes
 record paint-stroke tag=17
 field payload bytes
+record fill-region tag=18
+field payload bytes

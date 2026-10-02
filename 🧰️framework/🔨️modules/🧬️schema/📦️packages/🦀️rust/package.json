@@ -10,7 +10,8 @@
   },
   "scripts": {
     "generate": "bun nx run @semio-tech/framework-schema:generate",
-    "check": "bun nx run @semio-tech/framework-schema:check"
+    "check": "bun nx run @semio-tech/framework-schema:check",
+    "test-neutrality": "bun nx run @semio-tech/framework-schema:test-neutrality"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

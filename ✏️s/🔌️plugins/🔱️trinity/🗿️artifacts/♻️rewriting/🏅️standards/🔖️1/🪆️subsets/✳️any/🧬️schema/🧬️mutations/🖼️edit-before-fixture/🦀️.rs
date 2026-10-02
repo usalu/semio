@@ -28,8 +28,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditBefo
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit before-fixture", "Ausgangszustand bearbeiten")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit before-fixture", "Ausgangszustand bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

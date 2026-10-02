@@ -11138,6 +11138,11 @@
       "key": "outcomeIntroduced",
       "en": "New since this edit",
       "de": "Neu durch diese Bearbeitung"
+    },
+    {
+      "key": "refusalMemberGone",
+      "en": "The part this history edit targets was closed",
+      "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
     }
   ],
   "codeLabels": [
@@ -11208,6 +11213,10 @@
     {
       "code": "timeTravel.commit-failed",
       "key": "commitFailed"
+    },
+    {
+      "code": "timeTravel.member-gone",
+      "key": "refusalMemberGone"
     }
   ]
 }

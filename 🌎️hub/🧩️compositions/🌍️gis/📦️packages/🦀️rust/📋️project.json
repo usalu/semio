@@ -174,15 +174,7 @@
       "outputs": [],
       "dependsOn": [
         "describe"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "gis-inference-discovery"
-          ]
-        }
-      }
+      ]
     }
   }
 }

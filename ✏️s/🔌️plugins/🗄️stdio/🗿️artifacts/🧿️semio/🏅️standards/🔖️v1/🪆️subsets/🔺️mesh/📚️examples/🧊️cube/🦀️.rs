@@ -5,7 +5,8 @@
 //! 🦀️.rs`) — asserted byte-identical to it by this subset's own `fixture_honesty_law`
 //! (`🚪️io/🦀️.rs`), so this fixture can never silently drift back to a fake.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "cube";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

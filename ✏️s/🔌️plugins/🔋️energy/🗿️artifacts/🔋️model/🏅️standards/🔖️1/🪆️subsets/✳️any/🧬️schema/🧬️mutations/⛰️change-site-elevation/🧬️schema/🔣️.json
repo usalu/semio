@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-elevation/schema.json",
+  "title": "ChangeSiteElevation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newElevationM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteElevation"
+    },
+    "newElevationM": {
+      "type": "number",
+      "minimum": -300,
+      "exclusiveMaximum": 8900,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Elevation",
+          "de": "Höhe über NN"
+        },
+        "description": {
+          "en": "Above sea level, -300 m to below 8900 m.",
+          "de": "Über Normalnull, -300 m bis unter 8900 m."
+        },
+        "unit": "m",
+        "step": 1,
+        "precision": 0,
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

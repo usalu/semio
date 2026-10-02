@@ -1,4 +1,8 @@
 use super::*;
+macro_rules! ordinary_fixture_spec {
+    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+}
+
 use crate::os_dsl::schema::{ExprOp, ExprValue};
 use crate::os_dsl::schema::{FieldSpec, RecordLayout};
 
@@ -21,7 +25,7 @@ fn header_spec() -> RecordSpec {
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
 fn table_row_with_nested_record_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(header_spec))])
+    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(ordinary_fixture_spec!(header_spec)))])
 }
 
 // 🚫️async: E4 fn-pointer slot — see nested_spec above
@@ -54,12 +58,12 @@ fn full_spec() -> RecordSpec {
             FieldSpec::new(7, "enum_field", Shape::Enum(vec![("red".to_string(), 0), ("green".to_string(), 1), ("blue".to_string(), 2)])),
             FieldSpec::new(8, "tuple_field", Shape::Tuple(Box::new(Shape::Int), Some(3))),
             FieldSpec::new(9, "list_field", Shape::List(Box::new(Shape::Text))),
-            FieldSpec::new(10, "record_field", Shape::Record(nested_spec)),
+            FieldSpec::new(10, "record_field", Shape::Record(ordinary_fixture_spec!(nested_spec))),
             FieldSpec::new(11, "block_field", Shape::Block(Box::new(Shape::Int))),
-            FieldSpec::new(12, "statements_field", Shape::Statements(vec![("foo".to_string(), stmt_foo_spec), ("bar".to_string(), stmt_bar_spec)])),
+            FieldSpec::new(12, "statements_field", Shape::Statements(vec![("foo".to_string(), ordinary_fixture_spec!(stmt_foo_spec)), ("bar".to_string(), ordinary_fixture_spec!(stmt_bar_spec))])),
             FieldSpec::new(13, "map_field", Shape::Map(Box::new(Shape::Int))),
             FieldSpec::new(14, "value_field", Shape::Value),
-            FieldSpec::new(15, "table_field", Shape::Table(table_row_spec)),
+            FieldSpec::new(15, "table_field", Shape::Table(ordinary_fixture_spec!(table_row_spec))),
             FieldSpec::new(16, "wire_field", Shape::Wire),
             FieldSpec::new(17, "quantity_field", Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap())),
             FieldSpec::new(18, "angle_field", Shape::Angle(crate::os_dsl::unit_by_symbol("deg").unwrap())),
@@ -230,7 +234,7 @@ fn packed_numeric_list_and_tuple_round_trip_and_use_packed_tags() {
 
 #[test]
 fn table_soa_round_trips_with_sparse_columns() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_spec))]);
+    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_spec)))]);
     let mut row0 = HashMap::new();
     row0.insert(1, FieldValue::UInt(10));
     row0.insert(2, FieldValue::Text("alpha".to_string()));
@@ -263,7 +267,7 @@ fn table_soa_round_trips_with_sparse_columns() {
 /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
 #[test]
 fn table_soa_nested_record_column_backfills_absent_option_subfield() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_nested_record_spec))]);
+    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_nested_record_spec)))]);
     let mut header_fields = HashMap::new();
     header_fields.insert(1, FieldValue::Text("Stakeholder A".to_string()));
     // "description" (field 2, Option<Text>) is intentionally omitted from the fixture — it
@@ -292,7 +296,7 @@ fn table_soa_nested_record_column_backfills_absent_option_subfield() {
 /// not a `FieldValue::List` — a `List` fails `[T; N]`'s `DslField::from_value` downstream.
 #[test]
 fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
-    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_tuple_spec))]);
+    let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_tuple_spec)))]);
     let mut row = HashMap::new();
     row.insert(1, FieldValue::UInt(1));
     row.insert(2, FieldValue::Tuple(vec![FieldValue::Float(0.1), FieldValue::Float(0.2), FieldValue::Float(0.3), FieldValue::Float(0.4), FieldValue::Float(0.5)]));

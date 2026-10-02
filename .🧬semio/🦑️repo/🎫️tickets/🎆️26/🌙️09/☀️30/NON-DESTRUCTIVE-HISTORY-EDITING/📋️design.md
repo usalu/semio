@@ -350,3 +350,54 @@ shape rule, Rust + TS twin, laws); W3-T2-STROKES converts remodel on top.
    2d / fem); `transform-mesh` is not used.
 7. **Fold footprint:** one framework helper derives a leaf's fold-footprint declaration from its inverse length, removing the
    under-declared-footprint hazard class (owner: CLOSURE, with a law over every plugin).
+
+## §18 Number-control keyboard law (coordinator, 2026-10-01)
+
+Slider, dial, stepper and vector axes share one law (UI contract corpus, Rust + TS + both shells): Arrow keys = one step
+(facet `step`, else 10^-precision in display units) then snap within tolerance; PageUp/PageDown = next/previous detent when
+`snaps` exist, else ±10 steps; Home/End = hard min/max; decimal round-half-away-from-zero at `precision` in display units
+(`displayFactor`), converted back without float noise.
+
+## §19 Session-3 decisions (coordinator, 2026-10-02)
+
+1. **Transaction row label = the transaction's declared intent leaf.** A tool transaction may carry structural support
+   leaves before its intent (generation3d's first gumball: `create-widget` + synapse splice, then `drag-transforms`).
+   `ArtifactApp::tool_intent_kinds(tool: &str) -> &'static [&'static str]` (default empty) declares, per tool id
+   (`TransactionRef.tool`), the mutation kinds that name the gesture; the history row is labelled by the FIRST op of the
+   transaction whose kind is declared, else by the first op (today's rule). No wire change: tool id and op kinds are already
+   persisted, so the label survives reload. Neither "first leaf" nor "last leaf" positional conventions (puzzle 2d's drag is
+   first, its `connect-handles` follow). Owner: S3-W2A (runtime), adopters declare (S3-PROCEDURAL first).
+2. **Operator inputs are edited as typed absolute leaves.** generation3d `change-widget-input {id, channel, value}` with
+   `value` a discriminated root union (`type`: number | text | boolean | point | vector), hard bounds and full `x-semio-ui`
+   per variant (same pattern as forms `change-block-field`, §17.1). P8 (operator input field, commit on blur) commits it;
+   P9 mesh edits insert the operator with DEFAULT params and append one `change-widget-input` per user-set channel (no
+   duplicated params inside the inserted record), so time travel edits "extrude distance = 0.1" directly.
+3. **Static records are edited per field.** A whole-record leaf committed by an inspector press masks a history edit of an earlier
+   press of another field (energy `update-site` / `update-ground-temperature` / `update-run-period`). Static records get field-granular
+   absolute leaves (`change-site-<field>`, …); a field value inconsistent with the record's CURRENT other fields refuses with
+   `mutation.target-mismatch` (Error). Whole-record leaves survive only for genuine whole-record intents (import). Dynamic,
+   user-defined fields keep the generic typed-union leaf (forms `change-block-field`, §17.1).
+
+## §20 Closure decisions (coordinator, 2026-10-02, from `📓️s3-closure-census.md`)
+
+1. **No amend on any lane (D1).** Continuous view/config inputs (camera, playback cursor, viewer camera, engagement) stream
+   through the WINDOW TRANSIENT while the gesture runs and commit ONE config edit when it ends (release, pause, seek end, blur) —
+   the same scrub/tool-machine pattern as artifact gestures, on the config lane. `ArtifactCommand::AmendLast`/`AmendLastInLane`,
+   `Emit::amend`, `Emit::amend_config`, `Emit.coalesce_key`, `Edit.coalesce_key` (wire, digest, `.spr`, `.ops`, channel, manifest)
+   and their codecs are deleted; fixtures re-sealed (greenfield, no compat). Config-lane edits never appear as history rows (L4).
+   Playback advancing per frame is transient state; the cursor persists on pause/stop/seek end.
+2. **reasoning/wires drag (D2)** → S3-GRAPHS: node-drag machine + relative `move-nodes`.
+3. **Generic snapshot editors (D3)** commit a path-scoped patch leaf (`snapshot_edit_patch`: JSON pointer + value whose input
+   schema is the snapshot sub-schema at that pointer, so the time-travel editor renders the right control) instead of a
+   whole-snapshot `SetSnapshot`; domain leaves are used wherever they exist. `snapshot_edit_set_snapshot` survives only for genuine
+   whole-document replacement intents (import / revert to file). Owner: S3-STDIO (non-text), S3-TEXT (text), S3-FLOWCAD (flow).
+4. **Hand-written commit labels (D4)** (`Emit::commit(mutations, "label")`) are deleted: labels come from `SemanticMutation::label`
+   (G7); the G7 gate fails on any literal commit label. Owners: S3-DRAW (10), S3-NORM (2), S3-SPATIAL (1); gate: S3-AGNOSTIC.
+5. **Derived fold footprint (§17.7)** schema-first: the leaf schema declares `x-semio-inverse-rows` (`fixed:N | perTarget:<field> |
+   bounded:<const>`), the mutation derive emits `inverse_rows()`, `ArtifactStoreOneItemFootprint::for_leaf` replaces every hand
+   declaration; a hand-written declaration is a gate failure. Owner: S3-CLOSURE.
+6. **No hand-written emission labels at all.** `Emit { description }` literals are the same G7 breach as `Emit::commit(…, label)`
+   (a non-localized string becomes the row label; 220 sites at 12:3x, mostly stdio `SetActiveExample` emits and per-editor commit
+   helpers). Every row label comes from the leaves (`SemanticMutation::label`, en/de) or, for runtime verbs (load example), from a
+   framework-localized label. Once the sites are gone, `Emit.description` and the label parameter of `Emit::commit` are DELETED from
+   the runtime (S3-CLOSURE), so the breach cannot be written again; gate class `labelHandwritten` (S3-AGNOSTIC).

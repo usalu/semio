@@ -48,7 +48,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                     ViewWindowInstance { id: "layout-right".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: "layout-preview".into(), window_kind_id: crate::editor::layout::LAYOUT_PLAY_WINDOW_PREVIEW.into() },
                 ],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };
             let left = view.for_window_instance("layout-left").unwrap();
             let right = view.for_window_instance("layout-right").unwrap();
@@ -92,7 +92,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 let reopened_right = scene(&mut reopened, &right).await?;
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                 if reopened_left.camera_x != left_scene.camera_x || reopened_right.camera_x != right_scene.camera_x { return Err("Layout config changed during restore".into()); }
-                let stale = ViewModel { window_id: Some("lost-layout".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                let stale = ViewModel { window_id: Some("lost-layout".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 if addressed(&stale, LayoutWindowConfig::default()).is_ok() { return Err("Layout accepted stale window identity".into()); }
                 let wrong = view.for_window_instance("layout-preview").unwrap();
                 let mutation = addressed(&wrong, LayoutWindowConfig::default()).map_err(|error| format!("{error:?}"))?;

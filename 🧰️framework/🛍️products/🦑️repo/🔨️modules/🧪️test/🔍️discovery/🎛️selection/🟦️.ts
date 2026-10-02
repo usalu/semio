@@ -1,4 +1,5 @@
-import { type CoverageRow, type DiscoveredCase, type FixtureManifest, type Implementation, type MutationManifest, discoverTestCases } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type FixtureManifest, type Implementation } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type CoverageRow, type DiscoveredCase, type MutationManifest, discoverTestCases } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🎛️ Narrows discovery to the cases a command was pointed at (`--case`, `--owner`, `--project`). */
 export function selectCases(repoRoot: string, segments: readonly string[]): DiscoveredCase[] {

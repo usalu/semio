@@ -432,7 +432,7 @@ impl Host {
             source: &'a str,
             target: &'a str,
         }
-        let filter = dsl::to_dsl_value(&IoRoutesFilter { source, target }).ok();
+        let filter = Some(semio_framework_value::ToValue::to_value(&IoRoutesFilter { source, target }));
         self.registry_query("io-routes", filter).await
     }
 
@@ -442,7 +442,7 @@ impl Host {
         struct IoIdentifyFilter {
             payload: Vec<u8>,
         }
-        let filter = dsl::to_dsl_value(&IoIdentifyFilter { payload: payload.to_vec() }).ok();
+        let filter = Some(semio_framework_value::ToValue::to_value(&IoIdentifyFilter { payload: payload.to_vec() }));
         self.registry_query("io-identify", filter).await
     }
 

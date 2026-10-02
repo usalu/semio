@@ -1,0 +1,12 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "type":"object","additionalProperties":false,"required":["package","rows","text","binary"],
+ "properties":{
+  "package":{"type":"object","additionalProperties":false,"required":["parts","contentTypes","relationships","comment"],"properties":{
+   "parts":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["path","contentType","bytes"],"properties":{"path":{"type":"string"},"contentType":{"type":"string"},"bytes":{"$ref":"#/$defs/octets"}}}},
+   "contentTypes":{"type":"object","additionalProperties":false,"required":["defaults","overrides"],"properties":{"defaults":{"type":"array","items":{"$ref":"#/$defs/pair"}},"overrides":{"type":"array","items":{"$ref":"#/$defs/pair"}}}},
+   "relationships":{"type":"object","additionalProperties":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","relType","target","targetMode"],"properties":{"id":{"type":"string"},"relType":{"type":"string"},"target":{"type":"string"},"targetMode":{"enum":["internal","external"]}}}}},"comment":{"type":"string"}
+  }},"rows":{"type":"integer","minimum":1},"text":{"type":"string"},"binary":{"$ref":"#/$defs/octets"}
+ },
+ "$defs":{"octets":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"pair":{"type":"array","prefixItems":[{"type":"string"},{"type":"string"}],"minItems":2,"maxItems":2,"items":false}}
+}

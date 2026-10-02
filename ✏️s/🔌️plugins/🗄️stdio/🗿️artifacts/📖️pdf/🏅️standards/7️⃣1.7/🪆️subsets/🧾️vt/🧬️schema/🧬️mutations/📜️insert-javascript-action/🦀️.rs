@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for InsertJavascriptAction {
         vec![PdfVtMutation::RemoveJavascriptAction(RemoveJavascriptAction { script: self.script.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert JavaScript action", "JavaScript-Aktion einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert JavaScript action", "JavaScript-Aktion einfügen")
     }
 
     fn target(&self) -> Vec<String> {

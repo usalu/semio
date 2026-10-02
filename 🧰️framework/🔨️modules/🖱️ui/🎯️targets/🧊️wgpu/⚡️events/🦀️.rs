@@ -15,12 +15,12 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::layout::{
-    number_stepper_segments, ring_t_at, slider_control_presentation, slider_unit_label, slider_value_at, tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics,
+    number_stepper_segments, ring_t_at, slider_control_presentation, tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics,
 };
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer, INTENT_VALUE_FIELD};
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use ui_contract::{FlowInline, Trigger, UiFlow};
 
 //#region 🔖️UiEvent
@@ -377,18 +377,20 @@ impl FocusState {
                 previous_node.flags.set(NodeFlags::FOCUS_VISIBLE, false);
                 previous_node.state.caret_visible = false;
                 previous_node.state.slider_readout_click_at = None;
-                let buffer = previous_node.state.edit.take();
+                let refusal = if matches!(previous_node.spec.0, UiNode::Slider(_)) { previous_node.state.number_refusal.clone() } else { edit_refusal(previous_node) };
+                previous_node.state.number_refusal = refusal.clone();
+                let buffer = if refusal.is_some() { None } else { previous_node.state.edit.take() };
                 let press = matches!(previous_node.spec.0, UiNode::Input(_) | UiNode::NumberStepper(_)).then(|| previous_node.state.scrub_gesture.take()).flatten();
-                if let Some(edit) = buffer {
-                    if commits_on_blur(&previous_node.spec.0) {
-                        committed = edit_commit_action(previous_node, &edit.text).map(|fired| (previous, fired));
-                    } else if let Some(gesture) = press {
-                        committed = edit_commit_action(previous_node, &edit.text).map(|mut fired| {
-                            let value = fired.input.take().unwrap_or(DslValue::Null);
-                            fired.input = Some(DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(true))]));
-                            (previous, fired)
-                        });
+                let offered = previous_node.state.scrub_offered.take();
+                if let Some(edit) = buffer.as_ref().filter(|_| commits_on_blur(&previous_node.spec.0)) {
+                    committed = edit_commit_action(previous_node, &edit.text).map(|fired| (previous, fired));
+                } else if let Some(gesture) = press {
+                    let value = buffer.and_then(|edit| edit_commit_action(previous_node, &edit.text)).and_then(|mut fired| fired.input.take()).or(offered);
+                    committed = match value {
+                        Some(value) => press_release(&previous_node.spec.0, gesture, value),
+                        None => press_cancel(&previous_node.spec.0, gesture, "blur"),
                     }
+                    .map(|fired| (previous, fired));
                 }
             }
             tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
@@ -516,9 +518,12 @@ fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::Action
 /// way rather than inventing a second gesture for it.
 fn editable_value(node: &UiNode) -> Option<String> {
     match node {
-        UiNode::Input(input) => Some(input.value.clone()),
+        UiNode::Input(input) => Some(match input.display_factor.filter(|_| input.input_kind == "number").zip(input.value.trim().parse::<f64>().ok()) {
+            Some((_, stored)) => number_field_text(input, stored),
+            None => input.value.clone(),
+        }),
         UiNode::IconSelect(select) => Some(select.value.clone()),
-        UiNode::NumberStepper(stepper) => Some(crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision)),
+        UiNode::NumberStepper(stepper) => Some(crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision, stepper.display_factor)),
         _ => None,
     }
 }
@@ -539,12 +544,12 @@ fn commits_on_blur(node: &UiNode) -> bool {
 fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Input(input) => {
-            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(text.parse::<f64>().unwrap_or(f64::NAN), input)) } else { DslValue::String(text.to_string()) };
+            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
         }
         UiNode::IconSelect(select) => fired_action(&select.on_change, Trigger::Change, DslValue::String(text.to_string())),
-        UiNode::NumberStepper(stepper) => text.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| constrain_stepper_value(value, stepper)).and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
+        UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).ok().map(|value| constrain_stepper_value(value, stepper)).and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
         _ => None,
     }
 }
@@ -595,16 +600,26 @@ fn constrain_number_field(value: f64, input: &crate::wgpu::component::ui::UiInpu
         return value;
     }
     let constrained = constrain_number_input(value, input.min, input.max, input.step);
-    input.precision.map_or(constrained, |precision| ui_contract::round_ui_number(constrained, precision))
+    match (input.precision, input.display_factor) {
+        (None, _) => constrained,
+        (Some(precision), None) => ui_contract::round_ui_number(constrained, precision),
+        (Some(precision), Some(factor)) => ui_contract::round_ui_number(constrained * factor, precision) / factor,
+    }
 }
 
 fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
     let clamped = value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY));
-    stepper.precision.map_or(clamped, |precision| ui_contract::round_ui_number(clamped, precision))
+    match (stepper.precision, stepper.display_factor) {
+        (None, _) => clamped,
+        (Some(precision), None) => ui_contract::round_ui_number(clamped, precision),
+        (Some(precision), Some(factor)) => ui_contract::round_ui_number(clamped * factor, precision) / factor,
+    }
 }
 
+/// 🦉️ A stepper's live stored value: its edit buffer read back from display units (a candidate keeping its exact stored
+/// value), else its declared value.
 fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
-    node.state.edit.as_ref().and_then(|edit| edit.text.parse::<f64>().ok()).filter(|value| value.is_finite()).unwrap_or(stepper.value)
+    node.state.edit.as_ref().and_then(|edit| edit.text.trim().parse::<f64>().ok()).filter(|value| value.is_finite()).map(|typed| ui_contract::ui_number_typed_value(typed, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()))).unwrap_or(stepper.value)
 }
 
 fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
@@ -616,7 +631,45 @@ fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
     if slider.snaps.contains(&value) {
         return value;
     }
+    if slider.precision.is_some() {
+        return value.clamp(slider.min, slider.max.max(slider.min));
+    }
     constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))
+}
+
+/// 🪐️ The stored number a typed text of a numeric control means (display units read back by the contract's
+/// `ui_number_typed_value`, a candidate keeping its exact stored value), or `Err` with the refusal a renderer shows — the
+/// crossed bound's producer-localized text (empty for an unlabelled bound or an unreadable text). A refused text is never
+/// dispatched; the draft is kept.
+pub(crate) fn typed_number(text: &str, display_factor: Option<f64>, precision: Option<u16>, candidates: impl IntoIterator<Item = f64>, min: Option<f64>, max: Option<f64>, limits: Option<&ui_contract::UiNumberLimits>) -> Result<f64, String> {
+    let typed = text.trim().parse::<f64>().ok().filter(|value| value.is_finite()).ok_or_else(String::new)?;
+    let stored = ui_contract::ui_number_typed_value(typed, display_factor, precision, candidates);
+    match ui_contract::ui_number_crossed_bound(stored, min, max, limits) {
+        Some(bound) => Err(bound.refusal.map(|label| label.0.as_str().to_string()).unwrap_or_default()),
+        None => Ok(stored),
+    }
+}
+
+/// 🛰️ A number field's stored value and detents — the candidates a typed display value keeps exactly.
+fn current_stored(input: &crate::wgpu::component::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
+    input.value.trim().parse::<f64>().ok().into_iter().chain(input.snaps.iter().copied())
+}
+
+/// 🧿️ The text a number field's edit buffer shows for a stored value: its display text at its precision.
+fn number_field_text(input: &crate::wgpu::component::ui::UiInputNode, stored: f64) -> String {
+    ui_contract::ui_number_display_text(stored, input.display_factor, input.precision)
+}
+
+/// 🚧️ The refusal a numeric control's current edit buffer earns, `None` when it is admitted (or the node is no numeric
+/// control) — the one verdict commit, blur and paint share.
+pub(crate) fn edit_refusal(node: &Node) -> Option<String> {
+    let text = node.state.edit.as_ref()?.text.as_str();
+    match &node.spec.0 {
+        UiNode::Input(input) if input.input_kind == "number" => typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).err(),
+        UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).err(),
+        UiNode::Slider(slider) => typed_number(text, slider.display_factor, slider.precision, std::iter::once(slider_live_value(node, slider)).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref()).err(),
+        _ => None,
+    }
 }
 
 fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32) -> Option<f64> {
@@ -650,9 +703,9 @@ fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: Flow
     match &node.spec.0 {
         UiNode::Toggle(toggle) => fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)),
         UiNode::Slider(slider) => {
-            let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
-            let track = slider_control_presentation(bounds, slider.value, slider.min, slider.max, unit_width, control_gap, inline).slider.track_cell;
-            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_value_at(track, x, slider.min, slider.max, slider.step, &slider.snaps)))).flatten()
+            let unit_width = slider.unit_label().map(|_| inline_suffix_width);
+            let track = slider_control_presentation(bounds, slider.axis_position(slider.value), 0.0, 1.0, unit_width, control_gap, inline).slider.track_cell;
+            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(crate::wgpu::slider::slider_node_pointer_value(slider, track, x, y)))).flatten()
         }
         UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
         UiNode::NumberStepper(stepper) => {
@@ -688,7 +741,7 @@ fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: 
         "End" => ui_contract::SliderKey::End,
         _ => return None,
     };
-    Some(ui_contract::slider_key_value(current, slider.min, slider.max, slider.step, slider.snaps.iter().copied(), key, shift))
+    Some(ui_contract::slider_key_value(current, slider.min, slider.max, slider.step, slider.precision, slider.display_factor, slider.snaps.iter().copied(), key, shift))
 }
 
 fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
@@ -722,13 +775,13 @@ const SCRUB_ABORT_ARG: &str = "abort";
 /// 🔢️ Process-wide press serial: every press identity is unique for the life of the guest it addresses.
 static SCRUB_PRESS_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// 🎚️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `NumberStepper`'s absolute value,
-/// or a number `Input` without a commit policy (React's `SliderView`, `NumberStepperView` and `InputView` ride their
-/// continuous lane exactly then; a typed field's blur is the release).
+/// 🎚️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `Ring`, a `NumberStepper`'s absolute
+/// value, or a number or colour `Input` without a commit policy (React's `SliderView`, `RingView`, `NumberStepperView` and
+/// `InputView` ride their continuous lane exactly then; a typed field's blur is the release).
 fn is_continuous_control(node: &UiNode) -> bool {
     match node {
-        UiNode::Slider(_) | UiNode::NumberStepper(_) => true,
-        UiNode::Input(input) => input.input_kind == "number" && !commits_on_blur(node),
+        UiNode::Slider(_) | UiNode::Ring(_) | UiNode::NumberStepper(_) => true,
+        UiNode::Input(input) => matches!(input.input_kind.as_str(), "number" | "color") && !commits_on_blur(node),
         _ => false,
     }
 }
@@ -741,6 +794,9 @@ fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredActio
     let gesture = node.state.scrub_gesture.get_or_insert_with(|| format!("{window_id}/{}:{}", id.identity_parts().0, SCRUB_PRESS_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1)).clone();
     if release {
         node.state.scrub_gesture = None;
+        node.state.scrub_offered = None;
+    } else {
+        node.state.scrub_offered = Some(value.clone());
     }
     fired.input = Some(DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(release))]));
     fired
@@ -751,13 +807,29 @@ fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredActio
 fn cancelled_press(tree: &mut UiTree, id: NodeId, reason: &str) -> Option<FiredAction> {
     let node = tree.node_mut(id)?;
     let gesture = node.state.scrub_gesture.take()?;
-    let action = match &node.spec.0 {
-        UiNode::Slider(slider) => &slider.on_change,
-        UiNode::Input(input) => &input.on_change,
-        UiNode::NumberStepper(stepper) => &stepper.on_absolute,
-        _ => return None,
-    };
-    fired_action(action, Trigger::Change, DslValue::Object(vec![(SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_ABORT_ARG.to_string(), DslValue::String(reason.to_string()))]))
+    node.state.scrub_offered = None;
+    press_cancel(&node.spec.0, gesture, reason)
+}
+
+/// 🔗️ The binding every dispatch of a continuous control's presses goes through.
+fn press_binding(node: &UiNode) -> Option<&ActionDescriptor> {
+    match node {
+        UiNode::Slider(slider) => Some(&slider.on_change),
+        UiNode::Ring(ring) => Some(&ring.on_change),
+        UiNode::Input(input) => Some(&input.on_change),
+        UiNode::NumberStepper(stepper) => Some(&stepper.on_absolute),
+        _ => None,
+    }
+}
+
+/// 🪃️ The host cancel `{gesture, abort}` of the press `gesture` on `node`'s own binding.
+fn press_cancel(node: &UiNode, gesture: String, reason: &str) -> Option<FiredAction> {
+    fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_ABORT_ARG.to_string(), DslValue::String(reason.to_string()))]))
+}
+
+/// 🏁️ The release `{value, gesture, commit: true}` of the press `gesture` on `node`'s own binding.
+fn press_release(node: &UiNode, gesture: String, value: DslValue) -> Option<FiredAction> {
+    fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(true))]))
 }
 /// 📐️ One node's absolute painted rect: its own accepted layout plus every ancestor's origin — the
 /// same accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/`paint::paint_node` each
@@ -2028,19 +2100,18 @@ impl EventRouter {
         let Some(node) = tree.node_mut(id) else { return };
         let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
         let value = constrain_stepper_value(number_stepper_live_value(node, stepper) + delta, stepper);
-        let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision);
+        let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
     }
 
+    /// 🪁️ After an edit-buffer mutation: the typed draft is kept as typed (never clamped), a stepper — which dispatches every
+    /// admitted keystroke — shows the refusal its draft earns at once, and every other numeric control re-earns its refusal at
+    /// its commit (Enter, blur).
     fn normalize_stepper_edit(&mut self, tree: &mut UiTree, id: NodeId) {
         let Some(node) = tree.node_mut(id) else { return };
-        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
-        let Some(value) = node.state.edit.as_ref().and_then(|edit| edit.text.parse::<f64>().ok()).filter(|value| value.is_finite()) else { return };
-        let text = crate::wgpu::stepper::stepper_value_text(constrain_stepper_value(value, stepper), stepper.precision);
-        let caret = text.len();
-        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        node.state.number_refusal = if matches!(node.spec.0, UiNode::NumberStepper(_)) { edit_refusal(node) } else { None };
     }
 
     fn arm_stepper_repeat(&mut self, tree: &UiTree, id: NodeId, x: f32, y: f32) {
@@ -2108,18 +2179,18 @@ impl EventRouter {
         let Some(node) = tree.node(id) else { return false };
         let UiNode::Slider(slider) = &node.spec.0 else { return false };
         let value = slider_live_value(node, slider);
-        let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| tree.accepted_inline_suffix_width(id).unwrap_or(0.0));
-        if !slider_control_presentation(bounds, value, slider.min, slider.max, unit_width, self.control_gap, self.flow.inline).slider.value_cell.contains(x, y) {
+        let unit_width = slider.unit_label().map(|_| tree.accepted_inline_suffix_width(id).unwrap_or(0.0));
+        if !slider_control_presentation(bounds, slider.axis_position(value), 0.0, 1.0, unit_width, self.control_gap, self.flow.inline).slider.value_cell.contains(x, y) {
             if let Some(node) = tree.node_mut(id) {
                 node.state.slider_readout_click_at = None;
             }
             return false;
         }
-        let Some(node) = tree.node_mut(id) else { return false };
         let double_click = node.state.slider_readout_click_at.is_some_and(|at| self.clock_seconds - at <= SLIDER_DOUBLE_CLICK_SECONDS);
+        let text = double_click.then(|| slider.readout(value));
+        let Some(node) = tree.node_mut(id) else { return false };
         node.state.slider_readout_click_at = (!double_click).then_some(self.clock_seconds);
-        if double_click {
-            let text = ui_contract::format_ui_number(value);
+        if let Some(text) = text {
             let caret = text.len();
             node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
             tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
@@ -2130,14 +2201,27 @@ impl EventRouter {
     fn finish_slider_readout_edit(&mut self, tree: &mut UiTree, id: NodeId) -> Option<FiredAction> {
         let node = tree.node(id)?;
         let UiNode::Slider(slider) = &node.spec.0 else { return None };
-        let raw = node.state.edit.as_ref()?.text.parse::<f64>().ok().filter(|value| value.is_finite());
-        let candidate = raw.filter(|value| *value >= slider.min && *value <= slider.max).map(|value| constrain_slider_value(value, slider));
         let live = slider_live_value(node, slider);
+        let typed = typed_number(&node.state.edit.as_ref()?.text, slider.display_factor, slider.precision, std::iter::once(live).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref());
+        let slider = slider.clone();
+        let slider = &slider;
+        let candidate = match typed {
+            Ok(value) if value >= slider.min && value <= slider.max => constrain_slider_value(value, slider),
+            Ok(value) => value,
+            Err(refusal) => {
+                if let Some(node) = tree.node_mut(id) {
+                    node.state.number_refusal = Some(refusal);
+                }
+                tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                return None;
+            }
+        };
         let action = slider.on_change.clone();
         let epsilon = if slider.step > 0.0 { slider.step * 0.25 } else { 1e-9 };
-        let changed = candidate.filter(|value| (*value - live).abs() > epsilon);
+        let changed = Some(candidate).filter(|value| slider.snaps.contains(value) || (*value - live).abs() > epsilon);
         if let Some(node) = tree.node_mut(id) {
             node.state.edit = None;
+            node.state.number_refusal = None;
             if let Some(value) = changed {
                 node.state.slider_draft_value = Some(value);
             }
@@ -2218,6 +2302,9 @@ impl EventRouter {
         if matches!(key, "Enter" | "NumpadEnter") {
             if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()) {
                 let fired = self.finish_slider_readout_edit(tree, id);
+                if tree.node(id).is_some_and(|node| node.state.number_refusal.is_some()) {
+                    return out;
+                }
                 let _ = self.focus.clear_focus(tree);
                 if let Some(fired) = fired {
                     self.push_app_command(tree, id, fired, &mut out);
@@ -2245,6 +2332,11 @@ impl EventRouter {
                 return out;
             }
             let fired = tree.node(id).filter(|node| commits_on_blur(&node.spec.0)).and_then(|node| node.state.edit.as_ref().and_then(|edit| edit_commit_action(node, &edit.text)));
+            if let Some(node) = tree.node_mut(id) {
+                let refusal = edit_refusal(node);
+                node.state.number_refusal = refusal;
+            }
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
             if let Some(fired) = fired {
                 self.push_app_command(tree, id, fired, &mut out);
             }
@@ -2311,8 +2403,9 @@ impl EventRouter {
                 let UiNode::Input(input) = &node.spec.0 else { return out };
                 let Some(current) = edit.text.trim().parse::<f64>().ok().filter(|value| value.is_finite() && input.input_kind == "number") else { return out };
                 let key = if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown };
-                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(1.0), input.snaps.iter().copied(), key, false);
-                edit.text = input.precision.map_or_else(|| ui_contract::format_ui_number(next), |precision| ui_contract::format_ui_number_fixed(next, precision));
+                let current = typed_number(&edit.text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).unwrap_or(current);
+                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(0.0), input.precision, input.display_factor, input.snaps.iter().copied(), key, false);
+                edit.text = number_field_text(input, next);
                 edit.caret = edit.text.len();
                 edit.anchor = edit.caret;
                 mutated = true;
@@ -2419,7 +2512,7 @@ impl EventRouter {
         match event {
             AccessibilityUiEvent::Focus => {}
             AccessibilityUiEvent::Blur => {
-                if tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_))) {
+                if tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_) | UiNode::Ring(_))) {
                     if let Some(fired) = cancelled_press(tree, target, "blur") {
                         self.push_app_command(tree, target, fired, &mut commands);
                     }
@@ -2710,6 +2803,7 @@ impl EventRouter {
                         CaptureKind::Press => {
                             let released = tree.node(active_id).and_then(|node| match &node.spec.0 {
                                 UiNode::Slider(slider) if node.state.scrub_gesture.is_some() => fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_live_value(node, slider))),
+                                UiNode::Ring(ring) if node.state.scrub_gesture.is_some() => absolute_rect(tree, active_id).and_then(|bounds| fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, *x, *y)))),
                                 _ => None,
                             });
                             if let Some(fired) = released {
@@ -2759,9 +2853,9 @@ impl EventRouter {
                                                 commands.extend(self.close_topmost_overlay(tree));
                                             }
                                         }
-                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_))) {
-                                        // 🎬️ Every other value-carrying kind — `Toggle`, `Ring` — commits its own gesture
-                                        // here, through the same one authority (see 🔖️Commit); a `Slider` released its
+                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_) | UiNode::Ring(_))) {
+                                        // 🎬️ Every other value-carrying kind — `Toggle` — commits its own gesture here,
+                                        // through the same one authority (see 🔖️Commit); a `Slider` or `Ring` released its
                                         // press above, wherever the pointer let go.
                                         commands.extend(self.pointer_commit(tree, active_id, *x, *y));
                                     }
@@ -3022,6 +3116,13 @@ impl EventRouter {
                 let value = slider_key_value_from(slider, slider_live_value(node, slider), key, modifiers.shift)?;
                 (fired_action(&slider.on_change, Trigger::Change, DslValue::float(value)), None, Some(value))
             }
+            UiNode::NumberStepper(stepper) if matches!(key, "PageUp" | "PageDown") => {
+                let live = number_stepper_live_value(node, stepper);
+                let next = ui_contract::ui_number_key_value(live, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown }, false);
+                let binds_delta = node.intent.as_ref().map_or_else(|| !stepper.on_delta.action.is_empty(), |intent| intent.binds(Trigger::Delta));
+                let fired = if binds_delta { fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(next - live)) } else { fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(next)) };
+                ((next != live).then_some(fired).flatten(), Some(next - live).filter(|delta| *delta != 0.0), None)
+            }
             UiNode::NumberStepper(stepper) => {
                 let sign = match key {
                     "ArrowUp" => 1.0,
@@ -3053,16 +3154,16 @@ impl EventRouter {
         let node = tree.node(id)?;
         let (local_delta, local_slider) = match &node.spec.0 {
             UiNode::Slider(slider) => {
-                let unit_width = slider_unit_label(slider.value, slider.unit.as_deref()).map(|_| inline_suffix_width);
-                let track = slider_control_presentation(bounds, slider_live_value(node, slider), slider.min, slider.max, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
-                (None, track.contains(x, y).then(|| slider_value_at(track, x, slider.min, slider.max, slider.step, &slider.snaps)))
+                let unit_width = slider.unit_label().map(|_| inline_suffix_width);
+                let track = slider_control_presentation(bounds, slider.axis_position(slider_live_value(node, slider)), 0.0, 1.0, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
+                (None, track.contains(x, y).then(|| crate::wgpu::slider::slider_node_pointer_value(slider, track, x, y)))
             }
             UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
             _ => (None, None),
         };
-        let (is_slider, is_stepper) = (matches!(node.spec.0, UiNode::Slider(_)), matches!(node.spec.0, UiNode::NumberStepper(_)));
+        let (is_dragged, is_stepper) = (matches!(node.spec.0, UiNode::Slider(_) | UiNode::Ring(_)), matches!(node.spec.0, UiNode::NumberStepper(_)));
         let fired = pointer_commit_action(node, bounds, x, y, self.flow.inline, self.control_border, inline_suffix_width, self.control_gap).map(|fired| match fired.trigger {
-            Trigger::Change if is_slider => pressed(tree, &self.window_id, id, fired, false),
+            Trigger::Change if is_dragged => pressed(tree, &self.window_id, id, fired, false),
             Trigger::Change if is_stepper => pressed(tree, &self.window_id, id, fired, true),
             _ => fired,
         });

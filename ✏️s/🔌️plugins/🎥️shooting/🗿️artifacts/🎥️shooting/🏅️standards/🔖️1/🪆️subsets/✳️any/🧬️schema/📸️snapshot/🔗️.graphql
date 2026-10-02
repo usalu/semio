@@ -1,4 +1,5 @@
 # 🧬️ Shooting snapshot schema — artifact-lane fields only.
+scalar UInt32
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ShootingSnapshot {
@@ -40,8 +41,8 @@ type ShootingAsset {
 type ShootingShot {
   id: String!
   label: String!
-  width: Int!
-  height: Int!
+  width: UInt32!
+  height: UInt32!
   format: String!
   shape: String!
   background: String
@@ -82,5 +83,4 @@ type ShootingSceneLighting {
   ambient: ShootingAmbient!
   shadow: ShootingShadow!
   material: ShootingMaterial!
-  emblemBase64: String
 }

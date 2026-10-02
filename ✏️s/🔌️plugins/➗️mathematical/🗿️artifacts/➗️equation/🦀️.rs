@@ -425,7 +425,7 @@ pub fn equation_snapshot_from_host_snapshot(fixture: EquationFixture) -> Equatio
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.equation".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Equation", "Gleichung"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Equation", "Gleichung"),
         source_format: MATH_DOCUMENT_SCHEMA.into(),
         component_kind: "equation".into(),
         dimension: "graph".into(),
@@ -902,6 +902,26 @@ pub mod standards {
                             mod tests_rejects_a_bulk_delete_where_every_id_is_absent;
                         }
                         #[path = "."]
+                        pub mod move_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🚚️move-nodes/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🚚️move-nodes/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod set_node_positions {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍️set-node-positions/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍️set-node-positions/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍️set-node-positions/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod change_node_label {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node/🦀️.rs"]
                             mod component;
@@ -1107,6 +1127,8 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-node/🦀️.rs"]
+            pub mod add_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️.rs"]
             pub mod node_graph_edit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs"]

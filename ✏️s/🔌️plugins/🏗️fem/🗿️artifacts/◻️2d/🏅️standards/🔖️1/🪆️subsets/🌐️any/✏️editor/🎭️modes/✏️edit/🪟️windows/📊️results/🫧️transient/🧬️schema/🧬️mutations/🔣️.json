@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/results-window/transient/mutations.json",
+  "title": "Fem2dResultsWindowTransientMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPlaybackClock"
+      ],
+      "properties": {
+        "SetPlaybackClock": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/results-window/transient/mutation/set-playback-clock/schema.json"
+        }
+      }
+    }
+  ]
+}

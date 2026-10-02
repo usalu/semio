@@ -126,14 +126,7 @@ fn presence_text(value: String) -> UiNode {
 /// the root `UiStackNode`'s own id (the shells pass `s-presence-peers`, contract freeze §C0).
 /// `locale` resolves this element's own framework-owned copy (empty state, overflow suffix, role
 /// words) — terminology-invariant, so [`Terminology::ALL`]'s first entry is used to resolve it.
-pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>) -> UiNode {
-    build_presence_bar_localized(id, peers, max, Locale::default())
-}
-
-/// 🌐️ [`build_presence_bar`] with an explicit [`Locale`] — the host resolves the active locale itself
-/// (native shells read it from the same source as every other framework-owned label); this is the
-/// entry point that actually localizes.
-pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
+pub fn build_presence_bar(id: impl Into<String>, peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> UiNode {
     let id = id.into();
     if peers.is_empty() {
         return presence_stack(id, vec![presence_text(presence_empty_label(locale))]);
@@ -187,7 +180,7 @@ pub fn presence_overflow_label(overflow_count: usize, locale: Locale) -> String 
 /// rather than walking a `UiNode` tree through the Interpreter — the wgpu OS shell's footer, whose
 /// every other pill (`#s-sync-status`, `#s-checkin`) is an immediate-mode `ChromeGroupItem` for the
 /// same reason: they are SHELL-owned chrome, not plugin-declared nodes. Identical vocabulary to
-/// [`build_presence_bar_localized`]: the empty state, the same visible cap, the same overflow suffix.
+/// [`build_presence_bar`]: the empty state, the same visible cap, the same overflow suffix.
 // 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
 pub fn presence_bar_chip_text(peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> String {
     if peers.is_empty() {

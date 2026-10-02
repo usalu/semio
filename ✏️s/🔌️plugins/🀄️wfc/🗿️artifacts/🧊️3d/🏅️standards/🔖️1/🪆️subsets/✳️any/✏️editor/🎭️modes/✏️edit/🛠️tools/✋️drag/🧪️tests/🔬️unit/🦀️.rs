@@ -53,7 +53,7 @@ fn a_wire_drawn_by_the_same_gesture_rides_the_same_transaction() {
 
 #[test]
 fn a_seedless_view_publishes_the_leaves_plainly() {
-    let emit = wfc3d_drag_tool_emit("nodeGraphEdit", "", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 120.0, 0.0)], 120.0, "Drag room-a".into());
+    let emit = wfc3d_drag_tool_emit("nodeGraphEdit", "", &base(), Vec::new(), &[record("node-drag:1", &["room-a"], 120.0, 0.0)], 120.0);
     assert!(emit.transaction.is_none());
     assert_eq!(emit.artifact_mutations.len(), 1);
 }
@@ -61,8 +61,8 @@ fn a_seedless_view_publishes_the_leaves_plainly() {
 #[test]
 fn the_leaf_labels_the_row_in_english_and_german() {
     let label = <crate::Wfc3dMutation as protocol::SemanticMutation<Wfc3dSnapshot>>::label(&drag_slots(vec!["room-a".into(), "room-b".into()], 1.5, -0.25, 2.0));
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 slots by (1.5, -0.25, 2)");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Slots um (1,5; -0,25; 2) ziehen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 2 slots by (1.5, -0.25, 2)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Slots um (1,5; -0,25; 2) ziehen");
 }
 //#endregion 🛠️Tool
 
@@ -92,7 +92,7 @@ fn app() -> Wfc3dApp {
 
 fn graph_meta() -> ActionMeta {
     let window_instances = vec![ViewWindowInstance { id: WFC_GRAPH_WINDOW.into(), window_kind_id: WFC_GRAPH_WINDOW.into() }];
-    let view = ViewModel { window_instances, ..Default::default() }.for_window_instance(WFC_GRAPH_WINDOW).expect("the graph window is in the roster");
+    let view = ViewModel { window_instances, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(WFC_GRAPH_WINDOW).expect("the graph window is in the roster");
     ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }
 }
 
@@ -154,8 +154,8 @@ fn one_mounted_drag_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc3d@1/*#editor#nodeGraphEdit", "{transaction:?}");
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("drag-slots")), "the op is the relative leaf: {:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 slot by (1, 0, 0)");
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Slot um (1; 0; 0) ziehen");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 slot by (1, 0, 0)");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "1 Slot um (1; 0; 0) ziehen");
     let after = app.snapshot().expect("projection");
     let moved = |snapshot: &Wfc3dSnapshot| snapshot.slots.iter().find(|slot| slot.id == "room-a").map(|slot| slot.x).expect("room-a");
     assert_eq!(moved(&after), moved(&before) + 1.0, "the drag landed in document units");

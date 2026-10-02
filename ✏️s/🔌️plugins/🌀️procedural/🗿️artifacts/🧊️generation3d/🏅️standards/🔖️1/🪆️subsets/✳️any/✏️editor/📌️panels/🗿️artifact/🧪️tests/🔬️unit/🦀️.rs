@@ -9,7 +9,7 @@ fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
     let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
-    let labels = crate::editor::generation3d::terminology::generation3d_labels(&ViewModel::default());
+    let labels = crate::editor::generation3d::terminology::generation3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("document tree builds");
     fixture.retire_cold();
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("document tree projects");
@@ -108,7 +108,7 @@ fn oversized_graph() -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
 }
 
 fn outline_projection(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord]) -> serde_json::Value {
-    let labels = crate::editor::generation3d::terminology::generation3d_labels(&ViewModel::default());
+    let labels = crate::editor::generation3d::terminology::generation3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let outline = graph_outline(windows, nodes, edges, None, labels).expect("outline builds");
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("outline projects");
     serde_json::from_str(&projection).expect("outline projection json")
@@ -134,7 +134,7 @@ fn window_of(node: &serde_json::Value) -> (u64, u64, usize) {
 }
 
 fn window_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a): an oversized document states its full extent and materialises at most its slice.

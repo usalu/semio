@@ -22,8 +22,8 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
     fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
         agg_inverse(&MdMutation::SetInlines(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set inlines", "Inline-Elemente setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

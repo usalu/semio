@@ -29,7 +29,7 @@ export async function registerTests1(
     utimesSync,
     writeFileSync,
   } = dependencies;
-  const { CARGO_BINARY_SOURCES_SCHEMA_V1, CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, cargoBuildOwnerAliveV1, cargoDepInfoSourcesV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
+  const { CARGO_BINARY_SOURCES_SCHEMA_V1, CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, cargoBuildOwnerAliveV1, cargoDepInfoSourcesV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
   const gate = JSON.parse(readFileSync(new URL("./🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
     sourcesFile: string;
     depInfoCases: Array<{ name: string; text: string; sources: string[] }>;
@@ -148,7 +148,7 @@ export async function registerTests1(
     });
     for (const row of gate.freshnessCases) {
       it(`freshness: ${row.name}`, () => {
-        const record: import("../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts").CargoBinarySourcesV1 = { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs: row.builtAtMs, sources: Object.keys(row.modified) };
+        const record: import("../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts").CargoBinarySourcesV1 = { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs: row.builtAtMs, sources: Object.keys(row.modified) };
         expect(cargoBinarySourcesFreshnessV1(record, (path) => row.modified[path] ?? null)).toEqual({ fresh: row.fresh, changed: row.changed });
       });
     }

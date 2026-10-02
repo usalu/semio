@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, posix, resolve } from "node:path";
@@ -5,7 +6,7 @@ import ts from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.ts"), "utf8");
+const text = normalizationSourceDeclarations(resolve(root, library, "🧹️normalization/🟦️.ts"));
 const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
 const names = ["resolveReferencePath", "referencePathIndex", "addUniqueIndex", "ancestorReferenceCoordinateRoot", "splitTokenSuffix", "normalizeRelative", "sourceRelative"];
 const declarations = Object.fromEntries(names.map((name) => {

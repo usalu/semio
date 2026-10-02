@@ -1,11 +1,62 @@
 {
-  "sqliteDialect":{"artifactKind":"s.stdio.obj","standard":"3.0","subset":"geometry"},
-  "invalidSqliteDialects":[
-    {"artifactKind":"s.stdio.binary","standard":"3.0","subset":"geometry"},
-    {"artifactKind":"s.stdio.obj","standard":"unknown","subset":"geometry"},
-    {"artifactKind":"s.stdio.obj","standard":"3.0","subset":"unknown"}
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.obj",
+    "standard": "3.0",
+    "subset": "*"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.binary",
+      "standard": "3.0",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.obj",
+      "standard": "unknown",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "unknown"
+    },
+    {
+      "artifactKind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "geometry"
+    }
   ],
-  "binary64Bits":["0000000000000000","8000000000000000","3ff4000000000000","0000000000000001","7ff0000000000000","fff0000000000000","7ff0000000000001","7ff8123456789abc","fff8123456789abc"],
-  "binary32Bits":["00000000","80000000","3fa00000","00000001","7f800000","ff800000","7f800001","7fc12345","ffc12345"],
-  "classes":["finite","finite","finite","finite","positiveInfinity","negativeInfinity","nan","nan","nan"]
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff4000000000000",
+    "0000000000000001",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8123456789abc",
+    "fff8123456789abc"
+  ],
+  "binary32Bits": [
+    "00000000",
+    "80000000",
+    "3fa00000",
+    "00000001",
+    "7f800000",
+    "ff800000",
+    "7f800001",
+    "7fc12345",
+    "ffc12345"
+  ],
+  "classes": [
+    "finite",
+    "finite",
+    "finite",
+    "finite",
+    "positiveInfinity",
+    "negativeInfinity",
+    "nan",
+    "nan",
+    "nan"
+  ]
 }

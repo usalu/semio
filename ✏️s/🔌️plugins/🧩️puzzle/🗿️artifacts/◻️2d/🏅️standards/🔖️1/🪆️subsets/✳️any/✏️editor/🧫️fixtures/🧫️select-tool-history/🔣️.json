@@ -9,9 +9,9 @@
       ]
     },
     "nodes": [
-      { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
-      { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "mid:v0", "handleKind": "a", "angle": 3.141592653589793 }] },
-      { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "locked": true, "handles": [] }
+      { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "text": "Left", "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
+      { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Middle", "handles": [{ "id": "mid:v0", "handleKind": "a", "angle": 3.141592653589793 }] },
+      { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "text": "Pin", "locked": true, "handles": [] }
     ],
     "edges": []
   },
@@ -39,7 +39,8 @@
               { "path": "/dy", "control": "stepper", "snapSource": "gridFactor", "step": 5.0 }
             ],
             "preview": { "left": [-120.0, 40.0], "mid": [80.0, 40.0], "pin": [200.0, 0.0] },
-            "highlighted": ["left", "mid"]
+            "highlighted": ["left", "mid"],
+            "chips": { "/targets": ["Left", "Middle"] }
           }
         },
         {
@@ -49,7 +50,7 @@
         { "pick": "mid" },
         {
           "useSelection": "/targets",
-          "expect": { "draft": { "/targets": ["mid"] }, "preview": { "left": [-200.0, 0.0], "mid": [100.0, 40.0] }, "highlighted": ["mid"] }
+          "expect": { "draft": { "/targets": ["mid"] }, "preview": { "left": [-200.0, 0.0], "mid": [100.0, 40.0] }, "highlighted": ["mid"], "chips": { "/targets": ["Middle"] } }
         },
         {
           "accept": null,
@@ -93,8 +94,8 @@
             "stage": "editing",
             "inputs": [
               { "path": "/targets", "control": "reference", "domain": "vortex", "granularity": "node", "many": true },
-              { "path": "/angle", "control": "dial" },
-              { "path": "/pivotX", "control": "stepper", "snapSource": "gridFactor" }
+              { "path": "/angle", "control": "dial", "component": { "type": "slider", "appearance": "dial", "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "unit": "rad", "displayUnit": "°", "displayFactor": 57.29577951308232, "snaps": [-3.141592653589793, -1.5707963267948966, 0.0, 1.5707963267948966, 3.141592653589793], "limits": {} } },
+              { "path": "/pivotX", "control": "stepper", "snapSource": "gridFactor", "component": { "type": "numberStepper", "precision": 2 } }
             ],
             "preview": { "left": [-100.0, -100.0], "mid": [-100.0, 100.0] },
             "highlighted": ["left", "mid"]
@@ -108,7 +109,7 @@
         { "finalize": "overwrite", "expect": { "stage": null } },
         {
           "begin": { "row": 1 },
-          "expect": { "stage": "editing", "inputs": [{ "path": "/factor", "control": "slider", "scale": "log", "snaps": [0.25, 0.5, 1.0, 2.0, 4.0] }], "preview": { "left": [-100.0, 200.0], "mid": [-100.0, -200.0] } }
+          "expect": { "stage": "editing", "inputs": [{ "path": "/factor", "control": "slider", "scale": "log", "snaps": [0.25, 0.5, 1.0, 2.0, 4.0], "component": { "type": "slider", "scale": "log", "min": 0.1, "max": 10.0, "step": 0.01, "precision": 2, "snaps": [0.25, 0.5, 1.0, 2.0, 4.0], "limits": { "min": { "value": 0.0, "exclusive": true, "refusal": "Must be greater than 0" } } } }], "preview": { "left": [-100.0, 200.0], "mid": [-100.0, -200.0] } }
         },
         {
           "input": { "path": "/factor", "value": 0.5 },
@@ -149,13 +150,13 @@
         { "withdraw": null },
         {
           "accept": null,
-          "expect": { "stage": "reviewing", "review": "blocked", "blocking": true, "worst": "error", "outcomes": [{ "row": 1, "worst": "error", "code": "mutation.target-missing", "target": ["extra"] }], "nextProblem": { "row": 1 } }
+          "expect": { "stage": "reviewing", "review": "blocked", "blocking": true, "worst": "error", "outcomes": [{ "row": 1, "worst": "error", "code": "mutation.target-missing", "target": ["extra"], "introduced": true }], "nextProblem": { "row": 1 } }
         },
-        { "begin": "nextProblem", "expect": { "stage": "editing", "preview": { "left": [-200.0, 0.0], "mid": [0.0, 0.0] }, "absent": ["extra"], "highlighted": ["extra"] } },
+        { "begin": "nextProblem", "expect": { "stage": "editing", "preview": { "left": [-200.0, 0.0], "mid": [0.0, 0.0] }, "absent": ["extra"], "highlighted": ["extra"], "chips": { "/targets": ["extra"] } } },
         { "select": ["left", "mid"] },
         {
           "useSelection": "/targets",
-          "expect": { "draft": { "/targets": ["left", "mid"] }, "preview": { "left": [-190.0, 0.0], "mid": [10.0, 0.0] }, "highlighted": ["left", "mid"] }
+          "expect": { "draft": { "/targets": ["left", "mid"] }, "preview": { "left": [-190.0, 0.0], "mid": [10.0, 0.0] }, "highlighted": ["left", "mid"], "chips": { "/targets": ["Left", "Middle"] } }
         },
         { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false } },
         { "finalize": "overwrite", "expect": { "stage": null } }
@@ -191,9 +192,9 @@
         { "withdraw": null },
         {
           "accept": null,
-          "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "worst": "warning", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"] }] }
+          "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "worst": "warning", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": true }] }
         },
-        { "finalize": "overwrite", "expect": { "stage": null, "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"] }] } }
+        { "finalize": "overwrite", "expect": { "stage": null, "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": false }] } }
       ],
       "log": [
         { "mutation": "changeNodeLocked", "id": "pin", "newLocked": false },

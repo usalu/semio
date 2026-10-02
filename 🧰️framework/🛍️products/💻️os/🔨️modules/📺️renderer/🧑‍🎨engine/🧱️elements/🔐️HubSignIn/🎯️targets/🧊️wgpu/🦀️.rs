@@ -18,7 +18,7 @@
 //! book contains no token, no password and no session id.
 
 use serde::{Deserialize, Serialize};
-use ui_wgpu::wgpu::Locale;
+use semio_framework_ui_locale::Locale;
 
 //#region 🔖️Routes
 /// 🛣️ `POST` — AU1's `semio_hub::auth::SESSION_MINT_ROUTE`.

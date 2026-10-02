@@ -5,7 +5,16 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data, se
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavFmt, WavSnapshot};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArgSchema;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_s_artifact_stdio_contract::editing::RetainedBytesCopy;
 
 pub const SET_SAMPLE_ACTION_ID: &str = "set-cell";
@@ -492,7 +501,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         }
         self.complete = true;
         let mutations = std::mem::take(&mut self.mutations);
-        Ok(ArtifactCommandWorkStep::Complete(Emit { description: (!mutations.is_empty()).then(|| action_id(command).to_string()), artifact_mutations: mutations, ..Default::default() }))
+        Ok(ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ..Default::default() }))
     }
 
     fn begin_close(&mut self) {

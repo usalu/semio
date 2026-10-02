@@ -4,6 +4,10 @@
   "inputAreas": [
     "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d"
   ],
+  "policy": {
+    "excludedInputPaths": [],
+    "genericEmojiIdentities": ["📁️", "📂️", "📄️"]
+  },
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",

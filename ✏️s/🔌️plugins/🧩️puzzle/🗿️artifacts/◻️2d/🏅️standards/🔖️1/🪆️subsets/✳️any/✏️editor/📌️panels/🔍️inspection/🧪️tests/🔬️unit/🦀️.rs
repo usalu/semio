@@ -19,7 +19,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle2dLabels {
-    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())
+    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🏗️ A document of `ids` nodes with every one of them selected.
@@ -77,7 +77,7 @@ fn the_inspector_ids_section_stamps_the_whole_selection() {
 fn a_closed_inspector_ids_section_builds_no_row() {
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(false), 0, 16)], ..Default::default() };
+    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(false), 0, 16)], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
     let tree = render(&scene, labels(), &windows).expect("a closed ids section must be admitted");
     let ids = child_of(&tree, IDS_SECTION);
@@ -93,7 +93,7 @@ fn an_inspector_ids_window_materialises_exactly_its_slice() {
     drain_retired_ui_owners();
     let scene = selected_scene(SCALE_IDS);
     let (offset, rows) = (33u32, 7u32);
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(true), offset, rows)], ..Default::default() };
+    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(Some(true), offset, rows)], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_PROPERTIES);
     let tree = render(&scene, labels(), &windows).expect("a windowed ids section must be admitted");
     let ids = child_of(&tree, IDS_SECTION);

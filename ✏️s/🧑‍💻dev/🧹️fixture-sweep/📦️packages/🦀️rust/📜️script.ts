@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧭️ Fleet conformance remains an explicit test leaf, separate from kernel unit tests. */
-import { runExactCargoLaws, resolveTestLevel, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { assertFixtureSweepLawCoverage, fixtureSweepLawGroup, testFixtureSweepExtraction } from "../../🧪️tests/🔬️ownership/🟦️.ts";
@@ -16,7 +18,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await testFixtureSweepExtraction();
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot, cargoArgs: rest, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000,
       env: { ...process.env, RUST_TEST_NOCAPTURE: "1" },
       groups: [fixtureSweepLawGroup()],

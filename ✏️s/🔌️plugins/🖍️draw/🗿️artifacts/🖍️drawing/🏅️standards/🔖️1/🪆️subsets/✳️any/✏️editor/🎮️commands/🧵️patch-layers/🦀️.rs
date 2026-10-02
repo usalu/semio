@@ -29,5 +29,5 @@ pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawingSnapshot>, _c
     if operations.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit::commit(operations, "Edit layer properties"))
+    Ok(Emit::mutations(operations))
 }

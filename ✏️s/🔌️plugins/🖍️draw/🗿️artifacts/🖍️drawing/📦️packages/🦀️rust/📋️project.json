@@ -84,15 +84,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "draw-drawing-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -104,15 +96,7 @@
         "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "draw-drawing-graph-wire"
-          ]
-        }
-      }
+      "outputs": []
     }
   }
 }

@@ -88,7 +88,7 @@ mod panel_kit_tests {
         let entries = window_entries(20);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.rows".to_string(), open: Some(true), offset: 5, rows: 3 }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let section = tree_window_section(&TreeWindows::for_body(&view, "body"), "ns.rows", window_label(), false, &entries, window_row).expect("bounded fixture");
         assert_eq!(section.children.len(), 3);
@@ -100,7 +100,7 @@ mod panel_kit_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_first_paint_spends_one_shared_viewport_budget_in_document_order() {
         let entries = window_entries(30);
-        let view = ViewModel { tree_viewport_rows: Some(48), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(48), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         for (id, expected) in [("ns.a", 30usize), ("ns.b", 18), ("ns.c", 0)] {
             let section = tree_window_section(&windows, id, window_label(), true, &entries, window_row).expect("bounded fixture");
@@ -112,7 +112,7 @@ mod panel_kit_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_window_never_exceeds_one_built_children_page() {
         let entries = window_entries(UI_BUILT_CHILDREN_MAX * 4);
-        let view = ViewModel { tree_viewport_rows: Some(u32::MAX), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(u32::MAX), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let section = tree_window_section(&windows, "ns.rows", window_label(), true, &entries, window_row).expect("bounded fixture");
         assert!(section.children.len() <= UI_BUILT_CHILDREN_MAX, "one built node fans out at most one host child page");
@@ -139,7 +139,7 @@ mod panel_kit_tests {
         let keys: Vec<String> = (0..9).map(|index| format!("ns.s{index}")).collect();
         let view = ViewModel {
             tree_windows: keys.iter().map(|node_key| TreeWindowRequest { body_key: "body".to_string(), node_key: node_key.clone(), open: Some(true), offset: 0, rows: 30 }).collect(),
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         assert_eq!(windows.nodes_remaining(), LEDGER, "a render opens on the full ledger");
@@ -188,7 +188,7 @@ mod panel_kit_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_first_paint_never_outspends_the_node_ledger() {
         let entries = window_entries(200);
-        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let mut builder = PanelTreeBuilder::new("ns").expect("bounded fixture");
         for node_key in ["ns.a", "ns.b", "ns.c"] {
@@ -238,8 +238,8 @@ mod panel_kit_tests {
             commands: (1..=300).map(entry).collect(),
             command_filter: HistoryCommandFilter::All,
         };
-        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
-        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &view).await.expect("a log of any length must assemble");
+        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &view).await.expect("a log of any length must assemble");
         let commands = &panel.children[1];
         let fixed = body_nodes(&panel) - commands.children.len() - 1;
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 0 }), "the scrollbar spans the whole log");
@@ -296,7 +296,7 @@ mod panel_kit_tests {
         let entries = window_entries(60);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.offscreen".to_string(), open: Some(true), offset: 40, rows: 0 }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         assert_eq!(windows.nodes_reserved(), 1, "an off-screen open container reserves its own node and no rows");
@@ -313,7 +313,7 @@ mod panel_kit_tests {
         let entries = window_entries(12);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.rows".to_string(), open: Some(true), offset: 900, rows: 5 }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let section = tree_window_section(&TreeWindows::for_body(&view, "body"), "ns.rows", window_label(), true, &entries, window_row).expect("bounded fixture");
         assert_eq!(section.children.len(), 5, "a stale offset still shows a full window");
@@ -323,7 +323,7 @@ mod panel_kit_tests {
         let short = window_entries(3);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.rows".to_string(), open: Some(true), offset: 900, rows: 5 }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let section = tree_window_section(&TreeWindows::for_body(&view, "body"), "ns.rows", window_label(), true, &short, window_row).expect("bounded fixture");
         assert_eq!(section.children.len(), 3, "a container shorter than the window shows all of it from the top");
@@ -343,7 +343,7 @@ mod panel_kit_tests {
                 TreeWindowRequest { body_key: "body".to_string(), node_key: format!("ns.load-cases{sep}uls"), open: Some(true), offset: 4, rows: 3 },
                 TreeWindowRequest { body_key: "body".to_string(), node_key: format!("ns.combinations{sep}uls"), open: Some(false), offset: 0, rows: 0 },
             ],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         let mut section = |id: &str| {
@@ -393,7 +393,7 @@ mod panel_kit_tests {
     #[semio_framework_async_macros::async_test]
     async fn tree_window_headroom_covers_the_fattest_shipped_panel() {
         let selected = window_entries(200);
-        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let mut builder = PanelTreeBuilder::new("ns").expect("bounded fixture");
         builder = builder.window_section(&windows, "ns.selection", Some(window_label()), true, &selected, window_row).expect("bounded fixture");
@@ -436,7 +436,7 @@ mod panel_kit_tests {
     async fn a_path_the_host_cannot_send_renders_as_an_unrequested_container() {
         let entries = window_entries(30);
         let long = "d".repeat(300);
-        let view = ViewModel { tree_viewport_rows: Some(12), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(12), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let section = tree_window_section(&windows, &long, window_label(), true, &entries, window_row).expect("an unsendable path still assembles");
         assert!(long.chars().count() > 256, "the fixture is past the view-context identifier ceiling");
@@ -472,7 +472,7 @@ mod panel_kit_tests {
 
         let addressed = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.leaf".to_string(), open: Some(true), offset: 0, rows: 4 }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let addressed = TreeWindows::for_body(&addressed, "body");
         let Ok(first) = ui::tree_item(window_label()).try_id("ns.leaf") else { panic!("bounded fixture") };
@@ -503,7 +503,7 @@ mod panel_kit_tests {
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: "ns.scrolled".to_string(), open: Some(true), offset: 120, rows: 40 }],
             tree_viewport_rows: Some(500),
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         assert_eq!(windows.nodes_reserved(), 41, "the requested window plus the requested container's own node are held back");
@@ -531,7 +531,7 @@ mod panel_kit_tests {
         let keys: Vec<String> = (0..4).map(|index| format!("ns.s{index}")).collect();
         let view = ViewModel {
             tree_windows: keys.iter().map(|node_key| TreeWindowRequest { body_key: "body".to_string(), node_key: node_key.clone(), open: Some(true), offset: 0, rows: UI_BUILT_CHILDREN_MAX as u32 }).collect(),
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         assert_eq!(windows.nodes_reserved(), LEDGER, "four full-page requests cannot all be seated — the ledger is the ceiling");
@@ -555,7 +555,7 @@ mod panel_kit_tests {
     async fn a_nested_tree_window_item_inside_a_window_section_stays_inside_the_arena() {
         let cases = window_entries(40);
         let loads = window_entries(25);
-        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::default() };
+        let view = ViewModel { tree_viewport_rows: Some(500), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let body = PanelTreeBuilder::new("ns")
             .expect("bounded fixture")
@@ -647,7 +647,7 @@ mod panel_kit_tests {
             commands: (1..=100).map(entry).collect(),
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("bounded fixture");
+        let panel = ui_history_panel(&history, None, None, &Default::default(), "ctrl", Locale::En, false, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("bounded fixture");
         let commands = &panel.children[1];
         assert_eq!(commands.children.len(), (TREE_WINDOW_DEFAULT_ROWS as usize).min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport of commands, clamped by the built-children ceiling");
         assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 100, offset: 0 }), "the scrollbar spans the whole log");

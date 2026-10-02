@@ -33,8 +33,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveCo
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove content \"{}\" leaves from {}", self.content_id, self.from), &format!("Blätter von Inhalt \"{}\" aus {} entfernen", self.content_id, self.from))
     }
     fn target(&self) -> Vec<String> {
         vec![self.content_id.clone()]

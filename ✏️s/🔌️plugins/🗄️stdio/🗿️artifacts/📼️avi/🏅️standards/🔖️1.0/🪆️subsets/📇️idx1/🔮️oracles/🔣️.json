@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The Video for Windows AVI 1.0 RIFF layout's third top-level chunk, `idx1`, is the (optional) index of `movi` chunk offsets/flags/sizes -- normatively distinct from both `hdrl` and `movi`. `set-idx1-present` toggles that chunk's presence, owned here rather than by `🎛️hdrl`, for the same family-module reuse rationale as `../../🎞️movi/🔮️oracles/🔣️.json`.",
   "oracles": [],
@@ -69,5 +69,6 @@
         "set-idx1-present"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

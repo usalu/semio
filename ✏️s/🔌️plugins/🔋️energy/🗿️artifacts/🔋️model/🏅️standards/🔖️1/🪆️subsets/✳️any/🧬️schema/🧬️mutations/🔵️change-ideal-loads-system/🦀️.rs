@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} minimum cooling supply air temperature to {:?}", self.id.0, self.new_min_cooling_supply_air_temp_c), &format!("Minimale Kühlzulufttemperatur von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_min_cooling_supply_air_temp_c))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change ideal loads system {} minimum cooling supply air temperature to {:?}", self.id.0, self.new_min_cooling_supply_air_temp_c), &format!("Minimale Kühlzulufttemperatur von Ideallastsystem {} auf {:?} ändern", self.id.0, self.new_min_cooling_supply_air_temp_c))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔄 This subset's own contribution — the inline labelled equation AST composed alongside the graph and geometry playgrounds (1 of s.mathematical.equation's 15 mutation kinds: change-coefficient; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). The equation reaches the JSON export intact (unlike the graph/geometry scene, which is skipped entirely), so change-coefficient is witnessable there — discharged by the serde-json carrier reader below.",
   "oracles": [
@@ -288,14 +288,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🎚️change/⬅️before.json",
+          "path": "../🧫️fixtures/🎚️change-coefficient/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:23ac796b09a3359c8fcee96e5fc265de2c3667df663c0162be94b85dbad5802d",
           "bytes": 1280
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🎚️change/➡️after.json",
+          "path": "../🧫️fixtures/🎚️change-coefficient/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a3ab2d3c849a3f2b5c51c390c93e81a37b174c7d1a171e1164356ff4ab7fb9d2",
           "bytes": 1280

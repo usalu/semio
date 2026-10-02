@@ -80,7 +80,7 @@ fn runtime_with_component_worlds() -> RuntimeMailbox {
 
 #[cfg(test)]
 fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str) -> RuntimeMailbox {
-    let mut shell = crate::shell::ShellState::new(Vec::new(), "component-asset-close".to_string());
+    let mut shell = crate::shell::ShellState::new(Vec::new(), "component-asset-close".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for (host_id, surface_id, url) in [("component-world-a", "document-world-a", world_a_url), ("component-world-b", "document-world-b", world_b_url)] {
         let mut state = infinite_world::world::World3dState::new(surface_id.to_string(), format!("{surface_id}.controller"));
         infinite_world::world::reserve_world3d_asset_request(&mut state, infinite_world::world::WorldAssetRequestKind::Glb, url).expect("the exact World admits its asset request");
@@ -674,5 +674,5 @@ pub(crate) fn finish_world_fixture_component_close(shell: crate::shell::ShellSta
     assert!(close.terminal_is_empty(), "the production World close lane returns its exact owner");
     assert!(publish_component_surface_close_terminal(close.request.token));
     let mut owner = runtime.try_lock().expect("the fixture returns its Shell owner");
-    std::mem::replace(&mut owner.interaction.as_mut().expect("the interaction is returned").shell, crate::shell::ShellState::new(Vec::new(), "closed-fixture".to_string()))
+    std::mem::replace(&mut owner.interaction.as_mut().expect("the interaction is returned").shell, crate::shell::ShellState::new(Vec::new(), "closed-fixture".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }

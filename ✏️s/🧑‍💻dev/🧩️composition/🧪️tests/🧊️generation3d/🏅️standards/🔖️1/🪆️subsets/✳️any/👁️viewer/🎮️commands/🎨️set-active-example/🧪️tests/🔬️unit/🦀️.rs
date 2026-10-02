@@ -178,7 +178,7 @@ async fn an_unpublished_example_id_is_refused() {
 async fn an_unattached_surface_starts_no_run() {
     let _serial = context::lock();
     let mut app = app().await;
-    let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_framework_plugin::ViewModel::default())
+    let receipt = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
         .await
         .expect("the switch settles without an attached preview");
     assert!(run_actions(&receipt.effects).is_empty(), "no attached preview window means no run start");

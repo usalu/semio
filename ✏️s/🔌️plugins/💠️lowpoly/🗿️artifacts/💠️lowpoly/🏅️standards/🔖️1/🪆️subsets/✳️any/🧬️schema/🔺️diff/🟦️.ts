@@ -1,5 +1,6 @@
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import {parseBinary32,type Binary32}from"../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import {
   parseLowpolyArtifact,
   parseLowpolyObject,
@@ -61,7 +62,7 @@ export interface LowpolyIndexedPaintLayerPatch {
 export interface LowpolyPaintLayerPatch {
   name: string | null;
   visible: boolean | null;
-  opacity: number | null;
+  opacity: Binary32 | null;
   blendMode: string | null;
 }
 
@@ -191,7 +192,7 @@ export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPa
   return {
     name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
     visible: row["visible"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: row["opacity"] === null ? null : lowpolyLowpolyDiffGuardNumber(row["opacity"], `${at}.opacity`),
+    opacity: row["opacity"] === null ? null : parseBinary32(row["opacity"]),
     blendMode: row["blendMode"] === null ? null : lowpolyLowpolyDiffGuardString(row["blendMode"], `${at}.blendMode`),
   };
 }

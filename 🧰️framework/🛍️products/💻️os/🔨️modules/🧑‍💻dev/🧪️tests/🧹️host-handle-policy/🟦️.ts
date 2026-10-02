@@ -1,10 +1,12 @@
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic host handle policy owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -47,7 +49,7 @@ const HOST_ENGINE_HANDLE_TYPES: Readonly<Record<string, string>> = {
   // `engine-derive`/`engine-read` guest<->host boundary.
   BrepEngineHost: "host-owned brep engine wrapper (byte-budgeted engine-result cache + kernel session) — a process-lifetime handle to host-managed compute state, not a plugin's own data",
   // 🧠️ The host-owned LRU byte-budgeted engine-result cache `BrepEngineHost` wraps
-  // (🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs, doc comment: "Host-owned LRU engine
+  // (🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs, doc comment: "Host-owned LRU engine
   // result cache with a byte budget"). Holding one directly bypasses `BrepEngineHost`'s own wrapper but
   // reaches for the identical host-managed caching/dispatch authority.
   EngineCache: "host-owned LRU byte-budgeted engine-result cache underlying BrepEngineHost — same ambient reach as holding that wrapper directly, just unwrapped",

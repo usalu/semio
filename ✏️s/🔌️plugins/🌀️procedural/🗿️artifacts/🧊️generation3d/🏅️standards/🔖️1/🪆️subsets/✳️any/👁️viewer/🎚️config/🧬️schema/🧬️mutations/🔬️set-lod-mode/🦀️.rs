@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
         vec![Self { value: base.lod_mode.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Lod Mode", "Detailstufenmodus setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Lod Mode", "Detailstufenmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

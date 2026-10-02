@@ -208,3 +208,12 @@ All were run in the foreground behind the rustc gate. Logs are in `🗑️genera
 - **New witness fixtures:** svg base, xml base, json base and csv `🧫️fixtures/🧬️mutations/<leaf>/🧾️wire-witness/🦠️mutation/🔣️.json`.
 - **Ticket script (kept):** `🧪️w2-w-text-json-rows.py`.
 - **Scratch:** `🗑️generated/w2w-text/` (lint, parity, contract and cargo logs; `progress.txt`; `aggregate-map.json`).
+
+## Session 2 — 2026-10-01 (S2-STDIO-A, WP-2)
+
+Status: **IN PROGRESS**. The authoritative WP-2 record is `📓️w3-stdio-cases-2-report.md` § Session 2; this section names the text-lane items only.
+
+- §5.6 follow-up 1 is **done**: the json `JsonValue` refs. The 8 untyped nodes in 7 leaves `$ref` the base snapshot `JsonValue`, and that schema labels `schema`, `lexeme`, `items` and `members` (en/de). json lints: inputs 32/32 **0**, payloads 29/29, 15/15 witnessed, **0**.
+- §5.6 follow-up 2, `deserialize_double_option` into the stdio contract crate: in progress (html, xml).
+- §5.3, the csv/json `patch-snapshot` manifest rows and inline test modules: in progress.
+- §5.1, xml base pipeline parity: in progress (diagnosis).

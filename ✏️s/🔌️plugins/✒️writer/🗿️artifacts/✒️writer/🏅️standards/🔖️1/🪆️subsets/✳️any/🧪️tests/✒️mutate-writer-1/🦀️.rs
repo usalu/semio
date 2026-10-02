@@ -9,7 +9,7 @@
 //! therefore never dispatched for it. Registering an oracle handler here would be dead code that
 //! reads as coverage in every listing, so there is none; every law this case claims is asserted
 //! inside the subject handlers, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module, whose helpers are dependency-free
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module, whose helpers are dependency-free
 //! and format-neutral by their own doc comment.
 //!
 //! What the evidence rests on is the committed `(before, mutation, after, outcome)` specification
@@ -59,7 +59,7 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::snapshot::text::{parse_writer_dsl, print_writer_dsl};
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::schema::mutations::{
         apply_writer_mutation_outcome, decode_writer_mutation_json, decode_writer_snapshot_json, encode_writer_snapshot_json, inverse_writer_mutation_steps, WriterMutation,

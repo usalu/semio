@@ -14,6 +14,9 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 use semio_framework_os::OS_SPACE_SCHEMA;
 pub use semio_s_artifact_space_space::space_core::*;
 
+#[path = "🧫️fixtures/🦀️.rs"]
+mod demo_fixtures;
+
 //#region ⚙️Engine
 /// 🕳️ `🏠️home` moved out into `✏️editor`/`👁️viewer` above (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W2 packet P7). `🪐️space` (studio) has no artifact
@@ -222,6 +225,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // executor-bridge call site in this crate; the `space` artifact/editor/viewer calls below are
 // already sync (no bridge needed).
 pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
+    demo_fixtures::admit().map_err(|error| PluginAssemblyError::new("space.fixture.source", error))?;
     Plugin::<SpaceApps>::builder("space")
         .label("S Studio")
         .version("0.1.0")

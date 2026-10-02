@@ -13,7 +13,7 @@ fn native_catalog_dependency_is_exactly_its_compiled_owner() {
         let accepted = parsed.as_ref().is_ok_and(|dependencies| semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(dependencies).is_ok());
         assert_eq!(accepted, expected, "{}", row["id"]);
         let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&row["dependencies"].clone().into());
-        let decoded = semio_framework::from_dsl_value::<Vec<semio_framework::PluginDependency>>(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
+        let decoded = <Vec<semio_framework::PluginDependency> as semio_framework_value::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
         assert_eq!(decoded.is_ok(), parsed.is_ok(), "{}: the wire decoder and the JSON reader refuse the same dependency pins", row["id"]);
         assert_eq!(decoded.is_ok_and(|dependencies| semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&dependencies).is_ok()), expected, "{}", row["id"]);
     }
@@ -31,9 +31,9 @@ fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
         }
         let plugin = builder.try_library().unwrap();
         assert_eq!(serde_json::to_value(&plugin.manifest.topic_contributions).unwrap(), row["contributions"]);
-        let value = semio_framework::to_dsl_value(&plugin.manifest.topic_contributions).unwrap();
+        let value = semio_framework_value::ToValue::to_value(&plugin.manifest.topic_contributions);
         let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&value);
-        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework::from_dsl_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
+        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap()).unwrap();
         assert_eq!(serde_json::to_value(&roundtrip).unwrap(), row["contributions"]);
     }
 }
@@ -77,7 +77,6 @@ fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
     assert_eq!(receipts.iter().map(|receipt| receipt.descriptor_codec_id.as_str()).collect::<BTreeSet<_>>().len(), expected);
     assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), expected);
     assert!(receipts.iter().all(|receipt| receipt.pack_schema_hash != [0; 32] && receipt.instantiate().is_ok()));
-    eprintln!("[DEBUG] retained Stdio native factories instantiated: {}", receipts.len());
 }
 
 #[test]
@@ -204,13 +203,13 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
         assert_eq!(actual.len() == 1 && changed == original, accepted, "independent JSON equality {}", case["id"]);
         assert_eq!(validate_native_artifact_catalog_contributions(&actual).is_ok(), accepted, "{}", case["id"]);
         progress("validated");
-        let value = semio_framework::to_dsl_value(&actual).unwrap();
+        let value = semio_framework_value::ToValue::to_value(&actual);
         let packed = semio_framework_os_kernel::pack_rt::encode_wire_value(&value);
         progress("encoded");
         let decoded = semio_framework_os_kernel::pack_rt::decode_wire_value(&packed).unwrap();
         progress("decoded");
         assert_eq!(semio_framework_os_kernel::pack_rt::encode_wire_value(&decoded), packed);
-        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework::from_dsl_value(decoded).unwrap();
+        let roundtrip: Vec<semio_framework::TopicContribution> = semio_framework_value::FromValue::from_value(decoded).unwrap();
         assert_eq!(serde_json::to_value(&roundtrip).unwrap(), serde_json::to_value(&actual).unwrap());
         assert_eq!(validate_native_artifact_catalog_contributions(&roundtrip).is_ok(), accepted, "Pack {}", case["id"]);
         progress("complete");

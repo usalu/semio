@@ -138,7 +138,7 @@ pub fn build_tabs(id: &str, rows: &[TabRow], value: &str, orientation: TabsOrien
         .iter()
         .map(|row| {
             let mut descriptor = action.clone();
-            descriptor.args = Some(dsl::DslValue::Object(vec![("value".to_string(), dsl::DslValue::String(row.value.clone()))]));
+            descriptor.args = Some(semio_framework_value::DslValue::Object(vec![("value".to_string(), semio_framework_value::DslValue::String(row.value.clone()))]));
             UiNode::Button(UiButtonNode {
                 id: Some(tab_trigger_id(id, &row.value)),
                 icon_id: IconName::CircleDot,

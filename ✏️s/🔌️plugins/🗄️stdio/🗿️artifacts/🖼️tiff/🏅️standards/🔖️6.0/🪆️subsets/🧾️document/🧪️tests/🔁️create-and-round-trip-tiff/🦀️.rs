@@ -7,7 +7,7 @@
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_image, project_image, RasterSpec};
+use semio_s_plugin_stdio_raster_test_oracle::{oracle_create_image, project_image, RasterSpec};
 
 //#region 🔖️Input
 const FORMAT: &str = "tiff";
@@ -32,7 +32,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{spec, FORMAT};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_image, project_image};
+    use semio_s_plugin_stdio_raster_test_oracle::{oracle_create_image, project_image};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {

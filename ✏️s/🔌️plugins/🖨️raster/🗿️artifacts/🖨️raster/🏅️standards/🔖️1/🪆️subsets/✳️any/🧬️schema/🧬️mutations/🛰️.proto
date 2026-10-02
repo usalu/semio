@@ -90,6 +90,8 @@ message RasterBrush { double size = 1; double hardness = 2; double opacity = 3; 
 message RasterSelectionSpan { uint32 start = 1; uint32 length = 2; uint32 coverage = 3; }
 message RasterSelection { repeated RasterSelectionSpan spans = 1; }
 message PaintStroke { string layer_id = 1; string target = 2; string tool = 3; RasterBrush brush = 4; repeated RasterStrokePoint points = 5; optional RasterSelection selection = 6; }
+message RasterSeed { uint32 x = 1; uint32 y = 2; }
+message FillRegion { string layer_id = 1; string target = 2; RasterSeed seed = 3; uint32 tolerance = 4; repeated double color = 5; optional RasterSelection selection = 6; }
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -110,5 +112,6 @@ message RasterMutation {
     ChangeLayerTransform change_layer_transform = 17;
     ChangeLayerAdjustmentParameter change_layer_adjustment_parameter = 15;
     PaintStroke paint_stroke = 18;
+    FillRegion fill_region = 19;
   }
 }

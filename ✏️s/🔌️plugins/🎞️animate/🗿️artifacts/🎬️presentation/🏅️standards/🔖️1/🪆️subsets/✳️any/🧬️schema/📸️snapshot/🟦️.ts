@@ -13,3 +13,5 @@ export interface PresentationSnapshot {
 export function parsePresentationSnapshot(value: unknown, at = "$"): PresentationSnapshot {
   return parsePresentationArtifact(value, at);
 }
+
+export {PRESENTATION_SQLITE_SCHEMA,presentationSnapshotToSqliteDatabase,presentationSnapshotFromSqliteDatabase,type PresentationSqliteFrame,type PresentationSqliteSnapshot} from "./🪶️sqlite/🟦️.ts";

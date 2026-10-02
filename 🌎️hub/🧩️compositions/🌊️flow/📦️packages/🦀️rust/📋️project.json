@@ -107,15 +107,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "flow-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -127,15 +119,7 @@
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "flow-graph-wire"
-          ]
-        }
-      }
+      "outputs": []
     }
   }
 }

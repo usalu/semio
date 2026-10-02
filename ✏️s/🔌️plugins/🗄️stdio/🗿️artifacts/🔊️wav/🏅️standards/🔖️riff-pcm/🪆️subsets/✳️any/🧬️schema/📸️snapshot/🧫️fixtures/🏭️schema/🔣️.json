@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "fields": [
+        [
+          1,
+          "kind",
+          false
+        ],
+        [
+          2,
+          "pcm16",
+          true
+        ],
+        [
+          3,
+          "pcm8",
+          true
+        ],
+        [
+          4,
+          "float32",
+          true
+        ],
+        [
+          5,
+          "raw",
+          true
+        ]
+      ],
+      "tags": [
+        [
+          "pcm16",
+          0
+        ],
+        [
+          "pcm8",
+          1
+        ],
+        [
+          "float32",
+          2
+        ],
+        [
+          "raw",
+          3
+        ]
+      ]
+    },
+    {
+      "fields": [
+        [
+          1,
+          "kind",
+          false
+        ],
+        [
+          2,
+          "index",
+          true
+        ]
+      ],
+      "tags": [
+        [
+          "format",
+          0
+        ],
+        [
+          "samples",
+          1
+        ],
+        [
+          "other",
+          2
+        ]
+      ]
+    }
+  ],
+  "maximumBytes": 1048576,
+  "tinyBytes": 1
+}

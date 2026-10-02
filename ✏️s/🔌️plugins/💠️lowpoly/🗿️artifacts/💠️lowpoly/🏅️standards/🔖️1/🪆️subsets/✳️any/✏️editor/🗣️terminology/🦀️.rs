@@ -2,7 +2,7 @@
 //! window/panel/option component imports `LowpolyLabels` from here.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the lowpoly mesh editor; one field per label makes every locale combination compile-checked.
     pub struct LowpolyLabels {
         meshes: native_en "Meshes", native_de "Netze", reuse_en "Meshes", reuse_de "Netze";
@@ -72,14 +72,14 @@ pub fn lowpoly_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'
 
 /// 🗣️ Resolves a primitive catalogue entry's display label from its stable kind; unknown kinds fall
 /// back to the catalog's native English text.
-pub fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &LowpolyLabels) -> semio_framework_plugin::Label {
+pub fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &LowpolyLabels) -> semio_framework_ui_locale::Label {
     match kind {
         "box" => labels.primitive_box.into(),
         "plane" => labels.primitive_plane.into(),
         "cylinder" => labels.primitive_cylinder.into(),
         "cone" => labels.primitive_cone.into(),
         "ico_sphere" => labels.primitive_ico_sphere.into(),
-        _ => semio_framework_plugin::Label::data(fallback_label),
+        _ => semio_framework_ui_locale::Label::data(fallback_label),
     }
 }
 //#endregion 🔖️Labels

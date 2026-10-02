@@ -1,7 +1,7 @@
 use super::*;
 
 fn register_mp4_snapshot_schema() {
-    semio_framework_schema::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
+    semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor()).expect("schema descriptor publication");
 }
 
 #[semio_framework_async_macros::async_test]

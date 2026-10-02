@@ -1,0 +1,481 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "color"
+              },
+              "wire": {
+                "$ref": "#/$defs/color"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "function"
+              },
+              "wire": {
+                "$ref": "#/$defs/function"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "action"
+              },
+              "wire": {
+                "$ref": "#/$defs/action"
+              }
+            },
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "outline"
+              },
+              "wire": {
+                "$ref": "#/$defs/outline"
+              }
+            },
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "form"
+              },
+              "wire": {
+                "$ref": "#/$defs/form"
+              }
+            },
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "owner": {
+                "const": "date"
+              },
+              "wire": {
+                "$ref": "#/$defs/date"
+              }
+            },
+            "required": [
+              "id",
+              "owner",
+              "wire"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "color": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "deviceGray",
+                "deviceRgb"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "base"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pattern"
+            },
+            "base": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "alternate",
+            "tintTransform"
+          ],
+          "properties": {
+            "kind": {
+              "const": "separation"
+            },
+            "name": {
+              "type": "string"
+            },
+            "alternate": {
+              "$ref": "#/$defs/color"
+            },
+            "tintTransform": {
+              "$ref": "#/$defs/function"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "names",
+            "alternate",
+            "tintTransform",
+            "attributes"
+          ],
+          "properties": {
+            "kind": {
+              "const": "deviceN"
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "alternate": {
+              "$ref": "#/$defs/color"
+            },
+            "tintTransform": {
+              "$ref": "#/$defs/function"
+            },
+            "attributes": {
+              "type": "null"
+            }
+          }
+        }
+      ]
+    },
+    "function": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "domain",
+            "range",
+            "c0",
+            "c1",
+            "n"
+          ],
+          "properties": {
+            "kind": {
+              "const": "exponential"
+            },
+            "domain": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "range": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "c0": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "c1": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "n": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "functions"
+          ],
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "functions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/function"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "uri"
+                },
+                "uri": {
+                  "type": "string"
+                },
+                "isMap": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "kind",
+                "uri",
+                "isMap"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "named"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "name"
+              ]
+            }
+          ]
+        },
+        "next": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/outline"
+          }
+        }
+      },
+      "required": [
+        "title",
+        "italic",
+        "bold",
+        "open"
+      ]
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "container"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/form"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "flags"
+      ]
+    },
+    "date": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    }
+  }
+}

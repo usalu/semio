@@ -18,6 +18,9 @@ name = "semio_framework_os_config"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 schemars = "0.8.22"
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -95,6 +95,8 @@ pub mod derived_analysis {
     //#region 🔖️Conformance
     pub const CODE_DUPLICATE_MEMBER: &str = "stdio.json.i-json.duplicate-member-name";
     pub const CODE_UNSAFE_INTEGER: &str = "stdio.json.i-json.unsafe-integer";
+    pub const CODE_INVALID_NUMBER_LEXEME: &str = "stdio.json.i-json.invalid-number-lexeme";
+    pub const CODE_NUMBER_NOT_BINARY64: &str = "stdio.json.i-json.number-not-binary64";
     pub const CODE_TOP_LEVEL_SCALAR: &str = "stdio.json.i-json.top-level-scalar";
     pub const CODE_STRING_NONCHARACTER: &str = "stdio.json.i-json.string-noncharacter";
 
@@ -109,29 +111,6 @@ pub mod derived_analysis {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    /// 🔁️ Recursive scan: every object's member names, checked for duplicates independently at each
-    /// nesting level (a duplicate at a nested object doesn't affect its ancestors' own uniqueness).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn scan_duplicate_members(value: &JsonValue, out: &mut Vec<Diagnostic>) {
-        match value {
-            JsonValue::Object { members } => {
-                let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
-                for member in members {
-                    if !seen.insert(member.key.as_str()) {
-                        out.push(hard(CODE_DUPLICATE_MEMBER, format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object", member.key)));
-                    }
-                    scan_duplicate_members(&member.value, out);
-                }
-            }
-            JsonValue::Array { items } => {
-                for item in items {
-                    scan_duplicate_members(item, out);
-                }
-            }
-            _ => {}
-        }
     }
 
     /// 🔢️ Is this number lexeme an integer (no fractional part, no exponent)? Per RFC8259's grammar,
@@ -158,16 +137,6 @@ pub mod derived_analysis {
                 }
             },
             JsonValue::Number { .. } => {}
-            JsonValue::Object { members } => {
-                for member in members {
-                    scan_unsafe_integers(&member.value, out);
-                }
-            }
-            JsonValue::Array { items } => {
-                for item in items {
-                    scan_unsafe_integers(item, out);
-                }
-            }
             _ => {}
         }
     }
@@ -181,29 +150,6 @@ pub mod derived_analysis {
         (cp & 0xFFFE) == 0xFFFE || (0xFDD0..=0xFDEF).contains(&cp)
     }
 
-    /// 🔁️ Recursive scan: every string value for embedded Unicode noncharacters.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn scan_noncharacter_strings(value: &JsonValue, out: &mut Vec<Diagnostic>) {
-        match value {
-            JsonValue::String { value: s } => {
-                if s.chars().any(is_unicode_noncharacter) {
-                    out.push(soft(CODE_STRING_NONCHARACTER, format!("string {s:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));
-                }
-            }
-            JsonValue::Object { members } => {
-                for member in members {
-                    scan_noncharacter_strings(&member.value, out);
-                }
-            }
-            JsonValue::Array { items } => {
-                for item in items {
-                    scan_noncharacter_strings(item, out);
-                }
-            }
-            _ => {}
-        }
-    }
-
     /// 🛡️ Real RFC 7493 I-JSON conformance checks against one already-decoded `JsonSnapshot`. Shared
     /// single source of truth: `JsonIJsonComposer::compose` hard-gates on this (pre-serialization,
     /// authoritative), `JsonIJsonBuilder::build` hard-gates on this too, and the registered
@@ -215,13 +161,13 @@ pub mod derived_analysis {
         enum Work<'a>{Value(&'a JsonValue),Object(std::slice::Iter<'a,crate::schema::snapshot::JsonMember>,std::collections::HashSet<&'a str>),Array(std::slice::Iter<'a,JsonValue>)}
         let mut out=Vec::new();let mut count=0usize;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
         if !matches!(snapshot.value,JsonValue::Object{..}|JsonValue::Array{..}){out.push(soft(CODE_TOP_LEVEL_SCALAR,"top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));}
-        for pass in 0..3{let mut pending=vec![Work::Value(&snapshot.value)];while let Some(work)=pending.pop(){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
+        for pass in 0..3{let mut rows=0usize;let mut pending=vec![Work::Value(&snapshot.value)];while let Some(work)=pending.pop(){if matches!(&work,Work::Value(_)){rows=rows.checked_add(1).ok_or("I-JSON conformance row count overflow")?;control.check_rows(rows)?;}count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}
             match work{
                 Work::Value(JsonValue::Object{members})=>pending.push(Work::Object(members.iter(),std::collections::HashSet::new())),
                 Work::Value(JsonValue::Array{items})=>pending.push(Work::Array(items.iter())),
                 Work::Object(mut members,mut seen)=>{if let Some(member)=members.next(){if pass==0&&!seen.insert(member.key.as_str()){if member.key.len()>65536{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}out.push(hard(CODE_DUPLICATE_MEMBER,format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object",member.key)));}pending.push(Work::Object(members,seen));pending.push(Work::Value(&member.value));}},
                 Work::Array(mut items)=>{if let Some(value)=items.next(){pending.push(Work::Array(items));pending.push(Work::Value(value));}},
-                Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{for _ in lexeme.as_bytes().chunks(65536){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}scan_unsafe_integers(value,&mut out);},
+                Work::Value(value@JsonValue::Number{lexeme}) if pass==1=>{let meaning=crate::schema::snapshot::number::meaning(lexeme,control,SqliteSnapshotPhase::ProjectSnapshot,count,0)?;if !meaning.valid{out.push(hard(CODE_INVALID_NUMBER_LEXEME,"a number requires an RFC8259 lexeme".into()));}else if meaning.numeric.is_none(){out.push(hard(CODE_NUMBER_NOT_BINARY64,"a number exceeds finite IEEE754 binary64 representation -- RFC7493 §2.2".into()));}else{scan_unsafe_integers(value,&mut out);}},
                 Work::Value(JsonValue::String{value}) if pass==2=>{let mut noncharacter=false;for c in value.chars(){count=count.checked_add(1).ok_or("I-JSON validation unit count overflow")?;noncharacter|=is_unicode_noncharacter(c);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,count,0)?;}}if noncharacter{out.push(soft(CODE_STRING_NONCHARACTER,format!("string {value:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));}},
                 _=>{}
             }
@@ -229,14 +175,9 @@ pub mod derived_analysis {
     }
 
     pub fn check_i_json_conformance(snapshot: &JsonSnapshot) -> Vec<Diagnostic> {
-        let mut out = Vec::new();
-        if !matches!(snapshot.value, JsonValue::Object { .. } | JsonValue::Array { .. }) {
-            out.push(soft(CODE_TOP_LEVEL_SCALAR, "top-level value is neither an object nor an array -- RFC 7493 §2.1 recommends against a bare top-level scalar for interop".into()));
-        }
-        scan_duplicate_members(&snapshot.value, &mut out);
-        scan_unsafe_integers(&snapshot.value, &mut out);
-        scan_noncharacter_strings(&snapshot.value, &mut out);
-        out
+        let mut proceed=|_|true;
+        let mut control=semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
+        check_i_json_conformance_controlled(snapshot,&mut control).expect("borrowed I-JSON conformance without cancellation")
     }
     //#endregion 🔖️Conformance
 

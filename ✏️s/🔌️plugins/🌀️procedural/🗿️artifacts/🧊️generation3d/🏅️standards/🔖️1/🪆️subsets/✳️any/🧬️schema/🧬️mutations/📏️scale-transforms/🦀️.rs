@@ -34,10 +34,10 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Scal
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de), (z_en, z_de)] = [self.sx, self.sy, self.sz].map(generation3d_label_number);
         let (en, de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
-        protocol::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en}, {z_en})"), &format!("{de} um ({x_de}; {y_de}; {z_de}) skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en}, {z_en})"), &format!("{de} um ({x_de}; {y_de}; {z_de}) skalieren"))
     }
 
     fn target(&self) -> Vec<String> {

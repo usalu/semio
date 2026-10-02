@@ -13,9 +13,9 @@ pub(super) fn project(write:&mut Write<'_,'_>,meshes:&[GltfMesh])->Result<(),Str
  }Ok(())
 }
 pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>)->Result<Vec<GltfMesh>,String>{
- let rows=read.rows("gltf_mesh",1,1,2)?;let mut meshes=Vec::with_capacity(rows.len());for row in rows{let owner=row.rowid;let name=read.optional_text(row,3)?;let extensions=read.json(row,4)?;let extras=read.json(row,5)?;
-  let rows=read.rows("gltf_mesh_weight",1,owner,2)?;let mut weights=Vec::with_capacity(rows.len());for row in rows{read.scalar()?;weights.push(FloatRow::new(row,VALUE)?.real(3)?);}
-  let rows=read.rows("gltf_primitive",1,owner,2)?;let mut primitives=Vec::with_capacity(rows.len());for row in rows{let key=row.rowid;let indices=read.optional_index(row,3)?;let material=read.optional_index(row,5)?;let mode=read.optional_word(row,7)?;let extensions=read.json(row,9)?;let extras=read.json(row,10)?;let attributes=read_attributes(read,"gltf_primitive_attribute",key)?;let rows=read.rows("gltf_morph_target",1,key,2)?;let mut targets=Vec::with_capacity(rows.len());for row in rows{targets.push(GltfMorphTarget(read_attributes(read,"gltf_morph_attribute",row.rowid)?));}primitives.push(GltfPrimitive{attributes,indices,material,mode,targets,extensions,extras});}
-  meshes.push(GltfMesh{primitives,weights,name,extensions,extras});
- }Ok(meshes)
+ let rows=read.rows("gltf_mesh",1,1,2)?;let mut meshes=owned(Vec::with_capacity(rows.len()));for row in rows{let key=row.rowid;let mut mesh=owned(GltfMesh::default());let value=mesh.as_mut();value.name=read.optional_text(row,3)?;value.extensions=read.json(row,4)?;value.extras=read.json(row,5)?;
+  let rows=read.rows("gltf_mesh_weight",1,key,2)?;value.weights.reserve(rows.len());for row in rows{read.scalar()?;value.weights.push(FloatRow::new(row,VALUE)?.real(3)?);}
+  let rows=read.rows("gltf_primitive",1,key,2)?;value.primitives.reserve(rows.len());for row in rows{let key=row.rowid;let mut primitive=owned(GltfPrimitive::default());let current=primitive.as_mut();current.indices=read.optional_index(row,3)?;current.material=read.optional_index(row,5)?;current.mode=read.optional_word(row,7)?;current.extensions=read.json(row,9)?;current.extras=read.json(row,10)?;current.attributes=read_attributes(read,"gltf_primitive_attribute",key)?;let rows=read.rows("gltf_morph_target",1,key,2)?;current.targets.reserve(rows.len());for row in rows{current.targets.push(GltfMorphTarget(read_attributes(read,"gltf_morph_attribute",row.rowid)?));}value.primitives.push(primitive.take());}
+  meshes.as_mut().push(mesh.take());
+ }Ok(meshes.take())
 }

@@ -21,7 +21,7 @@
 
 //#region 🔖️Part21
 #[cfg(feature = "oracles")]
-pub mod part21 {
+pub(crate) mod part21 {
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use semio_repo_test_host::Json;
     use std::str::FromStr;

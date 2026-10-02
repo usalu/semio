@@ -12,7 +12,7 @@
         "required": ["id", "value", "draft", "reference", "referenceKind"],
         "properties": {
           "id": {"type": "string", "minLength": 1},
-          "value": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/snapshot.json#/$defs/XlsxCellValue"},
+          "value": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/mutation/set-cell/schema.json#/$defs/XlsxCellValue"},
           "draft": {"type": "string"},
           "reference": {"type": "string"},
           "referenceKind": {"enum": ["string", "number", "boolean", "empty"]},

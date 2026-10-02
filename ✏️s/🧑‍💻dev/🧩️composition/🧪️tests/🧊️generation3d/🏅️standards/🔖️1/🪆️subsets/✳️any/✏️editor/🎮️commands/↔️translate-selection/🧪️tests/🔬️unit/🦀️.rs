@@ -27,9 +27,11 @@ async fn translate_selection_persists_transform_into_flow_graph() {
 }
 
 //#region 🛠️GumballTool
-/// 🧾️ Every applied history row that carries document operations.
+/// 🧾️ Every applied history row that carries document operations, oldest first.
 async fn edit_rows(app: &mut context::Generation3dApp) -> Vec<semio_framework::kernel::HistoryEntry> {
-    semio_framework_plugin::PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect()
+    let mut rows: Vec<semio_framework::kernel::HistoryEntry> = semio_framework_plugin::PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
 }
 
 /// 🎚️ One gumball tick exactly as the live `World3dHost` sends it (`phase` stream / commit / abort, the owning window).
@@ -41,8 +43,8 @@ async fn tick(app: &mut context::Generation3dApp, args: serde_json::Value) {
 }
 
 /// ⚖️ LAW: a one-shot gumball drag is ONE tool transaction — one edit, one history row stamped with its `TransactionRef`
-/// whose ops are the splice that inserts the missing operator and the RELATIVE `drag-transforms` leaf; a second drag on
-/// the same shape reuses the operator and is a second transaction carrying the leaf alone, labelled from it.
+/// whose ops are the splice that inserts the missing operator and the RELATIVE `drag-transforms` leaf, labelled from that
+/// leaf; a second drag on the same shape reuses the operator and is a second transaction carrying the leaf alone.
 #[semio_framework_async_macros::async_test]
 async fn a_gumball_drag_is_one_transaction_of_the_relative_leaf() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
@@ -57,6 +59,7 @@ async fn a_gumball_drag_is_one_transaction_of_the_relative_leaf() {
     assert!(refs.iter().all(|transaction| transaction.id.starts_with("tx-") && transaction.tool == "s.procedural.generation3d@1/*#editor#translateSelection"), "{refs:?}");
     assert_ne!(refs[0].id, refs[1].id, "two drags are two transactions");
     assert!(rows[0].op_lines.last().is_some_and(|line| line.starts_with("drag-transforms")), "the first drag ends on its relative leaf: {:?}", rows[0].op_lines);
+    assert!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En).starts_with("Drag 1 shape(s) by (1, 2, 3)"), "the declared intent leaf labels a first grab, never its splice (design §19.1)");
     assert!(rows[1].op_lines.iter().all(|line| line.starts_with("drag-transforms")), "a re-grab is the relative leaf alone: {:?}", rows[1].op_lines);
     assert_eq!(rows[1].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 shape(s) by (0.5, 0, 0)");
     assert_eq!(rows[1].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "1 Form(en) um (0,5; 0; 0) ziehen");

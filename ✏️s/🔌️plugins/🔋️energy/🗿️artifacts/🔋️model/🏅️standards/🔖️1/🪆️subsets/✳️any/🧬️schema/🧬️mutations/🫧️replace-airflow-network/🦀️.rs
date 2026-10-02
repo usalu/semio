@@ -35,8 +35,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         if self.present {
             format!("Replace airflow network with {} zone nodes", self.zone_ids.len())
         } else {

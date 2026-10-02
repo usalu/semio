@@ -1189,11 +1189,11 @@ const _: fn() = || {
 };
 
 impl Ui {
-    pub fn new() -> Self {
+    pub fn new(locale: crate::wgpu::Locale) -> Self {
         Self {
             windows: UiSurfaceRegistry::default(),
             document_generation: 0,
-            shell: Shell::new(),
+            shell: Shell::new(locale),
             theme: Theme::default(),
             driver_drag: UiDriverDrag::Handle,
             pending_commands: Vec::new(),
@@ -3546,11 +3546,6 @@ impl Ui {
     }
 }
 
-impl Default for Ui {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 //#endregion 🔖️Ui
 
 //#region 🔬️Introspection

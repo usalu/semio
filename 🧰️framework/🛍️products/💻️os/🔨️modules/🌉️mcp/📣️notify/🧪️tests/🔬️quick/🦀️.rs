@@ -10,7 +10,7 @@ use crate::{build_server_from_catalog, GatewayRuntime};
 
 //#region 🧫️Fixtures
 fn fixture_catalog() -> Arc<Catalog> {
-    Arc::new(compile(&note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the note+cad fixture always compiles"))
+    Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
 
 /// 🧫️ A real server over the deterministic note+cad catalog, with a recording notification sink

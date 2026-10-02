@@ -12,7 +12,13 @@
 //! `pointer` (third-party) — an insert binds its parent — so a shortened window never binds a row that is not there.
 
 use semio_framework_os_kernel::{DslValue, Number};
-use semio_framework_plugin::{take_arena_unbuilt_rows, BuiltNode, Component, Locale, TreeWindows, UiMapBuilder, UiValue};
+use semio_framework_plugin::take_arena_unbuilt_rows;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Component;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiValue;
 use semio_framework_ui_contract as ui;
 use semio_s_artifact_stdio_contract::editing::{render_snapshot_details_provider, SnapshotDetailPathSegment, SnapshotDetailValue, SnapshotDetailsProvider};
 

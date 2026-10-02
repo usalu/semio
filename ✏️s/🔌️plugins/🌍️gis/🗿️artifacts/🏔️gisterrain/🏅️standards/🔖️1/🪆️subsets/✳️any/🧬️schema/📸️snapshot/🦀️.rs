@@ -88,36 +88,8 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 //#endregion 🔖️CodecPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_gis_terrain_snapshot_body(s: &GisTerrainSnapshot) -> String {
-    format!("exaggeration={}\nimportedFeaturesJson={}\nmesh={}", s.exaggeration, enc_str(&s.imported_features_json), enc_child_opt(&s.mesh))
-}
-fn parse_gis_terrain_snapshot_body(body: &str) -> Result<GisTerrainSnapshot, String> {
-    let mut exaggeration = None;
-    let mut imported_features_json = None;
-    let mut mesh = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("exaggeration=") {
-            exaggeration = Some(rest.trim().parse::<f64>().map_err(|e| e.to_string())?);
-        } else if let Some(rest) = line.strip_prefix("importedFeaturesJson=") {
-            imported_features_json = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("mesh=") {
-            mesh = dec_child_opt(rest)?;
-        }
-        // 🏔️ Any other line (`origin lon=… lat=…`, `position id=… …`) is the fixture's own
-        // human-readable scenery sidecar data — real content, but NOT a `GisTerrainSnapshot` field;
-        // `terrain_fixture_text::parse_descriptor` (`💡️inferences/🦀️.rs`) reads it directly
-        // off the same bundled `.gisterrain` file. Silently skipped here, exactly like the
-        // derive-generated grammar this codec replaced.
-        else {
-            continue;
-        }
-    }
-    Ok(GisTerrainSnapshot { exaggeration: exaggeration.ok_or_else(|| "gis terrain snapshot: missing exaggeration line".to_string())?, imported_features_json: imported_features_json.unwrap_or_default(), mesh })
-}
+
+
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
@@ -169,79 +141,12 @@ pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Op
     }
 }
 
-fn encode_gis_terrain_snapshot_binary(s: &GisTerrainSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = vec![PACK_BINARY_FORMAT];
-    out.extend_from_slice(&s.exaggeration.to_le_bytes());
-    write_str_lp(&mut out, &s.imported_features_json);
-    write_child_opt(&mut out, &s.mesh);
-    out
-}
-fn decode_gis_terrain_snapshot_binary(bytes: &[u8]) -> Result<GisTerrainSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let exaggeration = f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "exaggeration: short read".to_string())?);
-    let imported_features_json = read_str_lp(&mut reader)?;
-    let mesh = read_child_opt(&mut reader)?;
-    Ok(GisTerrainSnapshot { exaggeration, imported_features_json, mesh })
-}
+
+
 //#endregion 🔖️BinaryPrimitives
 
-//#region 🔹HandcraftedArtifactCodecs
-/// 🧬 Describes the three fields owned by the handcrafted GIS terrain pack body.
-fn gis_terrain_pack_record_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        Some("gisterrain"),
-        dsl::RecordLayout::Inline,
-        vec![dsl::FieldSpec::new(1, "exaggeration", dsl::Shape::Float), dsl::FieldSpec::new(2, "importedFeaturesJson", dsl::Shape::Text), dsl::FieldSpec::new(3, "mesh", <store::ArtifactChild<SemioMeshSnapshot> as dsl::DslField>::shape()).optional()],
-    )
-}
-
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits — see this file's
-/// module doc comment).
-impl store::ArtifactDsl for GisTerrainSnapshot {
-    const EXTENSION: &'static str = "gisterrain";
-    fn envelope_id() -> &'static str {
-        "gis.gisterrain"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_gis_terrain_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let body = print_gis_terrain_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for GisTerrainSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_gis_terrain_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        decode_gis_terrain_snapshot_binary(&inner).map_err(store::PackError::Schema)
-    }
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(gis_terrain_pack_record_spec())
-    }
-}
-//#endregion 🔹HandcraftedArtifactCodecs
+#[path="📦️pack/🦀️.rs"]
+mod owned_pack;
 
 //#region 🌉️IdentityBridge
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
@@ -272,3 +177,9 @@ pub fn gis_terrain_identity_report_json(dsl_text: &str) -> Result<String, String
     Ok(dsl::os_pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

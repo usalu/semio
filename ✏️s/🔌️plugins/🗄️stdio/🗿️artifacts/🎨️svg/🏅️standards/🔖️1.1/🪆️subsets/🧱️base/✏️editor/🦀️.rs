@@ -12,9 +12,39 @@ use crate::standards::v1_1::subsets::base::schema::mutations::{set_snapshot as s
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command
@@ -72,7 +102,7 @@ fn svgAnyEditor_retained_extent(command: &SvgAnyEditCommand, _snapshot: &SvgSnap
 }
 fn svgAnyEditor_retained_reduce(command: &SvgAnyEditCommand, _snapshot: &SvgSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<SvgAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<SvgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        SvgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svgAnyEditor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() }),
+        SvgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svgAnyEditor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -169,7 +199,6 @@ impl ArtifactEditor for SvgAnyEditor {
             SvgAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
             SvgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&svgAnyEditor_example_snapshot(example_id), STDIO_SVG_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
             SvgAnyEditCommand::SetPixelRegion { source } => {

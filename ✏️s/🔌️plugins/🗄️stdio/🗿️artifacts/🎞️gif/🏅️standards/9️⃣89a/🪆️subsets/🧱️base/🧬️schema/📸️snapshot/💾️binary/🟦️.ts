@@ -1,2 +1,2 @@
 /** 💾️ Gif representation for `stdio.gif` (snapshot). */
-export type GifSnapshotGif = Uint8Array;
+export type GifSnapshotPack = Uint8Array;

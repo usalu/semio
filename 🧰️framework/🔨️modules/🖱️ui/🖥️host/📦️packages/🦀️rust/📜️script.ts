@@ -1,5 +1,10 @@
 #!/usr/bin/env bun
-import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -20,8 +25,8 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
-    await runCargoTestBudgeted(["semio-framework-ui-host"], this.repoRoot, ["--no-fail-fast", ...rest]);
+    await runBudgetedTestCommand(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -29,7 +34,7 @@ class TestScript extends BundleScript {
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host native check accepts no arguments");
-    await runTestBudgeted("cargo", ["check", "-p", "semio-framework-ui-host", "--lib"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+    await runBudgetedTestCommand("cargo", ["check", "--manifest-path", "Cargo.toml", "--lib"], { cwd: this.root, budgetMs: buildBudgetMs() });
   }
 }
 
@@ -37,7 +42,7 @@ class CheckScript extends BundleScript {
 class CheckWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host Wasm check accepts no arguments");
-    await runTestBudgeted("cargo", ["check", "-p", "semio-framework-ui-host", "--lib", "--target", "wasm32-unknown-unknown"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+    await runBudgetedTestCommand("cargo", ["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-unknown-unknown"], { cwd: this.root, budgetMs: buildBudgetMs() });
   }
 }
 

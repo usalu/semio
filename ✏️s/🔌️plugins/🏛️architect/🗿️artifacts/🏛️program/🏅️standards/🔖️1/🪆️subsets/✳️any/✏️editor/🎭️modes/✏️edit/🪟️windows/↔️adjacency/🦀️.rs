@@ -6,7 +6,18 @@ use crate::editor::architect::ui_label;
 use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, tree_window_item, BuiltNode, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, TreeWindows, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::HasBase;
 
 #[path = "🎚️config/🦀️.rs"]

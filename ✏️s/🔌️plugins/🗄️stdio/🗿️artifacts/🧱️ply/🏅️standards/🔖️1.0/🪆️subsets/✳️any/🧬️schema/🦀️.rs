@@ -58,25 +58,25 @@ impl PlyArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.ply`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ply_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn ply_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.ply",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -228,13 +228,8 @@ pub fn empty_ply_snapshot() -> PlySnapshot {
 /// `📚️examples/🎬️demo/🖼️assets` fixtures are built from — a `vertex` element (2 rows, plain
 /// scalar `float` properties) and a `face` element (1 row, a `list uchar int vertex_indices`
 /// property, exercising the count-prefixed list-cell shape) plus one comment. `format:
-/// PlyFormat::Ascii` deliberately — `print_dsl`/`parse_dsl` always render/read the CANONICAL
-/// ascii encoding regardless of `format` (see `📸️snapshot/🦀️.rs`'s own
-/// `HandcraftedArtifactCodecs` doc comment), so a demo snapshot whose OWN `format` field isn't
-/// `Ascii` would make `fixture_honesty_law`'s `parse_dsl(print_dsl(demo)) == demo` fail — the
-/// DSL/text facet's own format-normalization would silently overwrite it. The Pack facet (which
-/// DOES respect `self.format`) is exercised against genuine BINARY bytes separately, by
-/// `protocol_walk_law` calling `encode_ply_with_format` directly with a non-ascii format.
+/// PlyFormat::Ascii` selects representative format metadata. Logical Text and Pack retain
+/// all formats, independent declarations, occurrence vectors and exact scalar words.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_ply_snapshot() -> PlySnapshot {
     use crate::schema::snapshot::{PlyProperty, PlyRow, PlyScalarType, PlyValue};

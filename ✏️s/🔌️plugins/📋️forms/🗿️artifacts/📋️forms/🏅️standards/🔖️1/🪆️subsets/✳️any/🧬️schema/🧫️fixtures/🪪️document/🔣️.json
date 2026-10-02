@@ -67,38 +67,6 @@
       "version": "1",
       "title": "Site Survey",
       "structure": {
-        "childId": "different-child",
-        "target": {
-          "artifactId": "forms-value",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "value"
-          }
-        }
-      },
-      "results": {
-        "childId": "forms-table",
-        "target": {
-          "artifactId": "forms-table",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "table"
-          }
-        }
-      },
-      "definition": {
-        "steps": []
-      },
-      "responses": []
-    },
-    {
-      "schema": "forms.form",
-      "id": "site-survey",
-      "version": "1",
-      "title": "Site Survey",
-      "structure": {
         "childId": "forms-value",
         "target": {
           "artifactId": "forms-value",
@@ -208,38 +176,6 @@
       },
       "results": {
         "childId": "forms-table",
-        "target": {
-          "artifactId": "forms-table",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "table"
-          }
-        }
-      },
-      "definition": {
-        "steps": []
-      },
-      "responses": []
-    },
-    {
-      "schema": "forms.form",
-      "id": "site-survey",
-      "version": "1",
-      "title": "Site Survey",
-      "structure": {
-        "childId": "forms-value",
-        "target": {
-          "artifactId": "forms-value",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "value"
-          }
-        }
-      },
-      "results": {
-        "childId": "different-child",
         "target": {
           "artifactId": "forms-table",
           "dialect": {
@@ -867,19 +803,6 @@
     },
     {
       "structure": {
-        "childId": "different-child",
-        "target": {
-          "artifactId": "forms-value",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "value"
-          }
-        }
-      }
-    },
-    {
-      "structure": {
         "childId": "forms-value",
         "target": {
           "artifactId": "forms-value",
@@ -929,19 +852,6 @@
           }
         },
         "locale": "de"
-      }
-    },
-    {
-      "results": {
-        "childId": "different-child",
-        "target": {
-          "artifactId": "forms-table",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "table"
-          }
-        }
       }
     },
     {
@@ -1013,5 +923,99 @@
     "semio foreign.forms.pack v1",
     "semio forms.form.dsl v1",
     "semio forms.form.pack v2"
+  ],
+  "validIndependentChildDocuments": [
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "forms-table",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
+    },
+    {
+      "schema": "forms.form",
+      "id": "site-survey",
+      "version": "1",
+      "title": "Site Survey",
+      "structure": {
+        "childId": "forms-value",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      },
+      "results": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      },
+      "definition": {
+        "steps": []
+      },
+      "responses": []
+    }
+  ],
+  "validIndependentChildDiffs": [
+    {
+      "structure": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-value",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          }
+        }
+      }
+    },
+    {
+      "results": {
+        "childId": "different-child",
+        "target": {
+          "artifactId": "forms-table",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          }
+        }
+      }
+    }
   ]
 }

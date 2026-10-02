@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "neutralFixture": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧫️fixtures/🔣️.json",
+  "neutralSchema": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧬️schema/🔣️.json",
+  "neutralRouter": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+  "mountedFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧫️fixtures/🔐️pool-use/🔣️.json",
+  "mountedSchema": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧬️schema/🔐️pool-use/🔣️.json",
+  "mountedRouter": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+  "neutralLaws": [
+    "native_pool::tests::worker_pool_use_native_busy_keeps_executor_running_until_final_release",
+    "native_pool::tests::worker_pool_use_acquire_and_shutdown_linearize_exactly_once",
+    "wasm_pool::cooperative_tests::worker_pool_use_cooperative_busy_keeps_executor_running_until_final_release"
+  ],
+  "mountedLaws": [
+    "db_engine::tests::database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack",
+    "db_engine::tests::database_worker_pool_use_is_admitted_before_the_first_storage_probe",
+    "db_engine::tests::database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer"
+  ],
+  "mountedCaseIds": [
+    "database-retains-one-clone-shared-use",
+    "terminal-database-releases-exact-use",
+    "stopped-pool-refuses-before-storage-probe",
+    "hard-scheduler-fault-retains-job",
+    "terminal-database-fences-activity-while-unrelated-use-runs"
+  ],
+  "neutralCaseIds": [
+    "held-use-refuses-shutdown",
+    "arc-clones-count-one-use-cell",
+    "final-drop-enables-shutdown",
+    "closing-fences-racing-acquire",
+    "stopped-shutdown-is-idempotent"
+  ]
+}

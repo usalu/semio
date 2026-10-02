@@ -49,11 +49,92 @@ fn sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits(
 #[test]
 fn sqlite_snapshot_gltf_actual_factory_exposes_owned_provider_and_structural_hash(){let codec=(crate::native_codecs()[0].codec)();assert!(codec.snapshot_sqlite.is_some());let spec=<GltfSnapshot as store::ArtifactPack>::record_spec().expect("owned GLTF record spec");assert_eq!(codec.pack_schema_hash,store::schema_hash(&spec));}
 
-#[test]
-fn sqlite_snapshot_gltf_emit_owned_review_assets(){let Ok(directory)=std::env::var("SEMIO_GLTF_REVIEW_DIR")else{return};let directory=std::path::Path::new(&directory);std::fs::create_dir_all(directory).unwrap();let demo=crate::engine::demo_gltf_snapshot();std::fs::write(directory.join("gltf.dsl.semio"),store::ArtifactDsl::print_dsl(&demo)).unwrap();std::fs::write(directory.join("gltf.pack.semio"),store::ArtifactPack::encode_pack(&demo)).unwrap();let codec=(crate::native_codecs()[0].codec)();std::fs::write(directory.join("gltf-hash.txt"),codec.pack_schema_hash.iter().map(|byte|format!("{byte:02x}")).collect::<String>()).unwrap();}
 
 #[test]
-fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists(){let mut snapshot:GltfSnapshot=dsl::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🌱️minimal/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();let before=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(before.tables.len(),57);assert_eq!(before.table("gltf_accessor").unwrap().rows.len(),0);let database=independent(&before,"SELECT 1");assert_eq!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);snapshot.document.accessors=vec![GltfAccessor{min:Some(Vec::new()),max:None,..Default::default()}];snapshot.document.extras=Some(GltfJson::Null);snapshot.buffers=vec![Vec::new()];let database=independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),"SELECT 1");let restored=GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored,snapshot);assert_eq!(restored.document.accessors[0].min,Some(Vec::new()));assert_eq!(restored.document.accessors[0].max,None);}
+fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists(){let mut snapshot:GltfSnapshot=dsl::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🌱️minimal/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();let before=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(before.tables.len(),57);assert_eq!(before.table("gltf_accessor").unwrap().rows.len(),0);let database=independent(&before,"SELECT 1");assert_eq!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);snapshot.document.accessors=vec![GltfAccessor{buffer_view:None,byte_offset:0,component_type:GltfComponentType::Float,normalized:false,count:0,kind:GltfAccessorType::Scalar,max:None,min:Some(Vec::new()),sparse:None,name:None,extensions:None,extras:None}];snapshot.document.extras=Some(GltfJson::Null);snapshot.buffers=vec![Vec::new()];let database=independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),"SELECT 1");let restored=GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored,snapshot);assert_eq!(restored.document.accessors[0].min,Some(Vec::new()));assert_eq!(restored.document.accessors[0].max,None);}
 
 #[test]
 fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_depth(){use store::sqlite_snapshot::SnapshotEncoding;let mut snapshot=fixture();#[derive(value_derive::FromValue)]#[value(rename_all="camelCase")]struct Depth{json_depth:usize}let depth:Depth=dsl::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️words/🔣️.json")).unwrap();let mut extras=GltfJson::Number(f64::from_bits(0x7ff8000000000042));for _ in 0..depth.json_depth{extras=GltfJson::Array(vec![extras])}snapshot.document.extras=Some(extras);let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let codec=(crate::native_codecs()[0].codec)().snapshot_sqlite.expect("actual GLTF owned provider");let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.gltf".into(),standard:"2.0".into(),subset:"*".into()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=(codec.import)(&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;let restored=(codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;assert_eq!(restored,database);}}
+
+#[test]
+fn sqlite_snapshot_gltf_logical_text_rejects_foreign_envelope_and_unowned_suffix(){
+ let snapshot=fixture();let text=store::ArtifactDsl::print_dsl(&snapshot);
+ assert!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).is_ok());
+ for invalid in [text.replace("stdio.gltf.dsl","stdio.obj.dsl"),text.replace("stdio.gltf.dsl v1","stdio.gltf.dsl v99"),format!("{text}\nunowned-field=1")]{assert!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(&invalid).is_err());}
+}
+
+#[test]
+fn sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee_words(){
+ let mut snapshot=fixture();let limits=SqliteDatabaseLimits::default();let mut extras=GltfJson::Number(f64::from_bits(0x7ff0000000001234));for _ in 0..1024{extras=GltfJson::Object(vec![("same".into(),extras),("same".into(),GltfJson::Null)])}snapshot.document.meshes[0].primitives[0].extras=Some(extras);
+ let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ for payload in[semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)),semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))]{let restored=match payload{semio_framework_os_kernel::io_schema::IoPayload::Text(text)=><GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=><GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap()};assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),database);}
+}
+
+#[test]
+fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists(){
+ let snapshot:GltfSnapshot=dsl::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🪹️empty-entities/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();let database=independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),"SELECT 1");assert_eq!(database.table("gltf_image").unwrap().rows.len(),2);assert_eq!(database.table("gltf_texture").unwrap().rows.len(),1);
+ for payload in[semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)),semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))]{let restored=match payload{semio_framework_os_kernel::io_schema::IoPayload::Text(text)=><GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=><GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap()};assert_eq!(restored,snapshot);assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),database);}
+}
+
+#[test]
+fn sqlite_snapshot_gltf_authored_grammar_recognizes_each_owned_named_domain(){
+ let grammar=dsl::grammar::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();let recognizer=dsl::grammar::Recognizer::compile(&grammar);for snapshot in[fixture(),dsl::json::from_json_str::<GltfSnapshot>(include_str!("../../🧫️fixtures/🪶️sqlite/🪹️empty-entities/🔣️.json")).unwrap()]{let text=store::ArtifactDsl::print_dsl(&snapshot);assert!(recognizer.recognize(&text).unwrap(),"{text}");}
+}
+
+#[test]
+fn sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_failure_and_cancellation(){
+ use dsl::DslField;
+ #[derive(value_derive::FromValue)]#[value(rename_all="camelCase")]struct Depth{controlled_retirement_depth:usize}
+ let depth_fixture:Depth=dsl::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️words/🔣️.json")).unwrap();
+ std::thread::Builder::new().stack_size(256*1024).spawn(move||{
+  #[derive(dsl::DslRecord)]struct Retained{primitive:GltfPrimitive,required:u64}
+  let depth=depth_fixture.controlled_retirement_depth;let mut json=GltfJson::Number(f64::from_bits(0x7ff0000000001234));for _ in 0..depth{json=GltfJson::Array(vec![json]);}
+  let mut primitive=fixture().document.meshes.remove(0).primitives.remove(0);primitive.extensions=Some(json);primitive.extras=None;
+  let value=Retained{primitive,required:7};let mut fields=match value.to_value(){dsl::FieldValue::Record(record)=>record,_=>unreachable!()};Retained::retire_decoded(value);
+  let required=fields.fields.remove(&1).unwrap();let mut callback=|_:protocol::native_decoding::NativeDecodeProgress|true;let mut control=dsl::NativeDecodeControl::new(64*1024*1024,&mut callback);
+  let error=Retained::from_record_controlled(&fields,&mut control).err().expect("missing later field must reject");assert!(error.contains("required"),"{error}");
+  fields.fields.insert(1,required);let mut reached=false;let mut callback=|progress:protocol::native_decoding::NativeDecodeProgress|{if progress.total==depth*2+1&&progress.completed>=256{reached=true;false}else{true}};let mut control=dsl::NativeDecodeControl::new(64*1024*1024,&mut callback);
+  assert!(Retained::from_record_controlled(&fields,&mut control).is_err());assert!(reached,"cancel inside actual extras reconstruction");
+  let mut callback=|_:protocol::native_decoding::NativeDecodeProgress|true;let mut control=dsl::NativeDecodeControl::new(64*1024*1024,&mut callback);let value=Retained::from_record_controlled(&fields,&mut control).unwrap();let mut current=value.primitive.extensions.as_ref().unwrap();for _ in 0..depth{match current{GltfJson::Array(values)=>current=&values[0],_=>panic!("lost typed array")}}assert!(matches!(current,GltfJson::Number(value)if value.to_bits()==0x7ff0000000001234));Retained::retire_decoded(value);
+ }).unwrap().join().unwrap();
+}
+
+#[test]
+fn sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_sibling(){
+ std::thread::Builder::new().stack_size(256*1024).spawn(||{
+  let mut snapshot=fixture();let mut value=GltfJson::Null;for _ in 0..2048{value=GltfJson::Array(vec![value]);}snapshot.document.extras=Some(GltfJson::Object(vec![("completed deep sibling".into(),value),("bad later scalar".into(),GltfJson::Bool(true))]));let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let database=independent(&expected,"UPDATE gltf_json_object_member SET value_id=(SELECT value_id FROM gltf_json_object_member WHERE name='completed deep sibling') WHERE name='bad later scalar'");assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());GltfSnapshot::retire_sqlite_snapshot(snapshot);
+ }).unwrap().join().unwrap();
+}
+
+#[test]
+fn sqlite_snapshot_gltf_independent_later_root_owner_failure_retires_completed_extensions(){
+ std::thread::Builder::new().stack_size(256*1024).spawn(||{
+  let mut snapshot=fixture();let mut value=GltfJson::Null;for _ in 0..2048{value=GltfJson::Array(vec![value]);}snapshot.document.extensions=Some(value);snapshot.document.extras=None;let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let database=independent(&expected,"UPDATE gltf_document SET extras_id=extensions_id");assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());GltfSnapshot::retire_sqlite_snapshot(snapshot);
+ }).unwrap().join().unwrap();
+}
+
+#[test]
+fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records(){
+ let demo=crate::engine::demo_gltf_snapshot();let text=include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");let bytes=include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");assert_eq!(store::ArtifactDsl::print_dsl(&demo),text);assert_eq!(store::ArtifactPack::encode_pack(&demo),bytes);assert_eq!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).unwrap(),demo);assert_eq!(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).unwrap(),demo);
+}
+
+#[test]
+fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state(){
+ let snapshot=crate::engine::decode_glb(include_bytes!("../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).unwrap();let bytes=include_bytes!("../../../../📚️examples/🌱️metabolism/🖼️assets/🎒️.pack.semio");assert!(store::ArtifactPack::encode_pack(&snapshot).as_slice()==bytes,"curated metabolism Pack must match the actual current owned native record graph");assert_eq!(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).unwrap(),snapshot);
+}
+
+#[test]
+fn sqlite_snapshot_gltf_typed_guard_rejects_independently_changed_owned_state(){
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let edited=independent(&database,"UPDATE gltf_material SET name='Different valid state' WHERE id=1");let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.gltf".into(),standard:"2.0".into(),subset:"*".into()};assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"typed guard must compare all owned state");let restored=GltfSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert!(restored.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok());
+}
+
+#[test]
+fn sqlite_snapshot_gltf_typed_guard_accepts_independently_renumbered_surrogate(){
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let edited=independent(&database,"UPDATE gltf_scene_node SET id=99 WHERE id=1");let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.gltf".into(),standard:"2.0".into(),subset:"*".into()};assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_ok(),"surrogate row identity must not change typed state");
+}
+
+#[test]
+fn sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_materialization(){
+ let mut value=word_snapshot(0x7ff0000000001234);value.schema="nondefault controlled GLTF schema".into();value.document.extras=Some(GltfJson::Array((0..600).map(|index|GltfJson::String(if index==0{"long semantic literal 世界".repeat(4096)}else{"child".into()})).collect()));let limits=SqliteDatabaseLimits{max_value_bytes:128*1024*1024,..SqliteDatabaseLimits::default()};let expected=value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ for payload in[store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value)),store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value))]{let restored=GltfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);GltfSnapshot::retire_sqlite_snapshot(restored);assert!(GltfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:4096,..limits})).is_err());let mut interior=false;let mut progress=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative&&event.completed>=256&&event.completed<event.total{interior=true;false}else{true}};assert!(GltfSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut progress,limits)).is_err());assert!(interior,"must cancel inside known actual native work");}GltfSnapshot::retire_sqlite_snapshot(value);
+}

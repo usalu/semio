@@ -7,7 +7,15 @@ use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::inferences::{language_diagnostics_json, language_tokens_json};
 use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
 use crate::{writer_text, WriterSnapshot};
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TextEditorScene;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as SemanticSurfaceKind;
 use serde_json::{json, Value};
 

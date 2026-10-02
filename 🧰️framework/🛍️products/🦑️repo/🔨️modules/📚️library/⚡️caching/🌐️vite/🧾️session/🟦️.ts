@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import schema from "./🧬️schema/🔣️.json";
-import { withResourceLeases } from "../../🔒️leases/🟦️.ts";
+import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 export type ServiceSession = { readonly schema: "semio.nx.service/v1"; readonly id: string; readonly owner: string; readonly pid: number };
 export const SERVICE_READY_ENDPOINT = "/__semio/nx-service";

@@ -20,7 +20,7 @@
 //   bun 📜️script.ts tiff-project --input <a.tiff>
 //   bun 📜️script.ts tiff-compare --input <expected.tiff> --input <actual.tiff>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)

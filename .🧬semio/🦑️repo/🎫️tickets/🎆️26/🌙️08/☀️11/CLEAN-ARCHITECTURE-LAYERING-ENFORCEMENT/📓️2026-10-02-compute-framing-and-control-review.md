@@ -1,0 +1,9 @@
+# Compute Framing and Control Review
+
+Read-only current source; no jobs. Compute Rust109–115 now hashes engine ID UTF8 byte-length as u64LE, exact ID bytes, input byte-length as u64LE and input bytes. This removes structural ambiguity of the former NUL delimiter while retaining NUL as legal identity data. Hash collision resistance remains separate from injective framing. Rust str has valid UTF8; JS identity must refuse lossy surrogate replacement, already represented by invalidIdentities corpus and Node lossless UTF8 round-trip oracle.
+
+Portable test43 independently authors Node Buffer byte lengths and concatenated preimages, compares handwritten corpus preimageHex, then checks owned keys against independent hash oracle at51–56. Original six native law names remain corpus-owned. Fixed framing must not silently normalize Unicode identities or convert ID code-unit length into UTF8 byte length. Current framing uses exact byte identity.
+
+Existing Rust Engine.compute46/EngineCache.derive119 remain synchronous without controller/cancellation arguments; hash input and compute output are potentially unbounded. This extraction/framing contract cannot establish progress/cancellation. A later schema-owned controlled compute/key route must define resource units/checkpoints and preserve exact key bytes without forwarding an ordinary factory through a controlled wrapper. Current cache registration replacement and read-by-key semantics are existing behavior, not newly proved identity/version invalidation.
+
+Whole-caller enforcement still needs the captured-source facet described in compute-whole-caller-enforcement-gap. Pass current executor source Map plus admitted graph and extern provider contexts; check every mount's direct canonical2D provider. Detect stale paths and duplicate family declarations exhaustively, but do not call that semantic alias/reexport resolution. Unknown origin must remain an explicit problem.

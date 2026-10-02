@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-png",
       "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
           "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"
@@ -2069,5 +2069,6 @@
       "family": "png-carrier",
       "notes": "PatchPixels{index:4,removeCount:4,pixels:[0,255,0,255]} replaces the second RGBA pixel in place; the raster keeps its width*height*4 byte length, which PNG's image data requires."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

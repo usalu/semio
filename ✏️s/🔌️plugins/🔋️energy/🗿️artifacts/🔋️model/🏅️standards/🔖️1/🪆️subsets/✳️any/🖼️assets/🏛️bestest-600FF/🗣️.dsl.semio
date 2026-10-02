@@ -104,4 +104,4 @@ schema=energy.model model={
   }
   ]
 }
-structure=child_id=energy-value target="energy-value!s.stdio.semio@v1/value" zones=child_id=energy-table target="energy-table!s.stdio.semio@v1/table"
+structure=child_id=energy-value target=artifact-id=energy-value artifact-kind=s.stdio.semio standard=v1 subset=value zones=child_id=energy-table target=artifact-id=energy-table artifact-kind=s.stdio.semio standard=v1 subset=table

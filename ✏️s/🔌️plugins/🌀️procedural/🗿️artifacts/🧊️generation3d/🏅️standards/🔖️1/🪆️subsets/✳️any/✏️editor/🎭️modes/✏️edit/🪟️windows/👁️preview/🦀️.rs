@@ -6,7 +6,16 @@ use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_sun_measures;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 #[path = "🫧️transient/🦀️.rs"]
 pub mod transient;

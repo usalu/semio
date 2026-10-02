@@ -18,15 +18,45 @@ use crate::schema::default_snapshot;
 use crate::{ProcedureSnapshot, Step, PROCEDURE_DOCUMENT_SCHEMA};
 use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
 // `semio_framework::*` elsewhere) — see `crate::PROCEDURE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
-use store::{ArtifactPack, EngineHandles};
+use semio_framework_2d::compute::EngineHandles;
+use store::{ArtifactPack, };
 
 /// 🏷️ Admits semantic labels for the imperative editor.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
@@ -478,7 +508,7 @@ impl ArtifactEditor for ImperativePlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
     }
 

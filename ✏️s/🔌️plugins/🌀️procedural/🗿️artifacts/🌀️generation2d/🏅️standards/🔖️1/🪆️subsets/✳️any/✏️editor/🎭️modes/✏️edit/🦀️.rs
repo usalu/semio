@@ -2,7 +2,11 @@
 //! preview).
 
 use crate::editor::generation2d::modes::edit::windows::{flow, preview};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRef, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::WindowLayout;
 
 pub const GENERATION2D_PLAY_MODE_EDIT: &str = "edit";
 

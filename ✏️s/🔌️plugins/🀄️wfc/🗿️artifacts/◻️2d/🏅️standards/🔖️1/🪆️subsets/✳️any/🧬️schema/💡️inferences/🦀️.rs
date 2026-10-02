@@ -739,10 +739,10 @@ impl semio_framework::ToolJobFactory for Wfc2dInferenceJobFactory {
 }
 
 /// 💡️ Descriptor for the `s.wfc.wfc2d.solve` inference — five handcrafted facet leaves.
-pub fn wfc2d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn wfc2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: WFC_2D_INFERENCE_TOOL_ID,
-        inference: ::semio_framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: ::semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 

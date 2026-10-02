@@ -4,11 +4,16 @@ extension obj
 start document
 comment none
 
-document = "stdio.obj" field*
-field = IDENT field-value?
-field-value = "=" value
-value = scalar value-tail? | list | record
-scalar = field | TEXT | INT | FLOAT
-value-tail = "," value
-list = "[" value* "]"
-record = "{" field* "}"
+document = "semio" "stdio.obj.dsl" "v1" snapshot
+snapshot = "schema" "=" text {"mtllib" "=" text}? "vertices" "=" "[" vertex* "]" "texcoords" "=" "[" texcoord* "]" "normals" "=" "[" normal* "]" "faces" "=" "[" face* "]" "groups" "=" "[" membership* "]" "objects" "=" "[" membership* "]" "usemtl" "=" "[" material* "]" "smoothing-groups" "=" "[" smoothing* "]" "unknown-statements" "=" "[" unknown* "]"
+vertex = "{" "x" "=" number "y" "=" number "z" "=" number {"w" "=" number}? "}"
+texcoord = "{" "u" "=" number "v" "=" number {"w" "=" number}? "}"
+normal = "{" "x" "=" number "y" "=" number "z" "=" number "}"
+face = "{" "vertices" "=" "[" corner* "]" "}"
+corner = "{" "vertex" "=" INT {"texcoord" "=" INT}? {"normal" "=" INT}? "}"
+membership = "{" "name" "=" text "faces" "=" "[" INT* "]" "}"
+material = "{" "face-index-from" "=" INT "material" "=" text "}"
+smoothing = "{" "face-index-from" "=" INT {"group" "=" INT}? "}"
+unknown = "{" "line-index" "=" INT "raw" "=" text "}"
+number = FLOAT | INT | IDENT
+text = IDENT | TEXT

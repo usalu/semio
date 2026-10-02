@@ -2,7 +2,7 @@
 //! node reaches for. Deliberately ONE block for the whole app.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
     pub struct Generation2dLabels {
         sources: native_en "Sources", native_de "Quellen", reuse_en "Sources", reuse_de "Quellen";

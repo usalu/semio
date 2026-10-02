@@ -1,5 +1,9 @@
 
 use super::*;
+macro_rules! ordinary_fixture_spec {
+    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+}
+
 use crate::os_dsl::schema::{FieldSpec, JoinMode, ParseOptions, RecordLayout};
 
 //#region 🔖️Fixtures
@@ -24,7 +28,7 @@ fn mixed_spec() -> RecordSpec {
             FieldSpec::new(6, "nickname", Shape::Text).optional(),
             FieldSpec::new(7, "payload", Shape::Bytes64),
             FieldSpec::new(8, "color", Shape::Enum(vec![("red".to_string(), 0), ("green".to_string(), 1), ("blue".to_string(), 2)])),
-            FieldSpec::new(9, "point", Shape::Record(nested_point_spec)),
+            FieldSpec::new(9, "point", Shape::Record(ordinary_fixture_spec!(nested_point_spec))),
             FieldSpec::new(10, "tags", Shape::List(Box::new(Shape::Text))),
             FieldSpec::new(11, "coords", Shape::Tuple(Box::new(Shape::Int), Some(3))),
             FieldSpec::new(12, "labels", Shape::Map(Box::new(Shape::Int))),
@@ -81,7 +85,7 @@ async fn record_value_gen_bounds_recursion_by_max_depth() {
     // points right back at itself. A generator that ignored `max_depth` would stack-overflow.
     // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Statements` below
     fn recursive_spec() -> RecordSpec {
-        RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), recursive_spec)]))])
+        RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), ordinary_fixture_spec!(recursive_spec))]))])
     }
     let spec = recursive_spec();
     let mut gen = RecordValueGen::new(7);

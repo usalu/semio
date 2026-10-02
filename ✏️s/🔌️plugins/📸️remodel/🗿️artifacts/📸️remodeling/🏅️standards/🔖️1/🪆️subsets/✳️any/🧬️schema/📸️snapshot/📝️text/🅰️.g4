@@ -10,7 +10,7 @@ schemaLine: 'schema' '=' 'remodeling.scene' ;
 idLine: 'id' '=' name ;
 snapshotPart: assetsMap | durableArtifactsMap | calibrationBlock | paramsBlock | resultsBlock | streamsTable | gcpsTable ;
 name: IDENT | TEXT ;
-num: INT | FLOAT ;
+num: INT | FLOAT | NONFINITE ;
 quantity: num IDENT ;
 coord3: '@' num ',' num ',' num ;
 pair: num ',' num ;
@@ -23,7 +23,7 @@ assetEntry: name '=' childHandle ;
 childHandle: 'child_id' '=' name 'target' '=' TEXT ;
 durableArtifactsMap: 'durable-artifacts' '=' '{' durableEntry* '}' ;
 durableEntry: name '=' durableField+ ;
-durableField: 'kind' '=' name | 'mime' '=' name | 'width' '=' INT | 'height' '=' INT | 'chunks' '=' textList ;
+durableField: 'kind' '=' name | 'mime' '=' name | 'width' '=' INT | 'height' '=' INT | 'chunks' '=' octetList ;
 calibrationBlock: 'calibration' '{' camerasTable rigTable '}' ;
 camerasTable: 'cameras' camerasHeader '{' cameraRow* '}' ;
 camerasHeader: '[' 'id' ':' 'TEXT' 'label' ':' 'TEXT' 'model' ':' 'TEXT' 'fx' ':' 'NUM' 'fy' ':' 'NUM' 'cx' ':' 'NUM' 'cy' ':' 'NUM' 'skew' ':' 'NUM' 'distortion' ':' 'TUPLE' 'rms-reprojection-px' ':' 'NUM' 'locked' ':' 'BOOL' ']' ;
@@ -74,9 +74,9 @@ poseRow: name quad coord3 ;
 resultsBlock: 'results' '{' resultsPart* '}' ;
 resultsPart: sparseBlock | denseResultBlock | meshResultBlock | trajectoryBlock | geoProductsBlock | qcBlock | tracksTable ;
 sparseBlock: 'sparse' '{' sparseField+ '}' ;
-sparseField: 'points' '=' name | 'colors' '=' name ;
+sparseField: 'points' floatBuffer | 'colors' '=' octets ;
 denseResultBlock: 'dense' '{' denseResultField+ '}' ;
-denseResultField: 'positions' '=' name | 'colors' '=' name | 'confidence' '=' name | 'classification' '=' name ;
+denseResultField: 'positions' floatBuffer | 'colors' '=' octets | 'confidence' floatBuffer | 'classification' '=' octets ;
 meshResultBlock: 'mesh' '{' meshResultPart* '}' ;
 meshResultPart: 'source' '=' meshSource | 'texture-asset-id' '=' name | meshChildBlock | watertightBlock ;
 meshSource: 'placeholder' | 'reconstructed' | 'imported' ;
@@ -94,7 +94,14 @@ tracksHeader: '[' 'id' ':' 'TEXT' 'length' ':' 'UINT' 'class' ':' 'ENUM' 'mean-s
 trackRow: name INT trackClass quantity ;
 trackClass: 'static' | 'moving' ;
 
+floatBuffer: '{' floatBufferVariant '}' ;
+floatBufferVariant: 'inline' 'values' '=' '[' num* ']' | 'content' 'content-id' '=' name 'chunk-count' '=' INT ;
+octets: TEXT ;
+octetList: '[' octets* ']' ;
+
 // 📐 Framework dialect-primitive terminals (only named, never defined, by the .semio itself).
+NONFINITE: 'inf' | '-inf' | 'nan' | 'nan32_' HEX HEX HEX HEX HEX HEX HEX HEX | 'nan64_' HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX ;
+fragment HEX: [0-9a-fA-F] ;
 BOOL: 'true' | 'false' ;
 FLOAT: '-'? [0-9]+ '.' [0-9]+ ([eE] [+-]? [0-9]+)? ;
 INT: '-'? [0-9]+ ;

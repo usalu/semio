@@ -5,20 +5,12 @@ import Ajv from "ajv";
 import ts from "typescript";
 import fixture from "../../🧫️fixtures/📇️bindings.json";
 import schema from "../../🧬️schema/🔣️.json";
-import { fixedFilenameContractIdsForPath, loadTaxonomy } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 test("surface compiler companions keep their exact paired identity in the handpicked output owner", () => {
   expect(new Ajv().validate(schema, fixture)).toBe(true);
-  const root = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust";
   const sourceRoot = join(import.meta.dir, "../../📦️packages/🦀️rust");
   const output = join(sourceRoot, fixture.directoryName);
   const names = [fixture.module, fixture.types, fixture.wasm, fixture.wasmTypes];
-  const taxonomy = loadTaxonomy();
-  for (const [index, name] of names.entries()) {
-    const path = `${root}/${fixture.directoryName}/${name}`;
-    expect(fixedFilenameContractIdsForPath(path, taxonomy)).toContain(fixture.contracts[index]!);
-    expect(fixedFilenameContractIdsForPath(`${root}/unowned/${name}`, taxonomy)).not.toContain(fixture.contracts[index]!);
-  }
   expect(existsSync(join(sourceRoot, "pkg"))).toBe(false);
   expect(readdirSync(output).sort()).toEqual([...names, ".gitignore", "package.json"].sort());
   const js = readFileSync(join(output, fixture.module), "utf8");

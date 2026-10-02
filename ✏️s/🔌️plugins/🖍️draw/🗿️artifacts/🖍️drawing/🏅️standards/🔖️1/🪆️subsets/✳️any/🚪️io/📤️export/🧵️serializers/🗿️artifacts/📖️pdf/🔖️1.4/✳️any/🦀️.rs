@@ -167,9 +167,9 @@ fn paint_node(writer: &mut PdfWriter, content: &mut PdfContent, doc: &DrawingSna
             let shading = gradient.map(|fill| writer.shading(fill)).transpose()?;
             if let Some(shading)=&shading {resources.insert(shading.clone());}
             let color = match &node.fill { Some(FillStyle::Solid { color }) => *color, _ => [0.0, 0.0, 0.0, 1.0] };
-            for (index, line) in semio_s_2d::text::drawing_text_lines(&text.content).enumerate() {
+            for (index, line) in semio_framework_2d::text::drawing_text_lines(&text.content).enumerate() {
                 if line.is_empty() { continue; }
-                let y = num(text.size + index as f64 * text.size * semio_s_2d::text::DRAWING_TEXT_LINE_HEIGHT);
+                let y = num(text.size + index as f64 * text.size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT);
                 let value = pdf_string(line);
                 if let Some(shading) = &shading {
                     let _ = writeln!(content, "q BT /{font} {} Tf 7 Tr 1 0 0 -1 0 {y} Tm ({value}) Tj ET /{shading} sh Q", num(text.size));

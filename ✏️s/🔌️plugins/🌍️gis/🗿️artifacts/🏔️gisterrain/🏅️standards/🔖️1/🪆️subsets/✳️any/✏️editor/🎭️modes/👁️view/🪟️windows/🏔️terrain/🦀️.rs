@@ -11,7 +11,15 @@ use crate::schema::{build_terrain_scene_json, TerrainDescriptorJson};
 use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
-use semio_framework_plugin::{scene_surface, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, World3dScene};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::World3dScene;
 use semio_framework_surface::terrain::projection;
 use serde_json::{json, Value};
 

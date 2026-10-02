@@ -3,7 +3,16 @@
 use super::config::SequenceMainWindowConfig;
 use crate::editor::sequence::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphEdgeRecord;
+use semio_framework_plugin::NodeGraphNodeRecord;
+use semio_framework_plugin::NodeGraphPortRecord;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_os_kernel::Viewport2d;
 
 //#region 🔖️Constants

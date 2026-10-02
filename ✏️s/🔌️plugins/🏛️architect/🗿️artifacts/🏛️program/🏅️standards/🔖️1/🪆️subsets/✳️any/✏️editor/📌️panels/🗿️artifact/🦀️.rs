@@ -13,7 +13,19 @@ use crate::editor::architect::{architect_action, ui_node, ui_text, ui_value_map,
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_ARTIFACT: &str = "architect.document";

@@ -1,7 +1,12 @@
 //! 🧬️ Generation2d play app — the `generate` mode: generations list + input form + output preview.
 
 use crate::editor::generation2d::modes::generate::windows::{form, generations, preview};
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout, ToolRef};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_plugin::create_named_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::NamedLayout;
+use semio_framework_plugin::ToolRef;
 
 pub const GENERATION2D_PLAY_MODE_GENERATE: &str = "generate";
 pub const GENERATION2D_PLAY_LAYOUT_GENERATE: &str = "generation2d-generate";

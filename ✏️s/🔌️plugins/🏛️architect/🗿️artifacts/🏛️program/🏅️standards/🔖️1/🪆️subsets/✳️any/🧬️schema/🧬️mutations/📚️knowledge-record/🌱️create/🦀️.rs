@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateKnowledgeRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create knowledge record \"{}\"", self.knowledge_record.header.name), &format!("Wissensdatensatz \"{}\" erstellen", self.knowledge_record.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create knowledge record \"{}\"", self.knowledge_record.header.name), &format!("Wissensdatensatz \"{}\" erstellen", self.knowledge_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.knowledge_record.header.id.0.clone()]

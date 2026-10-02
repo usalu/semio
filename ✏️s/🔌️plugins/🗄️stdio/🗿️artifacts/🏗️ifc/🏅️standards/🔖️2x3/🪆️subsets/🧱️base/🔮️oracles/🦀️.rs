@@ -40,7 +40,7 @@ use semio_repo_test_host::Json;
 #[cfg(feature = "oracles")]
 mod oracles {
     use super::Json;
-    use crate::artifacts::ifc::standards::v2x3::reference::part21::{header_from_wire, instance_from_wire, replace_with_snapshot, snapshot_payload as document_snapshot_payload, u64_field};
+    use crate::standards::v2x3::reference::part21::{header_from_wire, instance_from_wire, replace_with_snapshot, snapshot_payload as document_snapshot_payload, u64_field};
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use std::str::FromStr;
 
@@ -60,7 +60,7 @@ mod oracles {
             // two conformant writers that spell one character differently diverge for no semantic
             // reason. Decoded here through the shared oracle's OWN from-scratch reader, never
             // through the production codec this projection is evidence about.
-            Parameter::String(s) => tv("string", match crate::artifacts::step::standards::v_ap214::reference::part21::decode_string_literal(s) {
+            Parameter::String(s) => tv("string", match semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(s) {
                 Ok(value) => Json::String(value),
                 Err(error) => Json::Object(vec![("undecodableStringLiteral".to_string(), Json::String(error))]),
             }),

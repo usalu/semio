@@ -1,8 +1,8 @@
 //! ♻️ Exact field ownership for persisted space manifests.
 
 use crate::{CollectionRef, InstalledExtension, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility};
-use store::os_store::retirement::{RetireOwned, RetirementCursor};
-use store::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::{artifact_retire_leaf as retire_leaf, artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 retire_leaf!(SpaceKind, SpaceVisibility, SpaceRole);
 retire_struct!(SpaceUser { id, name, avatar, role });

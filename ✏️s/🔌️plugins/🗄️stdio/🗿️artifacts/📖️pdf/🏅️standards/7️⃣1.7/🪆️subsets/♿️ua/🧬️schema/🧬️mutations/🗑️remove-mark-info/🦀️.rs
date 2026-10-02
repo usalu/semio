@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveMarkInfo {
         support::catalog_flag(base, "MarkInfo", "Marked").map(|marked| PdfUaMutation::SetMarkInfo(SetMarkInfo { marked })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/UA marked flag", "PDF/UA-Markierungskennung entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA marked flag", "PDF/UA-Markierungskennung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

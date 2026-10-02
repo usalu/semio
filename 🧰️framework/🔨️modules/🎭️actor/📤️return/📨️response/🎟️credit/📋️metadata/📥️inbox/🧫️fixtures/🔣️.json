@@ -35,14 +35,17 @@
         "instanceLifecycles",
         "instanceTurns",
         "pending",
+        "actorsPastFirstTurn",
         "exclusiveIndices",
         "heartbeatSabView",
         "heartbeatTimeoutMs",
+        "firstTurnTimeoutMs",
         "watchdogIntervalMs",
         "now",
         "createWorker",
         "onShardLost",
         "onActorTrap",
+        "onLiveness",
         "onHostEffect",
         "maxOutstandingEffectsPerActor",
         "outstandingEffectsByActor",
@@ -71,6 +74,7 @@
       "fields": [
         "lastHeartbeatAtMs",
         "lastHeartbeatTurnSeq",
+        "lastHeartbeatPhase",
         "lastLivenessAtMs",
         "oldestPendingStartedAtMs",
         "missedCount",
@@ -116,6 +120,8 @@
         "slot",
         "startedAtMs",
         "actorId",
+        "kind",
+        "firstTurn",
         "output"
       ]
     },
@@ -143,12 +149,12 @@
   ],
   "minimumShells": {
     "client": {
-      "bytes": 720,
+      "bytes": 768,
       "slots": 1,
       "owners": 1
     },
     "worker": {
-      "bytes": 320,
+      "bytes": 336,
       "slots": 2,
       "owners": 2
     },
@@ -158,7 +164,7 @@
       "owners": 2
     },
     "pending": {
-      "bytes": 160,
+      "bytes": 192,
       "slots": 1,
       "owners": 1
     },
@@ -198,7 +204,8 @@
         "activationGeneration",
         "events",
         "commandPage",
-        "budget"
+        "budget",
+        "postedAtEpochMs"
       ]
     },
     {
@@ -265,6 +272,17 @@
       ]
     },
     {
+      "kind": "codec",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "activationGeneration",
+        "request"
+      ]
+    },
+    {
       "kind": "dispose",
       "ok": null,
       "fields": [
@@ -293,7 +311,9 @@
         "kind",
         "requestId",
         "ok",
-        "value"
+        "value",
+        "timings",
+        "beat"
       ]
     },
     {
@@ -307,7 +327,8 @@
         "stack",
         "type",
         "framesBytes",
-        "retryableLifecycle"
+        "retryableLifecycle",
+        "beat"
       ]
     },
     {
@@ -357,21 +378,23 @@
   ],
   "workerRequestKinds": [
     "attachHeartbeatSab",
-    "cancelJob",
     "dispose",
     "frame",
     "activate",
+    "cancelJob",
     "turn",
     "startJob",
     "stepJob",
     "takeSegmentedDownloadChunk",
     "checkpoint",
-    "restore"
+    "restore",
+    "codec"
   ],
   "workerReplyKinds": [
     "trap",
     "worker-fault",
     "heartbeat",
+    "result",
     "result",
     "result"
   ],

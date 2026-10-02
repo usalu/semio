@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧪️ The print product's contribution to the repository test platform. Every entry is a test-only reference implementation for one part of the print visualization grammar; the subject is the LaTeX kernel under latex/, probed numerically through semio-viz-probe.sty. Owned by the TESTS-HARNESS agent of ticket PRINT-VISUALIZATION-LIBRARY; ask there before adding an entry.",
   "oracles": [

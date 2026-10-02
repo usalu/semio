@@ -311,6 +311,8 @@ mod conformance_laws {
         const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
         let demo = demo_gif_snapshot();
+        assert!(store::ArtifactDsl::print_dsl(&demo)==FIXTURE_DSL, "owned native Text fixture differs");
+        assert!(store::ArtifactPack::encode_pack(&demo)==FIXTURE_PACK, "owned native Pack fixture differs");
 
         let parsed = <GifSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gif_snapshot()");

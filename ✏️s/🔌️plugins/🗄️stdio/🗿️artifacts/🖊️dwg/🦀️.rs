@@ -198,7 +198,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.dwg".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Dwg", "Dwg"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Dwg", "Dwg"),
         source_format: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

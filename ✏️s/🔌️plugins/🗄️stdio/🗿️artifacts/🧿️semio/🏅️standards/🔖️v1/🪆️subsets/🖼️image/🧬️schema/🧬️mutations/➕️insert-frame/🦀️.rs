@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for InsertFr
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
         agg_inverse(&SemioImageMutation::InsertFrame(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert frame", "Einzelbild einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert frame", "Einzelbild einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

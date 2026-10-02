@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddAuthor {
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.author.id.clone()]

@@ -17,8 +17,8 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
     fn inverse(&self, base: &WriterMainWindowTransient) -> Vec<WriterMainWindowTransientMutation> {
         vec![Self { value: base.engagement_input.clone() }.into()]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Engagement Input", "Interaktionseingabe des Schreibfensters setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Engagement Input", "Interaktionseingabe des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagement_input".into()]

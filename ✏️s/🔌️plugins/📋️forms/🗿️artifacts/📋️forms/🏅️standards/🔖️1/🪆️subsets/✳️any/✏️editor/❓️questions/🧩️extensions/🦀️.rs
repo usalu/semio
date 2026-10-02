@@ -38,7 +38,7 @@ mod tests;
 pub struct QuestionKindContribution {
     pub app_id: String,
     pub question_kind: String,
-    pub label: semio_framework_plugin::LocalizedLabel,
+    pub label: semio_framework_ui_locale::LocalizedLabel,
     pub icon_id: String,
     pub params_body_key: String,
     pub preview_body_key: String,

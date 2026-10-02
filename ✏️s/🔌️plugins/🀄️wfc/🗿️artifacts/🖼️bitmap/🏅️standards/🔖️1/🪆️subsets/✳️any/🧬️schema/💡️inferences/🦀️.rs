@@ -101,10 +101,10 @@ pub const fn bitmap_inference_metadata() -> semio_framework_plugin::ArtifactInfe
 }
 
 /// 💡️ Descriptor for the `s.wfc.bitmap` solve inference — five handcrafted facet leaves.
-pub fn bitmap_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn bitmap_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: BITMAP_INFERENCE_TOOL_ID,
-        inference: ::semio_framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

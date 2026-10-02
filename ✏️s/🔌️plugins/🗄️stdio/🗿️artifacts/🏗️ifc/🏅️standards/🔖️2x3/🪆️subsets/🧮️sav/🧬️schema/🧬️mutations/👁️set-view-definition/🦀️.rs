@@ -20,8 +20,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetViewDefini
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3SavMutation> {
         agg_inverse(&Ifc2x3SavMutation::SetViewDefinition(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set view definition", "Modellansichtsdefinition setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set view definition", "Modellansichtsdefinition setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

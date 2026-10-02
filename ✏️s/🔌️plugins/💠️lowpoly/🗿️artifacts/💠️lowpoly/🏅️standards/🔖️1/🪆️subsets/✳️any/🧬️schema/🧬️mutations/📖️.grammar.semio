@@ -29,7 +29,7 @@ change-paint-layer-visible = "change-paint-layer-visible" "object-id" "=" IDENT 
 change-paint-layer-opacity = "change-paint-layer-opacity" "object-id" "=" IDENT "index" "=" INT "new-opacity" "=" FLOAT
 change-paint-layer-blend-mode = "change-paint-layer-blend-mode" "object-id" "=" IDENT "index" "=" INT "new-blend-mode" "=" IDENT
 edit-paint-layer = "edit-paint-layer" "object-id" "=" IDENT "layer-index" "=" INT runs-table
-apply-paint-stroke = "apply-paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT "eraser" "=" BOOL "color" "=" "[" INT INT INT INT "]" "radius" "=" FLOAT "hardness" "=" FLOAT "opacity" "=" FLOAT "points" "=" "[" stroke-point+ "]"
+apply-paint-stroke = "apply-paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT "eraser" "=" BOOL "color" "=" "[" FLOAT FLOAT FLOAT "]" "radius" "=" FLOAT "hardness" "=" FLOAT "opacity" "=" FLOAT "points" "=" "[" stroke-point+ "]"
 stroke-point = "[" FLOAT FLOAT "]"
 move-selection = "move-selection" "object-id" "=" IDENT "vertex-ids" "=" "[" INT* "]" "offset" "=" vector
 rotate-selection = "rotate-selection" "object-id" "=" IDENT "vertex-ids" "=" "[" INT* "]" "pivot" "=" vector "axis" "=" vector "angle" "=" FLOAT

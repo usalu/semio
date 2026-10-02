@@ -1,7 +1,8 @@
+import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { buildBudgetMs } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { actorTypegenPlan, actorTypegenTarget } from "../📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../📤️publication/🟦️.ts";

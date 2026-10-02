@@ -65,7 +65,7 @@ fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewM
         .iter()
         .map(|window| ViewWindowInstance { id: window.id.clone(), window_kind_id: fixture.window_kinds.get(&window.kind).unwrap_or_else(|| panic!("fixture window kind {}", window.kind)).clone() })
         .collect();
-    ViewModel { window_instances, ..Default::default() }
+    ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW: which windows the READ-ONLY surface's `previewEval` run evaluates for a given attached roster.
@@ -85,7 +85,7 @@ async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached()
         let hops: Vec<String> = run.hop_windows.iter().cloned().collect::<std::collections::BTreeSet<_>>().into_iter().collect();
         eprintln!("viewer run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), run.hop_windows);
         assert_eq!(hops, case.armed_window_ids, "arming case {}", case.id);
-        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
+        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.is_empty(), "no roster at all starts nothing");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }

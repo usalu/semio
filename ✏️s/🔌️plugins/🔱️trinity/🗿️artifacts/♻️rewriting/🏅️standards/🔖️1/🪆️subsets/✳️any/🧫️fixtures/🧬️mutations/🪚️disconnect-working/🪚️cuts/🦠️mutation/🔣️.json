@@ -1,0 +1,6 @@
+{
+  "mutation": "disconnectWorkingEdges",
+  "targets": [
+    "e-bc"
+  ]
+}

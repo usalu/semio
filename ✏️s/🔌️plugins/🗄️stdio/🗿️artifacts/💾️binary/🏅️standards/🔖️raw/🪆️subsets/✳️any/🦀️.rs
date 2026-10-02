@@ -32,8 +32,8 @@ fn examples() -> &'static [ExampleSource] {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::binary_artifact_inference_descriptor()]).as_slice()
 }
 

@@ -67,7 +67,7 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).expect("neutral Terrain window fixture");
                 let left_id = fixture["leftWindowId"].as_str().expect("left window id");
                 let right_id = fixture["rightWindowId"].as_str().expect("right window id");
-                let roster = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: GisTerrainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
+                let roster = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: GisTerrainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let left = roster.for_window_instance(left_id).expect("left context");
                 let right = roster.for_window_instance(right_id).expect("right context");
                 let mut running = Box::new(app().await);

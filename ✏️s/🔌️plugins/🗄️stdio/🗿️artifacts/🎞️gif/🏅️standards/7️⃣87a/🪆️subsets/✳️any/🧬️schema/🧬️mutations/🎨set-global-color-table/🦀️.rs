@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetGlobalColorTable(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

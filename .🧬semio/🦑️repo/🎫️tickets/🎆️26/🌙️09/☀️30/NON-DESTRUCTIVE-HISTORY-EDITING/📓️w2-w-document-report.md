@@ -268,3 +268,10 @@ The warnings: unused `DocxParagraph`/`DocxRun` and zip imports, unused `sweep_a`
 - `ooxml`: the `remove-vml-part` undo carries its `markup`.
 
 **Scratch:** `🗑️generated/w2w-document/` (lint JSON before and after, the probe output, the plans, and case and cargo logs).
+
+## Session 2 — 2026-10-01 (S2-STDIO-A, WP-2)
+
+Status: **IN PROGRESS**. The authoritative WP-2 record is `📓️w3-stdio-cases-2-report.md` § Session 2 (pdf/docx/semio verification lives there).
+
+- The kit `set-snapshot` `labelMissing` (`/snapshot/schema`) is fixed in the kit snapshot schema. kit lints: inputs 27/27 **0**, payloads 16/16 **0**.
+- §4.4, the shared ooxml engine's dead `no-mutation`/`set-snapshot {conformanceClass}` dialect, and the matching `pdf_conformance` arms: removal in progress.

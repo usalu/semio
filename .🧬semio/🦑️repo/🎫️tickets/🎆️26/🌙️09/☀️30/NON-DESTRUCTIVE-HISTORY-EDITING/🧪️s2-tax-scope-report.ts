@@ -23,6 +23,7 @@ for (const scope of scopes) {
     const unique = [...new Map(findings.map((finding) => [`${finding.code}\0${finding.path}`, finding])).values()];
     appendFileSync(outPath!, JSON.stringify({ scope, seconds: Math.round((Date.now() - started) / 1000), entries: inventory.entries.length, findings: unique }) + "\n");
   } catch (error) {
+    if (/discovery contract validation failed|Invalid taxonomy schema/u.test(String(error))) { console.log("[DEBUG] taxonomy invalid, stopping: " + String(error).slice(0, 300)); break; }
     appendFileSync(outPath!, JSON.stringify({ scope, seconds: Math.round((Date.now() - started) / 1000), crash: error instanceof Error ? error.message.slice(0, 2000) : String(error) }) + "\n");
   }
 }

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This owner's contribution. one GIS Terrain window's config artifact carries a free/live viewport camera and one typed set-camera mutation, mounted directly from this facet's own leaf.",
   "oracles": [],

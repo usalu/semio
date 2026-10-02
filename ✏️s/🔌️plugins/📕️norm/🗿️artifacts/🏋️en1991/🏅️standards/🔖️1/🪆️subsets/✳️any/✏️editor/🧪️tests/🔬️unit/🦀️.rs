@@ -32,7 +32,7 @@ pub(crate) mod context {
                 window_id: Some(results::WINDOW_RESULTS.into()),
                 focused_window_id: Some(results::WINDOW_RESULTS.into()),
                 window_instances: vec![ViewWindowInstance { id: results::WINDOW_RESULTS.into(), window_kind_id: results::WINDOW_RESULTS.into() }],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             });
         }
         let result = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
@@ -48,7 +48,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render projection")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render projection")
     }
 }
 

@@ -624,12 +624,12 @@ where
             }
             Phase::RetireHistory => {
                 if let Some(history) = self.history.take() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(history));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
                 if let Some(fold) = self.fold.take() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
+                    *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
@@ -766,11 +766,11 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(fold) = self.fold.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(fold));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(pack) = self.pack.as_mut() {
@@ -786,15 +786,15 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released });
         }
         if let Some(expected) = self.expected.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(expected));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(expected));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(owner) = self.owner.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(owner));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(owner));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(schema) = self.schema.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(schema));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(schema));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         let owners = self.owners.as_mut().expect("persisted hydration owner catalog remains retained");

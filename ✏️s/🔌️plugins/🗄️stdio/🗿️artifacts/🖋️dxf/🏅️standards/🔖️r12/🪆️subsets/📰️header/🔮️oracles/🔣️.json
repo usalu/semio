@@ -1,7 +1,7 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json manifest. `dxf` 0.6 reads AND writes DXF, so it stands as an independent second producer for `@mode-differential` scenarios, not just an independent reader. Registered under its own id and the `dxf-r12-mutate` capability this subset's exhaustive DxfMutation catalog (19 kinds) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's capability fails the contract with `oracle-capability-mismatch`). This subset also defines its own `semantic-dxf-r12-v1` comparison profile here (not in the shared manifest, which this ticket must not edit) -- the registry aggregator merges every discovered manifest's `comparisonProfiles` repo-wide.",
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared 🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🔣️.json manifest. `dxf` 0.6 reads AND writes DXF, so it stands as an independent second producer for `@mode-differential` scenarios, not just an independent reader. Registered under its own id and the `dxf-r12-mutate` capability this subset's exhaustive DxfMutation catalog (19 kinds) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's capability fails the contract with `oracle-capability-mismatch`). This subset also defines its own `semantic-dxf-r12-v1` comparison profile here (not in the shared manifest, which this ticket must not edit) -- the registry aggregator merges every discovered manifest's `comparisonProfiles` repo-wide.",
   "oracles": [
     {
       "id": "dxf-crate-r12-mutate",
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/IxMilia/dxf",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "dxf-rs",
@@ -1263,5 +1263,6 @@
         }
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

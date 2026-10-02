@@ -20,8 +20,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveEntity {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::RemoveEntity(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove entity", "Entität entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

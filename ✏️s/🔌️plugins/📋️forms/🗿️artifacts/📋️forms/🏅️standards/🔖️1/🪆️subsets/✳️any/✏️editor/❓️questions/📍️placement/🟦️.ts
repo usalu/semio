@@ -23,9 +23,9 @@ export function questionInsertIndex(definition: FormsDefinition, stepId: string,
 /** 🌱️ Creates the first page when needed and preserves an explicit existing page target. */
 export function createQuestionEvent(definition: FormsDefinition, question: FormQuestion, stepId: string | null, newStepId: string): Extract<FormsMutation, { mutation: "createStep" | "createBlock" }> {
   if (definition.steps.some(step => step.blocks.some(existing => existing.id === question.id))) throw new Error("duplicate-question");
-  const candidate: FormStep = { id: newStepId, title: "Inputs", blocks: [structuredClone(question)] };
-  try { parseFormsDefinition({ steps: [candidate] }); } catch { throw new Error("invalid-question"); }
+  const candidate: FormStep = { id: newStepId, title: "Inputs", blocks: [question] };
+  try { candidate.blocks=parseFormsDefinition({ steps: [candidate] }).steps[0]!.blocks; } catch { throw new Error("invalid-question"); }
   const target = stepId === null ? definition.steps[0] : definition.steps.find(step => step.id === stepId);
   if (stepId !== null && !target) throw new Error("missing-step");
-  return target ? { mutation: "createBlock", stepId: target.id, block: structuredClone(question), index: null } : { mutation: "createStep", step: candidate, index: null };
+  return target ? { mutation: "createBlock", stepId: target.id, block: candidate.blocks[0]!, index: null } : { mutation: "createStep", step: candidate, index: null };
 }

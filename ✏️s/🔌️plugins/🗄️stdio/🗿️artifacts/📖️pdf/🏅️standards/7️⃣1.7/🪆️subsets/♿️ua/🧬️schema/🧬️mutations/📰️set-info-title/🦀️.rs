@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
         vec![PdfUaMutation::SetInfoTitle(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/UA title \"{}\"", self.title), &format!("PDF/UA-Titel \"{}\" setzen", self.title))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA title \"{}\"", self.title), &format!("PDF/UA-Titel \"{}\" setzen", self.title))
     }
 
     fn target(&self) -> Vec<String> {

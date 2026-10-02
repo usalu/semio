@@ -69,10 +69,10 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for SetSlider {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (value_en, value_de) = dag_label_number(self.value);
         let (field_en, field_de) = self.field.label();
-        protocol::LocalizedLabel::native(&format!("Set slider \"{}\" {field_en} to {value_en}", self.id), &format!("{field_de} von Schieberegler \"{}\" auf {value_de} setzen", self.id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set slider \"{}\" {field_en} to {value_en}", self.id), &format!("{field_de} von Schieberegler \"{}\" auf {value_de} setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, discovered by the same `testContributionDirName` convention as the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json — a mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registration lives here rather than in the shared, format-spanning manifest.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-gif",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "gif",
@@ -2028,5 +2028,6 @@
         }
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

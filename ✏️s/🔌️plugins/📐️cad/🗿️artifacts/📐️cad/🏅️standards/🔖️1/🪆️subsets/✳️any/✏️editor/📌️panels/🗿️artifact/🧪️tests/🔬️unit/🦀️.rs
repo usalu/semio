@@ -7,13 +7,17 @@ use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
 use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
 use crate::{CadNode, CadPaneId};
-use semio_framework_plugin::{ArtifactView, Locale, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 
 //#region 🧪️Harness
 /// 🪟️ A host view state whose first-paint budget is wide enough that every container materialises
 /// its whole list — the laws below that are about content, not about windowing, read this.
 fn wide_view_state(locale: Locale) -> ViewModel {
-    ViewModel { locale, tree_viewport_rows: Some(1024), ..ViewModel::default() }
+    ViewModel { locale, tree_viewport_rows: Some(1024), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🪟️ One host window request against this panel's body.
@@ -22,7 +26,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn windowed(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..ViewModel::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn child<'a>(parent: &'a BuiltNode, key: &str) -> &'a BuiltNode {
@@ -111,7 +115,7 @@ async fn an_oversized_document_stamps_the_full_total_and_materialises_only_its_s
     let scene = oversized_scene(300);
     let nodes = scene.nodes.len();
     assert!(nodes > ui::UI_BUILT_CHILDREN_MAX, "this law needs a container past one built page, found {nodes}");
-    let tree = tree_of(scene, &ViewModel::default());
+    let tree = tree_of(scene, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let section = child(&tree, "cad-play-document.nodes");
     let window = window_of(section);
     assert_eq!(window.total as usize, nodes, "the section reports every node it logically holds");
@@ -241,7 +245,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
     object.label = "U2".into();
     let windows = TreeWindows::unhosted();
-    let labels = cad_labels(&ViewModel::default());
+    let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let item = object_tree_item(&windows, "shape", &object, labels).expect("object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &item.component else {
         panic!("expected tree item");
@@ -251,7 +255,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
 
     // 🔑️ A second render is a second body: one `TreeWindows` may see a given node key only once
     // (`ui.tree-window.duplicate-key`), so the German paint gets its own ledger, as `render_body` does.
-    let de_view = ViewModel { locale: Locale::De, ..ViewModel::default() };
+    let de_view = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let de_labels = cad_labels(&de_view);
     let de_windows = TreeWindows::unhosted();
     let de_item = object_tree_item(&de_windows, "shape", &object, de_labels).expect("German object tree item");
@@ -267,7 +271,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
 async fn object_tree_item_streams_its_primitive_children_on_expand() {
     let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
-    let labels = cad_labels(&ViewModel::default());
+    let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let collapsed = object_tree_item(&TreeWindows::unhosted(), "shape", &object, labels).expect("collapsed object row");
     assert_eq!(collapsed.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
     assert_eq!(window_of(&collapsed).total, 1, "a collapsed object row still reports its primitive count");

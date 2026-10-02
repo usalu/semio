@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertStyle {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::InsertStyle(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert style", "Formatvorlage einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Formatvorlage einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

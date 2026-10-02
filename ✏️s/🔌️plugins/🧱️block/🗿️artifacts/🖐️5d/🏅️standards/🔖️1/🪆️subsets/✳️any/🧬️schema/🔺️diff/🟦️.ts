@@ -1,3 +1,5 @@
+import type {BlockKindIdentity,Block5dPart2d,Block5dPart3d,BlockRepresentation,Block5dGripKind,Block5dGripTemplate,BlockCompatibilityRule,BlockAttribute,BlockAuthor,BlockCamera2d,BlockCamera3d,BlockMeta,Block5dArtifact} from "../🟦️.ts";
+import * as model from "../🟦️.ts";
 /** 🧬️ Block5d diff schema — sparse field delta. */
 
 export interface Block5dDiff {
@@ -31,29 +33,17 @@ export interface Block5dDiff {
   meta?: BlockMeta;
 }
 
-export interface BlockKindIdentity { [key: string]: unknown; }
 
-export interface Block5dPart2d { [key: string]: unknown; }
 
-export interface Block5dPart3d { [key: string]: unknown; }
 
-export interface BlockRepresentation { [key: string]: unknown; }
 
-export interface Block5dGripKind { [key: string]: unknown; }
 
-export interface Block5dGripTemplate { [key: string]: unknown; }
 
-export interface BlockCompatibilityRule { [key: string]: unknown; }
 
-export interface BlockAttribute { [key: string]: unknown; }
 
-export interface BlockAuthor { [key: string]: unknown; }
 
-export interface BlockCamera2d { [key: string]: unknown; }
 
-export interface BlockCamera3d { [key: string]: unknown; }
 
-export interface BlockMeta { [key: string]: unknown; }
 
 export interface Block5dStringList {
   values: string[];
@@ -143,7 +133,6 @@ export interface Block5dAttributesPatch {
   replacement?: BlockAttribute;
 }
 
-export interface Block5dArtifact { [key: string]: unknown; }
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -238,3 +227,18 @@ export function parseBlock5dAttributesPatchEntry(value: unknown, at = "$"): Bloc
     patch: parseBlock5dAttributesPatch(row["patch"], `${at}.patch`),
   };
 }
+
+/** 🧩️ Admit the literal canonical replacement record. */
+export function parseBlock5dRepresentationsPatch(value:unknown,at="$"):Block5dRepresentationsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockRepresentation(row.replacement)})}}
+
+/** 🧩️ Admit the literal canonical replacement record. */
+export function parseBlock5dGripKindsPatch(value:unknown,at="$"):Block5dGripKindsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock5dGripKind(row.replacement)})}}
+
+/** 🧩️ Admit the literal canonical replacement record. */
+export function parseBlock5dGripsPatch(value:unknown,at="$"):Block5dGripsPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlock5dGripTemplate(row.replacement)})}}
+
+/** 🧩️ Admit the literal canonical replacement record. */
+export function parseBlock5dCompatibilityPatch(value:unknown,at="$"):Block5dCompatibilityPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockCompatibilityRule(row.replacement)})}}
+
+/** 🧩️ Admit the literal canonical replacement record. */
+export function parseBlock5dAttributesPatch(value:unknown,at="$"):Block5dAttributesPatch{const row=blockBlock5dDiffGuardObject(value,at);return{...(row.replacement===undefined?{}:{replacement:model.parseBlockAttribute(row.replacement)})}}

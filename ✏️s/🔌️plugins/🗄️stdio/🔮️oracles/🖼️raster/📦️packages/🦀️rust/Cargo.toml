@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-raster-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_stdio_raster_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:gif", "dep:image", "dep:png"]
+
+[dependencies]
+"gif" = { version = "0.13", optional = true }
+"image" = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
+"png" = { version = "0.18", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

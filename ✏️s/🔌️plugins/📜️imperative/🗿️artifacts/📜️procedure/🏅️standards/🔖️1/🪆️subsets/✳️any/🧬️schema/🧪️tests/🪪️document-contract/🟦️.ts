@@ -10,7 +10,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseProcedureArtifact } from "../../🟦️.ts";
 import { parseProcedureSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProcedureDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 /** 🪆️ Compares first-party parsers with Ajv and every committed Procedure mutation document. */
 export function testProcedureDocumentContractOracle(): void {

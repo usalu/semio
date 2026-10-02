@@ -4,7 +4,10 @@
 
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use semio_framework_plugin::app::{editable_table_window_row, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{BuiltNode, Locale, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

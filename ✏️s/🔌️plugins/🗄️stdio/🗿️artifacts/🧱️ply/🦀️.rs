@@ -156,7 +156,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.ply".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Ply", "Ply"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Ply", "Ply"),
         source_format: STDIO_PLY_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

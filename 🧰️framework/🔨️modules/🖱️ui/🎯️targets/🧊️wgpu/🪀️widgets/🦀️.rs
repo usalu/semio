@@ -35,11 +35,11 @@ impl<E> InputMeta<E> {
     /// `min`/`max`/`step` (React's DOM input refuses out-of-range values outright), everything else
     /// commits its text verbatim. `None` when a `number` field's buffer does not parse at all — the
     /// guest sees no commit rather than an invented number.
-    pub fn commit_value(&self, raw: &str) -> Option<dsl::DslValue> {
+    pub fn commit_value(&self, raw: &str) -> Option<semio_framework_value::DslValue> {
         if self.input_kind != "number" {
-            return Some(dsl::DslValue::String(raw.to_string()));
+            return Some(semio_framework_value::DslValue::String(raw.to_string()));
         }
-        raw.parse::<f64>().ok().map(|value| dsl::DslValue::float(crate::wgpu::events::constrain_number_input(value, self.min, self.max, self.step)))
+        raw.parse::<f64>().ok().map(|value| semio_framework_value::DslValue::float(crate::wgpu::events::constrain_number_input(value, self.min, self.max, self.step)))
     }
 }
 

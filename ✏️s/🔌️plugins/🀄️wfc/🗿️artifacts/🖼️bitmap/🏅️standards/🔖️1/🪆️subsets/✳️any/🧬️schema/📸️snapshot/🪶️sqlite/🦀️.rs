@@ -9,6 +9,8 @@ fn boolean(r:&SqliteRow,i:usize)->Result<bool,String>{match r.integer(i)?{0=>Ok(
 fn one<'a>(d:&'a SqliteDatabase,name:&str,n:usize)->Result<&'a SqliteRow,String>{let r=d.table(name)?.single_row()?;identity(r,n)?;if r.rowid!=1{return Err("bitmap document identity must be one".into())}Ok(r)}
 impl ArtifactSqliteSnapshot for BitmapSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{crate::schema::snapshot::text::decode_sqlite_snapshot_native(payload,c)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{crate::schema::snapshot::text::encode_sqlite_snapshot_native(self,encoding,c)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
  let mut p=Projection::new(Self::SQLITE_SCHEMA,c)?;p.check_rows(4usize.checked_add(self.input.palette.len()).and_then(|n|n.checked_add(self.pinned.len())).ok_or("bitmap row count overflow")?)?;
  p.insert_key("wfc_bitmap_document",1,&[Cell::Text(&self.schema),Cell::Text(&self.seed.to_string())])?;

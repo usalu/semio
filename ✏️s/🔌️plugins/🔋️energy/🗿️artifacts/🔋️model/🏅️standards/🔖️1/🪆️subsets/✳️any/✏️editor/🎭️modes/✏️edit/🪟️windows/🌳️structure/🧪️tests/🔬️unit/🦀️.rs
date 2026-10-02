@@ -13,13 +13,13 @@ async fn definition_declares_a_tree_window_keeping_the_kit_action() {
 async fn every_authored_action_is_localized_in_english_and_german() {
     for action in actions() {
         assert!(
-            semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)),
+            semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != action.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
             "action {} is not really translated",
             action.id
         );
         for arg in &action.args {
             assert!(
-                semio_framework::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_framework::Locale::En) != arg.label.resolve(terminology, semio_framework::Locale::De)),
+                semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != arg.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
                 "arg {} of action {} is not really translated",
                 arg.id,
                 action.id

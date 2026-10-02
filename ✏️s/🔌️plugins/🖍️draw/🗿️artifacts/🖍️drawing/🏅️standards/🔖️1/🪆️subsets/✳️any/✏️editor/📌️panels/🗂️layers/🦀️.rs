@@ -15,10 +15,24 @@ use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, ui_value_map, ui_value_text, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_PLAY_CONTROLLER_ID};
 use crate::schema::{drawing_play_boolean_child_row_id, drawing_play_layers_tree_row_id, find_drawing_layer, layer_base};
 use crate::{DrawingLayerNode, DrawingSnapshot};
-use semio_framework_plugin::{
-    tree_item, tree_item_with_action, tree_window_item, Buildable, BuiltNode, HasBase, LabelText, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 pub const DRAWING_PLAY_BODY_LAYERS: &str = "drawing.play.layers";
 pub const DRAWING_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-drawing-layer-kind";
@@ -27,7 +41,7 @@ pub const DRAWING_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-drawing-laye
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
+        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: Some(DRAWING_PLAY_BODY_LAYERS.into()),
         children: Vec::new(),

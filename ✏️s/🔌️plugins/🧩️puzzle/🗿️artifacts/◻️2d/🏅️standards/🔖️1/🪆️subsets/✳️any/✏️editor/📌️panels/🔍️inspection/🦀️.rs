@@ -9,10 +9,26 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, fixture_target_regions, puzzle_extension_id, ui_label, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
-use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, ui_node_list, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiListBuilder,
-    UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiListBuilder;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_ui_contract as ui;
 use serde_json::Value;
 

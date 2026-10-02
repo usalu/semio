@@ -11,6 +11,7 @@ pub enum SemioError {
     InvalidBinaryHeader(String),
     UnknownEnvelope(String),
     AmbiguousEnvelope,
+    DecodingControl(String),
 }
 
 impl std::fmt::Display for SemioError {
@@ -20,6 +21,7 @@ impl std::fmt::Display for SemioError {
             Self::InvalidBinaryHeader(detail) => write!(formatter, "invalid binary semio header: {detail}"),
             Self::UnknownEnvelope(detail) => write!(formatter, "unknown semio envelope: {detail}"),
             Self::AmbiguousEnvelope => formatter.write_str("ambiguous semio envelope match"),
+            Self::DecodingControl(detail) => formatter.write_str(detail),
         }
     }
 }
@@ -116,6 +118,14 @@ pub const BINARY_MAGIC: [u8; 8] = [0x89, b'S', b'E', b'M', 0x0D, 0x0A, 0x1A, 0x0
 
 const BINARY_HEADER_PREFIX_LEN: usize = 8 + 4;
 
+/// 📏️ Counts the exact declared framing bytes without allocating an identity token.
+pub fn declared_envelope_prefix_len(envelope_id:&str,component:Component,version:u16)->Result<usize,String>{
+    if !envelope_id.contains('.') { return Err("invalid declared envelope identity".into()); }
+    let mut digits=1usize;let mut remaining=version;while remaining>=10{digits+=1;remaining/=10;}
+    let token=envelope_id.len().checked_add(component.as_str().len()).and_then(|length|length.checked_add(3+digits)).ok_or("native envelope identity length overflow")?;
+    token.checked_add(if component.is_text(){7}else{BINARY_HEADER_PREFIX_LEN}).ok_or_else(||"native envelope prefix length overflow".into())
+}
+
 /// 📦️ Wraps a binary payload with the semio binary header.
 pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
     let token = envelope.binary_token();
@@ -126,6 +136,11 @@ pub fn wrap_binary(envelope: &SemioEnvelope, payload: &[u8]) -> Vec<u8> {
     out.extend_from_slice(token_bytes);
     out.extend_from_slice(payload);
     out
+}
+
+/// 🛫️ Emits an exact declared binary envelope without allocating an unchecked identity token.
+pub fn wrap_binary_controlled(envelope_id:&str,component:Component,version:u16,payload:&[u8],control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<Vec<u8>,String>{
+    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||component.is_text(){return Err("invalid declared binary envelope identity".into())}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=&digits[start..];let length=envelope_id.len().checked_add(component.as_str().len()+3+digits.len()).ok_or("native envelope identity length overflow")?;let token=u32::try_from(length).map_err(|_|"native envelope identity exceeds u32")?;let total=BINARY_HEADER_PREFIX_LEN.checked_add(length).and_then(|length|length.checked_add(payload.len())).ok_or("native binary envelope length overflow")?;let mut output=control.allocate_vec::<u8>(total)?;output.extend_from_slice(&BINARY_MAGIC);output.extend_from_slice(&token.to_le_bytes());for bytes in [envelope_id.as_bytes(),b".",component.as_str().as_bytes(),b" v",digits,payload]{control.scoped_stage(|control|{control.begin_stage(bytes.len())?;for fragment in bytes.chunks(65536){output.extend_from_slice(fragment);control.advance(fragment.len())?;}Ok::<_,String>(())})?;}Ok(output)})
 }
 
 /// 📖️ Strips the semio binary header and returns envelope + inner payload.
@@ -145,6 +160,25 @@ pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
     let envelope = parse_binary_token(token)?;
     let payload = bytes[token_end..].to_vec();
     Ok((envelope, payload))
+}
+
+/// 🚦️ Admits the exact declared envelope and borrows its binary body without a payload copy.
+pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<&'input[u8]>{
+    control.checkpoint().map_err(SemioError::DecodingControl)?;
+    if bytes.len()<BINARY_HEADER_PREFIX_LEN||bytes[..8]!=BINARY_MAGIC{return Err(SemioError::InvalidBinaryHeader("invalid binary envelope prefix".into()));}
+    let length=u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
+    let end=BINARY_HEADER_PREFIX_LEN.checked_add(length).filter(|end|*end<=bytes.len()).ok_or_else(||SemioError::InvalidBinaryHeader("truncated envelope token".into()))?;
+    if !matches_declared_token(&bytes[BINARY_HEADER_PREFIX_LEN..end],envelope_id,component,version,control)?{return Err(SemioError::InvalidBinaryHeader("declared envelope identity mismatch".into()));}
+    Ok(&bytes[end..])
+}
+
+fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<bool>{
+    let mut digits=[0u8;5];let mut start=digits.len();let mut remaining=version;
+    loop{start-=1;digits[start]=b'0'+(remaining%10) as u8;remaining/=10;if remaining==0{break;}}
+    let pieces=[envelope_id.as_bytes(),b".".as_slice(),component.as_str().as_bytes(),b" v".as_slice(),&digits[start..]];
+    let expected=pieces.iter().try_fold(0usize,|length,piece|length.checked_add(piece.len())).ok_or_else(||SemioError::InvalidBinaryHeader("declared envelope size overflow".into()))?;
+    if token.len()!=expected{return Ok(false);}
+    control.scoped_stage(|control|{control.begin_stage(expected).map_err(SemioError::DecodingControl)?;let mut position=0;for piece in pieces{for chunk in piece.chunks(256){if token[position..position+chunk.len()]!=*chunk{return Ok(false);}position+=chunk.len();control.advance(chunk.len()).map_err(SemioError::DecodingControl)?;}}Ok(true)})
 }
 
 fn parse_binary_token(token: &str) -> SemioResult<SemioEnvelope> {
@@ -173,6 +207,11 @@ pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
     format!("{}\n{}", envelope.preamble_line(), body_trimmed.trim_start())
 }
 
+/// 🛫️ Emits canonical declared Text and its exact body under cumulative ownership admission.
+pub fn wrap_text_controlled(envelope_id:&str,component:Component,version:u16,body:&str,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<String,String>{
+    control.scoped_stage(|control|{control.checkpoint()?;if !envelope_id.contains('.')||!component.is_text(){return Err("invalid declared text envelope identity".into())}let mut digits=[0u8;5];let mut start=digits.len();let mut value=version;loop{start-=1;digits[start]=b'0'+(value%10)as u8;value/=10;if value==0{break;}}let digits=std::str::from_utf8(&digits[start..]).map_err(|_|"native envelope version is not ASCII")?;let total=6usize.checked_add(envelope_id.len()).and_then(|length|length.checked_add(component.as_str().len()+4+digits.len())).and_then(|length|length.checked_add(body.len())).ok_or("native text envelope length overflow")?;control.charge(total)?;let mut output=String::new();output.try_reserve_exact(total).map_err(|_|"native text envelope allocation failed")?;for text in ["semio ",envelope_id,".",component.as_str()," v",digits,"\n",body]{control.scoped_stage(|control|{control.begin_stage(text.len())?;let mut start=0;while start<text.len(){let mut end=(start+65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[start..end]);control.advance(end-start)?;start=end;}Ok::<_,String>(())})?;}Ok(output)})
+}
+
 /// 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
 pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
     let mut lines = text.lines();
@@ -180,6 +219,18 @@ pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
     let envelope = parse_preamble_line(first)?;
     let rest = text[first.len()..].trim_start_matches(['\r', '\n']);
     Ok((envelope, rest))
+}
+
+/// 🛂️ Borrows canonical text after exact owner, component and version admission.
+pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,component:Component,version:u16,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->SemioResult<&'input str>{
+    control.checkpoint().map_err(SemioError::DecodingControl)?;
+    let bytes=text.as_bytes();let token_start=6usize;
+    if !bytes.starts_with(b"semio "){return Err(SemioError::InvalidPreamble("missing canonical envelope prefix".into()));}
+    let digits=if version>=10000{5}else if version>=1000{4}else if version>=100{3}else if version>=10{2}else{1};
+    let end=token_start.checked_add(envelope_id.len()).and_then(|n|n.checked_add(component.as_str().len()+3+digits)).filter(|end|*end<=bytes.len()).ok_or_else(||SemioError::InvalidPreamble("truncated envelope token".into()))?;
+    if !matches_declared_token(&bytes[token_start..end],envelope_id,component,version,control)?{return Err(SemioError::InvalidPreamble("declared envelope identity mismatch".into()));}
+    let body=if end==bytes.len(){end}else if bytes[end]==b'\n'{end+1}else if bytes.get(end..end+2)==Some(b"\r\n"){end+2}else{return Err(SemioError::InvalidPreamble("canonical preamble requires a line boundary".into()));};
+    Ok(&text[body..])
 }
 
 /// 🔍 Parses `semio plugin.artifact.component vN`.

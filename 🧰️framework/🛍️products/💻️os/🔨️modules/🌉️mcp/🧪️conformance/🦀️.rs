@@ -4,7 +4,8 @@
 
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog, CatalogSource};
 use semio_framework::manifest::{ApprovalMode, UndoMode};
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 use std::collections::BTreeMap;
 
 //#region 🔖️Finding

@@ -1,0 +1,25 @@
+{
+  "schema": "framework.assets.dispatch.portable/v1",
+  "declarations": [
+    { "id": "owned-extension", "value": { "kind": "fixture", "route": "/fixture", "payload": [1, 2, 3] }, "accepted": true },
+    { "id": "root-route", "value": { "kind": "another-kind", "route": "/" }, "accepted": true },
+    { "id": "missing-kind", "value": { "route": "/fixture" }, "accepted": false },
+    { "id": "empty-kind", "value": { "kind": "", "route": "/fixture" }, "accepted": false },
+    { "id": "unregistered-kind-syntax", "value": { "kind": "UPPER", "route": "/fixture" }, "accepted": false },
+    { "id": "relative-route", "value": { "kind": "fixture", "route": "fixture" }, "accepted": false },
+    { "id": "query-route", "value": { "kind": "fixture", "route": "/fixture?x=1" }, "accepted": false },
+    { "id": "array", "value": [], "accepted": false },
+    { "id": "null", "value": null, "accepted": false }
+  ],
+  "dispatch": [
+    { "id": "empty-owners", "providers": [], "specs": [], "plugins": [] },
+    { "id": "one-owner", "providers": ["fixture"], "specs": [{ "kind": "fixture", "route": "/a" }], "plugins": ["fixture:/a:bundle"] },
+    { "id": "added-owner", "providers": ["fixture", "extra"], "specs": [{ "kind": "extra", "route": "/b" }, { "kind": "fixture", "route": "/a" }], "plugins": ["extra:/b:bundle", "fixture:/a:bundle"] },
+    { "id": "deleted-owner", "providers": ["extra"], "specs": [{ "kind": "extra", "route": "/b" }], "plugins": ["extra:/b:bundle"] },
+    { "id": "missing-provider", "providers": [], "specs": [{ "kind": "fixture", "route": "/a" }], "plugins": null },
+    { "id": "duplicate-provider", "providers": ["fixture", "fixture"], "specs": [], "plugins": null },
+    { "id": "identical-declaration", "providers": ["fixture"], "specs": [{ "kind": "fixture", "route": "/a" }, { "kind": "fixture", "route": "/a" }], "plugins": ["fixture:/a:bundle"] },
+    { "id": "conflicting-declaration", "providers": ["fixture"], "specs": [{ "kind": "fixture", "route": "/a", "payload": 1 }, { "kind": "fixture", "route": "/a", "payload": 2 }], "plugins": null }
+  ],
+  "transport": { "kind": "extra", "route": "/fixture", "bytes": [1, 2, 3, 4], "status": 200, "missingStatus": 404 }
+}

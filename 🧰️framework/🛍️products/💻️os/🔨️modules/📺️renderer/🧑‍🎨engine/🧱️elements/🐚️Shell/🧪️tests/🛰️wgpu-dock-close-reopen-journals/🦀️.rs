@@ -40,13 +40,13 @@ fn journey_dock() -> DockState {
 /// 🧪️ The shell the journey reaches at `window-cap-focus`: a live session whose single window kind
 /// declares `engagementAbort` (puzzle3d's own `escape` verb) and a dock holding both panes.
 fn journey_shell(keybindings: Vec<Keybinding>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let app = test_app(Vec::new(), Vec::new());
     let mut kind = app.window_kinds.first().clone();
     kind.actions = vec![ActionDefinition::new("engagementAbort", LocalizedLabel::data("Abort"), ActionKind::Interaction, "eye")];
     let mut app = AppDefinition { window_kinds: WindowKinds::try_from(vec![kind]).expect("one window kind"), ..app };
     app.keybindings = keybindings;
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell.dock = journey_dock();
     shell.active_window_id = Some(TOP.to_string());
     shell

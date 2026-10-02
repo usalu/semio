@@ -476,7 +476,7 @@ fn doctype_json(doctype: &Option<XDoctype>) -> String {
         None => "null".to_string(),
         Some(dt) => {
             let entities: Vec<String> = dt.entities.iter().map(entity_json).collect();
-            format!("{{\"prologPosition\":{},\"name\":{},\"externalId\":{},\"entities\":[{}]}}", dt.prolog_position, json_str(&dt.name), external_id_json(&dt.external_id), entities.join(","))
+            format!("{{\"prologPosition\":{},\"name\":{},\"externalId\":{},\"entities\":[{}]}}", json_str(&dt.prolog_position.to_string()), json_str(&dt.name), external_id_json(&dt.external_id), entities.join(","))
         }
     }
 }

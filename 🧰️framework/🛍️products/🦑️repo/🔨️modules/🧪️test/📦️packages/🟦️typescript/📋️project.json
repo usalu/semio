@@ -15,7 +15,12 @@
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/{🟨️.mjs,📦️packages/🟦️typescript/📜️script.ts}",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/{🧪️tests,🧫️fixtures,🧬️schema}/🚷️discovery-boundaries/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/📐️test-layout/**/*"
       ]
     },
     "lint": {

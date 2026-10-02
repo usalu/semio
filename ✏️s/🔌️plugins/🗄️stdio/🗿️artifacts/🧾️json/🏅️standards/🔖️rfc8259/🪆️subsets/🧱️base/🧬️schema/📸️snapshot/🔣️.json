@@ -10,7 +10,18 @@
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Snapshot schema",
+          "de": "Snapshot-Schema"
+        },
+        "description": {
+          "en": "Identifier of the snapshot schema version.",
+          "de": "Kennung der Version des Snapshot-Schemas."
+        }
+      }
     },
     "value": {
       "$ref": "#/$defs/JsonValue",
@@ -73,7 +84,17 @@
             },
             "lexeme": {
               "type": "string",
-              "description": "original RFC8259 number lexeme, verbatim"
+              "description": "original RFC8259 number lexeme, verbatim",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Number lexeme",
+                  "de": "Zahlenlexem"
+                },
+                "description": {
+                  "en": "The RFC 8259 number exactly as written, never rounded.",
+                  "de": "Die RFC-8259-Zahl genau wie geschrieben, nie gerundet."
+                }
+              }
             }
           }
         },
@@ -106,6 +127,16 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/JsonValue"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Items",
+                  "de": "Elemente"
+                },
+                "description": {
+                  "en": "The array elements, in order.",
+                  "de": "Die Array-Elemente in ihrer Reihenfolge."
+                }
               }
             }
           }
@@ -125,7 +156,17 @@
               "items": {
                 "$ref": "#/$defs/JsonMember"
               },
-              "description": "insertion order preserved"
+              "description": "insertion order preserved",
+              "x-semio-ui": {
+                "label": {
+                  "en": "Members",
+                  "de": "Eigenschaften"
+                },
+                "description": {
+                  "en": "The object members, in insertion order.",
+                  "de": "Die Objekteigenschaften in Einfügereihenfolge."
+                }
+              }
             }
           }
         }

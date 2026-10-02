@@ -25,7 +25,7 @@
 //   bun 📜️script.ts dxf-project --input <a.dxf>
 //   bun 📜️script.ts dxf-compare --input <expected.dxf> --input <actual.dxf>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../💬️avi/🏅️standards/🔖️1.0/🪆️subsets/📰️header/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from
 // @see ../🏭️generator/🧫️fixtures/🦀️.rs — the `project` subcommand this file calls

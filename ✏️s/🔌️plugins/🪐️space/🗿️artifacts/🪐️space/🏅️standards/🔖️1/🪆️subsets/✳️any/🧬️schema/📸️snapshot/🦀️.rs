@@ -76,6 +76,7 @@ impl store::ArtifactDsl for SSpaceSnapshot {
 }
 
 impl store::ArtifactPack for SSpaceSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -123,7 +124,7 @@ pub fn mint_artifact_id(existing: &[SpaceArtifactRow], now_ms: u64) -> String {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️TableProjection
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ The space app table's strings (worker-brief task 1: name · id · kind · subset · updated · updated-by ·
     /// presence) — the single source both the editor's and the viewer's `main` window render from (neutral
     /// schema-layer helper so the viewer never has to import from `✏️editor`, `policyViewerPurityBreaches`). The
@@ -162,7 +163,7 @@ impl SpaceIndexTableLabels {
 /// `25.09.2026, 21:05 UTC` (de) — the Home and space tables' "Updated" cell. The guest has no time zone, so it
 /// says UTC instead of pretending to be local. Cases: `🧫️fixtures/🕰️utc-minute/🔣️.json` beside this module,
 /// cross-checked against `Intl.DateTimeFormat` by its TS unit test.
-pub fn utc_minute_text(epoch_ms: u64, locale: semio_framework_plugin::Locale) -> String {
+pub fn utc_minute_text(epoch_ms: u64, locale: semio_framework_ui_locale::Locale) -> String {
     let minutes = epoch_ms / 60_000;
     let (hour, minute) = ((minutes / 60) % 24, minutes % 60);
     let days = (minutes / 1_440) as i64 + 719_468;
@@ -175,8 +176,8 @@ pub fn utc_minute_text(epoch_ms: u64, locale: semio_framework_plugin::Locale) ->
     let month = if month_index < 10 { month_index + 3 } else { month_index - 9 };
     let year = year_of_era + era * 400 + i64::from(month <= 2);
     match locale {
-        semio_framework_plugin::Locale::En => format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02} UTC"),
-        semio_framework_plugin::Locale::De => format!("{day:02}.{month:02}.{year:04}, {hour:02}:{minute:02} UTC"),
+        semio_framework_ui_locale::Locale::En => format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02} UTC"),
+        semio_framework_ui_locale::Locale::De => format!("{day:02}.{month:02}.{year:04}, {hour:02}:{minute:02} UTC"),
     }
 }
 
@@ -241,3 +242,9 @@ pub fn s_space_identity_report_json(dsl_text: &str) -> Result<String, String> {
     Ok(report.to_string())
 }
 //#endregion 🌉️IdentityBridge
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

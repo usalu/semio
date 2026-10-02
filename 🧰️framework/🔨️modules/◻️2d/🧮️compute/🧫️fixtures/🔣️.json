@@ -1,0 +1,1163 @@
+{
+  "version": 1,
+  "keyEncoding": "u64le-length-fields",
+  "retainedNativeLaws": [
+    "register_and_derive_echoes_input",
+    "derive_twice_same_key_is_cache_hit",
+    "eviction_when_budget_exceeded",
+    "unknown_engine_fault",
+    "engine_key_is_stable",
+    "engine_rep_build_is_deterministic"
+  ],
+  "keys": [
+    {
+      "id": "echo-hello",
+      "engineId": "echo",
+      "inputHex": "68656c6c6f",
+      "preimageHex": "04000000000000006563686f050000000000000068656c6c6f",
+      "keyHex": "ed8a2da4f2879d1c15d768535e113cd8a0738762554d6066443ea2c236b213e7"
+    },
+    {
+      "id": "echo-same",
+      "engineId": "echo",
+      "inputHex": "73616d65",
+      "preimageHex": "04000000000000006563686f040000000000000073616d65",
+      "keyHex": "75fbfa7435e3b827142eba8afea82f4a72d8e21529e86c57602dcc82b7ffc534"
+    },
+    {
+      "id": "echo-abcd",
+      "engineId": "echo",
+      "inputHex": "61626364",
+      "preimageHex": "04000000000000006563686f040000000000000061626364",
+      "keyHex": "681bca61ba6dcf8c85a037c5b0e0bbb226209b0e9ce3b2b77f7bad5edd889085"
+    },
+    {
+      "id": "echo-wxyz",
+      "engineId": "echo",
+      "inputHex": "7778797a",
+      "preimageHex": "04000000000000006563686f04000000000000007778797a",
+      "keyHex": "bde2ee0f1774e8a57267b6bb41bdb8d4c6b599afe17c7a79848289b406601c7c"
+    },
+    {
+      "id": "echo-aa",
+      "engineId": "echo",
+      "inputHex": "6161",
+      "preimageHex": "04000000000000006563686f02000000000000006161",
+      "keyHex": "3c840b67a19eec012f528e292fb3dc96194709eccb2bca102e591b64dfd3557f"
+    },
+    {
+      "id": "echo-bb",
+      "engineId": "echo",
+      "inputHex": "6262",
+      "preimageHex": "04000000000000006563686f02000000000000006262",
+      "keyHex": "f280eba33433f70ede277268f913de826b227f57e153cea4c6d458737fcd2266"
+    },
+    {
+      "id": "echo-cc",
+      "engineId": "echo",
+      "inputHex": "6363",
+      "preimageHex": "04000000000000006563686f02000000000000006363",
+      "keyHex": "89b4af5280e5b5a3b7ed4e7d9d446f8f0b1148ce94a644693667d03e1cf0d2ac"
+    },
+    {
+      "id": "echo-dd",
+      "engineId": "echo",
+      "inputHex": "6464",
+      "preimageHex": "04000000000000006563686f02000000000000006464",
+      "keyHex": "d79140ec8ac84a6a330974b4942954ac3ba1f340ad7ad7c0e4e42daa36a1170f"
+    },
+    {
+      "id": "echo-empty",
+      "engineId": "echo",
+      "inputHex": "",
+      "preimageHex": "04000000000000006563686f0000000000000000",
+      "keyHex": "f1038c33b874400cd41892116774155cb81ecebfd39f93b46aba5c80d03c8166"
+    },
+    {
+      "id": "echo-long",
+      "engineId": "echo",
+      "inputHex": "616263646566",
+      "preimageHex": "04000000000000006563686f0600000000000000616263646566",
+      "keyHex": "3312fedd4e3e059aeb42e8bde6bb8f5ac567f88dfdea4dff4ec581dcb0b01e42"
+    },
+    {
+      "id": "echo-a",
+      "engineId": "echo",
+      "inputHex": "61",
+      "preimageHex": "04000000000000006563686f010000000000000061",
+      "keyHex": "642abb106df329be32cf2db9a2159d9278c2ecf9507a32ef32a2036a15051c01"
+    },
+    {
+      "id": "echo-b",
+      "engineId": "echo",
+      "inputHex": "62",
+      "preimageHex": "04000000000000006563686f010000000000000062",
+      "keyHex": "34044e019e57eb0019716183970c4f2f2ab980d9041169324c75f686cc8a832c"
+    },
+    {
+      "id": "empty-aa",
+      "engineId": "empty",
+      "inputHex": "6161",
+      "preimageHex": "0500000000000000656d70747902000000000000006161",
+      "keyHex": "51bd6d4f281efdba35b18c81ff2c8318ecb45e8f8eb60e9ca47d24f01f2e617a"
+    },
+    {
+      "id": "empty-bb",
+      "engineId": "empty",
+      "inputHex": "6262",
+      "preimageHex": "0500000000000000656d70747902000000000000006262",
+      "keyHex": "3b9decff07541debe04a3424af40eb1c4db7a717fce1b7eac300e6bc58c6b9ae"
+    },
+    {
+      "id": "missing-x",
+      "engineId": "missing",
+      "inputHex": "78",
+      "preimageHex": "07000000000000006d697373696e67010000000000000078",
+      "keyHex": "d0f60e2e4263f3a90319c40aded74cf9ff56e1f224d820c204a156ea3e85f3d2"
+    },
+    {
+      "id": "bad-x",
+      "engineId": "bad",
+      "inputHex": "78",
+      "preimageHex": "0300000000000000626164010000000000000078",
+      "keyHex": "b6a3664a3f37b02f6c367c3a79fed46b987023428df3b75d0c79b43b4d4ed67e"
+    },
+    {
+      "id": "invalid-x",
+      "engineId": "invalid",
+      "inputHex": "78",
+      "preimageHex": "0700000000000000696e76616c6964010000000000000078",
+      "keyHex": "676c45704102bb5d201cc122fa27f4b46fc157a5fcb8797cb70e159022a82744"
+    },
+    {
+      "id": "concat-left",
+      "engineId": "a",
+      "inputHex": "6263",
+      "preimageHex": "01000000000000006102000000000000006263",
+      "keyHex": "405e183e2494cdbe2df89349cc0ffa5b77fb885ad97a1d5660ecd0692ef8142a"
+    },
+    {
+      "id": "concat-right",
+      "engineId": "ab",
+      "inputHex": "63",
+      "preimageHex": "02000000000000006162010000000000000063",
+      "keyHex": "a0968c014f3fc7bd1a7d9a8d1ad1177eb379bd2f05e56309eb4e20347c5e7eba"
+    },
+    {
+      "id": "nul-left",
+      "engineId": "a\u0000b",
+      "inputHex": "63",
+      "preimageHex": "0300000000000000610062010000000000000063",
+      "keyHex": "fa165c184bdfcae92316862a987c7a037483208f215eef11ed30cc3da5be5502"
+    },
+    {
+      "id": "nul-right",
+      "engineId": "a",
+      "inputHex": "620063",
+      "preimageHex": "0100000000000000610300000000000000620063",
+      "keyHex": "825e2eb84e50a0c14b8dba5fd63cb7dabc0544a3c77e6ccc067df75d68ca8a8d"
+    },
+    {
+      "id": "unicode",
+      "engineId": "⚙️.ä",
+      "inputHex": "e99baa",
+      "preimageHex": "0900000000000000e29a99efb88f2ec3a40300000000000000e99baa",
+      "keyHex": "90e227a7a14772ec89914a927ca6e9c54b4c0783dac0b06d182a2b88db518e3f"
+    },
+    {
+      "id": "astral-scalar",
+      "engineId": "compute.💎",
+      "inputHex": "",
+      "preimageHex": "0c00000000000000636f6d707574652ef09f928e0000000000000000",
+      "keyHex": "887944dc7465398c6ad229e821685c8c5784e8440db5acc2bdb6f7361abb12b1"
+    },
+    {
+      "id": "replacement-scalar",
+      "engineId": "compute.�",
+      "inputHex": "",
+      "preimageHex": "0b00000000000000636f6d707574652eefbfbd0000000000000000",
+      "keyHex": "c4aae13fca05c9de3ea640730db09c03d6d7c169f43652f3176f2d7fa045c04a"
+    }
+  ],
+  "distinctTuples": [
+    {
+      "id": "ordinary-concatenation",
+      "left": "concat-left",
+      "right": "concat-right"
+    },
+    {
+      "id": "embedded-nul-boundary",
+      "left": "nul-left",
+      "right": "nul-right"
+    }
+  ],
+  "representations": [
+    {
+      "id": "original-sum-snapshot",
+      "values": [
+        1,
+        2,
+        3
+      ],
+      "expected": {
+        "total": 6,
+        "len": 3
+      }
+    },
+    {
+      "id": "empty-snapshot",
+      "values": [],
+      "expected": {
+        "total": 0,
+        "len": 0
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "echo-original",
+      "budgetBytes": 1024,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-hello",
+          "handle": "hello"
+        },
+        {
+          "op": "read",
+          "handle": "hello"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-hello",
+          "entries": 1,
+          "usedBytes": 5,
+          "lru": [
+            "echo-hello"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "68656c6c6f",
+          "entries": 1,
+          "usedBytes": 5,
+          "lru": [
+            "echo-hello"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cache-hit-original",
+      "budgetBytes": 1024,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-same",
+          "handle": "first"
+        },
+        {
+          "op": "derive",
+          "key": "echo-same",
+          "handle": "second"
+        },
+        {
+          "op": "read",
+          "handle": "second"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-same",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-same"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-same",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-same"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "73616d65",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-same"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eviction-original",
+      "budgetBytes": 4,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-abcd",
+          "handle": "keep"
+        },
+        {
+          "op": "derive",
+          "key": "echo-wxyz",
+          "handle": "evictor"
+        },
+        {
+          "op": "read",
+          "handle": "keep"
+        },
+        {
+          "op": "derive",
+          "key": "echo-wxyz",
+          "handle": "survivor"
+        },
+        {
+          "op": "read",
+          "handle": "survivor"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-abcd",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-abcd"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-wxyz",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-wxyz"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-wxyz"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-wxyz",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-wxyz"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "7778797a",
+          "entries": 1,
+          "usedBytes": 4,
+          "lru": [
+            "echo-wxyz"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "derive-touches-lru",
+      "budgetBytes": 6,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "a"
+        },
+        {
+          "op": "derive",
+          "key": "echo-bb",
+          "handle": "b"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "a2"
+        },
+        {
+          "op": "derive",
+          "key": "echo-cc",
+          "handle": "c"
+        },
+        {
+          "op": "derive",
+          "key": "echo-dd",
+          "handle": "d"
+        },
+        {
+          "op": "read",
+          "handle": "b"
+        },
+        {
+          "op": "read",
+          "handle": "a"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-bb",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-aa",
+            "echo-bb"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-cc",
+          "entries": 3,
+          "usedBytes": 6,
+          "lru": [
+            "echo-bb",
+            "echo-aa",
+            "echo-cc"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-dd",
+          "entries": 3,
+          "usedBytes": 6,
+          "lru": [
+            "echo-aa",
+            "echo-cc",
+            "echo-dd"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 3,
+          "usedBytes": 6,
+          "lru": [
+            "echo-aa",
+            "echo-cc",
+            "echo-dd"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6161",
+          "entries": 3,
+          "usedBytes": 6,
+          "lru": [
+            "echo-aa",
+            "echo-cc",
+            "echo-dd"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-does-not-touch-lru",
+      "budgetBytes": 4,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "a"
+        },
+        {
+          "op": "derive",
+          "key": "echo-bb",
+          "handle": "b"
+        },
+        {
+          "op": "read",
+          "handle": "a"
+        },
+        {
+          "op": "derive",
+          "key": "echo-cc",
+          "handle": "c"
+        },
+        {
+          "op": "read",
+          "handle": "a"
+        },
+        {
+          "op": "read",
+          "handle": "b"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-bb",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-aa",
+            "echo-bb"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6161",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-aa",
+            "echo-bb"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-cc",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-cc"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-cc"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6262",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-cc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oversized-output-retained",
+      "budgetBytes": 4,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "small"
+        },
+        {
+          "op": "derive",
+          "key": "echo-long",
+          "handle": "large"
+        },
+        {
+          "op": "read",
+          "handle": "small"
+        },
+        {
+          "op": "read",
+          "handle": "large"
+        },
+        {
+          "op": "derive",
+          "key": "echo-empty",
+          "handle": "zero"
+        },
+        {
+          "op": "read",
+          "handle": "large"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-long",
+          "entries": 1,
+          "usedBytes": 6,
+          "lru": [
+            "echo-long"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 1,
+          "usedBytes": 6,
+          "lru": [
+            "echo-long"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "616263646566",
+          "entries": 1,
+          "usedBytes": 6,
+          "lru": [
+            "echo-long"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-empty",
+          "entries": 1,
+          "usedBytes": 0,
+          "lru": [
+            "echo-empty"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 1,
+          "usedBytes": 0,
+          "lru": [
+            "echo-empty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unknown-engine-original",
+      "budgetBytes": 64,
+      "operations": [
+        {
+          "op": "derive",
+          "key": "missing-x",
+          "handle": "missing"
+        },
+        {
+          "op": "read-key",
+          "key": "missing-x"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "fault",
+          "code": "UnknownEngine",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        }
+      ]
+    },
+    {
+      "id": "compute-fault-keeps-cache",
+      "budgetBytes": 4,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "keep"
+        },
+        {
+          "op": "register",
+          "engineId": "bad",
+          "mode": "compute-fault"
+        },
+        {
+          "op": "derive",
+          "key": "bad-x",
+          "handle": "bad"
+        },
+        {
+          "op": "register",
+          "engineId": "invalid",
+          "mode": "invalid-input"
+        },
+        {
+          "op": "derive",
+          "key": "invalid-x",
+          "handle": "invalid"
+        },
+        {
+          "op": "read",
+          "handle": "keep"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "registered",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Compute",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "registered",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "InvalidInput",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6161",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "registration-keeps-existing-output",
+      "budgetBytes": 10,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-a",
+          "handle": "first"
+        },
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "double"
+        },
+        {
+          "op": "derive",
+          "key": "echo-a",
+          "handle": "hit"
+        },
+        {
+          "op": "derive",
+          "key": "echo-b",
+          "handle": "new"
+        },
+        {
+          "op": "read",
+          "handle": "first"
+        },
+        {
+          "op": "read",
+          "handle": "new"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-a",
+          "entries": 1,
+          "usedBytes": 1,
+          "lru": [
+            "echo-a"
+          ]
+        },
+        {
+          "kind": "registered",
+          "entries": 1,
+          "usedBytes": 1,
+          "lru": [
+            "echo-a"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-a",
+          "entries": 1,
+          "usedBytes": 1,
+          "lru": [
+            "echo-a"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-b",
+          "entries": 2,
+          "usedBytes": 3,
+          "lru": [
+            "echo-a",
+            "echo-b"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "61",
+          "entries": 2,
+          "usedBytes": 3,
+          "lru": [
+            "echo-a",
+            "echo-b"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6262",
+          "entries": 2,
+          "usedBytes": 3,
+          "lru": [
+            "echo-a",
+            "echo-b"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zero-byte-budget-empty-results",
+      "budgetBytes": 0,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "empty",
+          "mode": "empty"
+        },
+        {
+          "op": "derive",
+          "key": "empty-aa",
+          "handle": "a"
+        },
+        {
+          "op": "derive",
+          "key": "empty-bb",
+          "handle": "b"
+        },
+        {
+          "op": "read",
+          "handle": "a"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "empty-aa",
+          "entries": 1,
+          "usedBytes": 0,
+          "lru": [
+            "empty-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "empty-bb",
+          "entries": 2,
+          "usedBytes": 0,
+          "lru": [
+            "empty-aa",
+            "empty-bb"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "",
+          "entries": 2,
+          "usedBytes": 0,
+          "lru": [
+            "empty-aa",
+            "empty-bb"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-uses-key-not-engine-id",
+      "budgetBytes": 4,
+      "operations": [
+        {
+          "op": "register",
+          "engineId": "echo",
+          "mode": "echo"
+        },
+        {
+          "op": "derive",
+          "key": "echo-aa",
+          "handle": "a"
+        },
+        {
+          "op": "derive",
+          "key": "echo-bb",
+          "handle": "b"
+        },
+        {
+          "op": "read-forged",
+          "handle": "a",
+          "engineId": "different-engine"
+        },
+        {
+          "op": "derive",
+          "key": "echo-cc",
+          "handle": "c"
+        },
+        {
+          "op": "read",
+          "handle": "a"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "registered",
+          "entries": 0,
+          "usedBytes": 0,
+          "lru": []
+        },
+        {
+          "kind": "derived",
+          "key": "echo-aa",
+          "entries": 1,
+          "usedBytes": 2,
+          "lru": [
+            "echo-aa"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-bb",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-aa",
+            "echo-bb"
+          ]
+        },
+        {
+          "kind": "read",
+          "outputHex": "6161",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-aa",
+            "echo-bb"
+          ]
+        },
+        {
+          "kind": "derived",
+          "key": "echo-cc",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-cc"
+          ]
+        },
+        {
+          "kind": "fault",
+          "code": "Evicted",
+          "entries": 2,
+          "usedBytes": 4,
+          "lru": [
+            "echo-bb",
+            "echo-cc"
+          ]
+        }
+      ]
+    }
+  ],
+  "invalidIdentities": [
+    {
+      "id": "lone-high",
+      "utf16Units": [
+        55296
+      ],
+      "reason": "non-scalar-unicode"
+    },
+    {
+      "id": "lone-low",
+      "utf16Units": [
+        57343
+      ],
+      "reason": "non-scalar-unicode"
+    },
+    {
+      "id": "embedded-high",
+      "utf16Units": [
+        97,
+        55296,
+        98
+      ],
+      "reason": "non-scalar-unicode"
+    },
+    {
+      "id": "embedded-low",
+      "utf16Units": [
+        97,
+        57343,
+        98
+      ],
+      "reason": "non-scalar-unicode"
+    }
+  ]
+}

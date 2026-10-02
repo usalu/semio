@@ -2,15 +2,15 @@
 //! `GltfMutation` vocabulary (`../../🧬️schema/🧬️mutations/🦀️.rs`) — `mutate-<kind>`/`inverse-<kind>` each, plus one
 //! identity round trip. The judging oracle is the TypeScript reader (`🟦️.ts`, three's GLTFLoader over the committed
 //! afters); this file hosts the cross-semio SUPPLEMENT `json-rust-gltf-2-0-mutate` — every kind performed by independent
-//! GLB-container and JSON-tree manipulation (`semio_s_plugin_stdio_test_oracle`, `json` 0.12 as the JSON layer only,
+//! GLB-container and JSON-tree manipulation (`semio_s_artifact_stdio_gltf_test_oracle`, `json` 0.12 as the JSON layer only,
 //! never this subset's own codec) — and the SUBJECT: it decodes the GLB into `GltfSnapshot`, applies the row's
 //! production mutation (and, for an inverse row, that mutation's own computed inverse) through the subset's test
 //! bridges, re-encodes with `encode_glb` alone (no byte pass-through) and hands the result to the
 //! `gltf-2-0-three-compare-v1` pipeline as its `actual-gltf` artifact.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, round_trip, undo_create_scene};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, round_trip, undo_create_scene};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 
 //#region 🔖️Input
@@ -116,7 +116,7 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{gltf_inverse_restored_document, gltf_mutated_document};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Handlers
     /// 📐️ Full GLB parse → the row's production mutation (`GltfMutation` through `Mutation::diff(..).apply_to`) → GLB

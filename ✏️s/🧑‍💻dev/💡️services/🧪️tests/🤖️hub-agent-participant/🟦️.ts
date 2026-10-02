@@ -38,7 +38,7 @@ import { createSpaceCommandV1 } from "../../../../../🧰️framework/🛍️pro
 // 📁️ `new URL(x, import.meta.url).pathname` percent-encodes emoji path segments, and a counted
 // `..` chain silently walks past the root when a file moves — so the root is LOCATED, not counted.
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   let current = start;
   for (let depth = 0; depth < 32; depth += 1) {
     if (existsSync(join(current, ".mcp.json"))) return current;
@@ -48,7 +48,7 @@ function findRepoRoot(start: string): string {
   }
   throw new Error(`the hub-agent-participant gate could not locate the repository root above ${start}`);
 }
-const repoRoot = findRepoRoot(here);
+const repoRoot = findWorkspaceRoot(here);
 
 const ORIGIN = process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787";
 /** ⏳️ How long the hub's server-owned creation transaction may take to make the gate's note ready. */

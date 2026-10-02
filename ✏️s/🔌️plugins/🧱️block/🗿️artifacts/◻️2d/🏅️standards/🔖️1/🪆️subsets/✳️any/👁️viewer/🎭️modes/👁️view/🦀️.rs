@@ -2,7 +2,10 @@
 //! counterpart of the editor's single `edit` mode.
 
 use crate::viewer::block2d::modes::view::windows::board;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const BLOCK2D_VIEW_MODE_VIEW: &str = "view";
 

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "regular-authority",
+      "mutation": "none",
+      "accept": true
+    },
+    {
+      "id": "linked-taxonomy-leaf",
+      "mutation": "taxonomy-link",
+      "accept": false
+    },
+    {
+      "id": "linked-taxonomy-ancestor",
+      "mutation": "taxonomy-parent-link",
+      "accept": false
+    },
+    {
+      "id": "linked-workspace-root",
+      "mutation": "root-link",
+      "accept": false
+    },
+    {
+      "id": "raw-missing-prefix",
+      "mutation": "raw-missing-prefix",
+      "accept": false
+    },
+    {
+      "id": "raw-linked-prefix",
+      "mutation": "raw-linked-prefix",
+      "accept": false
+    },
+    {
+      "id": "linked-package-leaf",
+      "mutation": "package-link",
+      "accept": false
+    },
+    {
+      "id": "linked-package-ancestor",
+      "mutation": "package-parent-link",
+      "accept": false
+    },
+    {
+      "id": "linked-plugin-root",
+      "mutation": "plugin-root-link",
+      "accept": false
+    },
+    {
+      "id": "missing-optional-plugin-owner",
+      "mutation": "plugin-absent",
+      "accept": true
+    },
+    {
+      "id": "deleted-specific-workspace",
+      "mutation": "package-absent",
+      "accept": true
+    },
+    {
+      "id": "malformed-present-workspace",
+      "mutation": "package-invalid",
+      "accept": false
+    },
+    {
+      "id": "linked-root-ancestor",
+      "mutation": "root-ancestor-link",
+      "accept": false
+    },
+    {
+      "id": "linked-project-marker",
+      "mutation": "project-link",
+      "accept": false
+    },
+    {
+      "id": "linked-nx-marker",
+      "mutation": "nx-link",
+      "accept": false
+    }
+  ],
+  "freshness": {
+    "id": "changed-authority-with-cached-configuration",
+    "initialLocator": "policy/taxonomy.json",
+    "nextLocator": "policy/second.json",
+    "initialPlugins": [
+      "test"
+    ],
+    "nextPlugins": [
+      "fresh",
+      "test"
+    ],
+    "otherRootPlugins": [
+      "test"
+    ],
+    "owner": "🧰️framework/example",
+    "nextRole": "framework-modules",
+    "nextExports": [
+      ".",
+      "./fresh"
+    ],
+    "nextBannedStem": "fresh-policy"
+  }
+}

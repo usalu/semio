@@ -3,7 +3,7 @@ use super::*;
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn stalled_shell_io_keeps_mailbox_poll_p99_below_two_ms() {
-    let mut state = ShellState::new(Vec::new(), String::new());
+    let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     state.submit_shell_io(|| {
         std::thread::sleep(std::time::Duration::from_millis(80));
         ShellIoCompletion::Finished

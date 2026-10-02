@@ -21,7 +21,7 @@ fn x_of(app: &Fem2dApp, id: &str) -> f64 {
 }
 
 fn english(row: &HistoryEntry) -> String {
-    row.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
+    row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string()
 }
 
 /// 🧭️ The unmounted route commits a one-shot as the relative `move-selection` leaf — never a per-tick amend — and

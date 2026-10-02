@@ -3,7 +3,9 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
     ]
   },
   "targets": {
@@ -97,6 +99,36 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-mesh-contract"
+      }
+    },
+    "test-tile-proxy-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-tile-proxy-contract"
+      }
+    },
+    "test-dispatch-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-dispatch-contract"
+      }
+    },
+    "test-svg-video-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-svg-video-contract"
       }
     }
   }

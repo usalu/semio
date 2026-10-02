@@ -3,7 +3,12 @@
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use crate::editor::animate::{animate_presentation_action, ui_capacity_error, ui_children, ui_label, ui_map, ui_node, ui_text};
 use crate::PresentationSnapshot;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
 
 //#region 🔖️Constants

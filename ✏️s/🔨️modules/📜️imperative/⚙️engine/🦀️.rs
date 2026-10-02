@@ -18,7 +18,7 @@ const MAX_LOOP_ITERATIONS: u64 = 200_000;
 /// gated inside `neural_engine`'s own crate never becomes visible from this crate's `cfg(test)` —
 /// cfg(test) does not cross a crate boundary).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with="std::mem::drop")]
 pub struct Step {
     pub id: String,
     pub kind: String,

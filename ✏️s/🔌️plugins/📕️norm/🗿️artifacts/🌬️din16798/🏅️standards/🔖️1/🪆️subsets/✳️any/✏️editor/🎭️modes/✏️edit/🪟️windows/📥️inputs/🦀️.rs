@@ -1,7 +1,9 @@
 //! 📥️ DIN EN 16798 play app — the inputs window: structured SI document editor (B2 NormFieldMeta).
 
 use crate::Din16798Snapshot;
-use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-din16798-inputs";
@@ -16,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Din16798Snapshot, locale: semio_framework_plugin::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &Din16798Snapshot, locale: semio_framework_ui_locale::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::din16798_field_meta), windows)
 }
 //#endregion 🔖️Render

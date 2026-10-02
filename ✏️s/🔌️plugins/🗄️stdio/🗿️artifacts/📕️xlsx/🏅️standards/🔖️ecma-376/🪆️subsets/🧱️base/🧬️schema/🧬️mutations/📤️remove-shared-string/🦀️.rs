@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveSharedString {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::RemoveSharedString(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove shared string", "Gemeinsame Zeichenfolge entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove shared string", "Gemeinsame Zeichenfolge entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

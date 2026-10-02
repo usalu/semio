@@ -29,7 +29,14 @@ pub enum BcfCamera {
     Orthogonal { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, view_to_world_scale: f64 },
 }
 impl dsl::DslField for BcfCamera {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as dsl::DslVariants>::to_named_record_controlled(self,control)?);Ok(dsl::FieldValue::Statements(statements))}
+
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.step()?;
+        match value{dsl::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as dsl::DslVariants>::from_named_record_controlled(keyword,record,control).map_err(|error|error.message)},_=>Err("BCF camera requires exactly one typed choice".into())}
+    }
     fn shape() -> dsl::Shape { dsl::Shape::Statements(<Self as dsl::DslVariants>::variants()) }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<Self as dsl::DslVariants>::variants_controlled(control).map(dsl::Shape::Statements)}
     fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Statements(vec![<Self as dsl::DslVariants>::to_named_record(self)]) }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {

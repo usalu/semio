@@ -27,5 +27,121 @@
   ],
   "expected": [
     "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible"
+  ],
+  "candidateCases": [
+    {
+      "id": "empty",
+      "inputs": [],
+      "expected": []
+    },
+    {
+      "id": "visible",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "expected": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ]
+    },
+    {
+      "id": "omitted-existing",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️missing/🥒️.feature"
+      ],
+      "expected": []
+    },
+    {
+      "id": "duplicate",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature",
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "expected": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ]
+    },
+    {
+      "id": "native-separator",
+      "inputs": [
+        "🧰️framework\\🔨️modules\\🧵️job\\🧪️tests\\🔎️visible\\🥒️.feature"
+      ],
+      "expected": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ]
+    },
+    {
+      "id": "traversal",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/../🔎️visible/🥒️.feature"
+      ],
+      "expected": []
+    },
+    {
+      "id": "excluded",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/target/🧪️tests/🔎️hidden/🥒️.feature"
+      ],
+      "expected": []
+    },
+    {
+      "id": "linked-case",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️alias/🥒️.feature"
+      ],
+      "expected": []
+    },
+    {
+      "id": "linked-leaf",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔗️source/🥒️.feature"
+      ],
+      "expected": []
+    },
+    {
+      "id": "add-member",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "expected": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "mutation": {
+        "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+        "operation": "add"
+      }
+    },
+    {
+      "id": "remove-member",
+      "inputs": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "expected": [
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔎️visible/🥒️.feature"
+      ],
+      "mutation": {
+        "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🆕️added/🥒️.feature",
+        "operation": "remove"
+      }
+    }
+  ],
+  "authorityCases": [
+    {
+      "id": "root-link",
+      "path": "workspace-alias",
+      "authority": "root"
+    },
+    {
+      "id": "taxonomy-link",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "authority": "taxonomy"
+    },
+    {
+      "id": "policy-link",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "authority": "policy"
+    }
   ]
 }

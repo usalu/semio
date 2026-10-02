@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The transient state lane of `s.procedural.generation3d`'s editor (✏️editor/🫧️transient): its mutation vocabulary `Generation3dTransientMutation` over `Generation3dTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-procedural-generation3d-1-any-editor-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],
@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:90a18c0c8ed8806451cb736dad2f73de27794930607c1cb651967d6f7394fa9b",
           "bytes": 36
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0de99fc288024da15145f5ebeb4b342184ce9d8cda893bfa75ecd7cf12e4b12b",
           "bytes": 81
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:84ba4d97e4db52c75e7c73fe652ac25c020669c7a1b16a17e9688f964c9b3eda",
           "bytes": 56
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:84ba4d97e4db52c75e7c73fe652ac25c020669c7a1b16a17e9688f964c9b3eda",
           "bytes": 56
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-generation-preview/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

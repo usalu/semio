@@ -38,8 +38,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for EmbedFontFile {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} in Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} in Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))
     }
 
     fn target(&self) -> Vec<String> {

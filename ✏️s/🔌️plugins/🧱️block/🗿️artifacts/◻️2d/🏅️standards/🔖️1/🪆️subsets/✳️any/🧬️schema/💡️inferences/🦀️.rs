@@ -93,10 +93,10 @@ pub fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block2d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block2d_artifact_schema_descriptor`'s registration.
-pub fn block2d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn block2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.block.block2d.inference",
-        inference: ::semio_framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

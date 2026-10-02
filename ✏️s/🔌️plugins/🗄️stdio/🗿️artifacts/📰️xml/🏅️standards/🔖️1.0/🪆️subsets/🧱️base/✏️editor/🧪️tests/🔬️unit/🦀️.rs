@@ -177,3 +177,5 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", XmlAnyEditor, || semio_framework_plugin::App { definition: create_xml_editor(), examples: Vec::new() }, "../..");

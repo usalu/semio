@@ -227,7 +227,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_en1999::standards::v1::subsets::any::schema::mutations::{apply_en1999_mutation, decode_en1999_mutation_json, inverse_en1999_mutation, En1999Mutation};
     use semio_s_artifact_norm_en1999::standards::v1::subsets::any::schema::snapshot::{decode_en1999_dsl, decode_en1999_pack, decode_en1999_snapshot_json, encode_en1999_dsl, encode_en1999_pack, encode_en1999_snapshot_json, En1999Snapshot};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode
     /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through

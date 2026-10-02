@@ -161,15 +161,18 @@
       "properties": {
         "vertex": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "texcoord": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "normal": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -203,7 +206,8 @@
           "type": "array",
           "items": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 18446744073709551615
           }
         }
       }
@@ -223,7 +227,8 @@
           "type": "array",
           "items": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 18446744073709551615
           }
         }
       }
@@ -238,7 +243,8 @@
       "properties": {
         "faceIndexFrom": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "material": {
           "type": "string"
@@ -254,11 +260,13 @@
       "properties": {
         "faceIndexFrom": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "group": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },

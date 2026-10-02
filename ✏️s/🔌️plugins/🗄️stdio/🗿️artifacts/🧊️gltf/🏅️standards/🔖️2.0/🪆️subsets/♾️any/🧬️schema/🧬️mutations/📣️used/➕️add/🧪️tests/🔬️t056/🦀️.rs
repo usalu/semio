@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<AddUsedExtensionMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "add-used-extension");
-    super::super::component::fixture_corpus_tests::assert_case("📣️used-extension/➕️add/🔬️t056");
+    super::super::component::fixture_corpus_tests::assert_case("📣️used/➕️add/🔬️t056");
 }

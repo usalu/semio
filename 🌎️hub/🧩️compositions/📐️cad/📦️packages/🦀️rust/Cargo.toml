@@ -58,6 +58,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }

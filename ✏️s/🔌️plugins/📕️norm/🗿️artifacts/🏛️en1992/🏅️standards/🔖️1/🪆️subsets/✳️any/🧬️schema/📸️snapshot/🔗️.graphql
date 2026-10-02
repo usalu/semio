@@ -1,3 +1,4 @@
+scalar UInt32
 # 🧬️ EN 1992 snapshot GraphQL facet — mirrors Rust subject (characteristic actions; Table 3.1 derived off-schema).
 enum AnnexChoice { En De }
 enum MemberKind { Beam Slab Column Wall FlatSlab RibbedSlab TensionMember Bridge LiquidRetaining }
@@ -28,7 +29,7 @@ type PrestressSteel { id: String! name: String! fPk: Float! fP01k: Float! }
 type BarLayer {
   id: String!
   diameter: Float!
-  count: Int!
+  count: UInt32!
   position: String!
   anchorageLength: Float!
   lapLength: Float!
@@ -36,7 +37,7 @@ type BarLayer {
   aggregateSize: Float!
 }
 
-type Stirrups { diameter: Float! spacing: Float! legs: Int! }
+type Stirrups { diameter: Float! spacing: Float! legs: UInt32! }
 type PunchingSpec { columnWidth: Float! columnDepth: Float! columnPosition: String! asw: Float! }
 type PrestressSpec { force: Float! area: Float! eccentricity: Float! lossRatio: Float! }
 type FireSpec { rating: FireRating! axisDistance: Float! columnMethod: String! slabSystem: String! }
@@ -81,7 +82,7 @@ type RcMember {
   useFem: Boolean!
   udl: Float!
   deflectionSensitive: Boolean!
-  tightness: TightnessClass!
+  tightness: TightnessClass
   hdOverH: Float!
   liquidSigmaS: Float!
   liquidRhoPEff: Float!

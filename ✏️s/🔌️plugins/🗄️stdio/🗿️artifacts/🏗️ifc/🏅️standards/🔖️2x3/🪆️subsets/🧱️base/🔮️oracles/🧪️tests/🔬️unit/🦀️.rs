@@ -5,7 +5,7 @@ const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏥️wellness-
 
 /// 🧾️ The case's own `Examples` rows — the leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    crate::law::feature_rows(include_str!("../../../🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature"))
 }
 
 fn spec(kind: &str, params: Json) -> Json {

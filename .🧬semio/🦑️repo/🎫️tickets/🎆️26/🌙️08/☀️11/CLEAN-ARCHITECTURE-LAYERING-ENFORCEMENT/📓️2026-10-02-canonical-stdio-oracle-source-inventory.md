@@ -1,0 +1,910 @@
+# Exact Stdio Oracle Source Inventory
+
+This authored inventory preserves the current source cohort before its coordinated cut. Counts reflect physical inputs rather than executed native cases.
+
+- Shared oracle Rust files: 14
+- Mounted artifact/standard/subset oracle files: 72
+- Stdio Rust callers: 126
+- Complete canonical-library Rust callers: 257
+- Artifact case roots requiring explicit package contributions: 86
+- Involved contribution manifests: 145
+
+## Exact Mounted Sources
+
+- `artifacts::avi::standards::v1_0::subsets::hdrl`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🦀️.rs`
+- `artifacts::bcf::standards::v2_1::subsets::markup`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🦀️.rs`
+- `artifacts::binary::standards::v_raw::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::bmp::standards::v_v3::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::csv::standards::v_rfc4180::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::deflate::standards::v_rfc1950::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::docx::standards::v_ecma_376::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::docx::standards::v_ecma_376::subsets::strict`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🔮️oracles/🦀️.rs`
+- `artifacts::docx::standards::v_ecma_376::subsets::transitional`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🔮️oracles/🦀️.rs`
+- `artifacts::dwg::standards::v_ac1018::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::dwg::standards::v_ac1024::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::dxf::standards::v_r12::subsets::header`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🦀️.rs`
+- `artifacts::epw::standards::v_energyplus::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::gif::standards::v87a::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::gif::standards::v89a::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::gltf::standards::v2_0::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🦀️.rs`
+- `artifacts::html::standards::v5::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v2x3::reference`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v2x3::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v2x3::subsets::cobie`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v2x3::subsets::cv20`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v2x3::subsets::sav`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🦀️.rs`
+- `artifacts::ifc::standards::v4::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::jpg::standards::v_jfif_1_01::subsets::document`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`
+- `artifacts::jpg::standards::v_jfif_1_01::subsets::baseline`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🦀️.rs`
+- `artifacts::json::standards::v_rfc8259::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::las::standards::v1_0::subsets::header`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🦀️.rs`
+- `artifacts::md::standards::v_commonmark::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::mp3::standards::v_mpeg1_layer3::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::mp4::standards::v_isobmff::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::obj::standards::v3_0::subsets::geometry`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_4::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_4::subsets::a`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_4::subsets::x`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::a`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::e`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::h`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::ua`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::vt`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🦀️.rs`
+- `artifacts::pdf::standards::v1_7::subsets::x`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🦀️.rs`
+- `artifacts::ply::standards::v1_0::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::png::standards::v1_2::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::pptx::standards::v_ecma_376::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::pptx::standards::v_ecma_376::subsets::strict`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🦀️.rs`
+- `artifacts::pptx::standards::v_ecma_376::subsets::transitional`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🦀️.rs`
+- `artifacts::semio::standards::v1::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::reference`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc1`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc2`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc3`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc4`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc5`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🦀️.rs`
+- `artifacts::step::standards::v_ap214::subsets::cc6`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🦀️.rs`
+- `artifacts::stl::standards::v_ascii::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::svg::standards::v1_1::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::svg::standards::v1_1::subsets::tiny`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🦀️.rs`
+- `artifacts::svg::standards::v1_1::subsets::basic`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🦀️.rs`
+- `artifacts::tiff::standards::v6_0::subsets::document`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`
+- `artifacts::tiff::standards::v6_0::subsets::baseline`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracles/🦀️.rs`
+- `artifacts::tsv::standards::v_iana::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::txt::standards::v_utf_8::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::wav::standards::v_riff_pcm::subsets::any`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `artifacts::xlsx::standards::v_ecma_376::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::xlsx::standards::v_ecma_376::subsets::strict`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🦀️.rs`
+- `artifacts::xlsx::standards::v_ecma_376::subsets::transitional`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🦀️.rs`
+- `artifacts::xml::standards::v1_0::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::xml::standards::v1_0::subsets::valid`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🦀️.rs`
+- `artifacts::zip::standards::v2_0::subsets::base`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `artifacts::zip::standards::v2_0::subsets::iso21320`: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🦀️.rs`
+- `note::artifacts::note::standards::v1::subsets::any`: `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🦀️.rs` → higher assembly `../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+
+## Exact Shared Source Destinations
+
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🧪️tests/🔬️unit/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/⚖️law/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🧬️vector/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/⚖️law/🧬️vector/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🧬️vector/🧪️tests/🔬️unit/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/⚖️law/🧬️vector/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🎒️archive/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📃️document/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📊️tabular/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📰markup/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🔊️audio/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/🧪️tests/🔬️unit/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🔊️audio/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🖼️raster/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/🧪️tests/🔬️unit/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🖼️raster/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/🦀️.rs` → `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧊️mesh/🦀️.rs`
+
+## Exact Canonical-Library Callers
+
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/✒️mutate-writer-1/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-writer-writer-1-any-editor-edit-main-config/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-writer-writer-1-any-editor-edit-main-transient/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/➗️mutate-equation-1-any-equation/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-mathematical-equation-1-any-editor-edit-graph-config/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️mutate-equation-1-any-geometry/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🕸️mutate-equation-1-any-graph/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧪️tests/➗️mutate-equation-1-equation/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧪️tests/📐️mutate-equation-1-geometry/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧪️tests/🕸️mutate-equation-1-graph/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-wfc-wfc2d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc2d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-wfc2d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔲️mutate-grid2d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-bitmap-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-bitmap-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-wfc-wfc3d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-wfc3d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc-grid3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation2d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-procedural-generation3d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-procedural-generation3d-1-any-viewer-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-procedural-generation3d-1-any-viewer-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation3d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation3d-1-any-viewer-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌊️mutate-flow-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏔️mutate-gisterrain-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-gis-gismap-1-any-editor-edit-map-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-gis-gismap-1-any-viewer-view-map-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗺️mutate-gismap-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-animate-presentation-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-animate-presentation-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧭️mutate-presentation-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-shooting-shooting-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎥️mutate-shooting-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-shooting-shooting-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚓️mutate-playground-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔗️mutate-sequence-1-any-dependency/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪜️mutate-sequence-1-any-step/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧪️tests/🔗️mutate-sequence-1-dependency/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧪️tests/🪜️mutate-sequence-1-step/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🏋️mutate-fem2d-1-any-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📈️mutate-fem2d-1-any-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🕸️mutate-fem2d-1-any-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🛡️mutate-fem2d-1-any-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧱️mutate-fem2d-1-any-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🏋️mutate-fem2d-1-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/📈️mutate-fem2d-1-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem2d-1-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🛡️mutate-fem2d-1-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧱️mutate-fem2d-1-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🏋️mutate-fem3d-1-any-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📈️mutate-fem3d-1-any-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🕸️mutate-fem3d-1-any-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🛡️mutate-fem3d-1-any-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧱️mutate-fem3d-1-any-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🫧️mutate-fem-3d-1-any-editor-edit-results-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🏋️mutate-fem3d-1-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/📈️mutate-fem3d-1-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem3d-1-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🛡️mutate-fem3d-1-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧱️mutate-fem3d-1-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-architect-program-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-program-1/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-architect-program-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📤️export-program-xlsx/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-process3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-reasoning-wires-1-any-editor-edit-canvas-config/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-reasoning-wires-1-any-editor-edit-canvas-transient/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌵️mutate-forms-1/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-forms-forms-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️mutate-layout-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️mutate-en1990-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚡️mutate-din18599-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌍️mutate-en1997-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌬️mutate-din16798-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏋️mutate-en1991-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-en1992-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-vdi3805-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📇️mutate-iso16757-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔩️mutate-en1993-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-en1994-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧱️mutate-din4108-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪨️mutate-en1996-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪵️mutate-en1995-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪶️mutate-en1999-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫨️mutate-en1998-1/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌾️mutate-playbook-1/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-playbook-playbook-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-imperative-procedure-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📸️mutate-remodeling-1/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-edit-model-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-viewer-view-model-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-trinity-jack-1-any-editor-edit-graph-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-trinity-jack-1-any-editor-edit-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-trinity-jack-1-any-editor-edit-results-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-dag-dag-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-dag-dag-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎨️mutate-drawing-1-any-style/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔀️mutate-drawing-1-any-transform/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧱️mutate-drawing-1-any-structure/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪪️mutate-drawing-1-any-metadata/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🎨️mutate-drawing-1-style/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🪪️mutate-drawing-1-metadata/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🔀️mutate-drawing-1-transform/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧱️mutate-drawing-1-structure/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🖨️mutate-raster-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧪️tests/🎩️mutate-las-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🧪️tests/📍️mutate-las-1-0-points/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/📼️mutate-las-1-0-vlr/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🌐️mutate-html-5/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️tests/🌦️mutate-epw-energyplus/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧪️tests/🔀️mutate-zip-2-0-iso21320/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-zip-2-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/✏️create-and-edit-archive/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🖼️mutate-gif-87a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🧪️tests/🎛️mutate-gif-89a-graphic-control/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment/🧪️tests/💬️mutate-gif-89a-comment/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application/🧪️tests/🧩️mutate-gif-89a-application/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧪️tests/🎞️mutate-gif-89a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/🔁️create-and-round-trip-gif/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🎞️mutate-mp4-isobmff/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🔬️mutate-svg-1-1-tiny/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🔰️mutate-svg-1-1-basic/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🎨️mutate-svg-1-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🏗️mutate-ifc-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🔺️differential-ifc-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🏢️mutate-ifc-2x3-cobie/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧪️tests/🤝️mutate-ifc-2x3-cv20/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧪️tests/🧮️mutate-ifc-2x3-sav/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🔺️differential-ifc-2x3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint/🧪️tests/🔀️mutate-bcf-2-1-viewpoint/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot/🧪️tests/🔀️mutate-bcf-2-1-snapshot/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🔀️mutate-bcf-2-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🔀️mutate-binary-raw/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/📊️mutate-csv-rfc4180/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧪️tests/🔬️1-mutate-step-ap214-cc1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧪️tests/🔬️2-mutate-step-ap214-cc2/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🔬️3-mutate-step-ap214-cc3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧪️tests/🔬️4-mutate-step-ap214-cc4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧪️tests/🔬️5-mutate-step-ap214-cc5/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🔬️6-mutate-step-ap214-cc6/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/📐️mutate-step-ap214/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/📊️mutate-tsv-iana/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🔀️mutate-xlsx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🔀️mutate-xlsx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-xlsx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧪️tests/🖨️mutate-pdf-1-4-x/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧪️tests/🗄️mutate-pdf-1-4-a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/♿️mutate-pdf-1-7-ua/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🧪️tests/⚕️mutate-pdf-1-7-h/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧪️tests/📐️mutate-pdf-1-7-e/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧪️tests/🖨️mutate-pdf-1-7-x/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧪️tests/🗄️mutate-pdf-1-7-a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/✏️edit-existing-pdf/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/➕️create-minimal-pdf/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-7/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧪️tests/🧾️mutate-pdf-1-7-vt/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧪️tests/📏️mutate-docx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🔄️mutate-docx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/📜️mutate-docx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/📝️mutate-md-commonmark/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧪️tests/✅️mutate-xml-1-0-valid/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/📰️mutate-xml-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🔀️mutate-png-1-2/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧪️tests/🔁️round-trip-jpg-jfif-1-01-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧪️tests/🛡️mutate-jpg-jfif-1-01-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/📸️mutate-jpg-jfif-1-01/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🧪️tests/📖️create-and-read-jpeg/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🎛️mutate-avi-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🧪️tests/🎞️mutate-avi-1-0-movi/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🧪️tests/📇️mutate-avi-1-0-idx1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🌉️mutate-pptx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🔒️mutate-pptx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-pptx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🎚️create-and-retune-wave/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🎛️mutate-wav-riff-pcm/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/📝️mutate-txt-utf-8/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🔁️create-and-round-trip-stl/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🔺️mutate-stl-ascii/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1018/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1024/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/📊️mutate-dxf-r12-tables/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧪️tests/📰️mutate-dxf-r12/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities/🧪️tests/🧩️mutate-dxf-r12-entities/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks/🧪️tests/🧱️mutate-dxf-r12-blocks/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧪️tests/🔁️round-trip-tiff-6-0-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧪️tests/🧱️mutate-tiff-6-0-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🔁️create-and-round-trip-tiff/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🖼️mutate-tiff-6-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🔁️zlib-round-trip/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🗜️mutate-deflate-rfc1950/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🎨️mutate-obj-3-0-material/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/📐️mutate-obj-3-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🔄️create-and-round-trip-obj/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/🧊️mutate-gltf-2-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation/🧪️tests/🎞️mutate-gltf-2-0-animation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera/🧪️tests/🎥️mutate-gltf-2-0-camera/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🎬️mutate-gltf-2-0-scene/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🧪️tests/💎️mutate-gltf-2-0-material/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💿️buffer/🧪️tests/💿️mutate-gltf-2-0-buffer/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-gltf-2-0-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin/🧪️tests/🦴️mutate-gltf-2-0-skin/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset/🧪️tests/🪪️mutate-gltf-2-0-asset/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧱️mutate-ply-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🔀️mutate-json-rfc8259-i-json/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-json-rfc8259/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/✉️mutate-semio-base/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧪️tests/🌊️mutate-semio-flow/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧪️tests/🎞️mutate-semio-animation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧪️tests/🎥️mutate-semio-video/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧪️tests/🏛️mutate-semio-model/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧪️tests/📊️mutate-semio-table/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧪️tests/📐️mutate-semio-cad/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧪️tests/📃️mutate-semio-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧪️tests/📦️mutate-semio-object/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧪️tests/📽️mutate-semio-presentation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧪️tests/🔊️mutate-semio-audio/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧪️tests/🔢️mutate-semio-value/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🔤️mutate-semio-text/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🔺️mutate-semio-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🌳️mutate-semio-graph/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧪️tests/🖊️mutate-semio-drawing/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧪️tests/🖼️mutate-semio-image/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧊️mutate-semio-brep/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧰️mutate-semio-kit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🔁️create-and-round-trip-bmp/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🪟️mutate-bmp-v3/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-note-note-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📜️mutate-note-1-a5bb7f/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧪️tests/🎨️mutate-note-1-canvas/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧪️tests/📊️mutate-note-1-table/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧪️tests/📜️mutate-note-1-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧪️tests/🔤️mutate-note-1-text/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧪️tests/🖋️mutate-note-1-ink/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧪️tests/🖼️mutate-note-1-asset/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧪️tests/🧮️mutate-note-1-math/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧪️tests/🧱️mutate-note-1-block/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-block-3d-1-any-editor-edit-world-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌵️mutate-s-home-1/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪐️mutate-s-space-1/🦀️.rs`
+
+## Exact Contribution Inputs
+
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/➗️mathematical/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌍️gis/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎪️demonstrator/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏗️fem/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏭️process/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📏️layout/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📸️remodel/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🖍️draw/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🖨️raster/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💿️buffer/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🪐️space/🔮️oracles/🔣️.json`
+
+## All Authored Textual References
+
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/✒️mutate-writer-1/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-writer-writer-1-any-editor-edit-main-config/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-writer-writer-1-any-editor-edit-main-transient/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/➗️mathematical/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/➗️mutate-equation-1-any-equation/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-mathematical-equation-1-any-editor-edit-graph-config/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️mutate-equation-1-any-geometry/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🕸️mutate-equation-1-any-graph/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧪️tests/➗️mutate-equation-1-equation/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧪️tests/📐️mutate-equation-1-geometry/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧪️tests/🕸️mutate-equation-1-graph/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-wfc-wfc2d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc2d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-wfc2d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔲️mutate-grid2d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-bitmap-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-bitmap-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-wfc-wfc3d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-wfc-wfc3d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc-grid3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation2d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-procedural-generation3d-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-procedural-generation3d-1-any-viewer-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-procedural-generation3d-1-any-viewer-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation3d-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-procedural-generation3d-1-any-viewer-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌊️mutate-flow-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌍️gis/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏔️mutate-gisterrain-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-gis-gismap-1-any-editor-edit-map-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-gis-gismap-1-any-viewer-view-map-config/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗺️mutate-gismap-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌿️mutate-vcs-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-animate-presentation-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-animate-presentation-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧭️mutate-presentation-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-shooting-shooting-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎥️mutate-shooting-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-shooting-shooting-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎪️demonstrator/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚓️mutate-playground-1/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔗️mutate-sequence-1-any-dependency/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪜️mutate-sequence-1-any-step/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧪️tests/🔗️mutate-sequence-1-dependency/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧪️tests/🪜️mutate-sequence-1-step/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏗️fem/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🏋️mutate-fem2d-1-any-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📈️mutate-fem2d-1-any-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🕸️mutate-fem2d-1-any-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🛡️mutate-fem2d-1-any-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧱️mutate-fem2d-1-any-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🏋️mutate-fem2d-1-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/📈️mutate-fem2d-1-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem2d-1-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🛡️mutate-fem2d-1-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧱️mutate-fem2d-1-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🏋️mutate-fem3d-1-any-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📈️mutate-fem3d-1-any-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🔄️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🕸️mutate-fem3d-1-any-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🛡️mutate-fem3d-1-any-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🧱️mutate-fem3d-1-any-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/🫧️mutate-fem-3d-1-any-editor-edit-results-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧪️tests/🏋️mutate-fem3d-1-load/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/📈️mutate-fem3d-1-analysis/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-fem3d-1-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧪️tests/🛡️mutate-fem3d-1-boundary/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧪️tests/🧱️mutate-fem3d-1-material/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-architect-program-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-program-1/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-architect-program-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📤️export-program-xlsx/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏭️process/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-process3d-1/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-reasoning-wires-1-any-editor-edit-canvas-config/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📡️mutate-wires-1/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-reasoning-wires-1-any-editor-edit-canvas-transient/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌵️mutate-forms-1/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-forms-forms-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📏️layout/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📐️mutate-layout-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️mutate-en1990-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚡️mutate-din18599-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌍️mutate-en1997-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌬️mutate-din16798-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏋️mutate-en1991-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-en1992-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-vdi3805-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📇️mutate-iso16757-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔩️mutate-en1993-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-en1994-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧱️mutate-din4108-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪨️mutate-en1996-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪵️mutate-en1995-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪶️mutate-en1999-1/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫨️mutate-en1998-1/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌾️mutate-playbook-1/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-playbook-playbook-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-imperative-procedure-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🛟️mutate-procedure-1/🦀️.rs`
+- `✏️s/🔌️plugins/📸️remodel/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📸️mutate-remodeling-1/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-editor-edit-model-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-energy-model-1-any-viewer-view-model-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-energy-model-1/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-trinity-jack-1-any-editor-edit-graph-config/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-trinity-jack-1-any-editor-edit-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-trinity-jack-1-any-editor-edit-results-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌳️mutate-dag-1/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-dag-dag-1-any-editor-config/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-dag-dag-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎨️mutate-drawing-1-any-style/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔀️mutate-drawing-1-any-transform/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧱️mutate-drawing-1-any-structure/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪪️mutate-drawing-1-any-metadata/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🎨️mutate-drawing-1-style/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🪪️mutate-drawing-1-metadata/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🔀️mutate-drawing-1-transform/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧱️mutate-drawing-1-structure/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🖨️mutate-raster-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧪️tests/🎩️mutate-las-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📍️points/🧪️tests/📍️mutate-las-1-0-points/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/📼️vlr/🧪️tests/📼️mutate-las-1-0-vlr/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🌐️mutate-html-5/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️tests/🌦️mutate-epw-energyplus/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/🧪️tests/🔀️mutate-zip-2-0-iso21320/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-zip-2-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/✏️create-and-edit-archive/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧪️tests/🖼️mutate-gif-87a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🎛️graphic-control/🧪️tests/🎛️mutate-gif-89a-graphic-control/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/💬️comment/🧪️tests/💬️mutate-gif-89a-comment/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧩️application/🧪️tests/🧩️mutate-gif-89a-application/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧪️tests/🎞️mutate-gif-89a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/🔁️create-and-round-trip-gif/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️tests/🎞️mutate-mp4-isobmff/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🔬️mutate-svg-1-1-tiny/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🔰️mutate-svg-1-1-basic/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🎨️mutate-svg-1-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🏗️mutate-ifc-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧪️tests/🔺️differential-ifc-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧪️tests/🏢️mutate-ifc-2x3-cobie/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧪️tests/🤝️mutate-ifc-2x3-cv20/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧪️tests/🧮️mutate-ifc-2x3-sav/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🔺️differential-ifc-2x3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/👁️viewpoint/🧪️tests/🔀️mutate-bcf-2-1-viewpoint/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/📸️snapshot/🧪️tests/🔀️mutate-bcf-2-1-snapshot/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧪️tests/🔀️mutate-bcf-2-1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️tests/🔀️mutate-binary-raw/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️tests/📊️mutate-csv-rfc4180/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧪️tests/🔬️1-mutate-step-ap214-cc1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧪️tests/🔬️2-mutate-step-ap214-cc2/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🔬️3-mutate-step-ap214-cc3/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧪️tests/🔬️4-mutate-step-ap214-cc4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧪️tests/🔬️5-mutate-step-ap214-cc5/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🔬️6-mutate-step-ap214-cc6/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/📐️mutate-step-ap214/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️tests/📊️mutate-tsv-iana/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🔀️mutate-xlsx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🔀️mutate-xlsx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-xlsx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧪️tests/🖨️mutate-pdf-1-4-x/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧪️tests/🗄️mutate-pdf-1-4-a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-4/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧪️tests/♿️mutate-pdf-1-7-ua/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🧪️tests/⚕️mutate-pdf-1-7-h/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧪️tests/📐️mutate-pdf-1-7-e/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧪️tests/🖨️mutate-pdf-1-7-x/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧪️tests/🗄️mutate-pdf-1-7-a/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/✏️edit-existing-pdf/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/➕️create-minimal-pdf/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/📑️mutate-pdf-1-7/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧪️tests/🧾️mutate-pdf-1-7-vt/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧪️tests/📏️mutate-docx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧪️tests/🔄️mutate-docx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/📜️mutate-docx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️tests/📝️mutate-md-commonmark/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧪️tests/✅️mutate-xml-1-0-valid/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/📰️mutate-xml-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🔀️mutate-png-1-2/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧪️tests/🔁️round-trip-jpg-jfif-1-01-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧪️tests/🛡️mutate-jpg-jfif-1-01-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/📸️mutate-jpg-jfif-1-01/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🧪️tests/📖️create-and-read-jpeg/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧪️tests/🎛️mutate-avi-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎞️movi/🧪️tests/🎞️mutate-avi-1-0-movi/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/📇️idx1/🧪️tests/📇️mutate-avi-1-0-idx1/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧪️tests/🌉️mutate-pptx-ecma-376-transitional/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🔒️mutate-pptx-ecma-376-strict/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-pptx-ecma-376/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🎚️create-and-retune-wave/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🎛️mutate-wav-riff-pcm/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️tests/📝️mutate-txt-utf-8/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🔁️create-and-round-trip-stl/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️tests/🔺️mutate-stl-ascii/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1018/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧪️tests/🖊️mutate-dwg-ac1024/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🧪️tests/📊️mutate-dxf-r12-tables/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧪️tests/📰️mutate-dxf-r12/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities/🧪️tests/🧩️mutate-dxf-r12-entities/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks/🧪️tests/🧱️mutate-dxf-r12-blocks/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧪️tests/🔁️round-trip-tiff-6-0-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧪️tests/🧱️mutate-tiff-6-0-baseline/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🔁️create-and-round-trip-tiff/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🖼️mutate-tiff-6-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🔁️zlib-round-trip/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️tests/🗜️mutate-deflate-rfc1950/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/🎨️material/🧪️tests/🎨️mutate-obj-3-0-material/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/📐️mutate-obj-3-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/🔄️create-and-round-trip-obj/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧪️tests/🧊️mutate-gltf-2-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎞️animation/🧪️tests/🎞️mutate-gltf-2-0-animation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎥️camera/🧪️tests/🎥️mutate-gltf-2-0-camera/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🎬️scene/🧪️tests/🎬️mutate-gltf-2-0-scene/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🧪️tests/💎️mutate-gltf-2-0-material/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💿️buffer/🧪️tests/💿️mutate-gltf-2-0-buffer/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🕸️mesh/🧪️tests/🕸️mutate-gltf-2-0-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🦴️skin/🧪️tests/🦴️mutate-gltf-2-0-skin/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/🪪️asset/🧪️tests/🪪️mutate-gltf-2-0-asset/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧱️mutate-ply-1-0/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🔀️mutate-json-rfc8259-i-json/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧪️tests/🔀️mutate-json-rfc8259/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧪️tests/✉️mutate-semio-base/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧪️tests/🌊️mutate-semio-flow/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧪️tests/🎞️mutate-semio-animation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧪️tests/🎥️mutate-semio-video/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧪️tests/🏛️mutate-semio-model/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧪️tests/📊️mutate-semio-table/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧪️tests/📐️mutate-semio-cad/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧪️tests/📃️mutate-semio-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧪️tests/📦️mutate-semio-object/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧪️tests/📽️mutate-semio-presentation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧪️tests/🔊️mutate-semio-audio/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧪️tests/🔢️mutate-semio-value/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🔤️mutate-semio-text/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🔺️mutate-semio-mesh/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🌳️mutate-semio-graph/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧪️tests/🖊️mutate-semio-drawing/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧪️tests/🖼️mutate-semio-image/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧊️mutate-semio-brep/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧰️mutate-semio-kit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🔁️create-and-round-trip-bmp/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🪟️mutate-bmp-v3/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-note-note-1-any-editor-presence/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📜️mutate-note-1-a5bb7f/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔁️round-trips-the-committed-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧪️tests/🎨️mutate-note-1-canvas/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧪️tests/📊️mutate-note-1-table/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧪️tests/📜️mutate-note-1-document/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧪️tests/🔤️mutate-note-1-text/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧪️tests/🖋️mutate-note-1-ink/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧪️tests/🖼️mutate-note-1-asset/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧪️tests/🧮️mutate-note-1-math/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧪️tests/🧱️mutate-note-1-block/🦀️.rs`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-block-3d-1-any-editor-edit-world-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🔮️oracles/🔣️.json`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🌵️mutate-s-home-1/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫧️mutate-s-home-1-any-editor-transient/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪐️mutate-s-space-1/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗂️mutate-curation-1/🦀️.rs`
+- `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/⚡️exhaustive-cache-inputs/🟦️.ts`

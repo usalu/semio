@@ -25,6 +25,9 @@ pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
     ("PatchWorkingNodes", super::patch_working_nodes::binary::BINARY_TAG),
     ("DragRuleNodes", super::drag_rule_nodes::binary::BINARY_TAG),
     ("SetRuleLayoutPoints", super::set_rule_layout_points::binary::BINARY_TAG),
+    ("DeleteWorkingNodes", super::delete_working_nodes::binary::BINARY_TAG),
+    ("ConnectWorkingPorts", super::connect_working_ports::binary::BINARY_TAG),
+    ("DisconnectWorkingEdges", super::disconnect_working_edges::binary::BINARY_TAG),
 ];
 
 /// 📦️ Encodes a `RewriteRuleMutation` to its binary command form.

@@ -183,7 +183,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::gis_map_mutation_report_json;
     use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::snapshot::gis_map_identity_report_json;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

@@ -1,9 +1,9 @@
 {
+  "mutation": "insertSeismic",
   "index": 1,
   "item": {
-    "aEk": 45000.0,
     "id": "E-2",
+    "aEk": 45000.0,
     "importanceClass": "IV"
-  },
-  "mutation": "insertSeismic"
+  }
 }

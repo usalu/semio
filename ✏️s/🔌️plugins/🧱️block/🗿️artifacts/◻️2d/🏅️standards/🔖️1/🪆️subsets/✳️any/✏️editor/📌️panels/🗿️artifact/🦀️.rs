@@ -4,8 +4,19 @@
 use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
 use crate::editor::block2d::{ui_label, BLOCK2D_GRANULARITY_HANDLE, BLOCK2D_GRANULARITY_HANDLE_KIND, BLOCK2D_INTERACTION_HANDLE, BLOCK2D_PLAY_APP_ID};
-use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_contract::Label;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const BLOCK2D_BODY_ARTIFACT: &str = "block2d.play.artifact";

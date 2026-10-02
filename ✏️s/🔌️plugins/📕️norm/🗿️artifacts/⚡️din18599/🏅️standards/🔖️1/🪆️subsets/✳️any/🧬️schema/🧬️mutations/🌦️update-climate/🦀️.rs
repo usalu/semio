@@ -29,8 +29,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateClimat
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update monthly climate profile", "Monatsklimaprofil aktualisieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update monthly climate profile", "Monatsklimaprofil aktualisieren")
     }
 }
 //#endregion 🔖️UpdateClimate

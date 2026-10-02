@@ -123,7 +123,7 @@ pub mod derived_composition {
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor());
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor()).expect("schema descriptor publication");
         semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("presentation") }, store::ArtifactCodec::bare::<SemioPresentationSnapshot, crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
             crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
         ))
@@ -156,7 +156,7 @@ pub mod derived_composition {
     /// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor());
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 

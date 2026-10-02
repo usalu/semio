@@ -15,7 +15,15 @@ use crate::editor::wfc2d::modes::edit::tools::fill::{self, Wfc2dFillTickPayload}
 use crate::editor::wfc2d::transient::{assigned_tile, Wfc2dTransient};
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dTile, Wfc2dTileMedia};
 use crate::Wfc2dSnapshot;
-use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WFC_2D_PREVIEW_WINDOW: &str = "wfc-2d-preview";

@@ -55,7 +55,7 @@ pub(super) fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<Comm
 }
 
 fn test_shell_state() -> ShellState {
-    ShellState::new(Vec::new(), String::new())
+    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     shell.dock.root =
         crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
     shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
     shell.publish_retained_input_for_test(&mut input, &Theme::light());
     semio_framework_async::block_on(shell.open_context_menu(125.0, 25.0, None));
@@ -414,7 +414,7 @@ fn directory_home_bootstrap_waits_for_terminal_config_ack_and_retains_home_acros
             transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: body.into_bytes() });
         }
         let client = DirectoryClient::new(transport.clone(), "http://hub.test");
-        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::default()).expect("retained Home");
+        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("retained Home");
         home.bootstrap = DirectoryEventPageBootstrapV1::new(7, 3).expect("fixture epoch");
         let first = client.event_page(&directory_test_context(), 3).await.expect("first canonical page");
         let first_for_home = first.clone();
@@ -461,7 +461,7 @@ fn directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss
         let transport = DirectoryBootstrapFakeTransport::default();
         transport.responses.lock().expect("fake responses").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 200, body: directory_page_json(3, 8, false, 'b').into_bytes() });
         let client = DirectoryClient::new(transport, "http://hub.test");
-        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::default()).expect("retained Home");
+        let mut home = DirectoryHomeProjection::new("s".into(), 41, test_app(Vec::new(), Vec::new()), ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("retained Home");
         home.bootstrap = DirectoryEventPageBootstrapV1::new(7, 3).expect("fixture epoch");
         let failed_transport = DirectoryBootstrapFakeTransport::default();
         failed_transport.responses.lock().expect("fake failure").push_back(semio_framework_os_kernel::os_directory::client::HttpResponse { status: 503, body: Vec::new() });
@@ -605,7 +605,7 @@ fn fullscreen_command_requests_the_host_transition() {
 #[test]
 fn build_os_commands_terminology_options_include_app_terminologies() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
     let ActionArgControl::Select { options } = &terminology_command.args[0].control() else {
         panic!("expected a select control");
@@ -749,7 +749,7 @@ fn command_category_label_titleizes_hyphenated_ids() {
 #[test]
 fn command_search_items_stages_arg_commands_and_tags_os_category() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let items = shell.command_search_items();
     let appearance = items.iter().find(|item| item.id == "command.os.os.setAppearance").expect("one staged appearance command present");
     assert_eq!(appearance.label, "Set Appearance…");
@@ -765,7 +765,7 @@ fn command_search_items_stages_arg_commands_and_tags_os_category() {
 #[test]
 fn apply_os_command_reset_dock_clears_layout_override_locally() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell.layout_override = Some(shell.dock.to_window_layout());
     semio_framework_async::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
     assert!(shell.layout_override.is_none());
@@ -774,7 +774,7 @@ fn apply_os_command_reset_dock_clears_layout_override_locally() {
 #[test]
 fn apply_os_command_set_locale_dispatches_through_framework_controller() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     semio_framework_async::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
     assert_eq!(shell.locale_id, "de");
 }
@@ -810,7 +810,7 @@ fn apply_os_command_set_theme_id_updates_active_theme() {
 #[test]
 fn build_command_panel_ui_groups_rows_under_category_headers() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let UiNode::Tree(panel) = shell.build_command_panel_ui() else {
         panic!("expected a Tree root");
     };

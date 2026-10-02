@@ -93,5 +93,4 @@ message ShootingSceneLighting {
   ShootingAmbient ambient = 3;
   ShootingShadow shadow = 4;
   ShootingMaterial material = 5;
-  optional string emblem_base64 = 6;
 }

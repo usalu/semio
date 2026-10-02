@@ -24,6 +24,18 @@ impl RotateSelection {
     pub fn motion(&self) -> LowpolySelectionMotion {
         LowpolySelectionMotion::Turn { pivot: self.pivot, axis: self.axis, angle: self.angle }
     }
+
+    /// 🧪️ The payload's own invariant, independent of any document: every vertex named once, a finite pivot, axis and
+    /// angle, and an axis other than the zero vector (`x-semio-invariant` `axis-nonzero`).
+    pub fn invariant_violation(&self) -> Option<String> {
+        if let Some(reason) = crate::mutations::lowpoly_selection_vertex_violation(&self.vertex_ids) {
+            return Some(reason);
+        }
+        if !self.pivot.iter().chain(&self.axis).chain([&self.angle]).all(|value| value.is_finite()) {
+            return Some("The pivot, axis and angle must be finite.".into());
+        }
+        self.axis.iter().all(|value| *value == 0.0).then(|| "The rotation axis must not be the zero vector.".into())
+    }
 }
 
 impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RotateSelection {
@@ -35,7 +47,7 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RotateSelectio
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         self.motion().label(&self.object_id, self.vertex_ids.len())
     }
     fn target(&self) -> Vec<String> {

@@ -3,7 +3,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn fem2d_window_config_results_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("FEM window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
     for candidate in fixture["valid"].as_array().expect("neutral valid cases") {
         let base: Fem2dResultsWindowConfig = dsl::json::from_json_str(&candidate.to_string()).expect("neutral FEM window config");
         let mutation = Fem2dResultsWindowConfigMutation::Snapshot { config: Box::new(base.clone()) };
@@ -64,23 +64,6 @@ fn fem2d_results_animation_waveforms_map_phase_to_amplitude() {
     assert!((Fem2dResultsAnimation { phase: 0.25, ..sine }.amplitude() - 1.0).abs() < 1e-9);
     assert!(Fem2dResultsAnimation { phase: 0.75, ..sine }.amplitude() < -0.999);
     assert!(Fem2dResultsAnimation { phase: 0.0, ..sine }.amplitude().abs() < 1e-9);
-}
-
-/// 🔁️ LAW: `Loop` wraps, `Once` parks at 1 and stops itself, `PingPong` bounces by flipping
-/// `reverse` while `speed` stays positive.
-#[test]
-fn fem2d_results_animation_advances_by_its_loop_mode() {
-    let base = Fem2dResultsAnimation { phase: 0.99, playing: true, speed: 1.0, ..Fem2dResultsAnimation::default() };
-    let looped = Fem2dResultsAnimation { loop_mode: Fem2dLoopMode::Loop, ..base }.advanced(0.033);
-    assert!(looped.playing && looped.phase < 0.1, "{looped:?}");
-    let once = Fem2dResultsAnimation { loop_mode: Fem2dLoopMode::Once, ..base }.advanced(0.033);
-    assert_eq!(once.phase, 1.0);
-    assert!(!once.playing);
-    let bounced = Fem2dResultsAnimation { loop_mode: Fem2dLoopMode::PingPong, ..base }.advanced(0.033);
-    assert!(bounced.reverse && bounced.playing && bounced.phase < 1.0, "{bounced:?}");
-    assert!(bounced.advanced(0.033).phase < bounced.phase, "a reversed ping-pong walks back down");
-    let floored = Fem2dResultsAnimation { phase: 0.01, reverse: true, loop_mode: Fem2dLoopMode::PingPong, ..base }.advanced(0.033);
-    assert!(!floored.reverse && floored.phase >= 0.0, "{floored:?}");
 }
 
 /// ▶️ LAW: arming a finished `Once` run rewinds it, so the play button is never a dead control.

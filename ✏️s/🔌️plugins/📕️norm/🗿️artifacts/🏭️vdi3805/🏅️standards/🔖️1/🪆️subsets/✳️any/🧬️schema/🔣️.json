@@ -11,7 +11,8 @@
     "strictMode",
     "index",
     "geometry",
-    "curves"
+    "curves",
+    "limits"
   ],
   "properties": {
     "catalog": {
@@ -21,7 +22,11 @@
     "editionProfile": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "legacy",
+          "current"
+        ]
       },
       "x-semio-state": "artifact"
     },
@@ -88,7 +93,9 @@
           "type": "string"
         },
         "sequence": {
-          "type": "integer"
+          "type": "integer",
+          "maximum": 4294967295,
+          "minimum": 0
         }
       }
     },
@@ -136,7 +143,9 @@
           "type": "string"
         },
         "recordCount": {
-          "type": "integer"
+          "type": "integer",
+          "maximum": 4294967295,
+          "minimum": 0
         },
         "extensions": {
           "$ref": "#/$defs/ExtensionFields"
@@ -184,7 +193,9 @@
               "const": "valveHeating"
             },
             "dn": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 0
             },
             "kvsM3S": {
               "type": "number"
@@ -254,10 +265,14 @@
               "const": "pumpHeating"
             },
             "dnSuction": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 0
             },
             "dnDischarge": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 0
             },
             "nominalFlowM3S": {
               "type": "number"
@@ -396,7 +411,9 @@
           }
         },
         "sheet": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
         "records": {
           "type": "array",
@@ -456,10 +473,14 @@
       ],
       "properties": {
         "year": {
-          "type": "integer"
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 0
         },
         "month": {
-          "type": "integer"
+          "type": "integer",
+          "maximum": 255,
+          "minimum": 0
         }
       }
     },
@@ -476,7 +497,9 @@
           "type": "string"
         },
         "sheet": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
         "tags": {
           "type": "array",
@@ -488,7 +511,9 @@
           "type": [
             "integer",
             "null"
-          ]
+          ],
+          "minimum": 0,
+          "maximum": 65535
         }
       }
     },
@@ -630,23 +655,25 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "xUnit",
+        "yUnit",
         "points"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "points": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CurvePoint"
-          }
-        },
         "xUnit": {
           "$ref": "#/$defs/VdiUnit"
         },
         "yUnit": {
           "$ref": "#/$defs/VdiUnit"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          }
         }
       }
     },
@@ -684,21 +711,21 @@
       "required": [
         "symbol",
         "kind",
-        "siFactor",
-        "delta"
+        "delta",
+        "siFactor"
       ],
       "properties": {
         "symbol": {
           "type": "string"
         },
         "kind": {
-          "type": "string"
-        },
-        "siFactor": {
-          "type": "number"
+          "$ref": "#/$defs/VdiQuantityKind"
         },
         "delta": {
           "type": "boolean"
+        },
+        "siFactor": {
+          "type": "number"
         }
       }
     },
@@ -719,7 +746,8 @@
         },
         "quantity": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -736,7 +764,8 @@
         },
         "quantity": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -776,6 +805,30 @@
           }
         }
       }
+    },
+    "VdiQuantityKind": {
+      "type": "string",
+      "enum": [
+        "dimensionless",
+        "length",
+        "area",
+        "volume",
+        "mass",
+        "time",
+        "temperature",
+        "force",
+        "pressure",
+        "stress",
+        "moment",
+        "energy",
+        "power",
+        "thermalConductivity",
+        "thermalResistance",
+        "heatTransferCoefficient",
+        "airPermeability",
+        "ventilationRate",
+        "acceleration"
+      ]
     }
   }
 }

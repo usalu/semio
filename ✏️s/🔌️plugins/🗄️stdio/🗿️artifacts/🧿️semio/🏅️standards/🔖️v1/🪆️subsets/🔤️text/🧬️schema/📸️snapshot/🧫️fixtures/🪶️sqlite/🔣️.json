@@ -36,6 +36,11 @@
     }
   ],
   "editedContent": "SQLite 🌠",
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32
+  },
   "query": "SELECT r.language,r.content,m.kind,m.href FROM semio_text_run r LEFT JOIN semio_text_mark m ON m.run_id=r.id ORDER BY r.ordinal,m.ordinal",
   "sqliteDialect": {
     "artifactKind": "s.stdio.semio",
@@ -58,5 +63,6 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeOutputBytes": 100000
 }

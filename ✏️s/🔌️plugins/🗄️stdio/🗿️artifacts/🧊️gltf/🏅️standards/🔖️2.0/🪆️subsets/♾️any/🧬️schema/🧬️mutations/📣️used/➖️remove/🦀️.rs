@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExt
         vec![super::GltfMutation::RemoveUsedExtension(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove Used Extension", "Verwendete Erweiterung entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove Used Extension", "Verwendete Erweiterung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

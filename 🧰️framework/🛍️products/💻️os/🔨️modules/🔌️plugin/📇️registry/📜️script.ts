@@ -21,7 +21,7 @@ class LaunchNameContractTestScript extends BundleScript {
 class AssetContractTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test-asset-contract has no arguments");
-    const { proveTileProxyAssetCorpusV1, proveTileProxyTransportV1, proveTileAssetMetadataV1 } = await import("./🎮️playground/🗂️assets/🧪️tests/🟦️.ts");
+    const { proveTileProxyAssetCorpusV1, proveTileProxyTransportV1, proveTileAssetMetadataV1 } = await import("./🎮️playground/🖼️assets/🧪️tests/🟦️.ts");
     console.log(`playground-asset-contract: cases=${proveTileProxyAssetCorpusV1()} passed`);
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!artifactRoot) throw Error("test-asset-contract requires a ticket artifact directory");

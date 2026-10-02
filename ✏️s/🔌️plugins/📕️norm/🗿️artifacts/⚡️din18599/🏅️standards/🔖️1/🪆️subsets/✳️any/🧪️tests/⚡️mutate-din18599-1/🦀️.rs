@@ -3,7 +3,7 @@
 //! `din18599-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
 //! `Din18599Mutation` vocabulary — a energy-balance building: document scalars, whole-facet system specifications, zone and element lists and the composed climate child.
 //!
-//! ⚖️ Every law is asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module, reached
+//! ⚖️ Every law is asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module, reached
 //! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
 //! the SAME committed bytes: the feature is the single place a vector path is written down, and each handler resolves
 //! exactly the `(before, mutation, after, outcome)` URIs its own scenario's steps name.
@@ -16,7 +16,7 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::{apply_din18599_mutation, decode_din18599_mutation_json, inverse_din18599_mutation, Din18599Mutation};
     use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::{decode_din18599_dsl, decode_din18599_pack, decode_din18599_snapshot_json, encode_din18599_dsl, encode_din18599_pack, encode_din18599_snapshot_json, Din18599Snapshot};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     /// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
     const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";

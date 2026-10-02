@@ -21,6 +21,7 @@ use crate::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_contract::deserialize_double_option;
 #[cfg(test)]
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
@@ -167,18 +168,6 @@ pub struct PptxRunDiff {
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = font_size cleared, `Some(Some(sz))` = set.
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub font_size: Option<Option<u32>>,
-}
-
-/// 🕳️ Standard double-`Option` workaround (same helper `🧿️semio`'s `🏛️model` mutations carry, and the
-/// shape the value derive's own docs call `deserialize_double_option`): the derive's blanket
-/// `impl<T: FromValue> FromValue for Option<T>` reads `Null` as absence at ANY nesting depth, so a
-/// plain `Option<Option<u32>>` field collapses "cleared" (`Some(None)`) into "untouched" (`None`)
-/// on decode — which silently dropped the `font_size` clear out of every `print_diff`/`parse_diff`
-/// round trip. Paired with `skip_serializing_if = "Option::is_none"` (untouched omits the key
-/// entirely), key-PRESENT-with-`Null` now unambiguously means `Some(None)`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

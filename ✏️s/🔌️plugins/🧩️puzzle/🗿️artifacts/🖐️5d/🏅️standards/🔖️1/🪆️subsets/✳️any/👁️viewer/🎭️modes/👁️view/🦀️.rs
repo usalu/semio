@@ -3,7 +3,10 @@
 //! read-only 5d document shows BOTH projections instead of the world one alone.
 
 use crate::viewer::puzzle5d::modes::view::windows::{board2d, world3d};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const PUZZLE5D_VIEW_MODE_VIEW: &str = "view";
 

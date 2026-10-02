@@ -39,34 +39,6 @@ impl Fem2dResultsAnimation {
         }
     }
 
-    /// ⏱️ The state one fixed frame later, with the loop mode applied. `Once` parks at 1 and stops
-    /// itself; `PingPong` bounces off both ends by flipping `reverse` (`speed` never goes negative).
-    pub fn advanced(&self, seconds: f64) -> Self {
-        let mut next = *self;
-        let step = self.speed.clamp(ANIMATION_SPEED_MINIMUM, ANIMATION_SPEED_MAXIMUM) * seconds;
-        match self.loop_mode {
-            Fem2dLoopMode::Loop => next.phase = (self.phase + step).rem_euclid(1.0),
-            Fem2dLoopMode::Once => {
-                let phase = self.phase + step;
-                next.phase = phase.min(1.0);
-                next.playing = phase < 1.0;
-            }
-            Fem2dLoopMode::PingPong => {
-                let phase = if self.reverse { self.phase - step } else { self.phase + step };
-                if phase > 1.0 {
-                    next.phase = (2.0 - phase).clamp(0.0, 1.0);
-                    next.reverse = true;
-                } else if phase < 0.0 {
-                    next.phase = (-phase).clamp(0.0, 1.0);
-                    next.reverse = false;
-                } else {
-                    next.phase = phase;
-                }
-            }
-        }
-        next
-    }
-
     /// ▶️ Arms playback: a `Once` run that already sits at its end rewinds, so the play button is
     /// never a control that visibly does nothing.
     pub fn start(&mut self) {
@@ -208,6 +180,15 @@ impl semio_framework_plugin::WindowConfigOwner for Fem2dResultsWindowConfigOwner
 
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem2dResultsWindowConfig {
     view.window::<Fem2dResultsWindowConfigOwner>().cloned().unwrap_or_default()
+}
+
+/// 🎞️ The configuration the results window DRAWS: the persisted transport with the running clock's
+/// phase and direction folded in while the window plays, the resting phase otherwise.
+pub fn effective(config: &Fem2dResultsWindowConfig, clock: Option<&super::transient::Fem2dPlaybackClock>) -> Fem2dResultsWindowConfig {
+    match clock {
+        Some(clock) => Fem2dResultsWindowConfig { animation: clock.parked_into(&config.animation), ..config.clone() },
+        None => config.clone(),
+    }
 }
 
 /// 🪟️ The captured results-window partition, or `None` when the projection captured another window

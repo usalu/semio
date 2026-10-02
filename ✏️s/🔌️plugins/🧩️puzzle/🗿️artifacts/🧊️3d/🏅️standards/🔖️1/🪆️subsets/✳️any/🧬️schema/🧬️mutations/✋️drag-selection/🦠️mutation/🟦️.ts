@@ -1,5 +1,2 @@
-/** ✋️ `drag-selection` payload — a relative drag of objects and target volumes by one world offset; mirrors Rust `DragSelection` (`../🦀️.rs`). */
-export interface DragSelection {
-  targets: string[];
-  offset: [number, number, number];
-}
+/** 🧬️ One canonical mutation payload shared by every owning consumer. */
+export type {DragSelection} from "../../🟦️.ts";

@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
         vec![Self { selected_generation_id: base.selected_generation_id.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Selected Generation", "Ausgewählte Erzeugung setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Selected Generation", "Ausgewählte Erzeugung setzen")
     }
 
     fn target(&self) -> Vec<String> {

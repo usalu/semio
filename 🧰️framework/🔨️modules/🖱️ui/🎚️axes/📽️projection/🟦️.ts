@@ -1,7 +1,7 @@
 import type { UiAxes, UiAxisEntry } from "../📥️source/🟦️.ts";
 
 function emitRustEnum(name: string, entries: readonly UiAxisEntry[]): string {
-  const variants = entries.map((entry, index) => `    ${index === 0 ? "#[default]\n    " : ""}${entry.variant},`).join("\n");
+  const variants = entries.map((entry, index) => (index === 0 ? `    #[default]\n    ${entry.variant},` : `    ${entry.variant},`)).join("\n");
   const asStrArms = entries.map((entry) => `            ${name}::${entry.variant} => ${JSON.stringify(entry.id)},`).join("\n");
   const indexArms = entries.map((entry, index) => `            ${name}::${entry.variant} => ${index},`).join("\n");
   const parseArms = entries.map((entry) => `            ${JSON.stringify(entry.id)} => Some(${name}::${entry.variant}),`).join("\n");

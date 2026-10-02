@@ -1,3 +1,4 @@
+import{parseFormsJsonResponse,formsResponseJson,parseFormsJsonDefinition,parseFormsJsonValue}from"../../../🌱️value/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️events.json";
@@ -9,13 +10,13 @@ import { parseFormsResponse, applyResponseEvent, inverseResponseEvent, type Form
 /** 📨️ Submission, retraction and undo share fixtures and independent JSON Patch outcomes. */
 export function testFormsResponses(): void {
   for (const item of fixture.cases) {
-    const event = item.event as FormsResponseEvent;
-    if ("error" in item) assert.throws(() => applyResponseEvent(item.before, event), { message: item.error }, item.name);
+    const raw=item.event;const event:FormsResponseEvent=raw.mutation==="commitResponse"?{...raw,response:parseFormsJsonResponse(raw.response)}as FormsResponseEvent:raw as FormsResponseEvent;const before=item.before.map(parseFormsJsonResponse);
+    if ("error" in item) assert.throws(() => applyResponseEvent(before, event), { message: item.error }, item.name);
     else {
-      const actual = applyResponseEvent(item.before, event);
-      assert.deepEqual(actual, item.after, item.name);
-      assert.deepEqual(actual, applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
-      assert.deepEqual(inverseResponseEvent(item.before, event).reduce(applyResponseEvent, actual), item.before, item.name);
+      const actual = applyResponseEvent(before, event);
+      assert.deepEqual(actual.map(formsResponseJson), item.after, item.name);
+      assert.deepEqual(actual.map(formsResponseJson), applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
+      assert.deepEqual(inverseResponseEvent(before, event).reduce(applyResponseEvent, actual).map(formsResponseJson), item.before, item.name);
     }
   }
   const validate = semioSchemaAjvV1().compile(responseSchema);
@@ -34,8 +35,8 @@ export async function testFormsSubmission(): Promise<void> {
   const { default: responseSchema } = await import("../../🔣️.json");
   const validate = semioSchemaAjvV1().compile(responseSchema);
   for (const test of input.cases) {
-    const result = prepareResponse(input.definition as import("../../../📝️definition/🟦️.ts").FormsDefinition, test.values, input.metadata);
-    assert.deepEqual(result, test.expected, test.name);
-    if (result.response) assert.equal(validate(result.response), true, test.name);
+    const result = prepareResponse(parseFormsJsonDefinition(input.definition), Object.fromEntries(Object.entries(test.values).map(([key,value])=>[key,parseFormsJsonValue(value)])), input.metadata);
+    assert.deepEqual({...result,response:result.response?formsResponseJson(result.response):null}, test.expected, test.name);
+    if (result.response) assert.equal(validate(formsResponseJson(result.response)), true, test.name);
   }
 }

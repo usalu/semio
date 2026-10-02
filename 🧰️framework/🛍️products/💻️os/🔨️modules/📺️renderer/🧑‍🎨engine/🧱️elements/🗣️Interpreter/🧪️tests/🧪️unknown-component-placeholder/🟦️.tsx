@@ -89,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region CorpusConformance
-  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 71 cases) —
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 76 cases) —
    * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
    * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
    * into a real `📃️UiDocumentStore` and asserts the retained tree shape, every node's accessibility
@@ -151,8 +151,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 71 corpus fixtures", () => {
-      expect(cases.length).toBe(71);
+    it("loads all 76 corpus fixtures", () => {
+      expect(cases.length).toBe(76);
     });
 
     for (const testCase of cases) {
@@ -254,6 +254,58 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const overwrite = choices.container.querySelector<HTMLButtonElement>('button[aria-label="Overwrite"]')!;
       const described = (overwrite.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
       expect(described).toContain("Replaces the edited mutations in every alternative that contains them.");
+      cleanup();
+    });
+
+    /** 🧭️ The G6 number-control cases render every descriptor facet: a degree dial with its detent ticks and display-unit
+     * numbers, log-axis ticks, a display factor read back exactly, stepper detents on the page keys, and a hard-bound refusal
+     * that keeps the draft, names the bound and dispatches nothing. */
+    it("renders the dial, log, display-factor, detent and hard-bound cases with every facet", async () => {
+      const { render, cleanup, fireEvent } = await import("@semio-tech/ui-react/test");
+      const intents = vi.fn();
+      const actions = vi.fn();
+      const mount = (name: string) => {
+        const testCase = cases.find((candidate) => candidate.name === name)!;
+        const store = new UiDocumentStore(testCase.snapshot.surface);
+        store.loadSnapshot(testCase.snapshot);
+        return render(<UiNodeView store={store} id={testCase.snapshot.root} context={{ store, onAction: actions, onIntent: intents }} />);
+      };
+      const dial = mount("dial-with-snaps");
+      expect(dial.container.querySelector('[data-slot="slider-dial"]')).not.toBeNull();
+      expect(dial.container.querySelectorAll('[data-slot="slider-tick"]').length).toBe(5);
+      const angle = dial.container.querySelector<HTMLElement>('[role="slider"]')!;
+      expect(["aria-valuemin", "aria-valuemax", "aria-valuenow", "aria-valuetext", "aria-label"].map((name) => angle.getAttribute(name))).toEqual(["-180", "180", "90", "90 °", "Angle"]);
+      expect(dial.container.querySelector('[data-slot="slider-value"]')!.textContent).toBe("90");
+      cleanup();
+      const log = mount("log-slider");
+      const ticks = [...log.container.querySelectorAll<HTMLElement>('[data-slot="slider-tick"]')].map((tick) => Number.parseFloat(tick.style.left));
+      expect(ticks.map((tick) => Number(tick.toFixed(6)))).toEqual([0.25, 0.5, 1, 2, 4].map((snap) => Number(((Math.log(snap / 0.1) / Math.log(100)) * 100).toFixed(6))));
+      expect(log.container.querySelector('[data-slot="slider-value"]')!.textContent).toBe("1.00");
+      cleanup();
+      const heading = mount("display-factor");
+      const degrees = heading.container.querySelector<HTMLInputElement>('[data-stepper-input="true"]')!;
+      expect([degrees.value, degrees.getAttribute("aria-valuetext")]).toEqual(["45", "45 °"]);
+      expect(heading.container.querySelector('[data-slot="stepper-unit"]')!.textContent).toBe("°");
+      cleanup();
+      const gap = mount("stepper-detents");
+      const field = gap.container.querySelector<HTMLInputElement>('[data-stepper-input="true"]')!;
+      expect(field.value).toBe("2.0");
+      fireEvent.keyDown(field, { key: "PageUp" });
+      expect(field.value).toBe("5.0");
+      cleanup();
+      intents.mockClear();
+      actions.mockClear();
+      const width = mount("hard-bound-refusal");
+      const number = width.container.querySelector<HTMLInputElement>('input[type="number"]')!;
+      fireEvent.change(number, { target: { value: "-1" } });
+      fireEvent.blur(number);
+      expect(width.container.querySelector('[role="alert"]')?.textContent).toBe("Must be greater than 0");
+      expect([number.value, number.getAttribute("aria-invalid")]).toEqual(["-1", "true"]);
+      fireEvent.change(number, { target: { value: "120" } });
+      fireEvent.blur(number);
+      expect(width.container.querySelector('[role="alert"]')?.textContent).toBe("Must be at most 100");
+      expect(intents).not.toHaveBeenCalled();
+      expect(actions).not.toHaveBeenCalled();
       cleanup();
     });
   });

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "formerOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🧪️tests/🏷️localized-label-fixture/🟦️.ts",
+  "owner": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🏷️localized-label-fixture/🟦️.ts",
+  "retainedTextSha256": "13467f99b6cec5aeb9bd787d923ed34a2bd3a83a9a2e586839e3baaf43d8cffb",
+  "generalConfig": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎚️config/🟦️.ts",
+  "specificConfig": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🏷️localized-label-fixture/🎚️config/🟦️.ts",
+  "generalRoot": "🧰️framework/🔨️modules/🎠️kernel",
+  "generalIncludes": [
+    "🧪️tests/🔬️scope-contributions/🟦️.ts",
+    "🧪️tests/🏷️history-entry-label/🟦️.ts",
+    "🧪️tests/🧪️history-patch/🟦️.ts",
+    "🧪️tests/🧪️history-notices/🟦️.ts"
+  ],
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧫️fixtures/🏷️localized-label/🔣️.json",
+      "sha256": "24973dd6b159fd038897b366f1b706e08d0307825d7126793638851869960728"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧬️schema/🏷️localized-label/🔣️.json",
+      "sha256": "9c063f631c1e4e6cbef0ed2536c3441784dac12bfd53f708d9d0a9f313c55d4a"
+    }
+  ],
+  "productRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub",
+    "🏢️semio-tech",
+    "♻️mit-bestand"
+  ],
+  "target": "@semio-tech/framework-kernel:test-localized-label",
+  "script": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📜️script.ts",
+  "project": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📋️project.json",
+  "generalInputDirectories": [
+    "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures",
+    "🧰️framework/🔨️modules/🎠️kernel/🧬️schema"
+  ],
+  "generalIncludeSource": [
+    "*.ts",
+    "📤️return/📦️content/🟦️.ts"
+  ],
+  "generalTestCount": 75
+}

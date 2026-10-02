@@ -47,11 +47,15 @@ semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀�
 # canvas-presence twin (`🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu`) paints peers with. Workspace-internal.
 replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-os-config = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-os-shell = { workspace = true }
 # ⏪️ The time-travel session's own EN/DE stage and refusal labels (`TimeTravelLabel`) the shell's time-travel band
 # reads, so the band and the Rust-built History body say the same words. Target-neutral, workspace-internal.
 semio-framework-time-travel = { workspace = true }
-ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+# 🖊️ The drawing text line law (`drawing_text_lines`, `DRAWING_TEXT_LINE_HEIGHT`) the Canvas2d scene-node paint lays
+# text out with — the very law React's `drawSceneNode` imports from `◻️2d`. Target-neutral, workspace-internal.
+semio-framework-2d = { workspace = true }
+ui_wgpu ={ path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 # 🖥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `winit_app.rs`/`os_host.rs` already
 # named `ui_host::{WindowDelegate, WindowMetrics, RedrawOutcome, should_request_redraw, PointerRegistry,
@@ -187,3 +191,6 @@ ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️p
 # read) must answer the roles, names, actions and focus the language-agnostic fixture declares.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 accesskit_consumer = "0.39.1"
+
+[dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

@@ -1,5 +1,5 @@
 import { DOCUMENT_SERVICE_TOPIC_V1, InstalledServiceRegistryV1, parseDocumentServiceDeclarationV1, documentServiceRequestV1, type InstalledServiceDriverV1, type DocumentServiceDeclarationV1 } from "../../💡️inference/🔌️service/🟦️.ts";
-import { compileDocumentJsonSchemaV1 } from "../../../../../🔨️modules/🧬️schema/🌐️document-http/🟦️.ts";
+import { compileDocumentJsonSchemaV1 } from "../../📇️directory/🔌️client/🌐️document-http/🟦️.ts";
 // #region Header
 /**
  * 🧵️ `🏪️store/👷️worker/🟦️.ts` — browser backbone loader. Authenticated hub

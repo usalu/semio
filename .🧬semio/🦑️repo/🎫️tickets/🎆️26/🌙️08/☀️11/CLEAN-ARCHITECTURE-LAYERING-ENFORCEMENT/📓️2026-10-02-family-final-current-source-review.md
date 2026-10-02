@@ -1,0 +1,13 @@
+# Final bounded current family source review
+
+Read-only snapshot; no compiler or test execution. Owner is Repo library `🕸️dependencies/🧭️direction/🦀️source/📍️ownership`. Concurrent implementation remains in progress.
+
+## Current evidence
+
+The new constructor/value predicate is **not yet present** in the inspected source: lines114–122 retain the predecessor whitelist and empty-consumer continuation described in the prior value-occurrence report. Accordingly tuple constructor after `{`, return constructor, and bare struct/pattern heads cannot yet be credited as covered. High was notified before writing this receipt. Qualified associated routes still feed the binding inspector and explicit refusal. A future value predicate must exclude `.EngineKey` member access, declaration heads, and field labels followed by `:` rather than turning those ordinary namespaces into provider authority. This is a requested classification distinction, not a demand to reserve unrelated fields or Engine names.
+
+Activation now accepts `{sources,graph}` (line24), derives dependency aliases from captured manifest package overrides (lines27–32), and uses source participation manifest contexts (line27). It performs no new physical traversal. The executor at `source/🏃️execution/🟦️.ts:143–147` passes the already captured map and graph, refuses absent captured physical contract when active, and runs the inspector using that same inventory.
+
+The current fixture has **31 ownership cases and10 activation cases**; schema min/max match31/10 exactly. The portable test iterates all cases and all activation cases. The native harness now separately iterates every `.rs` activation source (native test lines15–17), a genuine extension beyond the earlier report where activation sources were not compiled. No current runtime result is claimed. Its activation compile arguments always use `--extern semio_framework_2d`; when a new Cargo-alias activation row is authored, the independent harness must also supply the alias extern name from its captured manifest rather than making a valid alias row fail for a harness-only reason. The current last two activation rows are canonical qualified/imported trait bounds; no renamed-provider activation row is present in this read.
+
+The bounded constructor/return/associated-route matrix remains the smallest concrete completion proof. Extend closed roster/schema/native output together; retain all31 original cases and10 activation rows. Alias activation must distinguish actual package override from unrelated external Engine and preserve explicit unproven scope/provider outcomes.

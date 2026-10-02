@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.raster.raster` is a LAYERED DOCUMENT, not an image file: its pixels live behind ids in a root `assets` pool and the vocabulary edits the layer tree around them, so a raster codec is a reader of a different artifact. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed mutation schema, grammar and specification vectors.",
   "oracles": [
@@ -248,6 +248,45 @@
               "directoryName": "🚫️rejects"
             }
           ]
+        },
+        {
+          "mutationId": "fill-region",
+          "sourceMutationDirectoryName": "🪣️fill-region",
+          "mutationDirectoryName": "🪣️fill-region",
+          "scenarios": [
+            {
+              "id": "fills-a-blank-layer-from-its-seed",
+              "directoryName": "🪣️fills"
+            },
+            {
+              "id": "stops-at-a-wall-of-another-colour",
+              "directoryName": "🧱️walls"
+            },
+            {
+              "id": "hides-the-mask-around-the-seed",
+              "directoryName": "🎭️masks"
+            },
+            {
+              "id": "leaves-a-region-already-that-colour",
+              "directoryName": "⚠️unchanged"
+            },
+            {
+              "id": "refuses-a-locked-layer",
+              "directoryName": "🔒️locked"
+            },
+            {
+              "id": "refuses-a-layer-the-document-lacks",
+              "directoryName": "🚫️rejects"
+            },
+            {
+              "id": "refuses-a-seed-outside-the-image",
+              "directoryName": "📍️outside"
+            },
+            {
+              "id": "clips-the-region-to-the-selection",
+              "directoryName": "✂️clips"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -268,7 +307,8 @@
         "change-layer-adjustment-parameter",
         "change-layer-locked",
         "change-layer-transform",
-        "paint-stroke"
+        "paint-stroke",
+        "fill-region"
       ]
     }
   ],
@@ -646,6 +686,27 @@
             "operation": "paint-stroke",
             "bridgeVersion": 1,
             "variant": "PaintStroke"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "fill-region",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "fill-region",
+            "bridgeVersion": 1,
+            "variant": "FillRegion"
           },
           "oracleRequirements": [
             {

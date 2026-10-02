@@ -27,8 +27,8 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for InsertNode
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
         agg_inverse(&SemioFlowMutation::InsertNode(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert node", "Knoten einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert node", "Knoten einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

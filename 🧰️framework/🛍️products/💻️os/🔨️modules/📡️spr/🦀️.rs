@@ -52,9 +52,8 @@ pub use crate::os_spr::wire::{
     decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
 };
-pub use crate::os_spr::wire::{
-    read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64, ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy,
-};
+pub use {crate::os_spr::wire::read_f64, crate::os_spr::wire::read_str, crate::os_spr::wire::read_varint_u64, crate::os_spr::wire::write_f64, crate::os_spr::wire::write_str, crate::os_spr::wire::write_varint_u64, crate::os_spr::wire::ActorId, crate::os_spr::wire::ArtifactId, crate::os_spr::wire::ArtifactVersion, crate::os_spr::wire::HybridLogicalTimestamp, crate::os_spr::wire::MergePolicy, crate::os_spr::wire::MutationId, crate::os_spr::wire::PayloadHash, crate::os_spr::wire::SchemaId, crate::os_spr::wire::SchemaVersion, crate::os_spr::wire::UndoPolicy};
+use semio_framework_schema_state::StateClass;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Compile

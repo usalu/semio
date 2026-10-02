@@ -1,0 +1,7 @@
+# 🧬️ MoveNodes mutation payload.
+
+type MoveNodes {
+  nodeIds: [String!]!
+  dx: Float!
+  dy: Float!
+}

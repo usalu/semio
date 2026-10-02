@@ -5,7 +5,9 @@
 
 use crate::ProcedureSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -29,7 +31,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(document: &ProcedureSnapshot, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::procedure_working_scene(document).path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
-    let columns = if view_state.locale == semio_framework_plugin::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
+    let columns = if view_state.locale == semio_framework_ui_locale::Locale::De { vec!["#".into(), "ID".into(), "Art".into()] } else { vec!["#".into(), "Id".into(), "Kind".into()] };
     TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render

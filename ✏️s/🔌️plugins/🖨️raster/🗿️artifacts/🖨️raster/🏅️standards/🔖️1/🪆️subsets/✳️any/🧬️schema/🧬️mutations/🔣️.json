@@ -56,6 +56,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/paint-stroke/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/fill-region/schema.json"
     }
   ]
 }

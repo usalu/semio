@@ -8,7 +8,15 @@
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
 use crate::{SequenceStep, SequenceWorkingScene};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphEdgeRecord;
+use semio_framework_plugin::NodeGraphNodeRecord;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_os_kernel::Viewport2d;
 
 //#region 🔖️Constants

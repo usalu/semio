@@ -83,7 +83,8 @@
         "version",
         "shared",
         "manifests",
-        "inputAreas"
+        "inputAreas",
+        "policy"
       ],
       "properties": {
         "$schema": {
@@ -149,6 +150,33 @@
             "type": "string",
             "minLength": 1,
             "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\%?#\\u0000-\\u001f]+$"
+          }
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "excludedInputPaths",
+            "genericEmojiIdentities"
+          ],
+          "properties": {
+            "excludedInputPaths": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[/]$)[^\\\\%?#\\u0000-\\u001f]+$"
+              }
+            },
+            "genericEmojiIdentities": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           }
         }
       }

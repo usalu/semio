@@ -82,7 +82,7 @@ fn every_target_row_names_the_session_its_window_kind_evaluates() {
         let kind = text(&row["kind"]);
         let expected = (!row["target"].is_null()).then(|| target_of(&row["target"]));
         assert_eq!(crate::editor::generation2d::generation2d_preview_target(kind), expected, "{kind}");
-        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..Default::default() };
+        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         assert_eq!(crate::editor::generation2d::generation2d_preview_windows(Some(&view)).iter().map(|(_, _, target)| *target).collect::<Vec<_>>(), expected.into_iter().collect::<Vec<_>>(), "{kind}: roster");
     }
     assert!(attached_preview_windows(None, &[("generation2d-preview", PreviewEvalTarget::Document)]).is_empty(), "no roster before the first surface");

@@ -1,0 +1,130 @@
+{
+  "climateZone": "Zone4",
+  "usage": "arbitrary persisted use 世界\u0000",
+  "tIntC": 20.25,
+  "rhInt": -0.5,
+  "hasMechanicalVentilation": true,
+  "airtightnessN50": 1.25,
+  "bb2DetailsConform": false,
+  "zones": [
+    {
+      "id": "same zone 世界",
+      "floorAreaM2": 120.25,
+      "heaviness": "arbitrary heaviness",
+      "nightVentilation": "arbitrary ventilation",
+      "windows": [
+        {
+          "id": "same window",
+          "orientation": "arbitrary orientation",
+          "inclinationDeg": 90.25,
+          "areaM2": 12.5,
+          "gValue": -0.7,
+          "shadingFc": 0.5
+        },
+        {
+          "id": "same window",
+          "orientation": "",
+          "inclinationDeg": -90.25,
+          "areaM2": -12.5,
+          "gValue": 0.7,
+          "shadingFc": -0.5
+        }
+      ]
+    },
+    {
+      "id": "same zone 世界",
+      "floorAreaM2": -120.25,
+      "heaviness": "",
+      "nightVentilation": "",
+      "windows": []
+    }
+  ],
+  "elements": [
+    {
+      "id": "same element 世界",
+      "kind": "arbitrary kind",
+      "zoneId": "same zone 世界",
+      "orientationDeg": -180.25,
+      "inclinationDeg": 90.125,
+      "adjacent": "arbitrary adjacency",
+      "areaM2": 60.5,
+      "deltaUG": -0.01,
+      "deltaUF": 0.02,
+      "deltaUR": -0.03,
+      "layers": [
+        {
+          "id": "same layer",
+          "materialId": "arbitrary material",
+          "thicknessM": 0.125,
+          "lambda": -0.035,
+          "mu": 1.25,
+          "density": -30.5,
+          "applicationType": "arbitrary application",
+          "compressiveClass": "arbitrary compressive",
+          "waterClass": "arbitrary water",
+          "tensileClass": "arbitrary tensile",
+          "acousticClass": "arbitrary acoustic",
+          "segments": [
+            {
+              "id": "same segment",
+              "materialId": "first material\u0000",
+              "fraction": 0.85,
+              "lambda": 0.035,
+              "mu": -1.25,
+              "density": 30.5
+            },
+            {
+              "id": "same segment",
+              "materialId": "",
+              "fraction": -0.85,
+              "lambda": -0.035,
+              "mu": 1.25,
+              "density": -30.5
+            }
+          ]
+        },
+        {
+          "id": "same layer",
+          "materialId": "",
+          "thicknessM": -0.125,
+          "lambda": 0.035,
+          "mu": -1.25,
+          "density": 30.5,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        }
+      ]
+    },
+    {
+      "id": "same element 世界",
+      "kind": "",
+      "zoneId": "missing zone",
+      "orientationDeg": 180.25,
+      "inclinationDeg": -90.125,
+      "adjacent": "",
+      "areaM2": -60.5,
+      "deltaUG": 0.01,
+      "deltaUF": -0.02,
+      "deltaUR": 0.03,
+      "layers": []
+    }
+  ],
+  "thermalBridges": [
+    {
+      "id": "same bridge",
+      "psi": 0.125,
+      "lengthM": -24.5,
+      "bb2Type": "arbitrary bridge type"
+    },
+    {
+      "id": "same bridge",
+      "psi": -0.125,
+      "lengthM": 24.5,
+      "bb2Type": ""
+    }
+  ]
+}

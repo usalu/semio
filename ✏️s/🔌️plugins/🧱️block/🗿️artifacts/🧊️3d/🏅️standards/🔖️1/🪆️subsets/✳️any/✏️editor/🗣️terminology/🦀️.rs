@@ -5,7 +5,7 @@
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the block3d-play app; one field per label makes every locale
 // combination compile-checked. No separate reuse-terminology concept, so reuse repeats native.
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     pub struct Block3dLabels {
         window_world: native_en "Object Kind", native_de "Objektart", reuse_en "Object Kind", reuse_de "Objektart";
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";

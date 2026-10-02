@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetFrame
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
         agg_inverse(&SemioImageMutation::SetFramePixels(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set frame pixels", "Pixel des Einzelbilds setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame pixels", "Pixel des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn sequence_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
     let base_config: SequenceMainWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
     let base_transient: SequenceScriptWindowTransient = dsl::json::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
     for row in fixture["configMutations"].as_array().unwrap() {

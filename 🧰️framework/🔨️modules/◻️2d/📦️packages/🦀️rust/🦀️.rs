@@ -4,15 +4,13 @@
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, superseded by `✳️drawing`'s
 //! real `ArtifactStore` + 17 mutation triads + `🎛flattened-scene` inference.
 
-pub use semio_framework_os_kernel::os_spr;
 
 #[path = "../../⚙️engine/🦀️.rs"]
 pub mod engine;
 pub use engine::*;
 
-#[path = "../../../../🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs"]
-pub mod os_engine;
-pub use os_engine::{Engine, EngineCache, EngineFault, EngineHandle as KernelEngineHandle, EngineKey};
+#[path = "../../🧮️compute/🦀️.rs"]
+pub mod compute;
 
 #[cfg(feature = "booleans")]
 #[path = "../../🔀️booleans/🦀️.rs"]

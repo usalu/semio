@@ -11,7 +11,7 @@ use crate::viewer::space_index::modes::view;
 use crate::viewer::space_index::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions this wave (no utilities, no mutations), so its typed command
@@ -63,7 +63,7 @@ impl ArtifactViewer for SpaceIndexViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, view_state)?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

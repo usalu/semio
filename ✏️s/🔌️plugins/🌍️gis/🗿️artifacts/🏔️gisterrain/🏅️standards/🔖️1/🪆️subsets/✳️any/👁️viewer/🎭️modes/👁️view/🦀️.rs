@@ -2,7 +2,12 @@
 //! counterpart of the editor's own `view` mode.
 
 use crate::viewer::gisterrain::modes::view::windows::terrain;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const GIS_TERRAIN_VIEW_MODE_VIEW: &str = "view";
 

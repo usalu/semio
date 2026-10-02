@@ -5,6 +5,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 use crate::CurationSnapshot;
 impl store::ArtifactPack for CurationSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.validate().map_err(store::PackError::Schema)?;
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;

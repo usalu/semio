@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 /** 🐚️ `@semio-tech/trinity-jack-shell` router: `bun ./📜️script.ts test` / `bun ./📜️script.ts run [args…]`. */
 import { join } from "node:path";
-import { runCargoTestBudgeted } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const BINARY_NAME = "semio-s-artifact-trinity-jack-shell";
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted([BINARY_NAME], this.repoRoot);
+  async run(_segments: string[]): Promise<void> {
+    await runRepositoryCargoTests([BINARY_NAME], this.repoRoot);
   }
 }
 

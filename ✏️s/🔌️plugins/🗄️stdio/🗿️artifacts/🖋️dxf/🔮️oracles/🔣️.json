@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-dxf-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-drawing-test-oracle",
+      "library": "semio_s_plugin_stdio_drawing_test_oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ]
+}

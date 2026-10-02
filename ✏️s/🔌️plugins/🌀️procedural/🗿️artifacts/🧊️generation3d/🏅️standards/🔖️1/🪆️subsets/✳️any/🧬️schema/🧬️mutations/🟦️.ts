@@ -1,6 +1,7 @@
 /** 🧬️ Generation3d direct-mutation discriminated union — mirror of `Generation3dMutation`. */
 import type { ChangeGenerationValue } from "./🔧️change/🦠️mutation/🟦️.ts";
 import type { ChangeSliderValue } from "./🎚️change-slider-value/🦠️mutation/🟦️.ts";
+import type { ChangeWidgetInput } from "./🎛️change-widget-input/🦠️mutation/🟦️.ts";
 import type { DragTransforms } from "./✋️drag-transforms/🦠️mutation/🟦️.ts";
 import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
 import type { RotateTransforms } from "./🔃️rotate-transforms/🦠️mutation/🟦️.ts";
@@ -12,7 +13,7 @@ import type { CreateWidget } from "./🌱️create-widget/🦠️mutation/🟦�
 import type { DeleteGeneration } from "./🗑️delete/🦠️mutation/🟦️.ts";
 import type { DeleteWidget } from "./❌delete-widget/🦠️mutation/🟦️.ts";
 import type { DeleteWidgetPosition } from "./🧹️delete-widget/🦠️mutation/🟦️.ts";
-import type { DisconnectSynapse } from "./✂️disconnect/🦠️mutation/🟦️.ts";
+import type { DisconnectSynapse } from "./✂️disconnect-synapse/🦠️mutation/🟦️.ts";
 import type { MoveWidget } from "./📍️move/🦠️mutation/🟦️.ts";
 import type { RenameGeneration } from "./🏷️rename/🦠️mutation/🟦️.ts";
 import type { UpdateCamera } from "./📷️update-camera/🦠️mutation/🟦️.ts";
@@ -38,4 +39,5 @@ export type Generation3dMutation =
   | ({ mutation: "dragTransforms" } & DragTransforms)
   | ({ mutation: "rotateTransforms" } & RotateTransforms)
   | ({ mutation: "scaleTransforms" } & ScaleTransforms)
-  | ({ mutation: "moveNodes" } & MoveNodes);
+  | ({ mutation: "moveNodes" } & MoveNodes)
+  | ({ mutation: "changeWidgetInput" } & ChangeWidgetInput);

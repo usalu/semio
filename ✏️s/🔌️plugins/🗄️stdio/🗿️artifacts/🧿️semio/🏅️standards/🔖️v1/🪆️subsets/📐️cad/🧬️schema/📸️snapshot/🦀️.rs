@@ -3,6 +3,7 @@
 //! "Subset snapshot cores" table, `cad` row). `CadEntity` carries the full 9-variant vocabulary
 //! (Line/Arc/Circle/Ellipse/Polyline/Text/Insert/Solid/Dimension).
 
+use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
@@ -147,7 +148,7 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_i32(s: &str) -> Result<i32, String> {
@@ -180,7 +181,7 @@ fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point2(p: &SemioPoint2) -> String {
-    format!("[{},{}]", p.x, p.y)
+    format!("[{},{}]", native::NativeF64(p.x), native::NativeF64(p.y))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
@@ -196,16 +197,16 @@ fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 fn enc_entity(e: &CadEntity) -> String {
     match e {
         CadEntity::Line { a, b } => format!("L[{},{}]", enc_point2(a), enc_point2(b)),
-        CadEntity::Arc { center, radius, start_angle, end_angle } => format!("A[{},{},{},{}]", enc_point2(center), radius, start_angle, end_angle),
-        CadEntity::Circle { center, radius } => format!("C[{},{}]", enc_point2(center), radius),
+        CadEntity::Arc { center, radius, start_angle, end_angle } => format!("A[{},{},{},{}]", enc_point2(center), native::NativeF64(*radius), native::NativeF64(*start_angle), native::NativeF64(*end_angle)),
+        CadEntity::Circle { center, radius } => format!("C[{},{}]", enc_point2(center), native::NativeF64(*radius)),
         CadEntity::Ellipse { center, major_axis_end, ratio, start_param, end_param } => {
-            format!("E[{},{},{},{},{}]", enc_point2(center), enc_point2(major_axis_end), ratio, start_param, end_param)
+            format!("E[{},{},{},{},{}]", enc_point2(center), enc_point2(major_axis_end), native::NativeF64(*ratio), native::NativeF64(*start_param), native::NativeF64(*end_param))
         }
         CadEntity::Polyline { vertices, closed } => format!("P[{},{}]", enc_list(vertices, enc_point2), enc_bool(*closed)),
-        CadEntity::Text { position, height, rotation, content } => format!("T[{},{},{},{}]", enc_point2(position), height, rotation, enc_str(content)),
-        CadEntity::Insert { block_name, insertion_point, scale, rotation } => format!("I[{},{},{},{}]", enc_str(block_name), enc_point2(insertion_point), enc_point2(scale), rotation),
+        CadEntity::Text { position, height, rotation, content } => format!("T[{},{},{},{}]", enc_point2(position), native::NativeF64(*height), native::NativeF64(*rotation), enc_str(content)),
+        CadEntity::Insert { block_name, insertion_point, scale, rotation } => format!("I[{},{},{},{}]", enc_str(block_name), enc_point2(insertion_point), enc_point2(scale), native::NativeF64(*rotation)),
         CadEntity::Solid { p1, p2, p3, p4 } => format!("S[{},{},{},{}]", enc_point2(p1), enc_point2(p2), enc_point2(p3), enc_point2(p4)),
-        CadEntity::Dimension { def_point, text_position, measurement, text } => format!("D[{},{},{},{}]", enc_point2(def_point), enc_point2(text_position), measurement, enc_str(text)),
+        CadEntity::Dimension { def_point, text_position, measurement, text } => format!("D[{},{},{},{}]", enc_point2(def_point), enc_point2(text_position), native::NativeF64(*measurement), enc_str(text)),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -715,3 +716,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

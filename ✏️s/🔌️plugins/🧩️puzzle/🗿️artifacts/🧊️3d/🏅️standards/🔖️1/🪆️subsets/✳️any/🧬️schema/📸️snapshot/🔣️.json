@@ -5,13 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "domain",
-    "meta",
-    "objects",
-    "attractions",
-    "targetVolumes",
-    "references"
+    "schema"
   ],
   "properties": {
     "schema": {

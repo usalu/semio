@@ -26,7 +26,7 @@
 //   bun 📜️script.ts docx-project --input <a.docx>
 //   bun 📜️script.ts docx-compare --input <expected.docx> --input <actual.docx>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch shape is mirrored from
 
@@ -321,5 +321,6 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 }
 
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
+// 🚰️ `exitCode`, never `process.exit()`: an explicit exit cuts a still-draining piped stdout at 64 KiB.
+if (import.meta.main) process.exitCode = await main(process.argv.slice(2));
 //#endregion 🚀️Entry

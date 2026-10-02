@@ -33,8 +33,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetLang {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/UA language to {}", self.lang), &format!("PDF/UA-Sprache auf {} setzen", self.lang))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA language to {}", self.lang), &format!("PDF/UA-Sprache auf {} setzen", self.lang))
     }
 
     fn target(&self) -> Vec<String> {

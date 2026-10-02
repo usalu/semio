@@ -15,7 +15,10 @@
 //! (`🏛️ShellHost/🟦️.tsx:10983`), mounted only while the retained operation is live. Every constant
 //! below is that class list, resolved.
 
-use ui_wgpu::wgpu::{Locale, Rect, Rgba, Theme};
+use semio_framework_ui_locale::Locale;
+use ui_wgpu::wgpu::Rect;
+use ui_wgpu::wgpu::Rgba;
+use ui_wgpu::wgpu::Theme;
 
 //#region 🔖️Geometry
 /// 📏️ `w-[36rem]` — 36 × the 16 px root font, in logical pixels.

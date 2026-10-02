@@ -12,19 +12,23 @@
   "properties": {
     "annex": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "enum": [
+        "En",
+        "De"
+      ]
     },
     "members": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/TimberMember"
       },
       "x-semio-state": "artifact"
     },
     "connections": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/TimberConnection"
       },
       "x-semio-state": "artifact"
     }
@@ -122,7 +126,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         },
         "diameterM": {
           "type": "number",
@@ -149,7 +154,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "rows": {
           "type": "integer",
@@ -162,7 +168,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "spacingM": {
           "type": "number",
@@ -269,7 +276,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "fUK": {
           "type": "number",
@@ -462,7 +470,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         },
         "support": {
           "$ref": "#/$defs/SupportType",
@@ -969,26 +978,26 @@
       "title": "MemberRole",
       "type": "string",
       "enum": [
-        "Beam",
-        "Column",
-        "Floor",
-        "Bridge"
+        "beam",
+        "column",
+        "floor",
+        "bridge"
       ],
       "x-semio-ui": {
         "options": {
-          "Beam": {
+          "beam": {
             "en": "Beam — bending member",
             "de": "Träger — Biegebauteil"
           },
-          "Column": {
+          "column": {
             "en": "Column — compression member",
             "de": "Stütze — Druckbauteil"
           },
-          "Floor": {
+          "floor": {
             "en": "Floor — joist or panel with vibration check",
             "de": "Decke — Balken oder Platte mit Schwingungsnachweis"
           },
-          "Bridge": {
+          "bridge": {
             "en": "Bridge — EN 1995-2 girder",
             "de": "Brücke — Träger nach EN 1995-2"
           }
@@ -1003,21 +1012,21 @@
       "title": "SupportType",
       "type": "string",
       "enum": [
-        "SimplySupported",
-        "Cantilever",
-        "ContinuousTwoSpan"
+        "simplySupported",
+        "cantilever",
+        "continuousTwoSpan"
       ],
       "x-semio-ui": {
         "options": {
-          "SimplySupported": {
+          "simplySupported": {
             "en": "Simply supported",
             "de": "Einfeldträger"
           },
-          "Cantilever": {
+          "cantilever": {
             "en": "Cantilever",
             "de": "Kragarm"
           },
-          "ContinuousTwoSpan": {
+          "continuousTwoSpan": {
             "en": "Continuous over two spans",
             "de": "Zweifeldträger"
           }

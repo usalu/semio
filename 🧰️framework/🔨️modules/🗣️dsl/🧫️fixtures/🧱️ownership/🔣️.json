@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🔨️modules/🗣️dsl",
+  "package": {
+    "name": "semio-framework-dsl",
+    "library": "semio_framework_dsl",
+    "manifest": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml"
+  },
+  "capture": {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🔬️lexical-grammar-contract/🧫️fixtures/🧬️original-inputs/🔣️.json",
+    "sha256": "fe1f38fa0ba3aa7b6bc78c43ea09103a36deb48d9b5a0523ce29821789d5d17b",
+    "inputs": 968,
+    "callerCandidates": 285,
+    "constructorReferences": 186
+  },
+  "mappings": [
+    {
+      "role": "token",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔤️token/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/🦀️.rs",
+      "sha256": "cee29460f129aa1646afa4d981ce7e08cb85b14adb1a32f0cc0c3d58d5f0e519"
+    },
+    {
+      "role": "lexer",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs",
+      "sha256": "465fa2483faef538127ca42fd1a4088ad530fe14c20ec8b1b7aba4cb3313af2d"
+    },
+    {
+      "role": "trust",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🎖️trust/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/🎖️trust/🦀️.rs",
+      "sha256": "820dad5c386ea98498f8dc4c9c1e52d71eb88860be09c49554d8140e248862fd"
+    },
+    {
+      "role": "grammar",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/🦀️.rs",
+      "sha256": "13cdc1b193dc342f754fe4ec752e6f0883d4978d12170f4294af3e667811742f"
+    },
+    {
+      "role": "literal",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🦀️.rs",
+      "sha256": "858b40eafeedfbf6647c0b2cb1440f1af994da76316c48bde5d029bab4dfa259"
+    },
+    {
+      "role": "idiom",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs",
+      "destination": "🧰️framework/🔨️modules/🗣️dsl/🗣️idiom/🦀️.rs",
+      "sha256": "2d950e689fde31022bafbe26455efefa93af353adc6ae18403ef7745818a5359"
+    }
+  ],
+  "specificFamilies": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo/📖️.grammar.semio",
+      "sha256": "721f0241258dbd372e2459c514fb97d5dee3403b40561043d0af1bdfaffa1fab",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🌍️geo"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene/📖️.grammar.semio",
+      "sha256": "ffaee83fa174a21918a71ed062618804b8b90a49eeba4513a19488acbb0e5e02",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🎬️scene"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet/📖️.grammar.semio",
+      "sha256": "6eb577d5d0022e3fe64c38fd315df15c6fc85621b212fc03399118e75cbc3496",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📊️sheet"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed/📖️.grammar.semio",
+      "sha256": "a727308a3726ac6cb0ee1d3f3c260eda08c0c4e05ccf2f17f45cef368633735d",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/📎️embed"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph/📖️.grammar.semio",
+      "sha256": "bca790072bd36befab0506a20f1f1699f4c3b3df193ea561fc23627bec5baeb8",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🕸️graph"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog/📖️.grammar.semio",
+      "sha256": "cdb45afe289263db6ce1afa243b6ad82024abba23e1ad4162a7078574d0a1fae",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🗂️catalog"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe/📖️.grammar.semio",
+      "sha256": "68bd8f98595192f01e03b398e25f79e7e8c91bcf4b5a0d3e787605d1e985bad4",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe"
+    }
+  ],
+  "originalLawCohorts": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔍️lexer/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8f191b30a73b553630ac15928e13b7fd67be3bb428dcf14730359d600c7cb060",
+      "count": 38
+    },
+    {
+      "source": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "5432e795fc89a1a8df559be1b789961880542d5f70e7698b49975f299fa0d4fb",
+      "count": 17
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8c7c7ce2cdbd798137ab2806318d6ea64535d17e554dd1f8be4b8e82a443104c",
+      "count": 43
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🦀️.rs",
+      "sha256": "16d7d240a88db7003d74d74b68ed26b508d79b6a5c403558d3839f4f46cb73ca",
+      "count": 3
+    }
+  ],
+  "consumers": [
+    {
+      "owner": "🧰️framework/🔨️modules/📚️compiler",
+      "manifest": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/Cargo.toml",
+      "source": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️.rs",
+      "root": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/🦀️.rs",
+      "boundary": "complete-package"
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🕸️graph",
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml",
+      "source": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/🦀️.rs",
+      "root": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/🦀️.rs",
+      "boundary": "language-only"
+    }
+  ],
+  "composition": {
+    "fragments": "explicit-selected-registration",
+    "macroMatchers": "explicit-selected-registration",
+    "unknownFragment": "refuse",
+    "defaultFamilyKnowledge": "specific-owner",
+    "formatClassification": "specific-owner",
+    "publicCompatibilityForwards": false
+  },
+  "independentCases": [
+    {
+      "id": "plain",
+      "text": "plain text",
+      "escaped": "plain text",
+      "jsonWire": "\"plain text\""
+    },
+    {
+      "id": "quotes",
+      "text": "quotes: \" and \\",
+      "escaped": "quotes: \\\" and \\\\",
+      "jsonWire": "\"quotes: \\\" and \\\\\""
+    },
+    {
+      "id": "lines",
+      "text": "line1\nline2\ttab\rreturn",
+      "escaped": "line1\\nline2\\ttab\\rreturn",
+      "jsonWire": "\"line1\\nline2\\ttab\\rreturn\""
+    },
+    {
+      "id": "unicode",
+      "text": "α 🔖️ café",
+      "escaped": "α 🔖️ café",
+      "jsonWire": "\"α 🔖️ café\""
+    }
+  ],
+  "refusedEscapes": [
+    {
+      "id": "unknown",
+      "escaped": "\\q",
+      "error": "unknown escape \\q"
+    },
+    {
+      "id": "dangling",
+      "escaped": "\\",
+      "error": "dangling escape at end of text"
+    }
+  ],
+  "lexicalCases": [
+    {
+      "id": "assignment",
+      "text": "count=42",
+      "tokens": [
+        {
+          "kind": "Ident",
+          "text": "count",
+          "start": 0,
+          "end": 5
+        },
+        {
+          "kind": "Equals",
+          "text": "=",
+          "start": 5,
+          "end": 6
+        },
+        {
+          "kind": "Int",
+          "text": "42",
+          "start": 6,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "id": "separated",
+      "text": "x = 7, y = 9",
+      "tokens": [
+        {
+          "kind": "Ident",
+          "text": "x",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "kind": "Equals",
+          "text": "=",
+          "start": 2,
+          "end": 3
+        },
+        {
+          "kind": "Int",
+          "text": "7",
+          "start": 4,
+          "end": 5
+        },
+        {
+          "kind": "Comma",
+          "text": ",",
+          "start": 5,
+          "end": 6
+        },
+        {
+          "kind": "Ident",
+          "text": "y",
+          "start": 7,
+          "end": 8
+        },
+        {
+          "kind": "Equals",
+          "text": "=",
+          "start": 9,
+          "end": 10
+        },
+        {
+          "kind": "Int",
+          "text": "9",
+          "start": 11,
+          "end": 12
+        }
+      ]
+    },
+    {
+      "id": "identifier",
+      "text": "alpha.beta/item",
+      "tokens": [
+        {
+          "kind": "Ident",
+          "text": "alpha.beta/item",
+          "start": 0,
+          "end": 15
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "policies": [
+    {
+      "version": 1,
+      "nextest": true,
+      "configPath": "/owner/nextest.toml",
+      "level": "fundamental",
+      "buildBudgetMs": 0,
+      "assertionThreads": 3,
+      "artifactDirectory": "/owner/results",
+      "retainArtifacts": true,
+      "coveragePath": null,
+      "rustMinStack": "134217728",
+      "manifestPath": "/owner/Cargo.toml",
+      "assertionBudgets": {
+        "fundamental": 15000,
+        "quick": 120000,
+        "long": 3600000,
+        "exhaustive": 86400000
+      },
+      "coverageEnabled": false,
+      "targetDirectory": "/owner/compiler-output"
+    },
+    {
+      "version": 1,
+      "nextest": false,
+      "configPath": "/owner/nextest.toml",
+      "level": "quick",
+      "buildBudgetMs": 0,
+      "assertionThreads": 3,
+      "artifactDirectory": "/owner/results",
+      "retainArtifacts": true,
+      "coveragePath": null,
+      "rustMinStack": "134217728",
+      "manifestPath": "/owner/Cargo.toml",
+      "assertionBudgets": {
+        "fundamental": 15000,
+        "quick": 120000,
+        "long": 3600000,
+        "exhaustive": 86400000
+      },
+      "coverageEnabled": false,
+      "targetDirectory": "/owner/compiler-output"
+    },
+    {
+      "version": 1,
+      "nextest": true,
+      "configPath": "/owner/nextest.toml",
+      "level": "long",
+      "buildBudgetMs": 0,
+      "assertionThreads": 3,
+      "artifactDirectory": "/owner/results",
+      "retainArtifacts": true,
+      "coveragePath": "/owner/coverage.lcov",
+      "rustMinStack": "134217728",
+      "manifestPath": "/owner/Cargo.toml",
+      "assertionBudgets": {
+        "fundamental": 15000,
+        "quick": 120000,
+        "long": 3600000,
+        "exhaustive": 86400000
+      },
+      "coverageEnabled": true,
+      "targetDirectory": "/owner/compiler-output"
+    },
+    {
+      "version": 1,
+      "nextest": false,
+      "configPath": "/owner/nextest.toml",
+      "level": "exhaustive",
+      "buildBudgetMs": 0,
+      "assertionThreads": 3,
+      "artifactDirectory": "/owner/results",
+      "retainArtifacts": true,
+      "coveragePath": "/owner/coverage.lcov",
+      "rustMinStack": "134217728",
+      "manifestPath": "/owner/Cargo.toml",
+      "assertionBudgets": {
+        "fundamental": 15000,
+        "quick": 120000,
+        "long": 3600000,
+        "exhaustive": 86400000
+      },
+      "coverageEnabled": true,
+      "targetDirectory": "/owner/compiler-output"
+    }
+  ],
+  "arguments": [
+    "--features",
+    "feature-a",
+    "--test",
+    "portable",
+    "-E",
+    "test(portable)",
+    "--no-fail-fast",
+    "--",
+    "--nocapture"
+  ],
+  "partition": {
+    "buildArgs": [
+      "--features",
+      "feature-a",
+      "--test",
+      "portable"
+    ],
+    "executionArgs": [
+      "-E",
+      "test(portable)",
+      "--no-fail-fast"
+    ],
+    "libtestArgs": [
+      "--nocapture"
+    ]
+  },
+  "lint": {
+    "arguments": [
+      "--features",
+      "feature-a"
+    ],
+    "command": [
+      "clippy",
+      "--manifest-path",
+      "/owner/Cargo.toml",
+      "-p",
+      "owner-package",
+      "--all-targets",
+      "--features",
+      "feature-a",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  }
+}

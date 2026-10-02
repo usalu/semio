@@ -19,15 +19,15 @@
 //! real page's geometry. Both are gone, and with them the carve-out: the laws are now measured
 //! against the REAL DOCUMENT's own projection, all 65 pages of it.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
 //! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
 //! must land back on the un-mutated document's projection, and `identity-round-trip` must recover
 //! the real input's own page tree from bytes that differ from the input. Nothing is exempt.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_4::subsets::base::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_pdf_1_4};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf";
@@ -90,10 +90,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::{apply_pdf_mutation, PdfMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::base::project_pdf_1_4;
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_4::subsets::base::project_pdf_1_4;
 
     /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfMutation, String> {

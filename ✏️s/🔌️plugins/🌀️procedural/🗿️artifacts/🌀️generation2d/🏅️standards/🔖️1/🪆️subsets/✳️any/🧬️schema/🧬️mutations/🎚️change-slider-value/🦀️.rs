@@ -31,9 +31,9 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeSliderVa
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = generation2d_label_number(self.value);
-        protocol::LocalizedLabel::native(&format!("Set slider \"{}\" to {en}", self.id), &format!("Schieberegler \"{}\" auf {de} setzen", self.id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set slider \"{}\" to {en}", self.id), &format!("Schieberegler \"{}\" auf {de} setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

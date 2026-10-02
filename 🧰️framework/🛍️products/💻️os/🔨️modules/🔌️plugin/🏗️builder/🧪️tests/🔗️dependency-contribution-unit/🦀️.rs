@@ -138,7 +138,7 @@ fn keyword_owned_record_codec_is_forwarded_once() {
     let spec = AddValue::__dsl_spec();
     assert_eq!(spec.keyword.as_deref(), Some("add-value"));
     let variants = <DependencyTestOp as dsl::DslVariants>::variants();
-    assert_eq!((variants[0].1)().keyword, spec.keyword);
+    assert_eq!((variants[0].1.ordinary)().keyword, spec.keyword);
     let rows: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔤️keywords/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let delta = i32::try_from(row["delta"].as_i64().unwrap()).unwrap();

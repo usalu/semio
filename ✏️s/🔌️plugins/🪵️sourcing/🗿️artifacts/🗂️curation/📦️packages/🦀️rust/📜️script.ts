@@ -6,10 +6,16 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framewor
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
+import {runRepositoryCommand} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments.length===1&&segments[0]==="snapshot-sqlite-source"){
+      const snapshot=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
+      await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(snapshot,"🧪️tests/🪶️sqlite/🟦️.ts")],this.repoRoot,"curation-snapshot-sqlite-public-types");
+      return;
+    }
 if (segments[0] === "curation-document-contract") {
   const schemaRoot = this.repoRoot + "/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
   const { testCurationDocumentContractOracle } = await import(schemaRoot + "/🧪️tests/🪪️document/🟦️.ts");
@@ -23,5 +29,4 @@ if (segments[0] === "curation-document-contract") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sourcing-curation", { commands: { verify: OwnedVerifyScript } });
-
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sourcing-curation", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

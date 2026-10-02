@@ -1666,3 +1666,30 @@ fn a_drag_offset_is_recorded_without_f64_pointer_noise() {
     assert_eq!((record["dx"].as_f64(), record["dy"].as_f64()), (Some(80.00003), Some(0.3)), "the stored offset is short: {record}");
 }
 //#endregion 🎬️Gestures
+
+//#region 🔗️DraftReferences
+#[cfg(test)]
+/// 🔗️ What an open time-travel draft references (`Board2dScene.highlighted_ids_json`) paints highlighted — a locked
+/// entity too, never dimmed — while the selection keeps its own chrome; setting it publishes nothing, the overlay pass
+/// repaints it without rebuilding the world cache, a fixture re-parse (every draft edit repaints the preview) keeps it,
+/// and the empty set clears it.
+#[test]
+fn draft_referenced_ids_paint_highlighted_without_publishing() {
+    let mut host = gesture_host();
+    host.set_selection_ids_silent(&["node-b".to_string()]);
+    host.set_highlighted_ids(vec!["node-locked".into(), "node-a".into(), "node-b".into()]);
+    assert!(gesture_rows(&mut host).is_empty(), "a highlight is never an event");
+    let style = |host: &BoardHost, id: &str| host.resolve_node_style_kind(host.nodes.get(id).expect("painted node"), StyleChromePass::InteractionOverlay);
+    assert_eq!(style(&host, "node-a"), BoardElementStyleKind::Highlighted);
+    assert_eq!(style(&host, "node-locked"), BoardElementStyleKind::Highlighted, "a locked reference is highlighted, not dimmed");
+    assert_eq!(style(&host, "node-b"), BoardElementStyleKind::Selected, "the selection keeps its chrome");
+    assert!(host.interaction_overlay_entity_ids().contains("node-a"), "the overlay pass repaints the highlight");
+    let node = |id: &str, x: f64| serde_json::json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
+    let preview = serde_json::json!({ "schema": "puzzle.2d.fixture", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", 0.0), node("node-b", 40.0)], "edges": [] }).to_string();
+    assert!(host.parse_fixture_json(&preview), "the preview fixture parses");
+    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["node-a","node-b","node-locked"]"#, "a preview repaint keeps what the draft references");
+    assert_eq!(style(&host, "node-b"), BoardElementStyleKind::Highlighted, "the re-parse cleared the selection, not the highlight");
+    host.set_highlighted_ids(Vec::new());
+    assert_eq!((style(&host, "node-a"), host.highlighted_ids_json().expect("highlighted ids")), (BoardElementStyleKind::Neutral, "[]".to_string()), "the empty set clears it");
+}
+//#endregion 🔗️DraftReferences

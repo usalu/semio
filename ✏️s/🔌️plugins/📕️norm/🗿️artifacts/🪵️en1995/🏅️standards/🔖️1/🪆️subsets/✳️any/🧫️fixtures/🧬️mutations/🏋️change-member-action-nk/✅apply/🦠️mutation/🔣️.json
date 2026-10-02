@@ -1,7 +1,7 @@
 {
   "ChangeMemberActionNK": {
-    "actionId": "g",
     "memberId": "beam-B1",
+    "actionId": "g",
     "newValue": 5000.0
   }
 }

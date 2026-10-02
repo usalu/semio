@@ -15,7 +15,7 @@ async fn drawing_viewer_camera_ownership_and_restore() {
     let manifest = || App { definition: create_drawing_viewer(),examples: Vec::new() };
     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest).await);
     app.bind_instance_id(91).await;
-    let view = ViewModel { window_instances: ["left","right"].into_iter().map(|id| ViewWindowInstance { id: id.into(),window_kind_id: DrawingViewerCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),..Default::default() };
+    let view = ViewModel { window_instances: ["left","right"].into_iter().map(|id| ViewWindowInstance { id: id.into(),window_kind_id: DrawingViewerCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest).await);
     reopened.bind_instance_id(92).await;
     let outcome: Result<(),String> = async {
@@ -54,9 +54,9 @@ async fn drawing_viewer_camera_ownership_and_restore() {
 #[test]
 fn drawing_viewer_camera_refuses_stale_or_wrong_windows() {
     let config = DrawingViewerCanvasWindowConfig::default();
-    assert!(addressed(&ViewModel::default(),config.clone()).is_err());
-    let view = ViewModel { window_id: Some("gone".into()),..Default::default() };
+    assert!(addressed(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),config.clone()).is_err());
+    let view = ViewModel { window_id: Some("gone".into()),..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert!(addressed(&view,config.clone()).is_err());
-    let view = ViewModel { window_id: Some("foreign".into()),window_instances: vec![ViewWindowInstance { id: "foreign".into(),window_kind_id: "other".into() }],..Default::default() };
+    let view = ViewModel { window_id: Some("foreign".into()),window_instances: vec![ViewWindowInstance { id: "foreign".into(),window_kind_id: "other".into() }],..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert!(addressed(&view,config).is_err());
 }

@@ -30,15 +30,60 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactReservedJob,
-    ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
-    DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactReservedJob;
+use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_framework_plugin::ArtifactToolCompletion;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_CONTROLLER_ID: &str = "raster-play";
@@ -132,8 +177,8 @@ pub fn raster_measure_action(action: &str) -> ActionDescriptor {
 
 /// 🏷️ Admits one resolved raster string into the semantic UI contract's fixed-capacity label owner —
 /// every panel/window label goes through here rather than the renderer's unbounded `Label`.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -275,6 +320,7 @@ mod args_bridge {
             "editMask" => RasterCommand::EditMask(decode(action, layer())?),
             "editPixels" => RasterCommand::EditPixels(decode(action, layer())?),
             "paintStroke" => RasterCommand::PaintStroke(decode(action, layer())?),
+            "fillRegion" => RasterCommand::FillRegion(decode(action, layer())?),
             "maskFromSelection" => RasterCommand::MaskFromSelection(decode(action, layer())?),
             "dropLayerKind" => RasterCommand::DropLayerKind(decode(action, plain())?),
             "setLayerVisible" => RasterCommand::SetLayerVisible(decode(action, layer())?),
@@ -338,13 +384,14 @@ semio_framework_plugin::app_commands! {
         "setPixelSelection" as "pixel-selection" => set_pixel_selection::SetPixelSelection,
         "exportPng" as "export-png" => export_png::ExportPng,
         "paintStroke" as "paint-stroke" => paint_stroke::PaintStroke,
+        "fillRegion" as "fill-region" => fill_region::FillRegion,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::raster::commands::{set_active_example,export_png,set_paint_target,set_mask_value,set_pixel_selection};
-use crate::editor::raster::commands::{edit_pixels,edit_mask,mask_from_selection,flatten_layers,merge_down,paint_stroke};
+use crate::editor::raster::commands::{edit_pixels,edit_mask,mask_from_selection,flatten_layers,merge_down,paint_stroke,fill_region};
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
@@ -379,6 +426,7 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setMaskValue",
     "setPixelSelection",
     "paintStroke",
+    "fillRegion",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
@@ -403,6 +451,7 @@ const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "editMask", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "editPixels", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "paintStroke", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "fillRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "maskFromSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "dropLayerKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -523,7 +572,7 @@ impl RasterCommandProofs {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "flattenLayers", "mergeDown", "editMask", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness", "setPaintTarget", "setMaskValue", "setPixelSelection", "paintStroke"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "flattenLayers", "mergeDown", "editMask", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness", "setPaintTarget", "setMaskValue", "setPixelSelection", "paintStroke", "fillRegion"
         ]
     }
 
@@ -1239,7 +1288,7 @@ impl ArtifactEditor for RasterPlayApp {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::raster::config::schema::app_schema_descriptor())
     }
 
@@ -1471,7 +1520,7 @@ pub fn create_raster_app() -> AppDefinition {
             // harmless duplicate registration (registry dedupes by id).
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.image".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("2D Image", "2D-Bild"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),
@@ -1516,6 +1565,9 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("paintStroke", LocalizedLabel::native("Paint Stroke", "Strich malen"), ActionKind::Mutation))
             .action_describe("paintStroke", LocalizedLabel::native("Paints one brush or eraser stroke on the selected layer's pixels or mask with the session brush. The whole stroke is one undoable edit whose brush and points can be edited in history.", "Malt einen Pinsel- oder Radierstrich mit dem Sitzungspinsel auf die Pixel oder die Maske der gewählten Ebene. Der ganze Strich ist ein rückgängig machbarer Schritt, dessen Pinsel und Punkte im Verlauf bearbeitet werden können."))
             .action_interactive_job("paintStroke", InteractiveJobClassification::Migrated)
+            .action_with(raster_internal_action("fillRegion", LocalizedLabel::native("Fill Region", "Region füllen"), ActionKind::Mutation))
+            .action_describe("fillRegion", LocalizedLabel::native("Fills the connected region around the clicked pixel of the selected layer's pixels or mask with the session colour, within the colour tolerance and the pixel selection. The fill is one undoable edit whose seed, tolerance and colour can be edited in history.", "Füllt die zusammenhängende Region um das angeklickte Pixel der Pixel oder der Maske der gewählten Ebene mit der Sitzungsfarbe, innerhalb der Farbtoleranz und der Pixelauswahl. Die Füllung ist ein rückgängig machbarer Schritt, dessen Startpixel, Toleranz und Farbe im Verlauf bearbeitet werden können."))
+            .action_interactive_job("fillRegion", InteractiveJobClassification::Migrated)
             .action_with(raster_internal_action("maskFromSelection", LocalizedLabel::native("Mask From Selection", "Maske aus Auswahl"), ActionKind::Mutation))
             .action_describe("maskFromSelection", LocalizedLabel::native("Creates an undoable layer mask from the current pixel selection.", "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."))
             .action_interactive_job("maskFromSelection", InteractiveJobClassification::Migrated)

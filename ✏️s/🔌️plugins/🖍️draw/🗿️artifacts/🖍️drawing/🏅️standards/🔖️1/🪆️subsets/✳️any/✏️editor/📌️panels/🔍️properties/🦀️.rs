@@ -4,7 +4,18 @@ use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, u
 use crate::schema::{selected_drawing_layers, layer_base, rgba_to_hex};
 use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, PathSegment};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{BuiltNode, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
 use semio_framework_ui_contract as ui;
 
 pub const DRAWING_PLAY_BODY_PROPERTIES: &str = "drawing.play.properties";

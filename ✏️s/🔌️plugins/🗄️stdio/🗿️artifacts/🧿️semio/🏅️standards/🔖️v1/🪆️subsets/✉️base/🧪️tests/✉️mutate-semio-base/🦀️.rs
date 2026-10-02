@@ -1,7 +1,7 @@
 //! 🦀️ Semio ENVELOPE exhaustive mutation case — Rust adapter.
 //!
 //! Both roles read the same committed JSON carrier vectors. The `oracle` role reads them through
-//! json-rust (`semio_s_plugin_stdio_test_oracle::artifacts::semio::standards::v1::subsets::base`,
+//! json-rust (`semio_s_artifact_stdio_semio_test_oracle::standards::v1::subsets::base`,
 //! registered as `json-rust-semio-envelope-carrier-reader` in `../../🔮️oracles/🔣️.json`) and routes
 //! them by the envelope's published law; it never links the subject crate. The `subject` role, gated
 //! behind the generated host's `sut` feature, decodes the same files through this subset's
@@ -121,7 +121,7 @@ fn outcome_of(envelope: &Json, diagnostics: &[String], matches_reference: bool) 
 mod oracle {
     use super::{kind_vector, outcome_of, reasserts, refuses, replaces, retypes, Vector};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::artifacts::semio::standards::v1::subsets::base::{read_carrier, restore, route, Routed};
+    use semio_s_artifact_stdio_semio_test_oracle::standards::v1::subsets::base::{read_carrier, restore, route, Routed};
 
     fn carrier(ctx: &Context, uri: &str) -> Result<Json, String> {
         read_carrier(&ctx.fixture_bytes(uri)?)
@@ -199,7 +199,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, decode_semio_mutation_json, inverse_semio_mutation, semio_mutation_refusal_codes, set_snapshot, SemioMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{decode_semio_envelope_pack, decode_semio_snapshot_json, encode_semio_envelope_pack, encode_semio_snapshot_json, parse_semio_envelope_dsl, print_semio_envelope_dsl, SemioSnapshot};
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
 
     fn text(ctx: &Context, uri: &str) -> Result<String, String> {
         String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))

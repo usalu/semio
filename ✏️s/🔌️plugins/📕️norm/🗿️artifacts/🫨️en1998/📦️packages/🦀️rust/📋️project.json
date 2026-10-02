@@ -39,6 +39,51 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
     }
   }
 }

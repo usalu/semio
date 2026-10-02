@@ -32,8 +32,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for DeleteRoute {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete route \"{}\"", self.id), &format!("Route \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete route \"{}\"", self.id), &format!("Route \"{}\" löschen", self.id))
     }
 }
 //#endregion 🔹Payload

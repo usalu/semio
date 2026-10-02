@@ -10,11 +10,39 @@ use crate::editor::json_any::modes::edit;
 use crate::editor::json_any::modes::edit::windows::main;
 use crate::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
-    Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
@@ -232,7 +260,7 @@ fn json_any_emit(command: &JsonAnyEditorCommand, snapshot: &JsonSnapshot, canoni
     }
     let (node_id, revision, value) = match command {
         JsonAnyEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&json_any_example_snapshot(example_id), STDIO_JSON_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
+            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&json_any_example_snapshot(example_id), STDIO_JSON_DOCUMENT_SCHEMA)], ..Default::default() })
         }
         JsonAnyEditorCommand::SetNode { node_id, revision, value } => (node_id, revision, value),
         JsonAnyEditorCommand::EditSnapshot { .. } => unreachable!(),
@@ -242,9 +270,9 @@ fn json_any_emit(command: &JsonAnyEditorCommand, snapshot: &JsonSnapshot, canoni
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.json.stale-node-edit"), "the JSON document changed while this node draft was open"));
     }
     let path = decode_path_id(node_id).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.json.invalid-node-path"), detail))?;
-    let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(value)
+    let parsed = crate::schema::snapshot::parse_json_text(value)
         .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.json.invalid-node-value"), format!("value for node '{node_id}' is not valid JSON: {error}")))?;
-    let event = SnapshotEditEvent::SetValue { path, value: dsl::ToValue::to_value(&parsed.value) };
+    let event = SnapshotEditEvent::SetValue { path, value: dsl::ToValue::to_value(&parsed) };
     <JsonAnyEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, snapshot)
 }
 
@@ -477,7 +505,7 @@ impl ArtifactEditor for JsonAnyEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         if let Some(event) = <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_event(command) {
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);

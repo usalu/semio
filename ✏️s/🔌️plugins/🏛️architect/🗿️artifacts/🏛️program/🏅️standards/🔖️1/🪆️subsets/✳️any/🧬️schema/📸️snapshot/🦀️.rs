@@ -4,6 +4,9 @@ use crate::kernel::*;
 use crate::registers::*;
 use framework_schema::ArtifactSchema;
 
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
@@ -282,6 +285,9 @@ impl store::ArtifactPack for ProgramSnapshot {
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
@@ -303,3 +309,7 @@ pub fn print_program_dsl(snapshot: &ProgramSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️ExternalBridges
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

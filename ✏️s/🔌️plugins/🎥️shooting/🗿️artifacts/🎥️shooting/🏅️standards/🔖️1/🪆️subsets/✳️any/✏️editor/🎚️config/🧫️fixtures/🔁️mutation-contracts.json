@@ -6,7 +6,6 @@
     "selectedShotIds": [],
     "centerModel": true,
     "fitRevision": 0,
-    "cameraDraftLabel": "",
     "camera": {
       "position": [
         420.0,
@@ -31,10 +30,11 @@
             "defaultShotFormat": "png",
             "defaultShotShape": "rectangle",
             "defaultAssetFormat": "glb",
-            "selectedShotIds": [],
-            "centerModel": true,
-            "fitRevision": 0,
-            "cameraDraftLabel": "Übersicht",
+            "selectedShotIds": [
+              "shot-a"
+            ],
+            "centerModel": false,
+            "fitRevision": 2,
             "camera": {
               "position": [
                 420.0,
@@ -56,10 +56,11 @@
         "defaultShotFormat": "png",
         "defaultShotShape": "rectangle",
         "defaultAssetFormat": "glb",
-        "selectedShotIds": [],
-        "centerModel": true,
-        "fitRevision": 0,
-        "cameraDraftLabel": "Übersicht",
+        "selectedShotIds": [
+          "shot-a"
+        ],
+        "centerModel": false,
+        "fitRevision": 2,
         "camera": {
           "position": [
             420.0,
@@ -96,7 +97,6 @@
         ],
         "centerModel": true,
         "fitRevision": 0,
-        "cameraDraftLabel": "",
         "camera": {
           "position": [
             420.0,
@@ -127,7 +127,6 @@
         "selectedShotIds": [],
         "centerModel": false,
         "fitRevision": 0,
-        "cameraDraftLabel": "",
         "camera": {
           "position": [
             420.0,
@@ -158,38 +157,6 @@
         "selectedShotIds": [],
         "centerModel": true,
         "fitRevision": 4294967295,
-        "cameraDraftLabel": "",
-        "camera": {
-          "position": [
-            420.0,
-            -420.0,
-            320.0
-          ],
-          "target": [
-            0.0,
-            0.0,
-            40.0
-          ],
-          "zoom": 1.0,
-          "fov": 50.0
-        }
-      }
-    },
-    {
-      "kind": "set-camera-draft-label",
-      "mutation": {
-        "SetCameraDraftLabel": {
-          "value": "Übersicht"
-        }
-      },
-      "expected": {
-        "defaultShotFormat": "png",
-        "defaultShotShape": "rectangle",
-        "defaultAssetFormat": "glb",
-        "selectedShotIds": [],
-        "centerModel": true,
-        "fitRevision": 0,
-        "cameraDraftLabel": "Übersicht",
         "camera": {
           "position": [
             420.0,
@@ -239,7 +206,6 @@
         "selectedShotIds": [],
         "centerModel": true,
         "fitRevision": 0,
-        "cameraDraftLabel": "",
         "camera": {
           "position": [
             1.0,
@@ -278,7 +244,6 @@
         "selectedShotIds": [],
         "centerModel": true,
         "fitRevision": 0,
-        "cameraDraftLabel": "",
         "camera": {
           "position": [
             420.0,

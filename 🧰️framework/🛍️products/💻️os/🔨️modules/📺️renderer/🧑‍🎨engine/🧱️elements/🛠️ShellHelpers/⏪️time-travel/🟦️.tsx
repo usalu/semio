@@ -11,10 +11,11 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { HISTORY_EDIT_ARG_GENERATION, historyEntryLabelText, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage } from "@semio-tech/framework";
+import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, historyEntryLabelText, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage } from "@semio-tech/framework";
 import type { ArtifactPresenceHistoryEdit } from "@semio-tech/framework-replication";
-import { ariaKeyshortcutsText, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useControlKeybinding, useUiKeybindingsByControlId, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
-import { useId, type ReactElement } from "react";
+import { ariaKeyshortcutsText, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
+import { useEffect, useId, useRef, type ReactElement } from "react";
+import type { ShellAction } from "../../🐚️Shell/🟦️.tsx";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1, shellLabel } from "../🟦️.tsx";
 import type { UiPresenceOverlayEntry, UiPresenceOverlayValue } from "../../🗣️Interpreter/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -31,7 +32,7 @@ export const TIME_TRAVEL_VERBS = {
   exit: "historyEditExit",
 } as const satisfies Readonly<Record<string, HistoryEditActionId>>;
 
-/** 🎬️ One control of {@link TIME_TRAVEL_VERBS}. */
+/** 🎚️ One control of {@link TIME_TRAVEL_VERBS}. */
 export type TimeTravelControlV1 = keyof typeof TIME_TRAVEL_VERBS;
 
 /** ⌨️ The remappable chord of each control that has one — never Escape, so Escape never discards a draft. */
@@ -46,7 +47,7 @@ export type TimeTravelBandControlStateV1 = { readonly control: TimeTravelControl
 
 const bandControl = (id: TimeTravelControlV1, disabledBy: UiTranslationKey | null = null): TimeTravelBandControlStateV1 => ({ control: id, label: `ui.timeTravel.${id}`, disabledBy });
 
-/** 🧭️ Why Finalize is disabled in a review, read from the session's own `review` and never inferred from a missing
+/** 🚧️ Why Finalize is disabled in a review, read from the session's own `review` and never inferred from a missing
  * report: nothing accepted is `empty`, a replay still owed or a blocking report is `blocked`, a `ready` review is
  * finalizable, and a review the session does not state is not possible right now. */
 function finalizeDisabledBy(session: HistoryTimeTravel): UiTranslationKey | null {
@@ -110,7 +111,7 @@ function timeTravelTargetText(session: HistoryTimeTravel, axes: { readonly termi
   return session.targetLabel === undefined ? "" : historyEntryLabelText(session.targetLabel, axes.terminology, axes.locale);
 }
 
-/** 📝️ {@link TimeTravelBandTextV1} of `session`: a review's status is the session's own `review`, never inferred from a
+/** 🖋️ {@link TimeTravelBandTextV1} of `session`: a review's status is the session's own `review`, never inferred from a
  * missing report; severity is always named in words (`ui.mutation.level.*`) and only when the session reports one,
  * never by colour alone; a fault code the shell knows (`timeTravel.cancelled`, the refusals) reads as its own text. */
 export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): TimeTravelBandTextV1 {
@@ -127,7 +128,7 @@ export function timeTravelBandTextV1(session: HistoryTimeTravel, axes: { readonl
   };
 }
 
-/** 🏷️ What a window of the editing program says about itself: the document before the edited mutation while a draft
+/** 🔖️ What a window of the editing program says about itself: the document before the edited mutation while a draft
  * is edited, else the session's stage. */
 export function timeTravelIndicatorTextV1(session: HistoryTimeTravel, axes: { readonly terminology: string; readonly locale: string }): string {
   const target = timeTravelTargetText(session, axes);
@@ -167,11 +168,11 @@ export function timeTravelPeerPresenceV1(
   return { peers: chips, overlay: notes.size === 0 ? EMPTY_PEER_OVERLAY : { byKey: new Map([...notes].map(([key, lines]): [string, UiPresenceOverlayEntry] => [key, { notes: lines }])) } };
 }
 
-/** 🎯️ Where keyboard focus belongs after a session change: the first input of the draft editor, the band, or the
+/** 🔦️ Where keyboard focus belongs after a session change: the first input of the draft editor, the band, or the
  * finalize prompt. */
 export type TimeTravelFocusTargetV1 = "editor" | "band" | "dialog";
 
-/** 🧭️ What one change of the focused program's session asks of the chrome: `reveal` opens the History panel, `focus`
+/** 🗺️ What one change of the focused program's session asks of the chrome: `reveal` opens the History panel, `focus`
  * moves keyboard focus. */
 export type TimeTravelTransitionV1 = { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null };
 
@@ -205,7 +206,7 @@ function focusableWithin(element: Element): HTMLElement | null {
   return element.matches(FOCUSABLE_SELECTOR) ? (element as HTMLElement) : element.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
 }
 
-/** 🎯️ The element that takes focus for `target` under `root`: the first focusable control of the editor's input rows
+/** 🔍️ The element that takes focus for `target` under `root`: the first focusable control of the editor's input rows
  * (`…/framework.history.editor.input.<pointer>`), else its Accept (the button, or the activatable row a lone button
  * becomes); the band (`[data-semio-time-travel]`); the open dialog's first control. `null` while it is not mounted yet. */
 export function timeTravelFocusElementV1(root: ParentNode, target: TimeTravelFocusTargetV1): HTMLElement | null {
@@ -236,15 +237,16 @@ export function timeTravelFocusIsHeldV1(active: Element | null): boolean {
   return active.closest('[role="dialog"]') === null && !active.id.includes(HISTORY_PANEL_ID_PART) && active.closest(`[id*="${HISTORY_PANEL_ID_PART}"]`) === null;
 }
 
-/** 🎯️ Moves focus to `target` under the shell's `root` (the prompt anywhere in its document, being portalled) once it is
- * mounted, retried across animation frames while the panel or the prompt mounts; a focus already inside the prompt stays,
- * and a person typing elsewhere keeps theirs. Answers the cancel. */
+/** ⏳️ Moves focus to `target` under the shell's `root` (the prompt anywhere in its document, being portalled) once it is
+ * mounted, retried across animation frames while the panel or the prompt mounts. A person typing elsewhere keeps their
+ * focus for the editor and the band; the modal prompt always takes it (focus returns when it closes), and a focus already
+ * inside the prompt stays. Answers the cancel. */
 export function scheduleTimeTravelFocusV1(root: Element, target: TimeTravelFocusTargetV1, frames = 30): () => void {
   const document = root.ownerDocument;
   let handle = 0;
   let remaining = frames;
   const attempt = () => {
-    if (timeTravelFocusIsHeldV1(document.activeElement)) return;
+    if (target !== "dialog" && timeTravelFocusIsHeldV1(document.activeElement)) return;
     const element = timeTravelFocusElementV1(target === "dialog" ? document : root, target);
     if (element !== null) {
       if (!(target === "dialog" && element.closest('[role="dialog"]')?.contains(document.activeElement))) element.focus();
@@ -254,6 +256,49 @@ export function scheduleTimeTravelFocusV1(root: Element, target: TimeTravelFocus
   };
   handle = requestAnimationFrame(attempt);
   return () => cancelAnimationFrame(handle);
+}
+
+/** 🏠️ What the History reveal speaks to: the device, the dock (or the merged mobile panel's tabs), the shell's dispatch, the
+ * root focus moves inside, and how many frames a focus waits for its target to mount. */
+export type TimeTravelRevealHostV1 = { readonly mobile: boolean; readonly dock: PanelDock; readonly mobilePanelTabs: readonly PanelTabNode[]; readonly dispatch: (action: ShellAction) => void; readonly root: Element | null; readonly frames?: number };
+
+/** 📂️ Opens the History panel where the shell keeps it — its own dock anchor, selected and shown, or on mobile the merged
+ * panel on the History tab — and answers whether one was found; a shell without the History tab dispatches nothing. */
+export function revealHistoryPanelV1(host: Pick<TimeTravelRevealHostV1, "mobile" | "dock" | "mobilePanelTabs" | "dispatch">): boolean {
+  if (host.mobile) {
+    const path = findPanelTabPath(host.mobilePanelTabs, FRAMEWORK_PANEL_TAB_HISTORY_ID);
+    if (path === undefined) return false;
+    host.dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+    host.dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+    return true;
+  }
+  const located = findPanelTabInDock(host.dock, FRAMEWORK_PANEL_TAB_HISTORY_ID);
+  const path = located === null ? undefined : findPanelTabPath(host.dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_HISTORY_ID);
+  if (located === null || path === undefined) return false;
+  host.dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: path });
+  host.dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
+  return true;
+}
+
+/** 🛰️ The shell's answer to each change of the focused program's session ({@link timeTravelTransitionV1}): the edge into a
+ * session reveals the History panel ({@link revealHistoryPanelV1}) and every focus move is scheduled under the host's root;
+ * a focus still waiting for its target yields only to a newer focus or to the close — never to a progress step — and the
+ * unmount cancels it. The host is read at the change, so a dock or device change alone never re-runs the effect. */
+export function useTimeTravelRevealV1(session: HistoryTimeTravel | null, host: TimeTravelRevealHostV1): void {
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  const seenRef = useRef<HistoryTimeTravel | null>(null);
+  const cancelRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const transition = timeTravelTransitionV1(seenRef.current, session);
+    seenRef.current = session;
+    if (transition.reveal) revealHistoryPanelV1(hostRef.current);
+    if (transition.focus === null && session !== null) return;
+    cancelRef.current?.();
+    const root = hostRef.current.root;
+    cancelRef.current = transition.focus === null || root === null ? null : scheduleTimeTravelFocusV1(root, transition.focus, hostRef.current.frames ?? 120);
+  }, [session]);
+  useEffect(() => () => cancelRef.current?.(), []);
 }
 
 /** 🏳️ The props both chrome pieces read: the live session, the program it edits and the shell's label axes. */

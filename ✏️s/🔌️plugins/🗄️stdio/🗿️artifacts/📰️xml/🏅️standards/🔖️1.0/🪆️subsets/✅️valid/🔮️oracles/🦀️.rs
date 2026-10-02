@@ -34,7 +34,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️Live
 #[cfg(feature = "oracles")]
 mod live {
-    use crate::markup::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
+    use semio_s_plugin_stdio_markup_test_oracle::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
     use semio_repo_test_host::Json;
 
     //#region 🔖️DoctypeGrammar
@@ -262,8 +262,8 @@ mod live {
                 };
                 doc.declaration = match (&doc.declaration, standalone) {
                     (None, None) => None,
-                    (None, Some(value)) => Some(crate::markup::live::MarkupDecl { version: "1.0".to_string(), encoding: None, standalone: Some(value) }),
-                    (Some(declaration), value) => Some(crate::markup::live::MarkupDecl { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: value }),
+                    (None, Some(value)) => Some(semio_s_plugin_stdio_markup_test_oracle::live::MarkupDecl { version: "1.0".to_string(), encoding: None, standalone: Some(value) }),
+                    (Some(declaration), value) => Some(semio_s_plugin_stdio_markup_test_oracle::live::MarkupDecl { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: value }),
                 };
                 Ok(())
             }

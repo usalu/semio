@@ -30,8 +30,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for EditNodeText {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit node \"{}\" text to \"{}\"", self.node_id, self.new_text), &format!("Text von Knoten \"{}\" in \"{}\" ändern", self.node_id, self.new_text))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit node \"{}\" text to \"{}\"", self.node_id, self.new_text), &format!("Text von Knoten \"{}\" in \"{}\" ändern", self.node_id, self.new_text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeSupervisio
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change design supervision level", "Überwachungsstufe der Planung ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change design supervision level", "Überwachungsstufe der Planung ändern")
     }
 }
 //#endregion 🔖️Payload

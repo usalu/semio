@@ -78,7 +78,7 @@ struct OsShortcutCollision {
 
 fn keyboard_interaction() -> crate::AppInteractionState {
     crate::AppInteractionState {
-        shell: crate::shell::ShellState::new(Vec::new(), String::new()),
+        shell: crate::shell::ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: ui_wgpu::wgpu::InputState::default(),
         theme: ui_wgpu::wgpu::Theme::default(),
         theme_dark: false,

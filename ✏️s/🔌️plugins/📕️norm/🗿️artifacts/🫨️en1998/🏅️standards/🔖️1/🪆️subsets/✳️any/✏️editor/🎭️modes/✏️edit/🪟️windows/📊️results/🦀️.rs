@@ -2,7 +2,8 @@
 
 use crate::document::NormHost;
 use crate::editor::en1998::En1998Family;
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_RESULTS: &str = "norm-en1998-results";
@@ -19,7 +20,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<En1998Family>, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_plugin::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host: &NormHost<En1998Family>, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     crate::app_surface::render_report(host.report(), windows, locale, controller_id)
 }
 //#endregion 🔖️Render

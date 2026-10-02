@@ -1,4 +1,5 @@
-scalar ObjSourceLineUInt64
+scalar ObjIndexUInt32
+scalar ObjSourceUInt64
 
 # 🧬️ ObjSnapshot schema facet — mirrors 🦀️.rs field-for-field.
 
@@ -9,19 +10,19 @@ type ObjTexCoord { u: Float! v: Float! w: Float }
 "A `vn` normal line."
 type ObjNormal { x: Float! y: Float! z: Float! }
 "One v[/vt][/vn] reference inside an f line."
-type ObjFaceVertex { vertex: Int! texcoord: Int normal: Int }
+type ObjFaceVertex { vertex: ObjIndexUInt32! texcoord: ObjIndexUInt32 normal: ObjIndexUInt32 }
 "A f line, kept as its original n-gon."
 type ObjFace { vertices: [ObjFaceVertex!]! }
 "A named g group — face-index membership list."
-type ObjGroup { name: String! faces: [Int!]! }
+type ObjGroup { name: String! faces: [ObjSourceUInt64!]! }
 "A named o object — face-index membership list."
-type ObjObject { name: String! faces: [Int!]! }
+type ObjObject { name: String! faces: [ObjSourceUInt64!]! }
 "One usemtl transition."
-type ObjUsemtlRange { faceIndexFrom: Int! material: String! }
+type ObjUsemtlRange { faceIndexFrom: ObjSourceUInt64! material: String! }
 "One s transition (null group = s off)."
-type ObjSmoothingRange { faceIndexFrom: Int! group: Int }
+type ObjSmoothingRange { faceIndexFrom: ObjSourceUInt64! group: ObjIndexUInt32 }
 "A retained comment/unrecognized source line."
-type ObjUnknownStatement { lineIndex: ObjSourceLineUInt64! raw: String! }
+type ObjUnknownStatement { lineIndex: ObjSourceUInt64! raw: String! }
 
 "Persisted stdio.obj snapshot."
 type ObjSnapshot {

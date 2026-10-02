@@ -42,7 +42,7 @@ use std::sync::Arc;
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.remodeling".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D Remodeling", "3D-Umbau"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Remodeling", "3D-Umbau"),
         source_format: "remodeling.scene".into(),
         component_kind: "remodeling".into(),
         dimension: "3d".into(),
@@ -180,7 +180,7 @@ pub const REMODELING_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 pub type RemodelingAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 pub type RemodelingMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
 
-/// 🧩️ Restart-stable content authority. Every encoded leaf decodes to at most 4 KiB; values carry
+/// 🧩️ Restart-stable content authority. Every literal leaf contains at most 4 KiB; values carry
 /// only bounded metadata and content-addressed leaves, never a whole image or mesh object.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", default)]
@@ -190,7 +190,7 @@ pub struct RemodelingDurableArtifact {
     pub mime: Option<String>,
     pub width: u32,
     pub height: u32,
-    pub chunks: Vec<String>,
+    pub chunks: Vec<ByteBuffer>,
 }
 
 pub type RemodelingDurableArtifactStore = BTreeMap<String, RemodelingDurableArtifact>;
@@ -248,7 +248,7 @@ pub fn remodeling_asset_chunk_source(snapshot: &RemodelingSnapshot, asset_id: &s
     let mut leaves = Vec::with_capacity(artifact.chunks.len());
     let mut byte_len = 0usize;
     for encoded in &artifact.chunks {
-        let chunk = decode_remodeling_durable_chunk(encoded)?;
+        let chunk = remodeling_durable_chunk(encoded)?;
         byte_len = byte_len.checked_add(chunk.len())?;
         if byte_len > REMODELING_RASTER_CONTENT_BYTES {
             return None;
@@ -282,7 +282,7 @@ pub fn durable_remodeling_asset(asset: &ImageAsset) -> Option<RemodelingDurableA
         mime: Some(asset.mime.clone()),
         width: asset.width,
         height: asset.height,
-        chunks: bytes.chunks(REMODELING_DURABLE_CHUNK_RAW_BYTES).map(base64_codec::base64_standard_encode).collect(),
+        chunks: bytes.chunks(REMODELING_DURABLE_CHUNK_RAW_BYTES).map(ByteBuffer::from_u8_slice).collect(),
     })
 }
 
@@ -380,24 +380,9 @@ impl RemodelingContentDigest {
     }
 }
 
-/// 🔗️ The packed-buffer handle a durable sparse cloud publishes in place of inline point bytes.
-pub fn remodeling_content_handle(content_id: &str, chunk_count: u64) -> String {
-    format!("remodeling-content:{content_id}|{chunk_count}")
-}
-
-pub fn remodeling_content_handle_parts(value: &str) -> Option<(&str, u64)> {
-    let (content_id, chunk_count) = value.strip_prefix("remodeling-content:")?.rsplit_once('|')?;
-    Some((content_id, chunk_count.parse().ok()?))
-}
-
 /// 🧱️ Raw bytes of one durable leaf, refusing anything above the 4 KiB leaf envelope.
-pub fn decode_remodeling_durable_chunk(encoded: &str) -> Option<Vec<u8>> {
-    let encoded_limit = REMODELING_DURABLE_CHUNK_RAW_BYTES.checked_add(2)?.checked_div(3)?.checked_mul(4)?;
-    if encoded.len() > encoded_limit {
-        return None;
-    }
-    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
-    (bytes.len() <= REMODELING_DURABLE_CHUNK_RAW_BYTES).then_some(bytes)
+pub fn remodeling_durable_chunk(chunk: &ByteBuffer) -> Option<&[u8]> {
+    (chunk.0.len() <= REMODELING_DURABLE_CHUNK_RAW_BYTES).then_some(chunk.0.as_slice())
 }
 
 /// ✅️ Whether `content_id` names complete durable content of `kind` with exactly `chunk_count` leaves
@@ -411,7 +396,7 @@ pub fn remodeling_content_is_complete(store: &RemodelingDurableArtifactStore, co
         RemodelingContentKind::Mesh => mesh_from_durable_chunks(&artifact.chunks).is_some(),
         RemodelingContentKind::Sparse | RemodelingContentKind::Image => {
             let mut bytes = 0usize;
-            artifact.chunks.iter().all(|encoded| decode_remodeling_durable_chunk(encoded).and_then(|chunk| bytes.checked_add(chunk.len())).is_some_and(|total| {
+            artifact.chunks.iter().all(|encoded| remodeling_durable_chunk(encoded).and_then(|chunk| bytes.checked_add(chunk.len())).is_some_and(|total| {
                 bytes = total;
                 total <= kind.max_bytes()
             }))
@@ -502,12 +487,12 @@ pub fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8
     true
 }
 
-fn mesh_from_durable_chunks(chunks: &[String]) -> Option<MeshData> {
+fn mesh_from_durable_chunks(chunks: &[ByteBuffer]) -> Option<MeshData> {
     let mut mesh = MeshData::default();
     let mut last_field = None;
     let mut bytes = 0usize;
     for encoded in chunks {
-        let chunk = decode_remodeling_durable_chunk(encoded)?;
+        let chunk = remodeling_durable_chunk(encoded)?;
         bytes = bytes.checked_add(chunk.len()).filter(|total| *total <= REMODELING_MESH_CONTENT_BYTES)?;
         if !apply_mesh_chunk(&mut mesh, last_field, &chunk) {
             return None;
@@ -576,7 +561,7 @@ pub fn bounded_remodeling_mesh_chunk(store: &RemodelingDurableArtifactStore, han
         return None;
     }
     let artifact = store.get(&handle.child_id)?;
-    Some(Arc::from(decode_remodeling_durable_chunk(artifact.chunks.get(usize::try_from(index).ok()?)?)?))
+    Some(Arc::from(remodeling_durable_chunk(artifact.chunks.get(usize::try_from(index).ok()?)?)?))
 }
 
 /// 🧱️ Resolves only fixed constants or durable content admitted by the 512/512 envelope.
@@ -621,112 +606,90 @@ pub fn remodeling_mesh_workspace(handle: &RemodelingMeshChild) -> Option<MeshDat
 //#endregion 🔖️MeshHandle
 //#endregion 🧩️Composition
 
-//#region 🔖️Packed
-/// 📦️ A flat `f32` buffer serialized as a base64 string of its little-endian bytes rather than a JSON
-/// array — point clouds and height grids commonly carry 10^5-10^6 elements, where per-element JSON
-/// text is both far larger on the wire and far slower to parse than one base64 blob.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[value(transparent)]
-#[serde(transparent)]
-pub struct PackedF32(pub String);
+//#region 🔖️Buffers
+/// ☁️ Literal samples or an explicit reference to snapshot-owned raw content.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum Float32Buffer {
+    #[dsl(key = "inline")]
+    Inline { values: Vec<f32> },
+    #[dsl(key = "content")]
+    Content { content_id: String, chunk_count: u64 },
+}
 
-impl PackedF32 {
-    /// 📦️ Encodes a `f32` slice as a base64 string of its little-endian bytes.
-    pub fn from_f32_slice(values: &[f32]) -> Self {
-        let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
-        Self(base64_codec::base64_standard_encode(bytes))
-    }
+impl Default for Float32Buffer {
+    fn default() -> Self { Self::Inline { values: Vec::new() } }
+}
 
-    /// 📦️ Decodes back into a `f32` vec; a malformed payload (bad base64, length not a multiple of 4)
-    /// decodes as empty rather than panicking, since packed buffers only ever round-trip in-process.
-    pub fn to_f32_vec(&self) -> Vec<f32> {
-        let Ok(bytes) = base64_codec::base64_standard_decode(self.0.as_bytes()) else {
-            return Vec::new();
-        };
-        let (chunks, remainder) = bytes.as_chunks::<4>();
-        if !remainder.is_empty() {
-            return Vec::new();
-        }
-        chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect()
-    }
-
+impl Float32Buffer {
+    pub fn from_f32_slice(values: &[f32]) -> Self { Self::Inline { values: values.to_vec() } }
+    pub fn to_f32_vec(&self) -> Vec<f32> { match self { Self::Inline { values } => values.clone(), Self::Content { .. } => Vec::new() } }
+    pub fn content_reference(&self) -> Option<(&str, u64)> { match self { Self::Content { content_id, chunk_count } => Some((content_id, *chunk_count)), Self::Inline { .. } => None } }
     pub fn to_f32_vec_from(&self, store: &RemodelingDurableArtifactStore) -> Vec<f32> {
-        let Some((content_id, chunk_count)) = remodeling_content_handle_parts(&self.0) else { return self.to_f32_vec() };
+        let Some((content_id, chunk_count)) = self.content_reference() else { return self.to_f32_vec() };
         let Some(artifact) = store.get(content_id).filter(|artifact| artifact.kind == "sparse" && u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)) else { return Vec::new() };
         let mut values = Vec::new();
-        for encoded in &artifact.chunks {
-            let Some(bytes) = decode_remodeling_durable_chunk(encoded) else { return Vec::new() };
+        for leaf in &artifact.chunks {
+            let Some(bytes) = remodeling_durable_chunk(leaf) else { return Vec::new() };
             let (chunks, remainder) = bytes.as_chunks::<4>();
-            if !remainder.is_empty() {
-                return Vec::new();
-            }
+            if !remainder.is_empty() { return Vec::new(); }
             values.extend(chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)));
         }
         values
     }
+    pub fn is_empty(&self) -> bool { match self { Self::Inline { values } => values.is_empty(), Self::Content { chunk_count, .. } => *chunk_count == 0 } }
+}
 
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+impl dsl::DslField for Float32Buffer {
+    fn shape() -> dsl::Shape { dsl::Shape::Block(Box::new(dsl::Shape::Statements(<Self as dsl::DslVariants>::variants()))) }
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        let shape = dsl::Shape::Statements(<Self as dsl::DslVariants>::variants_controlled(control)?);
+        Ok(dsl::Shape::Block(dsl::schema::producer::boxed(shape, control)?))
+    }
+    fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Block(Box::new(dsl::FieldValue::Statements(vec![<Self as dsl::DslVariants>::to_named_record(self)]))) }
+    fn to_value_controlled(&self, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::FieldValue, String> {
+        let mut statements = control.allocate_vec(1)?;
+        control.charge(std::mem::size_of::<dsl::FieldValue>())?;
+        statements.push(<Self as dsl::DslVariants>::to_named_record_controlled(self, control)?);
+        Ok(dsl::FieldValue::Block(Box::new(dsl::FieldValue::Statements(statements))))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let dsl::FieldValue::Block(value) = value else { return Err("expected a float-buffer block".into()) };
+        let dsl::FieldValue::Statements(statements) = value.as_ref() else { return Err("expected a float-buffer variant".into()) };
+        let [(keyword, record)] = statements.as_slice() else { return Err("expected one float-buffer variant".into()) };
+        <Self as dsl::DslVariants>::from_named_record(keyword, record).map_err(|error| error.to_string())
+    }
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.checkpoint()?;
+        let dsl::FieldValue::Block(value) = value else { return Err("expected a float-buffer block".into()) };
+        let dsl::FieldValue::Statements(statements) = value.as_ref() else { return Err("expected a float-buffer variant".into()) };
+        let [(keyword, record)] = statements.as_slice() else { return Err("expected one float-buffer variant".into()) };
+        <Self as dsl::DslVariants>::from_named_record_controlled(keyword, record, control).map_err(|error| error.to_string())
     }
 }
 
-/// 📦️ A flat `u8` buffer (vertex colors, classification codes) that serializes as a base64 string
-/// directly — same rationale as {@link PackedF32}.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+/// 🧱 Literal octets owned by a snapshot or a typed reconstruction operation.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[value(transparent)]
 #[serde(transparent)]
-pub struct PackedU8(pub String);
+pub struct ByteBuffer(pub Vec<u8>);
 
-impl PackedU8 {
-    /// 📦️ Encodes a `u8` slice as a base64 string.
-    pub fn from_u8_slice(values: &[u8]) -> Self {
-        Self(base64_codec::base64_standard_encode(values))
-    }
-
-    /// 📦️ Decodes back into a `u8` vec; a malformed payload decodes as empty.
-    pub fn to_u8_vec(&self) -> Vec<u8> {
-        base64_codec::base64_standard_decode(self.0.as_bytes()).unwrap_or_default()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
+impl ByteBuffer {
+    pub fn from_u8_slice(values: &[u8]) -> Self { Self(values.to_vec()) }
+    pub fn to_u8_vec(&self) -> Vec<u8> { self.0.clone() }
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
 }
 
-/// 🌉️ `PackedF32`'s inner string is ALREADY the wire format (base64 text), so it binds as a plain
-/// `Shape::Text` rather than `#[dsl(base64)]` (which is for raw `Vec<u8>` fields only) — no double
-/// encoding, no `-` sentinel: an empty buffer is just an empty quoted string.
-impl dsl::DslField for PackedF32 {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(self.0.clone())
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
-            other => Err(format!("expected Text, found {other:?}")),
-        }
-    }
+impl dsl::DslField for ByteBuffer {
+    fn shape() -> dsl::Shape { dsl::Shape::Bytes64 }
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> { control.checkpoint()?; Ok(dsl::Shape::Bytes64) }
+    fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Bytes64(self.0.clone()) }
+    fn to_value_controlled(&self, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::FieldValue, String> { control.copy_bytes(&self.0).map(dsl::FieldValue::Bytes64) }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> { match value { dsl::FieldValue::Bytes64(bytes) => Ok(Self(bytes.clone())), _ => Err("expected literal octets".into()) } }
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> { match value { dsl::FieldValue::Bytes64(bytes) => control.copy_bytes(bytes).map(Self), _ => Err("expected literal octets".into()) } }
 }
-
-/// 🌉️ Same reasoning as `PackedF32`'s impl above.
-impl dsl::DslField for PackedU8 {
-    fn shape() -> dsl::Shape {
-        dsl::Shape::Text
-    }
-    fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Text(self.0.clone())
-    }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        match value {
-            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
-            other => Err(format!("expected Text, found {other:?}")),
-        }
-    }
-}
-//#endregion 🔖️Packed
+//#endregion 🔖️Buffers
 
 //#region 🔖️Domain
 /// 🖼️ One embedded pixel asset (video frame, ortho tile, texture) referenced by id from
@@ -1218,8 +1181,8 @@ impl Default for RemodelingMesh {
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SparseCloud {
-    pub points: PackedF32,
-    pub colors: Option<PackedU8>,
+    pub points: Float32Buffer,
+    pub colors: Option<ByteBuffer>,
 }
 
 /// ☁️ Dense point cloud with optional per-point LAS-style classification codes (0 unclassified, 2
@@ -1229,10 +1192,10 @@ pub struct SparseCloud {
 #[value(rename_all = "camelCase", default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseCloud {
-    pub positions: PackedF32,
-    pub colors: Option<PackedU8>,
-    pub confidence: Option<PackedF32>,
-    pub classification: Option<PackedU8>,
+    pub positions: Float32Buffer,
+    pub colors: Option<ByteBuffer>,
+    pub confidence: Option<Float32Buffer>,
+    pub classification: Option<ByteBuffer>,
 }
 
 /// 🎥️ Recovered camera trajectory across all registered frames.
@@ -1651,7 +1614,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines/🦀️.rs"]
                             mod tests_refines_the_9fd25a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines-the-cam-0eaef0/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🔍️refines/🦀️.rs"]
                             mod tests_refines_the_cam_0eaef0;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧪️tests/🚫️refuses/🦀️.rs"]
@@ -2537,6 +2500,8 @@ pub mod editor {
         pub mod terminology;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/🦀️.rs"]
         pub mod reconstruction_session;
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
+        pub mod transient;
 
         #[path = "."]
         pub mod commands {
@@ -2562,6 +2527,8 @@ pub mod editor {
             pub mod edit_calibration;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️export-qc-report/🦀️.rs"]
             pub mod export_qc_report;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️import-abort/🦀️.rs"]
+            pub mod import_abort;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️import-frame-payload/🦀️.rs"]
             pub mod import_frame_payload;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎞️import-frames/🦀️.rs"]

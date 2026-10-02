@@ -21,8 +21,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetString {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::SetString(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set string", "Zeichenkette setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set string", "Zeichenkette setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

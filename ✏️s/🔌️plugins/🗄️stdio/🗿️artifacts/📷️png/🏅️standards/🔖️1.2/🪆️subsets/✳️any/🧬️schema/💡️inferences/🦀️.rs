@@ -62,10 +62,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1_2::subset
 /// 💡️ Registers `s.stdio.png.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `png_artifact_schema_descriptor`'s registration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn png_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn png_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.stdio.png.inference",
-        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

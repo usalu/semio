@@ -14,12 +14,38 @@ use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
-    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -230,7 +256,9 @@ fn md_applied_text(text: &str) -> Result<MdSnapshot, store::TextError> {
 /// unchanged at either end of a container stay untouched; a changed paragraph, or a heading that keeps its level, re-sets its
 /// inlines; a block quote, and a list that keeps its shape and item count, recurse into their own blocks; any other changed
 /// block is replaced; surplus blocks are removed (last first) or inserted. History therefore edits the block an author
-/// changed, never the whole document; a schema change alone is the whole-document `set-snapshot`.
+/// changed, never the whole document. The one genuine whole-document replacement is an applied DSL envelope that names
+/// another document schema: it is `set-snapshot`. The main window's Apply and the document-details editor both commit
+/// through here.
 fn md_net_mutations(base: &MdSnapshot, next: &MdSnapshot) -> Vec<MdMutation> {
     if base.schema != next.schema {
         return vec![MdMutation::SetSnapshot(SetSnapshot { snapshot: next.clone() })];
@@ -465,7 +493,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for MdEdito
 
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| MdMutation::SetSnapshot(SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, md_net_mutations)
     }
 }
 //#endregion 🔖️Editor

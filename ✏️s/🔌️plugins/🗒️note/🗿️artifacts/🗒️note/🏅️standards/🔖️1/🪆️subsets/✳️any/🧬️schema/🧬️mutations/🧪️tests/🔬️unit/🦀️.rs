@@ -51,7 +51,7 @@ fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot 
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_registers_semantic_descriptors() {
-    register_note_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_note_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in NoteMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
@@ -374,8 +374,40 @@ async fn a_block_drag_retargeted_onto_a_missing_block_blocks_finalizing() {
 /// 🗣️ The drag's history row label reads the block count and the offset in English and German.
 #[test]
 fn a_block_drag_label_reads_the_count_and_offset() {
-    let label = |mutation: NoteMutation| (mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::En), mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::De));
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_owned(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()) };
     assert_eq!(label(drag_blocks(vec!["b1".into()], 2.5, -10.0)), ("Drag 1 block by (2.5, -10)".to_string(), "1 Block um (2,5; -10) ziehen".to_string()));
     assert_eq!(label(drag_blocks(vec!["b1".into(), "b2".into()], 0.0, 3.0)), ("Drag 2 blocks by (0, 3)".to_string(), "2 Blöcke um (0; 3) ziehen".to_string()));
+}
+
+/// 🎚️ Document-setting rows read the value the way the inspector shows it (opacity in percent, German decimal comma, switches
+/// as verbs), an unset value reads as a reset, and no label leaks a Rust `Option` debug form.
+#[test]
+fn document_setting_labels_read_the_value_not_a_debug_option() {
+    let label = |mutation: NoteMutation| { let label = mutation.label(); (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_owned(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()) };
+    let pair = |en: &str, de: &str| (en.to_string(), de.to_string());
+    assert_eq!(label(change_grid_opacity(Some(0.76))), pair("Change grid opacity to 76%", "Rasterdeckkraft auf 76 % ändern"));
+    assert_eq!(label(change_grid_opacity(None)), pair("Reset grid opacity", "Rasterdeckkraft zurücksetzen"));
+    assert_eq!(label(change_grid_spacing(Some(12.5))), pair("Change grid spacing to 12.5", "Rasterabstand auf 12,5 ändern"));
+    assert_eq!(label(change_grid_visible(Some(false))), pair("Hide grid", "Raster ausblenden"));
+    assert_eq!(label(change_snap_enabled(Some(true))), pair("Enable snapping", "Fangfunktion einschalten"));
+    assert_eq!(label(rename_note(Some("Plan".into()))), pair("Rename note to \"Plan\"", "Notiz in \"Plan\" umbenennen"));
+    assert_eq!(label(rename_note(None)), pair("Remove note title", "Notiztitel entfernen"));
+    let settings = [change_grid_opacity(Some(1.0)), change_grid_spacing(None), change_grid_subdivisions(Some(4.0)), change_grid_subdivisions(None), change_grid_visible(Some(true)), change_grid_visible(None), change_snap_enabled(Some(false)), change_snap_enabled(None), change_snap_grid_spacing(Some(8.0)), change_snap_grid_spacing(None), change_pencil_width(Some(2.25)), change_pencil_width(None), change_eraser_radius(Some(16.0)), change_eraser_radius(None)];
+    for mutation in settings {
+        let (en, de) = label(mutation.clone());
+        assert!(![&en, &de].iter().any(|text| text.contains("Some(") || text.contains("None") || text.contains("true") || text.contains("false")), "{mutation:?}: {en} / {de}");
+    }
+}
+
+/// 🪧️ A history-edit reference chip reads a block by its own name in the shown document (the generic default, gap N3), and
+/// the drag's block reference takes "Use selection" from the composite window's block selection domain.
+#[test]
+fn block_references_read_their_name_and_take_the_block_selection() {
+    let snapshot = sample_snapshot();
+    let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&snapshot), &["b1"].into_iter().collect());
+    assert_eq!(names.get("b1").map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()).as_deref(), Some("Text"));
+    let schema: serde_json::Value = serde_json::from_str(<DragBlocks as protocol::MutationLeaf>::PAYLOAD_SCHEMA).expect("leaf schema");
+    let reference = &schema["properties"]["ids"]["x-semio-ui"]["ref"];
+    assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::note::NOTE_INTERACTION_BLOCKS), Some(crate::editor::note::NOTE_INTERACTION_GRANULARITY)), "{reference}");
 }
 //#endregion ⏪️TimeTravel

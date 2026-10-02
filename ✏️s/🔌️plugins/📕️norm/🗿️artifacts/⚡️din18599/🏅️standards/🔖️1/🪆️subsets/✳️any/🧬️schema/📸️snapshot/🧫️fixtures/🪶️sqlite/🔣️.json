@@ -1,0 +1,112 @@
+{
+  "buildingCategory": "NonResidential",
+  "attachment": "EndTerrace",
+  "useClass": "School",
+  "method": "Tabular",
+  "netFloorAreaM2": 1000.25,
+  "heatedVolumeM3": 5000.5,
+  "gegQpFactor": 1.25,
+  "deltaUWbWM2k": 0.05,
+  "automationClass": "D",
+  "zones": [
+    {
+      "id": "duplicate zone",
+      "labelEn": "Classroom 世界",
+      "labelDe": "Klasse\u0000Nord",
+      "usageProfile": "School",
+      "areaM2": 120.25,
+      "volumeM3": 360.5,
+      "thetaIHeatC": 20.25,
+      "thetaICoolC": 26.5,
+      "occupants": 4294967295,
+      "internalGainsWM2": 7.25,
+      "lightingPowerWM2": 10.5
+    },
+    {
+      "id": "duplicate zone",
+      "labelEn": "",
+      "labelDe": "",
+      "usageProfile": "WFH",
+      "areaM2": -20.25,
+      "volumeM3": -60.5,
+      "thetaIHeatC": -3.25,
+      "thetaICoolC": -1.5,
+      "occupants": 0,
+      "internalGainsWM2": -2.25,
+      "lightingPowerWM2": -4.5
+    }
+  ],
+  "elements": [
+    {
+      "id": "duplicate element",
+      "labelEn": "Wall 世界",
+      "labelDe": "Wand\u0000Süd",
+      "kind": "Window",
+      "zoneId": "duplicate zone",
+      "areaM2": 8.25,
+      "uValueWM2k": 1.125,
+      "orientationDeg": 180.5,
+      "tiltDeg": 90.25,
+      "gValue": 0.625,
+      "fc": 0.75,
+      "adjacency": "Unheated"
+    },
+    {
+      "id": "duplicate element",
+      "labelEn": "",
+      "labelDe": "",
+      "kind": "Roof",
+      "zoneId": "missing zone",
+      "areaM2": -8.25,
+      "uValueWM2k": -1.125,
+      "orientationDeg": -180.5,
+      "tiltDeg": -90.25,
+      "gValue": -0.625,
+      "fc": -0.75,
+      "adjacency": "Ground"
+    }
+  ],
+  "heating": {
+    "generationEfficiency": 0.825,
+    "distributionEfficiency": 0.9,
+    "storageEfficiency": 0.95,
+    "transferEfficiency": 0.875,
+    "energyCarrier": "unknown fuel 世界\u0000"
+  },
+  "dhw": {
+    "specificDemandKwhPersonA": 100.25,
+    "storageLossKwhA": 200.5,
+    "distributionLossKwhA": 300.75,
+    "energyCarrier": ""
+  },
+  "ventilation": {
+    "airflowM3H": 500.25,
+    "heatRecoveryEta": 0.875,
+    "fanPowerW": 100.5
+  },
+  "cooling": {
+    "plant": {
+      "eer": 3.625,
+      "energyCarrier": "arbitrary cooling"
+    }
+  },
+  "lighting": {
+    "controlFactor": 0.725
+  },
+  "renewables": {
+    "pvAreaM2": 30.25,
+    "pvEfficiency": 0.225,
+    "solarThermalKwhA": 2500.5
+  },
+  "climate": {
+    "childId": "climate-child 世界\u0000",
+    "target": {
+      "artifactId": "climate-document",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "table",
+        "subset": "*"
+      }
+    }
+  }
+}

@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ValidateFunction } from "ajv";
-import { resolveTestLevel, runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -39,10 +40,10 @@ class TestScript extends BundleScript {
 
 /** 📍 Executes exact document-scope and newly-created session handoff laws. */
 class DocumentOpeningScopeCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("document-opening-scope-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🚪️opening/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🚪️opening/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -64,10 +65,10 @@ class TypecheckScript extends BundleScript {
 
 /** 🎥️ Executes the typed InteractionState tutorial capture, diff, and playback laws. */
 class TutorialInteractionCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("tutorial-interaction-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(
+    await runVitest(
       this.root,
       [
         "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
@@ -82,10 +83,10 @@ class TutorialInteractionCheckScript extends BundleScript {
 
 /** 🌊️ Executes the shared Flow browser runtime and mounted React session-retirement laws. */
 class FlowBrowserRuntimeCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("flow-browser-runtime-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(
+    await runVitest(
       this.root,
       [
         "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
@@ -100,16 +101,16 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
 
 /** 🌱️ Executes the retained artifact-creation progress, cancellation and accessibility laws. */
 class ArtifactCreationProgressCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("artifact-creation-progress-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(
+    await runVitest(
       this.root,
       ["../../../../🧪️tests/🔬️artifact-creation-ready-opening/🟦️.ts", "--silent=false", "--reporter=verbose"],
       "../../🧪️tests/🎚️config/🟦️.ts",
     );
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(
+    await runVitest(
       this.root,
       [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--silent=false", "--reporter=verbose", "--testNamePattern=space artifact creation owner"],
       "../../🧪️tests/🎚️config/🟦️.ts",
@@ -194,14 +195,14 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
 }
 
 class DirectoryHomeBootstrapCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("directory-home-bootstrap-check accepts no arguments");
     console.log(`directory-home-bootstrap-oracle: checks=${directoryHomeBootstrapOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     // 🏁️ The second law is this lane's other half: the receipt only reaches the bootstrap because a
     // completion carries its operation's terminal output to EVERY subscriber of that instance.
-    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects|hands one completion its own effects"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects|hands one completion its own effects"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -252,11 +253,11 @@ export function hubAuthContractOracle(repoRoot: string): number {
  * schemas, the closed refusal tables, the local-only connection book, and both panes under a fake
  * hub transport speaking `📓️au1-hub-auth-sessions-and-rate-limit.md` §1's real wire. */
 class HubSignInSpacesCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("hub-sign-in-spaces-check accepts no arguments");
     console.log(`hub-auth-contract-oracle: checks=${hubAuthContractOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(
+    await runVitest(
       this.root,
       ["../../../../🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🤖️AgentDelegations/🧪️tests/🧩️component/🟦️.tsx", "--silent=false", "--reporter=verbose"],
       "../../🧪️tests/🎚️config/🟦️.ts",
@@ -311,13 +312,13 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
 }
 
 class DirectoryInviteCapabilityCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("directory-invite-capability-check accepts no arguments");
     console.log(`directory-invite-capability-oracle: checks=${directoryInviteCapabilityOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker space administration"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker space administration"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -383,13 +384,13 @@ export function scopedPresenceOracle(repoRoot: string): number {
 }
 
 class ScopedPresenceCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("scoped-presence-check accepts no arguments");
     console.log(`scoped-presence-oracle: checks=${scopedPresenceOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -701,49 +702,49 @@ export function selectionMergeVocabularyOracle(repoRoot: string): number {
 /** 🖱️ Executes the mounted `World3dHost` gesture laws next to their language-neutral Node twin. */
 /** 🔀️ Executes the surface-role/mode switching laws over the language-neutral switching fixture. */
 class SurfaceSwitchCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("surface-switch-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🔀️surface-switch/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🔀️surface-switch/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 /** 🎯️ Executes the Input Causality Ledger laws over the pure `ShellHost/input-ledger` module. */
 class InputLedgerCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("input-ledger-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🎯️input-ledger/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🎯️input-ledger/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 /** ⌨️ Executes the window-scope laws over the language-neutral dock-seed/chord-owner fixture. */
 class WindowScopeCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("window-scope-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/⌨️window-scope/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/⌨️window-scope/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 /** 📌️ Runs the view-state carriage laws: contributions are not a view-state field, and `panelJson`
  * is the one long field, bounded at the schema capacity. */
 class ViewStateCarriageCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("view-state-carriage-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/📌️view-state-carriage/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/📌️view-state-carriage/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 class World3dInteractionCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("world3d-interaction-check accepts no arguments");
     console.log(`world3d-pointer-gesture-oracle: checks=${world3dPointerGestureOracle(this.repoRoot)} clean`);
     console.log(`interaction-selection-set-oracle: checks=${interactionSelectionSetOracle(this.repoRoot)} clean`);
     console.log(`selection-merge-vocabulary-oracle: checks=${selectionMergeVocabularyOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧪️tests/🖱️world3d-interaction/🟦️.tsx", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -927,11 +928,11 @@ export function surfaceHostRetentionOracle(repoRoot: string): number {
 /** 🪪️ Runs the retained-surface-host laws: the framework-free twin over the language-neutral fixture,
  * then the React half that witnesses DOM identity and the single attach. */
 class SurfaceRetentionCheckScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments.length !== 0) throw new Error("surface-retention-check accepts no arguments");
     console.log(`surface-host-retention-oracle: checks=${surfaceHostRetentionOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🔬️engine-contract/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🔬️engine-contract/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

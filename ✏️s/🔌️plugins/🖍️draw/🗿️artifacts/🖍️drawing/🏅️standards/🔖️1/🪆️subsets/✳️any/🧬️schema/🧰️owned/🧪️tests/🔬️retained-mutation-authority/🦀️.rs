@@ -59,8 +59,8 @@ fn nested_snapshot() -> DrawingSnapshot {
         value.children.push(boolean);
         value.children.push(trace);
     }
-    admit_layer_string_destinations(&mut group);
     snapshot.layers.push(group);
+    snapshot.layers.iter_mut().for_each(admit_layer_string_destinations);
     snapshot.assets.insert("asset-a".into(), DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
     snapshot
 }
@@ -1585,7 +1585,7 @@ fn retained_blend_mutations_validate_vocabulary_and_return_unchanged_rejections(
         let id = crate::schema::layer_id(&source.layers[0]).to_owned();
         let mode = case["patch"]["value"].as_str().unwrap();
         let operation = crate::mutations::set_layer_blend_mode(id,mode.into());
-        let result = apply(source.clone(),&operation);
+        let result = apply(nested_snapshot(),&operation);
         if case["accepted"] == true {
             let actual = result.expect("canonical mode applies");
             let mut expected = source.clone();

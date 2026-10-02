@@ -1,2 +1,14 @@
 grammar Stdio_gif_snapshot;
-DOCUMENT: 'schema' [ ]+ 'stdio.gif' ;
+document: 'semio' 'stdio.gif.dsl' 'v1' snapshot EOF;
+snapshot: 'schema' '=' text 'width' '=' UINT 'height' '=' UINT 'background-color-index' '=' UINT 'pixel-aspect-ratio' '=' UINT globalPalette? 'images' '=' '[' image* ']';
+globalPalette: 'gct' '{' palette '}';
+localPalette: 'lct' '{' palette '}';
+palette: 'sorted' '=' boolean 'colors' '=' '[' color* ']';
+color: '{' 'r' '=' UINT 'g' '=' UINT 'b' '=' UINT '}';
+image: '{' 'left' '=' UINT 'top' '=' UINT 'width' '=' UINT 'height' '=' UINT 'interlace' '=' boolean 'indices' '=' text localPalette? '}';
+boolean: 'true' | 'false';
+text: STRING | IDENT | UINT;
+UINT: [0-9]+;
+STRING: '"' ('\\' . | ~["\\])* '"';
+IDENT: [a-zA-Z_] [a-zA-Z_0-9.-]*;
+WS: [ \t\r\n]+ -> skip;

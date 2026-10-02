@@ -188,7 +188,7 @@ mod live {
         let background_color_index = decoder.bg_color().unwrap_or(0) as u8;
         let pixel_aspect_ratio = *bytes.get(12).ok_or("truncated Logical Screen Descriptor: no pixel-aspect-ratio byte")?;
         let gct = decoder.global_palette().unwrap_or(&[]).to_vec();
-        let stored_interlace = crate::raster::gif_image_interlace_flags(bytes)?;
+        let stored_interlace = semio_s_plugin_stdio_raster_test_oracle::gif_image_interlace_flags(bytes)?;
         let mut images = Vec::new();
         while let Some(frame) = decoder.read_next_frame().map_err(|error| format!("independent reader could not decode a GIF87a image: {}", error))? {
             let interlaced = stored_interlace.get(images.len()).copied().unwrap_or(false);
@@ -209,7 +209,7 @@ mod live {
                 // 🔀️ `indices` is always natural row order in this model (that is what the reference
                 // decoder hands back); GIF stores an interlaced image's rows in four passes, and
                 // `gif::Encoder` writes the buffer verbatim, so the reordering is the caller's.
-                let stored = if image.interlaced { crate::raster::gif_reorder_rows(&image.indices, image.width as usize, image.height as usize, true) } else { image.indices.clone() };
+                let stored = if image.interlaced { semio_s_plugin_stdio_raster_test_oracle::gif_reorder_rows(&image.indices, image.width as usize, image.height as usize, true) } else { image.indices.clone() };
                 let frame = gif::Frame {
                     delay: 0,
                     dispose: gif::DisposalMethod::Any,

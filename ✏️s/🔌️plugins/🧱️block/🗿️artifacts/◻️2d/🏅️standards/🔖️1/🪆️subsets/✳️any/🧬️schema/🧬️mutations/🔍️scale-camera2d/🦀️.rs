@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ScaleCamera2d 
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamerazoom auf {} setzen", self.new_zoom))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale camera to {}", self.new_zoom), &format!("Kamerazoom auf {} setzen", self.new_zoom))
     }
 }
 //#endregion 🔖️Mutation

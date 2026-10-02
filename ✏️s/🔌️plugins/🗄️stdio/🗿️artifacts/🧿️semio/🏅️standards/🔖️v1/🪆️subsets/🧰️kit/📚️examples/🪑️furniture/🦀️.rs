@@ -8,7 +8,8 @@
 //! output of `demo_kit_snapshot()`, captured via a temporary `debug_dump_fixture_bytes` test in
 //! `📸️snapshot/🦀️.rs` (removed after capture), verified byte-exact with `wc -c`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "furniture";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

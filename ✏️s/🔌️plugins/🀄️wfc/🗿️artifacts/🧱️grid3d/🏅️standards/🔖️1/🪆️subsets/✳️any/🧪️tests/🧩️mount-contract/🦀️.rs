@@ -34,8 +34,8 @@ fn examples_round_trip_dsl_and_pack() {
 
 #[test]
 fn example_labels_are_localized_en_and_de() {
-    assert_eq!(blocks::label(), semio_framework_plugin::LocalizedLabel::native("Building Blocks", "Bauklötze"));
-    assert_eq!(pipes_3d::label(), semio_framework_plugin::LocalizedLabel::native("3D Pipes", "3D-Rohre"));
+    assert_eq!(blocks::label(), semio_framework_ui_locale::LocalizedLabel::native("Building Blocks", "Bauklötze"));
+    assert_eq!(pipes_3d::label(), semio_framework_ui_locale::LocalizedLabel::native("3D Pipes", "3D-Rohre"));
 }
 
 #[test]

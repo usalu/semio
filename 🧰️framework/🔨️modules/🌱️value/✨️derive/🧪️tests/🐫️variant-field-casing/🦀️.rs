@@ -16,7 +16,7 @@
 //!    that carrier instead of handing the whole object to a scalar `FromValue` that can never
 //!    accept it. serde refuses this shape at serialization time rather than defining a carrier, so
 //!    the oracle here is serde's own error — asserted, not asserted-about.
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "snake_case", deny_unknown_fields)]
@@ -69,7 +69,7 @@ fn wire_keys(value: &DslValue) -> Vec<String> {
 }
 
 // 🌿️ See the sibling `🛡️deny-unknown-fields-enums.rs` test file's identical docstring for why
-// `semio_framework_os_kernel` alone (not a separate `semio_framework_value_derive` import) is the
+// `semio_framework_value` alone (not a separate `semio_framework_value_derive` import) is the
 // correct single import here.
 
 //#region 🔖️RenameAllAlone — internally tagged

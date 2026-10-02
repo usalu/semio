@@ -64,8 +64,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindMorphTa
         vec![super::GltfMutation::UnbindMorphTargetAttribute(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Morph Target Attribute", "Bindung des Morphzielattributs aufheben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind Morph Target Attribute", "Bindung des Morphzielattributs aufheben")
     }
 
     fn target(&self) -> Vec<String> {

@@ -748,8 +748,7 @@ pub fn slider_adjacent_snap(current: f64, snaps: impl IntoIterator<Item = f64>, 
     }
 }
 
-/// 📄️ How many ladder rungs a large arrow (`Shift`) or a page key moves a slider (a page key stopping on the first
-/// detent it reaches).
+/// 📄️ How many steps a large arrow (`Shift`) or a page key with no detent ahead moves a numeric control.
 pub const SLIDER_PAGE_STEPS: f64 = 10.0;
 
 /// 🎹️ The keys a slider takes, once a renderer has mapped its physical key (direction, `dir`, inversion) onto
@@ -765,26 +764,43 @@ pub enum SliderKey {
 }
 
 /// 🪜️ The keyboard law every renderer shares for a bounded slider — [`ui_number_key_value`] with both bounds.
-pub fn slider_key_value(current: f64, min: f64, max: f64, step: f64, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
-    ui_number_key_value(current, Some(min), Some(max), step, snaps, key, large)
+#[allow(clippy::too_many_arguments, reason = "the twin of the TypeScript law's positional facets")]
+pub fn slider_key_value(current: f64, min: f64, max: f64, step: f64, precision: Option<u16>, display_factor: Option<f64>, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
+    ui_number_key_value(current, Some(min), Some(max), step, precision, display_factor, snaps, key, large)
 }
 
-/// ⌨️ The keyboard law of every numeric control. Arrows walk one rung of the step ladder from `min` (from 0
-/// without one; `large` walks [`SLIDER_PAGE_STEPS`] rungs) and never stop on a detent off their path, so a detent
-/// never traps them; from an off-ladder value the first rung beyond it is one rung. Page keys walk
-/// [`SLIDER_PAGE_STEPS`] rungs and stop on the first detent they reach. A key landing within ladder tolerance of a
-/// detent lands on the detent exactly (a rung of a `π/180` ladder from `-π` becomes `π/2` itself). Home and End go
-/// to the bounds (and keep the value without one). An invalid step walks rungs of one. The result is clamped to the
-/// bounds and cleaned to the decimals of the ladder origin and `step`, so `0.2 + 0.1` lands on `0.3`.
-pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, step: f64, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
+/// ⌨️ The keyboard law of every numeric control (slider, dial, stepper, number field, vector axis). The step is `step`,
+/// else (a non-positive or non-finite one) `10^-precision` display units converted back by the display factor, else 1.
+/// Arrows walk one step of the ladder from `min` (from 0 without one; `large` walks [`SLIDER_PAGE_STEPS`]); from an
+/// off-ladder value the first rung beyond it is one step, and they never stop on a detent off their path, so a detent
+/// never traps them. Page keys jump to the next/previous detent, else walk [`SLIDER_PAGE_STEPS`] steps. Home and End
+/// go to the bounds (and keep the value without one). A walked value is cleaned to the decimals of the ladder origin and
+/// step (`0.2 + 0.1` lands on `0.3`), then — with a `precision` — rounded half away from zero at that precision in
+/// display units and divided back by the factor, then clamped to the bounds; a value landing within ladder tolerance of
+/// a detent lands on the detent exactly (a rung of a `π/180` ladder from `-π` becomes `π/2` itself).
+#[allow(clippy::too_many_arguments, reason = "the twin of the TypeScript law's positional facets")]
+pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, step: f64, precision: Option<u16>, display_factor: Option<f64>, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
     let min = min.filter(|min| min.is_finite());
     let max = max.filter(|max| max.is_finite()).map(|max| min.map_or(max, |min| max.max(min)));
     let clamp = |value: f64| value.max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY));
+    let factor = display_factor.filter(|factor| factor.is_finite() && *factor > 0.0);
     let origin = min.unwrap_or(0.0);
-    let step = if step.is_finite() && step > 0.0 { step } else { 1.0 };
+    let step = if step.is_finite() && step > 0.0 {
+        step
+    } else {
+        precision.map_or(1.0, |precision| crate::round_ui_number(10f64.powi(-i32::from(precision.min(crate::UI_NUMBER_PRECISION_MAX))), precision) / factor.unwrap_or(1.0))
+    };
     let digits = decimal_digits(origin).max(decimal_digits(step)).min(12);
     let snaps: Vec<f64> = snaps.into_iter().filter(|snap| snap.is_finite()).collect();
-    let walk = |rungs: f64, forward: bool| {
+    let settle = |value: f64| snaps.iter().copied().find(|snap| (value - snap).abs() <= 1e-9 * step * ((snap - origin) / step).abs().max(1.0)).unwrap_or(value);
+    let shown = |value: f64| match precision {
+        None => value,
+        Some(precision) => {
+            let rounded = crate::round_ui_number(ui_number_display(value, factor), precision);
+            factor.map_or(rounded, |factor| rounded / factor)
+        }
+    };
+    let walk = |steps: f64, forward: bool| {
         let position = (current - origin) / step;
         let nearest = position.round();
         let base = if (position - nearest).abs() <= 1e-9 * nearest.abs().max(1.0) {
@@ -794,21 +810,14 @@ pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, ste
         } else {
             position.ceil()
         };
-        clamp(crate::round_ui_number(origin + (if forward { base + rungs } else { base - rungs }) * step, digits))
+        settle(clamp(shown(crate::round_ui_number(origin + (if forward { base + steps } else { base - steps }) * step, digits))))
     };
-    let settle = |value: f64| snaps.iter().copied().find(|snap| (value - snap).abs() <= 1e-9 * step * ((snap - origin) / step).abs().max(1.0)).unwrap_or(value);
-    let page = |forward: bool| {
-        let target = walk(SLIDER_PAGE_STEPS, forward);
-        let reached = snaps.iter().copied().filter(|snap| if forward { *snap > current && *snap <= target } else { *snap < current && *snap >= target });
-        let first = if forward { reached.min_by(f64::total_cmp) } else { reached.max_by(f64::total_cmp) };
-        first.unwrap_or_else(|| settle(target))
-    };
-    let rungs = if large { SLIDER_PAGE_STEPS } else { 1.0 };
+    let steps = if large { SLIDER_PAGE_STEPS } else { 1.0 };
     match key {
-        SliderKey::Increment => settle(walk(rungs, true)),
-        SliderKey::Decrement => settle(walk(rungs, false)),
-        SliderKey::PageUp => page(true),
-        SliderKey::PageDown => page(false),
+        SliderKey::Increment => walk(steps, true),
+        SliderKey::Decrement => walk(steps, false),
+        SliderKey::PageUp => slider_adjacent_snap(current, snaps.iter().copied(), true).map_or_else(|| walk(SLIDER_PAGE_STEPS, true), clamp),
+        SliderKey::PageDown => slider_adjacent_snap(current, snaps.iter().copied(), false).map_or_else(|| walk(SLIDER_PAGE_STEPS, false), clamp),
         SliderKey::Home => min.unwrap_or(current),
         SliderKey::End => max.unwrap_or(current),
     }

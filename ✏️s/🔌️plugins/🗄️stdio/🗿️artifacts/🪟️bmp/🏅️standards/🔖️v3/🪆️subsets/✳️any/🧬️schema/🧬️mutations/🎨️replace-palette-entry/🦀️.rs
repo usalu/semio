@@ -44,8 +44,8 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for ReplacePaletteEntryMut
             None => Vec::new(),
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace palette entry", "Paletteneintrag ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace palette entry", "Paletteneintrag ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-palette-entry".into()]

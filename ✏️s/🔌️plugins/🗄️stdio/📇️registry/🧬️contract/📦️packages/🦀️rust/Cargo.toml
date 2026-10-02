@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }

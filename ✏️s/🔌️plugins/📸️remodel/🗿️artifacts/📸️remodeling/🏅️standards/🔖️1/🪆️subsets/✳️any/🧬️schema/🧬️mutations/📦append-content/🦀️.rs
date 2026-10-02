@@ -4,12 +4,12 @@
 
 use crate::diff::RemodelingDiff;
 use crate::mutations::RemodelingMutation;
-use crate::{RemodelingContentKind, RemodelingSnapshot};
+use crate::{ByteBuffer, RemodelingContentKind, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-/// 📦️ `append-content` payload: `chunks` are base64 raw leaves placed at leaf index `first`.
+/// 📦️ `append-content` payload: `chunks` are literal raw leaves placed at leaf index `first`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -22,7 +22,7 @@ pub struct AppendContent {
     pub width: u32,
     pub height: u32,
     pub first: u64,
-    pub chunks: Vec<String>,
+    pub chunks: Vec<ByteBuffer>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -39,8 +39,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AppendCo
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltsblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Append {} content leaves to \"{}\"", self.chunks.len(), self.content_id), &format!("{} Inhaltsblätter an \"{}\" anhängen", self.chunks.len(), self.content_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.content_id.clone()]

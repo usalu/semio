@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the envelope's mutation vocabulary, its catalog, its committed JSON-carrier vectors, and the third-party reference that reads them. `s.stdio.semio` is the semio ENVELOPE — a union over eighteen semio-native subsets — and its JSON carrier is published schema-first beside the schema types, so a JSON implementation that has never seen this repository can read it and route it by the envelope's own law.",
   "oracles": [
@@ -20,7 +20,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/maciejhirsz/json-rust",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "engine": {
         "family": "json-rs",
         "implementation": "json Rust crate (maciejhirsz/json-rust) reading the committed envelope carrier",
@@ -694,8 +694,8 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🏛️apply-model-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:abf982aeae9d5d44a3a282d58f5c9e6a1e0bc4c25dfae7f8a22f4c3b5264a9fc",
-          "bytes": 291979
+          "sha256": "sha256:209d5615bc09bee29c8171096e6847779ff95600ffbdac347b8bdcc28ceadf96",
+          "bytes": 291799
         },
         {
           "role": "mutation-json",
@@ -708,8 +708,8 @@
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🏛️apply-model-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1eab7c853d9d03be8c1f9e24d99e7b31a027bda6bda29f4ffd21dd0c74a792a1",
-          "bytes": 292467
+          "sha256": "sha256:4525895b66990a25868e1a78bd3e8974aa289cfb24f662865cf85199f81dc5b1",
+          "bytes": 292287
         }
       ],
       "provenance": {
@@ -1781,5 +1781,6 @@
         }
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

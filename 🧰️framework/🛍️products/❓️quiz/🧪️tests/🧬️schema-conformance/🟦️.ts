@@ -5,7 +5,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
-import { type AdapterContext, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type Quiz, catalogIssues, quizIssues } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const REJECTED = "shared://🧬️schema-conformance/🔣️.json";

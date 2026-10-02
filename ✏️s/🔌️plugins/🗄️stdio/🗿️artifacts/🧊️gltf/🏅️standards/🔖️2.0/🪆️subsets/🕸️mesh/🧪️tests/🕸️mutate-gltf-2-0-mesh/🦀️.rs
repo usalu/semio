@@ -10,8 +10,8 @@
 //! carry what it removed — the top-level members restored from the original document.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, restore_members};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
 
 
 //#region 🔖️Spec
@@ -81,7 +81,7 @@ mod subject {
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document, GltfAccessorType, GltfComponentType};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{bind_morph_target_attribute, bind_primitive_attribute, bind_primitive_indices, bind_primitive_material, change_mesh_extension_data, change_mesh_extra_data, change_mesh_morph_weights, change_mesh_name, change_primitive_extension_data, change_primitive_extra_data, change_primitive_topology_mode, create_accessor, create_mesh, create_morph_target, create_primitive, delete_accessor, delete_mesh, delete_morph_target, delete_primitive, move_accessor, move_mesh, move_morph_target, move_morph_target_attribute, move_primitive, move_primitive_attribute, reorder_accessors, reorder_meshs, reorder_morph_target_attributes, reorder_morph_targets, reorder_primitive_attributes, reorder_primitives, unbind_morph_target_attribute, unbind_primitive_attribute, unbind_primitive_indices, unbind_primitive_material};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params
     /// 🔢️ A non-negative integer payload member.

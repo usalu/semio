@@ -5,12 +5,12 @@
 Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, once in Python — and require the same answer
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.trinity.rewriting` rule document and all seven typed mutations,
+  second implementation of the `s.trinity.rewriting` rule document and all fourteen typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` (the
   document: three whole JSON documents carried as `contentMediaType: application/json` strings, plus
   a map of parameter bindings and a map of `{x, y}` layout points, `additionalProperties: false`),
-  from `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the seven verbs and their argument
-  lists) and from the seven committed specification vectors. It imports nothing from this
+  from `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the fourteen verbs and their argument
+  lists) and from the fourteen committed specification vectors. It imports nothing from this
   repository's Rust.
 
   Why a second implementation rather than a third-party library. A rewrite rule here is not a
@@ -60,8 +60,8 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
 
   The committed specification vectors were KEPT, not replaced: `spec-vector-<kind>` replays each
   handcrafted `(before, mutation, after)` triple through both implementations. Unlike this plugin's
-  `🔌️jack` sibling, all seven of them are ACCEPTING, so the accepting direction here already had
-  committed evidence; what the real-document rows add is the same seven verbs against a rule whose
+  `🔌️jack` sibling, all fourteen of them are ACCEPTING, so the accepting direction here already had
+  committed evidence; what the real-document rows add is the same fourteen verbs against a rule whose
   before-fixture is a real graph rather than a two-node sketch.
 
   Both implementations additionally assert, in role, that each verb writes exactly ONE of the five
@@ -89,6 +89,13 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
       | remove-parameter-binding  | {"mutation":"removeParameterBinding","key":"label"}                                                                                                                                                                  |
       | change-rule-layout-point  | {"mutation":"changeRuleLayoutPoint","key":"b","newPoint":{"x":-96.5,"y":112.25}}                                                                                                                                     |
       | remove-rule-layout-point  | {"mutation":"removeRuleLayoutPoint","key":"a"}                                                                                                                                                                       |
+      | drag-working-nodes        | {"mutation":"dragWorkingNodes","targets":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1","6947a41b-8c6d-4291-bdd8-96cd535c78fc"],"dx":24.0,"dy":-12.5} |
+      | patch-working-nodes       | {"mutation":"patchWorkingNodes","targets":["6947a41b-8c6d-4291-bdd8-96cd535c78fc"],"field":"name","value":"ci_t_f8_b_c0_renamed"} |
+      | drag-rule-nodes           | {"mutation":"dragRuleNodes","targets":["lhs-where","rhs-set-0"],"dx":30.0,"dy":-20.0} |
+      | set-rule-layout-points    | {"mutation":"setRuleLayoutPoints","points":[{"key":"lhs-match","x":15.5,"y":-4.0}],"cleared":["a"]} |
+      | delete-working-nodes      | {"mutation":"deleteWorkingNodes","targets":["6947a41b-8c6d-4291-bdd8-96cd535c78fc","17d5dec8-87b2-44a9-84ff-93b7e7419bdd"]} |
+      | connect-working-ports     | {"mutation":"connectWorkingPorts","source":"6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702","target":"9fde3a12-8b39-42d9-850f-f0e8343caddd@4ba51a88-2a7f-4b78-b119-0f02eacdb702","kind":"Connection"} |
+      | disconnect-working-edges  | {"mutation":"disconnectWorkingEdges","targets":["2jGlFQA9H2mvmjiNpnYG5Q","2aA4mq3Qj0XRbikPznzENT"]} |
 
   @id-inverse
   @level-exhaustive
@@ -109,6 +116,13 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
       | remove-parameter-binding  | {"mutation":"removeParameterBinding","key":"label"}                                                                                                                                                                  |
       | change-rule-layout-point  | {"mutation":"changeRuleLayoutPoint","key":"b","newPoint":{"x":-96.5,"y":112.25}}                                                                                                                                     |
       | remove-rule-layout-point  | {"mutation":"removeRuleLayoutPoint","key":"a"}                                                                                                                                                                       |
+      | drag-working-nodes        | {"mutation":"dragWorkingNodes","targets":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1","6947a41b-8c6d-4291-bdd8-96cd535c78fc"],"dx":24.0,"dy":-12.5} |
+      | patch-working-nodes       | {"mutation":"patchWorkingNodes","targets":["6947a41b-8c6d-4291-bdd8-96cd535c78fc"],"field":"name","value":"ci_t_f8_b_c0_renamed"} |
+      | drag-rule-nodes           | {"mutation":"dragRuleNodes","targets":["lhs-where","rhs-set-0"],"dx":30.0,"dy":-20.0} |
+      | set-rule-layout-points    | {"mutation":"setRuleLayoutPoints","points":[{"key":"lhs-match","x":15.5,"y":-4.0}],"cleared":["a"]} |
+      | delete-working-nodes      | {"mutation":"deleteWorkingNodes","targets":["6947a41b-8c6d-4291-bdd8-96cd535c78fc","17d5dec8-87b2-44a9-84ff-93b7e7419bdd"]} |
+      | connect-working-ports     | {"mutation":"connectWorkingPorts","source":"6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702","target":"9fde3a12-8b39-42d9-850f-f0e8343caddd@4ba51a88-2a7f-4b78-b119-0f02eacdb702","kind":"Connection"} |
+      | disconnect-working-edges  | {"mutation":"disconnectWorkingEdges","targets":["2jGlFQA9H2mvmjiNpnYG5Q","2aA4mq3Qj0XRbikPznzENT"]} |
 
   @id-spec-vector
   @level-exhaustive
@@ -128,6 +142,13 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
       | remove-parameter-binding  | 🧹️remove-parameter-binding  | ✂️drops                      |
       | change-rule-layout-point  | 📐️change-rule-layout  | 📍️nudges          |
       | remove-rule-layout-point  | 🗑️remove-rule-layout  | 📐️clears                 |
+      | drag-working-nodes        | ✋️drag-working  | ✋️moves  |
+      | patch-working-nodes       | 🩹️patch-working  | 🩹️renames  |
+      | drag-rule-nodes           | 🫳️drag-rule  | 🫳️moves  |
+      | set-rule-layout-points    | 📍️set-rule-layout  | 📍️places  |
+      | delete-working-nodes      | ✂️delete-working  | ✂️deletes  |
+      | connect-working-ports     | 🔌️connect-working | 🔌️connects |
+      | disconnect-working-edges  | 🪚️disconnect-working | 🪚️cuts |
 
   @id-identity-round-trip
   @level-long

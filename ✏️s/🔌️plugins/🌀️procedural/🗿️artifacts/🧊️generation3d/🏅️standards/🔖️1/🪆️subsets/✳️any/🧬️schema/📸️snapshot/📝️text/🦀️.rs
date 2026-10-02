@@ -16,7 +16,7 @@ use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayS
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
-pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../📚️examples/🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../📚️examples/📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
@@ -210,7 +210,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_value_dsl_entries(preview), expanded: expanded.iter().cloned().collect() },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) },
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: semio_framework_value::ToValue::to_value(tree), flow: semio_framework_value::ToValue::to_value(flow) },
     }
 }
 
@@ -227,8 +227,8 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster {
             id,
             name,
-            tree: dsl::from_dsl_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
-            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
+            tree: semio_framework_value::FromValue::from_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
+            flow: semio_framework_value::FromValue::from_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
         },
     })
 }
@@ -241,11 +241,11 @@ pub struct FormGenerationDsl {
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
-    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect() }
+    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), semio_framework_value::ToValue::to_value(value))).collect() }
 }
 
 pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
-    FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect() }
+    FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| semio_framework_value::FromValue::from_value(value).ok().map(|json| (key, json))).collect() }
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]

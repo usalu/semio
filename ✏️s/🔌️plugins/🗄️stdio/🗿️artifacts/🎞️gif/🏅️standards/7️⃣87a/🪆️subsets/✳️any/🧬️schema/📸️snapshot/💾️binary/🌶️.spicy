@@ -1,4 +1,10 @@
-module Stdio_gif_snapshot;
-type Document = unit {
-    payload: bytes &eod;
+module stdio_gif_snapshot;
+public type EnvelopeHeader = unit {
+    magic: bytes &size=8;
+    token_len: uint32;
+    token: bytes &size=self.token_len;
+};
+public type SnapshotPack = unit {
+    envelope: EnvelopeHeader;
+    record_document: bytes &eod;
 };

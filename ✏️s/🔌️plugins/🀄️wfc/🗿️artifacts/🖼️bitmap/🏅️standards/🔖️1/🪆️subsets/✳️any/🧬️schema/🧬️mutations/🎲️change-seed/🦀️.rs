@@ -30,8 +30,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangeSeed {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change seed to {}", self.seed), &format!("Startwert auf {} ändern", self.seed))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change seed to {}", self.seed), &format!("Startwert auf {} ändern", self.seed))
     }
 }
 //#endregion 🔖️ChangeSeed

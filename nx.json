@@ -54,6 +54,12 @@
       "{projectRoot}/**/*.cs",
       "{projectRoot}/**/*.csproj",
       "{workspaceRoot}/Monorepo.sln"
+    ],
+    "nativeSources": [
+      "default"
+    ],
+    "nativeTestSources": [
+      "default"
     ]
   },
   "pluginsConfig": {

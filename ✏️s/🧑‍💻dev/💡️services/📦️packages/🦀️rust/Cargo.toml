@@ -21,6 +21,7 @@ path = "../../⌨️entrypoint/🦀️.rs"
 required-features=["native-renderer"]
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel.workspace = true
 semio-framework-os-renderer-wgpu={workspace=true,optional=true}
 semio-s-artifact-gis-gismap.workspace=true

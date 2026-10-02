@@ -12,8 +12,8 @@ use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, No
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::Label;
-use store::EngineHandles;
+use semio_framework_ui_locale::Label;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

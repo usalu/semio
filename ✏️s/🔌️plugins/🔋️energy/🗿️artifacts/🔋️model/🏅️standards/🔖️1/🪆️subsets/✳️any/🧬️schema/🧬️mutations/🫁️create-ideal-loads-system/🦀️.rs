@@ -62,8 +62,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create ideal loads system {}", self.id.0), &format!("Ideallastsystem {} erstellen", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create ideal loads system {}", self.id.0), &format!("Ideallastsystem {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

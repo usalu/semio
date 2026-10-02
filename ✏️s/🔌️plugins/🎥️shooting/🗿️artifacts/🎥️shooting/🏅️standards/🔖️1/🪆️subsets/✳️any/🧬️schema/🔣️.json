@@ -205,12 +205,14 @@
         "width": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "height": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "format": {
           "type": "string"
@@ -360,9 +362,6 @@
         },
         "material": {
           "$ref": "#/$defs/ShootingMaterial"
-        },
-        "emblemBase64": {
-          "type": "string"
         }
       }
     },

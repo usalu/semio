@@ -29,8 +29,8 @@ impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGener
     fn inverse(&self, base: &SHomeSnapshot) -> Vec<SHomeMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogstand auf {} ändern", self.new_catalog_generation))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change catalog generation to {}", self.new_catalog_generation), &format!("Katalogstand auf {} ändern", self.new_catalog_generation))
     }
 }
 //#endregion 🔖️Mutation

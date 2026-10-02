@@ -6,6 +6,13 @@
 use crate::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted lowpoly document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
@@ -49,6 +56,9 @@ impl store::ArtifactDsl for LowpolySnapshot {
 }
 
 impl store::ArtifactPack for LowpolySnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -69,13 +79,7 @@ impl store::ArtifactPack for LowpolySnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️DocumentHelpers
-/// 🏗️ Builds a single-object snapshot from mesh JSON — only the real persisted `mesh` handle
-/// (content-addressed off `mesh_json` via `mesh_child_handle`, identical geometry always resolving
-/// to the identical handle). The caller is responsible for seeding its OWN session-local
-/// `mesh_workspace` cache (`✏️editor/🖌️session::LowpolyScratch`) with `mesh_json` under
-/// `object_id` — this function no longer does it implicitly (round 2 of this ticket's round-trip
-/// law fix: `LowpolyObject` carries no live mesh content at all any more, see that struct's own doc
-/// comment).
+/// 🏗️ Builds an object with its authored mesh source and content-addressed child handle.
 pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolySnapshot {
     LowpolySnapshot {
         schema: LOWPOLY_DOCUMENT_SCHEMA.into(),

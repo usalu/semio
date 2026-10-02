@@ -421,7 +421,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.procedure".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Procedure", "Prozedur"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Procedure", "Prozedur"),
         source_format: "procedure.document".into(),
         component_kind: "procedure".into(),
         dimension: "graph".into(),
@@ -759,7 +759,7 @@ pub mod editor {
             pub mod run;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-step-params/🦀️.rs"]
             pub mod set_step_params;

@@ -24,7 +24,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveZone {
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove zone", "Zone entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove zone", "Zone entfernen")
     }
 }

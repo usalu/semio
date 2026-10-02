@@ -160,6 +160,11 @@ export const DESCRIPTOR_JSON_REL_PATH = TAXONOMY.generatorContracts["plugin-regi
  * `📓️design-abi.md` §2's canonical dash-separated string form. Unit variant `OnStartupFinished`
  * serializes as the bare string `"onStartupFinished"`; every other variant as
  * `{ "<camelTag>": { ...fields } }`. */
+
+function uniqueStrings(values: readonly string[]): string[] {
+  return [...new Set(values)];
+}
+
 export function formatActivationEvent(raw: unknown): string | undefined {
   if (typeof raw === "string") {
     return raw === "onStartupFinished" ? "on-startup-finished" : undefined;
@@ -297,10 +302,10 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
   {
     if (descriptor.role !== source.role || descriptor.packageId !== source.packageId || (descriptor.manifest as { pluginId: string }).pluginId !== source.pluginId) throw new Error("Compiled descriptor differs from its authored component identity in " + manifestPath);
     const capabilityRequests = Array.isArray(descriptor.capabilityRequests) ? descriptor.capabilityRequests : [];
-    capabilities = capabilityRequests.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
+    capabilities = uniqueStrings(capabilityRequests.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string"));
     const contributions = descriptor.contributions as Record<string, unknown> | undefined;
     const topicContributions = Array.isArray(contributions?.topicContributions) ? (contributions!.topicContributions as unknown[]) : [];
-    contributes = topicContributions.map((row) => (row as { topic?: unknown }).topic).filter((topic): topic is string => typeof topic === "string");
+    contributes = uniqueStrings(topicContributions.map((row) => (row as { topic?: unknown }).topic).filter((topic): topic is string => typeof topic === "string"));
     const rawActivationEvents = Array.isArray(descriptor.activationEvents) ? descriptor.activationEvents : [];
     activationEvents = rawActivationEvents.map(formatActivationEvent).filter((event): event is string => event !== undefined);
     for (const kind of descriptorSurfaceArtifactKinds(descriptor)) {
@@ -308,7 +313,8 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
       if (!activationEvents.includes(event)) activationEvents.push(event);
     }
     const rawExtensionPoints = Array.isArray(descriptor.extensionPoints) ? descriptor.extensionPoints : [];
-    extensionPoints = rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
+    extensionPoints = uniqueStrings(rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string"));
+    activationEvents = uniqueStrings(activationEvents);
     executionMode = typeof descriptor.execution === "string" ? descriptor.execution : undefined;
     const rawHashes = descriptor.hashes as Record<string, unknown> | undefined;
     if (rawHashes && typeof rawHashes.wasmSha256 === "string" && typeof rawHashes.coreWasmSha256 === "string" && typeof rawHashes.descriptorSha256 === "string") {

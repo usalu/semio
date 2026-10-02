@@ -1,9 +1,11 @@
+import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin build materialization owner. */
 
 import { artifactFiles } from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
-import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
@@ -11,7 +13,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -103,7 +105,7 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
-/** 🔑️ The `stageArtifacts` ownership key one component's staged module directory carries — byte
+/** 🔑️ The `stageRepositoryArtifacts` ownership key one component's staged module directory carries — byte
  * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
  * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
  * root instead of each claiming a tree of its own. */
@@ -152,11 +154,11 @@ async function materializePlugin(target: DeployedRegistryEntryV1, artifact: stri
     await describeBuiltPlugin(target, artifact, join(temporary, `${componentBase}.js`));
     if (!stagePluginDescriptor(target, temporary)) throw new Error(`Missing fresh descriptor for ${target.pluginId}`);
     writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, target.wasmOut));
-    // 🧱️ Published through the SAME `stageArtifacts` ownership key `@semio-tech/framework-plugin-web`'s
+    // 🧱️ Published through the SAME `stageRepositoryArtifacts` ownership key `@semio-tech/framework-plugin-web`'s
     // `materialize-<profile>` uses, so this catalog builder and the per-crate Nx target are two producers of
     // ONE tree rather than two trees: either may replace a module directory the other staged, and neither
     // can leave a half-written module visible to a running dev server.
-    await stageArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
+    await stageRepositoryArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
   } finally { rmSync(temporary, { recursive: true, force: true }); }
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/🧩️extension-modules/...`
   // from the SSE event, so the install root must already serve the new files.

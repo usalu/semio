@@ -42,6 +42,8 @@ pub(crate) mod context {
         App { definition: create_remodeling_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("remodel", RemodelingPlayApp, remodeling_app_manifest_for_tests, "../..");
+
     /// 🧪️ The ONE app shape every test uses: wired to the real manifest registry with a bound instance
     /// id, exactly what the plugin host mounts. A registry-less `new_app` cannot admit the bounded tool
     /// proofs any more (`interactive-job.catalog-authority … migrated={}`), so there is no "bare" variant.
@@ -95,7 +97,7 @@ pub(crate) mod context {
         ViewModel {
             window_id: Some("remodeling-test-window".into()),
             window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "remodeling-test-window".into(), window_kind_id: window_kind_id.into() }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
 
@@ -104,6 +106,7 @@ pub(crate) mod context {
             RemodelingCommand::SetCamera(_) | RemodelingCommand::SetLayerVisibility(_) => Some(model::windows::model::REMODELING_PLAY_WINDOW_MAIN),
             RemodelingCommand::SetFrameCursor(_) => Some(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES),
             RemodelingCommand::SetReportTable(_) => Some(analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT),
+            RemodelingCommand::ImportFramePayload(_) | RemodelingCommand::ImportVideoFramePayload(_) | RemodelingCommand::ImportVideoDone(_) | RemodelingCommand::ImportAbort(_) => Some(capture::windows::frames::REMODELING_PLAY_WINDOW_FRAMES),
             _ => None,
         };
         let view_state = window_kind.map(test_window);
@@ -136,7 +139,7 @@ pub(crate) mod context {
 
     /// 🪧️ The rendered tree as its JSON projection, with the projected tree retired.
     pub async fn render_json(app: &mut RemodelingApp, body_key: &str) -> serde_json::Value {
-        let tree = app.render(body_key, None, &ViewModel::default()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+        let tree = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
         serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))).expect("projection parses")
     }
 
@@ -306,7 +309,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         host_only_ids,
     };
     let expected_host_only = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 35, bounded: 35, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
+    assert_eq!(oracle, RemodelingRetainedCatalogSummary { routes: 36, bounded: 36, resumable: 0, unique: true, bounded_ids: bounded_owned, host_only_ids: expected_host_only });
     assert_eq!(subject, oracle);
 }
 
@@ -329,7 +332,7 @@ async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
 /// `remodeling_protocol` baseline (see this ticket's `🧪️wire-baseline-before.txt`).
 fn every_command() -> Vec<RemodelingCommand> {
     vec![
-        RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: "data:image/png;base64,abc".into(), name: "frame.png".into(), index: 0 }),
+        RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: "data:image/png;base64,abc".into(), name: "frame.png".into(), index: 0, total: 1 }),
         RemodelingCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload { payload: "data:image/jpeg;base64,abc".into(), name: "clip.mp4".into(), index: 1, frame_index: 1, timestamp_ms: 33.3 }),
         RemodelingCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }),
         RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: "data:video/mp4;base64,abc".into(), name: "clip.mp4".into() }),
@@ -390,6 +393,7 @@ fn every_command() -> Vec<RemodelingCommand> {
         RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
         RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
         RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
+        RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: None }),
     ]
 }
 
@@ -408,8 +412,12 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let contracts = <RemodelingRetainedCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     assert_eq!(contracts.len(), REMODELING_RETAINED_TOOL_IDS.len());
     assert_eq!(contracts.iter().map(|contract| contract.tool_id).collect::<std::collections::BTreeSet<_>>(), retained);
+    let import_routes = ["importFramePayload", "importVideoFramePayload", "importVideoDone", "importAbort"];
     for contract in contracts {
-        assert_eq!(contract.lanes.len(), 1, "route '{}' declares exactly one publication lane", contract.tool_id);
+        match import_routes.contains(&contract.tool_id) {
+            true => assert_eq!(contract.lanes, [semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient], "import route '{}' also writes its window's tool state", contract.tool_id),
+            false => assert_eq!(contract.lanes.len(), 1, "route '{}' declares exactly one publication lane", contract.tool_id),
+        }
     }
 
     assert!(<RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
@@ -534,6 +542,7 @@ async fn every_command_variant_roundtrips_and_prints_its_wire_keyword() {
         "import-video",
         "export-qc-report",
         "active-example",
+        "import-abort",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), keywords.len(), "the keyword list must cover every row");
@@ -570,12 +579,12 @@ async fn command_ids_and_wire_keywords_are_unique_per_row() {
     let mut ids: Vec<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 35, "35 distinct manifest action ids");
+    assert_eq!(ids.len(), 36, "36 distinct manifest action ids");
 
     let mut keywords: Vec<String> = every_command().iter().map(|command| command.print_op().split_whitespace().next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
-    assert_eq!(keywords.len(), 35, "35 distinct wire keywords");
+    assert_eq!(keywords.len(), 36, "36 distinct wire keywords");
 }
 /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
 /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).
@@ -657,7 +666,7 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("report-test".into()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "report-test".into(), window_kind_id: analyze::windows::report::REMODELING_PLAY_WINDOW_REPORT.into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
     app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).await.expect("view dispatch");

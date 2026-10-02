@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "active-outer-documentation",
+      "source": "#[doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {
+        "input.txt": "owned documentation\n"
+      },
+      "nativeInputs": [
+        "source.rs",
+        "input.txt"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": [
+          {
+            "kind": "include_str",
+            "path": "input.txt",
+            "line": 1
+          }
+        ]
+      },
+      "removal": {
+        "paths": [
+          "input.txt"
+        ],
+        "native": false
+      }
+    },
+    {
+      "id": "active-inner-documentation",
+      "source": "#![doc = include_str!(\"input.txt\")]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {
+        "input.txt": "owned documentation\n"
+      },
+      "nativeInputs": [
+        "source.rs",
+        "input.txt"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": [
+          {
+            "kind": "include_str",
+            "path": "input.txt",
+            "line": 1
+          }
+        ]
+      },
+      "removal": {
+        "paths": [
+          "input.txt"
+        ],
+        "native": false
+      }
+    },
+    {
+      "id": "dormant-outer-documentation",
+      "source": "#[cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {
+        "input.txt": "owned documentation\n"
+      },
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": [
+          {
+            "kind": "include_str",
+            "path": "input.txt",
+            "line": 1
+          }
+        ]
+      },
+      "removal": {
+        "paths": [
+          "input.txt"
+        ],
+        "native": true
+      }
+    },
+    {
+      "id": "dormant-inner-documentation",
+      "source": "#![cfg_attr(any(), doc = include_str!(\"input.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {
+        "input.txt": "owned documentation\n"
+      },
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": [
+          {
+            "kind": "include_str",
+            "path": "input.txt",
+            "line": 1
+          }
+        ]
+      },
+      "removal": {
+        "paths": [
+          "input.txt"
+        ],
+        "native": true
+      }
+    },
+    {
+      "id": "outer-opaque-attribute",
+      "source": "#[cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {},
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "unsupported-expression"
+      },
+      "removal": null
+    },
+    {
+      "id": "inner-opaque-attribute",
+      "source": "#![cfg_attr(any(), opaque(include_str!(\"absent.txt\")))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {},
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "unsupported-expression"
+      },
+      "removal": null
+    },
+    {
+      "id": "opaque-documentation-macro",
+      "source": "#[doc = stringify!(include_str!(\"absent.txt\"))]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {},
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "unsupported-expression"
+      },
+      "removal": null
+    },
+    {
+      "id": "outer-documentation-string-decoy",
+      "source": "#[doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {},
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": []
+      },
+      "removal": null
+    },
+    {
+      "id": "inner-documentation-string-decoy",
+      "source": "#![doc = \"include_str!(\\\"absent.txt\\\")\"]\nstruct Subject;\nfn main() { let _ = Subject; println!(\"[DEBUG] attribute oracle\"); }\n",
+      "files": {},
+      "nativeInputs": [
+        "source.rs"
+      ],
+      "result": {
+        "state": "resolved",
+        "references": []
+      },
+      "removal": null
+    }
+  ],
+  "featureCases": [
+    {
+      "id": "crate-associated-type-defaults",
+      "source": "#![feature(associated_type_defaults)]\ntrait Subject { type Item = u8; }\nfn main(){println!(\"[DEBUG] feature oracle\");}",
+      "modulePath": [],
+      "resolved": true,
+      "native": true,
+      "diagnostic": "none",
+      "files": {},
+      "mountPath": [],
+      "mountResolved": true
+    },
+    {
+      "id": "unknown-crate-feature",
+      "source": "#![feature(semio_unknown_feature)]\nfn main(){}",
+      "modulePath": [],
+      "resolved": false,
+      "native": false,
+      "diagnostic": "E0635",
+      "files": {},
+      "mountPath": [],
+      "mountResolved": false
+    },
+    {
+      "id": "mixed-crate-features",
+      "source": "#![feature(associated_type_defaults, semio_unknown_feature)]\nfn main(){}",
+      "modulePath": [],
+      "resolved": false,
+      "native": false,
+      "diagnostic": "E0635",
+      "files": {},
+      "mountPath": [],
+      "mountResolved": false
+    },
+    {
+      "id": "outer-associated-type-defaults",
+      "source": "#[feature(associated_type_defaults)]\nmod subject { trait Subject { type Item = u8; } }\nfn main(){}",
+      "modulePath": [
+        "subject"
+      ],
+      "resolved": false,
+      "native": false,
+      "diagnostic": "E0658",
+      "files": {},
+      "mountPath": [
+        "subject"
+      ],
+      "mountResolved": false
+    },
+    {
+      "id": "inline-associated-type-defaults",
+      "source": "mod subject { #![feature(associated_type_defaults)] trait Subject { type Item = u8; } }\nfn main(){}",
+      "modulePath": [
+        "subject"
+      ],
+      "resolved": false,
+      "native": false,
+      "diagnostic": "E0658",
+      "files": {},
+      "mountPath": [
+        "subject"
+      ],
+      "mountResolved": false
+    },
+    {
+      "id": "out-of-line-feature-is-not-crate-authority",
+      "source": "mod subject;fn main(){}",
+      "modulePath": [],
+      "resolved": true,
+      "files": {
+        "subject.rs": "#![feature(associated_type_defaults)]\ntrait Subject { type Item = u8; }"
+      },
+      "mountPath": [
+        "subject"
+      ],
+      "mountResolved": false,
+      "native": false,
+      "diagnostic": "E0658"
+    }
+  ]
+}

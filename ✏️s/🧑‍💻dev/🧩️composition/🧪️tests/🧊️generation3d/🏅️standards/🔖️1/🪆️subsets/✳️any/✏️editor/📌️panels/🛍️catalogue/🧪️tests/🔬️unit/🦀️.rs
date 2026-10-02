@@ -57,7 +57,7 @@ fn group_windows(json: &str) -> Vec<RenderedWindow> {
 }
 
 fn catalogue_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🧭️ A group's window path: the enclosing section key, `TREE_WINDOW_PATH_SEPARATOR`, then the group

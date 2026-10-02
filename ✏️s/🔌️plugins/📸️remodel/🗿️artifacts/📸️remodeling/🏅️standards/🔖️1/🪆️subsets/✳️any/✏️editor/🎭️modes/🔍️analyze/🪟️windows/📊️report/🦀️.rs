@@ -3,7 +3,14 @@
 
 use crate::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfig;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableScene, UiAssemblyResult, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TableScene;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
         support::file_spec_named(base, &self.file_name).map(|_| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" entfernen", self.file_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" entfernen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

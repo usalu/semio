@@ -15,7 +15,7 @@
 
 use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility};
 use std::collections::{BTreeMap, BTreeSet};
-use ui_wgpu::wgpu::Locale;
+use semio_framework_ui_locale::Locale;
 
 //#region 🔖️Routes
 pub const DIRECTORY_COMMANDS_PATH_V1: &str = "/directory/commands";

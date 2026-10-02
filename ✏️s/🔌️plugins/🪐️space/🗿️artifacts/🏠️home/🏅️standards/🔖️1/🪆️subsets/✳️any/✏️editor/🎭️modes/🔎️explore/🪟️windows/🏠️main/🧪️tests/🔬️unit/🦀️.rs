@@ -5,11 +5,11 @@ fn project(node: semio_framework_plugin::BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("Home row tree projection")
 }
 
-fn host_view(locale: semio_framework_plugin::Locale) -> semio_framework_plugin::ViewModel {
+fn host_view(locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
         locale,
         session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
     }
 }
 
@@ -155,7 +155,7 @@ async fn seeded_local_studio_renders_a_table_row() {
     // exercises the REAL end-to-end `render` (not `render_rows`), deliberately not asserting on
     // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
     let _ = crate::list_all_space_catalog_entries().await;
-    let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_plugin::Locale::En)).expect("seeded Home rows");
+    let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("seeded Home rows");
     let json = project(node);
     assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
 }
@@ -171,7 +171,7 @@ async fn german_locale_labels_resolve_in_the_rendered_table() {
 #[semio_framework_async_macros::async_test]
 async fn render_resolves_labels_from_host_view() {
     let cfg = HomeConfig { ..HomeConfig::default() };
-    let view_state = host_view(semio_framework_plugin::Locale::De);
+    let view_state = host_view(semio_framework_ui_locale::Locale::De);
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
     let _ = render(&cfg, &HomeDirectoryProjection::default(), &view_state).expect("localized Home rows");
@@ -191,7 +191,7 @@ fn keyed<'a>(node: &'a semio_framework_plugin::BuiltNode, key: &str) -> Option<&
 /// this test stays valid if the spacer count or the toolbar nesting ever changes.
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_real_create_space_and_import_studio_buttons() {
-    observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_framework_plugin::Locale::En)).expect("Home rows with toolbar actions"), |root| {
+    observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("Home rows with toolbar actions"), |root| {
         for (key, action) in [("s-home-create-space", "createSpace"), ("s-home-import-studio", "importSpace")] {
             let button = keyed(root, key).unwrap_or_else(|| panic!("a {key} button somewhere in the tree"));
             assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));

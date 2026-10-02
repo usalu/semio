@@ -28,8 +28,8 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
         base.0.clone().map(sign_in).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Sign out", "Abmelden")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Sign out", "Abmelden")
     }
 
     fn target(&self) -> Vec<String> {

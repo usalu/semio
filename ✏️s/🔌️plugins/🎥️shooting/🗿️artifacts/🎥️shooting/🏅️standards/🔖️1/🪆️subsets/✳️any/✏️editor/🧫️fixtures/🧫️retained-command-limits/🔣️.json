@@ -55,8 +55,7 @@
     {
       "toolId": "saveCamera",
       "lanes": [
-        "Artifact",
-        "Config"
+        "Artifact"
       ]
     },
     {
@@ -184,12 +183,6 @@
     },
     {
       "toolId": "loadSavedCamera",
-      "lanes": [
-        "Config"
-      ]
-    },
-    {
-      "toolId": "setCameraDraftLabel",
       "lanes": [
         "Config"
       ]
@@ -405,12 +398,6 @@
       "execution": "bounded",
       "admission": "Migrated",
       "feature": "locate a saved camera through a retained document cursor before publishing config"
-    },
-    {
-      "id": "setCameraDraftLabel",
-      "execution": "bounded",
-      "admission": "Migrated",
-      "feature": "publish fixed camera label configuration after a config preparation factory is installed"
     },
     {
       "id": "setCenterModel",

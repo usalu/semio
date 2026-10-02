@@ -15,6 +15,10 @@
 
 use crate::os_dsl::{lex as core_lex, lex_with as core_lex_with, CommentDialect, LexOptions, Limits, StringEscape, StringMode, TextError, TextSpan, TokenKind as CoreKind};
 
+#[path="📡️literal/🦀️.rs"]
+mod literal;
+pub use literal::walk_literal_protocol_controlled;
+
 //#region 🔖️Model
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SemioDialect {
@@ -88,6 +92,7 @@ pub enum Framing {
     Magic([u8; 8]),
     Record,
     Chunked,
+    Literal,
 }
 
 /// 🔀️ P2-M2 item 4: guard gating a field's (or a whole segment's) presence on an
@@ -1244,6 +1249,7 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                     "magic" => Framing::Magic(magic_bytes(parse_u64_literal(&mut cursor)?)),
                     "record" => Framing::Record,
                     "chunked" => Framing::Chunked,
+                    "literal" => Framing::Literal,
                     other => return Err(TextError::new(format!("unknown framing `{other}`"), head.span)),
                 });
                 cursor.skip_newlines();
@@ -1742,6 +1748,7 @@ pub fn print_protocol(protocol: &ProtocolFile) -> String {
         }
         Framing::Record => out.push_str("framing record\n"),
         Framing::Chunked => out.push_str("framing chunked\n"),
+        Framing::Literal => out.push_str("framing literal\n"),
     }
     for block in &protocol.blocks {
         match block {
@@ -2019,7 +2026,12 @@ impl Recognizer {
     /// already lexed cleanly (every pre-M1 pilot fixture), since forgiving vs. strict only differ
     /// on inputs that would otherwise abort with a lex error.
     pub fn recognize(&self, text: &str) -> Result<bool, TextError> {
-        let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
+        self.recognize_with_limits(text,&Limits::default())
+    }
+
+    /// 📏️ Recognizes an authored grammar within an explicit caller-owned lexical ceiling.
+    pub fn recognize_with_limits(&self,text:&str,limits:&Limits)->Result<bool,TextError>{
+        let raw = core_lex_with(text, limits, true, &self.grammar.lex)?;
         let tokens: Vec<_> = raw.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof).collect();
         let start = self.find_production(&self.grammar.start).ok_or_else(|| TextError::new(format!("start production `{}` not found", self.grammar.start), TextSpan::at(1, 1)))?;
         match self.match_production(start, &tokens, 0, text) {
@@ -2079,6 +2091,7 @@ impl Recognizer {
                 };
                 Some(match_raw_span(tokens, pos, text, end))
             }
+            Symbol::Terminal(name) if name.eq_ignore_ascii_case("HEX_BYTES") => match_hex_bytes(tokens, pos, text),
             Symbol::Terminal(name) => {
                 let token = tokens.get(pos)?;
                 terminal_matches(name, token).then_some(pos + 1)
@@ -2180,6 +2193,21 @@ fn match_raw_span(tokens: &[crate::os_dsl::SpannedToken], pos: usize, text: &str
     new_pos
 }
 
+/// 🧬️ Matches one contiguous hexadecimal octet literal across numeric and identifier token boundaries.
+fn match_hex_bytes(tokens: &[crate::os_dsl::SpannedToken], pos: usize, text: &str) -> Option<usize> {
+    let start = tokens.get(pos)?.byte_range.0 as usize;
+    let bytes = text.as_bytes();
+    let mut end = start;
+    while bytes.get(end).is_some_and(u8::is_ascii_alphanumeric) { end += 1; }
+    if end == start || (end-start)%2 != 0 || !bytes[start..end].iter().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(byte)) { return None; }
+    let mut next = pos;
+    while let Some(token) = tokens.get(next).filter(|token| (token.byte_range.0 as usize) < end) {
+        if token.byte_range.1 as usize > end { return None; }
+        next += 1;
+    }
+    (tokens.get(next-1)?.byte_range.1 as usize == end).then_some(next)
+}
+
 fn slice_source_text(tokens: &[crate::os_dsl::SpannedToken]) -> String {
     tokens.iter().map(|t| t.text.as_str().to_string()).collect::<Vec<_>>().join(" ")
 }
@@ -2193,6 +2221,9 @@ fn terminal_matches(name: &str, token: &crate::os_dsl::SpannedToken) -> bool {
         "BOOL" => matches!(token.kind, CoreKind::Ident) && (text == "true" || text == "false"),
         "IDENT" | "PLACEHOLDER" => matches!(token.kind, CoreKind::Ident | CoreKind::Placeholder),
         "INT" => matches!(token.kind, CoreKind::Int),
+        "U64" => matches!(token.kind, CoreKind::Int) && (text=="0"||!text.starts_with('0')) && text.bytes().all(|byte|byte.is_ascii_digit()) && text.parse::<u64>().is_ok(),
+        "U32" => matches!(token.kind, CoreKind::Int) && (text=="0"||!text.starts_with('0')) && text.bytes().all(|byte|byte.is_ascii_digit()) && text.parse::<u32>().is_ok(),
+        "I64" => {let digits=text.strip_prefix('-').unwrap_or(text);matches!(token.kind,CoreKind::Int)&&text!="-0"&&(digits=="0"||!digits.starts_with('0'))&&digits.bytes().all(|byte|byte.is_ascii_digit())&&text.parse::<i64>().is_ok()},
         "FLOAT" => matches!(token.kind, CoreKind::Float),
         "TEXT" | "STRING" => matches!(token.kind, CoreKind::Text),
         "STAR" => matches!(token.kind, CoreKind::Star),
@@ -2731,6 +2762,7 @@ fn definitions_only(block: &Block) -> bool {
 /// majority). The walker still only ever reads FORWARD from a jump's landing point — jumps move
 /// `pos` directly, they never make the walker itself search or backtrack mid-block.
 pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace, ProtocolMismatch> {
+    if matches!(spec.framing,Framing::Literal){return walk_literal_protocol_controlled(spec,bytes,&mut crate::os_dsl::NativeDecodeControl::new(256*1024*1024,&mut |_|true));}
     let mut pos = 0usize;
     match &spec.framing {
         Framing::Magic(magic) => {
@@ -2740,7 +2772,7 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
             }
             pos = 8;
         }
-        Framing::Record | Framing::Chunked => {}
+        Framing::Record | Framing::Chunked | Framing::Literal => {}
     }
 
     let skip_named_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);

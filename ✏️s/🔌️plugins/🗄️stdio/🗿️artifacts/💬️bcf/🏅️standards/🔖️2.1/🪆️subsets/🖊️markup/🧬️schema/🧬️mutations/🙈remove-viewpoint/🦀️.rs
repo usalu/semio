@@ -22,8 +22,8 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
         agg_inverse(&BcfMutation::RemoveViewpoint(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove viewpoint", "Blickpunkt entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove viewpoint", "Blickpunkt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -20,6 +20,12 @@ default = []
 component-app-assembly = ["semio-s-artifact-fem-2d/component-app-assembly", "semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

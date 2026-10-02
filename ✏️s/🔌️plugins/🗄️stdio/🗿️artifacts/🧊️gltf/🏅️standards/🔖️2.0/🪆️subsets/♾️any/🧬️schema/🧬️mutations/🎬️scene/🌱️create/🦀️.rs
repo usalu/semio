@@ -59,8 +59,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMu
         vec![super::GltfMutation::CreateScene(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Scene", "Szene erstellen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Scene", "Szene erstellen")
     }
 
     fn target(&self) -> Vec<String> {

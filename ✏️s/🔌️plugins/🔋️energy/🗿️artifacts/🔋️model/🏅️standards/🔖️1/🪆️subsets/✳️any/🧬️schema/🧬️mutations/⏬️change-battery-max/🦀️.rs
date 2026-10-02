@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Battery Max Discharge of battery {}", self.id.0), &format!("Maximale Entladeleistung von Batterie {} ändern", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Battery Max Discharge of battery {}", self.id.0), &format!("Maximale Entladeleistung von Batterie {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -16,13 +16,37 @@ use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcTile2d, WfcTileMedia2d};
 use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
-    DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient,
-    NoTransientMutation, ToolRef, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ViewModel,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::ViewModel;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️ActiveUtility
 /// 🧰️ The utility armed for the window being rendered or dispatched: the React host arms utilities
@@ -454,56 +478,56 @@ impl Grid2dEditor {
     /// 🖱️ One resolved cell gesture run through the ARMED utility: `pin` writes the active tile,
     /// `mask` toggles the hole, `select` emits nothing. Shared by the explicit `pick-cell` verb and
     /// by a raw canvas press, so a click and a scripted pick can never diverge.
-    fn armed_pick(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, utility: &str, x: u32, y: u32) -> Result<Option<(Grid2dMutation, String)>, Fault> {
+    fn armed_pick(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, utility: &str, x: u32, y: u32) -> Result<Option<Grid2dMutation>, Fault> {
         Ok(match utility {
             grid::UTILITY_PIN => {
                 let tile = Self::active_tile(document, config).ok_or_else(|| Fault::from("wfc-grid2d-no-tile-to-pin"))?;
-                Some((pin_cell(x, y, tile), format!("Pin cell ({x}, {y})")))
+                Some(pin_cell(x, y, tile))
             }
             grid::UTILITY_MASK => {
                 if document.masked.iter().any(|cell| cell.x == x && cell.y == y) {
-                    Some((unmask_cell(x, y), format!("Unmask cell ({x}, {y})")))
+                    Some(unmask_cell(x, y))
                 } else {
-                    Some((mask_cell(x, y), format!("Mask cell ({x}, {y})")))
+                    Some(mask_cell(x, y))
                 }
             }
             _ => None,
         })
     }
 
-    fn config_emit(view_state: Option<&ViewModel>, config: Grid2dWindowConfig, description: &str) -> Result<Emit<Grid2dMutation>, Fault> {
+    fn config_emit(view_state: Option<&ViewModel>, config: Grid2dWindowConfig) -> Result<Emit<Grid2dMutation>, Fault> {
         let view = view_state.ok_or_else(|| Fault::from("wfc-grid2d-window-required"))?;
         let mutation = window::addressed_config(view, config)?;
-        Ok(Emit { window_config_mutations: vec![mutation], description: Some(description.to_string()), ..Default::default() })
+        Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }
 
     /// ✏️ The editor's whole command behaviour, reachable from BOTH the `ArtifactEditor::handle`
     /// entry point and the retained tool job that carries a real UI dispatch.
     pub fn dispatch(command: &Grid2dEditorCommand, doc: &ArtifactView<'_, Grid2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: Option<&ViewModel>) -> Result<Emit<Grid2dMutation>, Fault> {
         let window_config = window::config_from_view(cfg);
-        let (mutation, description) = match command {
-            Grid2dEditorCommand::ChangeSeed { seed } => (change_seed(*seed), format!("Change seed to {seed}")),
-            Grid2dEditorCommand::ResizeGrid { width, height } => (resize_grid(*width, *height), format!("Resize grid to {width}×{height}")),
-            Grid2dEditorCommand::ChangeCellSize { cell_width, cell_height } => (change_cell_size(*cell_width, *cell_height), "Change cell size".to_string()),
-            Grid2dEditorCommand::ChangePeriodicity { periodic_x, periodic_y } => (change_periodicity(*periodic_x, *periodic_y), "Change periodicity".to_string()),
+        let mutation = match command {
+            Grid2dEditorCommand::ChangeSeed { seed } => change_seed(*seed),
+            Grid2dEditorCommand::ResizeGrid { width, height } => resize_grid(*width, *height),
+            Grid2dEditorCommand::ChangeCellSize { cell_width, cell_height } => change_cell_size(*cell_width, *cell_height),
+            Grid2dEditorCommand::ChangePeriodicity { periodic_x, periodic_y } => change_periodicity(*periodic_x, *periodic_y),
             Grid2dEditorCommand::CreateTile { id, label, weight } => {
-                (create_tile(WfcTile2d { id: id.clone(), label: label.clone(), weight: *weight, media: WfcTileMedia2d::default() }), format!("Create tile {id}"))
+                create_tile(WfcTile2d { id: id.clone(), label: label.clone(), weight: *weight, media: WfcTileMedia2d::default() })
             }
-            Grid2dEditorCommand::DeleteTile { id } => (delete_tile(id.clone()), format!("Delete tile {id}")),
-            Grid2dEditorCommand::ChangeTileWeight { id, weight } => (change_tile_weight(id.clone(), *weight), format!("Change weight of {id}")),
+            Grid2dEditorCommand::DeleteTile { id } => delete_tile(id.clone()),
+            Grid2dEditorCommand::ChangeTileWeight { id, weight } => change_tile_weight(id.clone(), *weight),
             Grid2dEditorCommand::ChangeTileMedia { id, media_json } => {
                 let media: WfcTileMedia2d = protocol::json::from_json_str(media_json).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-media:{error}")))?;
-                (change_tile_media(id.clone(), media), format!("Change media of {id}"))
+                change_tile_media(id.clone(), media)
             }
             Grid2dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, direction, allowed } => {
                 let direction = crate::schema::snapshot::text::direction_from_token(direction).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-direction:{error}")))?;
-                (create_rule(WfcAdjacencyRule2d { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction, allowed: *allowed }), format!("Create rule {id}"))
+                create_rule(WfcAdjacencyRule2d { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction, allowed: *allowed })
             }
-            Grid2dEditorCommand::DeleteRule { id } => (delete_rule(id.clone()), format!("Delete rule {id}")),
-            Grid2dEditorCommand::PinCell { x, y, tile_id } => (pin_cell(*x, *y, tile_id.clone()), format!("Pin cell ({x}, {y})")),
-            Grid2dEditorCommand::UnpinCell { x, y } => (unpin_cell(*x, *y), format!("Unpin cell ({x}, {y})")),
-            Grid2dEditorCommand::MaskCell { x, y } => (mask_cell(*x, *y), format!("Mask cell ({x}, {y})")),
-            Grid2dEditorCommand::UnmaskCell { x, y } => (unmask_cell(*x, *y), format!("Unmask cell ({x}, {y})")),
+            Grid2dEditorCommand::DeleteRule { id } => delete_rule(id.clone()),
+            Grid2dEditorCommand::PinCell { x, y, tile_id } => pin_cell(*x, *y, tile_id.clone()),
+            Grid2dEditorCommand::UnpinCell { x, y } => unpin_cell(*x, *y),
+            Grid2dEditorCommand::MaskCell { x, y } => mask_cell(*x, *y),
+            Grid2dEditorCommand::UnmaskCell { x, y } => unmask_cell(*x, *y),
             Grid2dEditorCommand::PickCell { x, y } => {
                 let utility = view_state.map_or(grid::UTILITY_SELECT, grid2d_active_utility);
                 match Self::armed_pick(doc.snapshot, &window_config, utility, *x, *y)? {
@@ -530,28 +554,28 @@ impl Grid2dEditor {
                 return Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() });
             }
             Grid2dEditorCommand::SetActiveTile { tile_id } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { active_tile_id: tile_id.clone(), ..window_config }, "Set active tile");
+                return Self::config_emit(view_state, Grid2dWindowConfig { active_tile_id: tile_id.clone(), ..window_config });
             }
             Grid2dEditorCommand::SetCamera { x, y, zoom } | Grid2dEditorCommand::SyncCamera { x, y, zoom } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { camera_x: *x, camera_y: *y, camera_zoom: if *zoom > 0.0 { *zoom } else { 1.0 }, ..window_config }, "Set camera");
+                return Self::config_emit(view_state, Grid2dWindowConfig { camera_x: *x, camera_y: *y, camera_zoom: if *zoom > 0.0 { *zoom } else { 1.0 }, ..window_config });
             }
             Grid2dEditorCommand::SetGridVisible { visible } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_visible: *visible, ..window_config }, "Set grid visibility");
+                return Self::config_emit(view_state, Grid2dWindowConfig { grid_visible: *visible, ..window_config });
             }
             Grid2dEditorCommand::SetGridSnapEnabled { enabled } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_snap_enabled: *enabled, ..window_config }, "Set grid snapping");
+                return Self::config_emit(view_state, Grid2dWindowConfig { grid_snap_enabled: *enabled, ..window_config });
             }
             Grid2dEditorCommand::SetGridFactor { factor } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_factor: if *factor > 0.0 { *factor } else { 1.0 }, ..window_config }, "Set grid factor");
+                return Self::config_emit(view_state, Grid2dWindowConfig { grid_factor: if *factor > 0.0 { *factor } else { 1.0 }, ..window_config });
             }
             Grid2dEditorCommand::Solve => {
-                return Ok(Emit { effects: vec![fill_tool::start_effect()], description: Some("Solve".to_string()), ..Default::default() });
+                return Ok(Emit::effect(fill_tool::start_effect()));
             }
             Grid2dEditorCommand::CommitFill { solve_json } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { solve_json: solve_json.clone(), ..window_config }, "Commit fill");
+                return Self::config_emit(view_state, Grid2dWindowConfig { solve_json: solve_json.clone(), ..window_config });
             }
         };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
+        Ok(Emit::mutations(vec![mutation]))
     }
 }
 
@@ -826,28 +850,28 @@ pub fn create_grid2d_editor() -> semio_framework_plugin::AppDefinition {
         .action_destructive("delete-tile")
         .action_destructive("delete-rule")
         .action_destructive("setActiveExample")
-        .action_describe("change-seed", semio_framework_plugin::LocalizedLabel::native("Sets the random seed the solve starts from; the same seed, tiles and rules always produce the same tiling.", "Legt den Zufallsstartwert des Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Kachelung."))
-        .action_describe("resize-grid", semio_framework_plugin::LocalizedLabel::native("Sets the grid to the given number of columns and rows; pins and masks on cells outside the new extent are removed.", "Setzt das Raster auf die angegebene Anzahl Spalten und Zeilen; Anheftungen und Ausblendungen außerhalb der neuen Ausdehnung werden entfernt."))
-        .action_describe("change-cell-size", semio_framework_plugin::LocalizedLabel::native("Sets the world width and height of one grid cell, the box each tile's image is scaled into and the spacing the grid window snaps to.", "Legt Breite und Höhe einer Rasterzelle in Weltmaßen fest, das Feld, in das jedes Kachelbild skaliert wird, und den Abstand, an dem das Rasterfenster fängt."))
-        .action_describe("change-periodicity", semio_framework_plugin::LocalizedLabel::native("Sets whether the grid wraps around horizontally and vertically, so tiles on one edge must fit the tiles on the opposite edge.", "Legt fest, ob das Raster horizontal und vertikal umläuft, sodass Kacheln am einen Rand zu denen am gegenüberliegenden Rand passen müssen."))
-        .action_describe("create-tile", semio_framework_plugin::LocalizedLabel::native("Adds a new tile with the given id and sampling weight to the tile set the solve may place.", "Fügt dem Kachelsatz, den der Löser setzen darf, eine neue Kachel mit der angegebenen Id und Gewichtung hinzu."))
-        .action_describe("delete-tile", semio_framework_plugin::LocalizedLabel::native("Removes a tile from the tile set together with every adjacency rule that names it and every cell pinned to it.", "Entfernt eine Kachel aus dem Kachelsatz samt aller Nachbarschaftsregeln, die sie nennen, und aller Zellen, die auf sie angeheftet sind."))
-        .action_describe("change-tile-weight", semio_framework_plugin::LocalizedLabel::native("Sets how strongly the solve favours one tile when several fit; a higher weight makes it more frequent.", "Legt fest, wie stark der Löser eine Kachel bevorzugt, wenn mehrere passen; ein höheres Gewicht macht sie häufiger."))
-        .action_describe("change-tile-media", semio_framework_plugin::LocalizedLabel::native("Replaces the image one tile is drawn with (media as JSON); its id, weight, rules and pins stay unchanged.", "Ersetzt das Bild, mit dem eine Kachel gezeichnet wird (Medium als JSON); Id, Gewicht, Regeln und Anheftungen bleiben unverändert."))
-        .action_describe("create-rule", semio_framework_plugin::LocalizedLabel::native("Allows or forbids tile B next to tile A in one direction; pairs without a rule are forbidden, so the rules are the complete whitelist.", "Erlaubt oder verbietet Kachel B in einer Richtung neben Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also die vollständige Positivliste."))
-        .action_describe("delete-rule", semio_framework_plugin::LocalizedLabel::native("Removes one adjacency rule by id; the tile pair falls back to forbidden in that direction.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; das Kachelpaar gilt in dieser Richtung wieder als verboten."))
-        .action_describe("pin-cell", semio_framework_plugin::LocalizedLabel::native("Fixes the cell at column x, row y to the given tile before solving; the solve must keep it.", "Legt die Zelle in Spalte x, Zeile y vor dem Lösen auf die angegebene Kachel fest; der Löser muss sie beibehalten."))
-        .action_describe("unpin-cell", semio_framework_plugin::LocalizedLabel::native("Releases the pin on the cell at column x, row y so the solve chooses its tile again.", "Löst die Anheftung der Zelle in Spalte x, Zeile y, sodass der Löser deren Kachel wieder selbst wählt."))
-        .action_describe("mask-cell", semio_framework_plugin::LocalizedLabel::native("Cuts the cell at column x, row y out of the problem: it gets no tile, and any pin it held is removed.", "Nimmt die Zelle in Spalte x, Zeile y aus dem Problem heraus: Sie erhält keine Kachel, eine vorhandene Anheftung wird entfernt."))
-        .action_describe("unmask-cell", semio_framework_plugin::LocalizedLabel::native("Puts the masked cell at column x, row y back into the problem so the solve fills it again.", "Nimmt die ausgeblendete Zelle in Spalte x, Zeile y wieder ins Problem auf, sodass der Löser sie wieder füllt."))
-        .action_describe("pick-cell", semio_framework_plugin::LocalizedLabel::native("Applies the grid window's armed utility to the cell at column x, row y: Pin fixes the armed tile there, Mask cuts the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf die Zelle in Spalte x, Zeile y an: Anheften setzt dort die gewählte Kachel fest, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
-        .action_describe("set-active-tile", semio_framework_plugin::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
-        .action_describe("set-grid-visible", semio_framework_plugin::LocalizedLabel::native("Shows or hides the cell grid lines in the grid window; a view setting that leaves the document unchanged.", "Blendet die Rasterlinien im Rasterfenster ein oder aus; eine Ansichtseinstellung, die das Dokument nicht ändert."))
-        .action_describe("set-grid-snap-enabled", semio_framework_plugin::LocalizedLabel::native("Turns snapping to the grid on or off for pointer gestures in the grid window; the document is not changed.", "Schaltet das Fangen am Raster für Zeigergesten im Rasterfenster ein oder aus; das Dokument ändert sich nicht."))
-        .action_describe("set-grid-factor", semio_framework_plugin::LocalizedLabel::native("Sets the spacing factor of the grid window's snap grid relative to the cell size; the document is not changed.", "Legt den Abstandsfaktor des Fangrasters im Rasterfenster relativ zur Zellgröße fest; das Dokument ändert sich nicht."))
-        .action_describe("solve", semio_framework_plugin::LocalizedLabel::native("Starts the fill tool run that tiles the grid from its tiles, rules, pins and masks; the tiling is shown as a preview and does not change the document.", "Startet den Füll-Werkzeuglauf, der das Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen kachelt; die Kachelung wird als Vorschau gezeigt und ändert das Dokument nicht."))
-        .action_describe("commit-fill", semio_framework_plugin::LocalizedLabel::native("Keeps a finished fill run's tiling (as JSON) in the grid window so it stays visible; the document is not changed.", "Behält die Kachelung eines fertigen Füll-Laufs (als JSON) im Rasterfenster, damit sie sichtbar bleibt; das Dokument ändert sich nicht."))
-        .action_describe("setActiveExample", semio_framework_plugin::LocalizedLabel::native("Replaces the whole document (grid, tiles, rules, pins and seed) with one of the plugin's bundled 2D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Kacheln, Regeln, Anheftungen und Startwert) durch eines der mitgelieferten 2D-Raster-Beispiele, anhand der Beispiel-Id."))
+        .action_describe("change-seed", semio_framework_ui_locale::LocalizedLabel::native("Sets the random seed the solve starts from; the same seed, tiles and rules always produce the same tiling.", "Legt den Zufallsstartwert des Lösers fest; derselbe Startwert mit denselben Kacheln und Regeln ergibt immer dieselbe Kachelung."))
+        .action_describe("resize-grid", semio_framework_ui_locale::LocalizedLabel::native("Sets the grid to the given number of columns and rows; pins and masks on cells outside the new extent are removed.", "Setzt das Raster auf die angegebene Anzahl Spalten und Zeilen; Anheftungen und Ausblendungen außerhalb der neuen Ausdehnung werden entfernt."))
+        .action_describe("change-cell-size", semio_framework_ui_locale::LocalizedLabel::native("Sets the world width and height of one grid cell, the box each tile's image is scaled into and the spacing the grid window snaps to.", "Legt Breite und Höhe einer Rasterzelle in Weltmaßen fest, das Feld, in das jedes Kachelbild skaliert wird, und den Abstand, an dem das Rasterfenster fängt."))
+        .action_describe("change-periodicity", semio_framework_ui_locale::LocalizedLabel::native("Sets whether the grid wraps around horizontally and vertically, so tiles on one edge must fit the tiles on the opposite edge.", "Legt fest, ob das Raster horizontal und vertikal umläuft, sodass Kacheln am einen Rand zu denen am gegenüberliegenden Rand passen müssen."))
+        .action_describe("create-tile", semio_framework_ui_locale::LocalizedLabel::native("Adds a new tile with the given id and sampling weight to the tile set the solve may place.", "Fügt dem Kachelsatz, den der Löser setzen darf, eine neue Kachel mit der angegebenen Id und Gewichtung hinzu."))
+        .action_describe("delete-tile", semio_framework_ui_locale::LocalizedLabel::native("Removes a tile from the tile set together with every adjacency rule that names it and every cell pinned to it.", "Entfernt eine Kachel aus dem Kachelsatz samt aller Nachbarschaftsregeln, die sie nennen, und aller Zellen, die auf sie angeheftet sind."))
+        .action_describe("change-tile-weight", semio_framework_ui_locale::LocalizedLabel::native("Sets how strongly the solve favours one tile when several fit; a higher weight makes it more frequent.", "Legt fest, wie stark der Löser eine Kachel bevorzugt, wenn mehrere passen; ein höheres Gewicht macht sie häufiger."))
+        .action_describe("change-tile-media", semio_framework_ui_locale::LocalizedLabel::native("Replaces the image one tile is drawn with (media as JSON); its id, weight, rules and pins stay unchanged.", "Ersetzt das Bild, mit dem eine Kachel gezeichnet wird (Medium als JSON); Id, Gewicht, Regeln und Anheftungen bleiben unverändert."))
+        .action_describe("create-rule", semio_framework_ui_locale::LocalizedLabel::native("Allows or forbids tile B next to tile A in one direction; pairs without a rule are forbidden, so the rules are the complete whitelist.", "Erlaubt oder verbietet Kachel B in einer Richtung neben Kachel A; Paare ohne Regel sind verboten, die Regeln bilden also die vollständige Positivliste."))
+        .action_describe("delete-rule", semio_framework_ui_locale::LocalizedLabel::native("Removes one adjacency rule by id; the tile pair falls back to forbidden in that direction.", "Entfernt eine Nachbarschaftsregel anhand ihrer Id; das Kachelpaar gilt in dieser Richtung wieder als verboten."))
+        .action_describe("pin-cell", semio_framework_ui_locale::LocalizedLabel::native("Fixes the cell at column x, row y to the given tile before solving; the solve must keep it.", "Legt die Zelle in Spalte x, Zeile y vor dem Lösen auf die angegebene Kachel fest; der Löser muss sie beibehalten."))
+        .action_describe("unpin-cell", semio_framework_ui_locale::LocalizedLabel::native("Releases the pin on the cell at column x, row y so the solve chooses its tile again.", "Löst die Anheftung der Zelle in Spalte x, Zeile y, sodass der Löser deren Kachel wieder selbst wählt."))
+        .action_describe("mask-cell", semio_framework_ui_locale::LocalizedLabel::native("Cuts the cell at column x, row y out of the problem: it gets no tile, and any pin it held is removed.", "Nimmt die Zelle in Spalte x, Zeile y aus dem Problem heraus: Sie erhält keine Kachel, eine vorhandene Anheftung wird entfernt."))
+        .action_describe("unmask-cell", semio_framework_ui_locale::LocalizedLabel::native("Puts the masked cell at column x, row y back into the problem so the solve fills it again.", "Nimmt die ausgeblendete Zelle in Spalte x, Zeile y wieder ins Problem auf, sodass der Löser sie wieder füllt."))
+        .action_describe("pick-cell", semio_framework_ui_locale::LocalizedLabel::native("Applies the grid window's armed utility to the cell at column x, row y: Pin fixes the armed tile there, Mask cuts the cell out, Select changes nothing.", "Wendet das gewählte Hilfsmittel des Rasterfensters auf die Zelle in Spalte x, Zeile y an: Anheften setzt dort die gewählte Kachel fest, Ausblenden nimmt die Zelle heraus, Auswählen ändert nichts."))
+        .action_describe("set-active-tile", semio_framework_ui_locale::LocalizedLabel::native("Arms the tile the grid window's Pin utility places; only this window's state changes, not the document.", "Wählt die Kachel, die das Hilfsmittel Anheften im Rasterfenster setzt; nur der Zustand dieses Fensters ändert sich, nicht das Dokument."))
+        .action_describe("set-grid-visible", semio_framework_ui_locale::LocalizedLabel::native("Shows or hides the cell grid lines in the grid window; a view setting that leaves the document unchanged.", "Blendet die Rasterlinien im Rasterfenster ein oder aus; eine Ansichtseinstellung, die das Dokument nicht ändert."))
+        .action_describe("set-grid-snap-enabled", semio_framework_ui_locale::LocalizedLabel::native("Turns snapping to the grid on or off for pointer gestures in the grid window; the document is not changed.", "Schaltet das Fangen am Raster für Zeigergesten im Rasterfenster ein oder aus; das Dokument ändert sich nicht."))
+        .action_describe("set-grid-factor", semio_framework_ui_locale::LocalizedLabel::native("Sets the spacing factor of the grid window's snap grid relative to the cell size; the document is not changed.", "Legt den Abstandsfaktor des Fangrasters im Rasterfenster relativ zur Zellgröße fest; das Dokument ändert sich nicht."))
+        .action_describe("solve", semio_framework_ui_locale::LocalizedLabel::native("Starts the fill tool run that tiles the grid from its tiles, rules, pins and masks; the tiling is shown as a preview and does not change the document.", "Startet den Füll-Werkzeuglauf, der das Raster aus Kacheln, Regeln, Anheftungen und Ausblendungen kachelt; die Kachelung wird als Vorschau gezeigt und ändert das Dokument nicht."))
+        .action_describe("commit-fill", semio_framework_ui_locale::LocalizedLabel::native("Keeps a finished fill run's tiling (as JSON) in the grid window so it stays visible; the document is not changed.", "Behält die Kachelung eines fertigen Füll-Laufs (als JSON) im Rasterfenster, damit sie sichtbar bleibt; das Dokument ändert sich nicht."))
+        .action_describe("setActiveExample", semio_framework_ui_locale::LocalizedLabel::native("Replaces the whole document (grid, tiles, rules, pins and seed) with one of the plugin's bundled 2D grid examples, by example id.", "Ersetzt das gesamte Dokument (Raster, Kacheln, Regeln, Anheftungen und Startwert) durch eines der mitgelieferten 2D-Raster-Beispiele, anhand der Beispiel-Id."))
         .action_audience("set-camera", semio_framework_plugin::CapabilityAudience::Chrome)
         .build_definition()
 }

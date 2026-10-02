@@ -3,23 +3,49 @@
 //! zlib container: CMF/FLG header fields plus an opaque decompressed `payload`. One window,
 //! `🪟️main` (`TextWindowKit`), renders the header fields as an editable `key=value` summary; its
 //! `replace-text` action funnels through the one typed command this surface declares,
-//! `DeflateEditorCommand::ReplaceText`, which parses the summary back into
-//! `SetCompressionParams`/`SetPresetDictionary` (see the window's own doc comment for why `payload`
+//! `DeflateEditorCommand::ReplaceText`, which parses the summary back into the header leaves it changed — `SetCompressionParams`
+//! and/or `SetPresetDictionary`, nothing when the Apply changed neither (see the window's own doc comment for why `payload`
 //! itself is never shown or parsed here — a compressed byte stream has no honest text form).
 
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
-use crate::schema::mutations::{set_compression_params, set_preset_dictionary, set_snapshot};
+use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary, set_snapshot};
 use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 #[cfg(test)]
 use semio_framework_plugin::Component;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault,
-    InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract,
-    ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.deflate@rfc1950/*`, verified against this
@@ -47,7 +73,7 @@ impl protocol::OpText for DeflateEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -57,7 +83,7 @@ impl protocol::OpText for DeflateEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -67,7 +93,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -85,7 +111,7 @@ impl protocol::OpBinary for DeflateEditorCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -146,7 +172,7 @@ fn deflate_command_id(command: &semio_s_artifact_stdio_contract::editing::Snapsh
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>) -> Result<Emit<DeflateMutation>, Fault> {
+fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>, snapshot: &DeflateSnapshot) -> Result<Emit<DeflateMutation>, Fault> {
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DeflateEditorCommand::ReplaceText { text }) = command else {
         return Err(Fault::from("stdio-deflate-snapshot-edit-routed-to-native-reducer"));
     };
@@ -157,21 +183,33 @@ fn deflate_text_emit(command: &semio_s_artifact_stdio_contract::editing::Snapsho
             "The compression summary must contain valid method, windowBits, levelHint, and presetDictionary fields.",
         )
     })?;
-    Ok(Emit {
-        artifact_mutations: vec![
-            DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }),
-            DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id }),
-        ],
-        description: Some("Set compression header".into()),
-        ..Default::default()
-    })
+    Ok(Emit::mutations(deflate_header_mutations(snapshot, method, window_bits, level_hint, dict_id)))
+}
+
+/// 🧮️ The header leaves that carry `base`'s header to the given one: `set-compression-params` when the method, window or level
+/// hint moved, `set-preset-dictionary` when the dictionary id did, nothing when neither.
+fn deflate_header_mutations(base: &DeflateSnapshot, method: u8, window_bits: u8, level_hint: crate::schema::snapshot::DeflateLevelHint, dict_id: Option<u32>) -> Vec<DeflateMutation> {
+    let params = ((method, window_bits, level_hint) != (base.compression_method, base.window_bits, base.compression_level_hint))
+        .then(|| DeflateMutation::SetCompressionParams(set_compression_params::SetCompressionParams { method, window_bits, level_hint }));
+    let dictionary = (dict_id != base.dict_id).then(|| DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id }));
+    params.into_iter().chain(dictionary).collect()
+}
+
+/// 🧩️ The net leaves of one document-details edit: the header leaves it changed, then `set-payload` when the payload changed;
+/// another document schema is the one genuine whole-document replacement (`set-snapshot`).
+fn deflate_net_mutations(base: &DeflateSnapshot, next: &DeflateSnapshot) -> Vec<DeflateMutation> {
+    if base.schema != next.schema {
+        return vec![DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() })];
+    }
+    let payload = (base.payload != next.payload).then(|| DeflateMutation::SetPayload(set_payload::SetPayload { payload: next.payload.clone() }));
+    deflate_header_mutations(base, next.compression_method, next.window_bits, next.compression_level_hint, next.dict_id).into_iter().chain(payload).collect()
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn deflate_text_reduce(
     command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<DeflateEditorCommand>,
-    _snapshot: &DeflateSnapshot,
+    snapshot: &DeflateSnapshot,
     _config: &NoConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
@@ -179,7 +217,7 @@ fn deflate_text_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DeflateEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<DeflateMutation>, Fault> {
-    deflate_text_emit(command)
+    deflate_text_emit(command, snapshot)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -331,12 +369,13 @@ impl ArtifactEditor for DeflateEditor {
     }
 
     /// ✏️ Parses the whole `key=value` summary and, if every required field is present and valid,
-    /// emits BOTH `SetCompressionParams` and `SetPresetDictionary` as one gesture. A malformed
+    /// emits the header leaves the Apply changed as one gesture: `SetCompressionParams` when the method, window or level hint
+    /// moved, `SetPresetDictionary` when the dictionary id did, nothing when neither. A malformed
     /// summary (missing, out-of-schema, or unparsable required field) returns a fault without a
     /// partial apply.
     fn handle(
         command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
@@ -345,9 +384,9 @@ impl ArtifactEditor for DeflateEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DeflateEditorCommand::ReplaceText { .. }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
-            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot);
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        deflate_text_emit(command)
+        deflate_text_emit(command, doc.snapshot)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -375,7 +414,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Deflate
 
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, deflate_net_mutations)
     }
 }
 //#endregion 🔖️Editor

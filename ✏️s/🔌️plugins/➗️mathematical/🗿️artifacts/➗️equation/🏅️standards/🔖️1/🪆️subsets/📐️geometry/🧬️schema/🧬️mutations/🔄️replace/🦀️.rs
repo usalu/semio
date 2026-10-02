@@ -22,8 +22,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ReplacePoint
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace points", "Punkte ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace points", "Punkte ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into()]

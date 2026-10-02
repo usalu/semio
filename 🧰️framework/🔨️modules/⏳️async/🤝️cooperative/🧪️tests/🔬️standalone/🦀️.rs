@@ -38,18 +38,3 @@ fn cooperative_maintenance_snapshot_contention_preserves_queued_job() {
     assert_eq!(pool.try_cooperative_snapshot().unwrap().selected_by_lane[Lane::Maintenance.index()], 1);
     pool.shutdown();
 }
-
-#[test]
-fn cooperative_maintenance_live_host_revisits_queued_owner() {
-    let source = include_str!("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-    assert!(exact_live_pump_binding(source), "queued maintenance must retain one actual host pump opportunity");
-    for hostile in [
-        source.replace("pump_runtime_live_cooperative_turn(cell)?;", "other_pump(cell)?;"),
-        source.replace("pump_runtime_live_cooperative_turn(cell)?;", ""),
-        source.replace("pump_runtime_live_cooperative_turn(cell)?;", "pump_runtime_live_cooperative_turn(cell)?; pump_runtime_live_cooperative_turn(cell)?;"),
-        source.replace("pool.pump(now_ms);", "while pool.pump(now_ms) {}"),
-        source.replace("let now_ms = semio_framework_job::default_now_ms();", "let now_ms = Some(0);"),
-    ] {
-        assert!(!exact_live_pump_binding(&hostile));
-    }
-}

@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/ui-locale-rs",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/ui-locale-rs:test --skip-nx-cache",
+    "test-quick": "bun nx run @semio-tech/ui-locale-rs:test-quick --skip-nx-cache",
+    "test-long": "bun nx run @semio-tech/ui-locale-rs:test-long --skip-nx-cache",
+    "test-exhaustive": "bun nx run @semio-tech/ui-locale-rs:test-exhaustive --skip-nx-cache"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

@@ -58,6 +58,8 @@ pub(crate) mod context {
     fn forms_manifest_for_tests() -> App {
         App { definition: create_forms_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("forms", FormsPlayApp, forms_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
@@ -98,10 +100,10 @@ pub(crate) mod context {
             ViewModel {
                 window_id: Some("forms-try-test".into()),
                 window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "forms-try-test".into(), window_kind_id: try_window::FORMS_PLAY_WINDOW_TRY.into() }],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             }
         } else {
-            ViewModel::default()
+            ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &view).await.expect("render")).expect("rendered component JSON")
     }
@@ -423,8 +425,8 @@ async fn initial_document_starts_with_a_blank_editable_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_falls_back_without_contribution() {
-    for (locale, expected) in [(semio_framework_plugin::Locale::En, "Extension unavailable"), (semio_framework_plugin::Locale::De, "Erweiterung nicht verfügbar")] {
-        let view = semio_framework_plugin::ViewModel { locale, ..Default::default() };
+    for (locale, expected) in [(semio_framework_ui_locale::Locale::En, "Extension unavailable"), (semio_framework_ui_locale::Locale::De, "Erweiterung nicht verfügbar")] {
+        let view = semio_framework_plugin::ViewModel { locale, ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native) };
         let node = render_extension_question(&building_component_question(), &Object::new(), &[], questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&view));
         let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
         assert!(json.contains(expected));
@@ -433,7 +435,7 @@ async fn extension_question_falls_back_without_contribution() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_emits_external_slot_when_contribution_registered() {
-    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::default()));
+    let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
@@ -456,7 +458,7 @@ async fn extension_question_emits_external_slot_when_topic_contribution_register
             ]),
         )),
     }];
-    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::default()));
+    let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, questions::extensions::ExtensionSurface::Try { window_id: "fill-1" }, true, forms_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("semantic component"))).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
@@ -479,7 +481,7 @@ async fn catalogue_kinds_includes_topic_contributed_kinds() {
             ]),
         )),
     }];
-    let kinds = catalogue_kinds(&contributions, &semio_framework_plugin::ViewModel::default());
+    let kinds = catalogue_kinds(&contributions, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
 }
 
@@ -568,7 +570,7 @@ async fn contributed_question_labels_follow_selected_axes() {
     let payload = dsl::json::from_json_str(&vectors["payload"].to_string()).unwrap();
     let contributions = vec![ProgramContributionEntry { plugin_id: "playbook-module-procedural".into(), topic_contribution: Some(semio_framework_plugin::TopicContribution::new("forms.questionKind", payload)) }];
     for case in vectors["cases"].as_array().unwrap() {
-        let view = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), terminology: semio_framework_plugin::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap(), ..Default::default() };
+        let view = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), terminology: semio_framework_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap(), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::parse(case["locale"].as_str().unwrap()).unwrap(), semio_framework_ui_locale::Terminology::parse(case["terminology"].as_str().unwrap()).unwrap()) };
         let expected = vectors["payload"]["label"][case["terminology"].as_str().unwrap()][case["locale"].as_str().unwrap()].as_str().unwrap();
         assert_eq!(expected, case["expected"].as_str().unwrap());
         let kinds = catalogue_kinds(&contributions, &view);

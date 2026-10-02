@@ -23,8 +23,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeLimits {
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update security limits (maximum file size {} bytes)", self.new_limits.max_file_bytes), &format!("Sicherheitsgrenzwerte (maximale Dateigröße {} Byte) aktualisieren", self.new_limits.max_file_bytes))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update security limits (maximum file size {} bytes)", self.new_limits.max_file_bytes), &format!("Sicherheitsgrenzwerte (maximale Dateigröße {} Byte) aktualisieren", self.new_limits.max_file_bytes))
     }
 }
 //#endregion 🔖️Payload

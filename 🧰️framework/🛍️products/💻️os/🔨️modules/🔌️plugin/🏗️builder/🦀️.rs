@@ -58,7 +58,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// 🏠️ Declarations of kinds another package owns, hosted in this plugin's guest — see [`Self::host_artifact`].
     hosted_artifacts: Vec<ArtifactDeclaration>,
     /// 📚️ Shared schema documents of a plugin submodule — see [`Self::schema_documents`].
-    schema_documents: Vec<(String, ::semio_framework_schema::ScopeSchemaExports)>,
+    schema_documents: Vec<(String, ::semio_framework_schema_registry::ScopeSchemaExports)>,
     artifact_definitions: Vec<crate::app::ArtifactDefinition>,
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
@@ -89,7 +89,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// the process-wide owner mutation roster by `try_build`.
     owner_mutation_rosters: Vec<crate::app::OwnerMutationRoster>,
     app_defs: Vec<(App, crate::app::declarations::AppFactory<PA>)>,
-    app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
+    app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
     document_app_ids: Vec<&'static str>,
     /// 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C — the new declaration tree,
     /// walked by `.declare_artifact(...)`/`try_build()` alongside (never instead of) `artifacts`
@@ -257,7 +257,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// the other catalogs, so the runtime input reader (`registered_input_schema_document`) resolves them. The owning
     /// plugin is declared explicitly as this one or a direct dependency whose artifacts this guest hosts (`host_artifact`); identical rows are
     /// tolerated, a conflicting row is fatal. Repeatable.
-    pub fn schema_documents(mut self, owner_plugin_id: impl Into<String>, documents: ::semio_framework_schema::ScopeSchemaExports) -> Self {
+    pub fn schema_documents(mut self, owner_plugin_id: impl Into<String>, documents: ::semio_framework_schema_registry::ScopeSchemaExports) -> Self {
         self.schema_documents.push((owner_plugin_id.into(), documents));
         self
     }
@@ -387,7 +387,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     where
         PA: From<crate::app::VcsArtifactApp<A>>,
     {
-        fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             resolve_ready(A::app_schema())
         }
         fn factory<A: ArtifactApp, PA: PluginApp + From<crate::app::VcsArtifactApp<A>>>(def: &crate::app::AppDefinition) -> PA {
@@ -452,7 +452,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             V::app_schema()
         }
         fn factory<V, PA>(def: &crate::app::AppDefinition) -> PA
@@ -521,7 +521,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
             E::app_schema()
         }
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition) -> PA {

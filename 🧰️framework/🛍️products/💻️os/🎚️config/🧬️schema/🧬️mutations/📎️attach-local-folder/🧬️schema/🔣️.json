@@ -64,8 +64,6 @@
     "folder": {
       "$ref": "#/$defs/LocalFolderRef",
       "x-semio-ui": {
-        "widget": "text",
-        "role": "value",
         "label": {
           "en": "Folder",
           "de": "Ordner"
@@ -94,7 +92,19 @@
         "path": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 4096
+          "maxLength": 4096,
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
+            },
+            "description": {
+              "en": "The absolute path of the folder on this device.",
+              "de": "Der absolute Pfad des Ordners auf diesem Gerät."
+            }
+          }
         }
       },
       "description": "An absolute folder path the host opens on this device; it never leaves the device."

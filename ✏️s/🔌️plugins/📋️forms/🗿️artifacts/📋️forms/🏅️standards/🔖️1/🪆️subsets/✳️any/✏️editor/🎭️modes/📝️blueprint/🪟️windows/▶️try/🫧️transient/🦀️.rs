@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
-use store::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 
 pub(crate) const MAX_TRY_VALUE_ENTRIES: usize = 64;
 
@@ -145,22 +145,22 @@ struct SharedTextRetirement {
     remaining: usize,
 }
 
-impl store::retirement::RetirementCursor for SharedTextRetirement {
-    fn close_step(&mut self, maximum_bytes: usize) -> store::retirement::RetirementStep {
-        let Some(value) = self.value.as_ref() else { return store::retirement::RetirementStep::Complete };
+impl semio_framework_value::retirement::RetirementCursor for SharedTextRetirement {
+    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+        let Some(value) = self.value.as_ref() else { return semio_framework_value::retirement::RetirementStep::Complete };
         if Arc::strong_count(value) > 1 {
             self.value.take();
             self.remaining = 0;
-            return store::retirement::RetirementStep::Complete;
+            return semio_framework_value::retirement::RetirementStep::Complete;
         }
         if self.remaining > 0 {
-            if maximum_bytes == 0 { return store::retirement::RetirementStep::BudgetExhausted; }
+            if maximum_bytes == 0 { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
             let bytes = maximum_bytes.min(self.remaining);
             self.remaining -= bytes;
-            return store::retirement::RetirementStep::Bytes(bytes);
+            return semio_framework_value::retirement::RetirementStep::Bytes(bytes);
         }
         self.value.take();
-        store::retirement::RetirementStep::Complete
+        semio_framework_value::retirement::RetirementStep::Complete
     }
     fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.remaining == 0 }
 }
@@ -174,8 +174,8 @@ impl Drop for SharedTextRetirement {
 
 struct SharedText(Arc<str>);
 
-impl store::retirement::RetireOwned for SharedText {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for SharedText {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let remaining = self.0.len();
         Box::new(SharedTextRetirement { value: ManuallyDrop::new(Some(self.0)), remaining })
     }
@@ -186,23 +186,23 @@ struct SharedChunksRetirement {
     chunks: ManuallyDrop<Option<Vec<Arc<str>>>>,
 }
 
-impl store::retirement::RetirementCursor for SharedChunksRetirement {
-    fn close_step(&mut self, _maximum_bytes: usize) -> store::retirement::RetirementStep {
+impl semio_framework_value::retirement::RetirementCursor for SharedChunksRetirement {
+    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
         if let Some(owner) = self.owner.take() {
             match Arc::try_unwrap(owner) {
                 Ok(chunks) => *self.chunks = Some(chunks),
                 Err(shared) => {
                     drop(shared);
-                    return store::retirement::RetirementStep::Complete;
+                    return semio_framework_value::retirement::RetirementStep::Complete;
                 }
             }
         }
-        let Some(chunks) = self.chunks.as_mut() else { return store::retirement::RetirementStep::Complete };
+        let Some(chunks) = self.chunks.as_mut() else { return semio_framework_value::retirement::RetirementStep::Complete };
         match chunks.pop() {
-            Some(chunk) => store::retirement::RetirementStep::Child(SharedText(chunk).retirement()),
+            Some(chunk) => semio_framework_value::retirement::RetirementStep::Child(SharedText(chunk).retirement()),
             None => {
                 self.chunks.take();
-                store::retirement::RetirementStep::Complete
+                semio_framework_value::retirement::RetirementStep::Complete
             }
         }
     }
@@ -221,15 +221,15 @@ impl Drop for SharedChunksRetirement {
 
 struct SharedChunks(Arc<Vec<Arc<str>>>);
 
-impl store::retirement::RetireOwned for SharedChunks {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for SharedChunks {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         Box::new(SharedChunksRetirement { owner: ManuallyDrop::new(Some(self.0)), chunks: ManuallyDrop::new(None) })
     }
 }
 
-impl store::retirement::RetireOwned for TryValueContent {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![SharedText(self.id).retirement(), SharedChunks(self.chunks).retirement()])
+impl semio_framework_value::retirement::RetireOwned for TryValueContent {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![SharedText(self.id).retirement(), SharedChunks(self.chunks).retirement()])
     }
 }
 
@@ -237,14 +237,14 @@ struct SharedTryValuesRetirement {
     root: ManuallyDrop<Option<Arc<BTreeMap<String, TryValueContent>>>>,
 }
 
-impl store::retirement::RetirementCursor for SharedTryValuesRetirement {
-    fn close_step(&mut self, _maximum_bytes: usize) -> store::retirement::RetirementStep {
-        let Some(root) = self.root.take() else { return store::retirement::RetirementStep::Complete };
+impl semio_framework_value::retirement::RetirementCursor for SharedTryValuesRetirement {
+    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+        let Some(root) = self.root.take() else { return semio_framework_value::retirement::RetirementStep::Complete };
         match Arc::try_unwrap(root) {
-            Ok(values) => store::retirement::RetirementStep::Child(values.retirement()),
+            Ok(values) => semio_framework_value::retirement::RetirementStep::Child(values.retirement()),
             Err(shared) => {
                 drop(shared);
-                store::retirement::RetirementStep::Complete
+                semio_framework_value::retirement::RetirementStep::Complete
             }
         }
     }
@@ -258,9 +258,9 @@ impl Drop for SharedTryValuesRetirement {
     }
 }
 
-impl store::retirement::RetireOwned for FormsTryValues {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![Box::new(SharedTryValuesRetirement { root: ManuallyDrop::new(Some(self.root)) }), self.revision.retirement()])
+impl semio_framework_value::retirement::RetireOwned for FormsTryValues {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![Box::new(SharedTryValuesRetirement { root: ManuallyDrop::new(Some(self.root)) }), self.revision.retirement()])
     }
 }
 
@@ -350,11 +350,11 @@ impl protocol::OpBinary for FormsTryWindowTransientMutation {
     }
 }
 
-store::artifact_retire_struct!(FormsTryWindowTransient { try_values });
+semio_framework_value::artifact_retire_struct!(FormsTryWindowTransient { try_values });
 
-impl store::retirement::RetireOwned for FormsTryWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        match self { Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), transient.retirement()]) }
+impl semio_framework_value::retirement::RetireOwned for FormsTryWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        match self { Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), transient.retirement()]) }
     }
 }
 
@@ -375,8 +375,8 @@ impl semio_framework_plugin::WindowTransientOwner for FormsTryWindowTransientOwn
     type State = FormsTryWindowTransient;
     type Mutation = FormsTryWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

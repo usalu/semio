@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.space.space.config")]
+#[artifact_schema(id = "hub.compositions.space.engine.space.config")]
 pub struct SpaceConfig {
     #[state(config)]
     pub camera: BTreeMap<String, SpaceWindowCamera>,
@@ -37,17 +37,17 @@ pub struct SpaceConfig {
 /// 📎 The `s.space.space` app-schema descriptor (config + presence facets) — returned, not
 /// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1c) hands it to `register_document_app` for registration, mirroring the `🗒️note` pattern.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
-    ::schema::AppSchemaDescriptor {
+pub async fn app_schema_descriptor() -> ::semio_framework_schema_registry::AppSchemaDescriptor {
+    ::semio_framework_schema_registry::AppSchemaDescriptor {
         id: "s.space.space",
-        config: ::schema::FacetLeaves {
+        config: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: ::schema::FacetLeaves {
+        presence: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

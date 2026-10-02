@@ -39,6 +39,63 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ]
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ]
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ]
+    },
+    "test-recursive-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test recursive-retirement",
+        "forwardAllArgs": true
+      }
     }
   }
 }

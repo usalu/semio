@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeTransparencyMuta
         }
         vec![PngMutation::ChangeTransparency(ChangeTransparencyMutation { trns: base.trns.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change transparency", "Transparenz ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change transparency", "Transparenz ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-transparency".into()]

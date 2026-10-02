@@ -27,8 +27,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for SetSnapshot {
         vec![PngMutation::SetSnapshot(Self { snapshot: base.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen")
     }
 
     fn target(&self) -> Vec<String> {

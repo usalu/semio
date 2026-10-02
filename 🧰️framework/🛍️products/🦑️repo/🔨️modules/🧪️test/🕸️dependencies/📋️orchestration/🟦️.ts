@@ -12,7 +12,7 @@ import {
   ratchetDependencies,
   scanDeclaredDependencies,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 

@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename zone {} to \"{}\"", self.id.0, self.new_name), &format!("Zone {} in \"{}\" umbenennen", self.id.0, self.new_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename zone {} to \"{}\"", self.id.0, self.new_name), &format!("Zone {} in \"{}\" umbenennen", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

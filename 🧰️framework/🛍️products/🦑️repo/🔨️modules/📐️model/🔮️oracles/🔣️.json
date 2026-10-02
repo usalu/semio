@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ Test-only references of the 📐️model owner. `ajv` is already a devDependency of 🔨️modules/📚️library/📦️packages/🟦️typescript and is registered in the repository-root 🔒️dependencies.json; no production code of this module can reach it, and this module ships no TypeScript package at all.",
   "oracles": [

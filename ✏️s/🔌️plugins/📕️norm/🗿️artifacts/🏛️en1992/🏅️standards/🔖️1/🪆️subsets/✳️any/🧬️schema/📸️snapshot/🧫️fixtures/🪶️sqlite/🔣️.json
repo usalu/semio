@@ -1,0 +1,180 @@
+{
+  "capabilityExports": [
+    "EN1992_SQLITE_SCHEMA",
+    "en1992SnapshotToSqliteDatabase",
+    "en1992SnapshotFromSqliteDatabase"
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000001",
+    "0000000000000001",
+    "0010000000000000"
+  ],
+  "tableNames": [
+    "en1992_document",
+    "en1992_concrete_grade",
+    "en1992_reinforcement_grade",
+    "en1992_prestress_steel",
+    "en1992_member",
+    "en1992_bar_layer",
+    "en1992_stirrups",
+    "en1992_punching",
+    "en1992_prestress",
+    "en1992_fire",
+    "en1992_member_action",
+    "en1992_anchor",
+    "en1992_anchor_action"
+  ],
+  "snapshot": {
+    "annex": "De",
+    "title": "Concrete \u0000日本",
+    "designWorkingLifeYears": 0.5,
+    "deltaCDev": 0.5,
+    "cementType": "arbitrary cement",
+    "concreteGrades": [
+      {
+        "id": "duplicate",
+        "name": "concrete",
+        "fCk": 0.5
+      }
+    ],
+    "reinforcementGrades": [
+      {
+        "id": "duplicate",
+        "name": "reinforcement",
+        "fYk": 0.5,
+        "eS": 0.5,
+        "ductility": "b",
+        "k": 0.5,
+        "epsUk": 0.5
+      }
+    ],
+    "prestressSteels": [
+      {
+        "id": "duplicate",
+        "name": "steel",
+        "fPk": 0.5,
+        "fP01k": 0.5
+      }
+    ],
+    "members": [
+      {
+        "id": "member",
+        "labelEn": "Member",
+        "labelDe": "Bauteil",
+        "kind": "RibbedSlab",
+        "concreteGradeId": "unknown concrete",
+        "reinforcementGradeId": "unknown rebar",
+        "prestressSteelId": "unknown prestress",
+        "exposure": "Xa3",
+        "width": 0.5,
+        "height": 0.5,
+        "effectiveDepth": 0.5,
+        "cover": 0.5,
+        "span": 0.5,
+        "support": "Fixed",
+        "bucklingLength": 0.5,
+        "longitudinal": [
+          {
+            "id": "bar",
+            "diameter": 0.5,
+            "count": 4294967295,
+            "position": "arbitrary",
+            "anchorageLength": 0.5,
+            "lapLength": 0.5,
+            "bondCondition": "arbitrary",
+            "aggregateSize": 0.5
+          }
+        ],
+        "stirrups": {
+          "diameter": 0.5,
+          "spacing": 0.5,
+          "legs": 4294967295
+        },
+        "punching": {
+          "columnWidth": 0.5,
+          "columnDepth": 0.5,
+          "columnPosition": "arbitrary",
+          "asw": 0.5
+        },
+        "prestress": {
+          "force": 0.5,
+          "area": 0.5,
+          "eccentricity": 0.5,
+          "lossRatio": 0.5
+        },
+        "fire": {
+          "rating": "R120",
+          "axisDistance": 0.5,
+          "columnMethod": "arbitrary",
+          "slabSystem": "arbitrary"
+        },
+        "actions": [
+          {
+            "id": "action\u0000日本",
+            "kind": "arbitrary",
+            "category": "unlisted",
+            "source": "owned",
+            "gKLine": 0.5,
+            "qKLine": 0.5,
+            "pointForce": 0.5,
+            "mK": 0.5,
+            "nK": 0.5,
+            "vK": 0.5,
+            "tK": 0.5,
+            "vKPunch": 0.5
+          }
+        ],
+        "useFem": true,
+        "udl": 0.5,
+        "deflectionSensitive": false,
+        "tightness": "Tc2",
+        "hdOverH": 0.5,
+        "liquidSigmaS": 0.5,
+        "liquidRhoPEff": 0.5,
+        "liquidFCtEff": 0.5,
+        "liquidSRMax": 0.5,
+        "bridgeSigmaC": 0.5,
+        "bridgeDeltaSigmaS": 0.5
+      }
+    ],
+    "anchors": [
+      {
+        "id": "anchor",
+        "hEf": 0.5,
+        "cracked": true,
+        "fUk": 0.5,
+        "fYk": 0.5,
+        "aS": 0.5,
+        "d": 0.5,
+        "c1": 0.5,
+        "fCk": 0.5,
+        "actions": [
+          {
+            "id": "action\u0000日本",
+            "kind": "arbitrary",
+            "category": "unlisted",
+            "source": "owned",
+            "gKLine": 0.5,
+            "qKLine": 0.5,
+            "pointForce": 0.5,
+            "mK": 0.5,
+            "nK": 0.5,
+            "vK": 0.5,
+            "tK": 0.5,
+            "vKPunch": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  "controlledOutput": {
+    "textBytes": 100000,
+    "cancelAfter": 65536,
+    "tinyBytes": 16
+  }
+}

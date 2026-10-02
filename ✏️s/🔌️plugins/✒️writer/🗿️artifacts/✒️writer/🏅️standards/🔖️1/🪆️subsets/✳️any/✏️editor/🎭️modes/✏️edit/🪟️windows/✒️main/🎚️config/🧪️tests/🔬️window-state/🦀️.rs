@@ -55,10 +55,10 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
                 let left_id = fixture["leftWindowId"].as_str().unwrap();
                 let right_id = fixture["rightWindowId"].as_str().unwrap();
-                let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
+                let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
                 let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
@@ -157,7 +157,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
 
 #[test]
 fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base_config: WriterMainWindowConfig = pack::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
     let base_transient: WriterMainWindowTransient = pack::from_json_str(&fixture["baseTransient"].to_string()).unwrap();
     let ids = [fixture["leftWindowId"].as_str().unwrap(), fixture["rightWindowId"].as_str().unwrap()];

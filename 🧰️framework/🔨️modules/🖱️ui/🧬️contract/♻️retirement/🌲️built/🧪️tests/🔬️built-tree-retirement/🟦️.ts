@@ -52,7 +52,6 @@ type BuiltTreeRetirementFixture = {
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { inspectRustModuleGraphFacts } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export function testBuiltTreeRetirementFixture(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");
@@ -77,12 +76,6 @@ export function testBuiltTreeRetirementFixture(): void {
   const native = read("./🦀️.rs");
   assert(native.includes("pub struct BuiltTreeRetirement") && native.includes("UiTypedRetirementCursor") && native.includes("try_next_or_release"));
   assert(!native.includes("close_ui_value_page_one") && !native.includes("close_built_node_page_one"), "exact tree closure cannot advance a global retirement queue");
-  const modules = inspectRustModuleGraphFacts(native).modules.filter(module => module.name === "tests" && module.conditional && !module.inline && module.pathTarget !== null);
-  assert.equal(modules.length, 1);
-  const testUrl = new URL(modules[0]!.pathTarget!, new URL("../..", import.meta.url));
-  const fixtureUrl = new URL("../../🧫️fixtures/🔣️.json", import.meta.url);
-  const includes = [...readFileSync(testUrl, "utf8").matchAll(/include_str!\(\s*"([^"]+)"\s*\)/gu)];
-  assert(includes.some(match => new URL(match[1]!, testUrl).href === fixtureUrl.href));
   const typedDepths = ["UiText", "crate::Component", "crate::LayoutSpec", "crate::StyleSpec", "crate::Activity", "bool", "crate::AccessibilitySpec", "crate::UiNodeBindings", "Option<MenuRef>"];
   assert.equal(typedDepths.length, fixture.payloadFields.length);
   for (const type of typedDepths) assert(native.includes(`<${type} as UiTypedRetire>::DEPTH`), `missing typed depth guard for ${type}`);

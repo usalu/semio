@@ -2,10 +2,10 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel): the
 //! macro's value is that every locale×terminology combination is compile-checked in one place.
 
-use semio_framework_plugin::Locale;
+use semio_framework_ui_locale::Locale;
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the animate presentation tile-play app; one field per label makes every locale×terminology combination compile-checked.
     pub struct AnimatePresentationLabels {
         tiles_section: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";

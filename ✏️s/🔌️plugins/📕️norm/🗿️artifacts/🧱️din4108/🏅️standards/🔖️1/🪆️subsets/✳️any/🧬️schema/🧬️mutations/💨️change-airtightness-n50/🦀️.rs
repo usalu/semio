@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeAirtight
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change air change rate n50", "Luftwechselrate n50 ändern")
     }
 }

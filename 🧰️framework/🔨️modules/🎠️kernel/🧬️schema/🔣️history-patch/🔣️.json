@@ -114,7 +114,19 @@
         "activeAlternativeId": { "type": "string" },
         "currentCheckpointId": { "type": "string" },
         "commandFilter": { "type": "string" },
-        "timeTravel": { "$ref": "#/definitions/HistoryTimeTravel" }
+        "timeTravel": { "$ref": "#/definitions/HistoryTimeTravel" },
+        "remoteReplay": { "$ref": "#/definitions/HistoryRemoteReplay" }
+      }
+    },
+    "HistoryRemoteReplay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["done", "total"],
+      "properties": {
+        "done": { "$ref": "#/definitions/U32" },
+        "total": { "$ref": "#/definitions/U32" },
+        "paused": { "type": "boolean" },
+        "fault": { "type": "string", "minLength": 1 }
       }
     },
     "HistoryPatchFixture": {

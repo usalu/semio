@@ -46,7 +46,8 @@
 
 // #region 🔌️Adapters
 import * as THREE from "three";
-import { defineTestAdapter, digest, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { digest } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧬️Model

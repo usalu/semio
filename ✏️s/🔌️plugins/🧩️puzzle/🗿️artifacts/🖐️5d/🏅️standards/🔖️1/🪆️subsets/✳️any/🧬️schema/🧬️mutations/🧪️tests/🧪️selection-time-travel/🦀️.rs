@@ -25,11 +25,14 @@ struct TimeTravelCase {
     blocks: bool,
 }
 
+/// 🎯️ Decodes the corpus with the framework JSON reader, whose float parse is correctly rounded: `serde_json` without
+/// `float_roundtrip` lands some 17-digit decimals one ulp off (`1.9999999999999993` → `…91`), which made an exact
+/// cross-language state compare fail on the harness, not on the leaves.
 fn cases() -> Vec<TimeTravelCase> {
-    let corpus: serde_json::Value = serde_json::from_str(CORPUS).expect("the corpus parses");
-    let snapshot = |value: &serde_json::Value| -> Puzzle5dSnapshot { dsl::json::from_json_str(&value.to_string()).expect("a corpus snapshot decodes") };
-    let mutation = |value: &serde_json::Value| -> Puzzle5dMutation { dsl::json::from_json_str(&value.to_string()).expect("a corpus payload decodes") };
-    let level = |value: &serde_json::Value| match value.as_str() {
+    let corpus = dsl::json::parse(CORPUS).expect("the corpus parses");
+    let snapshot = |value: &dsl::json::Value| -> Puzzle5dSnapshot { dsl::json::from_json_str(&dsl::json::to_string(value)).expect("a corpus snapshot decodes") };
+    let mutation = |value: &dsl::json::Value| -> Puzzle5dMutation { dsl::json::from_json_str(&dsl::json::to_string(value)).expect("a corpus payload decodes") };
+    let level = |value: &dsl::json::Value| match value.as_str() {
         None => None,
         Some("info") => Some(protocol::Severity::Info),
         Some("warning") => Some(protocol::Severity::Warning),

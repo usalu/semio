@@ -4,6 +4,13 @@ use crate::document::AnnexChoice;
 use crate::{CompositeBeam, CompositeColumn, CompositeSlab};
 use framework_schema::ArtifactSchema;
 
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -38,7 +45,7 @@ pub struct En1994Snapshot {
     pub fatigue_detail: String,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope_id = "norm.en1994");
+crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope_id = "norm.en1994", sqlite = sqlite::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1994Snapshot {

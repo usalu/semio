@@ -1,22 +1,2 @@
 semio stdio.json.dsl v1
-{
-  "name": "semio",
-  "count": 42,
-  "ratio": 3.5,
-  "active": true,
-  "missing": null,
-  "tags": [
-    "a",
-    "b",
-    "c"
-  ],
-  "nested": {
-    "deep": {
-      "deeper": [
-        1,
-        2,
-        3
-      ]
-    }
-  }
-}
+schema=stdio.json nodes=[ { kind=object items=[ ] members=[ { key=name value=1 } { key=count value=2 } { key=ratio value=3 } { key=active value=4 } { key=missing value=5 } { key=tags value=6 } { key=nested value=7 } ] } { kind=string string-value=semio items=[ ] members=[ ] } { kind=number number-lexeme="42" items=[ ] members=[ ] } { kind=number number-lexeme="3.5" items=[ ] members=[ ] } { kind=boolean boolean=true items=[ ] members=[ ] } { kind=null items=[ ] members=[ ] } { kind=array items=[ 8 9 10 ] members=[ ] } { kind=object items=[ ] members=[ { key=deep value=11 } ] } { kind=string string-value=a items=[ ] members=[ ] } { kind=string string-value=b items=[ ] members=[ ] } { kind=string string-value=c items=[ ] members=[ ] } { kind=object items=[ ] members=[ { key=deeper value=12 } ] } { kind=array items=[ 13 14 15 ] members=[ ] } { kind=number number-lexeme="1" items=[ ] members=[ ] } { kind=number number-lexeme="2" items=[ ] members=[ ] } { kind=number number-lexeme="3" items=[ ] members=[ ] } ]

@@ -18,8 +18,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for RemoveCo
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {
         agg_inverse(&DocxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1056,7 +1056,7 @@ impl MountedLayoutJob {
             return (0, 0);
         };
         let slider_unit_label = match spec {
-            UiNode::Slider(slider) => crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref()),
+            UiNode::Slider(slider) => slider.unit_label(),
             _ => None,
         };
         let part = match (spec, self.text_part) {

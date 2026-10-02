@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🀄️ `@semio-tech/wfc-plugin` router: `bun ./📜️script.ts test`. */
-import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -9,7 +10,7 @@ process.env.RUST_MIN_STACK ??= String(32 * 1024 * 1024);
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-hub-wfc"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-wfc"], this.repoRoot, rest);
   }
 }
 

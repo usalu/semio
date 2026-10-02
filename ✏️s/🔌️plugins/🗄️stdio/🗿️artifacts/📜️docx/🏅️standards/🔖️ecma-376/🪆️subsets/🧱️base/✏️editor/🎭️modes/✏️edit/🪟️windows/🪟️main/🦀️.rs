@@ -5,7 +5,17 @@
 use crate::schema::mutations::{docx_top_level_block_count, docx_top_level_run_at, docx_top_level_run_count, DocxXmlAddress};
 use crate::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
-use semio_framework_plugin::{ActionArgDef, BuiltNode, Locale, LocalizedLabel, PluginAssemblyError, TreeWindows, UiListBuilder, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiListBuilder;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;

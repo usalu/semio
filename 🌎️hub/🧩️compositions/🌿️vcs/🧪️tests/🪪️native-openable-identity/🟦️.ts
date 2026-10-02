@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 
@@ -35,7 +35,7 @@ export class NativeOpenableIdentityCheckScript extends BundleScript {
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
     if (!root.includes('.package_id("semio:vcs")') || !manifest.includes('package = "semio:vcs"') || artifact.includes('"vcs.document"')) throw new Error("VCS guest package/artifact authority is not canonical");
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "268435456" },
       groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_openable_identity" }, laws: ["vcs_guest_descriptor_has_one_canonical_native_openable_identity"] }],

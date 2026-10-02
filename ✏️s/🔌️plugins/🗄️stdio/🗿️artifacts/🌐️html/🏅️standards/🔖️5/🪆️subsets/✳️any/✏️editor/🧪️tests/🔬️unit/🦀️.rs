@@ -182,6 +182,24 @@ fn an_applied_text_is_its_net_node_leaves_and_they_reach_exactly_that_text() {
     }
 }
 
+/// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net node leaves — exactly the corpus leaves of the
+/// same change, never a whole `set-snapshot` for a node edit — with no description, so its row is labelled from its leaves.
+#[test]
+fn a_document_details_edit_is_its_net_node_leaves() {
+    use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
+    ::semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()]).expect("register html schema");
+    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{id}: {field} parses: {error:?}"));
+        let (base, next) = (parse("before"), parse("after"));
+        let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&next) };
+        let emit = <HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).unwrap_or_else(|fault| panic!("{id}: the details edit publishes: {fault:?}"));
+        assert_eq!(serde_json::Value::Array(emit.artifact_mutations.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the details edit is the net leaves");
+        assert_eq!(emit.description, None, "{id}: the row is labelled from its leaves");
+    }
+}
+
 /// ⚖️ LAW: the kit verb applies the HTML source the main window edits as ONE edit of its net leaves: one changed text is one
 /// `set-text` row labelled from the leaf, the document reads exactly the applied text, and ONE undo restores it.
 #[semio_framework_async_macros::async_test]
@@ -204,3 +222,5 @@ async fn one_applied_html_text_is_one_edit_of_its_net_leaves() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🧮️NetLeafLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", HtmlEditor, || semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() }, "../..");

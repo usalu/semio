@@ -527,3 +527,267 @@ Done: the React host now publishes the local user's history edit (and tool run) 
 - **Schema catalog.** Regenerated with no diagnostics for the new schemas.
 - **Not done here: native wgpu reattach.** It is recorded by W2-C in `📓️w2-c-report.md` Follow-up 4 for the coordinator to route. The Rust twin and its API are ready.
 - **e2e.** W3-E2E's probe step 5 now uses the reconnect flow: offer → reconnect → compare → detach → reload → no offer. It is waiting for activation #5.
+
+## Session 2 — 2026-10-01
+
+Successor executor S2-W2B. Aliases as above: `RE` = `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements`, `UI` = `🧰️framework/🔨️modules/🖱️ui`, `ENG` = `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine`.
+
+### S2.1 Repair (rule 21)
+
+- No half-finished W2-B edit. Every W2-B file was clean against HEAD (`4e36b2b5012`, 11:16). The peer's 11:12 ShellHost refactor was already committed and compiles.
+- The fake `PluginWasmHandle.readAppDocumentIdentity` error is gone; session 1's follow-up 3 fixed it.
+- The renderer-react typecheck has no error in any W2-B file. Every remaining error belongs to a peer:
+  - `RE/🐚️Shell/🟦️.tsx:1112`: `idleInstalledServiceStatusV1` is undefined (inference WIP).
+  - The stale generated registry, `🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts` (05:49). It still calls `moduleDirectoryName` with 1 argument; the 08:14 signature takes 2.
+  - From 12:08: the replication envelope gained `line`, which `🏪️store/👷️worker` and `🔄️sync/🧪️tests/🔬️backbone-parity` do not set yet.
+  - From 12:34: G6 numeric facets (`UiNumberLimits`, `SliderAppearance`, and `SliderProps.precision/displayUnit/displayFactor/limits`) break `UI/🧬️contract`, `UI/🧱️elements/🎚️Slider` and `RE/🗣️Interpreter/📖️stories`.
+- **Blocker for every React suite that imports ShellHost.** The stale registry throws at module load ("Cannot read properties of undefined (reading 'filter')"), so all five W2-B suites failed with 0 tests (`🗑️generated/s2-w2b/vitest-mine-1.txt`).
+  - Bridge: a ticket-local shim, `🗑️generated/s2-w2b/{registry-plugins-shim.ts, vitest-shim.config.ts}`. It aliases only the generated module to a copy whose module URL ignores the directory name. It is not referenced from any repo file.
+  - Every React count below was taken with that shim. **To redo without the shim** after `plugin-registry:generate`, or once S2-INFRA's item 4 lands.
+
+### S2.2 Changes
+
+**Plugin-level `timeTravel.*` refusal notices (coordinator item 1).** These 10 codes are now localized by code, in both shells' vocabulary:
+`busy`, `unknown-mutation`, `not-editable`, `unknown-input`, `invalid-input`, `no-selection`, `name-required`, `schema-unavailable`, and the driver faults `replay-faulted` and `commit-failed`.
+- `HISTORY_REFUSAL_LABEL_KEYS` (`RE/🛠️ShellHelpers/🟦️.tsx`) now has 20 codes.
+- New keys `ui.timeTravel.refusal.{busy,unknownMutation,notEditable,unknownInput,invalidInput,noSelection,nameRequired,schemaUnavailable,replayFaulted,commitFailed}` in `UI/🧱️elements/📚️I18n/🟦️.tsx` and both bundles of `UI/🎯️targets/⚛️react/🌐️i18n/🟦️.ts`. The texts were agreed with the coordinator, including its two German tweaks.
+- S2-W2A landed the same strings as `TIME_TRAVEL_LABELS`/`TIME_TRAVEL_CODE_LABELS` (`FW/⏪️time-travel/🟦️.ts`). A new React law requires every vocabulary code to exist in React with byte-equal en/de text, and no React `timeTravel.*` code outside the vocabulary.
+- Shared band corpus (`RE/🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band`):
+  - `refusals` now has 20 rows.
+  - New case "a faulted replay names its fault in words and can replay again".
+  - The unknown-fault case now uses `store.replay-unreadable`, since `replay-faulted` is now a known code.
+- `🧪️command-rejection` now reads its code list from the band corpus instead of a hard-coded 10.
+
+**Reveal and focus (G13, design §16).** New in `RE/🛠️ShellHelpers/⏪️time-travel/🟦️.tsx`:
+- `timeTravelTransitionV1(previous, next) → {reveal, focus}`:
+  - The edge into a new session (any `sessionId` change from none) reveals the History panel.
+  - A draft that starts (Begin, Next problem, another target) focuses the editor.
+  - Entering replaying or reviewing focuses the band.
+  - Choosing focuses the prompt.
+  - Progress steps, the commit and the close move nothing.
+- `timeTravelFocusElementV1`: the first focusable control under `…/framework.history.editor.input.<pointer>`, else Accept (its row button), the band, or the dialog's first control.
+- `timeTravelFocusIsHeldV1`: an editable field outside the History panel and the prompt keeps focus, so an agent-begun session never steals someone's typing.
+- `scheduleTimeTravelFocusV1(root, target, frames)`: retries per animation frame until the target mounts.
+- The band is now `tabIndex=-1` (focusable, not a tab stop). Its controls carry `min-h-medium px-tiny` (touch targets) and the band wraps within `max-w-[90vw]`.
+- ShellHost (`RE/🏛️ShellHost/🟦️.tsx`): `revealHistoryPanelRef` reveals the History tab through the dock's anchor, or the merged mobile panel when `mobile`. One session effect applies the transition, using up to 120 frames.
+  - A pending focus is cancelled only by a newer focus or by the close, never by a progress patch.
+- Corpus: a new required `transitions` array (13 rows) in the band corpus, with a matching `Transition` definition in `🧬️schema/🔣️time-travel-band`.
+
+**Blocking-rule copy (§16.1).** A peer changed it at 12:11: `review.blocked` now reads "Errors must be fixed or withdrawn before finalizing" / "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden". This changed `TIME_TRAVEL_LABELS.reportBlocking`, the corpus, the bundles and wgpu. The existing React law (bundle == vocabulary) holds.
+
+**Interpreter accessibility.** Gaps found and fixed in the React rendering of the Rust history body (`RE/🗣️Interpreter/🟦️.tsx`, `UI/🧱️elements/🪜️Stepper/🟦️.tsx`):
+- Tree rows dropped `style.tone`, so outcome rows had no severity colour. New `TREE_ROW_TONE_CLASSES` (info/success/warning/danger → `text-info`/`text-success`/`text-warning`/`text-destructive`) is applied as the row `className`. The icon and words were already there; tone is now the third cue.
+- An interpreted `numberStepper` had no accessible name. Its `aria-labelledby` pointed at a label element that only exists with `showLabel`.
+  - `Stepper` gained an `aria-label` prop. When one is given, the dangling `labelledby` is dropped.
+  - `NumberStepperView` forwards `accessibility.label` and `disabled`.
+- The interpreted `slider` now publishes `aria-valuetext` (value plus unit) through `uiAccessibilityValueV1`, as the declarative path already did.
+
+**R2-6 (no check-in during finalize) is extracted so it can be tested.** New in `RE/🛠️ShellHelpers/🟦️.tsx`:
+- `checkpointGateV1(timeTravel, message)` → dispatch, wait (`"auto"`) or frozen.
+- `checkpointOnCloseKeyV1(editor, program, documentId)`.
+- `useCheckpointOnCloseV1(key, onClose)`: the closure of the render that opened `key` runs when `key` changes.
+- ShellHost's `dispatchCheckpoint` and the close effect now use these three. The behaviour is the same as session 1's fix, now pinned by laws.
+
+**R2-4 (document identity) is extracted the same way.** `syncAttachDocumentIdV1(target, identity)` (`RE/🛠️ShellHelpers/🟦️.tsx`) is used by ShellHost `openSyncTarget`:
+- a folder or file attach addresses the program's own store id;
+- a hub target uses its own document id;
+- a program without a document attaches nothing.
+
+**`📎️local-folder-bindings` schema and React consumer (coordinator item 2).**
+- New schema `ENG/🧬️schema/🔣️local-folder-bindings/🔣️.json`. It references the `📎️attach-local-folder` and `✂️detach-local-folder` leaf payload schemas by `$id`.
+- Taxonomy for that directory is clean. It first sat under `📎️local-folder-bindings`, which the taxonomy rejected as `directory-kind-unresolved`, so it moved to the open `🔣️<slug>` pattern.
+- The React suite `RE/🏛️ShellHost/📎️local-folders/🧪️tests/🧩️component` now asserts the shared corpus (see S2.3).
+- Reconnect band: `max-w-[90vw]` and touch-size buttons.
+
+**framework-os** (`🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-restore/🟦️.ts`):
+- New law: a folder-bound document admits 3 batches stamped with its own id, and refuses a batch addressed by the old runtime counter (`puzzle2d-1`) with `local.backbone-scope-mismatch`. Nothing is added to the pending log.
+- The envelope literal gained `line: null`, adopting the peer's 12:08 wire field.
+
+### S2.3 Verification (foreground)
+
+**Final run, without the shim (16:4x).** S2-INFRA re-emitted the generated registry at 16:36, so these runs use the real renderer-react config (`../../🧪️tests/🎚️config/🟦️.ts`). The ticket-local shim files are deleted; no repo file ever referenced them.
+
+| Command (renderer-react package dir) | Result |
+|---|---|
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component 📎️local-folders/🧪️tests 🧪️command-rejection 🧪️staged-arg-controls 🌐️chrome-history-locale 🛠️ShellHelpers/🧪️tests/🧩️component 👥️scoped-presence` (`vitest-noshim-1.txt`) | **7 files, 80/80 ✔** |
+| same config: engine-contract, editable-controls, retained-control-commit, puzzle3d-settings, section-collapse, toggle-semantics, Interpreter in-source, keybinding-glyphs, command-panel, ChromePanels (`vitest-related-2.txt`) | 953/967 ✔, 14 ✘, none from W2-B. The same peer and pre-existing set as below, except: W1-E's conformance corpus grew from 71 to 76 cases ("loads all 71 corpus fixtures"), and the catalog-feedback timeout did not recur |
+| `bunx tsc --noEmit -p tsconfig.json` (`tsc-react-4.txt`) | 6 errors, 0 in W2-B files: the peer's `line` field in the worker and backbone-parity, `idleInstalledServiceStatusV1`, and W1-E's `SliderProps` in Interpreter stories. TS2554 from the registry is gone |
+
+**Earlier runs (with the ticket-local shim, see S2.1):**
+
+| Command (package dir) | Result |
+|---|---|
+| renderer-react `bunx tsc --noEmit -p tsconfig.json` (`tsc-react-3.txt`) | 10 errors, 0 in W2-B files (all peer, S2.1) |
+| ui-react `bunx tsc --noEmit -p tsconfig.json` (`tsc-ui-1.txt`) | 6 errors, 0 in W2-B files (peer G6 numeric, lease) |
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config T/🗑️generated/s2-w2b/vitest-shim.config.ts ⏪️time-travel/🧪️tests/🧩️component` | **31/31 ✔** (was 17; `vitest-tt-6.txt`, 16:4x after the peers' 13:42/13:49 Stepper/Interpreter edits) |
+| same, `📎️local-folders/🧪️tests` | **9/9 ✔** (was 3) |
+| same, `🧪️command-rejection` + `📎️local-folders` | 12/12 ✔ |
+| same, `🧪️staged-arg-controls` (`vitest-staged-1.txt`) | **13/13 ✔**. The vector page-key law now reads the shared `UI/🧬️contract/🧫️fixtures/🧫️number-controls` `keys` rows (every `pageUp`/`pageDown` case) instead of a local expectation, as the coordinator decided (16:4x). When S2-W1E moves the corpus and `uiNumberKeyValue` to "PageUp/PageDown go to the next/previous detent", this law follows without an edit. |
+| same, the 5 W2-B suites, before any change (`vitest-mine-2.txt`) | 38/38 ✔ |
+| same, W2-B + related (staged-arg, chrome-history-locale, ShellHelpers component, scoped-presence, keybinding-glyphs, command-panel, ChromePanels) (`vitest-mine-3.txt`) | 92/94. Both reds are fixed or not mine: `🧪️command-rejection`'s hard-coded list (fixed, now 12/12), and staged-arg "vector axis … detents on the page keys" (expected 1.5, got 1.2), caused by the peer's 12:34 `uiNumberKeyValue`/scale rework in `UI/🧬️contract/🧩️component` |
+| same, engine-contract, editable-controls, retained-control-commit, puzzle3d-settings, section-collapse, toggle-semantics, Interpreter in-source (`vitest-related-1.txt`) | 931/945 ✔, 14 ✘, none from W2-B (list below) |
+| ui-react `bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts …translation-totality… 🪜️Stepper 📨️UIDialog` | 2 files, 11/11 ✔ |
+| framework-os `bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ../../🔨️modules/🏪️store/👷️worker/🟦️.ts -t "folder archive restore"` | **5/5 ✔** (new R2-4 law included) |
+| `bun ./📜️script.ts verify taxonomy report --scope ENG/🧬️schema/🔣️local-folder-bindings` | clean |
+| same, `--scope RE/🛠️ShellHelpers` | 22 errors, all in directories W2-B did not create (`🎭️browser-actor-panels`, `📌️panel-carriage`, `🌐️instance-title` and others), plus one "preimage changed" because I edited a file during the scan |
+
+The 14 failures in the related run:
+- 4 in puzzle3d-settings: the intent `input` is now `{value, gesture, commit}`. That is the peer's continuous-lane protocol; the steppers' accessible names pass.
+- 6 in engine-contract text-editor key/paste/compose, and the portal z-tutorial test: pre-existing and peer-owned.
+- 1 SpaceToken gap CSS and 2 Interpreter Overlay layout: peer layout tokens.
+- 1 catalog-feedback test: timed out under load.
+
+New React laws (time-travel suite):
+- **Transitions:** the corpus transitions; focus-element resolution in the shell's real DOM, including the Accept fallback through the row's lone button; scheduled focus waits for mount, keeps the prompt's own focus and never takes focus from a field elsewhere.
+- **Controls:** every input control is named (stepper "dx" with min/max/step; slider "Angle" with `aria-valuetext` "0 °" and one tick per snap; select; vector axis "x" with bounds; reference chips "Remove node-1"; "Use selection"). Each dispatches `historyEditInput{generation, path, value}` or `historyEditUseSelection{generation, path}`.
+- **Alternatives:** the section lists the main line and the alternatives, says "Current" in words, and switches with a named "Switch" button that dispatches `switchAlternative{alternativeId}`.
+- **Keyboard:** Tab reaches Accept, dx, the slider, mode, both vector axes, both chips and "Use selection", in row order.
+- **Outcomes:** each outcome row shows words, an icon and a tone class.
+- **Phone fit:** the band fits a phone (90vw, wraps, touch-size controls).
+- **Finalize prompt:** rendered from the shared `🛂️manifest/🧫️fixtures/🧫️dialog-choices` fixture, the prompt opens with focus on its "Alternative name" field, has a destructive "Overwrite" and "Back", and shows 0 ARIA findings.
+- **ARIA oracle:** an axe-like structural check (aria-query role model plus dom-accessibility-api) over band and body finds 0 findings. It checks for unknown or unsupported `aria-*`, dangling `labelledby`/`describedby`, unnamed controls and duplicate ids.
+- **R2-6:** the checkpoint gate for every corpus stage; the close hook fires once per document left and never on a new session object of the same program (the New-alternative submit); while the history was being edited, it dispatches nothing.
+- **R2-2 / G5:** a read-back snapshot replaces the displaced document's rows. Every label `data-history-json` publishes is the `🧫️history-label-reload` expectation in en and de, and none is op text.
+
+### S2.4 Open items and routing
+
+- **Coordinator:**
+  - Re-activation of React 6012 for the live re-probe of steps 5, 7 and 9 (R2-2, R2-4, R2-6 and the reconnect band are proven only at unit and worker level). Probe verdicts to add: `history-panel-reveals-on-session-start` and `focus-moves-to-the-editor`.
+  - `axe-core` is not installed in the repo. Adding it as a devDependency of renderer-react needs a repo-wide `bun install`, which needs the coordinator's or the dev's consent. Until then, the aria-query and dom-accessibility-api structural oracle stands in.
+- **S2-W2A (Rust history body):**
+  - the R2-2 law `a_document_archive_round_trip_lists_every_history_row_of_its_source` was not re-run here (plugin lib-test target red from in-flight edits, 21 rustc at the time); request sent to S2-W2A;
+  - the `Dial` arm drops `snaps`, `unit` and `displayFactor` (R29/G6);
+  - stepper rows carry no snaps;
+  - reference chips show raw ids, not entity labels (G3, §16.4);
+  - optional: a Rust law tying `time_travel_editor_sections` keys to the React selectors `…editor.input.<pointer>` and `…editor.accept.row`.
+- **S2-W2A wire adopted (their §8.5).** `HistoryMutationEntry.introduced` is rendered by the Rust body, and React adds nothing to it. `TIME_TRAVEL_CODE_LABELS` is enforced by the new React law. React never used `timeTravelFaultLabel`, which is now deleted.
+- **S2-W2C (told through the coordinator):**
+  - the band corpus now has 20 refusals and 12 cases, and a new `transitions` array (wgpu could assert reveal and focus against it);
+  - the local-folder corpus now has a schema.
+- **Peers:** `idleInstalledServiceStatusV1` (inference); the replication envelope `line` call sites in the worker; the G6 slider/number facets.
+
+## Session 3 — 2026-10-02
+
+Successor executor S3-W2B. Aliases as above (`RE`, `UI`, `ENG`). Scratch output: `🗑️generated/s3-w2b/`.
+
+**Status: IN PROGRESS** (this section is kept current at every milestone).
+
+### S3.1 Repair (rule 28)
+
+The session-2 section ends at 17:00 on 2026-10-01. The cut session-2 resumption (03:20–03:40 on 2026-10-02, for audit wave A) left
+these W2-B edits on disk without a report entry. Each was read in full against HEAD `25bb77059d6`; none was half-finished:
+
+- **B-1 (staged vector axes, §18).** `RE/🛠️ShellHelpers/🟦️.tsx`: `StagedVectorAxis` routes ArrowUp/ArrowDown (Shift = ten steps),
+  PageUp/PageDown and Home/End through `uiNumberKeyValue`; a typed display value reads back through `uiNumberTypedValue`; a value
+  crossing a hard bound (`uiNumberCrossedBound`) is refused visibly (`aria-invalid`, `role=alert` line, draft kept, nothing staged).
+  New keys `ui.numberField.{belowMin,aboveMax}` (en/de, schema + bundles). Laws in `🧪️staged-arg-controls`: every `keys`, `typed`
+  and `limits` row of `UI/🧬️contract/🧫️fixtures/🧫️number-controls` on a one-axis vector.
+- **B-2 (reveal/focus wiring).** The ShellHost effect moved into `useTimeTravelRevealV1` + `revealHistoryPanelV1`
+  (`RE/🛠️ShellHelpers/⏪️time-travel/🟦️.tsx`); ShellHost calls the hook. Laws (`⏪️time-travel/🧪️tests/🧩️component`, region
+  `🛰️ShellReveal`) drive the shell's real `shellReducer`: desktop anchor, merged mobile panel, no History tab, the focus surviving
+  progress patches and cancelled by the close, held typing vs. the modal prompt, and an xstate model of the transition table checked
+  against every corpus `transitions` row.
+- **B-3** Stepper `aria-labelledby` only with `showLabel` (+ law). **B-4** reconnect band phone-fit law. **B-5** unique docstring
+  emoji, `draftBody` docstring moved, orphan docstrings deleted. **B-6** `timeTravel.member-gone` in `HISTORY_REFUSAL_LABEL_KEYS`, both
+  bundles and the band corpus (the vocabulary already has it). **B-7** the modal prompt always takes focus. **B-8** band-corpus
+  transitions carry `blocking` + `acceptedCount`, required by the corpus schema.
+
+### S3.2 Verification (foreground)
+
+| Command | Result |
+|---|---|
+| renderer-react `bunx tsc --noEmit -p tsconfig.json` (`tsc-react-1.txt`) | 4 errors, 0 in W2-B files: worker/backbone-parity `line` (×3), `idleInstalledServiceStatusV1` (`RE/🐚️Shell/🟦️.tsx:1112`) |
+| ui-react `bunx tsc --noEmit -p tsconfig.json` (`tsc-ui-1.txt`) | exit 0 |
+| renderer-react `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component 📎️local-folders/🧪️tests 🧪️command-rejection 🧪️staged-arg-controls 🌐️chrome-history-locale 🛠️ShellHelpers/🧪️tests/🧩️component 👥️scoped-presence` (`vitest-mine-1.txt`) | **7 files, 89/89 ✔** |
+
+### S3.3 B-1 completed across every React number control (design §18)
+
+The audit's cross-file half: the history editor's own number rows and vector axes are interpreted `input` nodes (`InputView`), its
+steppers interpreted `numberStepper` nodes (`Stepper`); both handled only part of the law.
+
+- **One key mapping** `uiNumberFieldKey(key, shiftKey, min, max)` in the UI contract (`UI/🧬️contract/🧩️component/🟦️.ts`, next to
+  `SliderKey`): ArrowUp/ArrowDown (Shift = large), PageUp/PageDown, Home/End **only toward a bound the field has** (the WAI-ARIA
+  spinbutton pattern: without one the caret keeps the key), `null` for everything else (ArrowLeft/Right stay the caret's). ShellHelpers'
+  local `numberFieldKeyV1` is deleted; `StagedVectorAxis`, `InputView` and `Stepper` all use the contract mapping.
+- **`InputView`** (`RE/🗣️Interpreter/🟦️.tsx`): `pageKey` → `lawKey`, every law key through `uiNumberKeyValue` (draft of a
+  blur-committed field, lane of a continuous one). **`Stepper`** (`UI/🧱️elements/🪜️Stepper/🟦️.tsx`): Home/End added; `handleKey`
+  takes a `SliderKey`.
+- **Laws.** New `RE/🗣️Interpreter/🧪️tests/🧪️number-keyboard-law` (registered in the Interpreter's in-source block): the mapping, and
+  for a blur-committed number field AND an interpreted stepper every `keys` row (dispatched intent = law value; unbound Home/End not
+  prevented, nothing dispatched), every `typed` row, every `limits` row (refused: `aria-invalid`, draft kept, nothing dispatched).
+  `🧪️staged-arg-controls` and the Stepper component law now take all six keys (they skipped Home/End).
+
+### S3.4 N12 (coordinator, from `📓️s3-gap.md`): `os.config.attach-local-folder` `/folder` was not editable
+
+- Cause: the `folder` object (`LocalFolderRef {kind: "path", path}`) declared `widget: text`, which cannot edit an object.
+- Fix (schema-first, `🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder/🧬️schema/🔣️.json`): `folder` keeps its label/description
+  (no widget); `$defs.LocalFolderRef.properties.path` gets `x-semio-ui {widget: text, role: value, label {Path, Pfad}, description}`.
+  The const `kind` is the discriminator, never an input. The time-travel editor flattens the object into one row
+  "Folder · Path" / "Ordner · Pfad" (`/folder/path`). Payload shape, fixtures and the TS/Rust leaf types are unchanged.
+- Laws: Rust `the_folder_is_edited_in_history_through_its_path_and_its_kind_is_no_input` (leaf unit tests, `mutation_input_defs` over
+  `PAYLOAD_SCHEMA`); TS twin in `📎️local-folders/🧪️tests/🧩️component` (`mutationInputDefs` + `argControl`).
+
+| Command | Result |
+|---|---|
+| test module `bun ./📜️script.ts schema mutation-inputs --under 🧰️framework/🛍️products/💻️os/🎚️config` (`inputs-config-2.txt`) | **0 findings**, 51/51 inputs of 20 leaves (strict) |
+| renderer-react vitest `📎️local-folders/🧪️tests` (`vitest-folders-1.txt`) | **11/11 ✔** |
+| renderer-react vitest `🗣️Interpreter/🟦️.tsx 🧪️staged-arg-controls -t "number-control law\|staged mutation-input controls"` (`vitest-interp-law-2.txt`) | **23/23 ✔** (7 new Interpreter laws + 16 staged) |
+| ui-react `SEMIO_VITEST_POLICY=<repositoryVitestPolicyV1> SEMIO_TEST_BUDGET_MS=540000 bun ./📜️script.ts test 🪜️Stepper 🔬️translation-totality` (`vitest-ui-3.txt`) | **5/5 ✔** |
+
+Note: the ui-react vitest config now refuses to load without `SEMIO_VITEST_POLICY` (peer change, `🏃️process/🧪️testing/🧪️vitest`); the
+policy was derived with the repo's own `repositoryVitestPolicyV1(<package dir>)`. The default 15 s budget kills the run at load ~100.
+
+### S3.5 Staged-arg number facets (coordinator, from S3-W1E)
+
+`renderStagedArgValueControl` (`RE/🛠️ShellHelpers/🟦️.tsx`) now draws every staged number control from the manifest's
+`actionArgNumberFacets` (TS twin of the Rust `ActionArgDef::number_facets`, the wgpu shell's source) through one wrapper
+`stagedNumberFacetsV1(def)` (refusals in the shell's current language, read from the label port):
+
+- **Slider/dial**: travel `min/max`, `step`, `snapValues`, `scale`, `appearance` (a dial is a dial now), `displayFactor`,
+  `precision`, `limits` (hard bounds; the travel is soft), readout and `aria-valuetext` with the display unit. The value is never
+  clamped to the travel.
+- **Stepper**: key range, step, precision, `snapValues`, `displayFactor`, unit symbol, `limits`, `aria-valuetext`.
+- **Number field and vector axes**: one `StagedNumberField` (replaces `StagedVectorAxis` and the raw `<Input type=number>`):
+  display units, §18 keys, typed read-back, refusal = the facet's localized limit refusal; a lone field shows its unit; an
+  emptied optional field clears. The shell-side fallback copy `ui.numberField.{belowMin,aboveMax}` is deleted (schema + both
+  bundles) — every limit now carries the framework refusal ("Must be at most 30 °" / "Darf höchstens 10 mm sein").
+- `stagedNumberDisplayText` reads through `uiNumberDisplayText`; ShellHelpers' unused `number-format` import is gone.
+- Law (`🧪️staged-arg-controls`): every case of `🛂️manifest/🧫️fixtures/🧫️number-facets` — the shell's facets equal the corpus's
+  (en/de per case); sliders/dials show the dial look, one tick per admitted detent, `aria-valuetext`, spoken `aria-valuemin/max`;
+  steppers/number fields/vector axes show the display value and unit and refuse a typed value beyond the limit with the
+  corpus's localized refusal; the two no-facet cases have none.
+
+### S3.6 N1 / N15 / editor keys (coordinator, from S3-W2A §9.2)
+
+- **N1 (paged mutation rows).** React needs no change: the History tab is mounted with the shell's `treeWindowHost`, and the
+  interpreter's generic nested windows file `TreeWindowRequest`s under the container path. Law (`⏪️time-travel/🧪️tests/🧩️component`
+  region `🪟️MutationPages`): a history row windowed over 40 mutations with 8 materialised exposes
+  `data-tree-window-path = framework.history.commands␟framework.history.entry.4`, total 40, length 8, a 32-row trailing spacer.
+- **N15 (refused Edit).** React honours `rowActions[].disabled` as it is: the Tree renders the action natively `disabled`
+  (exposed to assistive technology as unavailable), its accessible name is the Rust label naming the reason, and the row has no
+  activation. Law: Edit dispatches `historyEditBegin{mutationId}` while legal; while refused (en "Edit: Not possible right now",
+  de "Bearbeiten: Derzeit nicht möglich", texts from the band corpus) all 8 Edits are disabled and named with the reason, and
+  neither the buttons nor the rows dispatch anything; 0 ARIA findings. A focusable `aria-disabled` variant was tried in
+  `🌳️Tree` `renderTreeHeaderAction` and reverted: it changes every tree header/row action of the product (Execute/Reset of the
+  action panes, command panel) and broke their engine-contract laws — a UI-wide decision for W1-E/the coordinator (open item).
+- **Editor keys (S2.4 optional law).** The band corpus gained `editorKeys` (schema `EditorKey`/`EditorInputKey`): the History
+  panel id, Accept + its row, and per input pointer (object fields flattened) control + row keys. React law: focus resolution on
+  those keys in the interpreter's real DOM (first input, else Accept), inside the History panel (never "held"). Rust law
+  `the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses` appended (own region `🗝️EditorKeys`) to
+  `🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs`: renders the editor for `/dx` and `/pivot/x` and requires exactly the corpus keys
+  (panel id = `FRAMEWORK_PANEL_TAB_HISTORY_ID`). WRITTEN, run pending (plugin lib-test build, see S3.7).
+
+### S3.7 Verification so far (foreground; renderer-react package dir unless noted)
+
+| Command | Result |
+|---|---|
+| `bunx tsc --noEmit -p tsconfig.json` renderer-react (`tsc-react-3.txt`) | 4 errors, **0 in W2-B files** (peer: worker/backbone-parity `line` ×3, `idleInstalledServiceStatusV1`) |
+| `bunx tsc --noEmit -p tsconfig.json` ui-react (`tsc-ui-2.txt`) | **exit 0** |
+| `SEMIO_TEST_LEVEL=long bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ⏪️time-travel/🧪️tests/🧩️component 🧪️staged-arg-controls command-panel` (`vitest-tt-4.txt`) | **3 files, 61/61 ✔** |
+| same, `🔬️engine-contract -t "staging and single dispatch\|command panel\|window action"` (`vitest-p1p2-2.txt`) | **13/13 ✔** (two staged-form laws went red on the first facet rewrite — Execute gating and Reset — fixed: the reverted Tree change, and a staged number draft now yields to an outside value change) |
+| same, `🗣️Interpreter/🟦️.tsx 🧪️staged-arg-controls -t "number-control law\|staged mutation-input controls"` (`vitest-interp-law-2.txt`) | **23/23 ✔** |
+| same, `📎️local-folders/🧪️tests` (`vitest-folders-1.txt`) | **11/11 ✔** |
+| ui-react `SEMIO_VITEST_POLICY=… SEMIO_TEST_BUDGET_MS=540000 bun ./📜️script.ts test 🌳️Tree 🪜️Stepper 🔬️translation-totality` (`vitest-ui-4.txt`) | **4 files, 60/60 ✔** |
+| related set: `🔬️engine-contract editable-controls retained-control-commit puzzle3d-settings section-collapse toggle-semantics 🗣️Interpreter/🟦️.tsx keybinding-glyphs command-panel 📌️ChromePanels` (`vitest-related-1.txt`) | 19 ✘ in the first run; after the fixes none is W2-B's: puzzle3d-settings ×4 (peer continuous lane), text-editor key/paste/compose ×5 and portal `Worker is not defined` (pre-existing), SpaceToken ×1 + Overlay ×2 (peer layout), catalog-feedback timeout, `FlowGraphCanvasHost` "graph parameter keyboard" (peer NodeGraph/flow, `🕸️NodeGraph/🟦️.tsx` 12:01; red in isolation too, `vitest-recheck-1.txt`); ChromePanels tree order and the Interpreter surface-host law were load timeouts and pass in isolation |
+| test module `bun ./📜️script.ts schema mutation-inputs --under 🧰️framework/🛍️products/💻️os/🎚️config` | **0 findings** (51/51 inputs, 20 leaves) |
+| `cargo test -p semio-framework-os-config --lib -- local_folder` (private target, `cargo-os-config-{1,2}.txt`) | **BLOCKED by a peer**: `semio-framework-schema-registry` (28 errors at ~12:20) then `semio-framework` `🛂️manifest/🦀️.rs:1266-1269` (`with_schema_export_registry`, `SchemaFormat`, `registered_referenced_schema_documents` not in `semio_framework_schema`) — reported to the coordinator |

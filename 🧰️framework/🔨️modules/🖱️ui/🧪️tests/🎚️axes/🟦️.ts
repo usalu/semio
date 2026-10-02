@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
+import { createRequire } from "node:module";
 import { readUiAxes } from "../../🎚️axes/📥️source/🟦️.ts";
 import { emitUiAxesRust, emitUiAxesTypeScript } from "../../🎚️axes/📽️projection/🟦️.ts";
 import { uiAxesPreview, uiAxesTargets } from "../../🎚️axes/📋️plan/🟦️.ts";
@@ -11,6 +11,15 @@ import { publishUiAxes, staleUiAxesTargets } from "../../🎚️axes/📤️publ
 const repoRoot = join(import.meta.dir, "../../../../..");
 
 describe("UI axes source and projections", () => {
+  test("the axes command producer has only neutral runtime inputs", async () => {
+    const source = join(import.meta.dir, "../../🎚️axes/🏃️execution/🟦️.ts");
+    const syntax = ts.createSourceFile(source, readFileSync(source, "utf8"), ts.ScriptTarget.Latest, true);
+    const imports = syntax.statements.filter(ts.isImportDeclaration).map(row => ts.isStringLiteral(row.moduleSpecifier) ? row.moduleSpecifier.text : "");
+    expect(imports.every(path => !path.includes("🛍️products"))).toBe(true);
+    const projection = await createRequire(import.meta.url)("esbuild").build({ entryPoints: [source], bundle: true, write: false, metafile: true, platform: "node", format: "esm" });
+    expect(Object.keys(projection.metafile.inputs).every(path => !path.includes("🛍️products"))).toBe(true);
+    expect(uiAxesTargets(repoRoot, readUiAxes(repoRoot)).every(target => !target.path.includes("🛍️products"))).toBe(true);
+  });
   test("the neutral source defines the complete 2×2 locale and terminology axes", () => {
     const axes = readUiAxes(repoRoot);
     expect(axes.locales.map(({ id, variant }) => [id, variant])).toEqual([["en", "En"], ["de", "De"]]);
@@ -32,12 +41,15 @@ describe("UI axes source and projections", () => {
   });
 
   test("preview, freshness and publication share one exact two-file plan", () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-ui-axes-"));
+    const output = process.env.SEMIO_TEST_ARTIFACT_DIR!;
+    expect(output).toBeTruthy();
+    mkdirSync(output, { recursive: true });
+    const root = mkdtempSync(join(output, "ui-axes-"));
     try {
       const axes = readUiAxes(repoRoot);
       const targets = uiAxesTargets(root, axes);
       expect(targets.map(({ path }) => path)).toEqual([
-        join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🤖️generated/🦀️.rs"),
+        join(root, "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🤖️generated/🦀️.rs"),
         join(root, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts"),
       ]);
       expect(uiAxesPreview(root, targets).nodes).toHaveLength(2);
@@ -58,7 +70,7 @@ describe("UI axes source and projections", () => {
     const rustConsumer = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🦀️.rs"), "utf8");
     const rustFacade = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
     const typescriptConsumer = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
-    expect(rustConsumer).toContain("#[path = \"🤖️generated/🦀️.rs\"]");
+    expect(rustConsumer).toContain("../../../../🔨️modules/🖱️ui/🎚️axes/🤖️generated/🦀️.rs");
     expect(rustFacade).toContain("pub use dsl::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};");
     expect(typescriptConsumer).toContain("./🤖️generated/🎚️ui-axes/🟦️.ts");
     const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { generatorContracts: Record<string, { ownerPath: string; inputPatterns: string[] }> };

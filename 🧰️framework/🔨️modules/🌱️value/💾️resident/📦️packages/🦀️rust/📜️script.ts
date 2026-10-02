@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
-import { buildBudgetMs, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -7,7 +11,7 @@ import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Resident native test accepts no arguments");
-    await runCargoTestBudgeted(["semio-framework-value-resident"], this.repoRoot, ["--lib"]);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value-resident"], cwd: this.root, extraArgs: ["--lib"] }, readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -16,7 +20,7 @@ class CheckWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Resident Wasm check accepts no arguments");
     for (const target of ["wasm32-wasip2", "wasm32-unknown-unknown"]) {
-      await runTestBudgeted("cargo", ["check", "-p", "semio-framework-value-resident", "--lib", "--target", target], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+      await runBudgetedTestCommand("cargo", ["check", "--manifest-path", "Cargo.toml", "--lib", "--target", target], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
   }
 }

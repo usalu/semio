@@ -831,7 +831,6 @@ impl Default for GltfMaterial {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[derive(dsl::DslRecord)]
 pub struct GltfTexture {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -855,7 +854,6 @@ pub struct GltfTexture {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[derive(dsl::DslRecord)]
 pub struct GltfImage {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]

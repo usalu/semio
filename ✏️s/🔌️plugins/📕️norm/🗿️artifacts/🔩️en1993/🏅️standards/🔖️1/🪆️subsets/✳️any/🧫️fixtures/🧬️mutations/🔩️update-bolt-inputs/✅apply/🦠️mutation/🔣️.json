@@ -9,6 +9,7 @@
       "boltRows": 2,
       "boltsPerRow": 2,
       "pitch": 0.06,
+      "gauge": 0.06,
       "endDistance": 0.04,
       "edgeDistance": 0.04,
       "shearPlanes": 1,
@@ -18,12 +19,6 @@
       "weldLength": 0.0,
       "weldFu": 510000000.0,
       "weldGrade": "S355",
-      "category": "A",
-      "frictionMu": 0.5,
-      "preloadForce": 0.0,
-      "slipFactorKs": 1.0,
-      "frictionSurfaces": 1,
-      "gauge": 0.06,
       "actions": [
         {
           "id": "jf-1",
@@ -31,7 +26,12 @@
           "shear": 80000.0,
           "tension": 0.0
         }
-      ]
+      ],
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0.0,
+      "slipFactorKs": 1.0,
+      "frictionSurfaces": 1
     }
   }
 }

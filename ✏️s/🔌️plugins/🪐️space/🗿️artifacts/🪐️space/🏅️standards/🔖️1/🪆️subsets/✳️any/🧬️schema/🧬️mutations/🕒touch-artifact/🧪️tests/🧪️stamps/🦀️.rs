@@ -16,7 +16,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn decode_value<T: dsl::FromValue>(text: &str) -> T {
     let json = pack::parse_json(text).expect("fixture JSON decodes");
-    dsl::from_dsl_value(pack::json_to_dsl_value(&json)).expect("fixture value decodes")
+    semio_framework_value::FromValue::from_value(pack::json_to_dsl_value(&json)).expect("fixture value decodes")
 }
 fn encode_value<T: dsl::ToValue>(value: &T) -> pack::JsonValue {
     pack::json_from_dsl_value(&dsl::ToValue::to_value(value))

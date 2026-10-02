@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetStructTreeRoot {
         vec![PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {})]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set PDF/UA structure tree root", "PDF/UA-Strukturbaumwurzel setzen")
     }
 
     fn target(&self) -> Vec<String> {

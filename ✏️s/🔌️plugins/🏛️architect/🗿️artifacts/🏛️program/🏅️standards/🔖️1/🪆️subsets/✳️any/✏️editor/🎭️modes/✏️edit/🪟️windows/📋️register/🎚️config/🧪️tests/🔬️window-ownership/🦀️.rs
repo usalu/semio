@@ -16,7 +16,7 @@ fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<
 
 #[test]
 fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).expect("neutral Architect window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).expect("neutral Architect window fixture");
     let app_config = crate::editor::architect::config::ArchitectConfig::default();
     assert_eq!(<crate::editor::architect::config::ArchitectConfig as ArtifactDsl>::envelope_id(), "architect.config");
     assert_eq!(crate::editor::architect::config::ArchitectConfig::parse_dsl(&app_config.print_dsl()).expect("Architect app-config DSL"), app_config);
@@ -124,7 +124,7 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
         .into_iter()
         .map(|(id, window_kind_id)| ViewWindowInstance { id: id.into(), window_kind_id: window_kind_id.into() })
         .collect(),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let left = all.for_window_instance("architect-report-left").expect("left Report");
     let right = all.for_window_instance("architect-report-right").expect("right Report");
@@ -138,7 +138,7 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
     let wrong_kind_id = authored_id(&wrong_kind);
     assert!(wrong_kind.window_config_mutations.is_empty());
 
-    let stale = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..Default::default() };
+    let stale = ViewModel { window_id: Some("architect-report-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert!(run_report::handle_with_view(&payload, &doc, Some(&stale)).is_err());
     let right_emit = run_report::handle_with_view(&payload, &doc, Some(&right)).expect("right Report authoring");
     let right_id = authored_id(&right_emit);
@@ -228,7 +228,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     .into_iter()
                     .map(|(id, window_kind_id)| ViewWindowInstance { id: id.into(), window_kind_id: window_kind_id.into() })
                     .collect(),
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let register_left = all.for_window_instance("architect-register-left").expect("left Register");
                 let register_right = all.for_window_instance("architect-register-right").expect("right Register");
@@ -313,7 +313,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     {
                         return Err("Architect exact window configs changed during reopen".into());
                     }
-                    let stale = ViewModel { window_id: Some("architect-register-gone".into()), window_instances: all.window_instances.clone(), ..Default::default() };
+                    let stale = ViewModel { window_id: Some("architect-register-gone".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                     if addressed(&stale, "risks".into()).is_ok() {
                         return Err("Architect Register accepted stale window identity".into());
                     }

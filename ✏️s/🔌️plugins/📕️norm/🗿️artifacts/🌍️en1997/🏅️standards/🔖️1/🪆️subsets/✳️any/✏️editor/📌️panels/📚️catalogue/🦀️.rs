@@ -3,7 +3,12 @@
 use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use crate::artifact_schema::{part_1, resolve_params, resolve_upl_params, DesignApproach};
 use crate::document::{AnnexChoice, ClauseId};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1997.play.catalogue";
@@ -131,7 +136,7 @@ fn bearing_n_factors_table() -> CatalogueTable {
 //#region 🔖️Render
 pub fn render(
     examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

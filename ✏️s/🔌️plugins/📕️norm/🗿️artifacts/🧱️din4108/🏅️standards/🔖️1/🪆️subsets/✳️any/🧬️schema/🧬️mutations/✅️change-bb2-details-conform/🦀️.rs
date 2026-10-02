@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeBb2Detai
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Supplement 2 detail conformity", "Konformität der Anschlussdetails nach Beiblatt 2 ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Supplement 2 detail conformity", "Konformität der Anschlussdetails nach Beiblatt 2 ändern")
     }
 }

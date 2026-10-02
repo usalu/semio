@@ -3,7 +3,7 @@
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::create_stream;
 use crate::op::RemodelingMutation;
-use crate::schema::next_remodeling_id;
+use crate::schema::mint_remodeling_id;
 use crate::{MediaKind, MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -27,7 +27,7 @@ pub fn handle(payload: &AddStream, doc: &ArtifactView<'_, RemodelingSnapshot>, _
         camera_id if doc.snapshot.calibration.cameras.iter().any(|camera| camera.id == camera_id) => Some(camera_id.to_string()),
         camera_id => return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.stream.unknown-camera"), format!("no calibrated camera \"{camera_id}\" to bind the new stream to"))),
     };
-    let id = next_remodeling_id("stream");
+    let id = mint_remodeling_id(doc.operation_optional(), "stream");
     let stream = MediaStream { id, name: payload.name.clone(), kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None };
     Ok(Emit::mutations(vec![create_stream(stream)]))
 }

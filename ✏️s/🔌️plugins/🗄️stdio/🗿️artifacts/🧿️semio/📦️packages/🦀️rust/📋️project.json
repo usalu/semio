@@ -166,6 +166,20 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "cache": true
+    },
+    "conversion-definition-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🧩️composition/**/*",
+        "{projectRoot}/../../📜️artifact-definition.json"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition check"
+      }
     }
   }
 }

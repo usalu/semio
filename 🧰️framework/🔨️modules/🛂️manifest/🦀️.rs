@@ -17,7 +17,14 @@ use dsl::{DslValue, FromValue, ToValue, ValueError};
 // serde-only structs. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use ui_wgpu::wgpu::NamedLayout;
+use ui_wgpu::wgpu::SurfaceKind;
+use semio_framework_ui_locale::Terminology;
+use ui_wgpu::wgpu::WindowLayout;
+use ui_wgpu::wgpu::WindowOptions;
 // 🔀️ ArtifactKindSpec/OsMediaCapability/MediaType/MediaClass/MediaForm/MediaWireFormat/MediaPortSpec/
 // PortMultiplicity/MediaCompat/AppIo/ArtifactPresentation/ConfigSpec/CommandGrammar/Media/MediaPayload/
 // MediaConverter now live locally (see 🔖️MediaVocabulary below) — relocated from 🔺️mesh, ticket
@@ -746,7 +753,7 @@ impl ActionArgDef {
     }
 
     /// 🧱️ A record argument — the `#[dsl(block)]` payload shape a typed command decodes with
-    /// `dsl::from_dsl_value` (`setFrame.frame`, `setSource.source`), previously unexpressible, so
+    /// `semio_framework_value::FromValue::from_value` (`setFrame.frame`, `setSource.source`), previously unexpressible, so
     /// those verbs published an empty input schema and no agent could ever call them.
     pub fn object(id: impl Into<String>, label: impl Into<LocalizedLabel>, fields: Vec<ActionArgDef>) -> Self {
         Self::with_schema(id, label, ArgSchema::Object { fields })
@@ -1043,6 +1050,116 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
 }
 //#endregion 🔖️ActionArgs
 
+//#region 🔖️ActionArgFacets
+/// 🎛️ The UI-contract number facets of one input — the single mapping every renderer of an [`ActionArgDef`] shares (the
+/// time-travel editor, both shells' staged dialog fields): its key range (a slider's or dial's travel; a stepper's, number
+/// field's or vector axis' hard bounds, an excluded bound being none since no key lands on it), the step, the look (`Dial`
+/// for a dial presentation) and axis, the stored and shown unit as symbols ([`action_arg_unit_symbol`]), the display factor
+/// and precision, the declared detents the detent law and the limits admit, and the hard limits of the schema with their
+/// refusals naming the bound in display units ("Must be greater than 0", "Darf höchstens 180 ° sein"). TypeScript twin:
+/// `actionArgNumberFacets`; fixture `🧫️fixtures/🧫️number-facets`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ActionArgNumberFacets {
+    pub min: Option<f64>,
+    pub max: Option<f64>,
+    pub step: Option<f64>,
+    pub appearance: semio_framework_ui_contract::SliderAppearance,
+    pub scale: semio_framework_ui_contract::UiNumberScale,
+    pub unit: Option<String>,
+    pub display_unit: Option<String>,
+    pub display_factor: Option<f64>,
+    pub precision: Option<u16>,
+    pub snaps: Vec<f64>,
+    pub limits: semio_framework_ui_contract::UiNumberLimits,
+}
+
+impl ActionArgNumberFacets {
+    /// 🏷️ The unit a value shows with — the display unit, else the stored one.
+    pub fn shown_unit(&self) -> Option<&str> {
+        self.display_unit.as_deref().or(self.unit.as_deref())
+    }
+}
+
+/// 🔣️ The symbol a descriptor's unit name shows as (`deg` reads `°`, `percent` reads `%`); any other unit as written.
+pub fn action_arg_unit_symbol(unit: &str) -> String {
+    match unit {
+        "deg" | "degree" | "degrees" => "°".to_string(),
+        "percent" => "%".to_string(),
+        other => other.to_string(),
+    }
+}
+
+/// 🚧️ The refusal of a typed value crossing a hard bound, `{bound}` naming it — framework copy, EN and DE, no default.
+fn action_arg_bound_refusal(below: bool, exclusive: bool, locale: Locale) -> &'static str {
+    match (locale, below, exclusive) {
+        (Locale::En, true, false) => "Must be at least {bound}",
+        (Locale::En, true, true) => "Must be greater than {bound}",
+        (Locale::En, false, false) => "Must be at most {bound}",
+        (Locale::En, false, true) => "Must be less than {bound}",
+        (Locale::De, true, false) => "Muss mindestens {bound} sein",
+        (Locale::De, true, true) => "Muss größer als {bound} sein",
+        (Locale::De, false, false) => "Darf höchstens {bound} sein",
+        (Locale::De, false, true) => "Muss kleiner als {bound} sein",
+    }
+}
+
+impl ActionArgDef {
+    /// 🎛️ The [`ActionArgNumberFacets`] of the control [`Self::control`] derives, its refusals in `locale` — `None` unless
+    /// the input is a number field, stepper, slider, dial or vector.
+    pub fn number_facets(&self, locale: Locale) -> Option<ActionArgNumberFacets> {
+        use semio_framework_ui_contract::{SliderAppearance, UiNumberBound, UiNumberLimits, UiNumberScale};
+        let (hard_min, hard_max, min_exclusive, max_exclusive) = match &self.schema {
+            ArgSchema::Number { min, max, min_exclusive, max_exclusive, .. } => (*min, *max, *min_exclusive, *max_exclusive),
+            ArgSchema::Vector { min, max, .. } => (*min, *max, false, false),
+            _ => return None,
+        };
+        let number = |min: Option<f64>, max: Option<f64>, step: Option<f64>, unit: Option<String>, precision: Option<u32>, display_unit: Option<String>, display_factor: Option<f64>, snaps: Vec<f64>| ActionArgNumberFacets {
+            min,
+            max,
+            step: step.filter(|step| step.is_finite() && *step > 0.0),
+            unit: unit.as_deref().map(action_arg_unit_symbol),
+            display_unit: display_unit.as_deref().map(action_arg_unit_symbol),
+            display_factor,
+            precision: precision.map(|precision| u16::try_from(precision).unwrap_or(u16::MAX).min(semio_framework_ui_contract::UI_NUMBER_PRECISION_MAX)),
+            snaps,
+            ..ActionArgNumberFacets::default()
+        };
+        let key = |bound: Option<f64>, excluded: bool| bound.filter(|_| !excluded);
+        let mut facets = match self.control() {
+            ActionArgControl::Slider { min, max, step, unit, precision, display_unit, display_factor, snaps, scale, .. } => ActionArgNumberFacets { scale: if scale == Some(NumberScale::Log) { UiNumberScale::Log } else { UiNumberScale::Linear }, ..number(Some(min), Some(max), step, unit, precision, display_unit, display_factor, snaps) },
+            ActionArgControl::Dial { min, max, step, unit, precision, display_unit, display_factor, snaps, .. } => ActionArgNumberFacets { appearance: SliderAppearance::Dial, ..number(Some(min), Some(max), step, unit, precision, display_unit, display_factor, snaps) },
+            ActionArgControl::Stepper { min, max, step, unit, precision, display_unit, display_factor, snaps, .. } => number(key(min, min_exclusive), key(max, max_exclusive), step, unit, precision, display_unit, display_factor, snaps),
+            ActionArgControl::Number { min, max, step, unit, precision, display_unit, display_factor } => number(key(min, min_exclusive), key(max, max_exclusive), step, unit, precision, display_unit, display_factor, Vec::new()),
+            ActionArgControl::Vector { min, max, step, unit, precision, display_unit, display_factor, snaps, .. } => number(min, max, step, unit, precision, display_unit, display_factor, snaps),
+            _ => return None,
+        };
+        let shown_unit = facets.shown_unit().map(ToOwned::to_owned);
+        let bound = |value: f64, exclusive: bool, below: bool| {
+            let text = semio_framework_ui_contract::ui_number_display_text(value, facets.display_factor, None);
+            let text = shown_unit.as_ref().map_or_else(|| text.clone(), |unit| format!("{text} {unit}"));
+            let refusal = action_arg_bound_refusal(below, exclusive, locale).replace("{bound}", &text);
+            UiNumberBound { value, exclusive, refusal: Some(semio_framework_ui_contract::Label(semio_framework_ui_contract::UiText::clipped(&refusal))) }
+        };
+        let limits = UiNumberLimits { min: hard_min.map(|value| bound(value, min_exclusive, true)), max: hard_max.map(|value| bound(value, max_exclusive, false)) };
+        let (low, high) = (facets.min.unwrap_or(f64::NEG_INFINITY), facets.max.unwrap_or(f64::INFINITY));
+        let mut previous = f64::NEG_INFINITY;
+        facets.snaps.retain(|&snap| {
+            let kept = snap.is_finite() && snap > previous && (low..=high).contains(&snap) && limits.crossed(snap).is_none();
+            if kept {
+                previous = snap;
+            }
+            kept
+        });
+        facets.limits = limits;
+        Some(facets)
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️number-facets/🦀️.rs"]
+mod number_facets_tests;
+//#endregion 🔖️ActionArgFacets
+
 //#region 🔖️MutationInputs
 /// 🧭️ Resolves a cross-document `$ref`: the schema document whose `$id` is `id` (the reference without its fragment).
 pub trait InputSchemaResolver {
@@ -1149,11 +1266,14 @@ pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolve
 }
 
 /// 🧭️ The [`InputSchemaResolver`] over every JSON Schema document registered in the OS-wide `schema://` export registry
-/// (artifact facets and named scope exports): the document whose `$id` is `id`, or `None` when no plugin published it.
+/// (artifact facets and named scope exports) and every document a published mutation leaf references
+/// (`semio_framework_schema_registry::registered_referenced_schema_documents`): the document whose `$id` is `id`, or `None` when no plugin
+/// published it.
 pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
-    let texts: Vec<&'static str> = semio_framework_schema::with_schema_export_registry(|registry| {
-        registry.entries().filter(|entry| entry.format == semio_framework_schema::SchemaFormat::JsonSchema).filter_map(|entry| registry.resolve(entry.scope, entry.export, entry.format).ok()).filter(|text| text.contains(id)).collect()
+    let mut texts: Vec<&'static str> = semio_framework_schema_registry::with_schema_export_registry(|registry| {
+        registry.entries().filter(|entry| entry.format == semio_framework_schema_registry::SchemaFormat::JsonSchema).filter_map(|entry| registry.resolve(entry.scope, entry.export, entry.format).ok()).filter(|text| text.contains(id)).collect()
     });
+    texts.extend(semio_framework_schema_registry::registered_referenced_schema_documents().into_iter().filter(|text| text.contains(id)));
     texts.into_iter().find_map(|text| {
         let document = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::parse(text).ok()?);
         (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
@@ -2417,7 +2537,8 @@ fn history_lane_action_definitions() -> Vec<ActionDefinition> {
 //#region 🔖️HistoryEdit
 /// ✏️ Opens (or retargets) the history-edit session on one applied mutation: `mutationId`.
 pub const HISTORY_EDIT_BEGIN_ACTION_ID: &str = "historyEditBegin";
-/// 🎚️ Sets one input of the edited mutation's draft: `path` (RFC 6901 pointer into the payload) and `value`.
+/// 🎚️ Sets one input of the edited mutation's draft — `path` (RFC 6901 pointer into the payload) and `value` — or, with
+/// [`HISTORY_EDIT_ARG_EDIT`], inserts or removes one item of a list input.
 pub const HISTORY_EDIT_INPUT_ACTION_ID: &str = "historyEditInput";
 /// 🎯️ Sets the reference input at `path` from the current selection of its declared domain.
 pub const HISTORY_EDIT_USE_SELECTION_ACTION_ID: &str = "historyEditUseSelection";
@@ -2462,8 +2583,16 @@ pub const HISTORY_EDIT_ARG_MUTATION_ID: &str = "mutationId";
 pub const HISTORY_EDIT_ARG_STORE: &str = "store";
 /// 🧭️ The RFC 6901 pointer of one input inside the edited mutation's payload.
 pub const HISTORY_EDIT_ARG_PATH: &str = "path";
-/// 🎚️ `historyEditInput`'s new input value.
+/// 🎚️ `historyEditInput`'s new input value, or the item it inserts.
 pub const HISTORY_EDIT_ARG_VALUE: &str = "value";
+/// ✂️ `historyEditInput`'s list edit: absent sets the input at `path`; [`HISTORY_EDIT_INPUT_INSERT`] inserts `value` (absent:
+/// the item's default) before the item at `path` (`<array>/<index>`, or `<array>/-` to append); [`HISTORY_EDIT_INPUT_REMOVE`]
+/// removes the item at `path`.
+pub const HISTORY_EDIT_ARG_EDIT: &str = "edit";
+/// ➕️ The `historyEditInput` list edit that inserts an item.
+pub const HISTORY_EDIT_INPUT_INSERT: &str = "insert";
+/// ➖️ The `historyEditInput` list edit that removes an item.
+pub const HISTORY_EDIT_INPUT_REMOVE: &str = "remove";
 /// 🧿️ The session generation a verb addresses; absent addresses the live session.
 pub const HISTORY_EDIT_ARG_GENERATION: &str = "generation";
 /// 🏷️ `historyEditCommit`'s new alternative name.
@@ -2492,11 +2621,20 @@ pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
             ]),
         verb(HISTORY_EDIT_INPUT_ACTION_ID, "Set Mutation Input", "Mutationseingabe setzen", "sliders-horizontal")
             .describe(LocalizedLabel::native(
-                "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt.",
+                "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt.",
             ))
-            .use_when(["change this value in the edited step", "set the input of the mutation"])
-            .with_args([path(), ActionArgDef::any(HISTORY_EDIT_ARG_VALUE, LocalizedLabel::native("Value", "Wert")).required(), generation()]),
+            .use_when(["change this value in the edited step", "set the input of the mutation", "add or remove an item of a list input"])
+            .with_args([
+                path(),
+                ActionArgDef::any(HISTORY_EDIT_ARG_VALUE, LocalizedLabel::native("Value", "Wert")),
+                ActionArgDef::select(
+                    HISTORY_EDIT_ARG_EDIT,
+                    LocalizedLabel::native("List edit", "Listenbearbeitung"),
+                    vec![ActionArgOption::new(HISTORY_EDIT_INPUT_INSERT, LocalizedLabel::native("Insert item", "Element einfügen")), ActionArgOption::new(HISTORY_EDIT_INPUT_REMOVE, LocalizedLabel::native("Remove item", "Element entfernen"))],
+                ),
+                generation(),
+            ]),
         verb(HISTORY_EDIT_USE_SELECTION_ACTION_ID, "Use Selection", "Auswahl verwenden", "mouse-pointer")
             .describe(LocalizedLabel::native(
                 "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
@@ -5627,7 +5765,7 @@ pub fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> 
 pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
     let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
-    let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
+    let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or(Terminology::Native), locale).trim().to_lowercase();
     if !normalized_window.is_empty() && normalized_window != normalized_app && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window) {
         breadcrumb.push(normalized_window);
     }
@@ -6462,7 +6600,7 @@ mod plugin_dependency_tests;
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
 // added alongside, not replacing, Serialize/Deserialize.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -6611,6 +6749,28 @@ pub struct ViewSessionIdentity {
 }
 
 impl ViewModel {
+    /// 🌐️ Creates empty host context with the caller's explicit language and terminology.
+    pub fn new(locale: Locale, terminology: Terminology) -> Self {
+        Self {
+            active_mode_id: None,
+            active_window_kind_id: None,
+            active_utility_id: None,
+            active_utility_by_window_id: std::collections::HashMap::new(),
+            active_tool_id: None,
+            panel_json: None,
+            session_identity: None,
+            extension_input_json: None,
+            locale,
+            terminology,
+            window_id: None,
+            focused_window_id: None,
+            window_instances: Vec::new(),
+            tool_run_trace_cursor_by_window_id: std::collections::HashMap::new(),
+            tree_windows: Vec::new(),
+            tree_viewport_rows: None,
+        }
+    }
+
     /// 📌️ Projects app-level panels without binding their controls to a window.
     ///
     /// 🎯️ [`Self::focused_window_id`] survives — that is the whole point of the field — but only while

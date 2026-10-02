@@ -15,7 +15,10 @@ use crate::mutations::scale_frames::ScaleFrames;
 use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use machine::Command;
-use semio_framework_plugin::{Emit, LocalizedLabel, NoConfigMutation, UtilityDefinition};
+use semio_framework_plugin::Emit;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
@@ -281,8 +284,8 @@ pub struct LayoutTransformToolState {
     pub entries: Vec<LayoutTransformToolEntry>,
 }
 
-store::artifact_retire_struct!(LayoutTransformToolEntry { key, mutation });
-store::artifact_retire_struct!(LayoutTransformToolState { states, verb, authoring_seed, base_revision, transaction, entries });
+semio_framework_value::artifact_retire_struct!(LayoutTransformToolEntry { key, mutation });
+semio_framework_value::artifact_retire_struct!(LayoutTransformToolState { states, verb, authoring_seed, base_revision, transaction, entries });
 
 /// 🛠️ One window's transform tool for one dispatch: started at rest, or resumed from the gesture its window transient
 /// persisted, driven by one event or one host abort, and persisted back while its transaction is open.

@@ -1,6 +1,9 @@
 
 use super::*;
 
+#[path="🛫️controlled/🦀️.rs"]
+mod controlled;
+
 fn lcg_bytes(seed: u64, len: usize) -> Vec<u8> {
     let mut state = seed | 1;
     (0..len)

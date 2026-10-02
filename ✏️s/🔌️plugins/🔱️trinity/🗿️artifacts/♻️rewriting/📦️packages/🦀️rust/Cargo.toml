@@ -17,13 +17,20 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "semio-s-artifact-trinity-jack/component-app-assembly"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-tool-machine", "semio-s-artifact-trinity-jack/component-app-assembly"]
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-graph = { workspace = true }
 semio-framework = { workspace = true, optional = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-job = { workspace = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-replication = { workspace = true }
@@ -36,7 +43,6 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true }
 pack = { workspace = true }
-serde_json = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 

@@ -22,7 +22,7 @@ const DERIVED_ASSET: &str = "shared://🔄️round-trips-the-committed-document/
 mod subject {
     use super::{DERIVED_ASSET, DSL_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::fem2d_mutation_report_json;
     use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::snapshot::fem2d_identity_report_json;
 

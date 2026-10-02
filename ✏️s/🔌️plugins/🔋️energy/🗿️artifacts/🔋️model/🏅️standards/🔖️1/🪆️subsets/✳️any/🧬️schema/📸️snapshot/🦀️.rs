@@ -2,7 +2,11 @@
 
 use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[path="🛬️native/🦀️.rs"]
+mod native;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted energy-model document snapshot (persistent fields of the artifact). Ticket
@@ -54,10 +58,10 @@ impl ToValue for EnergyModelSnapshot {
         DslValue::object([
             ("schema".to_string(), self.schema.to_value()),
             ("model".to_string(), self.model.to_value()),
-            ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
-            ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
-            ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
-            ("weatherLink".to_string(), to_dsl_value(&self.weather_link).unwrap_or(DslValue::Null)),
+            ("structure".to_string(), semio_framework_value::ToValue::to_value(&self.structure)),
+            ("zones".to_string(), semio_framework_value::ToValue::to_value(&self.zones)),
+            ("referencedModel".to_string(), semio_framework_value::ToValue::to_value(&self.referenced_model)),
+            ("weatherLink".to_string(), semio_framework_value::ToValue::to_value(&self.weather_link)),
         ])
     }
 }
@@ -68,10 +72,10 @@ impl FromValue for EnergyModelSnapshot {
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,
-            structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
-            zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
-            referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
-            weather_link: from_dsl_value(field("weatherLink")).map_err(ValueError::new)?,
+            structure: semio_framework_value::FromValue::from_value(field("structure"))?,
+            zones: semio_framework_value::FromValue::from_value(field("zones"))?,
+            referenced_model: semio_framework_value::FromValue::from_value(field("referencedModel"))?,
+            weather_link: semio_framework_value::FromValue::from_value(field("weatherLink"))?,
         })
     }
 }
@@ -135,6 +139,7 @@ impl store::ArtifactDsl for EnergyModelSnapshot {
 }
 
 impl store::ArtifactPack for EnergyModelSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&EnergyModelPackRecord::__dsl_spec(), &EnergyModelPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -146,7 +151,7 @@ impl store::ArtifactPack for EnergyModelSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &EnergyModelPackRecord::__dsl_spec(), options)?;
-        EnergyModelPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+        EnergyModelPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(EnergyModelPackRecord::__dsl_spec())
@@ -158,6 +163,9 @@ impl store::ArtifactPack for EnergyModelSnapshot {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️round-trip/🦀️.rs"]
 mod round_trip_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️IdentityBridge
@@ -189,4 +197,3 @@ pub fn energy_model_identity_report_json(dsl_text: &str) -> Result<String, Strin
     Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge
-

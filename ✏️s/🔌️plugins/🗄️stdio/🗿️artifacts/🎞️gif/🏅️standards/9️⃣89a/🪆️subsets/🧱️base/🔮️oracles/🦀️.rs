@@ -279,7 +279,7 @@ mod imp {
             gif::Repeat::Finite(0) => None,
             gif::Repeat::Finite(n) => Some(n),
         };
-        let stored_interlace = crate::raster::gif_image_interlace_flags(input)?;
+        let stored_interlace = semio_s_plugin_stdio_raster_test_oracle::gif_image_interlace_flags(input)?;
         let mut frames = Vec::new();
         while let Some(frame) = decoder.read_next_frame().map_err(|error| format!("independent reader could not decode a GIF frame: {}", error))? {
             frames.push(OFrame {
@@ -328,7 +328,7 @@ mod imp {
                 // 🔀️ `indices` is natural row order throughout this model; GIF stores an interlaced
                 // image's rows in four passes and `write_frame` writes the buffer verbatim, so the
                 // re-interleaving is the caller's job (see the module docstring).
-                let stored = if frame.interlaced { crate::raster::gif_reorder_rows(&frame.indices, frame.width as usize, frame.height as usize, true) } else { frame.indices.clone() };
+                let stored = if frame.interlaced { semio_s_plugin_stdio_raster_test_oracle::gif_reorder_rows(&frame.indices, frame.width as usize, frame.height as usize, true) } else { frame.indices.clone() };
                 let gif_frame = gif::Frame {
                     delay: frame.delay,
                     dispose: frame.dispose,

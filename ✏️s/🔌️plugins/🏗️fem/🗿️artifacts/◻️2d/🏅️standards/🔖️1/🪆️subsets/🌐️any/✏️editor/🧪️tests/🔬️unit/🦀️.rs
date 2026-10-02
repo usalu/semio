@@ -33,10 +33,12 @@ pub(crate) mod context {
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     fn view(kind: &str) -> ViewModel {
         let id = if kind == crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID { "model-left" } else { "results-left" };
-        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
+        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
 
     pub(super) fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
+
+    semio_framework_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../..");
 
     pub fn fem2d_app() -> Fem2dApp {
         let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest));
@@ -135,7 +137,7 @@ pub(crate) mod context {
 
 use super::*;
 use crate::editor::fem2d::unit_tests::context::{fem2d_app, render};
-use semio_framework_plugin::{ArtifactEditor, EditorApp, PluginApp};
+use semio_framework_plugin::{ArtifactEditor, EditorApp};
 use store::ArtifactDsl;
 
 //#region 🔖️CommandSurface
@@ -173,7 +175,7 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "dead".into(), field: "name".into(), value: "Dead".into() }),
         Fem2dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
         Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: None }),
-        Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
+        Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: "results-left".into() }),
         Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
         Fem2dCommand::TranslateSelection(crate::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0, phase: None, reason: None }),
         Fem2dCommand::RotateSelection(crate::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None }),
@@ -287,7 +289,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
     let cfg = ConfigView { snapshot: &config, window: None };
     for command in every_command() {
         let tool_id = command.command_id();
-        let view = |id: &str, kind: &str| semio_framework_plugin::ViewModel { window_id: Some(id.into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() };
+        let view = |id: &str, kind: &str| semio_framework_plugin::ViewModel { window_id: Some(id.into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let emit = match &command {
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
@@ -296,7 +298,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
             Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
-            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
+            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::step(payload, &cfg, &view("results-left", results_window::WINDOW_KIND_ID), None).map(|step| step.emit),
             Fem2dCommand::SetTransformGumballFlag(payload) => crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
@@ -386,7 +388,7 @@ fn window_measures_include_transform_utility_options() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let view_state = ViewModel { active_utility_id: Some("transform".into()), ..Default::default() };
+    let view_state = ViewModel { active_utility_id: Some("transform".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let measures = Fem2dPlayApp::window_measures(&view, &cfg, &view_state);
     let model_measures = measures.get(model_window::WINDOW_KIND_ID).expect("model measures");
     let group = model_measures.iter().find_map(|measure| match measure {

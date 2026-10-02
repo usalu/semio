@@ -28,8 +28,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReplaceNodeProperties 
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace node \"{}\" properties", self.id), &format!("Eigenschaften von Knoten \"{}\" ersetzen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace node \"{}\" properties", self.id), &format!("Eigenschaften von Knoten \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

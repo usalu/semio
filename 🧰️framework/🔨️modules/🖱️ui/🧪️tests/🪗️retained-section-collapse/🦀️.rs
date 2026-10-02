@@ -155,7 +155,7 @@ fn nested_child_height(ui: &Ui) -> f32 {
 #[test]
 fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants() {
     let fixture = fixture();
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &disclosure(&fixture));
@@ -201,7 +201,7 @@ fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants(
 
 #[test]
 fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_tree());
@@ -221,7 +221,7 @@ fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
 /// physical close retires that hit and collapses the mounted descendant back to zero height.
 #[test]
 fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -261,7 +261,7 @@ fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child(
 /// after one stable header row and a second physical gutter click retires both geometry and hit.
 #[test]
 fn downward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &upward_nested_disclosure());
@@ -323,7 +323,7 @@ fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
             interaction_domain: None,
         })],
     });
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     ui.apply_tree("fixture", &tree);

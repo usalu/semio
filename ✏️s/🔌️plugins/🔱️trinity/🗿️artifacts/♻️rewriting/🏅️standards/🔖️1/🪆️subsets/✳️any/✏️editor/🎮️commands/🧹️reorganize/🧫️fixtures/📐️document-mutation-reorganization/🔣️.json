@@ -4,7 +4,7 @@
       "name": "Restore Default Semantic Layout",
       "before": {"lhs-match": {"x": 40, "y": -20}, "rhs-create-0": {"x": 160, "y": 80}},
       "after": {},
-      "artifactMutationCount": 2,
+      "artifactMutationCount": 1,
       "configMutationCount": 0
     },
     {

@@ -30,6 +30,7 @@ pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 /// on a thread of its own, so no law meets another law's engine, documents or chrome registry — in parallel or in
 /// sequence — and the renderer suite is one usable gate instead of an order-dependent one.
 pub(crate) struct WorkerCell<T> {
+    initialize: fn() -> T,
     #[cfg(not(test))]
     inner: std::sync::OnceLock<Mutex<T>>,
     #[cfg(test)]
@@ -37,11 +38,11 @@ pub(crate) struct WorkerCell<T> {
 }
 
 impl<T> WorkerCell<T> {
-    pub(crate) const fn new() -> Self {
+    pub(crate) const fn new(initialize: fn() -> T) -> Self {
         #[cfg(not(test))]
-        return Self { inner: std::sync::OnceLock::new() };
+        return Self { initialize, inner: std::sync::OnceLock::new() };
         #[cfg(test)]
-        return Self { inner: std::marker::PhantomData };
+        return Self { initialize, inner: std::marker::PhantomData };
     }
 }
 
@@ -54,7 +55,7 @@ thread_local! {
 /// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, created from `T::default()` on first use.
 /// Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
 #[cfg(test)]
-pub(crate) fn test_worker_cell<T: Default + 'static>(key: usize) -> &'static Mutex<T> {
+pub(crate) fn test_worker_cell<T: 'static>(key: usize, initialize: impl FnOnce() -> T) -> &'static Mutex<T> {
     let state = TEST_WORKER_CELLS.with(|cells| *cells.borrow_mut().entry(key).or_insert_with(|| Box::leak(Box::new(Mutex::new(T::default()))) as &'static dyn std::any::Any));
     state.downcast_ref::<Mutex<T>>().expect("one worker cell holds one state type")
 }
@@ -1101,7 +1102,7 @@ pub fn dispatch_accessibility_event(window_id: &str, window_generation: u64, nod
                     None
                 });
                 if let Some(focus) = focus {
-                    clear_text_editor_caret(&focus);
+                    blur_text_editor(&focus);
                 }
             }
             ui_wgpu::wgpu::AccessibilityUiEvent::Value(value) => {
@@ -1916,7 +1917,9 @@ fn reset_text_editor_caret(focus: &FocusedTextEditor) -> bool {
     caret.is_some_and(|caret| apply_presented_scene_caret(&focus.window_id, caret))
 }
 
-fn clear_text_editor_caret(focus: &FocusedTextEditor) -> bool {
+/// 🫥️ The editor lost keyboard focus: its open typing run ends as ONE edit (`blur`, design §13.2) and its caret clears.
+fn blur_text_editor(focus: &FocusedTextEditor) -> bool {
+    crate::engine_canvas::end_text_editor_typing(&focus.host_id, crate::engine_canvas::TextEditorTypingEnd::Blur);
     let caret = UI_ENGINE.with(|cell| cell.borrow_mut().clear_presented_scene_caret(&focus.window_id, focus.surface, focus.document_id));
     caret.is_some_and(|caret| apply_presented_scene_caret(&focus.window_id, caret))
 }
@@ -2026,7 +2029,7 @@ pub fn apply_focused_text_editor_text(text: &str, input: &mut ui_wgpu::wgpu::Inp
     }
     if !consumed && with_live_text_editor(&focus, |_| ()).is_none() {
         FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
-        clear_text_editor_caret(&focus);
+        blur_text_editor(&focus);
     }
     consumed
 }
@@ -2047,7 +2050,7 @@ pub fn blur_focused_text_editor_for_pointer(target: Option<&ScenePointerTarget>,
         focused.take()
     });
     let Some(retired) = retired else { return false };
-    clear_text_editor_caret(&retired);
+    blur_text_editor(&retired);
     true
 }
 
@@ -2203,7 +2206,7 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
         None => {
             let retired = FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow_mut().take());
             if let Some(retired) = retired {
-                clear_text_editor_caret(&retired);
+                blur_text_editor(&retired);
             }
             false
         }
@@ -5724,9 +5727,9 @@ struct DumpBoard2dCamera {
 }
 
 /// 🎲️ One `Board2d` surface's published board — the wgpu twin of React's Board2dHost `data-board-*` vitals
-/// (`board2dVitals`, `data-board-camera-json`, `data-board-selection-json`, `data-board-fixture-parsed`): where the
-/// pane sits on the page, the camera, every node's world position, the selection, and the fixture's node, edge and
-/// handle counts. A fixture that does not parse reads `parsed: false` with `-1` counts and no positions, as React's
+/// (`board2dVitals`, `data-board-camera-json`, `data-board-selection-json`, `data-board-highlighted-ids-json`,
+/// `data-board-fixture-parsed`): where the pane sits on the page, the camera, every node's world position, the selection,
+/// the ids a time-travel draft references (highlighted), and the fixture's node, edge and handle counts. A fixture that does not parse reads `parsed: false` with `-1` counts and no positions, as React's
 /// vitals do.
 #[cfg(any(target_arch = "wasm32", test))]
 #[derive(Debug, PartialEq, serde::Serialize)]
@@ -5738,6 +5741,7 @@ struct DumpBoard2dSurface {
     camera: Option<DumpBoard2dCamera>,
     positions: std::collections::BTreeMap<String, [f64; 2]>,
     selection: Vec<String>,
+    highlighted: Vec<String>,
     nodes: i64,
     edges: i64,
     handles: i64,
@@ -5760,12 +5764,13 @@ fn board2d_surface(surface_id: &str, window_id: &str, board: &ui_wgpu::wgpu::Boa
     let camera = serde_json::from_str::<Value>(&board.camera_json).ok().and_then(|camera| Some(DumpBoard2dCamera { x: camera.get("x")?.as_f64()?, y: camera.get("y")?.as_f64()?, zoom: camera.get("zoom")?.as_f64()? }));
     let selection = serde_json::from_str::<Value>(&board.selection_json).ok();
     let selection = selection.as_ref().and_then(|selection| selection.as_array().or_else(|| selection.get("ids").and_then(Value::as_array))).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
+    let highlighted = serde_json::from_str::<Vec<String>>(&board.highlighted_ids_json).unwrap_or_default();
     let count = |array: Option<&Vec<Value>>| array.map_or(0, |entries| entries.len() as i64);
     let (node_count, edge_count, handle_count) = match &fixture {
         Some(fixture) => (count(nodes), count(fixture.get("edges").and_then(Value::as_array)), nodes.into_iter().flatten().map(|node| count(node.get("handles").and_then(Value::as_array))).sum()),
         None => (-1, -1, -1),
     };
-    DumpBoard2dSurface { surface_id: surface_id.to_string(), window_id: window_id.to_string(), rect, camera, positions, selection, nodes: node_count, edges: edge_count, handles: handle_count, parsed: fixture.is_some() }
+    DumpBoard2dSurface { surface_id: surface_id.to_string(), window_id: window_id.to_string(), rect, camera, positions, selection, highlighted, nodes: node_count, edges: edge_count, handles: handle_count, parsed: fixture.is_some() }
 }
 
 /// 🚶️ The same depth-first walk [`walk_mesh_stats`] runs, collecting every `Board2d` component scene of one window at

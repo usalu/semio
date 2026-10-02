@@ -50,8 +50,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMu
         vec![super::XmlMutation::RemoveElement(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove Element", "Element entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove Element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-element".to_string()]

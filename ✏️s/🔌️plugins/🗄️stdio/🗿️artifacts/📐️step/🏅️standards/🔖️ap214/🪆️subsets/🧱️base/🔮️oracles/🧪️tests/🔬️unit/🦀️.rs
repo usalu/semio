@@ -5,7 +5,7 @@ const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🌲️hexagonal
 
 /// 🧾️ The case's own `Examples` rows — the `StepValue` leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    crate::law::feature_rows(include_str!("../../../🧪️tests/📐️mutate-step-ap214/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/📐️mutate-step-ap214/🥒️.feature"))
 }
 fn spec(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])

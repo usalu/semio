@@ -113,3 +113,10 @@ impl SequenceSnapshot {
     }
 }
 //#endregion 🔖️HostDocument
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

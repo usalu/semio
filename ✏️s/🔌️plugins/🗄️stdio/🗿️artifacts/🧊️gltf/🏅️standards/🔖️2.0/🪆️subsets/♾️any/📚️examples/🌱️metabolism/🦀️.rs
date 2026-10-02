@@ -2,7 +2,8 @@
 //! 271 meshes, KHR material extensions declared) decoded through the upgraded engine, not a
 //! hand-authored stub. Ticket ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 /// 🏷️ Stable example id for the navbar picker / `setActiveExample`.
 pub const ID: &str = "metabolism";

@@ -1,17 +1,177 @@
 {
- "schema":"s.wfc.grid2d", "seed":"18446744073709551615", "width":4294967295,"height":2,
- "cellWidthBits":"8000000000000000","cellHeightBits":"7ff0000000000001","periodicX":true,"periodicY":false,
- "tiles":[
-  {"id":"bitmap","label":"","weightBits":"fff0000000000000","media":{"kind":"bitmap","width":4294967295,"height":0,"palette":[{"r":4294967295,"g":2,"b":3,"a":0}],"pixels":"AAE="}},
-  {"id":"vector 🧬","weightBits":"7ff8000000004321","media":{"kind":"vector","paths":[{"strokeWidthBits":"0000000000000001","fill":{"r":1,"g":2,"b":3,"a":4},"stroke":{"r":5,"g":6,"b":7,"a":4294967295},"segments":[
-   {"kind":"moveTo","toBits":["8000000000000000","7ff0000000000001"]},
-   {"kind":"lineTo","toBits":["3ff0000000000000","fff0000000000000"]},
-   {"kind":"quadTo","ctrlBits":["0000000000000001","7ff0000000000000"],"toBits":["7ff8000000004321","0000000000000000"]},
-   {"kind":"cubicTo","ctrl1Bits":["3ff0000000000000","4000000000000000"],"ctrl2Bits":["4008000000000000","4010000000000000"],"toBits":["4014000000000000","4018000000000000"]},
-   {"kind":"close"}
-  ]},{"strokeWidthBits":"8000000000000000","segments":[]}]}},
-  {"id":"image","label":"世界","weightBits":"3ff0000000000000","media":{"kind":"image","childId":"owned-image","target":{"artifactId":"picture","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"image"}}}}
+ "schema": "s.wfc.grid2d",
+ "seed": "18446744073709551615",
+ "width": 4294967295,
+ "height": 2,
+ "cellWidthBits": "8000000000000000",
+ "cellHeightBits": "7ff0000000000001",
+ "periodicX": true,
+ "periodicY": false,
+ "tiles": [
+  {
+   "id": "bitmap",
+   "label": "",
+   "weightBits": "fff0000000000000",
+   "media": {
+    "kind": "bitmap",
+    "width": 4294967295,
+    "height": 0,
+    "palette": [
+     {
+      "r": 4294967295,
+      "g": 2,
+      "b": 3,
+      "a": 0
+     }
+    ],
+    "pixels": "AAE="
+   }
+  },
+  {
+   "id": "vector 🧬",
+   "weightBits": "7ff8000000004321",
+   "media": {
+    "kind": "vector",
+    "paths": [
+     {
+      "strokeWidthBits": "0000000000000001",
+      "fill": {
+       "r": 1,
+       "g": 2,
+       "b": 3,
+       "a": 4
+      },
+      "stroke": {
+       "r": 5,
+       "g": 6,
+       "b": 7,
+       "a": 4294967295
+      },
+      "segments": [
+       {
+        "kind": "moveTo",
+        "toBits": [
+         "8000000000000000",
+         "7ff0000000000001"
+        ]
+       },
+       {
+        "kind": "lineTo",
+        "toBits": [
+         "3ff0000000000000",
+         "fff0000000000000"
+        ]
+       },
+       {
+        "kind": "quadTo",
+        "ctrlBits": [
+         "0000000000000001",
+         "7ff0000000000000"
+        ],
+        "toBits": [
+         "7ff8000000004321",
+         "0000000000000000"
+        ]
+       },
+       {
+        "kind": "cubicTo",
+        "ctrl1Bits": [
+         "3ff0000000000000",
+         "4000000000000000"
+        ],
+        "ctrl2Bits": [
+         "4008000000000000",
+         "4010000000000000"
+        ],
+        "toBits": [
+         "4014000000000000",
+         "4018000000000000"
+        ]
+       },
+       {
+        "kind": "close"
+       }
+      ]
+     },
+     {
+      "strokeWidthBits": "8000000000000000",
+      "segments": []
+     }
+    ]
+   }
+  },
+  {
+   "id": "image",
+   "label": "世界",
+   "weightBits": "3ff0000000000000",
+   "media": {
+    "kind": "image",
+    "childId": "owned-image",
+    "target": {
+     "artifactId": "picture",
+     "dialect": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image"
+     }
+    }
+   }
+  }
  ],
- "rules":[{"id":"adjacency","tileAId":"bitmap","tileBId":"vector 🧬","direction":"BOTTOM","allowed":false}],
- "pinned":[{"x":4294967295,"y":1,"tileId":"image"}],"masked":[{"x":4,"y":5},{"x":0,"y":0}]
+ "rules": [
+  {
+   "id": "adjacency",
+   "tileAId": "bitmap",
+   "tileBId": "vector 🧬",
+   "direction": "BOTTOM",
+   "allowed": false
+  }
+ ],
+ "pinned": [
+  {
+   "x": 4294967295,
+   "y": 1,
+   "tileId": "image"
+  }
+ ],
+ "masked": [
+  {
+   "x": 4,
+   "y": 5
+  },
+  {
+   "x": 0,
+   "y": 0
+  }
+ ],
+ "controlledAdmission": {
+  "collectionItems": 1024,
+  "cancelAfter": 256,
+  "largeTextBytes": 100000,
+  "smallOwnedBytes": 128
+ },
+ "literalIdentityStates": [
+  {
+   "tileIds": [
+    "same",
+    "same",
+    "third"
+   ],
+   "ruleId": "repeated",
+   "tileAId": "missing 🧬\u0000!@/",
+   "tileBId": "",
+   "pinnedTileId": "unresolved"
+  },
+  {
+   "tileIds": [
+    "",
+    "",
+    "third!@/ 世界"
+   ],
+   "ruleId": "",
+   "tileAId": "unresolved!@/",
+   "tileBId": "absent",
+   "pinnedTileId": ""
+  }
+ ]
 }

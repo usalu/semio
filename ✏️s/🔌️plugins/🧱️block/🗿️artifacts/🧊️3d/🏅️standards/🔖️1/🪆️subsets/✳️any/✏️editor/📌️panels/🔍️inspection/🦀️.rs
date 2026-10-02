@@ -4,10 +4,22 @@
 use crate::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::{block3d_action, ui_label, ui_value_map, ui_value_text};
-use semio_framework_plugin::{
-    Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, Trigger, UiAssemblyResult, UiText,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_ui_contract::{self as ui, InputKind};
 
 //#region 🔖️Constants

@@ -1,5 +1,5 @@
 /** 🧬️ The one strict Ajv oracle for semio JSON schemas: Ajv in strict mode with the `x-semio-*` vendor annotation vocabulary
- * (`../../🧫️fixtures/🧬️schema-vendor-annotation-vocabulary-v1/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
+ * (`../../🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
  * instead of registering vendor keywords one call site at a time, so a schema that gains an annotation (e.g. `x-semio-note` in
  * `📇️directory/🧬️schema/🔣️.json`) keeps compiling everywhere, and a keyword outside the vocabulary still fails
  * (ticket 26/09/23 S15). https://ajv.js.org/strict-mode.html#prohibit-ignored-keywords */
@@ -32,8 +32,10 @@ export function semioSchemaAjvV1(options: Options = {}): Ajv {
 /** 🧺️ Adds every mutation leaf payload schema (`<mutations>/<leaf>/🧬️schema/🔣️.json`) of one aggregate collection to `ajv`, so the
  * aggregate document `<mutations>/🔣️.json` — a `oneOf` of leaf `$ref`s under the repo-wide aggregate rule — compiles. */
 export function addSemioMutationLeafSchemasV1(ajv: Ajv, mutations: URL): Ajv {
+  const directory = new URL(mutations);
+  if (!directory.pathname.endsWith("/")) directory.pathname += "/";
   for (const leaf of readdirSync(mutations, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
-    const schema = new URL(`${encodeURIComponent(leaf.name)}/🧬️schema/🔣️.json`, mutations);
+    const schema = new URL(`${encodeURIComponent(leaf.name)}/🧬️schema/🔣️.json`, directory);
     if (existsSync(schema)) ajv.addSchema(JSON.parse(readFileSync(schema, "utf8")));
   }
   return ajv;

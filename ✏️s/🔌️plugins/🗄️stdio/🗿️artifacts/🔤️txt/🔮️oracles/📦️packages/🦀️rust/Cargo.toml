@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-txt-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_txt_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:bstr", "dep:csv"]
+
+[dependencies]
+"bstr" = { version = "1.13", optional = true, default-features = false, features = ["std"] }
+"csv" = { version = "1", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

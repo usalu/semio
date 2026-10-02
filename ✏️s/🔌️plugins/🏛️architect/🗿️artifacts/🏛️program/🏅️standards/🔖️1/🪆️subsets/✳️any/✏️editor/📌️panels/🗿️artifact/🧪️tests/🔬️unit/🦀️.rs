@@ -57,7 +57,7 @@ fn oversized_program(count: usize) -> ProgramSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(program: &ProgramSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     crate::editor::architect::unit_tests::context::project_render(render(program, &TreeWindows::for_body(&view, ARCHITECT_BODY_ARTIFACT)))
 }
 

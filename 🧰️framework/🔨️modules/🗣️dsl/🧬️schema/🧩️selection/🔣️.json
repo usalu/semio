@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "uses", "selectedFragments", "expectedMissing"],
+    "properties": {
+      "id": {"type": "string", "minLength": 1},
+      "uses": {"$ref": "#/$defs/identities"},
+      "selectedFragments": {"$ref": "#/$defs/identities"},
+      "expectedMissing": {"$ref": "#/$defs/identities"}
+    }
+  },
+  "$defs": {
+    "identities": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

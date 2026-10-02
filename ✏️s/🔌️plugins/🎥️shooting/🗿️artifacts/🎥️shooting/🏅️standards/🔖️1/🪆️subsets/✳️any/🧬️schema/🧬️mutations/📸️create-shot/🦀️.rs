@@ -23,8 +23,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateShot {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create shot \"{}\"", self.shot.label), &format!("Aufnahme \"{}\" erstellen", self.shot.label))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create shot \"{}\"", self.shot.label), &format!("Aufnahme \"{}\" erstellen", self.shot.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.shot.id.clone()]

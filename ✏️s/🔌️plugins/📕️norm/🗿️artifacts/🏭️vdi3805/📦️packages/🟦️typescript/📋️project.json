@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/norm-vdi3805",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": ["language:typescript", "role:artifact", "family:norm"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

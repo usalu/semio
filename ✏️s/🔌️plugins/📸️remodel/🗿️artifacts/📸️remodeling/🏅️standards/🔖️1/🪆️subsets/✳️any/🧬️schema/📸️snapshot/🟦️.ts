@@ -1,3 +1,4 @@
+import { binary32, binary64, parseBinary32, parseBinary64, type Binary32, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ Remodeling snapshot schema — TypeScript twin of `📸️snapshot/🦀️.rs`.
  *
  *  Field names are declared once in Rust `snake_case`; the JSON key is serde's `camelCase`
@@ -29,10 +30,10 @@ export const REMODELING_CONTENT_KINDS: readonly RemodelingContentKind[] = ["spar
 //#endregion 🔖️Enums
 
 //#region 🔖️Domain
-export type Vec2 = [number, number];
-export type Vec3 = [number, number, number];
-export type Vec4 = [number, number, number, number];
-export type Vec5 = [number, number, number, number, number];
+export type Vec2 = [Binary32, Binary32];
+export type Vec3 = [Binary32, Binary32, Binary32];
+export type Vec4 = [Binary32, Binary32, Binary32, Binary32];
+export type Vec5 = [Binary32, Binary32, Binary32, Binary32, Binary32];
 
 /** 🧩️ Compact `store::os_io::ArtifactRef` dialect triple. */
 export interface ArtifactDialect {
@@ -67,7 +68,7 @@ export interface RemodelingDurableArtifact {
   mime: string | null;
   width: number;
   height: number;
-  chunks: string[];
+  chunks: ByteBuffer[];
 }
 
 export type RemodelingDurableArtifactStore = Record<string, RemodelingDurableArtifact>;
@@ -76,7 +77,7 @@ export interface VideoSource {
   name: string;
   container: string;
   codec: VideoCodec;
-  durationMs: number;
+  durationMs: Binary64;
   frameCount: number;
   width: number;
   height: number;
@@ -84,7 +85,7 @@ export interface VideoSource {
 
 export interface FrameRef {
   index: number;
-  timestampMs: number;
+  timestampMs: Binary64;
   assetId: string;
 }
 
@@ -93,8 +94,8 @@ export interface MediaStream {
   name: string;
   kind: MediaKind;
   cameraId: string | null;
-  syncOffsetMs: number;
-  fpsHint: number;
+  syncOffsetMs: Binary64;
+  fpsHint: Binary64;
   frames: FrameRef[];
   source: VideoSource | null;
 }
@@ -103,13 +104,13 @@ export interface CameraCalibration {
   id: string;
   label: string;
   model: string;
-  fx: number;
-  fy: number;
-  cx: number;
-  cy: number;
-  skew: number;
+  fx: Binary64;
+  fy: Binary64;
+  cx: Binary64;
+  cy: Binary64;
+  skew: Binary64;
   distortion: Vec5;
-  rmsReprojectionPx: number | null;
+  rmsReprojectionPx: Binary32 | null;
   locked: boolean;
 }
 
@@ -133,7 +134,7 @@ export interface GcpObservation {
 export interface GroundControlPoint {
   id: string;
   name: string;
-  worldPosition: Vec3;
+  worldPosition: [Binary64, Binary64, Binary64];
   observations: GcpObservation[];
 }
 
@@ -141,19 +142,19 @@ export interface IngestParams {
   frameSampleStride: number;
   maxFrames: number;
   downscaleLongEdgePx: number;
-  minSharpness: number;
+  minSharpness: Binary32;
 }
 
 export interface FeatureParams {
   detector: FeatureDetector;
   targetCount: number;
   octaves: number;
-  edgeThreshold: number;
+  edgeThreshold: Binary32;
 }
 
 export interface MatchParams {
   matcher: MatcherKind;
-  ratioTest: number;
+  ratioTest: Binary32;
   crossCheck: boolean;
   sequentialWindow: number;
   maxPairsPerFrame: number;
@@ -162,24 +163,24 @@ export interface MatchParams {
 
 export interface SfmParams {
   ransacIterations: number;
-  ransacThresholdPx: number;
+  ransacThresholdPx: Binary32;
   minTrackLength: number;
   baMaxIterations: number;
   robustLoss: RobustLossKind;
-  huberDeltaPx: number;
+  huberDeltaPx: Binary32;
 }
 
 export interface DenseParams {
   resolution: DenseResolution;
   windowRadiusPx: number;
   minViewConsistency: number;
-  confidenceThreshold: number;
+  confidenceThreshold: Binary32;
   maxPoints: number;
 }
 
 export interface MeshParams {
-  tsdfVoxelSizeMm: number;
-  tsdfTruncationMm: number;
+  tsdfVoxelSizeMm: Binary32;
+  tsdfTruncationMm: Binary32;
   decimateTargetTriangles: number;
   smoothingIterations: number;
   textureEnabled: boolean;
@@ -193,18 +194,18 @@ export interface MotionParams {
   enabled: boolean;
   maxTracks: number;
   trackWindowPx: number;
-  minTrackQuality: number;
+  minTrackQuality: Binary32;
   minTrackLengthFrames: number;
 }
 
 export interface GeoParams {
   enabled: boolean;
-  originLon: number | null;
-  originLat: number | null;
-  originAlt: number | null;
-  gsdM: number;
-  dsmCellM: number;
-  dtmFilterRadiusM: number;
+  originLon: Binary64 | null;
+  originLat: Binary64 | null;
+  originAlt: Binary64 | null;
+  gsdM: Binary32;
+  dsmCellM: Binary32;
+  dtmFilterRadiusM: Binary32;
   orthoMaxPx: number;
 }
 
@@ -234,9 +235,9 @@ export interface WatertightReportSnapshot {
   nonManifoldVertexCount: number;
   connectedComponents: number;
   consistentlyOriented: boolean;
-  eulerCharacteristic: number;
-  genus: number | null;
-  signedVolume: number;
+  eulerCharacteristic: bigint;
+  genus: bigint | null;
+  signedVolume: Binary64;
   selfIntersectionPairs: number | null;
   closedFallbackUsed: boolean;
   isClosed: boolean;
@@ -251,16 +252,18 @@ export interface RemodelingMesh {
   watertight: WatertightReportSnapshot | null;
 }
 
+export type Float32Buffer = { readonly kind: "inline"; readonly values: readonly Binary32[] } | { readonly kind: "content"; readonly contentId: string; readonly chunkCount: bigint };
+export type ByteBuffer = Uint8Array;
 export interface SparseCloud {
-  points: string;
-  colors: string | null;
+  points: Float32Buffer;
+  colors: ByteBuffer | null;
 }
 
 export interface DenseCloud {
-  positions: string;
-  colors: string | null;
-  confidence: string | null;
-  classification: string | null;
+  positions: Float32Buffer;
+  colors: ByteBuffer | null;
+  confidence: Float32Buffer | null;
+  classification: ByteBuffer | null;
 }
 
 export interface CameraTrajectory {
@@ -271,7 +274,7 @@ export interface MotionTrackSummary {
   id: string;
   length: number;
   class: TrackClass;
-  meanSpeedMS: number;
+  meanSpeedMS: Binary32;
 }
 
 export interface GeoProducts {
@@ -281,12 +284,12 @@ export interface GeoProducts {
 }
 
 export interface QcReportSnapshot {
-  reprojectionRmsPx: number;
-  gcpCheckpointRmse: number | null;
+  reprojectionRmsPx: Binary64;
+  gcpCheckpointRmse: Binary64 | null;
   watertight: WatertightReportSnapshot | null;
-  meanTrackLength: number;
-  registeredFrameRatio: number;
-  denseCoverageRatio: number;
+  meanTrackLength: Binary32;
+  registeredFrameRatio: Binary32;
+  denseCoverageRatio: Binary32;
   warnings: string[];
 }
 
@@ -315,6 +318,9 @@ export interface RemodelingSnapshot {
 
 //#region 🔖️Spec
 export type ValueSpec =
+  | { k: "bytes" }
+  | { k: "floatBuffer" }
+  | { k: "u64" }
   | { k: "text" }
   | { k: "bool" }
   | { k: "uint" }
@@ -352,7 +358,7 @@ export const camelOf = (snake: string): string => snake.split("_").map((part, in
 /** 🍢 `dsl` `kebab-case` rename over a Rust `snake_case` identifier. */
 export const kebabOf = (snake: string): string => snake.replace(/_/g, "-");
 
-const f = (name: string, spec: ValueSpec, dflt: () => unknown, extra: Partial<FieldSpec> = {}): FieldSpec => ({ name, spec, dflt, ...extra });
+const f = (name: string, spec: ValueSpec, dflt: () => unknown, extra: Partial<FieldSpec> = {}): FieldSpec => ({ name, spec, dflt: () => canonicalDefault(dflt(), spec), ...extra });
 const text = { k: "text" } as const;
 const bool = { k: "bool" } as const;
 const uint = { k: "uint" } as const;
@@ -394,7 +400,7 @@ export const IMAGE_ASSET_SPEC: RecordSpec = {
 export const DURABLE_ARTIFACT_SPEC: RecordSpec = {
   title: "RemodelingDurableArtifact",
   serdeDefault: true,
-  fields: [f("kind", text, () => ""), f("mime", opt(text), () => null), f("width", uint, () => 0), f("height", uint, () => 0), f("chunks", list(text), () => [])],
+  fields: [f("kind", text, () => ""), f("mime", opt(text), () => null), f("width", uint, () => 0), f("height", uint, () => 0), f("chunks", list({k:"bytes"}), () => [])],
 };
 
 export const VIDEO_SOURCE_SPEC: RecordSpec = {
@@ -631,13 +637,13 @@ export const REMODELING_MESH_SPEC: RecordSpec = {
 export const SPARSE_CLOUD_SPEC: RecordSpec = {
   title: "SparseCloud",
   serdeDefault: true,
-  fields: [f("points", text, () => ""), f("colors", opt(text), () => null)],
+  fields: [f("points", {k:"floatBuffer"}, () => ({kind:"inline",values:[]})), f("colors", opt({k:"bytes"}), () => null)],
 };
 
 export const DENSE_CLOUD_SPEC: RecordSpec = {
   title: "DenseCloud",
   serdeDefault: true,
-  fields: [f("positions", text, () => ""), f("colors", opt(text), () => null), f("confidence", opt(text), () => null), f("classification", opt(text), () => null)],
+  fields: [f("positions", {k:"floatBuffer"}, () => ({kind:"inline",values:[]})), f("colors", opt({k:"bytes"}), () => null), f("confidence", opt({k:"floatBuffer"}), () => null), f("classification", opt({k:"bytes"}), () => null)],
 };
 
 export const CAMERA_TRAJECTORY_SPEC: RecordSpec = {
@@ -746,65 +752,67 @@ const finiteNumber = (value: unknown, path: string): number => (typeof value ===
 
 const wholeNumber = (value: unknown, path: string, signed: boolean): number => {
   const number = finiteNumber(value, path);
+  if (!Number.isSafeInteger(number) || (!signed && number > 4294967295)) fail(path, "integer width exceeded");
   if (!Number.isInteger(number)) fail(path, `expected an integer, got ${number}`);
   if (!signed && number < 0) fail(path, `expected an unsigned integer, got ${number}`);
   return number;
 };
 
-/** 🧩️ Decodes one value against its spec; `f32` narrows exactly as Rust's `as f32` does. */
-export function decodeValue(value: unknown, spec: ValueSpec, path: string): unknown {
-  switch (spec.k) {
-    case "text":
-      return typeof value === "string" ? value : fail(path, `expected a string, got ${JSON.stringify(value)}`);
-    case "bool":
-      return typeof value === "boolean" ? value : fail(path, `expected a boolean, got ${JSON.stringify(value)}`);
-    case "uint":
-      return wholeNumber(value, path, false);
-    case "int":
-      return wholeNumber(value, path, true);
-    case "f64":
-      return finiteNumber(value, path);
-    case "f32":
-      return Math.fround(finiteNumber(value, path));
-    case "enum":
-      return typeof value === "string" && spec.of.includes(value) ? value : fail(path, `expected one of ${spec.of.join(" | ")}, got ${JSON.stringify(value)}`);
-    case "tuple": {
-      if (!Array.isArray(value)) fail(path, `expected an array of ${spec.len} numbers, got ${JSON.stringify(value)}`);
-      const items = value as unknown[];
-      if (items.length !== spec.len) fail(path, `expected exactly ${spec.len} numbers, got ${items.length}`);
-      return items.map((item, index) => (spec.w === 32 ? Math.fround(finiteNumber(item, `${path}[${index}]`)) : finiteNumber(item, `${path}[${index}]`)));
-    }
-    case "list":
-      if (!Array.isArray(value)) fail(path, `expected an array, got ${JSON.stringify(value)}`);
-      return (value as unknown[]).map((item, index) => decodeValue(item, spec.of, `${path}[${index}]`));
-    case "map": {
-      if (!isPlainObject(value)) fail(path, `expected an object, got ${JSON.stringify(value)}`);
-      const out: Record<string, unknown> = {};
-      for (const key of Object.keys(value).sort()) out[key] = decodeValue(value[key], spec.of, `${path}.${key}`);
-      return out;
-    }
-    case "rec":
-      return decodeRecord(value, spec.of(), path);
-    case "opt":
-      return value === null || value === undefined ? null : decodeValue(value, spec.of, path);
-  }
+function canonicalDefault(value:unknown,spec:ValueSpec):unknown {
+ if(value===null)return null;
+ if(spec.k==="f64")return binary64(value as number);
+ if(spec.k==="f32")return binary32(value as number);
+ if(spec.k==="int"||spec.k==="u64")return BigInt(value as number);
+ if(spec.k==="tuple")return(value as number[]).map(v=>spec.w===32?binary32(v):binary64(v));
+ return value;
+}
+function exactFloat(value:unknown,width:32|64,path:string,transport:boolean):Binary32|Binary64 {
+ if(transport&&typeof value==="number")return width===32?binary32(finiteNumber(value,path)):binary64(finiteNumber(value,path));
+ if(!isPlainObject(value)||Object.keys(value).length!==1||!Object.hasOwn(value,"bits"))return fail(path,"expected one exact IEEE word");
+ if(transport){if(typeof value.bits!=="string"||!(width===32?/^[0-9a-f]{8}$/:/^[0-9a-f]{16}$/).test(value.bits))return fail(path,"expected lowercase IEEE word");return width===32?{bits:Number.parseInt(value.bits,16)}:{bits:BigInt("0x"+value.bits)}}
+ try{return width===32?parseBinary32(value):parseBinary64(value)}catch{return fail(path,"expected canonical IEEE word")}
+}
+function exactInteger(value:unknown,signed:boolean,path:string,transport:boolean):bigint {
+ let word:bigint;
+ if(transport){if(typeof value==="number"&&Number.isSafeInteger(value))word=BigInt(value);else if(typeof value==="string"&&(signed?/^(0|-[1-9][0-9]*|[1-9][0-9]*)$/:/^(0|[1-9][0-9]*)$/).test(value)&&value.length<=20)word=BigInt(value);else return fail(path,"expected canonical integer decimal")}else if(typeof value==="bigint")word=value;else return fail(path,"expected owned bigint");
+ return word>=(signed?-9223372036854775808n:0n)&&word<=(signed?9223372036854775807n:18446744073709551615n)?word:fail(path,"integer width exceeded");
+}
+/** 🧩️ Admit the declared file transport or the strict canonical primitive representation. */
+export function decodeValue(value:unknown,spec:ValueSpec,path:string,transport=true):unknown {
+ switch(spec.k){
+ case "text":return typeof value==="string"?value:fail(path,"expected TEXT");
+ case "bool":return typeof value==="boolean"?value:fail(path,"expected Boolean");
+ case "uint":return wholeNumber(value,path,false);
+ case "int":return exactInteger(value,true,path,transport);
+ case "u64":return exactInteger(value,false,path,transport);
+ case "f64":return exactFloat(value,64,path,transport);
+ case "f32":return exactFloat(value,32,path,transport);
+ case "bytes":{if(!transport)return value instanceof Uint8Array?value.slice():fail(path,"expected owned literal octets");if(!Array.isArray(value))return fail(path,"expected an octet array");return Uint8Array.from(value.map((v,i)=>{const n=wholeNumber(v,path+"["+i+"]",false);return n<=255?n:fail(path,"octet width exceeded")}))}
+ case "floatBuffer":{if(!isPlainObject(value))return fail(path,"expected a float buffer");if(value.kind==="inline"){if(Object.keys(value).length!==2||!Array.isArray(value.values))return fail(path,"expected inline values");return{kind:"inline",values:value.values.map((v,i)=>exactFloat(v,32,path+".values["+i+"]",transport))}}if(value.kind==="content"){if(Object.keys(value).length!==3||typeof value.contentId!=="string")return fail(path,"expected content reference");return{kind:"content",contentId:value.contentId,chunkCount:exactInteger(value.chunkCount,false,path+".chunkCount",transport)}}return fail(path,"unknown buffer variant")}
+ case "enum":return typeof value==="string"&&spec.of.includes(value)?value:fail(path,"unknown enum");
+ case "tuple":{if(!Array.isArray(value)||value.length!==spec.len)return fail(path,"tuple width mismatch");return value.map((v,i)=>exactFloat(v,spec.w,path+"["+i+"]",transport))}
+ case "list":{if(!Array.isArray(value))return fail(path,"expected a list");return value.map((v,i)=>decodeValue(v,spec.of,path+"["+i+"]",transport))}
+ case "map":{if(!isPlainObject(value))return fail(path,"expected a map");const out:Record<string,unknown>={};for(const key of Object.keys(value).sort())Object.defineProperty(out,key,{value:decodeValue(value[key],spec.of,path+"."+key,transport),enumerable:true,writable:true,configurable:true});return out}
+ case "rec":return decodeRecord(value,spec.of(),path,transport);
+ case "opt":return value===null||transport&&value===undefined?null:decodeValue(value,spec.of,path,transport);
+ }
 }
 
 /** 🧱 Decodes one record, rejecting unknown keys and keys that carry no serde default. */
-export function decodeRecord(value: unknown, spec: RecordSpec, path: string): Record<string, unknown> {
+export function decodeRecord(value: unknown, spec: RecordSpec, path: string, transport=true): Record<string, unknown> {
   if (!isPlainObject(value)) fail(path, `expected a ${spec.title} object, got ${JSON.stringify(value)}`);
-  const source = value;
+  const source = value as Record<string,unknown>;
   const known = new Set(spec.fields.map((field) => camelOf(field.name)));
   for (const key of Object.keys(source)) if (!known.has(key)) fail(`${path}.${key}`, `unknown key for ${spec.title} (known: ${[...known].join(", ")})`);
   const out: Record<string, unknown> = {};
   for (const field of spec.fields) {
     const key = camelOf(field.name);
     if (!(key in source)) {
-      if (!spec.serdeDefault && !field.jsonOptional) fail(`${path}.${key}`, `missing required key for ${spec.title}`);
+      if (!transport || !spec.serdeDefault && !field.jsonOptional) fail(`${path}.${key}`, `missing required key for ${spec.title}`);
       out[key] = field.dflt();
       continue;
     }
-    out[key] = decodeValue(source[key], field.spec, `${path}.${key}`);
+    out[key] = decodeValue(source[key], field.spec, `${path}.${key}`, transport);
   }
   return out;
 }
@@ -833,6 +841,7 @@ export function floatLexeme(value: number, width: 32 | 64): string {
 }
 
 const indentOf = (depth: number): string => "  ".repeat(depth);
+const prettyJson=(value:unknown,depth:number):string=>JSON.stringify(value,null,2).split("\n").map((line,index)=>index===0?line:indentOf(depth)+line).join("\n");
 
 /** 🧵 Writes one value as `serde_json`'s pretty printer would, float width taken from the spec. */
 export function writeValueJson(value: unknown, spec: ValueSpec, depth: number): string {
@@ -842,18 +851,17 @@ export function writeValueJson(value: unknown, spec: ValueSpec, depth: number): 
       return JSON.stringify(value);
     case "bool":
       return value ? "true" : "false";
-    case "uint":
+    case "uint":return `${value}`;
     case "int":
-      return `${value}`;
+    case "u64":
+      return JSON.stringify((value as bigint).toString());
     case "f64":
-      return floatLexeme(value as number, 64);
+      return prettyJson({bits:parseBinary64(value).bits.toString(16).padStart(16,"0")},depth);
     case "f32":
-      return floatLexeme(value as number, 64);
-    case "tuple": {
-      const items = value as number[];
-      if (items.length === 0) return "[]";
-      return `[\n${items.map((item) => `${indentOf(depth + 1)}${floatLexeme(item, 64)}`).join(",\n")}\n${indentOf(depth)}]`;
-    }
+      return prettyJson({bits:parseBinary32(value).bits.toString(16).padStart(8,"0")},depth);
+    case "bytes":return prettyJson(Array.from(value as Uint8Array),depth);
+    case "floatBuffer":{const v=value as Float32Buffer;return prettyJson(v.kind==="inline"?{kind:"inline",values:v.values.map(x=>({bits:parseBinary32(x).bits.toString(16).padStart(8,"0")}))}:{kind:"content",contentId:v.contentId,chunkCount:v.chunkCount.toString()},depth)}
+    case "tuple":return prettyJson((value as unknown[]).map(v=>({bits:spec.w===32?parseBinary32(v).bits.toString(16).padStart(8,"0"):parseBinary64(v).bits.toString(16).padStart(16,"0")})),depth);
     case "list": {
       const items = value as unknown[];
       if (items.length === 0) return "[]";
@@ -898,3 +906,8 @@ export function remodelingSnapshotFromJsonText(text: string): RemodelingSnapshot
   return decodeRemodelingSnapshot(parsed);
 }
 //#endregion 🔖️Codec
+
+/** 🛂️ Validate only the complete canonical typed snapshot. */
+export const parseRemodelingSnapshot=(value:unknown,at="$"):RemodelingSnapshot=>decodeRecord(value,REMODELING_SNAPSHOT_SPEC,at,false) as unknown as RemodelingSnapshot;
+
+export { remodelingSnapshotToSqliteDatabase, remodelingSnapshotFromSqliteDatabase } from "./🪶️sqlite/🟦️.ts";

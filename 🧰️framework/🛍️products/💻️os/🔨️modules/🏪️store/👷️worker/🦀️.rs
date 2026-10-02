@@ -60,9 +60,8 @@ impl BackboneWorkerHost {
                         match events.recv().await {
                             Ok(event) => {
                                 let response = BackboneWorkerResponse::Event { document_id: document_id.clone(), client_instance_id: client_instance_id.clone(), event };
-                                if let Ok(bytes) = backbone_worker_wire::encode_response(&response) {
-                                    post_worker_message_bytes(&bytes);
-                                }
+                                let bytes = backbone_worker_wire::encode_response(&response);
+                                post_worker_message_bytes(&bytes).await;
                             }
                             Err(_) => break,
                         }
@@ -91,9 +90,8 @@ impl BackboneWorkerHost {
 
     #[wasm_bindgen(js_name = postReady)]
     pub async fn post_ready() {
-        if let Ok(bytes) = backbone_worker_wire::encode_response(&BackboneWorkerResponse::Ready) {
-            post_worker_message_bytes(&bytes);
-        }
+        let bytes = backbone_worker_wire::encode_response(&BackboneWorkerResponse::Ready);
+        post_worker_message_bytes(&bytes).await;
     }
 }
 //#endregion 🔖️Worker

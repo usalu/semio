@@ -1,0 +1,1 @@
+CREATE TABLE home_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, catalog_generation_high INTEGER NOT NULL CHECK(catalog_generation_high BETWEEN 0 AND 4294967295), catalog_generation_low INTEGER NOT NULL CHECK(catalog_generation_low BETWEEN 0 AND 4294967295));

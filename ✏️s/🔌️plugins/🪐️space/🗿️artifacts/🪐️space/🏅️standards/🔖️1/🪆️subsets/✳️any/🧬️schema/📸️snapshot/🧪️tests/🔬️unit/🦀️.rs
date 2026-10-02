@@ -42,8 +42,8 @@ async fn utc_minute_text_matches_the_shared_fixture_in_both_languages() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🕰️utc-minute/🔣️.json")).expect("fixture");
     for case in fixture["cases"].as_array().expect("cases") {
         let epoch_ms = case["epochMs"].as_u64().expect("epochMs");
-        assert_eq!(utc_minute_text(epoch_ms, semio_framework_plugin::Locale::En), case["en"].as_str().expect("en"), "{case}");
-        assert_eq!(utc_minute_text(epoch_ms, semio_framework_plugin::Locale::De), case["de"].as_str().expect("de"), "{case}");
+        assert_eq!(utc_minute_text(epoch_ms, semio_framework_ui_locale::Locale::En), case["en"].as_str().expect("en"), "{case}");
+        assert_eq!(utc_minute_text(epoch_ms, semio_framework_ui_locale::Locale::De), case["de"].as_str().expect("de"), "{case}");
         if let Some(rfc3339) = case["rfc3339"].as_str() {
             assert_eq!(rfc3339_utc_epoch_ms(rfc3339), Some(epoch_ms - epoch_ms % 1_000), "{case}");
         }

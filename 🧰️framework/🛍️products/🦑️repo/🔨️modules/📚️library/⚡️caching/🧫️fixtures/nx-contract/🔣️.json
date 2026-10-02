@@ -335,10 +335,11 @@
     ]
   },
   "generators": [
-    "schema-entity-catalog",
-    "styling-tokens",
     "graph-catalog",
-    "plugin-registry"
+    "plugin-registry",
+    "repo-entity-kinds",
+    "schema-entity-catalog",
+    "styling-tokens"
   ],
   "validationPrerequisite": {
     "target": "@semio-tech/plugin-registry:generate",

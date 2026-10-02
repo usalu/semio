@@ -2,7 +2,7 @@
 //! node reaches for.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
     pub struct Generation3dLabels {
         catalogue_inputs: native_en "Inputs", native_de "Eingaben", reuse_en "Inputs", reuse_de "Eingaben";

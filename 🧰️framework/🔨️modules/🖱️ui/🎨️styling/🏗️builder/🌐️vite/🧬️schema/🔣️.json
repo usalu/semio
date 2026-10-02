@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:assets:build-providers:v1",
+  "definitions": {
+    "MeshCollectionAssetSpecV1": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "route", "catalog"],
+      "properties": { "kind": { "const": "mesh-collection" }, "route": { "type": "string", "minLength": 1 }, "catalog": { "type": "string", "minLength": 1 } }
+    },
+    "StaticDirectoryAssetSpecV1": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "route", "root"],
+      "properties": { "kind": { "const": "static-dir" }, "route": { "type": "string", "minLength": 1 }, "root": { "type": "string", "minLength": 1 } }
+    }
+  }
+}

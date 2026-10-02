@@ -6,7 +6,7 @@ fn results_view() -> ViewModel {
     ViewModel {
         window_id: Some("results-left".into()),
         window_instances: vec![ViewWindowInstance { id: "results-left".into(), window_kind_id: results::WINDOW_KIND_ID.into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

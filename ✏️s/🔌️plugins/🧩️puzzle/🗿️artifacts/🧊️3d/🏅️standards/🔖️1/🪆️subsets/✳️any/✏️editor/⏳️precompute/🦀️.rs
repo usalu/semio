@@ -29,8 +29,9 @@ use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext,
     CollisionStepResult,
 };
+use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, Fixture, FixtureObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
+    BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, Fixture, FixtureObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
     SceneConfig,
 };
 use crate::Puzzle3dError;
@@ -71,7 +72,7 @@ const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US: u64 = 500;
 /// validated-geometry-bytes-out compute, so one mesh identity decodes exactly once per process and
 /// every document instance reads the identical derived page instead of re-uploading it. This is the
 /// kernel the WIT `engine-derive`/`engine-read` host route registers once it is threaded through
-/// exchange (`🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs`), with no plugin-side change.
+/// exchange (`🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs`), with no plugin-side change.
 struct Puzzle3dMeshDecodeEngine;
 
 /// ⚖️ Byte budget of the derived-geometry LRU: `COLLISION_MESH_MAX_MESHES` document-scale meshes at the
@@ -79,13 +80,13 @@ struct Puzzle3dMeshDecodeEngine;
 /// never both saturate.
 const BRUSH_MESH_CACHE_BYTES: usize = COLLISION_MESH_MAX_MESHES * COLLISION_MESH_MAX_VALUES * 4;
 
-impl store::Engine for Puzzle3dMeshDecodeEngine {
+impl semio_framework_2d::compute::Engine for Puzzle3dMeshDecodeEngine {
     const ENGINE_ID: &'static str = "puzzle3d.mesh-decode";
 
-    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, store::EngineFault> {
-        let geometry = brush_mesh_request_geometry(input).ok_or_else(|| store::EngineFault::InvalidInput("puzzle3d brush mesh request".into()))?;
-        let (positions, indices) = decode_brush_mesh_geometry(geometry).ok_or_else(|| store::EngineFault::InvalidInput("puzzle3d brush mesh geometry".into()))?;
-        brush_mesh_geometry_is_admissible(&positions, &indices).then(|| geometry.to_vec()).ok_or_else(|| store::EngineFault::Compute("puzzle3d brush mesh geometry is not a closed indexed triangle page".into()))
+    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, semio_framework_2d::compute::EngineFault> {
+        let geometry = brush_mesh_request_geometry(input).ok_or_else(|| semio_framework_2d::compute::EngineFault::InvalidInput("puzzle3d brush mesh request".into()))?;
+        let (positions, indices) = decode_brush_mesh_geometry(geometry).ok_or_else(|| semio_framework_2d::compute::EngineFault::InvalidInput("puzzle3d brush mesh geometry".into()))?;
+        brush_mesh_geometry_is_admissible(&positions, &indices).then(|| geometry.to_vec()).ok_or_else(|| semio_framework_2d::compute::EngineFault::Compute("puzzle3d brush mesh geometry is not a closed indexed triangle page".into()))
     }
 }
 
@@ -132,15 +133,15 @@ fn brush_mesh_geometry_is_admissible(positions: &[f32], indices: &[u32]) -> bool
 /// url→handle index that lets a later command — or an entirely different open document — reach a mesh
 /// the client uploaded once, so the wire only ever needs to carry the mesh id again.
 struct Puzzle3dBrushMeshStore {
-    engines: store::EngineCache,
-    handles: HashMap<String, store::EngineHandle>,
-    digests: HashMap<String, store::EngineHandle>,
+    engines: semio_framework_2d::compute::EngineCache,
+    handles: HashMap<String, semio_framework_2d::compute::EngineHandle>,
+    digests: HashMap<String, semio_framework_2d::compute::EngineHandle>,
 }
 
 fn brush_mesh_store() -> &'static Mutex<Puzzle3dBrushMeshStore> {
     static STORE: OnceLock<Mutex<Puzzle3dBrushMeshStore>> = OnceLock::new();
     STORE.get_or_init(|| {
-        let mut engines = store::EngineCache::new(BRUSH_MESH_CACHE_BYTES);
+        let mut engines = semio_framework_2d::compute::EngineCache::new(BRUSH_MESH_CACHE_BYTES);
         engines.register(Puzzle3dMeshDecodeEngine);
         Mutex::new(Puzzle3dBrushMeshStore { engines, handles: HashMap::new(), digests: HashMap::new() })
     })
@@ -172,7 +173,7 @@ pub fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Optio
     let request = encode_brush_mesh_request(url, positions, indices)?;
     let digest = brush_mesh_digest(positions, indices);
     let mut store = brush_mesh_store().try_lock().ok()?;
-    let handle = store.engines.derive(<Puzzle3dMeshDecodeEngine as store::Engine>::ENGINE_ID, &request).ok()?;
+    let handle = store.engines.derive(<Puzzle3dMeshDecodeEngine as semio_framework_2d::compute::Engine>::ENGINE_ID, &request).ok()?;
     let geometry = store.engines.read(&handle).ok()?;
     store.handles.insert(url.to_string(), handle.clone());
     store.digests.insert(digest, handle);

@@ -93,7 +93,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.gif".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Gif", "Gif"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Gif", "Gif"),
         source_format: STDIO_GIF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

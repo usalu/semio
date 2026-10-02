@@ -8,16 +8,16 @@ use std::sync::Arc;
 const _: () = assert!(!std::mem::needs_drop::<State>() && !std::mem::needs_drop::<Mutation>());
 const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
 
-impl store::retirement::RetireOwned for State {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::leaf(self.revision)
+impl semio_framework_value::retirement::RetireOwned for State {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::leaf(self.revision)
     }
 }
 
-impl store::retirement::RetireOwned for Mutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for Mutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self::ChangePublicationTransient(value) = self;
-        store::retirement::leaf(value.revision)
+        semio_framework_value::retirement::leaf(value.revision)
     }
 }
 
@@ -32,8 +32,8 @@ fn transfer(mutation: Mutation) -> State {
 
 /// 📦️ Shares the exact production lifecycle across window and document replacement laws.
 pub(crate) fn owners() -> WindowTransientOwnerBundle<State, Mutation> {
-    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<State>> = Arc::new(store::retirement::OwnedValueRetirementFactory::default());
-    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<Mutation>> = Arc::new(store::retirement::OwnedValueRetirementFactory::default());
+    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<State>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
+    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<Mutation>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
     let preparation = Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(footprint, transfer, state.clone(), mutation.clone()));
     WindowTransientOwnerBundle::new(preparation, state, mutation)
 }

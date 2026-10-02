@@ -6,7 +6,17 @@ use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyV
 use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use crate::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -31,7 +41,7 @@ fn inspector_error(stage: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", format!("lowpoly inspector admission failed at {stage}"))
 }
 
-fn control_row(id: &str, label: semio_framework_plugin::LabelText, control: semio_framework_plugin::BuiltNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn control_row(id: &str, label: semio_framework_ui_locale::LabelText, control: semio_framework_plugin::BuiltNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     ui::tree_item(ui_label(label.as_str())?)
         .try_id(id)
         .map_err(|_| inspector_error("row-id"))?
@@ -41,7 +51,7 @@ fn control_row(id: &str, label: semio_framework_plugin::LabelText, control: semi
         .map_err(|_| inspector_error("row-build"))
 }
 
-fn inspector_utility_param_field(id: &str, label: semio_framework_plugin::LabelText, key: &str, value: &serde_json::Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn inspector_utility_param_field(id: &str, label: semio_framework_ui_locale::LabelText, key: &str, value: &serde_json::Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let current = value.get(key).map_or_else(|| "0".to_string(), |entry| entry.to_string());
     let (action, args) = lowpoly_action("setUtilityParam", Some(ui_value_map([("key", ui_value_text(key)?)])?))?;
     let mut number_input = ui::input(InputKind::Number)
@@ -97,7 +107,7 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
     // this wave — dropped rather than shown stale. Peer/self selection surfaces generically.
     let object_rows = ui_node_list([name_row, smooth_row])?;
     let transform_rows = ui_node_list([tree_item_desc(format!("{ROOT}.transform.utility"), ui_label(labels.utility.as_str())?, Some(active_utility.to_string()))])?;
-    let utility_params: [(&str, semio_framework_plugin::LabelText, &str); 11] = [
+    let utility_params: [(&str, semio_framework_ui_locale::LabelText, &str); 11] = [
         ("extrude", labels.extrude_distance, "extrudeDistance"),
         ("inset", labels.inset_amount, "insetAmount"),
         ("bevel", labels.bevel_amount, "bevelAmount"),

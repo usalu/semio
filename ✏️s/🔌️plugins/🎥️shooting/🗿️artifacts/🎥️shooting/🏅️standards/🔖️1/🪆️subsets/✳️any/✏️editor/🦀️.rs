@@ -21,14 +21,55 @@ use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, DslValue,
-    Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityDefinition, WindowEngagement, WindowMeasure,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_APP_ID: &str = "s.shooting.shooting@1/*#editor";
@@ -235,7 +276,6 @@ semio_framework_plugin::app_commands! {
         "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
         "setCamera" as "camera" => set_camera::SetCamera,
         "loadSavedCamera" as "load-saved-camera" => load_saved_camera::LoadSavedCamera,
-        "setCameraDraftLabel" as "camera-draft-label" => set_camera_draft_label::SetCameraDraftLabel,
         "setCenterModel" as "center-model" => set_center_model::SetCenterModel,
         "setShotSelection" as "set-shot-selection" => set_shot_selection::SetShotSelection,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
@@ -250,7 +290,7 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
-use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
+use camera::{load_saved_camera, save_camera, set_camera, set_shot_camera};
 use export::{export_active_shot, export_all_shots};
 use document::{import_snapshot_json, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
@@ -378,7 +418,7 @@ mod args_bridge {
             "setActiveShot" => ShootingCommand::SetActiveShot(decode(action, fold(args, &[("value", "shot_id"), ("id", "shot_id")], &[]))?),
             "setActiveAsset" => ShootingCommand::SetActiveAsset(decode(action, fold(args, &[("value", "asset_id"), ("id", "asset_id")], &[]))?),
             "setShotCamera" => ShootingCommand::SetShotCamera(decode(action, nest_camera(fold(args, &[("id", "shot_id")], &[])))?),
-            "saveCamera" => ShootingCommand::SaveCamera(decode(action, plain())?),
+            "saveCamera" => ShootingCommand::SaveCamera(decode(action, fold(args, &[("value", "label")], &[("label", text(""))]))?),
             "setSunAzimuth" => ShootingCommand::SetSunAzimuth(decode(action, plain())?),
             "setSunElevation" => ShootingCommand::SetSunElevation(decode(action, plain())?),
             "setSunIntensity" => ShootingCommand::SetSunIntensity(decode(action, plain())?),
@@ -400,7 +440,6 @@ mod args_bridge {
             "scaleSelection" => ShootingCommand::ScaleSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("sx", one()), ("sy", one()), ("sz", one())]))?),
             "setCamera" => ShootingCommand::SetCamera(decode(action, nest_camera(plain()))?),
             "loadSavedCamera" => ShootingCommand::LoadSavedCamera(decode(action, fold(args, &[("value", "id"), ("camera_id", "id")], &[]))?),
-            "setCameraDraftLabel" => ShootingCommand::SetCameraDraftLabel(decode(action, with_text_value(plain()))?),
             "setCenterModel" => ShootingCommand::SetCenterModel(decode(action, fold(args, &[("value", "pressed")], &[]))?),
             "setShotSelection" => ShootingCommand::SetShotSelection(decode(action, fold(args, SHOT_IDS, &[("shot_ids", DslValue::Array(Vec::new()))]))?),
             "worldPointerDown" => ShootingCommand::WorldPointerDown(decode(action, plain())?),
@@ -453,7 +492,6 @@ const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &[
     "scaleSelection",
     "setCamera",
     "loadSavedCamera",
-    "setCameraDraftLabel",
     "setCenterModel",
     "setShotSelection",
     "worldPointerDown",
@@ -551,7 +589,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
         ArtifactToolPublicationContract { tool_id: "setActiveShot", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setShotCamera", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "saveCamera", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "saveCamera", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -573,7 +611,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "loadSavedCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setCameraDraftLabel", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCenterModel", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setShotSelection", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -645,7 +682,6 @@ impl ArtifactEditor for ShootingPlayApp {
             "scaleSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "setCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "loadSavedCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "setCameraDraftLabel" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "setCenterModel" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "setShotSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "worldPointerDown" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
@@ -702,7 +738,7 @@ impl ArtifactEditor for ShootingPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::shooting::config::schema::app_schema_descriptor())
     }
 
@@ -866,9 +902,9 @@ impl ArtifactEditor for ShootingPlayApp {
         .map(semio_framework_plugin::built_to_component_tree)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let labels = shooting_play_labels(view_state);
-        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, cfg.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
+        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -908,7 +944,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             // — identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(semio_framework_plugin::ArtifactKindSpec {
                 id: "2d.image".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("2D Image", "2D-Bild"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),
@@ -960,9 +996,8 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
-            // 👁️ Ephemeral view state — shot gallery selection, camera draft label, transform utility.
+            // 👁️ Ephemeral view state — shot gallery selection, transform utility.
             .view_action("setShotSelection", LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl festlegen"))
-            .view_action("setCameraDraftLabel", LocalizedLabel::native("Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"))
             .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
@@ -1023,7 +1058,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadSavedCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCameraDraftLabel", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCenterModel", InteractiveJobClassification::Migrated)
             .action_interactive_job("setShotSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
@@ -1075,7 +1109,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setActiveShot", LocalizedLabel::native("Makes the shot with the given id the active one that shot edits and Export Active Shot apply to.", "Macht die Aufnahme mit der angegebenen Id zur aktiven, auf die Aufnahmeänderungen und Aktive Aufnahme exportieren wirken."))
             .action_describe("setActiveAsset", LocalizedLabel::native("Makes the asset (3D model) with the given id the active one, or clears the active asset.", "Macht das Objekt (3D-Modell) mit der angegebenen Id zum aktiven oder hebt das aktive Objekt auf."))
             .action_describe("setShotCamera", LocalizedLabel::native("Replaces the camera pose stored on one shot, which decides how that shot frames the scene when rendered.", "Ersetzt die in einer Aufnahme gespeicherte Kamerapose, die bestimmt, wie diese Aufnahme die Szene beim Rendern zeigt."))
-            .action_describe("saveCamera", LocalizedLabel::native("Saves the current viewport camera into the document's catalogue of saved cameras under the drafted label.", "Speichert die aktuelle Ansichtskamera unter der entworfenen Bezeichnung im Katalog gespeicherter Kameras des Dokuments."))
+            .action_describe("saveCamera", LocalizedLabel::native("Saves the current viewport camera into the document's catalogue of saved cameras under the given label (Camera N when blank).", "Speichert die aktuelle Ansichtskamera unter der angegebenen Bezeichnung (Kamera N, wenn leer) im Katalog gespeicherter Kameras des Dokuments."))
             .action_describe("loadSavedCamera", LocalizedLabel::native("Moves the viewport camera to one saved camera by id; only the view changes, not the document.", "Setzt die Ansichtskamera auf eine gespeicherte Kamera anhand ihrer Id; nur die Ansicht ändert sich, nicht das Dokument."))
             .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction (azimuth, in degrees) the scene's sun shines from.", "Legt die Himmelsrichtung (Azimut, in Grad) fest, aus der die Sonne der Szene scheint."))
             .action_describe("setSunElevation", LocalizedLabel::native("Sets how high above the horizon (elevation, in degrees) the scene's sun stands.", "Legt fest, wie hoch über dem Horizont (Höhe, in Grad) die Sonne der Szene steht."))
@@ -1097,7 +1131,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given assets by an angle around the axis ax, ay, az; one gumball drag is one history step whose rotation stays editable.", "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; ein Gumball-Zug ist ein Verlaufsschritt, dessen Drehung bearbeitbar bleibt."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the given assets by sx, sy and sz; one gumball drag is one history step whose factors stay editable.", "Skaliert die angegebenen Objekte um sx, sy und sz; ein Gumball-Zug ist ein Verlaufsschritt, dessen Faktoren bearbeitbar bleiben."))
             .action_describe("setShotSelection", LocalizedLabel::native("Selects the given shots in the gallery and document tree; only the editor's view state changes.", "Wählt die angegebenen Aufnahmen in Galerie und Dokumentbaum aus; nur der Ansichtszustand des Editors ändert sich."))
-            .action_describe("setCameraDraftLabel", LocalizedLabel::native("Sets the label the next Save Camera stores the viewport camera under; the document is not changed.", "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."))
             .action_describe("setCenterModel", LocalizedLabel::native("Sets whether the viewport keeps the model centred; only the view changes.", "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."))
             .action_describe("saveDownload", LocalizedLabel::native("Writes the whole shooting document as text to a downloaded shooting.shooting.ops file on the user's machine.", "Schreibt das gesamte Shooting-Dokument als Text in eine heruntergeladene Datei shooting.shooting.ops auf dem Rechner des Nutzers."))
             .action_describe("importAssetRequest", LocalizedLabel::native("Opens the host's file picker for a GLB model; the chosen file is then imported as a new asset.", "Öffnet die Dateiauswahl des Hosts für ein GLB-Modell; die gewählte Datei wird dann als neues Objekt importiert."))

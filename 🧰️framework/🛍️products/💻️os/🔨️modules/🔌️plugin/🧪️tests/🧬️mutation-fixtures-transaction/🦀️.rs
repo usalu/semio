@@ -18,8 +18,9 @@ use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use store::{Backbone, BackboneMessage, EngineHandles, MemoryBackbone};
-use ui_wgpu::wgpu::LocalizedLabel;
+use semio_framework_2d::compute::EngineHandles;
+use store::{Backbone, BackboneMessage, MemoryBackbone};
+use semio_framework_ui_locale::LocalizedLabel;
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, dsl::DslArtifact)]
 #[dsl(extension = "testkit-txn")]
@@ -48,8 +49,8 @@ impl store::ArtifactSqliteSnapshot for TxnSnapshot {
     }
 }
 
-impl semio_framework_schema::ArtifactCompositionFields for TxnSnapshot {
-    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+impl semio_framework_schema_composition::ArtifactCompositionFields for TxnSnapshot {
+    fn visit_child_refs<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())
     }
 }
@@ -117,7 +118,7 @@ impl ::protocol::OpText for TxnCommand {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                let record = ::dsl::parse(body, &(spec_fn.ordinary)(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
                 return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -127,7 +128,7 @@ impl ::protocol::OpText for TxnCommand {
         let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
         let variants = <Self as ::dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
+        let body = ::dsl::print(&record, &(spec_fn.ordinary)(), ::dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {
@@ -363,7 +364,7 @@ impl ArtifactApp for TxnApp {
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-        built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
+        built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}", doc.snapshot.count)))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

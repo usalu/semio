@@ -153,7 +153,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                         ViewWindowInstance { id: wrong_id.into(), window_kind_id: building::config::CadBuildingWindowConfigOwner::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: "cad-panel".into(), window_kind_id: "cad-document-panel".into() },
                     ],
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance(left_id).expect("left window");
                 let right = view.for_window_instance(right_id).expect("right window");
@@ -241,7 +241,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     };
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                     restored?;
-                    let stale = ViewModel { window_id: Some("cad-missing".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                    let stale = ViewModel { window_id: Some("cad-missing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                     if addressed(&stale, CadWorldWindowConfig::default()).is_ok() {
                         return Err("CAD accepted a stale window identity".into());
                     }
@@ -291,7 +291,7 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
 
                 let view = ViewModel {
                     window_instances: vec![ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() }],
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance("cad-shape-left").expect("left window");
                 let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
@@ -328,7 +328,7 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                         ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: "cad-building".into(), window_kind_id: building::config::CadBuildingWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ],
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let mut source: Box<VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> =
                     Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);

@@ -5,7 +5,7 @@
 //! `MeshChild` variant carries a `store::ArtifactChild<SemioMeshSnapshot>` — a foreign type this
 //! crate can implement neither `dsl::DslField` nor `dsl::DslRecord` for. The twin carries the field
 //! as `dsl::DslValue`, the engine's own schema-less literal, and bridges at the boundary through
-//! `dsl::to_dsl_value`/`dsl::from_dsl_value`, which are defined for every `ToValue`/`FromValue`
+//! `semio_framework_value::ToValue::to_value`/`semio_framework_value::FromValue::from_value`, which are defined for every `ToValue`/`FromValue`
 //! type. The remaining three records are twinned for symmetry, so one file states this subset's
 //! whole text grammar instead of scattering `#[dsl]` attributes across a schema file that must stay
 //! representation-free.
@@ -89,13 +89,13 @@ pub fn edge_from_dsl(edge: SlotEdgeDsl) -> SlotEdge {
 /// 🖼️ `media` is the one field that cannot be a derive: see this file's own docstring. A medium that
 /// refuses to project is `Null`, never a silent drop.
 pub fn tile_to_dsl(tile: &Tile) -> TileDsl {
-    TileDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: dsl::to_dsl_value(&tile.media).unwrap_or(dsl::DslValue::Null) }
+    TileDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: semio_framework_value::ToValue::to_value(&tile.media) }
 }
 
 pub fn tile_from_dsl(tile: TileDsl) -> Result<Tile, store::TextError> {
     let media: TileMedia3d = match tile.media {
         dsl::DslValue::Null => TileMedia3d::default(),
-        other => dsl::from_dsl_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+        other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
     };
     Ok(Tile { id: tile.id, label: tile.label, weight: tile.weight, media })
 }
@@ -252,3 +252,7 @@ mod tests;
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Wfc3dSnapshotText = String;
 //#endregion 🚚️Carrier
+
+#[path="🛬️native/🦀️.rs"]
+mod controlled_native;
+pub(crate)use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};

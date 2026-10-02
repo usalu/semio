@@ -20,7 +20,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageOverrides {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-overrides", kind: "set-page-overrides", record: "SetPageOverrides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_overrides(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_page_overrides(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Set overrides on page \"{}\"", self.id), &format!("Abweichungen von Seite \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set overrides on page \"{}\"", self.id), &format!("Abweichungen von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

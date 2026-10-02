@@ -14,7 +14,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   let current = start;
   for (let depth = 0; depth < 32; depth += 1) {
     if (existsSync(join(current, "🌎️hub", "📦️packages", "🦀️rust", "Cargo.toml"))) return current;
@@ -25,7 +25,7 @@ function findRepoRoot(start: string): string {
   throw new Error("probe could not locate the repository root above " + start);
 }
 
-const repoRoot = findRepoRoot(import.meta.dir);
+const repoRoot = findWorkspaceRoot(import.meta.dir);
 const hubRustRoot = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust");
 const { finishLocalHub, startLocalHub, waitForReadiness } = await import(join(repoRoot, "🌎️hub", "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));
 /** 🧾️ The production sealer every os client uses, so this probe posts byte-for-byte what the shell

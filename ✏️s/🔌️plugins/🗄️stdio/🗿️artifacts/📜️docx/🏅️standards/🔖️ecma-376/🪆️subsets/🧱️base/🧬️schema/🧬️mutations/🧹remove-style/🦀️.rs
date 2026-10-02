@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::RemoveStyle(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove style", "Formatvorlage entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Formatvorlage entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

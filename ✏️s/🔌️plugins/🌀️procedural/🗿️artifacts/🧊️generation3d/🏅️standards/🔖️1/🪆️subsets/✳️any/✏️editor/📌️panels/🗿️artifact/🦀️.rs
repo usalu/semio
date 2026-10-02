@@ -7,7 +7,14 @@ use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, 
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::plugin_app_close_prelude::UiAssemblyResult;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_ARTIFACT: &str = "procedural.play.artifact";

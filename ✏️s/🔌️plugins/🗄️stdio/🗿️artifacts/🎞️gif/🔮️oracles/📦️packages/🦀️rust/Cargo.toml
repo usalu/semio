@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-gif-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_gif_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:gif", "semio-s-plugin-stdio-raster-test-oracle/oracles"]
+
+[dependencies]
+"gif" = { version = "0.13", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-raster-test-oracle" = { path = "../../../../../🔮️oracles/🖼️raster/📦️packages/🦀️rust", default-features = false }

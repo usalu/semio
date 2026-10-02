@@ -195,3 +195,5 @@ fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
     apply(&mut snapshot, TsvEditorCommand::RemoveColumn { column: 0, revision });
     assert!(snapshot.records[0].is_empty());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", TsvEditor, || semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() }, "../..");

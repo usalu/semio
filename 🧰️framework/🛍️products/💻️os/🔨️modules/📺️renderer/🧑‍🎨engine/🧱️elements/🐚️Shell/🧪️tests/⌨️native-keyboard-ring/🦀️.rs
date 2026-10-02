@@ -21,7 +21,7 @@ fn register_fixture_hits(fixture: &Value, input: &mut InputState<ActionDescripto
 #[test]
 fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
     shell.publish_retained_hit_registry(&mut input);
@@ -52,7 +52,7 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
 #[test]
 fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
     shell.publish_retained_hit_registry(&mut input);
@@ -68,7 +68,7 @@ fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
 #[test]
 fn a_painted_navbar_hands_the_platform_a_named_tree() {
     let theme = Theme::light();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.screen_w = 1440.0;
     shell.sync_dock_tabs();
     for (id, label) in [("fixture.leading.first", "First"), ("fixture.leading.second", "Second"), ("fixture.leading.third", "Third")] {

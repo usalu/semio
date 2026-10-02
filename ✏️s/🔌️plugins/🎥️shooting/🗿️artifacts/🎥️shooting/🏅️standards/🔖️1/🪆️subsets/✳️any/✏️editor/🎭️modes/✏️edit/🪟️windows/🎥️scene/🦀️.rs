@@ -7,10 +7,21 @@ use crate::standards::v1::subsets::any::schema::is_transparent_shooting_backgrou
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use dsl::json;
 use dsl::os_pack::json::{parse, Value};
-use semio_framework_plugin::{
-    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
-    WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
-};
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementPossible;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::World3dScene;
+use semio_framework_plugin::WorldSunConfig;
 use std::collections::HashSet;
 
 fn vec3(v: [f64; 3]) -> Value {
@@ -65,16 +76,18 @@ pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> 
     ]
 }
 
-pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: &ShootingLabels) -> WindowEngagement {
+/// 🎥️ The scene window's engagement: the camera field submits its text to `saveCamera` (typing publishes nothing; the
+/// host holds the line), the saved cameras are the possibles, and the status counts assets and shots.
+pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(true),
         options: None,
         input: Some(WindowEngagementInput {
-            id: Some("shooting.camera-draft".into()),
-            value: Some(config.camera_draft_label.clone()),
+            id: Some("shooting.camera-label".into()),
+            value: None,
             placeholder: Some(labels.camera_label_placeholder.into()),
             disabled: None,
-            on_change: Some(crate::editor::shooting::shooting_window_action("setCameraDraftLabel", None)),
+            on_change: None,
             on_submit: Some(crate::editor::shooting::shooting_window_action("saveCamera", None)),
             on_repeat_last: None,
             on_abort: None,

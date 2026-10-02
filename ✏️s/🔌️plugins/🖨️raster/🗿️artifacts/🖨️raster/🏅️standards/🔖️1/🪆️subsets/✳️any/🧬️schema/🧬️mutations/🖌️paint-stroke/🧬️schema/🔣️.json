@@ -249,7 +249,7 @@
           "x": {
             "type": "number",
             "x-semio-ui": {
-              "widget": "number",
+              "widget": "stepper",
               "role": "value",
               "label": {
                 "en": "X",
@@ -264,7 +264,7 @@
           "y": {
             "type": "number",
             "x-semio-ui": {
-              "widget": "number",
+              "widget": "stepper",
               "role": "value",
               "label": {
                 "en": "Y",

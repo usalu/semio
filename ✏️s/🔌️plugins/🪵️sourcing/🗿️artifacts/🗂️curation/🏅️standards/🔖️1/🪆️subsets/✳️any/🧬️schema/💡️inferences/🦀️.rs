@@ -107,10 +107,10 @@ pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> dsl::DslValue {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sourcing.curation.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `curation_artifact_schema_descriptor`'s registration.
-pub fn curation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn curation_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.sourcing.curation.inference",
-        inference: framework_schema::FacetLeaves {
+        inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

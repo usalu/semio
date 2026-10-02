@@ -30,10 +30,10 @@ impl MutationKind<CadSnapshot, CadMutation> for MoveObjects {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.placements.len() {
-            1 => protocol::LocalizedLabel::native("Move 1 object", "1 Objekt verschieben"),
-            count => protocol::LocalizedLabel::native(&format!("Move {count} objects"), &format!("{count} Objekte verschieben")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Move 1 object", "1 Objekt verschieben"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {count} objects"), &format!("{count} Objekte verschieben")),
         }
     }
     fn target(&self) -> Vec<String> {

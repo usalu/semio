@@ -1,3 +1,4 @@
+import{parseFormsJsonChangeBlockField,formsBlockFieldJson,parseFormsJsonArtifact,formsArtifactJson}from"../../🌱️value/🔣️json/🟦️.ts";
 /** 🎛️ Conformance of the `change-block-field` TS twin (`../../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts`) against the
  * leaf's JSON Schema through a THIRD-PARTY validator (Ajv) and a property oracle (fast-check): the twin admits exactly what
  * the schema admits, reads every committed witness unchanged, and derives every committed quintet's diagnostic from the
@@ -20,7 +21,7 @@ const validate = ajv.compile(leafSchema);
 
 const parses = (value: unknown): boolean => {
   try {
-    parseChangeBlockField(value);
+    parseFormsJsonChangeBlockField(value);
     return true;
   } catch {
     return false;
@@ -37,21 +38,21 @@ describe("change-block-field TS twin", () => {
       const payload = readJson(join(FIXTURES, name, "🦠️mutation", "🔣️.json")) as Record<string, unknown>;
       expect(validate(payload), `${name}: ${JSON.stringify(validate.errors)}`).toBe(true);
       const { mutation: _, ...wire } = payload;
-      expect(parseChangeBlockField(payload)).toEqual(wire as never);
+      expect(formsBlockFieldJson(parseFormsJsonChangeBlockField(payload))).toEqual(wire as never);
     }
   });
 
   test("every committed quintet's diagnostic is derived from its before-document", () => {
     for (const name of committed.filter((entry) => entry !== "🧾️wire-witness")) {
       const root = join(FIXTURES, name);
-      const before = readJson(join(root, "📸️snapshot", "⬅️before", "🔣️.json")) as { definition: { steps: FormStep[] } };
+      const before = parseFormsJsonArtifact(readJson(join(root, "📸️snapshot", "⬅️before", "🔣️.json")));
       const after = readJson(join(root, "📸️snapshot", "➡️after", "🔣️.json"));
       const outcome = readJson(join(root, "🎯️outcome", "🔣️.json")) as { code?: string; path?: string[]; messages?: { code: string }[] };
-      const change = parseChangeBlockField(readJson(join(root, "🦠️mutation", "🔣️.json")));
+      const change = parseFormsJsonChangeBlockField(readJson(join(root, "🦠️mutation", "🔣️.json")));
       const derived = diagnoseChangeBlockField(before.definition.steps.flatMap((step) => step.blocks), change);
       expect(derived?.code, name).toBe((outcome.code ?? outcome.messages?.[0]?.code) as never);
       if (outcome.path !== undefined) expect(derived?.path, name).toEqual(outcome.path);
-      expect(after, `${name}: an unapplied edit leaves the document as it was`).toEqual(before);
+      expect(after, `${name}: an unapplied edit leaves the document as it was`).toEqual(formsArtifactJson(before));
     }
   });
 

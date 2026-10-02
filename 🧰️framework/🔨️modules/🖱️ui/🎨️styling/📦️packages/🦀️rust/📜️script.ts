@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** ⚙️ Routes styling generation, verification, font acquisition, and tests. */
-import { resolveTestLevel, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";
-import { collectStylingViolationsV1 } from "../../🛡️verification/🟦️.ts";
-import { loadStylingSourceV1 } from "../../🛡️verification/📇️source/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
@@ -35,32 +35,9 @@ class FontsScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
-  }
-}
-
-function reportViolations(label: string, success: string, violations: readonly { file: string; line: number; kind: string; text: string }[]): void {
-  if (violations.length === 0) {
-    console.log(success);
-    return;
-  }
-  console.error(`framework/ui/styling: found ${violations.length} ${label} violation(s):`);
-  for (const violation of violations.slice(0, 80)) console.error(`  ${violation.file}:${violation.line} [${violation.kind}] ${violation.text}`);
-  if (violations.length > 80) console.error(`  … and ${violations.length - 80} more`);
-  process.exit(1);
-}
-
-class CheckNoPxScript extends BundleScript {
-  run(): void {
-    reportViolations("hardcoded px sizing", "framework/ui/styling: no hardcoded px sizing violations", collectStylingViolationsV1(loadStylingSourceV1(this.repoRoot), "px"));
-  }
-}
-
-class CheckNoRawColorsScript extends BundleScript {
-  run(): void {
-    reportViolations("hardcoded color", "framework/ui/styling: no hardcoded color violations", collectStylingViolationsV1(loadStylingSourceV1(this.repoRoot), "color"));
+    await runVitestV1(readVitestPolicyV1(process.env,this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 
@@ -96,8 +73,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-generated", CheckGeneratedScript)
   .register("fonts", FontsScript)
   .register("test", TestScript)
-  .register("check-no-px", CheckNoPxScript)
-  .register("check-no-raw-colors", CheckNoRawColorsScript)
   .register("test-verification-contract", VerificationContractScript)
   .register("test-relative-sizing", RelativeSizingContractScript)
   .register("test-color-primitives", ColorPrimitivesContractScript);

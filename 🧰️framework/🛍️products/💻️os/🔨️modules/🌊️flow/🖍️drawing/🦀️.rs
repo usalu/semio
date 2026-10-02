@@ -283,43 +283,43 @@ pub trait DrawingKernel {
 // #endregion 🔖️KernelTrait
 
 // #region 🔖️Engine
-use semio_framework_2d::Engine as _;
+use semio_framework_2d::compute::Engine as _;
 
 /// ⚙️ Content-addressed drawing node engine (`ENGINE_ID = "s.2d.drawing"`).
 pub struct DrawingEngine;
 
-impl semio_framework_2d::Engine for DrawingEngine {
+impl semio_framework_2d::compute::Engine for DrawingEngine {
     const ENGINE_ID: &'static str = "s.2d.drawing";
 
-    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, semio_framework_2d::EngineFault> {
-        let node = StoredNode::decode_pack(input).map_err(semio_framework_2d::EngineFault::InvalidInput)?;
-        StoredNode::encode_pack(&node).map_err(semio_framework_2d::EngineFault::InvalidInput)
+    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, semio_framework_2d::compute::EngineFault> {
+        let node = StoredNode::decode_pack(input).map_err(semio_framework_2d::compute::EngineFault::InvalidInput)?;
+        StoredNode::encode_pack(&node).map_err(semio_framework_2d::compute::EngineFault::InvalidInput)
     }
 }
 
 const ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 
-fn map_engine_fault(fault: semio_framework_2d::EngineFault) -> semio_framework_2d::DrawingError {
+fn map_engine_fault(fault: semio_framework_2d::compute::EngineFault) -> semio_framework_2d::DrawingError {
     match fault {
-        semio_framework_2d::EngineFault::Evicted => semio_framework_2d::DrawingError::MissingHandle("engine cache evicted handle".into()),
-        semio_framework_2d::EngineFault::InvalidInput(message) => semio_framework_2d::DrawingError::InvalidInput(message),
-        semio_framework_2d::EngineFault::Compute(message) => semio_framework_2d::DrawingError::Operation(message),
-        semio_framework_2d::EngineFault::UnknownEngine(message) => semio_framework_2d::DrawingError::Operation(message),
+        semio_framework_2d::compute::EngineFault::Evicted => semio_framework_2d::DrawingError::MissingHandle("engine cache evicted handle".into()),
+        semio_framework_2d::compute::EngineFault::InvalidInput(message) => semio_framework_2d::DrawingError::InvalidInput(message),
+        semio_framework_2d::compute::EngineFault::Compute(message) => semio_framework_2d::DrawingError::Operation(message),
+        semio_framework_2d::compute::EngineFault::UnknownEngine(message) => semio_framework_2d::DrawingError::Operation(message),
     }
 }
 
-fn drawing_handle_from_key(key: semio_framework_2d::EngineKey) -> DrawingHandle {
+fn drawing_handle_from_key(key: semio_framework_2d::compute::EngineKey) -> DrawingHandle {
     DrawingHandle(hex_encode(&key.0))
 }
 
-fn kernel_handle_for_drawing(handle: &DrawingHandle) -> Result<semio_framework_2d::KernelEngineHandle, semio_framework_2d::DrawingError> {
+fn compute_handle_for_drawing(handle: &DrawingHandle) -> Result<semio_framework_2d::compute::EngineHandle, semio_framework_2d::DrawingError> {
     let bytes = hex_decode(handle.as_str()).map_err(|_| semio_framework_2d::DrawingError::InvalidInput("invalid drawing handle hex".into()))?;
     if bytes.len() != 32 {
         return Err(semio_framework_2d::DrawingError::InvalidInput("drawing handle length".into()));
     }
     let mut key = [0u8; 32];
     key.copy_from_slice(&bytes);
-    Ok(semio_framework_2d::KernelEngineHandle { key: semio_framework_2d::EngineKey(key), engine_id: DrawingEngine::ENGINE_ID.to_string() })
+    Ok(semio_framework_2d::compute::EngineHandle { key: semio_framework_2d::compute::EngineKey(key), engine_id: DrawingEngine::ENGINE_ID.to_string() })
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
@@ -362,10 +362,10 @@ impl StoredNode {
 }
 
 /// 🗄️ [`DrawingKernel`] using engine derive through the WIT `engine-derive`/`engine-read` guest↔host
-/// boundary (process-local [`semio_framework_2d::EngineCache`]) — flow's own ephemeral node-evaluation kernel,
+/// boundary (process-local [`semio_framework_2d::compute::EngineCache`]) — flow's own ephemeral node-evaluation kernel,
 /// not a persisted artifact store.
 pub struct DrawingStore {
-    cache: semio_framework_2d::EngineCache,
+    cache: semio_framework_2d::compute::EngineCache,
     live: HashSet<String>,
 }
 
@@ -377,26 +377,26 @@ impl Default for DrawingStore {
 
 impl DrawingStore {
     pub fn new() -> Self {
-        let mut cache = semio_framework_2d::EngineCache::new(ENGINE_CACHE_BUDGET_BYTES);
+        let mut cache = semio_framework_2d::compute::EngineCache::new(ENGINE_CACHE_BUDGET_BYTES);
         cache.register(DrawingEngine);
         Self { cache, live: HashSet::new() }
     }
 
     /// 🧩 Attach to an existing host-owned cache (registers [`DrawingEngine`]).
-    pub fn with_engine_cache(mut cache: semio_framework_2d::EngineCache) -> Self {
+    pub fn with_engine_cache(mut cache: semio_framework_2d::compute::EngineCache) -> Self {
         cache.register(DrawingEngine);
         Self { cache, live: HashSet::new() }
     }
 
     /// 🧠 Mutable engine cache backing the WIT `engine-derive`/`engine-read` guest↔host boundary.
-    pub fn engine_cache_mut(&mut self) -> &mut semio_framework_2d::EngineCache {
+    pub fn engine_cache_mut(&mut self) -> &mut semio_framework_2d::compute::EngineCache {
         &mut self.cache
     }
 
     fn derive_node(&mut self, node: &StoredNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         let pack = StoredNode::encode_pack(node).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
-        let kernel_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
-        let drawing = drawing_handle_from_key(kernel_handle.key);
+        let compute_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
+        let drawing = drawing_handle_from_key(compute_handle.key);
         self.live.insert(drawing.as_str().to_string());
         Ok(drawing)
     }
@@ -423,8 +423,8 @@ impl DrawingStore {
         if !self.live.contains(handle.as_str()) {
             return Err(semio_framework_2d::DrawingError::MissingHandle(handle.as_str().to_string()));
         }
-        let kernel_handle = kernel_handle_for_drawing(handle)?;
-        let pack = self.cache.read(&kernel_handle).map_err(map_engine_fault)?;
+        let compute_handle = compute_handle_for_drawing(handle)?;
+        let pack = self.cache.read(&compute_handle).map_err(map_engine_fault)?;
         StoredNode::decode_pack(&pack).map_err(semio_framework_2d::DrawingError::InvalidInput)
     }
 

@@ -28,10 +28,10 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelectio
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (puzzle5d_selection_number(self.dx), puzzle5d_selection_number(self.dy));
         let (en, de) = puzzle5d_selection_items(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en}) on the board"), &format!("{de} auf dem Brett um ({dx_de}; {dy_de}) ziehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en}) on the board"), &format!("{de} auf dem Brett um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

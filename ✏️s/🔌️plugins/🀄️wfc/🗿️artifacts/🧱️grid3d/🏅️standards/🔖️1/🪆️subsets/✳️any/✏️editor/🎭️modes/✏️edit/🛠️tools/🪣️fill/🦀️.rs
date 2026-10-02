@@ -7,7 +7,12 @@ use crate::editor::grid3d::modes::edit::windows::preview;
 use crate::schema::inferences::{solve_with_job, Grid3dAssignment, Grid3dInferenceCommit};
 use crate::schema::snapshot::Grid3dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, Operation, StepContext, StepOutcome};
-use semio_framework_plugin::{Fault, LocalizedLabel, ToolDefinition, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest};
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunRebasePolicy, ToolRunReasonDefinition, ToolRunReconfigurePolicy, ToolRunSettingsReads,
     ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID,

@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.native-decoding-stage/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.native-decoding-stage/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "operation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "units"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "begin",
+                "advance",
+                "charge"
+              ]
+            },
+            "units": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "operations"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scope"
+            },
+            "operations": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/operation"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reject"
+            }
+          }
+        }
+      ]
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "maximumBytes",
+        "cancel",
+        "operations",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "cancel": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "total",
+                "at"
+              ],
+              "properties": {
+                "total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "at": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                }
+              }
+            }
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "progress",
+            "errors"
+          ],
+          "properties": {
+            "progress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "completed",
+                "total",
+                "ownedBytes"
+              ],
+              "properties": {
+                "completed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "total": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "ownedBytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                }
+              }
+            },
+            "errors": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {
+                "enum": [
+                  "overrun",
+                  "canceled",
+                  "limit",
+                  "rejected"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

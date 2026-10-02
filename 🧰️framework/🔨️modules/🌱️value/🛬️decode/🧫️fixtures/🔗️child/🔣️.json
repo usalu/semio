@@ -1,0 +1,9 @@
+{
+  "childId": "child🧬\u0000",
+  "artifactId": "node!@/",
+  "artifactKind": "s.stdio.semio",
+  "standard": "1",
+  "subset": "table",
+  "repeatCount": 32768,
+  "cancelAt": 256
+}

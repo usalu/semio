@@ -770,6 +770,7 @@ LABELS = [
     ("replayFaulted", "Replay failed: later mutations could not be checked", "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"),
     ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
     ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
+    ("refusalMemberGone", "The part this history edit targets was closed", "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"),
 ]
 
 CODE_LABELS = [
@@ -790,6 +791,7 @@ CODE_LABELS = [
     ("timeTravel.schema-unavailable", "refusalSchemaUnavailable"),
     ("timeTravel.replay-faulted", "replayFaulted"),
     ("timeTravel.commit-failed", "commitFailed"),
+    ("timeTravel.member-gone", "refusalMemberGone"),
 ]
 
 FIXTURE = {

@@ -128,6 +128,14 @@ describe("lifecycle law", () => {
     }
   });
 
+  test("begin is refused exactly where the reducer refuses it, in every context", () => {
+    for (const [name, json] of Object.entries(law.contexts)) {
+      const session = M.timeTravelSessionFromJson(json);
+      const result = M.applyTimeTravel(session, M.timeTravelEventFromJson(law.events.begin));
+      expect(M.timeTravelBeginRefusal(session), name).toBe(result.ok ? null : result.rejection);
+    }
+  });
+
   test("stale generations are silent no-ops in every context", () => {
     for (const [name, json] of Object.entries(law.contexts)) {
       const before = M.timeTravelSessionFromJson(json);

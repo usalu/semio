@@ -50,6 +50,8 @@ VECTORS = {
     "set-node-root": (f"{_ROOT}/🚩set-node-root/🧪️reports", "setNodeRoot", False),
     "connect-nodes": (f"{_ROOT}/🤝️connect-nodes/🧪️rejects", "connectNodes", True),
     "disconnect-nodes": (f"{_ROOT}/✂️disconnect-nodes/🧪️rejects", "disconnectNodes", True),
+    "move-nodes": (f"{_ROOT}/🚚️move-nodes/🧪️reports", "moveNodes", False),
+    "set-node-positions": (f"{_ROOT}/📍️set-node-positions/🧪️reports", "setNodePositions", False),
 }
 
 
@@ -207,6 +209,36 @@ def apply_disconnect_nodes(document, payload):
     return after, dict(NULL_DIFF, wiresFixture={}), applied()
 
 
+def apply_move_nodes(document, payload):
+    """🚚 A drag: every addressed node the board holds moves by ONE offset from where it stands; none held is a
+    rejection naming every id; a zero offset is a no-op."""
+    present = [node_id for node_id in payload["nodeIds"] if find_node(document, node_id) is not None]
+    if not present:
+        return document, None, {"status": "rejected", "code": "mutation.target-missing", "path": list(payload["nodeIds"])}
+    if payload["dx"] == 0 and payload["dy"] == 0:
+        return document, NULL_DIFF, no_op()
+    after = copy.deepcopy(document)
+    for node_id in present:
+        node = find_node(after, node_id)
+        node["x"], node["y"] = node.get("x", 0.0) + payload["dx"], node.get("y", 0.0) + payload["dy"]
+    return after, dict(NULL_DIFF, wiresFixture={}), applied()
+
+
+def apply_set_node_positions(document, payload):
+    """📍 Absolute positions: every addressed node the board holds lands at its position; none held is a rejection;
+    every node already there is a no-op."""
+    present = [position for position in payload["positions"] if find_node(document, position["nodeId"]) is not None]
+    if not present:
+        return document, None, {"status": "rejected", "code": "mutation.target-missing", "path": [position["nodeId"] for position in payload["positions"]]}
+    if all(find_node(document, position["nodeId"]).get("x", 0.0) == position["x"] and find_node(document, position["nodeId"]).get("y", 0.0) == position["y"] for position in present):
+        return document, NULL_DIFF, no_op()
+    after = copy.deepcopy(document)
+    for position in present:
+        node = find_node(after, position["nodeId"])
+        node["x"], node["y"] = position["x"], position["y"]
+    return after, dict(NULL_DIFF, wiresFixture={}), applied()
+
+
 APPLIERS = {
     "create-node": apply_create_node,
     "delete-node": apply_delete_node,
@@ -218,6 +250,8 @@ APPLIERS = {
     "set-node-root": apply_set_node_root,
     "connect-nodes": apply_connect_nodes,
     "disconnect-nodes": apply_disconnect_nodes,
+    "move-nodes": apply_move_nodes,
+    "set-node-positions": apply_set_node_positions,
 }
 # endregion 🔖️Vocabulary
 

@@ -328,3 +328,24 @@ prompts New alternative vs Overwrite; tools are state machines yielding mutation
 | S2-TAX | `📚️library/🔣️taxonomy.json` (Edit tool only), taxonomy engine | structural leaf identity from mutation catalogs; restore the sealed `📽️nested-cargo-package-projection` catalog; workspace-contract package-move re-target |
 | S2-CODES | outcome-code fixtures/adapters | drop the "warn" alias (70 fixtures), generation3d/workflow checked-apply adapters, remodel oracle, deferred reruns |
 | queued | norm-2, norm-3, media, stdio cases, GRAPHS, CLOSURE, E2E, W3-G gates, W3-R audits | launched as slots free |
+
+## Session 3 — successor roster (coordinator `⚪b7db773a…`, 2026-10-02 11:00)
+
+Session 2's fleet was cut ~03:45. One successor per WP with the same owner files; fleet rules 1–31. Focus: verify → fix →
+close (rule 29). Product acceptance unchanged (Session 2 paragraph above). Reports: append `## Session 3 — 2026-10-02`.
+
+| WP (session 3) | Model | Assignment |
+|---|---|---|
+| S3-INFRA | opus | activation blocker (a): wgpu frame-worker "browser import is not schema-owned" (`🌱️value/🧬️schema/🌳️intrinsic`, `🎠️kernel/🫧️transient`) — schema-owned fix, prove with the `generate-frame-worker` target; audit wave A I-1..I-3; I2 `Bytes` arms compile proof; peer-break watch (workspace load, taxonomy load, guest gate) |
+| S3-PUZZLE | opus | activation blocker (b) FIRST: puzzle 3d `📚️examples/🌲️concrete-forest/🦀️.rs:31:125` panics in the descriptor probe (wasm); then S2.5 verification list + resume list |
+| S3-W2A | opus | owed plugin/kernel laws (history_patch, history_notices, history_edit, time_travel, composed_child_history), native + wasm32-wasip2 checks, §8 open items, acceptance items (multi-mutation drafts from Reviewing, persisted warnings after finalize + reload, Next problem, progress + cancel, G9 runtime adoption) |
+| S3-W1G | opus | owed kernel laws + per-test suite, plugin suite, FU4 hub bin laws; follow-up 4 (hub forced rebuild + rebootstrap test, refused-step text en/de, TS timestamp twin); §15 status proof |
+| S3-W1E | opus | S2.5 runtime law, S2.5b wgpu renderer compile + tests, S2.5c corpus law; display facets for the shell staged-arg slider (agree region with S3-W2C) |
+| S3-W2B | opus | audit B-1 (§18 law on staged vector axes) + B-2 (ShellHost reveal/focus test); React typecheck + suites; S2.4 open items |
+| S3-W2C | opus | S2.9 open items, native folder re-attach parity (5), staged-arg slider facets in `staged_arg_row`, wgpu tests + wasm32 check, `--renderer=wgpu` probe prerequisites |
+| S3-W2D | opus | S2.6 verification, S2.7 items, wgpu shortest-decimal replay proof |
+| S3-AGNOSTIC | opus | §6 "Next" list, G7/G8/G12 gates to a verdict, per-plugin acceptance table, routed findings |
+| S3-DRAW / S3-SPATIAL / S3-FLOWCAD / S3-LAYOUT / S3-CONTROLS / S3-TEXT / S3-STROKES / S3-PROCEDURAL / S3-GRAPHS | opus | the "verification still to run" + "open" sections of their session-2 report sections, then remaining conversions |
+| S3-GAP | sonnet | read-only: goal-level gap analysis on the code (G1..G14 re-evaluated + new) → `📓️s3-gap.md` |
+| S3-CLOSURE-CENSUS | sonnet | read-only: census of every remaining non-machine gesture / artifact-lane amend / coalesce key / brackets / preview contracts + CLOSURE brief → `📓️s3-closure-census.md` |
+| queued | – | S3-CODES-TAX (C-1..C-5, T-1, T-2), S3-NORM (owed cargo + 47 rule-1 breaches), S3-STDIO (WP-2/WP-3, cases-2, media), S3-E2E (after serve), S3-CLOSURE, S3-GATES, audit wave B, coordinator regenerations |

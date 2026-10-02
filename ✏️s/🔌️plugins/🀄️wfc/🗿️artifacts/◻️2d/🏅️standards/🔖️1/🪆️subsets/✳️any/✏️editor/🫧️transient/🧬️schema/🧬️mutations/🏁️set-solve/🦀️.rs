@@ -21,8 +21,8 @@ impl protocol::MutationKind<Wfc2dTransient, Wfc2dTransientMutation> for SetSolve
     fn inverse(&self, base: &Wfc2dTransient) -> Vec<Wfc2dTransientMutation> {
         vec![Self { assignments: base.assignments.clone(), contradiction: base.contradiction }.into()]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Solve", "Lösung setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["assignments".into()]

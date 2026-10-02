@@ -11,8 +11,8 @@ use std::sync::OnceLock;
 
 /// 💡️ `::semio_framework_schema::` (the extern crate) vs the bare `schema` local import (this
 /// subset's own schema module) — the two share a name, only the leading path disambiguates.
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::bitmap_artifact_inference_descriptor()]).as_slice()
 }
 

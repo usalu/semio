@@ -38,4 +38,5 @@ if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
   }
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { ...{
   twins: [{ name: "sequence-snapshot-fixture-asset", run: sequenceSnapshotFixtureAssetSelfTests }, { name: "artifact-io-descriptor-parity", run: testArtifactIoDescriptorParity }],
+  snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"],
 }, commands: { verify: OwnedVerifyScript } });

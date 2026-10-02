@@ -27,15 +27,60 @@ use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, ExampleSource, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, TopologyNode, UtilityDefinition, WindowMeasure,
-};
-use serde_json::Value;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::ExampleSource;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 #[path = "🎯️selection/🦀️.rs"]
 pub mod selection;
@@ -166,14 +211,6 @@ impl Generation3dInstanceOperationOwner {
         result
     }
 
-    /// 🧵️ Owes every attached preview window an evaluation and wakes the live run.
-    fn owe_attached_previews(&mut self, windows: &[(&str, &'static str)]) -> Result<(), Fault> {
-        let Self { eval_session, run_link, closing, .. } = self;
-        let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        crate::preview_eval::owe_attached_previews(session, run_link, windows);
-        Ok(())
-    }
-
     /// 🩹️ Owes the attached previews exactly what this gesture's own emit says it owes them — a
     /// landed artifact mutation moved the document the evaluation reads, nothing else did — and puts
     /// the run start the debt needs on that same emit when no run is live to be woken instead.
@@ -272,7 +309,7 @@ pub struct Generation3dPlayApp;
 /// graph cannot express must never be silently replaced by one it can.
 fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
     let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
-    dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
+    semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
@@ -754,22 +791,45 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
 /// gesture (this instance's) folded in — `None` while nothing is open, so the committed snapshot is read as is. The
 /// overlay is retired cold by the caller, never dropped.
 fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provisional: &[dsl::DslValue], gumball: &transform_commands::GumballGestures) -> Option<Generation3dSnapshot> {
-    use crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation;
     if provisional.is_empty() && gumball.is_empty() {
         return None;
     }
     let mut overlay = committed.clone();
     for value in provisional {
         if let Ok(leaf) = <Generation3dMutation as dsl::FromValue>::from_value(value.clone()) {
-            let _ = apply_generation3d_mutation(&mut overlay, &leaf);
-            leaf.retire_cold();
+            generation3d_fold_provisional(&mut overlay, leaf);
         }
     }
-    for row in gumball.provisional(&overlay.host_snapshot) {
-        let _ = apply_generation3d_mutation(&mut overlay, &row);
-        row.retire_cold();
+    let gestures = gumball.provisional(&overlay.host_snapshot);
+    for row in gestures.rows {
+        generation3d_fold_provisional(&mut overlay, row);
     }
     Some(overlay)
+}
+
+/// 🫥️ Folds one provisional leaf into a preview overlay and retires it. A leaf the overlay refuses paints nothing — a
+/// preview shows only what applies — and its refusal is never lost: the commit that lands the same leaf on the committed
+/// document reports it as the history row's outcome.
+fn generation3d_fold_provisional(overlay: &mut Generation3dSnapshot, leaf: Generation3dMutation) {
+    let _refused_paints_nothing = crate::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(overlay, &leaf);
+    leaf.retire_cold();
+}
+
+/// 🪩️ The document and marks a preview body paints while a gumball gesture is open (design §13, F-7): the committed
+/// snapshot with every open gesture folded in — the overlay its flow evaluation reads — and the selection carried onto
+/// the operators the gestures splice, so the first grab of a shape keeps painting and selecting the instance the live
+/// evaluation moves. `None` while no gesture is open; the caller retires the overlay cold.
+fn generation3d_gumball_preview(committed: &Generation3dSnapshot, marks: &PreviewInteractionMarks, gumball: &transform_commands::GumballGestures) -> Option<(Generation3dSnapshot, PreviewInteractionMarks)> {
+    if gumball.is_empty() {
+        return None;
+    }
+    let gestures = gumball.provisional(&committed.host_snapshot);
+    let mut overlay = committed.clone();
+    for row in gestures.rows {
+        generation3d_fold_provisional(&mut overlay, row);
+    }
+    let marks = gestures.selections.iter().fold(marks.clone(), PreviewInteractionMarks::following);
+    Some((overlay, marks))
 }
 
 /// 🕹️ `nodeGraphEdit`/`deleteSelection`/`{translate,rotate,scale}Selection` read real `graph` selection
@@ -826,7 +886,6 @@ fn generation3d_retained_reduce(
     match command {
         Generation3dCommand::EditMeshSelection(payload) => edit_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::KnifeMeshSelection(payload) => knife_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::NodeGraphEdit(payload) => Ok(node_graph_edit::apply_selected(payload, &doc, &selected())),
         Generation3dCommand::DeleteSelection(_) if selection::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(selection::DOMAIN).map(String::as_str)) => edit_mesh_selection::delete_selected(&doc, interaction.selection.get(selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
         // 🧭️ Keyboard traversal reads the SAME `graph` selection the pointer writes and hands the next
@@ -1924,6 +1983,17 @@ impl ArtifactEditor for Generation3dPlayApp {
         registry.register::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>()
     }
 
+    /// 🧭️ The leaf that names each gumball gesture (design §19.1): a first grab's transaction splices the transform operator
+    /// in before its relative leaf, and the history row is still labelled by that leaf.
+    fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
+        match tool.strip_prefix(GENERATION3D_EDITOR_APP_ID).and_then(|verb| verb.strip_prefix('#')) {
+            Some("translateSelection") => &["drag-transforms"],
+            Some("rotateSelection") => &["rotate-transforms"],
+            Some("scaleSelection") => &["scale-transforms"],
+            _ => &[],
+        }
+    }
+
     /// 🎯️ `flowEvalTick` publishes the evaluation into ONE preview window's retained transient, and
     /// the whole chain is self-dispatched: an `Effect::DispatchAction` reaches the shell with no
     /// window of its own and is redispatched under whichever window is current — the flow window in
@@ -2032,7 +2102,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         proofs
     }
 
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::generation3d::config::schema::app_schema_descriptor())
     }
 
@@ -2094,7 +2164,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                             .widgets
                             .iter()
                             .any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value: current, .. } if id == target_id && *current != number))
-                            .then(|| crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value(target_id.clone(), number))
+                            .then(|| crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value(target_id.to_string(), number))
                     })
                     .collect();
                 Ok(Emit::mutations(operations))
@@ -2118,9 +2188,10 @@ impl ArtifactEditor for Generation3dPlayApp {
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
         match action {
             "setActiveExample" => Ok(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
-            })),
+            "nodeGraphEdit" => {
+                semio_framework_tool_machine::node_graph_edit_rows(&args).map_err(Fault::from)?;
+                Ok(Generation3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(dsl::json::to_json_string).unwrap_or_else(|| "[]".into()) }))
+            }
             "deleteSelection" => Ok(Generation3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Generation3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "addWidget" => Ok(Generation3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
@@ -2327,7 +2398,6 @@ impl ArtifactEditor for Generation3dPlayApp {
             Generation3dCommand::KnifeMeshSelection(payload) => knife_mesh_selection::apply_selected(payload, doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::DeleteSelection(_) if selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)) => edit_mesh_selection::delete_selected(doc, &interaction.selection(selection::DOMAIN).ids),
             Generation3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
-            Generation3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
             _ if generation3d_gumball_command(command) => {
                 let gesture = generation3d_gumball_gesture(command).ok_or_else(|| Fault::from("generation3d-gumball-command"))?;
                 let components = selection::edits_components(view_state, interaction.active_granularity(selection::DOMAIN)).then(|| interaction.selection(selection::DOMAIN).ids.as_slice());
@@ -2443,21 +2513,28 @@ impl ArtifactEditor for Generation3dPlayApp {
             .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
             .and_then(|state| state.preview_eval_text.as_deref());
         let marks = PreviewInteractionMarks::from_interaction(interaction);
+        let previews = matches!(body_key, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW | generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW);
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-                owner.with_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, preview_eval_text, view_state, &marks, session, doc.tool_run()))
+                let gesture = previews.then(|| generation3d_gumball_preview(doc.snapshot, &marks, &owner.gumball)).flatten();
+                let (document, marks) = gesture.as_ref().map_or((doc.snapshot, &marks), |(document, marks)| (document, marks));
+                let rendered = owner.with_session(|session| generation3d_render_body(body_key, document, cfg.snapshot, preview_eval_text, view_state, marks, session, doc.tool_run()));
+                if let Some((document, _)) = gesture {
+                    document.retire_cold();
+                }
+                rendered
             })
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation3d.eval-session-owner", error.message))?
     }
 
     fn window_engagements_with_request_context(_doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>, interaction: &InteractionView<'_>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
-        let engagement = selection::engagement(&selection::ComponentSelection::from_interaction(interaction), view_state.locale == semio_framework_plugin::Locale::De);
+        let engagement = selection::engagement(&selection::ComponentSelection::from_interaction(interaction), view_state.locale == semio_framework_ui_locale::Locale::De);
         HashMap::from([(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), engagement)])
     }
 
     fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let measures = edit_preview::preview_window_measures(config, is_de, generation3d_action);
         HashMap::from([
             (flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.to_string(), flow_window::window_measures(&config.lod_mode, is_de, generation3d_action)),
@@ -2513,7 +2590,7 @@ impl Generation3dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = generation3d_labels(view_state);
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let has_selection = !nodes.is_empty() || !edges.is_empty();
@@ -2527,7 +2604,7 @@ impl Generation3dPlayApp {
         }
         menu = menu.group("methods", |m| m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets"));
         menu = menu.group(CONTEXT_MENU_TRANSFER_CATEGORY, |m| m.action("importDocumentRequest").action("exportDocument"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()
@@ -3083,6 +3160,16 @@ impl PreviewInteractionMarks {
         Self::marked(&self.selected, widget_id, channel, index)
     }
 
+    /// 🪢️ These marks as an open gumball gesture leaves them once committed: its `graph` nodes selected and, for a
+    /// component gesture, its components re-addressed onto the component operator; hover is untouched.
+    pub fn following(self, gesture: &transform_commands::GumballSelection) -> Self {
+        let components = match &gesture.components {
+            Some((_, ids)) => selection::ComponentSelection { selected: ids.clone(), ..self.components },
+            None => self.components,
+        };
+        Self { components, hovered: self.hovered, selected: gesture.nodes.iter().cloned().collect() }
+    }
+
     /// 🕸️ The widget id behind any interaction id — `{w}`, `{w}@{c}` and `{w}@{c}#{i}` all resolve
     /// to `{w}`.
     pub fn widget_of(id: &str) -> &str {
@@ -3144,7 +3231,9 @@ impl PreviewInteractionMarks {
 /// `graph` marks `render_with_request_context` resolved — the gumball now shows for a real
 /// selection instead of always reporting empty. `"rectangle"` (the pre-migration default
 /// `selection_method`) is hardcoded: the framework tracks no persistent "last marquee method"
-/// outside a live gesture.
+/// outside a live gesture. Every gumball is live (`gumballLiveDispatch`): the host streams its
+/// ticks into the guest's open tool transaction and paints the guest's answer — the transform
+/// operator re-evaluated with everything downstream of it — instead of moving the instance locally.
 pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, payload: &PreviewPayload) -> String {
     let mut value = dsl::json::parse(&semio_framework_plugin::world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref())).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
@@ -3157,6 +3246,7 @@ pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, pa
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode", dsl::json::Value::String(active_utility.to_string()));
         object.insert("gumballActive", dsl::json::Value::Bool(!payload.selected_ids.is_empty() && !active_utility.is_empty()));
+        object.insert("gumballLiveDispatch", dsl::json::Value::Bool(true));
         object.insert("showEdges", dsl::json::Value::Bool(show_edges));
         object.insert("selectionMode", dsl::json::Value::String(selection_mode.to_string()));
         object.insert("granularity", dsl::json::Value::String(selection_mode.to_string()));
@@ -3165,7 +3255,6 @@ pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, pa
             if let Some(pivot) = payload.component_pivot {
                 object.insert("gumballTarget", vec3_json(pivot));
                 object.insert("gumballActive", dsl::json::Value::Bool(!active_utility.is_empty()));
-                object.insert("gumballLiveDispatch", dsl::json::Value::Bool(true));
             }
         }
     }

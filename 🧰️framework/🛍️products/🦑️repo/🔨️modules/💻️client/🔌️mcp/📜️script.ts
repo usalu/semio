@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧭️ `repo-mcp` router: `bun ./📜️script.ts build|test`. The Go sources of this module are
  * taxonomy-named (`🖥️server/🐹️.go`, `🗄️repository/🐹️.go`, …), so both verbs go through the canonical
  * Go projection rather than calling `go` on the tree directly. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveMcpBin, resolveTestLevel, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goCoverageArgs, goLevelTestArgs, resolveMcpBin, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

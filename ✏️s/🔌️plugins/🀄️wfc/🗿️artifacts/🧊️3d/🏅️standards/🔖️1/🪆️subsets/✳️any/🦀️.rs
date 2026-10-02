@@ -14,8 +14,8 @@ fn examples() -> &'static [ExampleSource] {
     crate::examples::example_source_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::wfc3d_artifact_inference_descriptor()]).as_slice()
 }
 

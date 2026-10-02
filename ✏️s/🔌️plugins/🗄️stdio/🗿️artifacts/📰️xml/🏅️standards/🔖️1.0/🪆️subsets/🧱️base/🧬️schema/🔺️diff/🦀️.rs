@@ -24,6 +24,7 @@ use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.xml`.
@@ -55,11 +56,6 @@ pub struct XmlDiff {
     pub root: Option<XmlNodeDiff>,
 }
 //#endregion 🔖️Diff
-
-/// 🏳️ Keeps present null values distinct from omitted fields during sparse replay.
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
-}
 
 //#region 🔖️NodeDiff
 /// 🌳 Recursive per-node diff, shaped like the `XmlNode` it targets.
@@ -1013,11 +1009,11 @@ pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
             }
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlDoctype { prolog_position: parse_usize(prolog_position)?, name: dec_str(name)?, external_id, declarations })
+    Ok(XmlDoctype { prolog_position: prolog_position.parse::<u64>().map_err(|error|error.to_string())?, name: dec_str(name)?, external_id, declarations })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, doctype.prolog_position as u64);
+    store::pack_rt::write_varint_u64(out, doctype.prolog_position);
     write_str_lp(out, &doctype.name);
     match &doctype.external_id {
         None => out.push(0),
@@ -1045,7 +1041,7 @@ pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
-    let prolog_position = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let prolog_position = reader.read_varint_u64().map_err(|error| error.to_string())?;
     let name = read_str_lp(reader)?;
     let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
         0 => None,

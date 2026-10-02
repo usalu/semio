@@ -3,9 +3,8 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn cad_config_default_matches_the_existing_runtime_defaults() {
     let config = CadConfig::default();
-    assert_eq!(config.engagement_step, "Idle");
     assert!(config.selected_node_ids.is_empty());
-    assert_eq!(config.engagement_preview_generation, 0);
+    assert_eq!(config.contributions_json, "[]");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -13,8 +12,7 @@ async fn cad_config_dsl_round_trips_a_populated_record() {
     let config = CadConfig {
         selected_node_ids: vec!["node-1".into(), "node-2".into()],
         hovered_reference_id: Some("ref-1".into()),
-        engagement_session_json: Some("{\"interactionId\":\"box\"}".into()),
-        engagement_input: "select".into(),
+        active_example_id: Some("demo".into()),
         ..CadConfig::default()
     };
     let text = store::ArtifactDsl::print_dsl(&config);

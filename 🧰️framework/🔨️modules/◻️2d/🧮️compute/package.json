@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/2d-compute",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-schema": "nx run @semio-tech/2d-compute:test-schema",
+    "test-ownership": "nx run @semio-tech/2d-compute:test-ownership",
+    "check-types": "nx run @semio-tech/2d-compute:check-types"
+  }
+}

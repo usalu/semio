@@ -38,6 +38,22 @@
       "expectedKindId": "members-of-fixtures"
     },
     {
+      "id": "subset-fixture-scenario-vector",
+      "scope": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+      "path": "🧫️fixtures/🩹️patch-snapshot-applied",
+      "owner": "🧬️schema/🧬️mutations/🩹️patch-snapshot",
+      "form": "fixture-scenario-vector",
+      "expectedKindId": "members-of-fixtures"
+    },
+    {
+      "id": "window-config-vector-scenario",
+      "scope": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config",
+      "path": "🧫️fixtures/🎨️set-vector-style/✅️set-vector",
+      "owner": "🧬️schema/🧬️mutations/🎨️set-vector-style",
+      "form": "fixture-vector-scenario",
+      "expectedKindId": "members-of-members-of-fixtures"
+    },
+    {
       "id": "module-leaf",
       "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction",
       "path": "🧬️mutations/🔁️set-state",

@@ -21,7 +21,7 @@
 //   bun 📜️script.ts gltf-project --input <a.gltf|a.glb>
 //   bun 📜️script.ts gltf-compare --input <expected.gltf> --input <actual.gltf>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling this file's
 //      CLI/dispatch/compare shape is mirrored from (both hand structural equality to this file itself)
 // @see ../🏭️generator/📜️script.ts — the write half; this file never writes, only reads

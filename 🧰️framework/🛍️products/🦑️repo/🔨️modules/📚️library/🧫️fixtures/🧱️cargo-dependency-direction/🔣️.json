@@ -73,6 +73,16 @@
         "fromOwnerPaths": [
           "^implementation/plugin(?:$|/(?!🗿️artifacts/|🧩️extensions/))"
         ]
+      },
+      "cargo-framework-no-products": {
+        "fromRoles": [],
+        "toRoles": [],
+        "fromOwnerPaths": [
+          "^framework/(?:modules|packages)(?:/|$)"
+        ],
+        "toOwnerSegments": [
+          "🛍️products"
+        ]
       }
     },
     "ownerRoles": [
@@ -1207,6 +1217,346 @@
           "owner": "implementation/extension"
         }
       ]
+    },
+    {
+      "id": "general-normal-product",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/modules/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "general-development-renamed-product",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "dev",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/modules/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "dev",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "general-build-optional-platform-product",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "build",
+              "optional": true,
+              "platform": "cfg(target_os = \"windows\")"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/modules/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "build",
+          "optional": true,
+          "platform": "cfg(target_os = \"windows\")"
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "general-product-cannot-hide-framework-role",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": true,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "framework",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/modules/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "normal",
+          "optional": true,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "general-library-role-cannot-hide-product-owner",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "library",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/modules/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "specific-products-may-compose-each-other",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/🛍️products/owner",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "framework",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "general-modules-may-compose-each-other",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/modules/shared",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/modules/shared",
+          "role": "framework",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "physical-source-selector-respects-owner-boundary",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/modules-general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "general-package-facade-no-product",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/packages/general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-framework-no-products",
+          "from": "framework/packages/general",
+          "to": "framework/🛍️products/specific",
+          "alias": "specific_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "physical-package-selector-respects-owner-boundary",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "framework/packages-general",
+          "role": "framework",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "specific_alias",
+              "owner": "framework/🛍️products/specific",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/🛍️products/specific",
+          "role": "product",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
     }
   ],
   "corruptions": [
@@ -1226,6 +1576,11 @@
     "invalid-owner-pattern",
     "unknown-owner-role",
     "duplicate-owner-rule",
-    "empty-owner-pattern"
+    "empty-owner-pattern",
+    "empty-source-selector",
+    "empty-target-selector",
+    "duplicate-source-role",
+    "duplicate-target-role",
+    "unknown-rule-field"
   ]
 }

@@ -31,8 +31,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveLang {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove PDF/UA language", "PDF/UA-Sprache entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/UA language", "PDF/UA-Sprache entfernen")
     }
 
     fn target(&self) -> Vec<String> {

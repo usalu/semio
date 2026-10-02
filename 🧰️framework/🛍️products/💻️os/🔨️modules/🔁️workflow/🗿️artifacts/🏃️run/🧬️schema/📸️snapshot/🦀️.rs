@@ -1,6 +1,9 @@
 //! 📸️ Persisted workflow run snapshot and codecs.
 use crate::S_RUN_SCHEMA;
 
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite;
+
 /// 🚦️ Lifecycle state of a whole run. `sealed` (on `RunArtifact`) is a distinct bool, not folded into
 /// this enum — "sealed" and "final status" are orthogonal (a `Failed` run is sealed with `status:
 /// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
@@ -41,7 +44,14 @@ fn run_status_variants() -> Vec<(String, u32)> {
     vec![("pending".to_string(), 0), ("running".to_string(), 1), ("succeeded".to_string(), 2), ("failed".to_string(), 3), ("canceled".to_string(), 4)]
 }
 
+fn run_enum_shape_controlled<C:dsl::NativeSchemaControl>(labels:&[(&str,u32)],control:&mut C)->Result<dsl::Shape,String>{
+    control.scoped_stage(|control|{control.begin_stage(labels.len())?;let mut values=control.allocate_vec::<(String,u32)>(labels.len())?;for(label,ordinal)in labels{values.push((control.copy_text(label)?,*ordinal));control.step()?;}Ok(dsl::Shape::Enum(values))})
+}
+
 impl dsl::DslField for RunStatus {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;Ok(dsl::FieldValue::Enum(run_status_ordinal(*self)))}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;match value{dsl::FieldValue::Enum(ordinal)=>run_status_from_ordinal(*ordinal),_=>Err("expected declared run status enum".into())}}
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{run_enum_shape_controlled(&[("pending",0),("running",1),("succeeded",2),("failed",3),("canceled",4)],control)}
     fn shape() -> dsl::Shape {
         dsl::Shape::Enum(run_status_variants())
     }
@@ -88,6 +98,9 @@ fn run_node_status_variants() -> Vec<(String, u32)> {
 }
 
 impl dsl::DslField for RunNodeStatus {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.step()?;Ok(dsl::FieldValue::Enum(run_node_status_ordinal(*self)))}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;match value{dsl::FieldValue::Enum(ordinal)=>run_node_status_from_ordinal(*ordinal),_=>Err("expected declared run status enum".into())}}
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{run_enum_shape_controlled(&[("computed",0),("cacheHit",1),("failed",2)],control)}
     fn shape() -> dsl::Shape {
         dsl::Shape::Enum(run_node_status_variants())
     }
@@ -114,6 +127,30 @@ pub enum RunTrigger {
     Manual { actor: String },
     Automation { automation_ref: String, event_fingerprint: String },
 }
+
+fn run_trigger_to_record_controlled(value:&RunTrigger,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{
+ control.scoped_stage(|control|{control.begin_stage(4)?;let mut record=dsl::native_encoding::EncodedRecord::new(4,control)?;match value{
+ RunTrigger::Manual{actor}=>{record.insert(0,dsl::FieldValue::Text(control.copy_text("manual")?));control.step()?;record.insert(1,dsl::FieldValue::Text(control.copy_text(actor)?));control.step()?;record.insert(2,dsl::FieldValue::Absent);control.step()?;record.insert(3,dsl::FieldValue::Absent);control.step()?;},
+ RunTrigger::Automation{automation_ref,event_fingerprint}=>{record.insert(0,dsl::FieldValue::Text(control.copy_text("automation")?));control.step()?;record.insert(1,dsl::FieldValue::Absent);control.step()?;record.insert(2,dsl::FieldValue::Text(control.copy_text(automation_ref)?));control.step()?;record.insert(3,dsl::FieldValue::Text(control.copy_text(event_fingerprint)?));control.step()?;}
+ }Ok(record.take())})
+}
+fn run_trigger_from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<RunTrigger,String>{
+ control.scoped_stage(|control|{control.begin_stage(4)?;control.step()?;let kind=match record.get(0){Some(dsl::FieldValue::Text(value))=>value.as_str(),_=>return Err("expected run trigger kind".into())};
+ let mut text=|id|->Result<Option<String>,String>{let value=match record.get(id){None|Some(dsl::FieldValue::Absent)=>None,Some(value)=>Some(control.scoped_stage(|control|{control.begin_stage(0)?;<String as dsl::DslField>::from_value_controlled(value,control)})?)};control.step()?;Ok(value)};
+ let actor=text(1)?;let automation_ref=text(2)?;let event_fingerprint=text(3)?;match(kind,actor,automation_ref,event_fingerprint){("manual",Some(actor),None,None)=>Ok(RunTrigger::Manual{actor}),("automation",None,Some(automation_ref),Some(event_fingerprint))=>Ok(RunTrigger::Automation{automation_ref,event_fingerprint}),_=>Err("invalid run trigger fields".into())}})
+}
+
+fn run_trigger_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(4)?;let mut fields=control.allocate_vec::<dsl::FieldSpec>(4)?;
+        fields.push(dsl::schema::producer::field(0,"kind",dsl::Shape::Text,control)?);control.step()?;
+        fields.push(dsl::schema::producer::field(1,"actor",dsl::Shape::Text,control)?.optional());control.step()?;
+        fields.push(dsl::schema::producer::field(2,"automation_ref",dsl::Shape::Text,control)?.optional());control.step()?;
+        fields.push(dsl::schema::producer::field(3,"event_fingerprint",dsl::Shape::Text,control)?.optional());control.step()?;
+        dsl::schema::producer::record(None,dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn run_trigger_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:run_trigger_spec,decoding:|control|run_trigger_spec_controlled(control),encoding:|control|run_trigger_spec_controlled(control)}}
 
 fn run_trigger_spec() -> dsl::RecordSpec {
     dsl::RecordSpec::new(
@@ -176,9 +213,14 @@ fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, stor
 }
 
 impl dsl::DslField for RunTrigger {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{run_trigger_to_record_controlled(self,control).map(dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::RecordValue,String>{run_trigger_to_record_controlled(self,control)}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.checkpoint()?;match value{dsl::FieldValue::Record(record)=>run_trigger_from_record_controlled(record,control),_=>Err("expected declared record".into())}}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{run_trigger_from_record_controlled(record,control)}
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(run_trigger_spec)
+        dsl::Shape::Record(run_trigger_spec_producer())
     }
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Record(run_trigger_spec_producer()))}
     fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Record(run_trigger_to_record(self))
     }
@@ -262,6 +304,7 @@ pub struct RunLogLine {
 /// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
 /// and the apply-rejection law, not the promotion wiring itself.
 #[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(id = "os.run")]
 pub struct RunArtifact {
     pub schema: String,
@@ -326,6 +369,7 @@ impl store::ArtifactDsl for RunArtifact {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for RunArtifact {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;

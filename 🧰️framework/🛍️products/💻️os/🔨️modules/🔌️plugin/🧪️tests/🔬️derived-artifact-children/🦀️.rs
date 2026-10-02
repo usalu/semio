@@ -81,13 +81,13 @@ impl ArtifactComposition for ChildrenTestComposition {
     }
 }
 
-const CHILD_SLOTS: &[::semio_framework_schema::ChildSlotSpec] = &[::semio_framework_schema::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];
+const CHILD_SLOTS: &[::semio_framework_schema_composition::ChildSlotSpec] = &[::semio_framework_schema_composition::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];
 
 struct ChildrenTestChildren;
 
 impl ArtifactChildren for ChildrenTestChildren {
     type Snapshot = ChildrenTestSnapshot;
-    fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+    fn slots() -> &'static [::semio_framework_schema_composition::ChildSlotSpec] {
         CHILD_SLOTS
     }
     fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError> {

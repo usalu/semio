@@ -130,10 +130,10 @@ const expectedDispatch = (testCase: FixtureCase): { action: string; args: Record
   }
 };
 
-/** 🎚️ React's continuous lanes (`SliderView`, `NumberStepperView` without a `delta` binding, a number `InputView` without a commit policy) dispatch presses: a pointer press or drag on a slider or a stepper side releases, a field still being typed leaves its press open; every other dispatch is no press. */
+/** 🎚️ React's continuous lanes (`SliderView`, `RingView`, `NumberStepperView` without a `delta` binding, a number `InputView` without a commit policy) dispatch presses: a pointer press or drag on a slider or a stepper side releases, a field still being typed leaves its press open; every other dispatch is no press. */
 const expectedPress = (testCase: FixtureCase): "open" | "released" | undefined => {
   const { node } = testCase;
-  if (node.kind === "slider") return "released";
+  if (node.kind === "slider" || node.kind === "ring") return "released";
   if (node.kind === "numberStepper") return testCase.deltaBinding ? undefined : "released";
   if (node.kind === "input" && node.inputKind === "number" && !inputCommitsOnBlur(node)) return testCase.gesture.kind === "type" ? "open" : "released";
   return undefined;

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The transient state lane of `s.fem.3d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient): its mutation vocabulary `Fem3dResultsWindowTransientMutation` over `Fem3dResultsWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-fem-3d-1-any-editor-edit-results-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],

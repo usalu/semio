@@ -1,7 +1,9 @@
 //! 📥️ DIN V 18599 play app — structured property editor over the compliance document.
 
 use crate::Din18599Snapshot;
-use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-din18599-inputs";
@@ -18,7 +20,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(
     document: &Din18599Snapshot,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

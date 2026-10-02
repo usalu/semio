@@ -8,7 +8,7 @@ import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framewor
 const input: SvgSnapshot = { schema: fixture.schema, doc: {
   declaration: { version: "1.0", encoding: "UTF-8", quote: "single" },
   prolog: [{ kind: "comment", text: "before" }], epilog: [{ kind: "comment", text: "after" }],
-  doctype: { prologPosition: 1, name: "svg", externalId: { kind: "system", systemId: "svg.dtd" }, declarations: [{ kind: "entity", parameter: false, name: "title", value: "Grüße 🌠" }] },
+  doctype: { prologPosition: 1n, name: "svg", externalId: { kind: "system", systemId: "svg.dtd" }, declarations: [{ kind: "entity", parameter: false, name: "title", value: "Grüße 🌠" }] },
   root: { kind: "element", name: "svg", attrs: [{ name: "xmlns", value: "http://www.w3.org/2000/svg" }, { name: "viewBox", value: "0 0 100 100" }], children: [
     { kind: "element", name: "g", attrs: [{ name: "transform", value: "translate(10 20) rotate(30)" }], children: [
       { kind: "element", name: "path", attrs: [{ name: "id", value: "shape" }, { name: "d", value: "M0 0L10 20Z" }], children: [] },

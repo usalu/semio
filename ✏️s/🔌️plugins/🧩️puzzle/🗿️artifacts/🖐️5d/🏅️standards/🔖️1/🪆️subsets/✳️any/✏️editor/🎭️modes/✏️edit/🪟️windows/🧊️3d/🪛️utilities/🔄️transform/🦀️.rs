@@ -19,7 +19,9 @@ use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle5d_mutat
 use crate::Puzzle5dSnapshot;
 use dsl::json;
 use machine::Command;
-use semio_framework_plugin::{LocalizedLabel, UtilityDefinition, WindowMeasure};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::{puzzle3d_unique_targets, Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
 use std::sync::Arc;

@@ -471,6 +471,46 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
     drop_engine_surface(id);
 }
 
+/// ⚖️ LAW (text-splice corpus `hostSignals`, shared with the React host): every host signal the wgpu editor owns ends its open
+/// typing run with the corpus `typingCommit` reason — a pure caret move, the editor losing keyboard focus, the page hidden — as
+/// ONE commit signal sent once the run's last keystroke left, and nothing is left to drive afterwards. The idle bound is the
+/// tool-machine owner's constant.
+#[test]
+fn text_editor_host_signals_end_the_typing_run_with_the_corpus_reasons() {
+    let _serialized = engine_surface_law_guard();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/✂️text-splice/🔣️.json")).expect("text-splice corpus");
+    for row in corpus["hostSignals"].as_array().expect("host signals") {
+        let (signal, commit) = (row["signal"].as_str().expect("signal"), row["commit"].as_str().expect("commit"));
+        if signal == "idle" {
+            assert_eq!((commit, ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS), ("idle", 750), "the idle bound ends the run as `idle`");
+            continue;
+        }
+        let id = format!("text-editor-signal-{signal}");
+        drop_engine_surface(&id);
+        let scene = text_editor_scene(&id, "alpha");
+        assert!(sync_engine_scene(&scene, "editor-signal-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+        let mut input = InputState::<ActionDescriptor>::default();
+        assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &PointerModifiers::default(), &mut input), Ok(true));
+        match signal {
+            "caretMove" => {}
+            "blur" => assert!(end_text_editor_typing(&id, TextEditorTypingEnd::Blur), "a keystroke in flight is a run the blur ends"),
+            "hidden" => assert!(end_every_text_editor_typing(TextEditorTypingEnd::Hidden) >= 1, "the hidden page ends the run"),
+            other => panic!("unknown host signal {other:?}"),
+        }
+        let delivered = drain_editor_actions_accepted(&mut input);
+        assert_eq!(delivered.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"], "{signal}: the keystroke leaves before the run ends");
+        if signal == "caretMove" {
+            assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::ArrowLeft, &PointerModifiers::default(), &mut input), Ok(true));
+        }
+        let ended = drain_editor_actions_accepted(&mut input);
+        assert_eq!(serde_json::to_value(ended[0].args.as_ref().expect("commit args")).expect("args"), json!({ "surfaceId": id, "typing": id, "typingCommit": commit }), "{signal}");
+        assert_eq!(ended.len(), if signal == "caretMove" { 2 } else { 1 }, "{signal}: ONE commit signal");
+        assert!(drain_editor_actions_accepted(&mut input).is_empty() && !has_pending_text_editor_outbox(), "{signal}: the ended run leaves nothing to drive");
+        assert!(!end_text_editor_typing(&id, TextEditorTypingEnd::Blur), "{signal}: no run is left to end");
+        drop_engine_surface(&id);
+    }
+}
+
 #[test]
 fn text_editor_outbox_pages_a_large_document_into_one_ordered_edit_and_selection_pair() {
     let _serialized = engine_surface_law_guard();

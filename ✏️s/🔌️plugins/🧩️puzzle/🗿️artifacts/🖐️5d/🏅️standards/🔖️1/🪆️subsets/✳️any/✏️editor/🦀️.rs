@@ -37,13 +37,65 @@ use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutati
 use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::window as window_ownership;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob,
-    ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault,
-    DialogDefinition, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation,
-    PluginCloseStep, PortMultiplicity, ToolRef, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactPresentation;
+use semio_framework_plugin::ArtifactReservedJob;
+use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_framework_plugin::ArtifactToolCompletion;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::DialogDefinition;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_plugin::InteractionWrite;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPortDirection;
+use semio_framework_plugin::MediaPortSpec;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PluginCloseStep;
+use semio_framework_plugin::PortMultiplicity;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
@@ -52,7 +104,7 @@ use serde::{Deserialize, Serialize};
 use dsl::os_pack::json::{parse, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
@@ -829,10 +881,12 @@ pub struct Puzzle5dInteractionSnapshot {
     pub granularity: String,
     pub selected: Vec<String>,
     pub hovered: Vec<String>,
+    pub referenced: Vec<String>,
 }
 
 impl Puzzle5dInteractionSnapshot {
-    /// 🕹️ Reads the live `vortex` domain: its selection plus its `"pointer"`-channel hover.
+    /// 🕹️ Reads the live `vortex` domain: its selection, its `"pointer"`-channel hover and the ids the open time-travel
+    /// draft references (what both panes paint highlighted while a history edit is open).
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
         let selection = interaction.selection(PUZZLE5D_INTERACTION_DOMAIN);
         let hover = interaction.hover(PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_HOVER_CHANNEL);
@@ -845,7 +899,7 @@ impl Puzzle5dInteractionSnapshot {
         } else {
             PUZZLE5D_GRANULARITY_PART.to_string()
         };
-        Self { granularity, selected, hovered: hover.ids.clone() }
+        Self { granularity, selected, hovered: hover.ids.clone(), referenced: interaction.draft_references(PUZZLE5D_INTERACTION_DOMAIN).to_vec() }
     }
 
     /// 🕹️ The retained-reducer twin — the same read from the raw `InteractionState`/hover map a
@@ -857,7 +911,12 @@ impl Puzzle5dInteractionSnapshot {
         let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
         let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
         let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE5D_GRANULARITY_PART.to_string() });
-        Self { granularity, selected, hovered }
+        Self { granularity, selected, hovered, referenced: Vec::new() }
+    }
+
+    /// 🔗️ The ids the board paints highlighted while a time-travel draft references them, as the scene's JSON id array.
+    pub fn referenced_json(&self) -> String {
+        serde_json::to_string(&self.referenced).unwrap_or_else(|_| "[]".into())
     }
 
     pub fn selected_ids(&self, granularity: &str) -> &[String] {
@@ -1045,6 +1104,28 @@ pub fn puzzle5d_part_display_label(part: &Puzzle5dPart, document: &Puzzle5dDocum
         return part.id.clone();
     }
     puzzle5d_kind_catalog_label(document, &part.part_kind)
+}
+
+/// 🪧️ What a history-edit reference chip reads for one entity of the typed document (design §16.4) — the outliner's
+/// names over the document itself: a part by its volume label, else its flat text, else its kind id (the catalogue rides
+/// in a child store the chip does not open), a grip as `<part> · <grip kind>`, a fastener as `<part> → <part>`. Target
+/// volumes carry no authored name, so they keep the framework's `<Kind> <short id>`; so does an id outside `kinds`.
+pub fn puzzle5d_entity_label(snapshot: &Puzzle5dSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+    let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
+    let text = |value: &Option<String>| value.clone().filter(|text| !text.is_empty());
+    let part_label = |part: &crate::Puzzle5dPart| text(&part.part_3d.label).or_else(|| text(&part.part_2d.text)).or_else(|| text(&part.part_kind)).unwrap_or_else(|| part.id.clone());
+    let port = |full_id: &str| snapshot.parts.iter().find_map(|part| part.grips.iter().find(|grip| puzzle5d_grip_full_id(&part.id, &grip.id) == full_id).map(|grip| (part, grip)));
+    let label = if let Some(part) = wants(PUZZLE5D_GRANULARITY_PART).then(|| snapshot.parts.iter().find(|part| part.id == id)).flatten() {
+        Some(part_label(part))
+    } else if let Some((part, grip)) = wants(PUZZLE5D_GRANULARITY_GRIP).then(|| port(id)).flatten() {
+        Some(format!("{} \u{b7} {}", part_label(part), text(&grip.grip_kind).or_else(|| text(&grip.grip_2d.grip_kind)).unwrap_or_else(|| grip.id.clone())))
+    } else if let Some(fastener) = wants(PUZZLE5D_GRANULARITY_FASTENER).then(|| snapshot.fasteners.iter().find(|fastener| fastener.id == id)).flatten() {
+        let end = |full_id: &str| port(full_id).map_or_else(|| full_id.to_string(), |(part, _)| part_label(part));
+        Some(format!("{} \u{2192} {}", end(&fastener.source), end(&fastener.target)))
+    } else {
+        None
+    };
+    label.filter(|label| label != id).map(|label| LocalizedLabel::data(&label))
 }
 
 /// 🔢️ The next distinct part label for one kind — the first instance takes the catalogue name, each
@@ -8943,6 +9024,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         window_ownership::register_config(registry)
     }
 
+    /// 🪧️ A history-edit reference chip names its board/world entity as the outliner does ([`puzzle5d_entity_label`]).
+    fn entity_label(snapshot: &Puzzle5dPlaySnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+        puzzle5d_entity_label(snapshot.typed(), kinds, id)
+    }
+
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         window_ownership::register_transient(registry)
     }
@@ -9132,7 +9218,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle5dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::puzzle5d::config::schema::app_schema_descriptor())
     }
 
@@ -9550,8 +9636,6 @@ fn puzzle5d_interaction_definition() -> InteractionDefinition {
 /// live for `setActiveExample`'s own dispatch path (`🎮️commands/🛍️set-active-example`), only the
 /// manifest-level registration is gone.
 pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
-    let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into(), interaction: Puzzle5dInteractionSnapshot::default() };
-    let manifest_labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("puzzle5d authored a label set for the host's own default axes");
     Editor::builder(Puzzle5dPlayApp::DIALECT)
             .document(["semio", "puzzle", "5d"])
             .artifact_kind(crate::artifact_kind())
@@ -9560,8 +9644,8 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE5D_PLAY_MODE_EDIT)
-            .window_kind_def(board2d::definition(&envelope, manifest_labels))
-            .window_kind_def(world3d::definition(&envelope, manifest_labels))
+            .window_kind_def(board2d::definition())
+            .window_kind_def(world3d::definition())
             .interaction(puzzle5d_interaction_definition())
             .window_kind_interactions(board2d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
             .window_kind_interactions(world3d::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)])
@@ -9900,3 +9984,6 @@ mod agent_lane_tests;
 mod target_volume_tests;
 //#endregion 🧪️UnitTests
 
+#[cfg(test)]
+#[path = "🧪️tests/🧵️retained-wiring/🦀️.rs"]
+mod retained_wiring_tests;

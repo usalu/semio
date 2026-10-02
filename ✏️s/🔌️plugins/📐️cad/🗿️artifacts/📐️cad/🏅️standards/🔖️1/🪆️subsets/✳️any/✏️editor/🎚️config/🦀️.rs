@@ -3,24 +3,6 @@
 
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-//#region 🔖️PreviewGeneration
-/// 🔢️ Largest preview generation represented exactly by Rust, Proto `int32`, GraphQL `Int`,
-/// JSON Schema, and JavaScript `number`.
-pub const CAD_PREVIEW_GENERATION_MAX: i32 = i32::MAX;
-
-/// 🛡️ Rejects negative AND overflowing generations at every wire-backed config ingestion boundary.
-/// Decodes through `i64` first (never `i32` directly) — `i32::from_value` truncates an
-/// out-of-range `Number` with an `as i32` cast (see `impl_int_codec!` in
-/// `🌱️value/🔁️codec/🦀️.rs`) rather than erroring, so a value like `i32::MAX + 1` would otherwise
-/// silently wrap into a negative `i32` instead of being rejected on its own terms.
-pub fn deserialize_cad_preview_generation(value: protocol::DslValue) -> Result<i32, protocol::ValueError> {
-    let generation = <i64 as protocol::FromValue>::from_value(value)?;
-    if !(0..=i64::from(CAD_PREVIEW_GENERATION_MAX)).contains(&generation) {
-        return Err(protocol::ValueError::new("cad preview generation must be nonnegative"));
-    }
-    Ok(generation as i32)
-}
-//#endregion 🔖️PreviewGeneration
 
 //#region 🔖️Config
 /// 🎛️ Handle preferences persisted by one exact CAD world-window configuration owner.
@@ -66,9 +48,8 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 
 /// 🧮️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: cad's real `ArtifactApp::Config` — see the region doc
 /// comment above for the full absorption story.
-/// `engagement_session_json` is the pre-serialized JSON of `cad_document_engine::interaction::
-/// CadEngagementScratch` — that type's `context: HashMap<String, Value>` field has no `dsl` shape
-/// (arbitrary JSON), so it round-trips as an opaque string rather than a nested `#[dsl(block)]`.
+/// The per-frame engagement state (action line, REPL step, live session, repeat-last) is NOT config: it lives in the
+/// addressed world window's transient (`🪟️windows/🫧️transient`, design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "cadcfg")]
@@ -86,29 +67,12 @@ pub struct CadConfig {
     /// framework `"cad"` domain's mesh hover; was piggy-backed onto the deleted `hovered_object_id`
     /// via a `"reference:"` string prefix, now its own field.
     pub hovered_reference_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::engagement_input`.
-    pub engagement_input: String,
-    /// 👁️ Was `CadPlayRuntime::engagement_step`.
-    pub engagement_step: String,
     /// 👁️ Was `CadPlayRuntime::active_example_id`.
     pub active_example_id: Option<String>,
     /// 👁️ Was `CadPlayRuntime::selected_reference_model_definition_id`.
     pub selected_reference_model_definition_id: Option<String>,
     /// 👁️ Was `CadPlayRuntime::selected_reference_id`.
     pub selected_reference_id: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::engagement_pane`.
-    pub engagement_pane: Option<String>,
-    /// 👁️ Was `CadPlayRuntime::engagement_session` (`Option<CadEngagementScratch>`) — see the struct
-    /// doc comment for why this is an opaque JSON string here.
-    pub engagement_session_json: Option<String>,
-    /// 🪪️ Exact serialized public-operation identity that last advanced the engagement preview.
-    pub engagement_preview_operation_json: Option<String>,
-    /// 🔢️ Persisted increment-only engagement preview generation in the lossless cross-surface
-    /// domain `0..=2_147_483_647`.
-    #[value(deserialize_with = "deserialize_cad_preview_generation")]
-    pub engagement_preview_generation: i32,
-    /// 👁️ Was `CadPlayRuntime::last_finalized_interaction_id`.
-    pub last_finalized_interaction_id: Option<String>,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -167,16 +131,9 @@ impl Default for CadConfig {
         Self {
             selected_node_ids: Vec::new(),
             hovered_reference_id: None,
-            engagement_input: String::new(),
-            engagement_step: "Idle".into(),
             active_example_id: None,
             selected_reference_model_definition_id: None,
             selected_reference_id: None,
-            engagement_pane: None,
-            engagement_session_json: None,
-            engagement_preview_operation_json: None,
-            engagement_preview_generation: 0,
-            last_finalized_interaction_id: None,
             contributions_json: default_contributions_json(),
         }
     }
@@ -216,7 +173,7 @@ impl protocol::OpText for CadConfigMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -226,7 +183,7 @@ impl protocol::OpText for CadConfigMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -237,7 +194,7 @@ impl protocol::OpBinary for CadConfigMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -255,7 +212,7 @@ impl protocol::OpBinary for CadConfigMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })

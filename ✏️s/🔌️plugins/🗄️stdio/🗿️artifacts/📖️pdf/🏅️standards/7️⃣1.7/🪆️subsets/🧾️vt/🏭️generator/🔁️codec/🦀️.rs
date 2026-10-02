@@ -4,7 +4,7 @@
 //! Both halves matter and neither may come from this repository:
 //!
 //! * [`apply`] performs each of the eighteen declared mutations by editing the object graph through
-//!   `lopdf` — never through `semio-s-plugin-stdio-test-oracle`'s `oracle_apply_mutation`, which is
+//!   `lopdf` — never through `semio-s-artifact-stdio-pdf-test-oracle`'s `oracle_apply_mutation`, which is
 //!   what made the previous fixture corpus inadmissible as evidence.
 //! * [`project`] reads the conformance axes back through `lopdf`, so the expected state is the
 //!   committed `after` half of a fixture rather than something we computed.

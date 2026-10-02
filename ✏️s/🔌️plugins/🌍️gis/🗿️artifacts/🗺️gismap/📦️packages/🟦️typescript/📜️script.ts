@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌍 GIS Map inference, history and acknowledged-view conformance command owner. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { getWorkspaceRoot, resolveTestLevel, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 //#region 💡️InferencePortCheck
@@ -596,4 +597,7 @@ class TilePrefetchScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("tiles-check", TileCheckScript).register("tiles-prefetch", TilePrefetchScript).register("inference-check", GisMapInferencePortCheckScript).register("inference-bridge-check",InferenceBridgeCheckScript).register("cold-document-pair-check", ColdDocumentPairBrowserCheckScript);
-await runScriptMain(router, { defaultCommand: "inference-check" });
+if(["build","check","test"].includes(process.argv[2]??"")){
+ const{runArtifactTypeScriptPackageMain}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts");
+ await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts"]});
+}else await runScriptMain(router,{defaultCommand:"inference-check"});

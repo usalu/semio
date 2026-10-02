@@ -1,0 +1,33 @@
+# Schema Validator and Document HTTP Ownership
+
+The current general Schema Rust provider compiles Document HTTP declarations using OS Directory client types and embeds the OS declaration schema. No independent Rust validator package exists. The validator itself imports OS DslValue only for fragment inputs; the actual type lives in the neutral Value package. SchemaError also mixes validator failures with catalog-only UnknownSchema.
+
+The schema-first ownership fixture requires a neutral validator package, a specific Directory client HTTP module and vector corpus, a generic facade with no HTTP module, and product-free validator dependencies. The unchanged 64-vector subset corpus and draft07 and fragment corpora remain normative. The specific HTTP provider and all three original native laws move together; generic Schema will consume the one compiled neutral validator through its real owned public API.
+
+Initial ownership assertion is expected RED before the source cut. Native compiler coordination is pending; no feature completion is claimed.
+
+## Landed Ownership and Observed Checks
+
+- The initial Bun ownership proof failed at the absent neutral validator package as intended. After the physical cut the same schema-first proof passes.
+- The real validator now compiles once as semio-framework-schema-validator, depends on neutral Value and Pack, and owns pure SchemaError and ValidationDiagnostic. Generic Schema consumes those real APIs; catalog-only UnknownSchema belongs to SchemaCatalogError. Generic Schema retains its other OS catalog callbacks and is not yet completely product-free.
+- The full Rust and TypeScript HTTP provider moved physically to OS Directory client/HTTP; all Rust clients including GIS, MCP and Shell and all TypeScript store/service clients use the real new owner. The generic facade exposes no HTTP API. No alias or forwarding module remains.
+- All original three HTTP law bodies remain in the specific provider, with only their crate import and fixture location changed. The HTTP fixture moved using a filesystem rename without rewriting bytes. OS DocumentHttpCheckScript invokes the three new native namespaces and its existing transport law, preserving its independent AJV checks.
+- The existing 64-case schema-subset corpus passed unchanged through Bun, Node and independent AJV. The relocated TypeScript installed service corpus passed its four envelope vectors, 12 lifecycle events, six JSON oracle vectors and eight transport hostiles. The unchanged relocated HTTP declarations, input vectors and reply node bounds passed independent AJV and the actual relocated TypeScript compiler.
+- Live cargo metadata --no-deps --offline succeeds with the new real workspace member and updates the normal root Cargo.lock. Validator dependency closure consists of 11 neutral framework packages, with no product path.
+- Registered actual neutral crate test and products-absent targets through its canonical script and Nx project. Launch seed reservations 900.05749 and 900.05750 point to the neutral proof and actual OS HTTP checks respectively. Generated launch regeneration is coordinated with root/native owner.
+
+Native runtime verification is still pending the shared compiler queue. The products-absent native test constructs a fresh workspace from actual dependency declarations and source owners, asserts every product and s tree and the generic Schema component are physically absent, and runs original 64 subset vectors plus progress/cancellation against the actual validator. No stub compiler receipt or architecture-complete claim is made.
+
+## Actual Products-Absent Native Receipt
+
+The registered Nx target @semio-tech/schema-validator-rs:test-neutral-owner completed GREEN: overall 14.1 seconds, offline native compilation 12.29 seconds, two tests passed, zero failed, zero ignored, zero filtered. Actual runtime logs confirmed all 64 unchanged subset vectors and progress, node limits and cancellation. The Bun enclosing law passed in 12.77 seconds with all 14 ownership assertions.
+
+The initial native capture exposed Replication's real mounted neutral Diagnostic sibling, omitted from a manifest-directory-only copy. The capture now follows actual Rust source mounts to include that neutral sibling while dependency cfg-test folders are not followed; Cargo does not compile tests of dependency packages. A following source enumeration attempt encountered a dependency cfg-test fixture in OS and was correctly rejected before compilation. The final proof contains no product, s or generic Schema component tree and compiles actual production dependency sources with the validator's actual native tests. No fixture expectations changed, no product source was included and no stub or facade source was authored.
+
+The shared compiler queue was released to the native owner. Its registered joint HTTP/admission bundle subsequently completed GREEN in 25.8 seconds. Each of the three relocated HTTP laws and the original Directory transport law ran one passing native test against the current 1,282-law OS library census, with 1,281 other laws excluded by exact selection. The native owner retained the actual AJV/provider/transport success output from Nx terminal outputs. Current complete admission is 24 native laws passed, zero skipped, and three portable laws with 114 assertions. The earlier 21-law admission count predates the current source frontier and is not its receipt.
+
+Affected S/Hub client compilation, current 69 descriptor freshness, the general Schema suite and generated launch regeneration remain owned by the shared native/root queue. This document does not claim those pending results or complete architecture enforcement.
+
+## Files in This Ownership Cut
+
+Created validator package Cargo/lib/script/Nx project/package files, pure error source, ownership schema/fixture/proof, actual native subset/control laws and products-absent native law under Schema/validator. Updated the validator's direct value import and owned JSON compile/validate APIs, general Schema facade/manifest/component/component-unit import, root workspace manifest/lock, OS kernel manifest/script and Directory client module mount. Moved the whole HTTP provider directory (Rust, TypeScript and three native laws) plus its exact neutral vector fixture to OS Directory client. Updated direct clients in OS store worker, OS inference service and its TypeScript laws, OS MCP dispatch/inference/service, OS Shell WGPU, GIS inference client and GIS MCP laws. Rebound the two taxonomy TypeScript source references and registered the two launch seeds. The root/native owner retains responsibility for generated launch files and shared compiler verification.

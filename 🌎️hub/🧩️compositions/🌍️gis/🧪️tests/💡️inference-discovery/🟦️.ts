@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import Ajv from "ajv";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🧬️ One compiled export of the GIS plugin's own module contract (`🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json`).
@@ -133,7 +133,7 @@ export class InferenceDiscoveryOracleScript extends BundleScript {
 export class InferenceDiscoveryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await new InferenceDiscoveryOracleScript(this.root,this.repoRoot).run();
-    await runExactCargoLaws({ cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs:3_600_000, lawBudgetMs:60_000,
+    await runRepositoryExactCargoLaws({ cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs:3_600_000, lawBudgetMs:60_000,
       groups:[
         {package:"semio-s-artifact-gis-gismap",target:{kind:"lib"},cargoArgs:["--features","mcp-service"],laws:["inference_mcp::tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
         {package:"semio-hub-gis",target:{kind:"lib"},laws:["surface_tests::gis_component_assembly_declares_exact_package_identity_before_descriptor_emission"]},

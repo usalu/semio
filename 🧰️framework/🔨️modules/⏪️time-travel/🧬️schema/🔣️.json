@@ -827,7 +827,8 @@
         "refusalSchemaUnavailable",
         "replayFaulted",
         "commitFailed",
-        "outcomeIntroduced"
+        "outcomeIntroduced",
+        "refusalMemberGone"
       ]
     },
     "LifecycleLawFixture": {
@@ -1240,8 +1241,8 @@
         },
         "labels": {
           "type": "array",
-          "minItems": 35,
-          "maxItems": 35,
+          "minItems": 36,
+          "maxItems": 36,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -1267,8 +1268,8 @@
         },
         "codeLabels": {
           "type": "array",
-          "minItems": 17,
-          "maxItems": 17,
+          "minItems": 18,
+          "maxItems": 18,
           "uniqueItems": true,
           "description": "Every timeTravel.* code a history-edit verb or driver answers (session refusals, frozen, cancelled, the hosting runtime's refusals and driver faults) with the label key a host shows for it.",
           "items": {

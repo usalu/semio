@@ -1,17 +1,2 @@
 semio stdio.json.dsl v1
-{
-  "id": "semio.stdio.i-json.demo",
-  "interoperable": true,
-  "revision": 1048576,
-  "ratio": 0.25,
-  "members": [
-    {
-      "name": "alpha",
-      "weight": 0.5
-    },
-    {
-      "name": "beta",
-      "weight": 0.5
-    }
-  ]
-}
+schema=stdio.json nodes=[ { kind=object items=[ ] members=[ { key=id value=1 } { key=interoperable value=2 } { key=revision value=3 } { key=ratio value=4 } { key=members value=5 } ] } { kind=string string-value=semio.stdio.i-json.demo items=[ ] members=[ ] } { kind=boolean boolean=true items=[ ] members=[ ] } { kind=number number-lexeme="1048576" items=[ ] members=[ ] } { kind=number number-lexeme="0.25" items=[ ] members=[ ] } { kind=array items=[ 6 7 ] members=[ ] } { kind=object items=[ ] members=[ { key=name value=8 } { key=weight value=9 } ] } { kind=object items=[ ] members=[ { key=name value=10 } { key=weight value=11 } ] } { kind=string string-value=alpha items=[ ] members=[ ] } { kind=number number-lexeme="0.5" items=[ ] members=[ ] } { kind=string string-value=beta items=[ ] members=[ ] } { kind=number number-lexeme="0.5" items=[ ] members=[ ] } ]

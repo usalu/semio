@@ -4,7 +4,18 @@ use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_node_list, vcs_action};
 use crate::VcsSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::{Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_WINDOW_EDITOR: &str = "vcs-editor";

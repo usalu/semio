@@ -1,3 +1,5 @@
+use semio_framework_schema_state::StateClass;
+use semio_framework_schema_registry::{ArtifactInferenceDescriptor, FacetLeaves, register_artifact_inference_descriptor, with_artifact_inference_catalog};
 
 use super::*;
 use crate::{ArtifactVersion, DictBuilder, DictReader, HybridLogicalTimestamp, MutationId, RecordHasher};
@@ -423,21 +425,21 @@ fn undo_policy_and_state_class_to_value_round_trip() {
 //#endregion 🔖️Policies
 
 //#region 🔖️ArtifactInferenceCatalog
-fn empty_kernel_facet_leaves() -> KernelFacetLeaves {
-    KernelFacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }
+fn empty_kernel_facet_leaves() -> FacetLeaves {
+    FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }
 }
 
 #[test]
 fn kernel_artifact_inference_catalog_registers_independently_of_the_four_facet_descriptor() {
-    let before = kernel_artifact_inference_catalog_len();
-    register_kernel_artifact_inference_descriptor(KernelArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty_kernel_facet_leaves() });
-    assert!(kernel_artifact_inference_descriptor_registered("s.wave3.synthetic.inference"));
-    assert_eq!(kernel_artifact_inference_catalog_len(), before.max(1));
+    let before = artifact_inference_catalog_len();
+    register_artifact_inference_descriptor(ArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty_kernel_facet_leaves() }).expect("schema descriptor publication");
+    assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.inference"));
+    assert_eq!(artifact_inference_catalog_len(), before.max(1));
     let mut found = false;
-    with_kernel_artifact_inference_catalog(|entries| {
+    with_artifact_inference_catalog(|entries| {
         found = entries.iter().any(|entry| entry.id == "s.wave3.synthetic.inference");
     });
-    assert!(found, "registered inference descriptor must be visible via with_kernel_artifact_inference_catalog");
+    assert!(found, "registered inference descriptor must be visible via with_artifact_inference_catalog");
 }
 //#endregion 🔖️ArtifactInferenceCatalog
 

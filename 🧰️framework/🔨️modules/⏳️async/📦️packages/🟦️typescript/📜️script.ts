@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 /** ⏳️ `@semio-tech/framework-async` TS package router: `bun ./📜️script.ts info|test|twin`. No web-host
  * implementation exists yet — `WebAsyncScope` (`../../🟦️.ts`) is a documented seam only. What this
  * package DOES test is the `boxed_fixed_slots` budget twin: the Rust-free re-check of
  * `../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json`'s `capacity × size_of` arithmetic, the independent
  * half of the law the per-crate Rust guards assert against live `size_of`. */
-import { resolveTestLevel, runVitest } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -21,7 +23,7 @@ class InfoScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitestV1(readVitestPolicyV1(process.env,this.root), rest, "../../🧪️tests/🎚️config/🟦️.ts", process.env);
   }
 }
 

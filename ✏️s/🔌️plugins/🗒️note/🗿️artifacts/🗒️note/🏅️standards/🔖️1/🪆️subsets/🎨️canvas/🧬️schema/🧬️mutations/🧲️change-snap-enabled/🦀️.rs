@@ -31,8 +31,12 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapEnabled {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change snap enabled to {:?}", self.new_enabled), &format!("Fangfunktion auf {:?} ändern", self.new_enabled))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        match self.new_enabled {
+            Some(true) => semio_framework_ui_locale::LocalizedLabel::native("Enable snapping", "Fangfunktion einschalten"),
+            Some(false) => semio_framework_ui_locale::LocalizedLabel::native("Disable snapping", "Fangfunktion ausschalten"),
+            None => crate::schema::mutations::note_setting_label(("snapping", "Fangfunktion"), None),
+        }
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

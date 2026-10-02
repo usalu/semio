@@ -1,6 +1,7 @@
 //! 📚️ Example failing Blatt 19.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-19-fail";
 pub fn label() -> LocalizedLabel {

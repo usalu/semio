@@ -23,8 +23,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetSnapshot {
         vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace PDF snapshot", "PDF-Snapshot ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace PDF snapshot", "PDF-Snapshot ersetzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -11,7 +11,7 @@
 //! generated host's `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_svg_1_1};
+use semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_svg_1_1};
 
 
 //#region 🔖️Input
@@ -100,10 +100,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::mutations::{apply_svg_mutation, SvgMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_svg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::base::project_svg_1_1;
+    use semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::base::project_svg_1_1;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own

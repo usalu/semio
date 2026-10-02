@@ -50,7 +50,7 @@ pub(crate) mod context {
 
     /// 🪟️ Targets the real GIS Map window instance for render, config, and measure authority.
     pub fn main_window_view() -> ViewModel {
-        ViewModel { window_id: Some("gis-map-main-test".into()), window_instances: vec![ViewWindowInstance { id: "gis-map-main-test".into(), window_kind_id: map::GIS2D_PLAY_WINDOW_MAIN.into() }], ..Default::default() }
+        ViewModel { window_id: Some("gis-map-main-test".into()), window_instances: vec![ViewWindowInstance { id: "gis-map-main-test".into(), window_kind_id: map::GIS2D_PLAY_WINDOW_MAIN.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
 
     /// 🧹️ Drives a GIS Map fixture to its exact terminal-empty ownership witness.
@@ -527,7 +527,7 @@ async fn gis2d_map_media_exports_the_document_descriptor() {
 async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
     let mut app = app().await;
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("empty-canvas context menu should not be empty");
     assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");

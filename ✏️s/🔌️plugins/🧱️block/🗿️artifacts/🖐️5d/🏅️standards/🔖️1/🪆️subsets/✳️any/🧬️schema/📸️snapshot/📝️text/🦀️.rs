@@ -10,7 +10,7 @@ use crate::Block5dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
-pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio");
+pub const BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio");
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block5d` DSL.
 pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio");
 

@@ -1,5 +1,5 @@
 CREATE TABLE obj_document (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
+  id INTEGER PRIMARY KEY,
   schema TEXT NOT NULL,
   material_library TEXT
 );
@@ -59,9 +59,14 @@ CREATE TABLE obj_face_vertex (
   id INTEGER PRIMARY KEY,
   face_id INTEGER NOT NULL REFERENCES obj_face(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  vertex_id INTEGER NOT NULL REFERENCES obj_vertex(id),
+  vertex_source_index INTEGER NOT NULL CHECK(vertex_source_index BETWEEN 0 AND 4294967295),
+  texcoord_source_index INTEGER CHECK(texcoord_source_index BETWEEN 0 AND 4294967295),
+  normal_source_index INTEGER CHECK(normal_source_index BETWEEN 0 AND 4294967295),
+  vertex_id INTEGER REFERENCES obj_vertex(id),
   texcoord_id INTEGER REFERENCES obj_texcoord(id),
-  normal_id INTEGER REFERENCES obj_normal(id)
+  normal_id INTEGER REFERENCES obj_normal(id),
+  CHECK(texcoord_source_index IS NOT NULL OR texcoord_id IS NULL),
+  CHECK(normal_source_index IS NOT NULL OR normal_id IS NULL)
 );
 CREATE TABLE obj_group (
   id INTEGER PRIMARY KEY,
@@ -73,7 +78,9 @@ CREATE TABLE obj_group_face (
   id INTEGER PRIMARY KEY,
   group_id INTEGER NOT NULL REFERENCES obj_group(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  face_id INTEGER NOT NULL REFERENCES obj_face(id)
+  face_source_index_high INTEGER NOT NULL CHECK(face_source_index_high BETWEEN 0 AND 4294967295),
+  face_source_index_low INTEGER NOT NULL CHECK(face_source_index_low BETWEEN 0 AND 4294967295),
+  face_id INTEGER REFERENCES obj_face(id)
 );
 CREATE TABLE obj_object (
   id INTEGER PRIMARY KEY,
@@ -85,7 +92,9 @@ CREATE TABLE obj_object_face (
   id INTEGER PRIMARY KEY,
   object_id INTEGER NOT NULL REFERENCES obj_object(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  face_id INTEGER NOT NULL REFERENCES obj_face(id)
+  face_source_index_high INTEGER NOT NULL CHECK(face_source_index_high BETWEEN 0 AND 4294967295),
+  face_source_index_low INTEGER NOT NULL CHECK(face_source_index_low BETWEEN 0 AND 4294967295),
+  face_id INTEGER REFERENCES obj_face(id)
 );
 CREATE TABLE obj_face_boundary (
   id INTEGER PRIMARY KEY,
@@ -97,14 +106,18 @@ CREATE TABLE obj_material_range (
   id INTEGER PRIMARY KEY,
   document_id INTEGER NOT NULL REFERENCES obj_document(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  first_boundary_id INTEGER NOT NULL REFERENCES obj_face_boundary(id),
+  first_face_source_index_high INTEGER NOT NULL CHECK(first_face_source_index_high BETWEEN 0 AND 4294967295),
+  first_face_source_index_low INTEGER NOT NULL CHECK(first_face_source_index_low BETWEEN 0 AND 4294967295),
+  first_boundary_id INTEGER REFERENCES obj_face_boundary(id),
   material TEXT NOT NULL
 );
 CREATE TABLE obj_smoothing_range (
   id INTEGER PRIMARY KEY,
   document_id INTEGER NOT NULL REFERENCES obj_document(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  first_boundary_id INTEGER NOT NULL REFERENCES obj_face_boundary(id),
+  first_face_source_index_high INTEGER NOT NULL CHECK(first_face_source_index_high BETWEEN 0 AND 4294967295),
+  first_face_source_index_low INTEGER NOT NULL CHECK(first_face_source_index_low BETWEEN 0 AND 4294967295),
+  first_boundary_id INTEGER REFERENCES obj_face_boundary(id),
   group_number INTEGER CHECK (group_number BETWEEN 0 AND 4294967295)
 );
 CREATE TABLE obj_unknown_statement (

@@ -4,6 +4,10 @@
   "inputAreas": [
     "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer"
   ],
+  "policy": {
+    "excludedInputPaths": [],
+    "genericEmojiIdentities": ["📁️", "📂️", "📄️"]
+  },
   "shared": {
     "rustRegistry": "📇️registry/🦀️.rs",
     "typescriptIndex": "🟦️.ts",

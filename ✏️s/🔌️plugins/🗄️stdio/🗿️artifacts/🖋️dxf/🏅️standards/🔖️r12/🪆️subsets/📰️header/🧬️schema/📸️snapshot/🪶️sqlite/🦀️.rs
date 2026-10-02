@@ -17,6 +17,30 @@ fn codes(out: &mut Projection<'_, '_>, owner: usize, key: i64, codes: &[(i32, Dx
 
 fn point(out: &mut Projection<'_, '_>, entity: i64, ordinal: usize, role: &str, point: &[f64; 3]) -> Result<(), String> { out.insert("dxf_entity_point", &[C::Integer(entity), C::Integer(ordinal as i64), C::Text(role), C::Real(point[0]), C::Real(point[1]), C::Real(point[2])])?; Ok(()) }
 
+fn add_native_rows(rows:&mut usize,count:usize,control:&mut Control<'_>)->Result<(),String>{*rows=rows.checked_add(count).ok_or("DXF entity count overflow")?;control.check_rows(*rows)?;control.checkpoint(Phase::EncodeNative,*rows,0)}
+fn native_entity_rows(entities:&[DxfEntity],rows:&mut usize,control:&mut Control<'_>)->Result<(),String>{
+    for entity in entities{
+        add_native_rows(rows,1,control)?;
+        let codes=match entity{
+            DxfEntity::Line{unknown_group_codes,..}=>{add_native_rows(rows,2,control)?;unknown_group_codes},
+            DxfEntity::Circle{unknown_group_codes,..}|DxfEntity::Arc{unknown_group_codes,..}|DxfEntity::Text{unknown_group_codes,..}|DxfEntity::Insert{unknown_group_codes,..}=>{add_native_rows(rows,1,control)?;unknown_group_codes},
+            DxfEntity::Solid{unknown_group_codes,..}=>{add_native_rows(rows,4,control)?;unknown_group_codes},
+            DxfEntity::Polyline{vertices,unknown_group_codes,..}=>{for vertex in vertices{add_native_rows(rows,1,control)?;add_native_rows(rows,vertex.unknown_group_codes.len(),control)?;}unknown_group_codes},
+            DxfEntity::Other{group_codes,..}=>group_codes,
+        };add_native_rows(rows,codes.len(),control)?;
+    }Ok(())
+}
+fn native_rows(snapshot:&DxfSnapshot,control:&mut Control<'_>)->Result<(),String>{
+    let mut rows=0;add_native_rows(&mut rows,1,control)?;
+    for header in &snapshot.header_vars{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,header.extra_group_codes.len(),control)?;}
+    for layer in &snapshot.tables.layers{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,layer.unknown_group_codes.len(),control)?;}
+    for style in &snapshot.tables.styles{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,style.unknown_group_codes.len(),control)?;}
+    for linetype in &snapshot.tables.linetypes{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,linetype.unknown_group_codes.len(),control)?;}
+    for table in &snapshot.other_tables{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,table.tags.len(),control)?;}
+    for block in &snapshot.blocks{add_native_rows(&mut rows,1,control)?;add_native_rows(&mut rows,block.unknown_group_codes.len(),control)?;native_entity_rows(&block.entities,&mut rows,control)?;}
+    native_entity_rows(&snapshot.entities,&mut rows,control)
+}
+
 fn entities(out: &mut Projection<'_, '_>, block: Option<i64>, entities: &[DxfEntity]) -> Result<(), String> {
     for (ordinal, entity) in entities.iter().enumerate() {
         let mut fields = [C::Null; 14];
@@ -47,6 +71,14 @@ fn entities(out: &mut Projection<'_, '_>, block: Option<i64>, entities: &[DxfEnt
 }
 
 impl store::ArtifactSqliteSnapshot for DxfSnapshot {
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,String>{
+        control.checkpoint(Phase::EncodeNative,0,0)?;native_rows(self,control)?;
+        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control)
+    }
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,String>{
+        store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),snapshot_text::from_record_controlled,control)
+    }
+
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(), String> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;
         let database = self.to_sqlite_database(control)?;
@@ -177,6 +209,27 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn sqlite_snapshot_dxf_controlled_output_retains_complete_state_and_interior_admission(){
+        let plan:serde_json::Value=serde_json::from_str(include_str!("../📝️text/🧫️fixtures/🛫️encoding/🔣️.json")).unwrap();let mut snapshot=fixture();snapshot.schema=plan["unit"].as_str().unwrap().repeat(plan["repetitions"].as_u64().unwrap() as usize);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{
+            let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,limits)).unwrap();assert_eq!(DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+            let mut reached=false;let result=snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |event|{if event.phase==Phase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=plan["cancelAfter"].as_u64().unwrap() as usize&&event.completed<event.total{reached=true;false}else{true}},limits));assert!(reached);assert!(result.is_err());
+            assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut |_|true,sqlite_snapshot::SqliteDatabaseLimits{max_value_bytes:plan["tinyMaximumBytes"].as_u64().unwrap() as usize,..limits})).is_err());
+        }
+    }
+    #[test]
+    fn sqlite_snapshot_dxf_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
+        use store::{ArtifactDsl,ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        let mut snapshot=fixture();snapshot.schema="DXF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
+        for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
+            assert_eq!(DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits)).unwrap(),snapshot);
+            let mut reached=false;let result=DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |event|{if event.phase==Phase::DecodeNative&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true}},limits));assert!(result.is_err());assert!(reached,"cancel inside long native text");
+            let mut small=limits;small.max_value_bytes=128;assert!(DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,small)).is_err());
+            assert!(DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|false,limits)).is_err());
+        }
+    }
+
     #[test]
     fn sqlite_snapshot_dxf_owned_guard_checks_exact_identity_and_projection(){
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("dxf_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());

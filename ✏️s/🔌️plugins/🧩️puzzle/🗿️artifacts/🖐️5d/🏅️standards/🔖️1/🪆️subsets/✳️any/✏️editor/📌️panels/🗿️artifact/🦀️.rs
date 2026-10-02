@@ -26,10 +26,21 @@ use crate::editor::puzzle5d::{
     PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRANULARITY_TARGET_VOLUME, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
-use semio_framework_plugin::{
-    row_action, row_target, tree_window_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::row_target;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

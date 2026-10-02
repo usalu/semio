@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "largeTextCharacters",
+    "cancelAfter",
+    "smallValueBudget"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "subset",
+          "xmlns",
+          "relationshipsNamespace",
+          "conformance",
+          "vml",
+          "missingWorksheet",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subset": {
+            "enum": [
+              "strict",
+              "transitional"
+            ]
+          },
+          "xmlns": {
+            "type": "string"
+          },
+          "relationshipsNamespace": {
+            "type": "string"
+          },
+          "conformance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vml": {
+            "type": "boolean"
+          },
+          "missingWorksheet": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "namespace-mismatch",
+                "relationships-namespace-mismatch",
+                "conformance-attribute",
+                "vml-forbidden",
+                "worksheet-content-type-missing"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "largeTextCharacters": {
+      "const": 100000
+    },
+    "cancelAfter": {
+      "const": 256
+    },
+    "smallValueBudget": {
+      "const": 1024
+    }
+  }
+}

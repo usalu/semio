@@ -764,7 +764,7 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_
 /// 🧾️ Encodes one handcrafted descriptor JSON exactly as the publisher's descriptor bytes are encoded.
 fn encode_descriptor_json(json: serde_json::Value) -> Vec<u8> {
     let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
-    os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"))
+    os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))
 }
 
 /// 🏠️ The fixture editor as a HOST of the base package's kind: it declares no kind, hosts `s.fixture.document` from
@@ -982,8 +982,8 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     if foreign_service {
         descriptor.contributions.inference_services.iter_mut().find(|service| service.inference_schema == "s.gis.gismap.inference").expect("actual GIS inference declaration").contributor = "foreign".into();
     }
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("GIS descriptor self-hash projection"))));
-    let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project GIS descriptor"));
+    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
+    let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .expect("actual GIS codec receipts")
         .into_iter()
@@ -2024,7 +2024,7 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
             let kind = descriptor.manifest.artifact_kinds[0].clone();
             descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
         }
-        let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).expect("project descriptor"));
+        let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
         let answer: serde_json::Value = serde_json::from_slice(&descriptor_open_targets_answer(&bytes).expect("open-target answer")).expect("answer json");
         assert_eq!(answer["schema"], fixture["answerSchema"], "{name}");
         let targets = answer["targets"].as_array().unwrap();
@@ -2288,8 +2288,8 @@ mod long {
                     _ => panic!("unknown atomic fixture change {change}"),
                 }
                 descriptor.hashes.descriptor_sha256.clear();
-                descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).unwrap())));
-                let mut value = to_dsl_value(&descriptor).unwrap();
+                descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
+                let mut value = semio_framework_value::ToValue::to_value(&descriptor);
                 if change == "gis-duplicate-field" {
                     let DslValue::Object(fields) = &mut value else { panic!("full descriptor object") };
                     let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();

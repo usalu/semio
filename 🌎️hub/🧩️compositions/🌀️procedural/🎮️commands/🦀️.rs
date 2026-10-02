@@ -6,7 +6,8 @@
 //! program-level handler and is dispatched through `handle_plugin_command`, never through an app.
 
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{DslValue, LocalizedLabel};
+use semio_framework_plugin::DslValue;
+use semio_framework_ui_locale::LocalizedLabel;
 
 /// 🪪️ The command id, addressed as `{owner: Plugin{"procedural"}, command_id: LIST_FLOW_EXTENSIONS}`.
 pub(crate) const LIST_FLOW_EXTENSIONS: &str = "listFlowExtensions";

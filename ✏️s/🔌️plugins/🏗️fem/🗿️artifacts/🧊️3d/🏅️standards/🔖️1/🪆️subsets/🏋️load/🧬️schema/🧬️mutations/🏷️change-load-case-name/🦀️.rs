@@ -26,8 +26,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ChangeLoadCaseName {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename case \"{}\" to \"{}\"", self.case_id, self.new_name), &format!("Lastfall \"{}\" in \"{}\" umbenennen", self.case_id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

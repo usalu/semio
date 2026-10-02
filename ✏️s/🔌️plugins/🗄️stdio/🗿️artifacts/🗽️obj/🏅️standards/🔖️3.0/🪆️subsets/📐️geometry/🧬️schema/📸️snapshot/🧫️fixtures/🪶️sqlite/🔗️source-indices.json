@@ -1,0 +1,9 @@
+{
+  "schema": "unresolved OBJ intermediate",
+  "faces": [{"vertices":[]},{"vertices":[{"vertex":4294967295,"texcoord":4294967294,"normal":4294967293}]}],
+  "groups": [{"name":"unresolved group","faces":[37,0,37]}],
+  "objects": [{"name":"unresolved object","faces":[91]}],
+  "usemtl": [{"faceIndexFrom":72,"material":"independent range"}],
+  "smoothingGroups": [{"faceIndexFrom":61,"group":4294967295}],
+  "unsigned64Indices": ["0","9007199254740993","18446744073709551615"]
+}

@@ -19,10 +19,11 @@ name = "semio_framework_graph"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-neural_engine = { path = "../../../../🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 # ⚠️ `serde`/`serde_json` are fully removed — every type in this crate carries `ToValue`/
 # `FromValue` instead of `Serialize`/`Deserialize`. `⚙️engine/🦀️.rs`'s `property_bag_from_value`/

@@ -42,6 +42,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }

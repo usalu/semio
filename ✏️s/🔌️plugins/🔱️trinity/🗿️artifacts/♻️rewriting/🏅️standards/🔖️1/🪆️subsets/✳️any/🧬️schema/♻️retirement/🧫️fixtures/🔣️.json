@@ -16,6 +16,9 @@
     { "value": { "mutation": "dragWorkingNodes", "targets": ["a", "Ü"], "dx": 1.5, "dy": -2 }, "bytes": 19 },
     { "value": { "mutation": "patchWorkingNodes", "targets": ["a"], "field": "name", "value": "😀" }, "bytes": 9 },
     { "value": { "mutation": "dragRuleNodes", "targets": ["rhs-set-0"], "dx": 0, "dy": 80 }, "bytes": 25 },
-    { "value": { "mutation": "setRuleLayoutPoints", "points": [{ "key": "lhs-match", "x": 1, "y": 2 }], "cleared": ["node"] }, "bytes": 29 }
+    { "value": { "mutation": "setRuleLayoutPoints", "points": [{ "key": "lhs-match", "x": 1, "y": 2 }], "cleared": ["node"] }, "bytes": 29 },
+    { "value": { "mutation": "deleteWorkingNodes", "targets": ["a", "Ü"] }, "bytes": 3 },
+    { "value": { "mutation": "connectWorkingPorts", "source": "a@out", "target": "Ü@in", "kind": "K" }, "bytes": 11 },
+    { "value": { "mutation": "disconnectWorkingEdges", "targets": ["e", "Ü"] }, "bytes": 3 }
   ]
 }

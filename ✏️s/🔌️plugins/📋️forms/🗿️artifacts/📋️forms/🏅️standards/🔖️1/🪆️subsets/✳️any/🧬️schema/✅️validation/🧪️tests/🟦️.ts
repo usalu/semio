@@ -1,3 +1,4 @@
+import{parseFormsJsonQuestion,parseFormsJsonValue}from"../../🌱️value/🔣️json/🟦️.ts";
 /** 🧪️ Shared answer contracts checked independently with Ajv and ajv-formats. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
@@ -9,7 +10,7 @@ export function testFormsValidation(): void {
   const ajv = new Ajv({ multipleOfPrecision: 10 });
   addFormats(ajv);
   for (const test of fixture.cases) {
-    const actual = answerError(test.question as FormQuestion, test.value as DslValue);
+    const actual = answerError(parseFormsJsonQuestion(test.question), parseFormsJsonValue(test.value));
     assert.equal(actual, test.error, test.name);
     assert.equal(actual === null, ajv.compile(test.oracle)(test.value), test.name);
   }

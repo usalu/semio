@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::law::feature_rows;
+use semio_repo_test_host::law::feature_rows;
 
 /// 🧫️ The real committed package `📜️mutate-docx-ecma-376` runs on — the WordprocessingML document
 /// derived once from this repository's own `README.md`: 414 top-level body blocks, a real 37-row
@@ -10,7 +10,7 @@ const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📜️example-r
 /// 📸️ The committed after-document the case's `set-snapshot` scenarios replace the README with.
 const AFTER: &[u8] = include_bytes!("../../../🧫️fixtures/🧾️readme-afters/📸️set-snapshot/➡️after.docx");
 
-/// 🧾️ The case's own `Examples` rows, read rather than restated — see [`crate::law::feature_rows`].
+/// 🧾️ The case's own `Examples` rows, read rather than restated — see [`semio_repo_test_host::law::feature_rows`].
 const FEATURE: &str = include_str!("../../../🧪️tests/📜️mutate-docx-ecma-376/🥒️.feature");
 
 fn spec(kind: &str, params: &Json) -> Json {

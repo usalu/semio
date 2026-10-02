@@ -31,7 +31,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, decode_semio_animation_mutation_json, inverse_semio_animation_mutation, set_snapshot, SemioAnimationMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::{parse_semio_animation_dsl, print_semio_animation_dsl, AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};

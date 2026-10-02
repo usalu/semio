@@ -30,8 +30,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateTextFrame {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_text_frame(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update text frame \"{}\"", self.frame_id), &format!("Textrahmen \"{}\" aktualisieren", self.frame_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update text frame \"{}\"", self.frame_id), &format!("Textrahmen \"{}\" aktualisieren", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

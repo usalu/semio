@@ -1,0 +1,6 @@
+
+Controlled native output is now authored using the verified shared encode_sqlite_snapshot_record_native helper and the genuine derived RecordSpecProducer/typed controlled fields. Known domain row admission occurs before invoking metadata projection. A new neutral-fixture long-Unicode/full-u64 law requires both native formats, interior EncodeNative cancellation and pre-materialization byte/row refusal. These new output obligations have not executed yet; historical native/source/public results remain distinct.
+
+## Current strict controlled input/output and actual declaration proof
+
+The registered uncached serial quick Home+Space run completed exit 0 in 8m39s. Space's retained task transcript executes all four selected SQLite laws: Nextest `5eb53434-455c-47b5-9857-0d1371189117`, 4/4 passed in 4.074s, 53 unrelated tests filtered. This is current mandatory metadata and controlled native input/output with semantic row admission, full strings/u64 persisted index state, Unicode cancellation/resource bounds, actual owning declaration and public typed/erased routes in both encodings. No full 57-test Space package claim. Nx suppressed successful task output; its actual retained transcript was inspected read-only and copied into `🗑️generated/space-native-current-task-transcript.log`. Combined transcript: `🗑️generated/home-space-native-current-controlled-output.log`.

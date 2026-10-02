@@ -311,7 +311,7 @@ fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat: f64) 
 /// `World3dState.meshes`/`pending_glb_urls` in the same consumer: a per-viewer materialized cache of
 /// an external resource, outside the tier a-e table entirely. Open question for the coordinator/W1
 /// owner (see `📓️wave2-reports/terrain-report.md`): whether decode+mesh-build should instead route
-/// through the frozen host `EngineCache` (`💻️os/🔨️modules/⚙️engine`) — its docstring scopes it to
+/// through the frozen host `EngineCache` (`◻️2d/🧮️compute`) — its docstring scopes it to
 /// "the wasm guest↔host boundary", and whether this consumer crosses that boundary is unconfirmed.
 #[derive(Default)]
 struct TerrainElevationTiles {

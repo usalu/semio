@@ -6,7 +6,8 @@ use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::unit_tests::context::*;
-use semio_framework_plugin::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 use serde_json::Value;
 
 fn fill_children(runtime: Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
@@ -18,7 +19,7 @@ fn fill_children(runtime: Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> Vec<W
 /// 🛠️ Fill's count entry is a tool measure keyed by the fill tool id, not a window utility-options group.
 #[test]
 fn fill_count_entry_is_a_tool_measure() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let host = puzzle_board_host();
     let fill_scene = scene(default_empty_fixture(), Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() }, overview::utilities::select::UTILITY_ID);
     assert!(matches!(&measures(&fill_scene, labels), WindowMeasure::Group { id, active_utility_id: None, .. } if id == "puzzle2d-tool-options-fill"));
@@ -30,7 +31,7 @@ fn fill_count_entry_is_a_tool_measure() {
 /// plugin-local progress, cancel or retry control beside it.
 #[test]
 fn fill_count_is_the_only_unbounded_measure_and_defaults_to_one_hundred() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let children = fill_children(Puzzle2dPlayRuntime { fill_count: 5_000, ..Puzzle2dPlayRuntime::default() }, labels);
     // ⚖️ The count leads; the node/handle distribution groups the brush shares follow it.
     let [WindowMeasure::Number { id, value, min, max, step, ready, loading, waiting, .. }, WindowMeasure::Group { id: nodes, .. }, WindowMeasure::Group { id: handles, .. }] = children.as_slice() else { panic!("the count leads the fill measures, followed by the two distribution groups: {children:?}") };

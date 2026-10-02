@@ -11,7 +11,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { defineTestAdapter, digest } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { digest } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Oracle repository

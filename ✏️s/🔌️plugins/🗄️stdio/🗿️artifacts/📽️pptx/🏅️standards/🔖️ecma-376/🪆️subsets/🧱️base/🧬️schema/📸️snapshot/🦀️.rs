@@ -47,12 +47,19 @@ impl PptxParagraph {
 
 /// 📐️ A shape's `a:xfrm` position/size, in EMUs (`a:off@x/y`, `a:ext@cx/cy`) -- a weak (value)
 /// entity per the recipe: whole-value replaced in diffs, never sub-diffed.
+#[path="🧭️transform/🦀️.rs"]
+mod transform;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct PptxTransform {
+    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
     pub x: i64,
+    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
     pub y: i64,
+    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
     pub cx: i64,
+    #[value(serialize_with="transform::to_value",deserialize_with="transform::from_value",serialize_controlled_with="transform::to_value_controlled",deserialize_controlled_with="transform::from_value_controlled",retire_with="std::mem::drop")]
     pub cy: i64,
 }
 
@@ -266,15 +273,15 @@ impl PptxSnapshotRecord {
         let mut opc = snapshot.opc.clone();
         let binary_parts = std::mem::take(&mut opc.parts).into_iter().map(|part| PptxBinaryPartRecord { path: part.path, content_type: part.content_type, bytes: part.bytes }).collect();
         let relationships = std::mem::take(&mut opc.relationships);
-        let mut relationship_groups = relationships.into_iter().map(|(owner, relationships)| Ok(PptxRelationshipGroupRecord { owner, relationships: dsl::to_dsl_value(&relationships)? })).collect::<Result<Vec<_>, String>>()?;
+        let mut relationship_groups = relationships.into_iter().map(|(owner, relationships)| Ok(PptxRelationshipGroupRecord { owner, relationships: semio_framework_value::ToValue::to_value(&relationships) })).collect::<Result<Vec<_>, String>>()?;
         relationship_groups.sort_by(|left, right| left.owner.cmp(&right.owner));
-        Ok(Self { schema: snapshot.schema.clone(), opc: dsl::to_dsl_value(&opc)?, binary_parts, relationship_groups, xml_parts: dsl::ToValue::to_value(&snapshot.xml_parts), presentation: dsl::ToValue::to_value(&snapshot.presentation) })
+        Ok(Self { schema: snapshot.schema.clone(), opc: semio_framework_value::ToValue::to_value(&opc), binary_parts, relationship_groups, xml_parts: dsl::ToValue::to_value(&snapshot.xml_parts), presentation: dsl::ToValue::to_value(&snapshot.presentation) })
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn into_snapshot(self) -> Result<PptxSnapshot, String> {
         let schema = self.schema;
-        let mut opc: OpcPackage = dsl::from_dsl_value(self.opc)?;
+        let mut opc: OpcPackage = semio_framework_value::FromValue::from_value(self.opc).map_err(|error| error.to_string())?;
         if !opc.parts.is_empty() {
             return Err("PPTX DSL OPC metadata must not contain binary parts".into());
         }
@@ -286,7 +293,7 @@ impl PptxSnapshotRecord {
             if opc.relationships.contains_key(&group.owner) {
                 return Err(format!("PPTX DSL repeats relationship owner {}", group.owner));
             }
-            opc.relationships.insert(group.owner, dsl::from_dsl_value(group.relationships)?);
+            opc.relationships.insert(group.owner, semio_framework_value::FromValue::from_value(group.relationships).map_err(|error| error.to_string())?);
         }
         let mut snapshot = PptxSnapshot::from_parts(opc, dsl::FromValue::from_value(self.xml_parts).map_err(|error| error.to_string())?, dsl::FromValue::from_value(self.presentation).map_err(|error| error.to_string())?);
         snapshot.schema = schema;
@@ -295,51 +302,30 @@ impl PptxSnapshotRecord {
 }
 
 impl store::ArtifactDsl for PptxSnapshot {
-    const EXTENSION: &'static str = "pptx";
-    fn envelope_id() -> &'static str {
-        "stdio.pptx"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        for i in (0..hex.len()).step_by(2) {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
-        }
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let bytes = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+ const EXTENSION:&'static str="pptx";
+ fn envelope_id()->&'static str{"stdio.pptx"}
+ fn parse_dsl(text:&str)->Result<Self,store::TextError>{native::decode_text(text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).map_err(|error|store::TextError::new(error,dsl::TextSpan::at(1,1)))}
+ fn print_dsl(&self)->String{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).expect("PPTX native ownership admission"){semio_framework_os_kernel::io_schema::IoPayload::Text(text)=>text,semio_framework_os_kernel::io_schema::IoPayload::Binary(_)=>unreachable!()}}
 }
-
 impl store::ArtifactPack for PptxSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema("pack envelope mismatch".into()));
-        }
-        let _ = options;
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
-    }
+ fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{match native::encode(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Binary,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)?{semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes)=>Ok(bytes),semio_framework_os_kernel::io_schema::IoPayload::Text(_)=>unreachable!()}}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{native::decode_binary(bytes,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::Schema)}
 }
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️shadow/🦀️.rs"]
 mod shadow_tests;
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🧩️native/🦀️.rs"]
+mod native;
+
+#[path="🛡️subset/🦀️.rs"]
+mod subset;

@@ -1,15 +1,17 @@
 dialect grammar
 grammar equation.snapshot
 extension equation
-use family-scene
+comment none
 start document
-
-# Real grammar for `EquationSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
-# `EquationPackRecord` (📸️snapshot/💾️binary/🦀️.rs), the same record the pack encodes: the three
-# composed child handles plus the authored `equation` and the live `graph`/`geometry` scene their
-# shared `EquationWorkingScene` owns, each as a dynamic value literal (`{ key=value … }`, `[ … ]`).
-# Fields are space-separated `key=value` tokens in any order; an absent optional field is omitted.
-artifact-mark = "semio mathematical.equation.dsl v1"
-document = artifact-mark field*
-field = {"notation" "=" child-handle} | {"results" "=" child-handle} | {"computed" "=" child-handle} | {"equation" "=" VALUE} | {"graph" "=" VALUE} | {"geometry" "=" VALUE}
-child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}
+artifact-mark = "semio" "mathematical.equation.dsl" "v1"
+document = artifact-mark root-field+
+root-field = {"notation" "=" child} | {"results" "=" child} | {"computed" "=" child} | {"equation" "=" expression}
+child = child-field+
+child-field = {"child-id" "=" text} | {"artifact-id" "=" text} | {"artifact-kind" "=" text} | {"standard" "=" text} | {"subset" "=" text}
+expression = expression-field+
+expression-field = {"next-label" "=" INT} | {"nodes" "=" "[" node* "]"}
+node = node-field+
+node-field = {"label" "=" INT} | {"kind" "=" node-kind} | {"lexeme" "=" text} | {"numer" "=" text} | {"denom" "=" text} | {"name" "=" text} | {"terms" "=" indices} | {"factors" "=" indices} | {"base" "=" INT} | {"exponent" "=" INT}
+node-kind = "integer" | "rational" | "symbol" | "add" | "mul" | "pow"
+indices = "[" INT* "]"
+text = IDENT | TEXT

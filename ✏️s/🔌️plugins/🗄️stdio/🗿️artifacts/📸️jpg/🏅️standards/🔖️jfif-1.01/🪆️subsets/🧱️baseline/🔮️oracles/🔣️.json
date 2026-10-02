@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution. The ♾️any sibling registers `image` 0.25 for the DOCUMENT vocabulary; this conformance-class vocabulary registers no oracle, because `image`'s public surface cannot see any of the five T.81 Annex F axes it addresses — see noOracleDecisions for the full reasoning, including why a byte-level differential would be vacuous here even with a perfect one.",
   "oracles": [
@@ -740,5 +740,6 @@
       "family": "structural",
       "notes": "SOF marker code hand-patched 0xC0 (baseline DCT, Huffman) -> 0xC9 (extended sequential DCT, arithmetic coding). HANDCRAFTED: Pillow has no arithmetic-entropy-coding support in its JPEG encoder at all (Huffman only), so no real-library path reaches this mutation. The entropy-coded scan data is left byte-identical to the genuine Pillow Huffman encoding, so this file is explicitly NOT a spec-conformant arithmetic-coded bitstream -- it exercises only the SOF marker-field mutation this subset's own vocabulary names, and is not claimed to be more than that."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

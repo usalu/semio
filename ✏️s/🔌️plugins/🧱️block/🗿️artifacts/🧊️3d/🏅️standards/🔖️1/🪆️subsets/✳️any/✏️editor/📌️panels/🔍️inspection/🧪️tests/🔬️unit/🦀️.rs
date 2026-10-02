@@ -36,13 +36,13 @@ fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
 /// 🚚️ Reads through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
 /// node's `BuiltChildren` only serialises through the retained page transport.
 fn project(document: &Block3dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = block3d_labels(&ViewModel::default());
+    let labels = block3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(document, None, labels, windows).expect("inspector renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector projection")
 }
 
 fn window_view(open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: BLOCK3D_BODY_INSPECTOR.into(), node_key: BLOCK3D_INSPECTOR_SUMMARY.into(), open, offset, rows }], ..Default::default() }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: BLOCK3D_BODY_INSPECTOR.into(), node_key: BLOCK3D_INSPECTOR_SUMMARY.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a): the summary section stamps its full field count, materialises at most that slice, and

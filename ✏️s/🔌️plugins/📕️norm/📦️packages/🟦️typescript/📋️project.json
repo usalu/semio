@@ -10,6 +10,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-wire-twins": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts wire-twins",
+        "forwardAllArgs": true
+      }
+    },
     "test-oracle-source": {
       "executor": "nx:run-commands",
       "options": {

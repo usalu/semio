@@ -14,10 +14,26 @@ use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit::wi
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell, set_snapshot};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-};
-use store::EngineHandles;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1: the canonical surface-id
@@ -198,7 +214,7 @@ fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxStrictEditorCommand
     if render_xlsx_cell_value(&cell.value, &workbook.shared_strings) == *value {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value) })], description: Some(format!("Set {sheet_name}!{row},{column}")), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: parse_xlsx_cell_value(value) })], ..Default::default() })
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxStrictEditor {

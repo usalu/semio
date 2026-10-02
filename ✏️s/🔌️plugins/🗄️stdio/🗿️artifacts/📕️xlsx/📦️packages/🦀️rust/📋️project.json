@@ -39,6 +39,20 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../📦️opc/**/*"
+      ]
     }
   }
 }

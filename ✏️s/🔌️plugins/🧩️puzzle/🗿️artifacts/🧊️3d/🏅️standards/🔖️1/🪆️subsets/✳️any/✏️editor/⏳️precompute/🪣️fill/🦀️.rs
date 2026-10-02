@@ -15,8 +15,9 @@ use crate::editor::puzzle3d::precompute::geometry::{
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::editor::puzzle3d::{empty_fixture, puzzle3d_next_object_label, Puzzle3dFixture, Puzzle3dObject};
+use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
+    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
     KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
 use semio_framework_job::{CommitCandidate, Generation, InteractiveJob, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, StepContext, StepOutcome};
@@ -560,6 +561,14 @@ fn retire_dsl_one(value: &mut dsl::DslValue, depth: usize) -> bool {
     match value {
         dsl::DslValue::String(string) => {
             if !retire_string(string) {
+                return false;
+            }
+            *value = dsl::DslValue::Null;
+            false
+        }
+        dsl::DslValue::Bytes(bytes) => {
+            if bytes.capacity() != 0 {
+                drop(std::mem::take(bytes));
                 return false;
             }
             *value = dsl::DslValue::Null;

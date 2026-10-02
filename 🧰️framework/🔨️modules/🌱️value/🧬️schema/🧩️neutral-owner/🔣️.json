@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/neutral-owner.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "grant",
+    "vectors",
+    "compilerStorage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "input",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {},
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "compilerStorage": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "directory",
+              "missing",
+              "relative",
+              "file",
+              "link",
+              "linked-ancestor"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

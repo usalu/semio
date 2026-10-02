@@ -119,12 +119,12 @@ pub fn handle(payload: &EditSelection, doc: &ArtifactView<'_, DrawingSnapshot>, 
     let ids = if payload.ids.is_empty() { &session.interaction.ids } else { &payload.ids };
     if payload.operation=="ungroup" {
         let (mutations,selection)=ungroup::plan(doc.snapshot,ids)?;
-        let mut emit=Emit::commit(mutations,"Ungroup");
+        let mut emit=Emit::mutations(mutations);
         emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&selection,"replace"));
         return Ok(emit);
     }
     let mutations=plan(doc.snapshot,ids,&payload.operation)?;
-    Ok(if mutations.is_empty() { Emit::default() } else { Emit::commit(mutations,&payload.operation) })
+    Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
+import{parseFormsJsonQuestion,formsQuestionJson,parseFormsJsonValue,parseFormsJsonCondition}from"../../../../🧬️schema/🌱️value/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️patches.json";
@@ -10,27 +11,27 @@ import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧬️mu
 /** 🧪️ Validated field edits match shared vectors and independent JSON Patch application. */
 export function testFormsQuestionPatches(): void {
   for (const item of fixture.cases) {
-    const before = structuredClone(item.before) as FormQuestion;
+    const before = parseFormsJsonQuestion(item.before);
     if ("error" in item) {
-      assert.throws(() => patchQuestion(before, item.field, item.value as DslValue), { message: item.error }, item.name);
+      assert.throws(() => patchQuestion(before, item.field, ((item.field==="default"||item.field==="params")&&item.value!==null?parseFormsJsonValue(item.value):item.field==="condition"&&item.value!==null?parseFormsJsonCondition(item.value):item.value)), { message: item.error }, item.name);
     } else {
-      const actual = patchQuestion(before, item.field, item.value as DslValue);
-      assert.deepEqual(actual, item.after, item.name);
-      assert.deepEqual(actual, applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
+      const actual = patchQuestion(before, item.field, ((item.field==="default"||item.field==="params")&&item.value!==null?parseFormsJsonValue(item.value):item.field==="condition"&&item.value!==null?parseFormsJsonCondition(item.value):item.value));
+      assert.deepEqual(formsQuestionJson(actual), item.after, item.name);
+      assert.deepEqual(formsQuestionJson(actual), applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
     }
-    assert.deepEqual(before, item.before, "patch leaves the input untouched");
+    assert.deepEqual(formsQuestionJson(before), item.before, "patch leaves the input untouched");
   }
   const validate = new Ajv().compile(choiceSchema);
   for (const item of choices.cases) {
-    const before = structuredClone(item.before) as FormQuestion;
+    const before = parseFormsJsonQuestion(item.before);
     const edit = { option: item.option, field: item.field, value: item.value };
     assert.equal(validate(edit), true, JSON.stringify(validate.errors));
     if ("error" in item) assert.throws(() => patchChoice(before, edit), { message: item.error }, item.name);
     else {
       const actual = patchChoice(before, edit);
-      assert.deepEqual(actual, item.after, item.name);
-      assert.deepEqual(actual, applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
+      assert.deepEqual(formsQuestionJson(actual), item.after, item.name);
+      assert.deepEqual(formsQuestionJson(actual), applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.name);
     }
-    assert.deepEqual(before, item.before, "choice edit leaves source untouched");
+    assert.deepEqual(formsQuestionJson(before), item.before, "choice edit leaves source untouched");
   }
 }

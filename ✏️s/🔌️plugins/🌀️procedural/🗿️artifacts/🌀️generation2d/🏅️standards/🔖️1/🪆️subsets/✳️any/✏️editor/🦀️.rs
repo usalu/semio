@@ -24,14 +24,59 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
-    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion,
-    ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Effect, Emit, EphemeralEmit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, TopologyNode,
-};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactReservedJob;
+use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_framework_plugin::ArtifactToolCompletion;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::TopologyNode;
 use crate::preview_eval::{PreviewEvalRunLink, PreviewEvalRunOwner, PreviewEvalSessions, PreviewEvalTarget, PreviewEvalWindow};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 🏷️ Plain string tag (NOT a trait const — `ArtifactEditor::DIALECT`+`ROLE` derive the real surface
@@ -315,7 +360,7 @@ fn generation2d_retained_reduce(
     snapshot: &Generation2dSnapshot,
     config: &Generation2dConfig,
     history: &semio_framework_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
+    _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
@@ -334,7 +379,6 @@ fn generation2d_retained_reduce(
             next.viewport = payload.viewport;
             Ok(Emit { window_config_mutations: vec![flow_window::config::addressed(view, next)?], ..Default::default() })
         }
-        Generation2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply_selected(payload, &doc, &interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default()),
         _ => command.dispatch(&doc, &cfg, session),
     }
 }
@@ -439,18 +483,24 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
 /// snapshot with every open press's and typing run's provisional leaves (the framework's, as of admission) folded in —
 /// `None` while nothing is open, so the committed snapshot is read as is. The overlay is retired cold, never dropped.
 fn generation2d_provisional_snapshot(committed: &Generation2dSnapshot, provisional: &[dsl::DslValue]) -> Option<Generation2dSnapshot> {
-    use crate::standards::v1::subsets::any::schema::mutations::apply_generation2d_mutation;
     if provisional.is_empty() {
         return None;
     }
     let mut overlay = committed.clone();
     for value in provisional {
         if let Ok(leaf) = <Generation2dMutation as dsl::FromValue>::from_value(value.clone()) {
-            let _ = apply_generation2d_mutation(&mut overlay, &leaf);
-            leaf.retire_cold();
+            generation2d_fold_provisional(&mut overlay, leaf);
         }
     }
     Some(overlay)
+}
+
+/// 🫥️ Folds one provisional leaf into a preview overlay and retires it. A leaf the overlay refuses paints nothing — a
+/// preview shows only what applies — and its refusal is never lost: the commit that lands the same leaf on the committed
+/// document reports it as the history row's outcome.
+fn generation2d_fold_provisional(overlay: &mut Generation2dSnapshot, leaf: Generation2dMutation) {
+    let _refused_paints_nothing = crate::standards::v1::subsets::any::schema::mutations::apply_generation2d_mutation(overlay, &leaf);
+    leaf.retire_cold();
 }
 
 /// 🔢️ The digest a preview target is evaluated and owed under: the committed document's target digest folded with the
@@ -1373,7 +1423,7 @@ pub struct Generation2dPlayApp;
 /// one still faults: a camera the graph cannot express is never silently replaced by one it can.
 fn parse_flow_viewport(args: &dsl::DslValue) -> Result<semio_framework_os_kernel::Viewport2d, Fault> {
     let Some(value) = args.get("viewport").cloned() else { return Ok(semio_framework_os_kernel::Viewport2d::default()) };
-    dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
+    semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
 impl ArtifactEditor for Generation2dPlayApp {
@@ -1580,7 +1630,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::generation2d::config::schema::app_schema_descriptor())
     }
 
@@ -1623,9 +1673,10 @@ impl ArtifactEditor for Generation2dPlayApp {
         };
         let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
         match action {
-            "nodeGraphEdit" => Ok(Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
-            })),
+            "nodeGraphEdit" => {
+                semio_framework_tool_machine::node_graph_edit_rows(&args).map_err(Fault::from)?;
+                Ok(Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.get("operations").map(dsl::json::to_json_string).unwrap_or_else(|| "[]".into()) }))
+            }
             "moveMediaNode" => Ok(Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
             "addWidget" => Ok(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "removeWidget" => Ok(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
@@ -1683,24 +1734,19 @@ impl ArtifactEditor for Generation2dPlayApp {
         }
     }
 
-    /// 🕹️ `nodeGraphEdit` reads the `graph` interaction domain directly (bypassing the
-    /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, ctx)`
-    /// signature is framework-fixed and has no `interaction` slot) — ticket
-    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
+    /// 🕹️ Every command runs its generated dispatch over a scratch session: no generation2d verb reads an ambient
+    /// selection (`nodeGraphEdit` rows name every entity they edit, design §13.3).
     fn handle(
         command: &Generation2dCommand,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, Fault> {
         let mut session = FlowEvalSession::new();
-        let result = match command {
-            Generation2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, &mut session),
-            _ => command.dispatch(doc, cfg, &mut session),
-        };
+        let result = command.dispatch(doc, cfg, &mut session);
         close_flow_session(&mut session);
         result
     }
@@ -1888,14 +1934,14 @@ impl Generation2dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
         menu = menu.group("mode", |m| m.action("setShowMode"));
         menu = menu.group("create", |m| m.action("addGeneration"));
         menu = menu.group("methods", |m| m.action("selectGeneration"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()

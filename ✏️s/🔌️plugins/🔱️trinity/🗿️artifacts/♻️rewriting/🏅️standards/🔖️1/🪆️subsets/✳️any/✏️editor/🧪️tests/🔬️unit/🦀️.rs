@@ -1,13 +1,22 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::Rhs;
 use protocol::{OpBinary, OpText};
-use semio_framework_plugin::{artifact_app_laws, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
+use semio_framework_plugin::artifact_app_laws;
+use semio_framework_plugin::App;
+use semio_framework_plugin::EditorApp;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::PluginApp;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_plugin::VcsArtifactApp;
+use semio_framework_plugin::ViewModel;
 
 /// 🎫️ See `jack`'s `trinity_jack_manifest_for_tests` doc comment for why this wrapper exists
 /// (SDK gap, `artifact_app_laws::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
 fn trinity_rewriting_manifest_for_tests() -> App {
     App { definition: create_rewriting_app(), examples: Vec::new() }
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
     artifact_app_laws::meta(actor)
@@ -120,7 +129,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::default()).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -131,8 +140,8 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
 #[semio_framework_async_macros::async_test]
 async fn renders_before_and_after_graphs() {
     let mut app = new_app().await;
-    let before = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::default()).await;
-    let after = render(&mut app, TRINITY_REWRITING_PLAY_BODY_AFTER, &ViewModel::default()).await;
+    let before = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let after = render(&mut app, TRINITY_REWRITING_PLAY_BODY_AFTER, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(before.contains("node-graph"));
     assert!(after.contains("node-graph"));
 }
@@ -153,8 +162,8 @@ async fn apply_rewriting_changes_after_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn renders_lhs_rhs_graphs() {
     let mut app = new_app().await;
-    let lhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_LHS, &ViewModel::default()).await;
-    let rhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_RHS, &ViewModel::default()).await;
+    let lhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_LHS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
+    let rhs_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_RHS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(lhs_json.contains("node-graph"));
     assert!(rhs_json.contains("node-graph"));
     let lhs = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&lhs_json).expect("lhs node-graph scene");
@@ -183,13 +192,12 @@ async fn add_and_delete_rhs_set_clause() {
     settle(&mut app).await;
     let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
     assert_eq!(rhs.set.len(), 2);
-    select_graph(&mut app, &["rhs-set-1"]).await;
     let result = app
-        .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
+        .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"))
         .await
-        .expect("delete selection");
+        .expect("delete the clause node");
     let receipt = settle(&mut app).await;
-    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "deleteSelection must publish an artifact mutation: {:?}", receipt.lanes);
+    assert!(!result.mutations.is_empty() || receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a delete row must publish an artifact mutation: {:?}", receipt.lanes);
     let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
     assert_eq!(rhs.set.len(), 1);
 }
@@ -197,7 +205,7 @@ async fn add_and_delete_rhs_set_clause() {
 #[semio_framework_async_macros::async_test]
 async fn jack_view_renders_compiled_query_tokens() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_JACK, &ViewModel::default()).await;
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_JACK, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.tokens_json.is_some_and(|tokens| !tokens.is_empty()));
 }
@@ -205,7 +213,7 @@ async fn jack_view_renders_compiled_query_tokens() {
 #[semio_framework_async_macros::async_test]
 async fn graph_scenes_have_lod_json() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::default()).await;
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_BEFORE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
     assert!(scene.lod_json.is_some(), "lodJson lane missing: {json}");
 }
@@ -272,7 +280,7 @@ async fn set_active_example_is_registered_on_both_tool_rosters() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_resolve_native_by_default() {
     let mut app = new_app().await;
-    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &ViewModel::default()).await;
+    let json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(json.contains("\"Pieces\""));
     assert!(!json.contains("Stücke"));
 }
@@ -280,7 +288,7 @@ async fn trinity_rewriting_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_translate_panels_in_german() {
     let mut app = new_app().await;
-    let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
+    let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let document_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_ARTIFACT, &view).await;
     assert!(document_json.contains("Stücke"));
     assert!(!document_json.contains("\"Pieces\""));
@@ -441,7 +449,7 @@ async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_grou
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &ViewModel::default()).await;
+    let menu = app.context_menu(&request, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     let bare_edit_rows = menu.iter().flat_map(|row| std::iter::once(row).chain(row.children.iter().flatten())).filter(|row| row.action.as_deref() == Some("nodeGraphEdit") && row.id != "delete-selection").count();
     assert_eq!(bare_edit_rows, 0, "no argument-less nodeGraphEdit row: {menu:?}");
 }
@@ -454,3 +462,162 @@ async fn the_node_graph_gesture_verb_is_kept_off_the_rail_and_the_transform_grou
 async fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_rewriting_app().artifact_kinds, vec![crate::artifact_kind()]);
 }
+
+//#region 🕹️NodeDragLaws
+fn working_graph_positions(state: &RewritingSnapshot) -> Vec<(String, f64, f64)> {
+    semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes").nodes().into_iter().map(|node| (node.id, node.x, node.y)).collect()
+}
+
+fn drag_row(gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> pack::JsonValue {
+    pack::json!({ "operation": "move", "gestureId": gesture, "nodeIds": node_ids, "dx": dx, "dy": dy })
+}
+
+fn applied(state: &RewritingSnapshot, leaves: &[RewriteRuleMutation]) -> RewritingSnapshot {
+    let mut next = state.clone();
+    for leaf in leaves {
+        crate::apply_rewrite_rule_mutation(&mut next, leaf).expect("the leaf applies");
+    }
+    next
+}
+
+/// ⚖️ LAW: a released working-graph drag (the hosts' `move` gesture record) is ONE tool transaction of `<appId>#nodeGraphEdit`
+/// holding ONE relative `drag-working-nodes {targets, dx, dy}` — every target moves by the offset, every other node stays — and
+/// ONE inverse row restores the graph; two gestures are two transactions, a seedless view publishes the leaf plainly, and a
+/// release that moves nothing leaves zero trace.
+#[test]
+fn a_released_working_graph_drag_is_one_tool_transaction_of_one_relative_leaf() {
+    let state = default_rule_state();
+    let ids = working_graph_node_ids(&state);
+    let (first, second) = (ids[0].as_str(), ids[1].as_str());
+    let operations = pack::JsonValue::Array(vec![drag_row("g-1", &[first, second], 24.0, -8.0)]).to_string();
+    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &operations, "seed").expect("a drag row is admitted");
+    let transaction = emit.transaction.clone().expect("the release is a tool transaction");
+    assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.trinity.rewriting@1/*#editor#nodeGraphEdit", "{transaction:?}");
+    assert!(emit.coalesce_key.is_none(), "a committed transaction is a plain edit");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragWorkingNodes(leaf)] if leaf.targets == vec![first.to_string(), second.to_string()] && (leaf.dx, leaf.dy) == (24.0, -8.0)), "{:?}", emit.artifact_mutations);
+    let moved = applied(&state, &emit.artifact_mutations);
+    for ((id, x, y), (_, before_x, before_y)) in working_graph_positions(&moved).into_iter().zip(working_graph_positions(&state)) {
+        let expected = if id == first || id == second { (before_x + 24.0, before_y - 8.0) } else { (before_x, before_y) };
+        assert_eq!((x, y), expected, "node {id}");
+    }
+    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
+    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
+    assert_eq!(applied(&moved, &inverse), state, "the inverse row restores the working graph");
+    let again = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::JsonValue::Array(vec![drag_row("g-2", &[first], 1.0, 0.0)]).to_string(), "seed").expect("a second drag");
+    assert_ne!(again.transaction.expect("second ref").id, transaction.id, "two gestures are two transactions");
+    let plain = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &operations, "").expect("a seedless drag");
+    assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "a view without command authority publishes the leaf plainly");
+    let idle = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::JsonValue::Array(vec![drag_row("g-3", &[first], 0.0, 0.0)]).to_string(), "seed").expect("a zero drag");
+    assert!(idle.artifact_mutations.is_empty() && idle.transaction.is_none(), "a release that moved nothing leaves zero trace");
+    let malformed = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &pack::json!([{ "operation": "move", "gestureId": "g", "nodeIds": [], "dx": 1.0, "dy": 0.0 }]).to_string(), "seed");
+    assert!(malformed.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a malformed gesture record is refused by name");
+}
+
+/// ⚖️ LAW: a rule-node drag on the LHS/RHS canvas is ONE relative `drag-rule-nodes` that moves each clause from where it sits —
+/// its layout point, else its default slot — and ONE `set-rule-layout-points` row undoes it exactly (a node that had no point
+/// is cleared back to its slot).
+#[test]
+fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row() {
+    let mut state = default_rule_state();
+    state.rule_layout.insert("lhs-where".into(), LayoutPoint { x: 300.0, y: 90.0 });
+    let operations = pack::JsonValue::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
+    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DragRuleNodes(_)]), "{:?}", emit.artifact_mutations);
+    let moved = applied(&state, &emit.artifact_mutations);
+    assert_eq!(moved.rule_layout.get("lhs-match"), Some(&LayoutPoint { x: 30.0, y: 10.0 }), "the match moves from its default slot");
+    assert_eq!(moved.rule_layout.get("lhs-where"), Some(&LayoutPoint { x: 330.0, y: 100.0 }), "the WHERE clause moves from its layout point");
+    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
+    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::SetRuleLayoutPoints(undo)] if undo.cleared == vec!["lhs-match".to_string()] && undo.points.len() == 1), "one exact inverse row: {inverse:?}");
+    assert_eq!(applied(&moved, &inverse), state);
+}
+
+/// ⚖️ LAW (fixture `🧫️fixtures/🧫️node-graph-edit-rows`): every accepted row of the shared node-graph record vocabulary maps to an
+/// intent leaf on the working graph — `connect` draws ONE `connect-working-ports` carrying the graph's edge kind, `disconnect` cuts
+/// ONE `disconnect-working-edges` — every refused row refuses the whole batch by name, `setSlider`/`insertPort` are refused (the
+/// graph has neither), and a rule side draws or cuts no wire alone.
+#[test]
+fn the_shared_node_graph_rows_map_to_intent_leaves() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json")).expect("node-graph-edit-rows fixture");
+    let state = default_rule_state();
+    let edit = |surface: &str, rows: serde_json::Value| crate::editor::rewriting::commands::node_graph_edit(&state, surface, &rows.to_string(), "seed");
+    for refused in corpus["refused"].as_array().expect("refused rows") {
+        let emit = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([refused["row"]]));
+        assert!(emit.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "refused row {} is refused by name", refused["id"]);
+    }
+    let graph = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes");
+    let (nodes, edges) = (graph.nodes(), graph.edges());
+    let connect = serde_json::json!([{ "operation": "connect", "sourceNodeId": nodes[0].id, "sourcePortId": "out", "targetNodeId": nodes[1].id, "targetPortId": "in" }]);
+    let drawn = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, connect.clone()).expect("a connect row");
+    let (source, target) = (format!("{}@out", nodes[0].id), format!("{}@in", nodes[1].id));
+    assert!(drawn.transaction.is_none() && matches!(drawn.artifact_mutations.as_slice(), [RewriteRuleMutation::ConnectWorkingPorts(leaf)] if leaf.source == source && leaf.target == target && leaf.kind == edges[0].kind), "{:?}", drawn.artifact_mutations);
+    let wired = applied(&state, &drawn.artifact_mutations);
+    let after = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&wired.before_fixture_json).expect("the wired graph decodes");
+    assert_eq!(after.edges().len(), edges.len() + 1, "one wire is drawn");
+    assert!(after.edges().iter().any(|edge| edge.source == source && edge.target == target && edge.id == format!("{source}->{target}")));
+    let inverse = crate::inverse_rewrite_rule_mutation(&state, &drawn.artifact_mutations[0]);
+    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
+    assert_eq!(applied(&wired, &inverse), state, "the inverse row restores the working graph");
+    let cut = edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([{ "operation": "disconnect", "synapseId": edges[0].id }])).expect("a disconnect row");
+    assert!(matches!(cut.artifact_mutations.as_slice(), [RewriteRuleMutation::DisconnectWorkingEdges(leaf)] if leaf.targets == vec![edges[0].id.clone()]), "{:?}", cut.artifact_mutations);
+    let severed = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&applied(&state, &cut.artifact_mutations).before_fixture_json).expect("the cut graph decodes");
+    assert_eq!((severed.nodes().len(), severed.edges().len()), (nodes.len(), edges.len() - 1), "one wire is cut, every node stays");
+    for row in [serde_json::json!({ "operation": "setSlider", "widgetId": "w", "value": 1.0 }), serde_json::json!({ "operation": "insertPort", "nodeId": nodes[0].id, "side": "input", "index": 0 })] {
+        assert!(edit(TRINITY_REWRITING_PLAY_SURFACE_BEFORE, serde_json::json!([row])).is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "{row} is refused by name");
+    }
+    assert!(edit(TRINITY_REWRITING_PLAY_SURFACE_LHS, connect).is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a rule side draws no wire alone");
+}
+
+/// ⚖️ LAW: one canvas drag through the shell is ONE edit and ONE history row labelled from its leaf in every language, and ONE
+/// undo moves the nodes back.
+#[semio_framework_async_macros::async_test]
+async fn one_canvas_drag_is_one_history_row_labelled_from_its_leaf() {
+    use semio_framework_plugin::PluginApp;
+    let mut app = new_app().await;
+    let before = app.snapshot().expect("projection");
+    let ids = working_graph_node_ids(&before);
+    let rows_before = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).count();
+    let operations = pack::JsonValue::Array(vec![drag_row("g-shell", &[ids[0].as_str(), ids[1].as_str()], 24.0, -8.0)]).to_string();
+    let args = pack::json_to_dsl_value(&pack::json!({ "surfaceId": TRINITY_REWRITING_PLAY_SURFACE_BEFORE, "operations": operations }));
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("local")).await.expect("the drag is admitted");
+    settle(&mut app).await;
+    let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
+    assert_eq!(rows.len(), rows_before + 1, "one drag, one edit, one row");
+    let row = rows.iter().max_by_key(|row| row.seq).expect("the drag's row");
+    assert_eq!(row.mutations.len(), 1, "one relative leaf");
+    assert_eq!(row.mutations[0].label.resolve(Terminology::Native, Locale::En), "Drag 2 nodes by (24, -8)");
+    assert_eq!(row.mutations[0].label.resolve(Terminology::Native, Locale::De), "2 Knoten um (24; -8) ziehen");
+    history(&mut app, "undo").await;
+    assert_eq!(working_graph_positions(&app.snapshot().expect("projection")), working_graph_positions(&before), "one undo moves the nodes back");
+}
+
+/// ⚖️ LAW: a `delete` row on the working graph is ONE relative `delete-working-nodes` of its nodes — every edge touching them goes
+/// with them — followed by ONE `disconnect-working-edges` of the wires it names apart from those; each undoes with ONE row, and a
+/// node the graph does not hold is skipped (`mutation.partial`), never a whole-graph write.
+#[test]
+fn a_deleted_working_graph_selection_is_relative_leaves() {
+    use semio_s_artifact_trinity_jack::port_node_id;
+    let state = default_rule_state();
+    let graph = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&state.before_fixture_json).expect("the working graph decodes");
+    let touches = |edge: &semio_s_artifact_trinity_jack::Edge, id: &str| port_node_id(&edge.source).unwrap_or(&edge.source) == id || port_node_id(&edge.target).unwrap_or(&edge.target) == id;
+    let doomed = graph.nodes().into_iter().map(|node| node.id).find(|id| graph.edges().iter().any(|edge| touches(edge, id))).expect("a node with an edge");
+    let touching: Vec<String> = graph.edges().iter().filter(|edge| touches(edge, &doomed)).map(|edge| edge.id.clone()).collect();
+    let apart = graph.edges().into_iter().find(|edge| !touches(edge, &doomed)).map(|edge| edge.id);
+    let synapses: Vec<String> = touching.iter().take(1).cloned().chain(apart.clone()).collect();
+    let delete = serde_json::json!([{ "operation": "delete", "nodeIds": [doomed, "absent"], "synapseIds": synapses }]).to_string();
+    let emit = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_BEFORE, &delete, "seed").expect("a delete");
+    match apart.clone() {
+        Some(apart) => assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DeleteWorkingNodes(nodes), RewriteRuleMutation::DisconnectWorkingEdges(wires)] if nodes.targets == vec![doomed.clone(), "absent".to_string()] && wires.targets == vec![apart.clone()]), "{:?}", emit.artifact_mutations),
+        None => assert!(matches!(emit.artifact_mutations.as_slice(), [RewriteRuleMutation::DeleteWorkingNodes(_)]), "{:?}", emit.artifact_mutations),
+    }
+    let deleted = applied(&state, &emit.artifact_mutations);
+    let after = semio_s_artifact_trinity_jack::JackSnapshot::from_json(&deleted.before_fixture_json).expect("the deleted graph decodes");
+    assert!(after.nodes().iter().all(|node| node.id != doomed) && after.nodes().len() + 1 == graph.nodes().len(), "only the named node the graph holds is gone");
+    assert_eq!(after.edges().len() + touching.len() + usize::from(apart.is_some()), graph.edges().len(), "every edge touching it and the named wire apart are gone, every other edge stays");
+    let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&emit.artifact_mutations[0], &state);
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.partial"), "the node the graph lacks is skipped: {:?}", outcome.messages());
+    let inverse = crate::inverse_rewrite_rule_mutation(&state, &emit.artifact_mutations[0]);
+    assert!(matches!(inverse.as_slice(), [RewriteRuleMutation::EditBeforeFixture(_)]), "one inverse row: {inverse:?}");
+    let rule = crate::editor::rewriting::commands::node_graph_edit(&state, TRINITY_REWRITING_PLAY_SURFACE_LHS, &serde_json::json!([{ "operation": "delete", "nodeIds": [], "synapseIds": ["lhs-wire"] }]).to_string(), "seed");
+    assert!(rule.is_err_and(|fault| fault.code.0 == "trinity.rewriting.node-graph.row"), "a rule wire is cut with its clause, never alone");
+}
+//#endregion 🕹️NodeDragLaws

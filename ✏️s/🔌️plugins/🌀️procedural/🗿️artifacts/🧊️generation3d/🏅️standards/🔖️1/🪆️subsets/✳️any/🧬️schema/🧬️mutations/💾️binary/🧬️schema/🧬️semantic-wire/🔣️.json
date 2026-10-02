@@ -13,8 +13,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 10,
+      "maxItems": 10,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -33,7 +33,7 @@
           "tag": {
             "type": "integer",
             "minimum": 14,
-            "maximum": 18
+            "maximum": 19
           },
           "source": {
             "type": "string",
@@ -83,6 +83,23 @@
                 "maxItems": 2,
                 "items": {
                   "type": "number"
+                }
+              },
+              "input": {
+                "type": "object",
+                "required": [
+                  "$schema"
+                ],
+                "properties": {
+                  "$schema": {
+                    "enum": [
+                      "number",
+                      "text",
+                      "boolean",
+                      "point",
+                      "vector"
+                    ]
+                  }
                 }
               }
             }

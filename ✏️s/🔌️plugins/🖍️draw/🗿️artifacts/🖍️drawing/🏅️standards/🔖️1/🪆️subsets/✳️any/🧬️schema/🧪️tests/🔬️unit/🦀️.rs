@@ -593,9 +593,9 @@ fn text_line_layout_matches_the_shared_fixture() {
     for case in fixture["cases"].as_array().unwrap() {
         let content = case["content"].as_str().unwrap();
         let size = case["size"].as_f64().unwrap();
-        let actual = semio_s_2d::text::drawing_text_lines(content).collect::<Vec<_>>();
+        let actual = semio_framework_2d::text::drawing_text_lines(content).collect::<Vec<_>>();
         assert_eq!(serde_json::json!(actual), case["lines"]);
-        for (index, value) in semio_s_2d::text::drawing_text_fallback_extent(content, size).iter().enumerate() { assert!((value - case["extent"][index].as_f64().unwrap()).abs() < 1e-10); }
+        for (index, value) in semio_framework_2d::text::drawing_text_fallback_extent(content, size).iter().enumerate() { assert!((value - case["extent"][index].as_f64().unwrap()).abs() < 1e-10); }
     }
 }
 

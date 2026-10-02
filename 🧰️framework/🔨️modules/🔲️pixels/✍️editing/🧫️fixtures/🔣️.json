@@ -1370,5 +1370,340 @@
         "height": 2
       }
     }
+  ],
+  "floodSelections": [
+    {
+      "name": "A zero tolerance takes only the seed's exact colour",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "expected": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "The full tolerance takes every reachable pixel",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 255,
+      "expected": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "Regions are 4-connected: a diagonal neighbour of the same colour is not reached",
+      "image": {
+        "width": 3,
+        "height": 3,
+        "pixels": [
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255,
+          0,
+          0,
+          0,
+          255,
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "expected": [
+        255,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Alpha counts in the channel distance",
+      "image": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          200
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 54,
+      "expected": [
+        255,
+        0
+      ]
+    },
+    {
+      "name": "A distance equal to the tolerance is taken",
+      "image": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          200
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 55,
+      "expected": [
+        255,
+        255
+      ]
+    },
+    {
+      "name": "An unselected pixel is never taken and blocks the region behind it",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255
+        ]
+      },
+      "seed": [
+        0,
+        0
+      ],
+      "tolerance": 0,
+      "selection": [
+        255,
+        0,
+        128
+      ],
+      "expected": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "A selected pixel is taken at its selection coverage",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255
+        ]
+      },
+      "seed": [
+        1,
+        0
+      ],
+      "tolerance": 0,
+      "selection": [
+        200,
+        100,
+        50
+      ],
+      "expected": [
+        200,
+        100,
+        50
+      ]
+    },
+    {
+      "name": "A wall splits a region; the seed's side is taken",
+      "image": {
+        "width": 4,
+        "height": 2,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          0,
+          0,
+          0,
+          255,
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255,
+          0,
+          0,
+          0,
+          255,
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255
+        ]
+      },
+      "seed": [
+        3,
+        1
+      ],
+      "tolerance": 0,
+      "expected": [
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "A seed on an unselected pixel takes nothing",
+      "image": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          10,
+          10,
+          10,
+          255,
+          10,
+          10,
+          10,
+          255
+        ]
+      },
+      "seed": [
+        1,
+        0
+      ],
+      "tolerance": 255,
+      "selection": [
+        255,
+        0
+      ],
+      "expected": [
+        0,
+        0
+      ]
+    }
   ]
 }

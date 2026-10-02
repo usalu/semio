@@ -30,7 +30,7 @@ import { hubCredentialFromEnv, isAcceptancePreconditionMissing } from "../../../
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   for (let current = start, depth = 0; depth < 32; depth += 1) {
     if (existsSync(join(current, ".mcp.json"))) return current;
     const parent = dirname(current);
@@ -39,7 +39,7 @@ function findRepoRoot(start: string): string {
   }
   throw new Error(`the user-path gate could not locate the repository root above ${start}`);
 }
-const repoRoot = findRepoRoot(here);
+const repoRoot = findWorkspaceRoot(here);
 const HUB = (process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787").replace(/\/$/u, "");
 const SHELL = (process.env.S_OS_MCP_LIVE_SHELL_URL ?? "http://127.0.0.1:6080").replace(/\/$/u, "");
 const LOCALE = process.env.S_OS_MCP_LIVE_LOCALE === "de" ? "de" : "en";

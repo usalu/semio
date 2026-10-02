@@ -10,14 +10,85 @@
   "gcps": null,
   "results": {
     "sparse": {
-      "points": "AAAAAAAAAAAAAAAAAACAPwAAgD8AAIA/",
-      "colors": "/wAAAP8A"
+      "points": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f800000"
+          }
+        ]
+      },
+      "colors": [
+        255,
+        0,
+        0,
+        0,
+        255,
+        0
+      ]
     },
     "dense": {
-      "positions": "AACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA",
-      "colors": "ECAwQFBg",
-      "confidence": "AABAPwAAAD8=",
-      "classification": "AgY="
+      "positions": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "00000000"
+          }
+        ]
+      },
+      "colors": [
+        16,
+        32,
+        48,
+        64,
+        80,
+        96
+      ],
+      "confidence": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "3f400000"
+          },
+          {
+            "bits": "3f000000"
+          }
+        ]
+      },
+      "classification": [
+        2,
+        6
+      ]
     },
     "mesh": {
       "mesh": {

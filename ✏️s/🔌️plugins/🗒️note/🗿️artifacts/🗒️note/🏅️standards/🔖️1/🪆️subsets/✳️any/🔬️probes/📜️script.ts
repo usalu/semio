@@ -24,7 +24,7 @@
 //   bun 📜️script.ts pdf-compare  --input <expected.pdf> --input <actual.pdf>
 //
 // @see ../🏭️generator/🔁️codec/⌨️cli/🦀️.rs — the binary that does the reading/comparing
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 
 //#endregion 🧲️Header
 

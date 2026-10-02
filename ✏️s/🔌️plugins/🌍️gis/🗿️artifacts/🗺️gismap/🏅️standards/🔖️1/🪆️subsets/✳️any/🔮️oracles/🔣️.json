@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.gis.gismap` carries three parallel id-keyed, order-meaningful `MapFeature` collections whose payloads are opaque `dsl::DslValue`s, and two derived composed children content-addressed off all three. No third party reads `.dsl.semio` — GeoJSON, `geo` and GDAL were surveyed and declined for the reasons recorded on the oracle entry — so the reference is a SECOND IMPLEMENTATION in Python, written from this subset's committed schema, grammar and specification vectors.",
   "oracles": [

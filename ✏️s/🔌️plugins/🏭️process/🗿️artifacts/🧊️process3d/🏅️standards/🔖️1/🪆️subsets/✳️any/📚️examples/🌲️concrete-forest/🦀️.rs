@@ -1,7 +1,8 @@
 //! 📚️ Example `concrete-forest` — the reused hexagonal-cut concrete forest piece processed by every
 //! machine of the concrete catalog.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "concrete-forest";
 pub fn label() -> LocalizedLabel {

@@ -7,7 +7,10 @@ use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_VOXEL_DIM_MAX, PUZZLE5D_VOXEL_DIM_MIN};
 use dsl::os_pack::json::object;
-use semio_framework_plugin::{LabelText, LocalizedLabel, UtilityDefinition, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 
 pub const UTILITY_ID: &str = "volumeBrush";
 

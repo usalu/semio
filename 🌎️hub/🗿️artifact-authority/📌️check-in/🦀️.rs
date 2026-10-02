@@ -17,6 +17,7 @@ use ::directory::os_directory::{
     descriptor_digest_v1, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentDescriptor, DocumentScope,
     EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
 };
+use ::directory::os_store::canonical_check_in_line;
 use semio_framework_hash::Sha256;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -50,13 +51,6 @@ pub trait ReplayingArtifactAuthority {
     /// 📌️ Folds the ledger stream onto the base pair, validates both sides, and transfers one
     /// checkpoint candidate whose baseline is exactly `head`.
     async fn materialize_check_in(&self, request: CheckInMaterialization, context: &OperationContext<'_>) -> Result<CheckpointCandidate, AuthorityError>;
-}
-
-/// 📌️ The alternative Check In publishes for `document_id`: the canonical trunk.
-/// Replay clears any viewer's head before it materializes the pair, so this line is what the
-/// published checkpoint contains.
-fn canonical_check_in_line(document_id: &str) -> String {
-    semio_framework_os_kernel::canonical_check_in_line(document_id)
 }
 
 fn validate_check_in(request: &CheckInMaterialization, context: &OperationContext<'_>) -> Result<(), AuthorityError> {

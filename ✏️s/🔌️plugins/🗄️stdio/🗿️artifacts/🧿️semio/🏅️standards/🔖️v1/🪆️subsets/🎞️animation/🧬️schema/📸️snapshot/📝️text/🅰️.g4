@@ -28,9 +28,12 @@ point3: '[' number ',' number ',' number ']';
 quat: '[' number ',' number ',' number ',' number ']';
 numberList: '[' (number (',' number)*)? ']';
 
-number: INT | FLOAT;
+number: INT | FLOAT | IEEE;
 
 HEX: [0-9a-f]*;
 INT: '-'? [0-9]+;
 FLOAT: '-'? [0-9]+ '.' [0-9]+;
 WS: [ \t\r\n]+ -> skip;
+
+IEEE : '-'? 'inf' | 'nan64_' WORD WORD WORD WORD | 'nan32_' WORD WORD ;
+fragment WORD : [0-9a-f] [0-9a-f] [0-9a-f] [0-9a-f] ;

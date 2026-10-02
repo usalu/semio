@@ -311,7 +311,7 @@ impl MemberOpenRequest {
             };
         }
         if let Some(expected) = self.expected.take() {
-            *self.closing_identity = Some(super::retirement::owned_retirement((expected, self.owner.take())));
+            *self.closing_identity = Some(semio_framework_value::retirement::owned_retirement((expected, self.owner.take())));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         assert!(self.owner.is_none());
@@ -344,56 +344,21 @@ pub struct MemberOpenAdmissionError {
     pub request: MemberOpenRequest,
 }
 
-crate::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition, conflicts, viewer_line, viewer_checkpoint });
-crate::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect });
-crate::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
-crate::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
-crate::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
-crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane });
-crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
-crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
-crate::artifact_retire_struct!(crate::os_spr::TransactionRef { id, tool });
-crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
-crate::artifact_retire_struct!(crate::os_spr::EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
-crate::artifact_retire_leaf!(crate::os_spr::HybridLogicalTimestamp);
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition, conflicts, viewer_line, viewer_checkpoint });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryComposition { owner, dialect });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
 
-impl super::retirement::RetireOwned for crate::os_spr::MutationId {
-    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
-        super::retirement::RetireOwned::retirement(self.0)
-    }
-}
 
-impl super::retirement::RetireOwned for crate::os_spr::InputReplacement {
-    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
-        match self {
-            Self::Input { schema, payload } => crate::artifact_retirement_sequence![schema, payload],
-            Self::Withdrawn => super::retirement::sequence(Vec::new()),
-        }
-    }
-}
-crate::artifact_retire_struct!(crate::os_spr::FoldChange { id, edit_ids, description, saved_at });
-crate::artifact_retire_struct!(crate::os_spr::FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
-crate::artifact_retire_struct!(crate::os_spr::FoldAlternative { id, name, checkpoint_ids });
-crate::artifact_retire_struct!(crate::os_spr::TransitionAuthor { id, name, avatar });
-crate::artifact_retire_struct!(crate::os_spr::TransitionPin { child_uri, checkpoint_id });
-crate::artifact_retire_leaf!(crate::os_dsl::Severity);
-impl super::retirement::RetireOwned for crate::os_dsl::FaultCode {
-    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
-        super::retirement::RetireOwned::retirement(self.0)
-    }
-}
-crate::artifact_retire_struct!(crate::os_spr::MutationMessage { level, code, message, target, op_index });
-crate::artifact_retire_struct!(crate::os_spr::EditMessages { edit_id, messages });
 
-impl super::retirement::RetireOwned for crate::os_spr::MutationOrigin {
-    fn retirement(self) -> Box<dyn super::retirement::RetirementCursor> {
-        match self {
-            Self::Owner => super::retirement::sequence(Vec::new()),
-            Self::Contributed { plugin_id, mutation_id, payload_hash } => crate::artifact_retirement_sequence![plugin_id, mutation_id.0, payload_hash.0],
-            Self::Transaction { initiator } => crate::artifact_retirement_sequence![initiator.artifact_id, initiator.artifact_kind, initiator.dialect],
-        }
-    }
-}
+
+
+
+
 
 pub(super) struct MemberStoreOpenRetained<P, M>
 where
@@ -545,7 +510,7 @@ where
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(super::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(request) = self.request.as_mut() {

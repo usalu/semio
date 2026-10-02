@@ -3,7 +3,8 @@
 //! whose declared root name matches the document element, so `check_valid_conformance` reports no
 //! hard issue. The ✳️any subset's own `🎬️demo` cannot serve here — it has no doctype at all.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

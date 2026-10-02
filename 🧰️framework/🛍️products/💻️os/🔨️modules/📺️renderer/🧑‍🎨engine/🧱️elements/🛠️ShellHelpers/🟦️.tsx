@@ -36,6 +36,8 @@ import {
     // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
     // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
     argControl,
+    actionArgNumberFacets,
+    type ActionArgNumberFacets,
     referenceIdText,
     referenceIdValue,
     type ReferenceIdType,
@@ -189,8 +191,7 @@ import React, {
     useState
 } from "react";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
-import { parseUiColorHex, uiColorHex, uiNumberKeyValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+import { parseUiColorHex, uiColorHex, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import type { SelectionMode } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
@@ -2261,9 +2262,7 @@ export type BrowserActorPanelHostV1 = Readonly<{
   onAction: (action: ActionDescriptor) => void;
 }>;
 
-/** 🗂️ The panel-tab ids whose bodies an actor may render for `app`: its panel-tab leaves with a body, exactly the
- * panels the local refresh asks a guest for (`buildUiRefreshRequest`). */
-/** 🛟️ Every history-edit refusal code the shell names, with its label key: the event log's and the hub's `history.*`
+/** 🧯️ Every history-edit refusal code the shell names, with its label key: the event log's and the hub's `history.*`
  * transition refusals (`🛢️db/🗿️artifact`, `🏪️store/🔄️sync`), a live session's `timeTravel.*` refusals
  * (`⏪️time-travel`), the plugin runtime's own preconditions of a `historyEdit*` verb and the driver faults it records on
  * the session (`🔌️plugin/⏪️time-travel`). Every text is byte-equal with the wgpu shell's (the shared band corpus).
@@ -2291,6 +2290,7 @@ export const HISTORY_REFUSAL_LABEL_KEYS = {
   "timeTravel.schema-unavailable": "ui.timeTravel.refusal.schemaUnavailable",
   "timeTravel.replay-faulted": "ui.timeTravel.refusal.replayFaulted",
   "timeTravel.commit-failed": "ui.timeTravel.refusal.commitFailed",
+  "timeTravel.member-gone": "ui.timeTravel.refusal.memberGone",
 } as const satisfies Readonly<Record<string, UiTranslationKey>>;
 
 /** 🛟️ One code of {@link HISTORY_REFUSAL_LABEL_KEYS}. */
@@ -3245,7 +3245,7 @@ export function checkinSubmitMessageV1(args: unknown): string {
   return message === "" ? "check-in" : message;
 }
 
-/** ⏪️ What a checkpoint request does while the focused program's history may be under edit (e2e R2-6): outside a
+/** 🛂️ What a checkpoint request does while the focused program's history may be under edit (e2e R2-6): outside a
  * session it dispatches `commitCheckpoint`; inside one the guest freezes the history (`timeTravel.frozen`), so an
  * automatic check-in (`"auto"`: idle, edit count, close) waits for the next one after the session and an explicit one is
  * told why — no `commitCheckpoint` reaches the guest from either. */
@@ -3254,20 +3254,20 @@ export function checkpointGateV1(timeTravel: HistoryTimeTravel | null, message: 
   return message === "auto" ? "wait" : "frozen";
 }
 
-/** 📌️ The identity a checkpoint-on-close is keyed on: one program's one document, `null` when no editor holds one. A
+/** 🔩️ The identity a checkpoint-on-close is keyed on: one program's one document, `null` when no editor holds one. A
  * view-state rewrite (every finalize, the New-alternative submit) mints a new session object of the SAME program, which
  * keeps this key and so closes nothing (e2e R2-6). */
 export function checkpointOnCloseKeyV1(editor: boolean, program: { readonly pluginId: string; readonly instanceId: number } | null, documentId: string | null): string | null {
   return editor && program !== null && documentId !== null && documentId !== "" ? `${program.pluginId}#${program.instanceId}@${documentId}` : null;
 }
 
-/** 📌️ Runs `onClose` — the closure of the render that opened `key` — when `key` changes or the shell unmounts: the
+/** 🛬️ Runs `onClose` — the closure of the render that opened `key` — when `key` changes or the shell unmounts: the
  * document that is being left checkpoints, never the one that replaced it. */
 export function useCheckpointOnCloseV1(key: string | null, onClose: () => void): void {
   useEffect(() => (key === null ? undefined : onClose), [key]);
 }
 
-/** 🪪️ The document a sync attach addresses: a hub target's own document, else the program's own document identity — the
+/** ⚓️ The document a sync attach addresses: a hub target's own document, else the program's own document identity — the
  * id its store stamps on every envelope it publishes (`ReadDocumentIdentity`), so the actor admits the program's edits as
  * that document's instead of refusing each batch `local.backbone-scope-mismatch` (e2e R2-4). `null`: the program holds no
  * document, and there is nothing to attach. */
@@ -4536,13 +4536,23 @@ export function interactionSelectionIdsV1(state: InteractionState, domain: strin
   return domain === undefined ? Object.values(state.selection).flatMap((entry) => entry.ids) : (state.selection[domain]?.ids ?? []);
 }
 
-/** 🔢️ A staged number as the human reads it: scaled by `displayFactor`, printed at `precision`, followed by the display
- * unit (else the stored unit). */
-export function stagedNumberDisplayText(value: number, control: { readonly precision?: number; readonly displayFactor?: number; readonly displayUnit?: string; readonly unit?: string }): string {
-  const shown = value * (control.displayFactor ?? 1);
-  const text = control.precision === undefined ? formatUiNumber(shown) : formatUiNumberFixed(shown, control.precision);
-  const unit = control.displayUnit ?? control.unit;
+/** 🪧️ A staged number as the human reads it: `stored × displayFactor` at `precision` (`uiNumberDisplayText`), followed by
+ * the display unit (else the stored unit). */
+export function stagedNumberDisplayText(value: number, facets: Pick<ActionArgNumberFacets, "precision" | "displayFactor" | "displayUnit" | "unit">): string {
+  const text = uiNumberDisplayText(value, facets.displayFactor, facets.precision);
+  const unit = facets.displayUnit ?? facets.unit;
   return unit ? `${text} ${unit}` : text;
+}
+
+/** 📐️ The UI-contract number facets of a staged number, stepper, slider, dial or vector input — `actionArgNumberFacets`, the
+ * twin of the Rust `ActionArgDef::number_facets` the wgpu shell's staged rows read (`🛂️manifest/🧫️fixtures/🧫️number-facets`):
+ * key range, step, look, axis, unit symbols, display factor, precision, admitted detents and the hard limits whose
+ * refusals read in the shell's current language. */
+export function stagedNumberFacetsV1(def: ResolvedActionArgDef): ActionArgNumberFacets {
+  const locale = SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale()) ?? SHELL_LOCALES[0];
+  const facets = actionArgNumberFacets(def, locale);
+  if (facets === null) throw new Error(`Staged input ${def.id} has no number facets`);
+  return facets;
 }
 
 /** 🧷️ The ids a reference input holds, whether it takes many or one, as the text a selection spells them in. */
@@ -4584,8 +4594,6 @@ function StagedReferenceField({ id, labelledBy, value, many, maxItems, domain, i
   );
 }
 
-/** 🎨️ A staged sRGB colour over the vector it edits (components within 0..1): a native colour picker for red, green and blue
- * and, with `alpha`, the straight alpha as a number field named "a" — the staged value keeps 3 or 4 components. */
 /** 🎨️ A staged colour with the W1-E `color_input` recipe semantics: the swatch (the platform's colour picker, named by
  * the field), the hex field — typed hex is staged once it parses (`parseUiColorHex`), on Enter or blur, keeping the
  * alpha when the text carries none — and, for a colour with alpha, the opacity slider over 0..1. sRGB components in
@@ -4639,48 +4647,105 @@ function StagedColorField({ id, labelledBy, value, alpha, disabled, required, on
   );
 }
 
-/** 🧭️ A staged vector with the W1-E `vector_input` recipe semantics: one named number field per component sharing the
- * vector's facets — bounds, a step (else one unit of its precision), its display unit and factor, and its detents,
- * which the page keys jump between through the shared keyboard law (`uiNumberKeyValue`). */
-function StagedVectorField({ id, labelledBy, value, control, disabled, required, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly control: Extract<ActionArgControl, { kind: "vector" }>; readonly disabled?: boolean; readonly required?: boolean; readonly onChange: (value: unknown) => void }): ReactElement {
-  const tuple = Array.isArray(value) && value.length >= control.dims ? (value as readonly number[]) : null;
-  const axes = Array.from({ length: control.dims }, (_, index) => ["x", "y", "z", "w"][index] ?? String(index));
-  const factor = control.displayFactor ?? 1;
-  const unit = control.displayUnit ?? control.unit;
-  const step = control.step ?? (control.precision === undefined ? undefined : 10 ** -control.precision);
-  const commit = (index: number, next: number) => {
-    const values = axes.map((_, component) => tuple?.[component] ?? 0);
-    values[index] = Math.min(control.max ?? Number.POSITIVE_INFINITY, Math.max(control.min ?? Number.NEGATIVE_INFINITY, next));
-    onChange(values);
-  };
+/** 🧲️ A staged vector with the W1-E `vector_input` recipe semantics: one {@link StagedNumberField} per component, named
+ * "x (mm)" and so on, every axis sharing the vector's facets. */
+function StagedVectorField({ id, labelledBy, value, dims, facets, disabled, required, onChange }: { readonly id: string; readonly labelledBy?: string; readonly value: unknown; readonly dims: number; readonly facets: ActionArgNumberFacets; readonly disabled?: boolean; readonly required?: boolean; readonly onChange: (value: unknown) => void }): ReactElement {
+  const tuple = Array.isArray(value) && value.length >= dims ? (value as readonly number[]) : null;
+  const axes = Array.from({ length: dims }, (_, index) => ["x", "y", "z", "w"][index] ?? String(index));
+  const unit = facets.displayUnit ?? facets.unit;
+  const commit = (index: number, next: number) => onChange(axes.map((_, component) => (component === index ? next : (tuple?.[component] ?? 0))));
   return (
     <div id={id} role="group" aria-labelledby={labelledBy} data-staged-control="vector" className="flex w-full min-w-0 flex-wrap gap-single">
       {axes.map((axis, index) => (
-        <div key={`${id}.${axis}`} className="flex min-w-[4rem] flex-1 items-center gap-tiny text-xs text-muted-foreground">
-          <label htmlFor={`${id}.${axis}`}>{unit ? `${axis} (${unit})` : axis}</label>
-          <Input
-            id={`${id}.${axis}`}
-            required={required}
-            type="number"
-            className="h-medium w-full min-w-0"
-            value={tuple ? formatUiNumber((tuple[index] ?? 0) * factor) : ""}
-            min={control.min === undefined ? undefined : control.min * factor}
-            max={control.max === undefined ? undefined : control.max * factor}
-            step={step === undefined ? undefined : step * factor}
-            disabled={disabled}
-            onKeyDown={(event) => {
-              if (event.key !== "PageUp" && event.key !== "PageDown") return;
-              event.preventDefault();
-              commit(index, uiNumberKeyValue(tuple?.[index] ?? 0, control.min ?? null, control.max ?? null, control.step ?? step ?? 1, control.snaps ?? [], event.key === "PageUp" ? "pageUp" : "pageDown", false));
-            }}
-            onChange={(event) => {
-              const parsed = Number(event.target.value);
-              if (event.target.value === "" || !Number.isFinite(parsed)) return;
-              commit(index, (control.precision === undefined ? parsed : roundUiNumber(parsed, control.precision)) / factor);
-            }}
-          />
-        </div>
+        <StagedNumberField key={`${id}.${axis}`} id={`${id}.${axis}`} label={unit ? `${axis} (${unit})` : axis} stored={tuple === null ? null : (tuple[index] ?? 0)} facets={facets} disabled={disabled} required={required} onCommit={(next) => commit(index, next)} />
       ))}
+    </div>
+  );
+}
+
+/** 🗜️ A staged number field — a number input or one vector axis — under the number-control law (design §18,
+ * `🖱️ui/🧬️contract/🧫️fixtures/🧫️number-controls`) and its facets: it shows `stored × displayFactor` at the precision; the
+ * keys `uiNumberFieldKey` names (Home/End only toward a key bound) move the stored value through `uiNumberKeyValue`; a typed
+ * display value reads back through `uiNumberTypedValue` (an exact detent or the current value kept, else rounded half away
+ * from zero and divided by the display factor) and is staged at once — unless it is unreadable or crosses a hard limit,
+ * which keeps the draft, marks the field invalid and names the limit's refusal; an emptied field clears (`onClear`) where
+ * the input may be unset. A stored value changed from outside (Reset, a default) replaces a draft that does not read back
+ * to it. A lone field shows its unit beside it; an axis names it in its label. */
+function StagedNumberField({ id, label, labelledBy, unit, stored, facets, disabled, required, onCommit, onClear }: { readonly id: string; readonly label?: string; readonly labelledBy?: string; readonly unit?: string; readonly stored: number | null; readonly facets: ActionArgNumberFacets; readonly disabled?: boolean; readonly required?: boolean; readonly onCommit: (next: number) => void; readonly onClear?: () => void }): ReactElement {
+  const [draft, setDraft] = useState<string | null>(null);
+  const [refusal, setRefusal] = useState<{ readonly message: string | null } | null>(null);
+  const factor = facets.displayFactor ?? null;
+  const precision = facets.precision ?? null;
+  const shown = (value: number) => uiNumberDisplayText(value, factor, precision);
+  const step = facets.step ?? (precision === null ? undefined : 10 ** -precision / (factor ?? 1));
+  const refusalId = `${id}.refusal`;
+  const [seen, setSeen] = useState(stored);
+  if (seen !== stored) {
+    setSeen(stored);
+    const number = Number(draft?.trim() ?? "");
+    const readBack = draft === null || draft.trim() === "" || !Number.isFinite(number) ? null : uiNumberTypedValue(number, factor, precision, [stored ?? 0, ...facets.snaps]);
+    if (draft !== null && readBack !== stored) {
+      setDraft(null);
+      setRefusal(null);
+    }
+  }
+  const typed = (text: string) => {
+    setDraft(text);
+    const number = Number(text.trim());
+    if (text.trim() === "" && onClear !== undefined) {
+      setRefusal(null);
+      onClear();
+      return;
+    }
+    if (text.trim() === "" || !Number.isFinite(number)) {
+      setRefusal({ message: null });
+      return;
+    }
+    const next = uiNumberTypedValue(number, factor, precision, [stored ?? 0, ...facets.snaps]);
+    const crossed = uiNumberCrossedBound(next, facets.min, facets.max, facets.limits);
+    if (crossed !== null) {
+      setRefusal({ message: crossed.refusal ?? null });
+      return;
+    }
+    setRefusal(null);
+    onCommit(next);
+  };
+  const input = (
+    <Input
+      id={id}
+      aria-labelledby={labelledBy}
+      required={required}
+      type="number"
+      className="h-medium w-full min-w-0"
+      value={draft ?? (stored === null ? "" : shown(stored))}
+      min={facets.min === undefined ? undefined : uiNumberDisplay(facets.min, factor)}
+      max={facets.max === undefined ? undefined : uiNumberDisplay(facets.max, factor)}
+      step={step === undefined ? undefined : uiNumberDisplay(step, factor)}
+      disabled={disabled}
+      aria-invalid={refusal === null ? undefined : true}
+      aria-describedby={refusal?.message ? refusalId : undefined}
+      onKeyDown={(event) => {
+        const key = uiNumberFieldKey(event.key, event.shiftKey, facets.min, facets.max);
+        if (key === null) return;
+        event.preventDefault();
+        setDraft(null);
+        setRefusal(null);
+        onCommit(uiNumberKeyValue(stored ?? 0, facets.min ?? null, facets.max ?? null, facets.step ?? 0, precision, factor, facets.snaps, key.key, key.large));
+      }}
+      onChange={(event) => typed(event.target.value)}
+      onBlur={() => {
+        if (refusal === null) setDraft(null);
+      }}
+    />
+  );
+  return (
+    <div className="flex min-w-[4rem] flex-1 flex-col gap-tiny">
+      <div className="flex items-center gap-tiny text-xs text-muted-foreground">
+        {label === undefined ? null : <label htmlFor={id}>{label}</label>}
+        {input}
+        {unit === undefined ? null : <span data-slot="staged-unit" className="shrink-0 tabular-nums">{unit}</span>}
+      </div>
+      {refusal?.message ? <span id={refusalId} role="alert" data-staged-refusal="" className="text-xs text-destructive">{refusal.message}</span> : null}
     </div>
   );
 }
@@ -4714,29 +4779,21 @@ function renderStagedArgValueControl(def: ResolvedActionArgDef, value: unknown, 
   switch (control.kind) {
     case "text":
       return <Input id={fieldId} aria-labelledby={labelledBy} required={field?.required} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
-    case "stepper":
-      return <Stepper id={fieldId} aria-labelledby={labelledBy} value={typeof value === "number" && Number.isFinite(value) ? value : undefined} defaultValue={control.min ?? 0} min={control.min} max={control.max} step={control.step ?? 1} precision={control.precision} disabled={disabled} onChange={(next) => onChange(next)} />;
+    case "stepper": {
+      const facets = stagedNumberFacetsV1(def);
+      const numeric = typeof value === "number" && Number.isFinite(value) ? value : undefined;
+      return <Stepper id={fieldId} aria-labelledby={labelledBy} aria-valuetext={numeric === undefined ? undefined : stagedNumberDisplayText(numeric, facets)} value={numeric} defaultValue={facets.min ?? 0} min={facets.min} max={facets.max} step={facets.step ?? 1} precision={facets.precision} snapValues={facets.snaps} displayFactor={facets.displayFactor ?? null} unit={facets.displayUnit ?? facets.unit ?? null} limits={facets.limits} disabled={disabled} onChange={(next) => onChange(next)} />;
+    }
     case "slider":
     case "dial": {
-      const numeric = typeof value === "number" && Number.isFinite(value) ? value : control.min;
-      return <Slider id={fieldId} aria-labelledby={labelledBy} aria-valuetext={stagedNumberDisplayText(numeric, control)} data-staged-control={control.kind} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} snapValues={control.snaps} formatDisplayValue={(shown) => stagedNumberDisplayText(shown, control)} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
+      const facets = stagedNumberFacetsV1(def);
+      const numeric = typeof value === "number" && Number.isFinite(value) ? value : (facets.min ?? control.min);
+      return <Slider id={fieldId} aria-labelledby={labelledBy} aria-valuetext={stagedNumberDisplayText(numeric, facets)} data-staged-control={control.kind} className="w-full min-w-0" min={facets.min ?? control.min} max={facets.max ?? control.max} step={facets.step} snapValues={facets.snaps} scale={facets.scale} appearance={facets.appearance} displayFactor={facets.displayFactor ?? null} precision={facets.precision ?? null} limits={facets.limits} formatDisplayValue={(shown) => stagedNumberDisplayText(shown, facets)} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
     }
-    case "number":
-      return (
-        <Input
-          id={fieldId}
-          aria-labelledby={labelledBy}
-          required={field?.required}
-          type="number"
-          className="h-medium w-full min-w-0"
-          value={value === undefined || value === null || value === "" ? "" : String(value)}
-          min={control.min}
-          max={control.max}
-          step={control.step}
-          disabled={disabled}
-          onChange={(event) => onChange(event.target.value === "" ? undefined : Number(event.target.value))}
-        />
-      );
+    case "number": {
+      const facets = stagedNumberFacetsV1(def);
+      return <StagedNumberField id={fieldId} labelledBy={labelledBy} unit={facets.displayUnit ?? facets.unit} stored={typeof value === "number" && Number.isFinite(value) ? value : null} facets={facets} disabled={disabled} required={field?.required} onCommit={(next) => onChange(next)} onClear={() => onChange(undefined)} />;
+    }
     case "toggle":
       return <Toggle id={fieldId} aria-labelledby={labelledBy} icon="check" pressed={value === true} text={uiDataLabel(def.label)} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
     case "segmented": {
@@ -4777,7 +4834,7 @@ function renderStagedArgValueControl(def: ResolvedActionArgDef, value: unknown, 
     case "reference":
       return <StagedReferenceField id={fieldId} labelledBy={labelledBy} value={value} many={control.many ?? false} maxItems={control.maxItems} domain={control.domain} idType={control.idType} disabled={disabled} selection={context.selection} onChange={onChange} />;
     case "vector":
-      return <StagedVectorField id={fieldId} labelledBy={labelledBy} value={value} control={control} disabled={disabled} required={field?.required} onChange={onChange} />;
+      return <StagedVectorField id={fieldId} labelledBy={labelledBy} value={value} dims={control.dims} facets={stagedNumberFacetsV1(def)} disabled={disabled} required={field?.required} onChange={onChange} />;
     case "color":
       return <StagedColorField id={fieldId} labelledBy={labelledBy} value={value} alpha={control.alpha} disabled={disabled} required={field?.required} onChange={onChange} />;
     case "iconSelect":

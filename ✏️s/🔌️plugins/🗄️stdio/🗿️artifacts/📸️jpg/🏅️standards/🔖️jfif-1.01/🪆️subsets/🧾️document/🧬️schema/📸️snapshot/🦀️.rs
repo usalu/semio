@@ -9,6 +9,7 @@
 
 use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
+use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::text as owned_text;
 
 //#region Jfif
 /// 📏️ JFIF APP0 `units` byte (ITU-T T.871 / JFIF 1.02 §). `Aspect` means `x_density`/
@@ -49,7 +50,7 @@ impl JfifDensityUnits {
 pub struct JfifThumbnail {
     pub width: u8,
     pub height: u8,
-    #[value(default)]
+    #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
     pub rgb_data: Vec<u8>,
 }
 //#endregion Jfif
@@ -137,7 +138,7 @@ pub struct JpgHuffmanTable {
     pub id: u8,
     pub class: JpgHuffmanClass,
     pub bits: [u8; 16],
-    #[value(default)]
+    #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
     pub values: Vec<u8>,
 }
 //#endregion QuantHuffmanTables
@@ -151,7 +152,7 @@ pub struct JpgHuffmanTable {
 #[value(rename_all = "camelCase")]
 pub struct JpgSegment {
     pub marker: u8,
-    #[value(default)]
+    #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
     pub data: Vec<u8>,
 }
 //#endregion OtherSegments
@@ -183,7 +184,7 @@ pub struct JpgSnapshot {
     #[value(default)]
     pub height: u32,
     #[state(artifact)]
-    #[value(default)]
+    #[value(default, with = "pack::value::bytes", serialize_controlled_with = "pack::value::bytes::to_value_controlled")]
     pub pixels: Vec<u8>,
     /// 🎚️ Quality parameter `engine::encode_jpg` scales the Annex K quantization tables by
     /// (IJG convention, `1..=100`). `None` = the engine's own default (90).
@@ -274,49 +275,28 @@ impl store::ArtifactDsl for JpgSnapshot {
         "stdio.jpg"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        crate::engine::decode_jpg(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    fn parse_dsl(text:&str)->Result<Self,store::TextError>{
+        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|store::TextError::new(error.to_string(),dsl::TextSpan::at(1,1)))?;
+        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(store::TextError::new("JPG owned Text envelope mismatch",dsl::TextSpan::at(1,1)));}
+        owned_text::from_record(dsl::schema::parse_exact(body,&owned_text::spec(),&dsl::ParseOptions::default())?)
     }
-
-    fn print_dsl(&self) -> String {
-        let bytes = crate::engine::encode_jpg(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
+    fn print_dsl(&self)->String{
+        let body=dsl::schema::print(&owned_text::to_record(self),&owned_text::spec(),dsl::JoinMode::Document);
+        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared JPG envelope");store::semio_format::wrap_text(&envelope,&body)
     }
 }
 
 impl store::ArtifactPack for JpgSnapshot {
+    fn record_spec()->Option<dsl::RecordSpec>{Some(owned_text::spec())}
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_jpg(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
+    fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
+        let body=store::pack_rt::encode_document(&owned_text::spec(),&owned_text::to_record(self),options)?;
+        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::Schema(error.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
     }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::engine::decode_jpg(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+    fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
+        let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::Schema(error.to_string()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("JPG owned Pack envelope mismatch".into()));}
+        owned_text::from_record(store::pack_rt::decode_document(&body,&owned_text::spec(),options)?.0).map_err(|error|store::PackError::Schema(error.to_string()))
     }
 }
 //#endregion HandcraftedArtifactCodecs

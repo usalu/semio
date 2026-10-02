@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "surface": {
+    "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+    "fixture": "🧰️framework/🔨️modules/🗺️surface/🧫️fixtures/📇️bindings.json"
+  },
+  "built": {
+    "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🦀️.rs",
+    "fixture": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧫️fixtures/🔣️.json"
+  }
+}

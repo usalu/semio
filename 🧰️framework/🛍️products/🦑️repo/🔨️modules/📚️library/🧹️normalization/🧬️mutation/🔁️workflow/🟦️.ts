@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { canonicalJson } from "../../🟦️.ts";
-import type { BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
+import type { BreachRecord } from "../../../🟦️.ts";
 import { taxonomyCliArtifactPath, taxonomyCliGuardedPath, taxonomyCliPrintJson, taxonomyCliProgress, taxonomyCliRequireCommittedApply, taxonomyCliWriteJson, type TaxonomyCliOperation, type TaxonomyCliOptions } from "../../🎮️command-contract/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME } from "../🪪️identity/🟦️.ts";
 import { inventoryMutationTaxonomy, type MutationTaxonomyInventory } from "../🧾️evidence/🟦️.ts";

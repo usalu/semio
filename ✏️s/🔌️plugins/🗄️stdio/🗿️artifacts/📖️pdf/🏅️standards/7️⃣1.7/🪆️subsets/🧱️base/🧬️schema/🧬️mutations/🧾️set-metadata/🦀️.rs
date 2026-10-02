@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetMetadata {
         vec![PdfMutation::SetMetadata(SetMetadata { xmp: base.metadata.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set metadata", "Metadaten setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set metadata", "Metadaten setzen")
     }
 
     fn target(&self) -> Vec<String> {

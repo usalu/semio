@@ -5,7 +5,12 @@
 //! or completeness requirement.
 
 use crate::viewer::block5d::modes::view::windows::world;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const BLOCK5D_VIEW_MODE_VIEW: &str = "view";
 

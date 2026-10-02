@@ -1444,6 +1444,16 @@ pub fn from_json_str<T: FromValue>(text: &str) -> Result<T, ValueError> {
     let value = parse(text).map_err(|error| ValueError::new(error.to_string()))?;
     T::from_value(to_dsl_value(&value))
 }
+
+/// 🚦️ Parses and binds JSON under the caller's cumulative native ownership control.
+pub fn from_json_str_controlled<T: FromValue>(_text: &str, _control: &mut protocol::value::NativeDecodeControl<'_>) -> Result<T, ValueError> {
+    Err(ValueError::new("JSON owner has no controlled native decoding implementation"))
+}
+
+/// 🛫️ Writes ordered JSON under the caller's cumulative native ownership control.
+pub fn to_json_string_controlled<T: ToValue>(_value: &T, _control: &mut protocol::value::NativeEncodeControl<'_>) -> Result<String, String> {
+    Err("JSON owner has no controlled native encoding implementation".into())
+}
 //#endregion 🔖️ToFromValueBridge
 
 //#region 🔖️Macro

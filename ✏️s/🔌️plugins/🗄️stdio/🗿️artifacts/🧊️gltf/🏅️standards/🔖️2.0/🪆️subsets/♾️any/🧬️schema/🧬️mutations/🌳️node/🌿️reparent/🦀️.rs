@@ -80,8 +80,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
         vec![super::GltfMutation::MoveNodeParent(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Node Parent", "Elternknoten verschieben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move Node Parent", "Elternknoten verschieben")
     }
 
     fn target(&self) -> Vec<String> {

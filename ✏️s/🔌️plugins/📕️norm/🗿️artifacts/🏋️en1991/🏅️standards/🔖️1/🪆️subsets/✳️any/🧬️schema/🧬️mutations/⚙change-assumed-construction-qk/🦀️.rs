@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedCon
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change assumed construction load", "Angenommene Last im Bauzustand ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change assumed construction load", "Angenommene Last im Bauzustand ändern")
     }
 }
 //#endregion 🔖️Payload

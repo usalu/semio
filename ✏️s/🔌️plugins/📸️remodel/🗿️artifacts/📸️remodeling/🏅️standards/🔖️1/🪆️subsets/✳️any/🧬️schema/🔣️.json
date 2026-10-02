@@ -6,14 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "id",
-    "streams",
-    "assets",
-    "durableArtifacts",
-    "calibration",
-    "params",
-    "gcps",
-    "results"
+    "id"
   ],
   "properties": {
     "schema": {
@@ -108,10 +101,7 @@
       "type": "object",
       "title": "CalibrationState",
       "additionalProperties": false,
-      "required": [
-        "cameras",
-        "rig"
-      ],
+      "required": [],
       "properties": {
         "cameras": {
           "type": "array",
@@ -131,19 +121,7 @@
       "type": "object",
       "title": "CameraCalibration",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "label",
-        "model",
-        "fx",
-        "fy",
-        "cx",
-        "cy",
-        "skew",
-        "distortion",
-        "rmsReprojectionPx",
-        "locked"
-      ],
+      "required": [],
       "properties": {
         "id": {
           "type": "string"
@@ -155,40 +133,37 @@
           "type": "string"
         },
         "fx": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "fy": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "cx": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "cy": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "skew": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "distortion": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 5,
-          "maxItems": 5
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         },
         "rmsReprojectionPx": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "float"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary32Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "locked": {
           "type": "boolean"
@@ -210,21 +185,19 @@
         },
         "rotationWxyz": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         },
         "translation": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         }
       }
     },
@@ -232,9 +205,7 @@
       "type": "object",
       "title": "CameraTrajectory",
       "additionalProperties": false,
-      "required": [
-        "poses"
-      ],
+      "required": [],
       "properties": {
         "poses": {
           "type": "array",
@@ -248,41 +219,40 @@
       "type": "object",
       "title": "DenseCloud",
       "additionalProperties": false,
-      "required": [
-        "positions",
-        "colors",
-        "confidence",
-        "classification"
-      ],
+      "required": [],
       "properties": {
         "positions": {
-          "type": "string",
-          "format": "base64",
-          "description": "base64 of little-endian f32 lanes (semio_hub_remodel PackedF32)"
+          "$ref": "#/$defs/Float32Buffer"
         },
         "colors": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "base64",
-          "description": "base64 of raw u8 lanes (semio_hub_remodel PackedU8)"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ByteBuffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "confidence": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "base64",
-          "description": "base64 of little-endian f32 lanes (semio_hub_remodel PackedF32)"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Float32Buffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "classification": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "base64",
-          "description": "base64 of raw u8 lanes (semio_hub_remodel PackedU8)"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ByteBuffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -290,13 +260,7 @@
       "type": "object",
       "title": "DenseParams",
       "additionalProperties": false,
-      "required": [
-        "resolution",
-        "windowRadiusPx",
-        "minViewConsistency",
-        "confidenceThreshold",
-        "maxPoints"
-      ],
+      "required": [],
       "properties": {
         "resolution": {
           "$ref": "#/$defs/DenseResolution"
@@ -304,21 +268,23 @@
         "windowRadiusPx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "minViewConsistency": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "confidenceThreshold": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "maxPoints": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -344,12 +310,7 @@
       "type": "object",
       "title": "FeatureParams",
       "additionalProperties": false,
-      "required": [
-        "detector",
-        "targetCount",
-        "octaves",
-        "edgeThreshold"
-      ],
+      "required": [],
       "properties": {
         "detector": {
           "$ref": "#/$defs/FeatureDetector"
@@ -357,16 +318,17 @@
         "targetCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "octaves": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "edgeThreshold": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         }
       }
     },
@@ -383,11 +345,11 @@
         "index": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "timestampMs": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "assetId": {
           "type": "string"
@@ -410,16 +372,16 @@
         "frameIndex": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "pixel": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 2,
-          "maxItems": 2
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         }
       }
     },
@@ -427,57 +389,55 @@
       "type": "object",
       "title": "GeoParams",
       "additionalProperties": false,
-      "required": [
-        "enabled",
-        "originLon",
-        "originLat",
-        "originAlt",
-        "gsdM",
-        "dsmCellM",
-        "dtmFilterRadiusM",
-        "orthoMaxPx"
-      ],
+      "required": [],
       "properties": {
         "enabled": {
           "type": "boolean"
         },
         "originLon": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "originLat": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "originAlt": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "gsdM": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "dsmCellM": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "dtmFilterRadiusM": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "orthoMaxPx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -485,11 +445,7 @@
       "type": "object",
       "title": "GeoProducts",
       "additionalProperties": false,
-      "required": [
-        "dsmAssetId",
-        "dtmAssetId",
-        "orthoAssetId"
-      ],
+      "required": [],
       "properties": {
         "dsmAssetId": {
           "type": [
@@ -515,12 +471,7 @@
       "type": "object",
       "title": "GroundControlPoint",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "worldPosition",
-        "observations"
-      ],
+      "required": [],
       "properties": {
         "id": {
           "type": "string"
@@ -530,12 +481,11 @@
         },
         "worldPosition": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/Binary64Transport"
+          }
         },
         "observations": {
           "type": "array",
@@ -549,31 +499,28 @@
       "type": "object",
       "title": "IngestParams",
       "additionalProperties": false,
-      "required": [
-        "frameSampleStride",
-        "maxFrames",
-        "downscaleLongEdgePx",
-        "minSharpness"
-      ],
+      "required": [],
       "properties": {
         "frameSampleStride": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "maxFrames": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "downscaleLongEdgePx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "minSharpness": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         }
       }
     },
@@ -581,21 +528,13 @@
       "type": "object",
       "title": "MatchParams",
       "additionalProperties": false,
-      "required": [
-        "matcher",
-        "ratioTest",
-        "crossCheck",
-        "sequentialWindow",
-        "maxPairsPerFrame",
-        "loopClosure"
-      ],
+      "required": [],
       "properties": {
         "matcher": {
           "$ref": "#/$defs/MatcherKind"
         },
         "ratioTest": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "crossCheck": {
           "type": "boolean"
@@ -603,12 +542,14 @@
         "sequentialWindow": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "maxPairsPerFrame": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "loopClosure": {
           "type": "boolean"
@@ -635,16 +576,7 @@
       "type": "object",
       "title": "MediaStream",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "kind",
-        "cameraId",
-        "syncOffsetMs",
-        "fpsHint",
-        "frames",
-        "source"
-      ],
+      "required": [],
       "properties": {
         "id": {
           "type": "string"
@@ -662,12 +594,10 @@
           ]
         },
         "syncOffsetMs": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "fpsHint": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "frames": {
           "type": "array",
@@ -691,35 +621,25 @@
       "type": "object",
       "title": "MeshParams",
       "additionalProperties": false,
-      "required": [
-        "tsdfVoxelSizeMm",
-        "tsdfTruncationMm",
-        "decimateTargetTriangles",
-        "smoothingIterations",
-        "textureEnabled",
-        "textureSize",
-        "guaranteeWatertight",
-        "holeFillMaxBoundaryVerts",
-        "selfIntersectionCheck"
-      ],
+      "required": [],
       "properties": {
         "tsdfVoxelSizeMm": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "tsdfTruncationMm": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "decimateTargetTriangles": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "smoothingIterations": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "textureEnabled": {
           "type": "boolean"
@@ -727,7 +647,8 @@
         "textureSize": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "guaranteeWatertight": {
           "type": "boolean"
@@ -735,7 +656,8 @@
         "holeFillMaxBoundaryVerts": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "selfIntersectionCheck": {
           "type": "boolean"
@@ -755,13 +677,7 @@
       "type": "object",
       "title": "MotionParams",
       "additionalProperties": false,
-      "required": [
-        "enabled",
-        "maxTracks",
-        "trackWindowPx",
-        "minTrackQuality",
-        "minTrackLengthFrames"
-      ],
+      "required": [],
       "properties": {
         "enabled": {
           "type": "boolean"
@@ -769,21 +685,23 @@
         "maxTracks": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "trackWindowPx": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "minTrackQuality": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "minTrackLengthFrames": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -791,12 +709,7 @@
       "type": "object",
       "title": "MotionTrackSummary",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "length",
-        "class",
-        "meanSpeedMS"
-      ],
+      "required": [],
       "properties": {
         "id": {
           "type": "string"
@@ -804,14 +717,14 @@
         "length": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "class": {
           "$ref": "#/$defs/TrackClass"
         },
         "meanSpeedMS": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         }
       }
     },
@@ -819,26 +732,20 @@
       "type": "object",
       "title": "QcReportSnapshot",
       "additionalProperties": false,
-      "required": [
-        "reprojectionRmsPx",
-        "gcpCheckpointRmse",
-        "watertight",
-        "meanTrackLength",
-        "registeredFrameRatio",
-        "denseCoverageRatio",
-        "warnings"
-      ],
+      "required": [],
       "properties": {
         "reprojectionRmsPx": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "gcpCheckpointRmse": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "format": "double"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "watertight": {
           "anyOf": [
@@ -851,16 +758,13 @@
           ]
         },
         "meanTrackLength": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "registeredFrameRatio": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "denseCoverageRatio": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "warnings": {
           "type": "array",
@@ -874,16 +778,7 @@
       "type": "object",
       "title": "ReconstructionParams",
       "additionalProperties": false,
-      "required": [
-        "ingest",
-        "feature",
-        "matching",
-        "sfm",
-        "dense",
-        "mesh",
-        "motion",
-        "geo"
-      ],
+      "required": [],
       "properties": {
         "ingest": {
           "$ref": "#/$defs/IngestParams"
@@ -915,15 +810,7 @@
       "type": "object",
       "title": "ReconstructionResults",
       "additionalProperties": false,
-      "required": [
-        "sparse",
-        "dense",
-        "mesh",
-        "trajectory",
-        "tracks",
-        "geo",
-        "qc"
-      ],
+      "required": [],
       "properties": {
         "sparse": {
           "anyOf": [
@@ -1017,13 +904,7 @@
       "type": "object",
       "title": "RemodelingDurableArtifact",
       "additionalProperties": false,
-      "required": [
-        "kind",
-        "mime",
-        "width",
-        "height",
-        "chunks"
-      ],
+      "required": [],
       "properties": {
         "kind": {
           "type": "string"
@@ -1037,17 +918,19 @@
         "width": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "height": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "chunks": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ByteBuffer"
           }
         }
       }
@@ -1056,12 +939,7 @@
       "type": "object",
       "title": "RemodelingMesh",
       "additionalProperties": false,
-      "required": [
-        "mesh",
-        "source",
-        "textureAssetId",
-        "watertight"
-      ],
+      "required": [],
       "properties": {
         "mesh": {
           "$ref": "#/$defs/RemodelingMeshChild"
@@ -1109,32 +987,26 @@
       "type": "object",
       "title": "RigExtrinsic",
       "additionalProperties": false,
-      "required": [
-        "cameraId",
-        "rotationWxyz",
-        "translationM"
-      ],
+      "required": [],
       "properties": {
         "cameraId": {
           "type": "string"
         },
         "rotationWxyz": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 4,
-          "maxItems": 4
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         },
         "translationM": {
           "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
           "minItems": 3,
-          "maxItems": 3
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/Binary32Transport"
+          }
         }
       }
     },
@@ -1151,40 +1023,34 @@
       "type": "object",
       "title": "SfmParams",
       "additionalProperties": false,
-      "required": [
-        "ransacIterations",
-        "ransacThresholdPx",
-        "minTrackLength",
-        "baMaxIterations",
-        "robustLoss",
-        "huberDeltaPx"
-      ],
+      "required": [],
       "properties": {
         "ransacIterations": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "ransacThresholdPx": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         },
         "minTrackLength": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "baMaxIterations": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "robustLoss": {
           "$ref": "#/$defs/RobustLossKind"
         },
         "huberDeltaPx": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Binary32Transport"
         }
       }
     },
@@ -1192,23 +1058,20 @@
       "type": "object",
       "title": "SparseCloud",
       "additionalProperties": false,
-      "required": [
-        "points",
-        "colors"
-      ],
+      "required": [],
       "properties": {
         "points": {
-          "type": "string",
-          "format": "base64",
-          "description": "base64 of little-endian f32 lanes (semio_hub_remodel PackedF32)"
+          "$ref": "#/$defs/Float32Buffer"
         },
         "colors": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "base64",
-          "description": "base64 of raw u8 lanes (semio_hub_remodel PackedU8)"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ByteBuffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1236,15 +1099,7 @@
       "type": "object",
       "title": "VideoSource",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "container",
-        "codec",
-        "durationMs",
-        "frameCount",
-        "width",
-        "height"
-      ],
+      "required": [],
       "properties": {
         "name": {
           "type": "string"
@@ -1256,23 +1111,25 @@
           "$ref": "#/$defs/VideoCodec"
         },
         "durationMs": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "frameCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "width": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "height": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -1280,77 +1137,68 @@
       "type": "object",
       "title": "WatertightReportSnapshot",
       "additionalProperties": false,
-      "required": [
-        "vertexCount",
-        "triangleCount",
-        "boundaryEdgeCount",
-        "boundaryLoopCount",
-        "nonManifoldEdgeCount",
-        "nonManifoldVertexCount",
-        "connectedComponents",
-        "consistentlyOriented",
-        "eulerCharacteristic",
-        "genus",
-        "signedVolume",
-        "selfIntersectionPairs",
-        "closedFallbackUsed",
-        "isClosed",
-        "isTwoManifold",
-        "isWatertight"
-      ],
+      "required": [],
       "properties": {
         "vertexCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "triangleCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "boundaryEdgeCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "boundaryLoopCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "nonManifoldEdgeCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "nonManifoldVertexCount": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "connectedComponents": {
           "type": "integer",
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "consistentlyOriented": {
           "type": "boolean"
         },
         "eulerCharacteristic": {
-          "type": "integer",
-          "format": "int64"
+          "$ref": "#/$defs/Signed64Transport"
         },
         "genus": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "int64"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Signed64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "signedVolume": {
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/Binary64Transport"
         },
         "selfIntersectionPairs": {
           "type": [
@@ -1358,7 +1206,8 @@
             "null"
           ],
           "format": "uint32",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "closedFallbackUsed": {
           "type": "boolean"
@@ -1549,10 +1398,10 @@
               ],
               "properties": {
                 "routes": {
-                "const": 40
+                  "const": 40
                 },
                 "bounded": {
-                "const": 40
+                  "const": 40
                 },
                 "resumable": {
                   "const": 0
@@ -1570,6 +1419,123 @@
       "additionalProperties": false,
       "x-semio-formats": [
         "🔣️jsonschema"
+      ]
+    },
+    "Binary32Transport": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}$"
+            }
+          }
+        }
+      ]
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        }
+      ]
+    },
+    "Unsigned64Transport": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-5])$"
+        }
+      ]
+    },
+    "Signed64Transport": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^((0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-7])|-([1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-8]))$"
+        }
+      ]
+    },
+    "ByteBuffer": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "Float32Buffer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inline"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Binary32Transport"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "contentId",
+            "chunkCount"
+          ],
+          "properties": {
+            "kind": {
+              "const": "content"
+            },
+            "contentId": {
+              "type": "string"
+            },
+            "chunkCount": {
+              "$ref": "#/$defs/Unsigned64Transport"
+            }
+          }
+        }
       ]
     }
   }

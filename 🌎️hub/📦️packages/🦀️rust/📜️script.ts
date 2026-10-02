@@ -1,7 +1,12 @@
 #!/usr/bin/env bun
+import {captureOwnedProcess} from "../../../🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
+import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
-import { runCollabE2eCli } from "../../🧪️tests/🤝️dev-collaboration/🟦️.ts";
 import { DevLocalHubScript } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
 import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats , cpSync } from "node:fs";
@@ -10,9 +15,11 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
 import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { cargoWorkspaceForManifest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { packageNativeRelease, signExecutableForDistribution } from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
@@ -32,9 +39,6 @@ import { decodeBackboneWorkerResponse, decodePackValue, encodeBackboneWorkerRequ
 import type { PackValue } from "../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
 import {
   DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-  GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
-  GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
-  GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR,
   DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
   DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
   type DocumentExecutionProtocolV1,
@@ -83,7 +87,7 @@ import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framewo
 import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { proveGisComponentColdMapPatch } from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
-import { OS_HUB_PORT, OS_HUB_PORT_ENV, runCargo, runCargoTestBudgeted, runExactCargoLaws, runExactCargoLawProcess, runCmd, runProbe, spawnDaemon, terminateOwnedChildTree, buildBudgetMs, orchestratorBudgetOpts, resolveTestLevel, readStableBuildFile, viteConfigLoader, type ExactCargoLawGroup } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { OS_HUB_PORT, OS_HUB_PORT_ENV, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runCmd, runProbe, spawnDaemon, orchestratorBudgetOpts, readStableBuildFile, viteConfigLoader } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
@@ -92,7 +96,7 @@ import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣�
 import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE, deliverCredentialEnvelopeToChild, deliverMcpCredentialEnvelope, deliverNativeCredentialEnvelope, directChildEnvironment, sealedDirectChildEnvironment } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
 import { assertHubFixtureExpectation, type HubFixtureExpectationV1 } from "../../🧬️schema/🛂️fixture-expectation/🟦️.ts";
-import { runOwnedCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing/🧪️tests/🏃️execution/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
@@ -108,7 +112,7 @@ import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️i
 class HubFoundationSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("foundation-source-check accepts no arguments");
-    await runOwnedCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")], this.repoRoot, "hub-foundation-source", 120_000);
+    await runRepositoryCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")], this.repoRoot, "hub-foundation-source", 120_000);
   }
 }
 
@@ -116,7 +120,7 @@ class HubFoundationSourceScript extends BundleScript {
 class HubSocketGrantCommandSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("socket-grant-command-source-check accepts no arguments");
-    await runOwnedCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")], this.repoRoot, "hub-socket-grant-command-source", 120_000);
+    await runRepositoryCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")], this.repoRoot, "hub-socket-grant-command-source", 120_000);
   }
 }
 
@@ -126,7 +130,7 @@ class HubSocketGrantCommandSourceScript extends BundleScript {
 class HubLiveSignInScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("live-sign-in-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts")], this.repoRoot, "hub-live-sign-in", 300_000, {
+    await runRepositoryCommand("bun", [join(this.repoRoot, "🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts")], this.repoRoot, "hub-live-sign-in", 300_000, {
       env: { ...process.env, OS_HUB_CREDENTIAL_SIGN_IN: "1" },
     });
   }
@@ -2555,7 +2559,7 @@ class InferenceClientContractTestScript extends BundleScript {
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
     try {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? hubTestArtifactRoot(this.root),
@@ -2594,7 +2598,7 @@ class ComponentCodecCheckScript extends BundleScript {
     if(!oracle(fixture)) throw new Error(JSON.stringify(oracle.errors));
     resolveTestLevel([],segments[0]==="budget"?"exhaustive":"quick");
     const filter=segments[0]==="budget"?"actual_gis_owned_codec_honors":"actual_component_codec_exports";
-    await runCargoTestBudgeted(["semio-hub"],this.repoRoot,["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
+    await runRepositoryCargoTests(["semio-hub"],this.repoRoot,["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
   }
 }
 
@@ -2604,7 +2608,7 @@ class TestScript extends BundleScript {
     const [head, ...tail] = rest;
     const allFeatures = head === "all-features";
     process.env.SEMIO_TEST_ARTIFACT_DIR ??= hubTestArtifactRoot(this.root);
-    await runCargoTestBudgeted(["semio-hub"], this.repoRoot, allFeatures ? ["--all-features", ...tail] : rest);
+    await runRepositoryCargoTests(["semio-hub"], this.repoRoot, allFeatures ? ["--all-features", ...tail] : rest);
   }
 }
 
@@ -2798,7 +2802,7 @@ class AdminDirectoryAuthorityCheckScript extends BundleScript {
       oracle.close();
     }
     if (phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -2953,7 +2957,7 @@ class ShareIssuanceAtomicityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("share-issuance-atomicity-check accepts only --native");
     const checks = await proveShareIssuanceAtomicity(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -3222,7 +3226,7 @@ class RetainedShortAdminCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("retained-short-admin-check accepts only --native");
     const checks = await proveRetainedShortAdmin(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -3340,7 +3344,7 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
     ];
     if (mutants.some((mutant) => mutant === hubSource || directoryMessageAuthoritySourceConforms(mutant))) throw new Error("directory message authority guard admitted a hostile source mutation");
     if (phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -3399,7 +3403,7 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
       console.log("scoped-directory-socket-source-check: neutral=19 hostile=3 browser-terminal=3");
     }
     if (phase === "all" || phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         groups: [
           {
@@ -3419,7 +3423,7 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
       for (const receipt of receipts) console.log(`scoped-directory-socket-native-receipt: ${JSON.stringify(receipt)}`);
     }
     if (phase === "all" || phase === "process") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -3474,7 +3478,7 @@ type NativeArtifactProviderFrontierFixture = {
   readonly production: {
     readonly feature: "native-artifact-execution";
     readonly providerId: "stdio+gis+vcs/native-codecs/v1";
-    readonly receiptCount: 32;
+    readonly receiptAuthority: "compiled-kind-schema-roster";
     readonly pluginDependencies: readonly ["stdio/full-artifact-catalog", "gis", "vcs"];
   };
   readonly configuredWithoutProvider: "reject";
@@ -3488,7 +3492,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   if (!headlessProfile(fixture.headless) || !providerIdentity(fixture.production)) throw new Error("native artifact provider frontier fixture violates its owning scope contract");
   if (String(fixture.schema) !== "semio.hub.native-artifact-provider-frontier/v1" || String(fixture.configuredWithoutProvider) !== "reject") throw new Error("native artifact provider frontier envelope differs");
   if (Boolean(fixture.headless.defaultFeatures) || JSON.stringify(fixture.headless.features) !== JSON.stringify(["sqlite"]) || fixture.headless.directPluginDependencies.length !== 0) throw new Error("headless hub profile is no longer provider-free");
-  if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || Number(fixture.production.receiptCount) !== 32
+  if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || fixture.production.receiptAuthority !== "compiled-kind-schema-roster"
     || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio/full-artifact-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
   const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
@@ -3497,22 +3501,27 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   for (const dependency of ['"dep:semio-hub-stdio"', '"semio-hub-stdio/full-artifact-catalog"', '"dep:semio-hub-gis"', '"dep:semio-hub-vcs"']) {
     if (!featureRow.includes(dependency)) throw new Error("native artifact execution feature omitted " + dependency);
   }
+  const document = Bun.TOML.parse(manifest) as { dependencies: Record<string, { workspace?: boolean; optional?: boolean; "default-features"?: boolean }> };
+  const ownerManifest = cargoWorkspaceForManifest(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml").manifest;
+  const owner = Bun.TOML.parse(readFileSync(join(repoRoot, ownerManifest), "utf8")) as { workspace: { dependencies: Record<string, { "default-features"?: boolean }> } };
   for (const dependency of ["semio-hub-stdio", "semio-hub-gis", "semio-hub-vcs"]) {
-    const row = manifest.match(new RegExp("^" + dependency + "\\s*=\\s*\\{([^\\n]+)\\}$", "mu"))?.[1] ?? "";
-    if (!row.includes("optional = true") || !row.includes("default-features = false")) throw new Error(dependency + " is not an optional no-default dependency");
+    const local = document.dependencies[dependency];
+    const inherited = local?.workspace === true ? owner.workspace.dependencies[dependency] : undefined;
+    if (local?.optional !== true || (local["default-features"] ?? inherited?.["default-features"]) !== false) throw new Error(dependency + " is not an optional no-default dependency");
   }
   const authorityRoot = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🦀️.rs"), "utf8");
   if (!/#\[cfg\(feature = "native-artifact-execution"\)\]\s+#\[path = "📇️native-openable-provider\/🦀️\.rs"\]\s+pub mod native_openable_provider;/u.test(authorityRoot)) throw new Error("native provider module escaped its production feature");
   const trusted = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
   if (!trusted.includes("pub trait NativeCodecProviderSourceV1: Sync") || trusted.includes("use super::native_openable_provider::NativeCodecProviderSetV1;")) throw new Error("trusted catalog core still owns a concrete native plugin provider");
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
-  if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = " + fixture.production.receiptCount + ";"))
+  if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub fn native_openable_provider_receipt_count()"))
     throw new Error("production provider identity or receipt closure drifted");
   const startup = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   if (
     !startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") ||
     !startup.includes("configured trusted catalog requires the native-artifact-execution provider") ||
-    !startup.includes("configured_catalog_without_a_native_provider_fails_closed")
+    !startup.includes('#[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]') ||
+    !readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs"), "utf8").includes("configured_catalog_without_a_native_provider_fails_closed")
   )
     throw new Error("headless configured-catalog startup no longer fails closed");
   console.log(
@@ -3521,7 +3530,7 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
       " plugin-deps=" +
       fixture.headless.directPluginDependencies.length +
       " production-receipts=" +
-      fixture.production.receiptCount +
+      fixture.production.receiptAuthority +
       " configured-no-provider=" +
       fixture.configuredWithoutProvider,
   );
@@ -3562,7 +3571,8 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     !finalFence.includes("subject.revalidate(") ||
     !finalFence.includes("state.directory.head_seq().await") ||
     !finalFence.includes("DocumentOpenPlanErrorCodeV1::Stale") ||
-    !hub.includes('fixture["fences"]')
+    !hub.includes('#[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]') ||
+    !readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs"), "utf8").includes('fixture["fences"]')
   )
     throw new Error("execution-target final authorization/revision fence or native corpus missing");
   const admittedRoute = hubSchemaExport(repoRoot, "schema://hub.directory/ExecutionTargetAssetRouteV1");
@@ -3813,7 +3823,7 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
     await proveBrowserBrokerRelay(this.repoRoot);
     console.log("execution-target-relay-check: existing browser proof-ratchet runtime regression clean");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -4384,7 +4394,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const admitsOpenTarget = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableOpenTargetV1");
   const admitsAttestation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableAttestationV1");
   const admitsHostileExpectation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.native-openable-provider/NativeOpenableHostileExpectationV1");
-  if (fixture.schema !== "semio.hub.native-openable-catalog-provider-fixture/v1" || fixture.receiptCount !== 29 || fixture.hostileCases.length !== 13
+  if (fixture.schema !== "semio.hub.native-openable-catalog-provider-fixture/v1" || fixture.receiptAuthority !== "compiled-kind-schema-roster" || fixture.hostileCases.length !== 13
     || new Set(fixture.hostileCases.map((row: any) => row.mutation)).size !== 13 || typeof fixture.providerProjection !== "string" || typeof fixture.artifactDefinitionsRoot !== "string") throw new Error("native-openable catalog provider envelope differs");
   if (!admitsOpenTarget(fixture.openTarget) || !admitsAttestation(fixture.attestation)) throw new Error("native-openable open target or attestation violates its owning scope contract");
   for (const row of fixture.hostileCases) if (!admitsHostileExpectation(row)) throw new Error(`native-openable hostile expectation is malformed: ${row.name}`);
@@ -4513,7 +4523,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     descriptorSha256: string;
   };
   const valid = (candidate: Candidate): boolean => {
-    if (candidate.owners.length !== fixture.receiptCount || candidate.projected.length !== fixture.receiptCount || candidate.targets.length !== 1) return false;
+    if (candidate.owners.length !== owners.length || candidate.projected.length !== owners.length || candidate.targets.length !== 1) return false;
     const unique = (values: string[]): boolean => values.length === new Set(values).size;
     if (!unique(candidate.owners.map((row) => row.factory_id)) || !unique(candidate.owners.map((row) => row.descriptor_codec_id)) || !unique(candidate.projected.map((row) => row.factory_id))) return false;
     if (candidate.projected.some((row, index) => index > 0 && candidate.projected[index - 1]!.factory_id.localeCompare(row.factory_id) >= 0)) return false;
@@ -4618,7 +4628,7 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   if (accepted !== 1) throw new Error("VCS provider corpus must admit exactly one selection");
   for (const profile of fixture.unconsumedProfiles) if (!admitsProfile(profile)) throw new Error(`VCS unconsumed profile violates its owning scope contract: ${profile.name}`);
   const linked = new Map<string, number>([
-    ["semio:stdio", 29],
+    ["semio:stdio", JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"), "utf8")).receipts.length],
     ["semio:gis", 2],
     ["semio:vcs", receipts.receipts.length],
   ]);
@@ -4630,8 +4640,8 @@ async function proveVcsNativeProviderSelectionFixture(repoRoot: string): Promise
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
   if (!provider.includes('NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }') || !provider.includes('identity.factory_id != "vcs.vcs.v1"') || !provider.includes('identity.schema != "vcs.vcs"'))
     throw new Error("linked VCS provider entry or its exact identity fences are absent");
-  if ([...linked.values()].reduce((sum, count) => sum + count, 0) !== 32 || !provider.includes("pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32;")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
-  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=32 scope-exports=2; no native or catalog activation claim`);
+  if ([...linked.values()].some((count) => count < 1) || !provider.includes("pub fn native_openable_provider_receipt_count()")) throw new Error("linked provider closure is not the exact stdio+GIS+VCS sum");
+  console.log(`vcs-native-provider-selection-oracle: cases=${fixture.cases.length} accepted=${accepted} unconsumed-profiles=${fixture.unconsumedProfiles.length} linked-receipts=${[...linked.values()].reduce((sum, count) => sum + count, 0)} scope-exports=2; no native or catalog activation claim`);
 }
 
 const HEADLESS_STDIO_METADATA_MAX_BYTES = 2 * 1024 * 1024 * 1024;
@@ -4844,7 +4854,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
 }
 
 /** 🧪️ Compiles bounded positive/negative imports against one private metadata capture. */
-async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<ReturnType<typeof runExactCargoLaws>>[number]): Promise<void> {
+async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<ReturnType<typeof runRepositoryExactCargoLaws>>[number]): Promise<void> {
   const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🧪️imports.json"), "utf8")) as { features: string[]; cases: { id: string; source: string; accepted: boolean }[] };
   const reportPath = join(receipt.artifactDir, "build.stdout");
@@ -4892,7 +4902,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
       if (cancelled) throw new Error("headless Stdio imports cancelled");
       const input = join(runRoot, `${row.id}.rs`);
       writeFileSync(input, row.source + "\n", { flag: "wx", mode: 0o600 });
-      const result = await runExactCargoLawProcess("rustc", headlessStdioImportArguments(capture, [capture.depsDirectory], input, join(runRoot, `${row.id}.rmeta`)), {
+      const result = await captureOwnedProcess("rustc", headlessStdioImportArguments(capture, [capture.depsDirectory], input, join(runRoot, `${row.id}.rmeta`)), {
         cwd: repoRoot, env: exactCargoStageEnvironments().env, budgetMs: 60_000, maxOutputBytes: 1024 * 1024,
         stdoutPath: join(runRoot, `${row.id}.stdout`), stderrPath: join(runRoot, `${row.id}.stderr`), cancelled: () => cancelled,
       });
@@ -4908,7 +4918,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
   console.log(`headless Stdio imports: features=${fixture.features.join(",")} cases=${fixture.cases.length}; evidence=${runRoot}; private-metadata-capture=1; native metadata only, no guest execution claim`);
 }
 
-async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Awaited<ReturnType<typeof runExactCargoLaws>>[number]): Promise<void> {
+async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Awaited<ReturnType<typeof runRepositoryExactCargoLaws>>[number]): Promise<void> {
   const law = receipt.laws.findIndex((name) => name.endsWith("native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities"));
   if (law < 0) throw new Error("native Stdio commitment law receipt is absent");
   const output = join(receipt.artifactDir, `law-${law}.stdout`);
@@ -4933,7 +4943,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     await proveNativeOpenableCatalogProviderFixture(this.repoRoot);
     if (segments.includes("--oracle-only")) return;
     const stdioOnly = segments.includes("--stdio-only");
-    const options: Parameters<typeof runExactCargoLaws>[0] = {
+    const options: Parameters<typeof runRepositoryExactCargoLaws>[0] = {
       cwd: this.root,
       ...exactCargoStageEnvironments(),
       groups: [
@@ -4975,12 +4985,12 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     };
     const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package === "semio-hub-stdio") : options.groups;
     if (!integration) throw new Error("native Stdio integration target is absent");
-    const receipts = [...(await runExactCargoLaws({ ...options, groups: [integration] }))];
+    const receipts = [...(await runRepositoryExactCargoLaws({ ...options, groups: [integration] }))];
     const stdioReceipt = receipts[0];
     if (!stdioReceipt) throw new Error("native Stdio catalog receipt is absent");
     await proveNativeStdioCommitmentSchema(this.repoRoot, stdioReceipt);
     await proveHeadlessStdioImports(this.repoRoot, stdioReceipt);
-    receipts.push(...await runExactCargoLaws({ ...options, groups: remaining }));
+    receipts.push(...await runRepositoryExactCargoLaws({ ...options, groups: remaining }));
     for (const receipt of receipts) console.log(`native-openable-provider-receipt: ${JSON.stringify(receipt)}`);
     console.log(`native-openable-catalog-provider-laws: passed=${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)}`);
     console.log(stdioOnly
@@ -4997,7 +5007,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
     await proveTrustedCompiledDependenciesFixture(this.repoRoot);
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       ...exactCargoStageEnvironments(),
       groups: [
@@ -5030,7 +5040,7 @@ class DocumentBrowserActorIdentityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && !["--native", "--catalog-native"].includes(segments[0]))) throw new Error("document-browser-actor-identity-check accepts only --native or --catalog-native");
     await proveDocumentBrowserActorIdentityFixture(this.repoRoot);
     if (segments[0] === undefined) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       ...exactCargoStageEnvironments(),
       groups:
@@ -5101,7 +5111,7 @@ class TrustedCatalogOpenedRootCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("trusted-catalog-opened-root-check accepts only --native");
     await proveTrustedCatalogOpenedRootFixture(this.repoRoot);
     if (segments[0] === undefined) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       ...exactCargoStageEnvironments(),
       groups: [
@@ -5117,7 +5127,7 @@ class TrustedCatalogOpenedRootCheckScript extends BundleScript {
         {
           package: "semio-hub",
           target: { kind: "bin", name: "os-hub" },
-          laws: ["tests::trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root", "tests::configured_catalog_without_a_native_provider_fails_closed", "tests::native_openable_stdio_provider_is_the_only_atomic_readiness_transition"],
+          laws: ["tests::trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root", "tests::configured_catalog_without_a_native_provider_fails_closed", "tests::quick::native_openable_stdio_provider_is_the_only_atomic_readiness_transition"],
         },
       ],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
@@ -7569,7 +7579,7 @@ class CanonicalArchitectureScript extends BundleScript {
     const { proveLocalSessionBrokerContract } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts");
     const { nextestArtifactLocation } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     await proveLocalSessionBrokerContract(nextestArtifactLocation(this.repoRoot).directory);
-    await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(),
+    await runRepositoryExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(),
       groups: [{ package: "semio-hub", target: { kind: "lib" }, laws: [
         "every_manifest_case_is_accepted_exactly_when_the_fixture_says_so",
         "only_the_canonical_manifest_bytes_decode_and_both_digests_agree_with_the_fixture",
@@ -8527,7 +8537,135 @@ function moduleRustSource(root: string): string {
   return files.sort().map((file) => readFileSync(file, "utf8")).join("\n");
 }
 
+/** 🪢 Verifies independent kind coverage and the complete schema-qualified receipt roster. */
+async function proveNativeCatalogReceiptPairs(repoRoot: string): Promise<void> {
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
+  const root = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📇️catalog");
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json"), "utf8"));
+  const full = JSON.parse(readFileSync(join(root, "🧫️fixtures/📇️native-catalog-surface/🧪️full-roster.json"), "utf8"));
+  assert(hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogReceiptPairs")(fixture));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  const fullSchema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")).$defs.NativeCatalogFullRoster;
+  const validateFull = ajv.compile(fullSchema);
+  assert(validateFull(full), "independent AJV closed full catalog roster");
+  const validateOwnedFull = hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogFullRoster");
+  assert(validateOwnedFull(full), "owned closed full catalog roster");
+  const triples = full.identities as string[][];
+  const expectedTriples = new Set(triples.map((row) => JSON.stringify(row)));
+  const validateTripleRoster = ajv.compile({ type: "array", minItems: 30, maxItems: 30, uniqueItems: true, items: { enum: triples } });
+  for (const row of full.cases) {
+    const hostile = structuredClone(full);
+    switch (row.mutation) {
+      case "none": break;
+      case "reverse": hostile.identities.reverse(); break;
+      case "missing": hostile.identities.splice(17, 1); break;
+      case "duplicate": hostile.identities[17] = [...hostile.identities[16]]; break;
+      case "extra": hostile.identities.push(["s.stdio.pdf", "foreign.schema", "foreign.factory"]); break;
+      case "schema": hostile.identities[17][1] = "foreign.schema"; break;
+      case "factory": hostile.identities[17][2] = "foreign.factory"; break;
+      case "case": hostile.cases[7] = { ...hostile.cases[0] }; break;
+      default: throw new Error(`unknown full catalog mutation ${row.mutation}`);
+    }
+    const keys = new Set(hostile.identities.map((identity: string[]) => JSON.stringify(identity)));
+    const accepted = keys.size === 30 && hostile.identities.length === 30 && [...keys].every((key) => expectedTriples.has(key as string)) && row.mutation !== "case";
+    assert.equal(accepted, row.accepted, `${row.id} full owned identity roster`);
+    assert.equal(Boolean(validateTripleRoster(hostile.identities)) && row.mutation !== "case", row.accepted, `${row.id} independent full AJV roster`);
+    if (row.mutation !== "none" && row.mutation !== "reverse") {
+      assert.equal(validateFull(hostile), false, `${row.id} independent closed full corpus substitution`);
+      assert.equal(validateOwnedFull(hostile), false, `${row.id} owned closed full corpus substitution`);
+    }
+  }
+  const FullDatabase = (await import("bun:sqlite")).Database;
+  const fullCounts = new FullDatabase(":memory:");
+  try {
+    fullCounts.exec("CREATE TABLE codec_identity(kind TEXT NOT NULL, schema TEXT NOT NULL, factory TEXT NOT NULL)");
+    const insert = fullCounts.prepare("INSERT INTO codec_identity VALUES (?, ?, ?)");
+    for (const identity of triples) insert.run(identity[0]!, identity[1]!, identity[2]!);
+    assert.deepEqual(fullCounts.query("SELECT count(*) AS rows, count(DISTINCT kind) AS kinds, count(DISTINCT factory) AS factories FROM codec_identity").get(), { rows: 30, kinds: 29, factories: 30 });
+    assert.deepEqual(fullCounts.query("SELECT count(*) AS pairs FROM (SELECT DISTINCT kind, schema FROM codec_identity)").get(), { pairs: 30 });
+  } finally {
+    fullCounts.close();
+  }
+  const selection = readFileSync(join(root, "../🤖️generated/🧩️composition/🦀️.rs"), "utf8").split("\n").find((line) => line.startsWith("fn selected_contributions()"))!;
+  const owners = new Set([...selection.matchAll(/semio_s_artifact_stdio_(\w+)::contribution/g)].map((match) => match[1]!));
+  assert.equal(owners.size, full.artifactAssemblies);
+  const artifacts = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");
+  const actualTriples: string[][] = [];
+  const ledger = { declared: { codecs: 0, mutations: 0, inferences: 0 }, registered: { codecs: 0, mutations: 0, inferences: 0 }, implemented: { codecs: 0, mutations: 0, inferences: 0 }, verified: { codecs: 0, mutations: 0, inferences: 0 } };
+  let definitions = 0;
+  for (const directory of readdirSync(artifacts)) {
+    const path = join(artifacts, directory, "📜️artifact-definition.json");
+    if (!existsSync(path)) continue;
+    const definition = JSON.parse(readFileSync(path, "utf8"));
+    if (!owners.has(definition.artifact)) continue;
+    definitions++;
+    for (const category of ["codecs", "mutations", "inferences"] as const) {
+      for (const capability of definition[category]) {
+        ledger.declared[category]++;
+        if (capability.executable_registration) ledger.registered[category]++;
+        if (capability.status === "implemented") ledger.implemented[category]++;
+        if (capability.status === "verified") ledger.verified[category]++;
+        if (category === "codecs" && capability.native_factory) {
+          const binding = capability.native_factory;
+          actualTriples.push([binding.artifact_kind, binding.artifact_schema, binding.factory_id]);
+        }
+      }
+    }
+  }
+  assert.equal(definitions, full.artifactAssemblies);
+  assert.deepEqual(ledger, full.ledger, "actual authored capability declarations retain exact independent ledger");
+  assert.equal(validateTripleRoster(actualTriples), true, "actual selected definition factory identities equal the closed full roster");
+  console.log(`native-catalog-full-roster: schemas=30 kinds=29 factories=30 declared=36 cases=${full.cases.length} independent-ajv=matched independent-sqlite=30/29/30`);
+  const nativeLaw = readFileSync(join(root, "../🔌️plugin/📇️catalog/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  assert(nativeLaw.includes('fixture["identities"]') && nativeLaw.includes('fixture["artifactKinds"]'), "original native count law must retain exact schema-qualified roster and unique kinds");
+  const pairSchema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")).$defs.NativeCatalogReceiptPairs;
+  const validateCorpus = ajv.compile(pairSchema);
+  assert(validateCorpus(fixture), "independent AJV receipt pair corpus");
+  const duplicateCase = structuredClone(fixture);
+  duplicateCase.cases[7] = { ...duplicateCase.cases[0] };
+  assert.equal(validateCorpus(duplicateCase), false, "independent AJV refuses duplicate case substitution");
+  assert.equal(hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogReceiptPairs")(duplicateCase), false, "owned corpus refuses duplicate case substitution");
+  const validatePairs = ajv.compile({ type: "array", minItems: fixture.pairs.length, maxItems: fixture.pairs.length, uniqueItems: true, items: { enum: fixture.pairs } });
+  const validateKinds = ajv.compile({ type: "array", const: [...fixture.kinds].sort() });
+  const expected = new Set(fixture.pairs.map((pair: string[]) => JSON.stringify(pair)));
+  const { Database } = await import("bun:sqlite");
+  const counts = new Database(":memory:");
+  try {
+    counts.exec("CREATE TABLE codec_identity(kind TEXT NOT NULL, schema TEXT NOT NULL)");
+    const insert = counts.prepare("INSERT INTO codec_identity VALUES (?, ?)");
+    for (const pair of fixture.pairs) insert.run(pair[0], pair[1]);
+    const independent = counts.query("SELECT (SELECT count(*) FROM (SELECT DISTINCT kind, schema FROM codec_identity)) AS codecIdentities, count(DISTINCT kind) AS artifactKinds FROM codec_identity").get();
+    assert.deepEqual(independent, fixture.identityCounts, "independent SQLite identity projections");
+    assert.equal(expected.size, fixture.identityCounts.codecIdentities, "owned schema-qualified identity count");
+    assert.equal(new Set(fixture.pairs.map((pair: string[]) => pair[0])).size, fixture.identityCounts.artifactKinds, "owned artifact-kind count");
+  } finally {
+    counts.close();
+  }
+  for (const row of fixture.cases) {
+    const pairs: string[][] = fixture.pairs.map((pair: string[]) => [...pair]);
+    switch (row.mutation) {
+      case "none": break;
+      case "reverse": pairs.reverse(); break;
+      case "missing-schema": pairs.splice(1, 1); break;
+      case "missing-kind": pairs.pop(); break;
+      case "duplicate": pairs[1] = [...pairs[0]!]; break;
+      case "foreign-schema": pairs[1]![1] = "foreign.schema"; break;
+      case "foreign-kind": pairs[1]![0] = "foreign.artifact"; break;
+      case "extra": pairs.push(["s.stdio.pdf", "foreign.schema"]); break;
+      default: throw new Error(`unknown receipt pair mutation ${row.mutation}`);
+    }
+    const keys = new Set(pairs.map((pair) => JSON.stringify(pair)));
+    const kinds = [...new Set(pairs.map((pair) => pair[0]!))].sort();
+    const accepted = keys.size === pairs.length && keys.size === expected.size && [...keys].every((key) => expected.has(key)) && JSON.stringify(kinds) === JSON.stringify([...fixture.kinds].sort());
+    assert.equal(Boolean(validatePairs(pairs)) && Boolean(validateKinds(kinds)), row.accepted, `${row.id} independent AJV roster oracle`);
+    assert.equal(accepted, row.accepted, `${row.id} owned pair roster`);
+  }
+  console.log(`native-catalog-receipt-pairs: cases=${fixture.cases.length} schemas=${fixture.pairs.length} kinds=${fixture.kinds.length} independent-ajv=matched independent-sqlite-identities=${fixture.identityCounts.codecIdentities}/${fixture.identityCounts.artifactKinds}`);
+}
+
 async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
+  await proveNativeCatalogReceiptPairs(repoRoot);
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
   const fixtureRoot = join(root, "🧫️fixtures/🛡️opened-root");
@@ -10584,7 +10722,7 @@ async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: Trus
       }
     };
     verifyRetainedBytes();
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: repoRoot,
       groups: [
         {
@@ -11236,7 +11374,7 @@ async function proveTrustedPublicationCli(repoRoot: string, hubRoot: string): Pr
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = process.env.CARGO_TARGET_DIR;
   if (!artifactRoot || !cargoTargetDir || !isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("publication CLI laws require exact ticket-owned artifact and Cargo roots");
-  await runExactCargoLaws({
+  await runRepositoryExactCargoLaws({
     cwd: repoRoot, ...exactCargoStageEnvironments(), artifactDir: artifactRoot,
     groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: [
       "trusted_catalog_command::tests::trusted_publication_transport_matches_neutral_arguments_and_input_bounds",
@@ -11592,7 +11730,7 @@ class GisInferenceLedgerCheckScript extends BundleScript {
       "inference_live_author_rechecks_real_sqlite_session_scope_role_revocation_and_cancellation",
       "gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
     ];
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       groups: [
         { package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn"] },
@@ -11625,7 +11763,7 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("gis-map-frozen-binding-check accepts only --native");
     await proveGisMapFrozenBindingFixture(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],
@@ -12897,7 +13035,7 @@ class GisMapProposalCheckScript extends BundleScript {
       ];
       if (mode === "--process") routeLaws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
       const laws = [...libraryLaws, ...routeLaws];
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -13073,7 +13211,7 @@ class LocalBootstrapLaunchCheckScript extends BundleScript {
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
     signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
   }
 }
@@ -13101,7 +13239,7 @@ class PublishScript extends BundleScript {
 class BuildDevScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
@@ -13112,7 +13250,7 @@ class BuildDevScript extends BundleScript {
 class BuildDevPostgresScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev-postgres through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub", "--features", "postgres,neo4j"], this.repoRoot, { output: "dist/build-dev-postgres", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub", "--features", "postgres,neo4j"], this.repoRoot, { output: "dist/build-dev-postgres", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
@@ -13360,7 +13498,7 @@ ${finishGisMapProcessDocumentSocket.toString()}
   assert.deepEqual(live.frames, []); assert.equal(live.plan.receipt, "");
   process.stdout.write(JSON.stringify({ id: "ws-websocket-close", closed: true, frames: 0, receipt: "" }));
 })().catch(error => { process.stderr.write(String(error).slice(0, 1024)); process.exitCode = 1; });`;
-    const result = await runExactCargoLawProcess("node", ["--eval", thirdParty], {
+    const result = await captureOwnedProcess("node", ["--eval", thirdParty], {
       cwd: repoRoot, env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot }, budgetMs: fixture.maximumMs * 3, maxOutputBytes: 4_096,
       stdoutPath: join(evidence, "ws.stdout"), stderrPath: join(evidence, "ws.stderr"), cancelled: () => false,
     });
@@ -13453,7 +13591,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "--publication-native") {
       await proveTrustedGenerationStageFixture(this.repoRoot);
       await proveTrustedPublicationFixture(this.repoRoot);
-      await runCargoTestBudgeted(["semio-hub"], this.repoRoot, ["--no-default-features", "--features", "sqlite", "--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
+      await runRepositoryCargoTests(["semio-hub"], this.repoRoot, ["--no-default-features", "--features", "sqlite", "--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
       return;
     }
     if (segments.length === 1 && segments[0] === "--publication-source") {
@@ -13500,7 +13638,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
       !catalogSource.includes("selected profile must resolve at least one document-open target") ||
       !catalogSource.includes("selected profile resolved a different number of document-open targets than it declares") ||
-      !providerSource.includes("NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32") ||
+      !providerSource.includes("pub fn native_openable_provider_receipt_count()") ||
       !providerSource.includes("receipt.package_version != version") ||
       !registrySource.includes("CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024") ||
       runtimeSource.split("catalog.generation_id() != authority.catalog.generation_id").length - 1 !== 2 ||
@@ -13553,7 +13691,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
           gisColdMap.includes('gis.descriptor?.path !== "packages/gis/descriptor.semio"') &&
           gisColdMap.includes("trustedBootstrapReadCurrentBundle(current, check)") &&
           gisColdMap.includes("verifyRetainedBytes();") &&
-          gisColdMap.includes("runExactCargoLaws({") &&
+          gisColdMap.includes("runRepositoryExactCargoLaws({") &&
           gisColdMap.includes("genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface") &&
           gisColdMap.includes("genuine_gis_component_rejects_stale_cold_authority_before_loading"),
       ],
@@ -13591,7 +13729,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       console.log("trusted-native-hub build:start artifacts=" + hubBuildRoot);
       try {
         const targets = segments[0] === "--two-author-shell" ? ["-p", "semio-hub", "--bins", "--features", "semio-hub/integration-fixtures"] : ["--bin", "os-hub"];
-        const result = await runExactCargoLawProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
+        const result = await captureOwnedProcess("cargo", ["build", "--manifest-path", "Cargo.toml", ...targets, "--message-format=json"], {
           cwd: this.root,
           env: { ...hubEnv, CARGO_TERM_COLOR: "never" },
           budgetMs: buildBudgetMs(),
@@ -13616,7 +13754,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
         hubBuildControl.close();
       }
       if (segments[0] === "--two-author-shell") runCargo(["build", "-p", "semio-framework-os-mcp", "--bins"], this.repoRoot, hubEnv);
-      if (segments[0] === "--two-author-shell") await runExactCargoLaws({
+      if (segments[0] === "--two-author-shell") await runRepositoryExactCargoLaws({
         cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath,
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],
         buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
@@ -15456,7 +15594,7 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
           : []),
         ...(["authority", "invites"].includes(phase) ? [] : [{ package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: laws.slice(8) }]),
       ].sort((left, right) => Number(left.target.kind === "bin") - Number(right.target.kind === "bin"))) {
-        const receipts = await runExactCargoLaws({
+        const receipts = await runRepositoryExactCargoLaws({
           cwd: this.root,
           ...exactCargoStageEnvironments(),
           groups: [group],
@@ -15726,7 +15864,7 @@ class SpaceArtifactCreationCheckScript extends BundleScript {
           ],
         });
       }
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot, ...exactCargoStageEnvironments(),
         groups,
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 180_000,
@@ -15750,7 +15888,7 @@ class CheckInCheckScript extends BundleScript {
         "check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author",
       ];
       if (phase === "process") laws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -15795,7 +15933,7 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
         "directory_event_page_v1_append_admission_is_transactional_for_sqlite_postgres_and_neo4j",
         "directory_event_page_v1_route_rejects_noncanonical_query_and_stale_bearer_without_body",
       ];
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -16162,7 +16300,7 @@ class SpaceAdministrationCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("space-administration-check accepts source or native");
     const checks = await proveDirectorySpaceAdministrationPageV1(this.repoRoot);
     if (phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -16480,7 +16618,7 @@ class PresenceNormalizationCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("presence-normalization-check accepts source or native");
     const checks = await provePresenceNormalizationFixture(this.repoRoot);
     if (phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -16536,7 +16674,7 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (!hub.includes(`fn ${law}(`) || !hub.includes("with_graceful_shutdown") || !hub.includes("test_state_with_directory")) throw new Error("missing composed SQLite shutdown/reopen acceptance journey");
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite"], laws: [law] }],
@@ -16569,7 +16707,7 @@ class PresenceLeaseCheckScript extends BundleScript {
       const hubGroup = { package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: hubLaws };
       const groups =
         phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, hubGroup] : [hubGroup];
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: phase === "native" ? this.repoRoot : this.root,
         ...exactCargoStageEnvironments(),
         groups,
@@ -16943,7 +17081,7 @@ class InviteRedemptionTransactionCheckScript extends BundleScript {
               ]
             : [];
     if (lawGroups.length > 0) {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         groups: lawGroups,
         progress(event) {
@@ -16961,7 +17099,7 @@ class DirectoryOrderedPublicationCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-ordered-publication-check accepts only --native");
     const checks = orderedDirectoryPublicationOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [
@@ -17713,7 +17851,7 @@ class SpaceJourneyCheckScript extends BundleScript {
 
 /** 🤝️ Executes the hub-owned two-browser collaboration acceptance suite. */
 class DevCollaborationScript extends BundleScript {
-  async run(segments: string[]): Promise<void> { await runCollabE2eCli(segments); }
+  async run(segments: string[]): Promise<void> { await (await import("../../🧪️tests/🤝️dev-collaboration/🟦️.ts")).runCollabE2eCli(segments); }
 }
 
 const router = new ScriptRouter(import.meta.dir)

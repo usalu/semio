@@ -188,7 +188,7 @@ fn app() -> BitmapApp {
 
 fn input_meta() -> ActionMeta {
     let window_instances = vec![ViewWindowInstance { id: WFC_BITMAP_WINDOW_INPUT.into(), window_kind_id: WFC_BITMAP_WINDOW_INPUT.into() }];
-    let view = ViewModel { window_instances, ..Default::default() }.for_window_instance(WFC_BITMAP_WINDOW_INPUT).expect("the input window is in the roster");
+    let view = ViewModel { window_instances, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(WFC_BITMAP_WINDOW_INPUT).expect("the input window is in the roster");
     ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }
 }
 
@@ -251,8 +251,8 @@ fn one_mounted_stroke_is_one_edit_one_row_and_one_transaction() {
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.bitmap@1/*#editor#paint-stroke", "{transaction:?}");
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("paint-input-stroke")), "the op is the parametric leaf: {:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Paint stroke of 4 cells in colour 1");
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint stroke of 4 cells in colour 1");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
     assert_ne!(app.snapshot().expect("projection"), before, "the stroke landed");
     close(&mut app);
 }

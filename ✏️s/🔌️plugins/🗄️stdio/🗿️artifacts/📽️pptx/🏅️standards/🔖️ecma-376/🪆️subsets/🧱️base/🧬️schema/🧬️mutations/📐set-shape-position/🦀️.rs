@@ -23,8 +23,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapePosition {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::SetShapePosition(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set shape position", "Position der Form setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set shape position", "Position der Form setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

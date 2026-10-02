@@ -21,8 +21,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetCell {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::SetCell(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set cell", "Zelle setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
     }
     fn target(&self) -> Vec<String> {
         let mut target = vec!["xmlParts".into(), self.address.part_path.clone(), "document".into(), "root".into()];

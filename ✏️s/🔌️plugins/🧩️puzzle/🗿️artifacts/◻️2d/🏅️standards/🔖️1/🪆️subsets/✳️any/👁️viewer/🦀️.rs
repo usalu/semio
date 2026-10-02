@@ -7,11 +7,24 @@
 use crate::viewer::puzzle2d::modes::view;
 use crate::viewer::puzzle2d::modes::view::windows::board;
 use crate::{Puzzle2dSnapshot, PUZZLE2D_DIALECT, PUZZLE_2D_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
 // 🕹️ `InteractionView` — see `✏️editor/🦀️.rs`'s identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

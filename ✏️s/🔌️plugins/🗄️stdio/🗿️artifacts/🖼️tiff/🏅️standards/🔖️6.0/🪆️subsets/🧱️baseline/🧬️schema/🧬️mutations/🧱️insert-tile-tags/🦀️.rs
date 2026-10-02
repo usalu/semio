@@ -22,8 +22,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for InsertTileTa
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::InsertTileTags(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert tile tags", "Kachel-Tags einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert tile tags", "Kachel-Tags einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

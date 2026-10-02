@@ -209,8 +209,7 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `grammar_conformance_law`: the snapshot grammar (a hex-dump grammar — GIF89a has
-    /// no textual syntax of its own, see that file's own doc comment) recognizes real
+    /// ✅️ The owned snapshot record grammar recognizes real
     /// `print_dsl` output for the demo (dancing.gif) snapshot.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
@@ -219,7 +218,9 @@ mod conformance_laws {
         let text = store::ArtifactDsl::print_dsl(&demo_gif_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
-        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body");
+        assert!(recognizer.recognize(&reconstructed).is_err(),"default16MiB lexical ceiling must remain strict");
+        assert!(recognizer.recognize_with_limits(&reconstructed,&dsl::Limits{max_bytes:reconstructed.len()-1,..dsl::Limits::default()}).is_err(),"caller byte ceiling must reject before recognition");
+        assert!(recognizer.recognize_with_limits(&reconstructed,&dsl::Limits{max_bytes:32*1024*1024,..dsl::Limits::default()}).expect("recognize"), "grammar did not recognize demo dsl body");
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
@@ -282,6 +283,8 @@ mod conformance_laws {
         const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
         let demo = demo_gif_snapshot();
+        assert!(store::ArtifactDsl::print_dsl(&demo)==FIXTURE_DSL, "owned native Text fixture differs");
+        assert!(store::ArtifactPack::encode_pack(&demo)==FIXTURE_PACK, "owned native Pack fixture differs");
 
         let parsed = <GifSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gif_snapshot()");

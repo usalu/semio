@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
-#[artifact_schema(id = "s.space.space.presence")]
+#[artifact_schema(id = "hub.compositions.space.engine.space.presence")]
 pub struct SpacePresence {
     #[state(presence)]
     pub camera: BTreeMap<String, SpaceWindowCamera>,

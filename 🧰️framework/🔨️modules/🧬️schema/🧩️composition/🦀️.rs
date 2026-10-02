@@ -1,11 +1,11 @@
-//! 🧩️ Pure schema composition vocabulary, mounted once by the kernel and reexported by schema.
+//! 🧩️ Canonical allocation-free child and link schema composition vocabulary.
 
 /// 🧒️ One declared CHILD slot on an artifact snapshot — an owned sub-artifact with its own document
 /// and lifecycle (`ArtifactChild<T>` / `Vec<ArtifactChild<T>>` at the field level).
 ///
 /// `kind` is a plain `&'static str` holding a canonical artifact kind id, grammar `s.<plugin>.<artifact>`
 /// (e.g. `"s.stdio.mesh"`) — deliberately NOT the `ArtifactKindId` newtype from `🚪️io`'s `semio-framework`
-/// crate: this crate (`semio-framework-schema`) must not gain a dependency on `semio-framework` merely to
+/// crate: this crate (`semio-framework-schema-composition`) must not gain a dependency on `semio-framework` merely to
 /// name a kind inside a slot table.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ChildSlotSpec {

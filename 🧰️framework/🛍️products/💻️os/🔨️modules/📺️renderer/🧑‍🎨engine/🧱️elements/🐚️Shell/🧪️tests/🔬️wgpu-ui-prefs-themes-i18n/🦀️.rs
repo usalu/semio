@@ -124,7 +124,7 @@ fn shell_pref_locks_reads_the_four_lockable_envs() {
 #[test]
 fn load_ui_prefs_once_prefers_a_lock_over_storage() {
     let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), ..Default::default() });
-    let mut state = ShellState::new(Vec::new(), String::new());
+    let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     state.load_ui_prefs_once();
     assert_eq!(state.appearance_id, "dark");
     state.appearance_id = "light".to_string();
@@ -149,7 +149,7 @@ fn load_ui_prefs_once_prefers_a_lock_over_storage() {
 /// previous run left behind.
 #[test]
 fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
-    let mut state = ShellState::new(Vec::new(), String::new());
+    let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     state.load_ui_prefs_once();
     let after_load = state.chrome_present.last_synced_preferences.clone();
     assert!(after_load.is_some());
@@ -256,11 +256,11 @@ fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
         assert_eq!(crate::host_locale(), expected, "🗣️ `normalizeUiLocale` folds {tag:?}");
     }
     crate::set_host_locale("de-DE");
-    assert_eq!(resolve_locale_id(None, &stored(None)), "de", "the host speaks when nothing else does");
-    assert_eq!(resolve_locale_id(None, &stored(Some(OsUiLocale::En))), "en", "a stored preference outranks the host");
-    assert_eq!(resolve_locale_id(Some("en".to_string()), &stored(Some(OsUiLocale::De))), "en", "a lock outranks both");
+    assert_eq!(resolve_locale_id(None, &stored(None), semio_framework_ui_locale::Locale::En), "de", "the host speaks when nothing else does");
+    assert_eq!(resolve_locale_id(None, &stored(Some(OsUiLocale::En)), semio_framework_ui_locale::Locale::En), "en", "a stored preference outranks the host");
+    assert_eq!(resolve_locale_id(Some("en".to_string()), &stored(Some(OsUiLocale::De)), semio_framework_ui_locale::Locale::En), "en", "a lock outranks both");
     crate::set_host_locale("");
-    assert_eq!(resolve_locale_id(None, &stored(None)), "en", "`detectShellLocale(undefined)` answers en");
+    assert_eq!(resolve_locale_id(None, &stored(None), semio_framework_ui_locale::Locale::En), "en", "`detectShellLocale(undefined)` answers en");
     crate::set_host_locale(before.unwrap_or(""));
 
     let engine = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root");

@@ -3,7 +3,11 @@
 use crate::editor::playbook::config::PlaybookConfig;
 use crate::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
 use semio_framework::parse_contributions;
-use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BlockPaletteEntry;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const PLAYBOOK_PLAY_WINDOW_BUILDER: &str = "playbook-builder";

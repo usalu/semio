@@ -5,8 +5,17 @@ use crate::editor::remodeling::modes::model::windows::model::config::RemodelingM
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
 use crate::editor::remodeling::reconstruction_session::{RECONSTRUCTION_TRACE_CAMERA_MESH, RECONSTRUCTION_TRACE_MESH_LANE, RECONSTRUCTION_TRACE_POINT_MESH};
 use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::{PackedF32, RemodelingSnapshot};
-use semio_framework_plugin::{world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig};
+use crate::RemodelingSnapshot;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UtilityRef;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::WorldSunConfig;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -112,8 +121,6 @@ fn world_instances_json(config: &RemodelingModelWindowConfig) -> String {
 /// as its own (small, unattenuated) point layer, and the GCP world positions. A running reconstruction
 /// shows its cameras and points through the framework `toolRunTrace` lane instead, and its provisional
 /// result through the overlay document this window already renders.
-/// `PackedF32`/`PackedU8`'s inner string is already a base64 little-endian buffer, matching
-/// `positionsB64`/`colorsB64`'s wire shape byte-for-byte — no decode/re-encode round trip needed.
 fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> Option<String> {
     let mut layers: Vec<Value> = Vec::new();
     if config.layers.sparse {
@@ -121,8 +128,8 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
             if !sparse.points.is_empty() {
                 layers.push(json!({
                     "id": "remodeling-sparse",
-                    "positionsB64": PackedF32::from_f32_slice(&sparse.points.to_f32_vec_from(&scene.durable_artifacts)).0,
-                    "colorsB64": sparse.colors.as_ref().map(|colors| colors.0.clone()),
+                    "positionsB64": base64_codec::base64_standard_encode(sparse.points.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
+                    "colorsB64": sparse.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
                     // 📏️ Screen pixels, like the camera and GCP layers: the reconstruction is
                     // normalised to unit RMS radius, so an attenuated (world-unit) size of 3 drew
                     // every point as a square larger than the object and the cloud as one grey blob.
@@ -137,8 +144,8 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
             if !dense.positions.is_empty() {
                 layers.push(json!({
                     "id": "remodeling-dense",
-                    "positionsB64": dense.positions.0,
-                    "colorsB64": dense.colors.as_ref().map(|colors| colors.0.clone()),
+                    "positionsB64": base64_codec::base64_standard_encode(dense.positions.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
+                    "colorsB64": dense.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
                     "size": 2.0,
                     "sizeAttenuation": false,
                 }));
@@ -149,7 +156,7 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
         let positions: Vec<f32> = trajectory.poses.iter().flat_map(|pose| pose.translation).collect();
         layers.push(json!({
             "id": "remodeling-camera-poses",
-            "positionsB64": PackedF32::from_f32_slice(&positions).0,
+            "positionsB64": base64_codec::base64_standard_encode(positions.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
             "colorsB64": Value::Null,
             "size": 9.0,
             "sizeAttenuation": false,
@@ -159,7 +166,7 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
         let positions: Vec<f32> = scene.gcps.iter().flat_map(|gcp| gcp.world_position.map(|c| c as f32)).collect();
         layers.push(json!({
             "id": "remodeling-gcps",
-            "positionsB64": PackedF32::from_f32_slice(&positions).0,
+            "positionsB64": base64_codec::base64_standard_encode(positions.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
             "colorsB64": Value::Null,
             "size": 10.0,
             "sizeAttenuation": false,

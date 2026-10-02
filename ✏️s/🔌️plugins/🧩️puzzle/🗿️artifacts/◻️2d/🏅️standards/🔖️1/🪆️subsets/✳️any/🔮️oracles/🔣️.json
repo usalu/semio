@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `Puzzle2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no third party reads the CARRIER — but five do read the FACTS the carrier states, and they are registered below: networkx and graphology for the handle-owned topology and its two cascades, shapely for node geometry, jsonschema and jsonpatch (corroborated by deepdiff, and mirrored in a second ecosystem by the npm jsonschema and fast-json-patch) for payload shape and diff reproduction. The in-repository Python second implementation stays registered alongside them and remains what it always was: useful evidence, not independent evidence.",
   "oracles": [

@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseProgramArtifact } from "../../🟦️.ts";
+import { programArtifactFromJson, programDiffFromJson } from "../../🔣️json/🟦️.ts";
 import { parseProgramSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProgramDiff } from "../../🔺️diff/🟦️.ts";
 
@@ -82,8 +83,9 @@ export function testProgramDocumentContract(): void {
     const value = readJson(path);
     assert(validateArtifact(value), `${path}: ${JSON.stringify(validateArtifact.errors)}`);
     assert(validateSnapshot(value), `${path}: ${JSON.stringify(validateSnapshot.errors)}`);
-    assert.deepEqual(parseProgramArtifact(value), value, `${path}: artifact parser`);
-    assert.deepEqual(parseProgramSnapshot(value), value, `${path}: snapshot parser`);
+    const canonical=programArtifactFromJson(value);
+    assert.deepEqual(parseProgramArtifact(canonical), canonical, `${path}: artifact parser`);
+    assert.deepEqual(parseProgramSnapshot(canonical), canonical, `${path}: snapshot parser`);
     assert.deepEqual(Object.keys(value), expectedFields, `${path}: exact root fields`);
     assertChild(value.knowledge, `${path}.knowledge`);
     assertChild(value.benchmarks, `${path}.benchmarks`);
@@ -93,7 +95,8 @@ export function testProgramDocumentContract(): void {
   for (const path of diffPaths) {
     const value = readJson(path);
     assert(validateDiff(value), `${path}: ${JSON.stringify(validateDiff.errors)}`);
-    assert.deepEqual(parseProgramDiff(value), value, `${path}: diff parser`);
+    const canonicalDiff=(() => { try { return programDiffFromJson(value); } catch (error) { throw new Error(`${path}: ${error instanceof Error ? error.message : String(error)}`); } })();
+    assert.deepEqual(parseProgramDiff(canonicalDiff), canonicalDiff, `${path}: diff parser`);
     assert.deepEqual(Object.keys(value), ["artifact", ...expectedFields], `${path}: exact diff fields`);
     if (value.knowledge !== null) assertChild(value.knowledge, `${path}.knowledge`);
     if (value.benchmarks !== null) assertChild(value.benchmarks, `${path}.benchmarks`);
@@ -101,9 +104,10 @@ export function testProgramDocumentContract(): void {
 
   const neutral = readJson(neutralPath);
   assert(validateArtifact(neutral), JSON.stringify(validateArtifact.errors));
-  assert.deepEqual(parseProgramSnapshot(neutral), neutral);
-  assert.throws(() => parseProgramSnapshot({ ...neutral, documents: [] }), /unknown field/, "obsolete documents alias is rejected");
-  assert.throws(() => parseProgramSnapshot({ ...neutral, project: { ...neutral.project, foreign: true } }), /unknown field/, "nested register primitives reject foreign fields");
+  const canonicalNeutral=programArtifactFromJson(neutral);
+  assert.deepEqual(parseProgramSnapshot(canonicalNeutral), canonicalNeutral);
+  assert.throws(() => parseProgramSnapshot({ ...canonicalNeutral, documents: [] }), /unknown field/, "obsolete documents alias is rejected");
+  assert.throws(() => parseProgramSnapshot({ ...canonicalNeutral, project: { ...canonicalNeutral.project, foreign: true } }), /unknown field/, "nested register primitives reject foreign fields");
   assert.throws(() => assertChild({ ...neutral.knowledge, target: { ...neutral.knowledge.target, artifactId: "wrong" } }, "wrong-child"), /target identity/, "child identity mismatch is rejected");
   assert.equal(neutral.meta.locale, "en", "ProgramMeta.locale remains document content language");
 }

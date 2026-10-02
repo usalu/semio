@@ -12,7 +12,7 @@
 
 //#region 🔌️Adapters
 import { Kind, parse, valueFromASTUntyped, type OperationDefinitionNode } from "graphql";
-import { defineTestAdapter } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔢️Coercion

@@ -69,8 +69,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
         vec![super::GltfMutation::ChangePrimitiveExtraData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Primitive Extra Data", "Zusatzdaten des Primitivs ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Primitive Extra Data", "Zusatzdaten des Primitivs ändern")
     }
 
     fn target(&self) -> Vec<String> {

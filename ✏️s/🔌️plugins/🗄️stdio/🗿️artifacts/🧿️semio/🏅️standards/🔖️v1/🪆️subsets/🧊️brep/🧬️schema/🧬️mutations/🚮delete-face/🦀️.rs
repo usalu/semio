@@ -19,8 +19,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteFace
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete face \"{}\"", self.id), &format!("Fläche \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete face \"{}\"", self.id), &format!("Fläche \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -16,7 +16,7 @@ use super::*;
 #[dsl(keyword = "set-object")]
 pub struct SetObject {
     pub name: String,
-    pub faces: Vec<usize>,
+    pub faces: Vec<u64>,
 }
 
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
@@ -28,8 +28,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetObject(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set object", "Objekt setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set object", "Objekt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

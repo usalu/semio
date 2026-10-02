@@ -22,8 +22,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::RenameMember(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename member", "Eigenschaft umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

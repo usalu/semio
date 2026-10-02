@@ -2,7 +2,8 @@
 use super::*;
 use crate::catalog::compile;
 use crate::source_builders;
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 #[test]
 fn tokenizer_splits_camel_case_and_kebab_case_and_drops_stopwords() {

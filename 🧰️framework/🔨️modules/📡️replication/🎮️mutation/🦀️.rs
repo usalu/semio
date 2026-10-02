@@ -215,8 +215,8 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
         crate::UndoPolicy::ExactBaseOnly
     }
     /// 🗂️ Which durability/visibility class this operation's diffs belong to.
-    fn state_class(&self) -> crate::StateClass {
-        crate::StateClass::Artifact
+    fn state_class(&self) -> semio_framework_schema_state::StateClass {
+        semio_framework_schema_state::StateClass::Artifact
     }
     /// 🌐️ Conservative base-independent foreign-step capability used to avoid replaying
     /// ordinary local operations solely for transaction-proposal discovery.
@@ -234,6 +234,10 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     /// roster of editable inputs a plugin publishes without an operation at hand. `#[derive(Mutations)]` fills it; a
     /// hand-written projection bridge forwards its source aggregate's.
     const INPUT_SCHEMAS: &'static [&'static str] = &[];
+    /// 🔗️ Per [`Self::INPUT_SCHEMAS`] row, the documents that leaf's payload schema references (`MutationLeaf::PAYLOAD_SCHEMA_DOCUMENTS`)
+    /// — what the runtime publishes beside the schemas so every `$ref` of every editable input resolves. Row-aligned like
+    /// [`Self::INPUT_SCHEMAS`]; `#[derive(Mutations)]` fills it, a hand-written bridge forwards its source aggregate's.
+    const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[];
     /// 🧬️ The payload JSON Schema of this operation's own leaf, or `None` when its inputs are not editable.
     /// `#[derive(Mutations)]` answers the wrapped leaf's `MutationLeaf::PAYLOAD_SCHEMA`.
     fn input_schema(&self) -> Option<&'static str> {
@@ -321,7 +325,7 @@ impl crate::value::ToValue for MutationDiffParticipation {
 /// 🧷️ The protocol outcome class one direct mutation can reach — the vocabulary fixtures, manifests and bridges
 /// share verbatim, so no layer projects one record onto another.
 ///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — `$defs/MutationOutcomeClass`
+/// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — `$defs/MutationOutcomeClass`
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum MutationOutcomeClass {
@@ -963,6 +967,10 @@ pub trait MutationLeaf {
     /// 🧬️ The leaf's normative payload JSON Schema text (`DESCRIPTOR.payload_schema`, embedded at compile time by
     /// `#[derive(dsl::MutationLeaf)]`) — the source of its input descriptors (`manifest::mutation_input_defs`).
     const PAYLOAD_SCHEMA: &'static str;
+    /// 🔗️ Every schema document [`Self::PAYLOAD_SCHEMA`] references by `$id`, transitively, that the leaf's own plugin (or
+    /// framework module) tree holds — embedded by `#[derive(dsl::MutationLeaf)]` and published at runtime, so every input resolves
+    /// whatever facet or artifact of the plugin it lives in (design §16.3).
+    const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[];
     /// 🧬️ [`Self::PAYLOAD_SCHEMA`] when this operation is user-editable, else `None`. A leaf whose type wraps its payload
     /// in one variant of an enum (`#[mutation_leaf(payload = Apply)]`) is editable only in that variant; its other
     /// variants (an internal inverse such as `Restore`) are not.

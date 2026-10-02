@@ -22,8 +22,8 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveSample {
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
         agg_inverse(&Mp4Mutation::RemoveSample(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove sample", "Sample entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

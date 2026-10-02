@@ -7,7 +7,14 @@
 
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dSlot, Wfc2dTile, Wfc2dTileMedia};
 use crate::Wfc2dSnapshot;
-use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WFC_2D_VIEW_WINDOW: &str = "wfc-2d-board";

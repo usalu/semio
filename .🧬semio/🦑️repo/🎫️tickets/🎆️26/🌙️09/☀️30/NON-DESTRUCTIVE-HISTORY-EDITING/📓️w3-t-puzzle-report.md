@@ -198,3 +198,165 @@ All commands run from `/Users/ueli/Documents/semio`, gated with `until [ "$(pgre
    `bun ./📜️script.ts verify taxonomy report --scope ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d`, then the same command with `--scope ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d`.
 
 Expected failure modes to check first: borrow-check errors in the new 5d code (`Puzzle5dBoardEventsWork` `Complete` stage, `Puzzle5dActionCtx::commit_selection`), and source-scan laws whose literals were rewritten (§3).
+
+## Session 2 — 2026-10-01
+
+Successor of W3-T-PUZZLE (S2-PUZZLE). This section is updated at each milestone. Paths are relative to `P3`/`P5` as above unless written in full.
+
+### S2.0 Status (10-02 02:50, CARGO HOLD rule 26)
+
+- **Source: done** for every resume item below. **Compile/test: WRITTEN BUT UNVERIFIED (peer breakage).** Every `cargo` run since 12:00 died in peer crates before reaching puzzle: first `semio-framework-os-kernel` (59 errors, `HistoryPageStack` mid-edit of the PAGED-ARTIFACT-HISTORY-LEDGER session), then `semio-s-artifact-stdio-gltf` (210–498 errors, `DslValue::Bytes` / `Mutation` trait rollout). Puzzle 3d depends on stdio-gltf directly. Last attempt 13:57, still blocked.
+- **Verified without cargo:** both schema lints (0 findings, both artifacts), the independent Python oracles (every selection vector), a numpy third-party placement oracle, and `jsonschema` validation of the new time-travel corpus (§S2.4).
+
+### S2.1 Repair (fleet rule 21)
+
+- The predecessor's last edits were all in the 11:16 auto-commit:
+  - the machine-derive codec opt-in (`event <Name>: serde`; tests 11/11 at 07:54);
+  - the 5d editor at 07:40, which makes `Puzzle5dTransformWork::read` take the typed `&Puzzle5dSnapshot`, so the `crate::Puzzle5dSnapshot` import the 07:35 wasm check flagged as unused is now used.
+- I read the code: neither edit is half-finished. Compile proof is pending.
+- The predecessor's 07:35 `cargo check … puzzle-5d --features component-app-assembly --target wasm32-wasip2` had **Finished**, 0 errors, 5 warnings (`🗑️generated/w3-t-puzzle/check-wasm-5d.txt`). That covered the 3d and 5d editors before this session's edits.
+- **Peer collision, resolved.** The REPO-PATH-BUDGET rename (`26/10/01/REPO-PATH-BUDGET`) renamed long fixture case dirs while I regenerated vectors:
+  - 3d: `🎯️drags-object-and-volume`→`🎯️drags`, `🎯️turns-…`→`🎯️turns`, `🎯️scales-…`→`🎯️scales`;
+  - 5d: `⚠️skips`, `🔄️turns`, `🔍️scales`, `🚚️drags`.
+  - I adopted the new names in the author script.
+  - I deleted only the stale copies of the old-named fixture dirs that my first regeneration had re-created.
+  - I moved my three 3d selection schema-test twins to the new names, which the crate mount already pointed at. The peer later finished every other twin, and 0 mount paths are missing in 2d/3d/5d.
+  - New cases use names of 12 bytes or less, following the peer's rule.
+
+### S2.2 Changes
+
+1. **Coordinator: set-active-example coalesce key removed.**
+   - `PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY` and its `coalesce_key` are deleted from `P3/✏️editor/🦀️.rs`. An example load is ONE document-replacement edit.
+   - `✏️editor/🧪️tests/🔬️example-switch/🦀️.rs` now asserts `coalesce_key == None`; the test is renamed `…_emits_one_uncoalesced_edit`.
+2. **Rotate pivot parity (wgpu preview = commit).**
+   - Every 3D gumball leaf turns and scales each target about its OWN origin: puzzle `rotate-selection`/`rotate-selection3d`, shooting `rotate-assets`, and the predecessor's leaves. React's instance preview does the same.
+   - The wgpu world engine was the outlier. It orbited instance translations about the selection centroid without turning them, so a single object showed no rotation at all.
+   - `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs`: the new `gumball_preview_in_place` serves both `retained_gumball_preview_model` and the test-only `apply_gumball_preview`. A turn rotates the instance basis about the handle axis in place; a scale stretches the instance's own local axis.
+   - New law `world_gumball_turn_and_scale_preview_each_instance_in_place` (`♾️infinite/🌍️world/🧪️tests/🔬️unit/🦀️.rs`).
+   - No leaf change and no React change. Open: React's vortex-marker preview still rotates markers about the gumball anchor (S2-SPATIAL, `World3dHost` `worldVorticesWithGumballPreview`).
+3. **Attraction re-solve on move (3d).**
+   - The leaves (not the tool) now keep the document resolved, so editing a gesture in time travel re-solves on whatever base it replays.
+   - `P3/🧬️schema/🧬️mutations/🦀️.rs`, new region `🔖️AttractionPose`. The placement kernel moved from the editor into the schema: `puzzle3d_attraction_child_pose`, `derive_attraction_params`, the vec/quaternion helpers and `puzzle3d_vortex_full_id`. The editor `pub use`s them, so there is no duplicate.
+   - New `puzzle3d_selection_follow`. A drag or turn re-places every UNLOCKED object an attraction hangs off a moved object, breadth-first, using the kernel and the unchanged parameters, so subtrees follow exactly as `resolve_puzzle3d_attractions` would.
+   - Every other attraction touching a moved object is re-derived from the moved poses. A scaling moves no pose and re-solves nothing.
+   - The diff carries the object and attraction patches plus one Info `mutation.cascade` naming the followers and the re-derived attractions. The inverse adds exact `replace-attraction-geometry` restores.
+   - Leaf diffs: `✋️drag-selection`/`🔄️rotate-selection` pass `follow = true`, `🔍️scale-selection` passes `false`. The schema descriptions say so.
+   - Why the kernel and not a rigid carry: the numpy oracle showed the document kernel is not rigid-equivariant. Resolving after a rigid carry would snap followers, so followers are placed by the kernel.
+   - **5d: nothing to re-solve.** No 5d code places parts from fastener parameters. World fastener lines are drawn grip to grip from part poses, and drops write zero parameters, as before.
+4. **Store footprints declared per row.**
+   - Puzzle 3d and 5d declared `work_items: 2` for every mutation. A selection leaf over N targets, or a removal with cascades, then failed the bounded publication with `batched item candidate failed its exact fixed fold contract`.
+   - 3d: drag/rotate use `for_one_item(PUZZLE3D_SELECTION_INVERSE_ROWS)` (the one-item byte budget ÷ `size_of::<Puzzle3dMutation>()`). Scale uses `targets.len()`. `delete-object`/`remove-object-vortex` use `1 + 64`.
+   - 5d: `drag-selection2d` N, `drag-selection3d` 2N, `rotate-`/`scale-selection3d` N, `delete-part`/`remove-part-grip` `1 + 64`.
+5. **Paged relocate scan with progress and cancellation.**
+   - `Puzzle3dRelocateScan` (3d `…/🧊️main/🪛️utilities/🔄️transform/🦀️.rs`) and `Puzzle5dRelocateScan` (5d `…/🧊️3d/🪛️utilities/🔄️transform/🦀️.rs`) work as begin → step(page) → progress → finish. The connected or fastened set is indexed once.
+   - `puzzle3d_relocate_record`/`puzzle5d_relocate_record` are now the one-call drive of the same scan.
+   - Both transform works go `Read → Scan (one Progress per 16 objects/parts, en/de) → Commit`. `extent = 2 + pages`, and close releases the scan.
+   - Laws:
+     - `a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds` (3d) and `a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds` (5d), over every page size;
+     - `world_relocate_scan_pages_progress_and_cancels_with_zero_trace` (3d, Nakagin);
+     - `world_relocate_extent_fits_within_cap_for_nakagin`, updated;
+     - both hostile static laws now also require `…Stage::Scan` and `…RelocateScan::begin(document`.
+6. **Machine-derive warning:** the predecessor's opt-in is in place, and both transform charts declare plain `event Event {…}`. Proof that the warning is gone needs the next wasm check (pending).
+7. **Time-travel laws for every relative leaf (language-agnostic).**
+   - Corpus: `P3|P5/🧫️fixtures/🧫️selection-time-travel/🔣️.json` (8 cases each), schema `P3|P5/🧬️schema/🔣️selection-time-travel/🔣️.json`.
+   - Each case edits ONE recorded gesture's offset, angle, factors or targets, including a no-op edit, a partial (locked) edit and a blocking target-missing edit. It states the preview (state before + draft, nothing downstream), the fresh-fold replay, the per-mutation outcomes and the finalize verdict.
+   - Rust laws `every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold` (`P3|P5/🧬️schema/🧬️mutations/🧪️tests/🧪️selection-time-travel/🦀️.rs`) check, per case:
+     - one gesture = one edit carrying its `TransactionRef`;
+     - the `state_before` preview;
+     - a cancelled replay leaves zero trace;
+     - the Report-replay outcomes and `blocks_finalize`;
+     - the replay equals the fresh fold;
+     - the overwrite folds to it, supersedes the edited op and keeps every `TransactionRef`.
+   - Editor law `a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction` (3d, Nakagin): one row, one `drag-selection`, the follower moves, one undo restores both.
+   - **React vs wgpu:** both hosts dispatch the same release verb with identical motion keys (`dx/dy/dz`, `ax/ay/az/angle`, `sx/sy/sz`; wgpu adds `surfaceId`/`windowId`, which the guest ignores). With the in-place wgpu preview, both hosts now preview what they commit, except followers: neither host previews attracted objects, and they land on commit in both.
+8. **Vectors and oracles.**
+   - 3d selection vectors were regenerated with the re-solve. 6 existing vectors changed, as intended: re-derived attractions and followers.
+   - New: `✋️drag-selection/⛓️follow`, `🪢️cross`, `🔄️rotate-selection/⛓️orbits`, `🔍️scale-selection/⛓️stays` (on a resolved chain scene). They are mounted in `🧊️3d/🦀️.rs` and registered in `🔮️oracles/🔣️.json`.
+   - The independent oracle `🧪️tests/🧊️mutate-puzzle-3d-1/🐍️.py` gained the re-solve; its docstring states the numeric port.
+   - 5d vectors regenerate byte for byte; only the assertion-message template changed.
+   - Ticket scripts: `🧪️w3-t-puzzle-author-vectors.py` (extended), `🧪️w3-t-puzzle-author-time-travel.py` (new), `🧪️w3-t-puzzle-oracle-selfcheck.py` (new).
+   - `P3|P5/🧫️fixtures/🗄️retained-jobs/🔣️.json`: the `worldRelocate` cursor and boundary lists gain `proximityScan`.
+
+### S2.3 Verification so far
+
+| Command (cwd `/Users/ueli/Documents/semio` unless noted) | Result |
+|---|---|
+| `python3 T/🧪️w3-t-puzzle-oracle-selfcheck.py 3d` | 16/16 vectors: oracle after + inverse exact; 15 attractions re-placed by numpy within 1e-6; 8/8 time-travel cases schema-valid (`jsonschema` + `referencing`) and folded exactly by the oracle; **0 failures** |
+| `python3 T/🧪️w3-t-puzzle-oracle-selfcheck.py 5d` | 12/12 vectors, 8/8 time-travel cases, **0 failures** |
+| `bun ./📜️script.ts schema mutation-inputs --under ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`) | 92/92 inputs of 38 leaves, **0 findings** |
+| `… schema mutation-payloads --under …/🧊️3d` | 58/58 payloads, 4 negative witnesses, 38/38 leaves witnessed, **0 findings** |
+| `… schema mutation-inputs --under …/🖐️5d` | 99/99 inputs of 39 leaves, **0 findings** |
+| `… schema mutation-payloads --under …/🖐️5d` | 69/69 payloads, 39/39 witnessed, **0 findings** |
+| `bun ./📜️script.ts verify taxonomy report --scope ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d` (16:46) | exit 0; 17 findings (15 `directory-kind-unresolved`, 1 `path-too-long` in `🖌️brush/🧪️tests/🔬️unit`, 1 `projection-member-unresolved` `💾️binary`), all pre-existing; **none in a directory this WP added** (`🧫️selection-time-travel`, `🔣️selection-time-travel`, `🧪️selection-time-travel`, `⛓️follow`, `🪢️cross`, `⛓️orbits`, `⛓️stays`) |
+| `… verify taxonomy report --scope …/🖐️5d` (16:52) | exit 0; 26 pre-existing findings (25 `directory-kind-unresolved`, 1 `projection-member-unresolved`); none in this WP's new directories |
+| `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-5d --features component-app-assembly --target wasm32-wasip2 --lib` (12:00) | blocked: os-kernel, 59 peer errors |
+| `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --lib` (12:51, 13:06, 13:24, 13:57, 16:35) | blocked: stdio-gltf, 498 → 210 → 16 peer errors (`Option::to_value` in `📸️snapshot/📦️pack`) |
+| same, `-j 4` (17:00 SIGKILL under swap; 17:28 `semio-framework-ui` `wgpu::layout`/`stepper` peer mid-edit; 17:41 cut by the usage limit; 21:37 `semio-framework-plugin` `HistoryPatch.remote_replay` missing, peer mid-edit) | blocked by peers; no error in a puzzle file was ever reported |
+| `cargo check -j 2 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --lib --message-format=short` (23:14 → 23:24) | **Finished**, 0 errors. The new schema code (re-solve, pose kernel, footprints) type-checks. 1 warning: the schema root's test-only duplicate `puzzle3d_vortex_full_id` (`🧬️schema/🦀️.rs:927`), now deleted; `🧬️schema/🧪️tests/🔬️precompute-model` uses the mutations one. Editor/tests not covered (no feature, no test target) |
+
+Gimbal tolerance: at a tilt of ±90° the kernel's `asin` resolves the angle only to about 1e-7, so the numpy placement check uses 1e-6 (documented in the script).
+
+### S2.4 Open / coordinator actions
+
+- Re-describe the puzzle plugin after this lands. The descriptor still lists `transformBegin`/`transformEnd` and lacks the 7 selection leaf kinds. Central `schema generate` is needed for the new `🔣️selection-time-travel` schemas and the changed 3d leaf descriptions. Re-activate puzzle (stale wasm).
+- The obsolete `#![allow(unexpected_cfgs)]` workarounds for the old macro behaviour can go once a wasm check shows the warning gone: shooting `…/🎮️commands/🧭️gumball/🦀️.rs:10` (S2-SPATIAL) and `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/🦀️.rs:13` (S2-DRAW / hub owner).
+- S2-SPATIAL: React vortex/attraction marker preview of a multi-object turn orbits the gumball anchor (`worldVorticesWithGumballPreview`). It should turn each marker about its owning instance's origin.
+
+### S2.5 Verification still to run (after rule 26 CARGO HOLD lifts)
+
+One at a time, each gated (`until [ "$(pgrep -x rustc | wc -l | tr -d ' ')" -lt 8 ]; do sleep 20; done`), from `/Users/ueli/Documents/semio`. Tests use `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-s2-puzzle`.
+
+1. `cargo check -j 2 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-5d --features component-app-assembly --target wasm32-wasip2 --lib --message-format=short` — both editors, and proof the `unexpected cfg serde` warning is gone.
+2. `cargo test -j 2 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --lib --message-format=short -- selection mutations:: selection_time_travel` — leaf vectors, the re-solve vectors and the time-travel corpus law.
+3. The same for `semio-s-artifact-puzzle-5d`.
+4. `cargo test -j 2 --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib --message-format=short -- transform_tool selection gumball relocate bracket nakagin motionless drag_edited example coalesce scan` — editor and tool laws.
+5. The 5d twin: `-- transform_tool selection gumball board_drag inspector_nudge motionless retained hostile_static_law board_drag_edited scan`.
+6. `cargo test -j 2 -p semio-framework-os-infinite --lib --message-format=short -- world_gumball` (root workspace) — the in-place preview law.
+
+## Session 3 — 2026-10-02
+
+Successor S3-PUZZLE. Paths are relative to `P3`/`P5` as above unless written in full; `P2` = `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any`.
+
+### S3.0 Status (updated at every milestone)
+
+- **Activation blocker (b): FIXED (data) and proven for 3d** (law 4/4 green, 11:53); 2d + 5d law runs pending. `main` notified 11:55.
+
+### S3.1 Activation blocker (b) — descriptor probe panic `concrete-forest example dsl parses`
+
+- **Symptom** (`🗑️generated/e2e/activate-retry-17.log`): `materialize-dev` → descriptor probe → `P3/📚️examples/🌲️concrete-forest/🦀️.rs:31` panics `expected LBrace, found Ident 'id' at 5:140` → wasm `unreachable`.
+- **Root cause: a peer DSL grammar change, not puzzle code.** Since 2026-10-01 ~20:08 (uncommitted peer work in `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`, `parse_shape`/`print_shape` `Shape::List` arms; law `🗣️dsl/🧬️schema/🧪️tests/🧾️record-list` "canonical braces preserve ordered optional and empty record-list items") every element of a `Shape::List(Shape::Record)` is read and printed **braced** (`[ { k=v } { k=v } ]`). The old printer wrote them bare (`[ k=v k=v ]`). All 7 puzzle example DSL fixtures (2d ×2, 3d ×2, 5d ×3) were authored in the bare form (last touched 09-02…09-17) and nobody migrated them. 2d (`handles`), 3d (`representations`, `vortices`, …) and 5d (`grips`) all broke; 3d's concrete-forest is simply the first the probe builds. The example data was never changed; the editor/leaf/schema code is not involved.
+- **Fix (data, all at once):** ticket script `🧪️s3-puzzle-brace-record-lists.py` rewrites every bare record list into the braced canonical form with the OLD parser's exact boundary rule (`parse_record_fields`: a record ends at the first key it already consumed). Bare nested record fields inside list elements (5d `grip-2d=angle=…`, `grip-3d=position=…`) stay bare — the grammar still prints `Shape::Record` fields bare — and their extent follows the same rule with the key sets of `Puzzle5dGrip2d`/`Puzzle5dGrip3d`. Self-check built in: deleting the inserted braces gives back the source byte for byte.
+  - 2d concrete-forest 1 list / 11 records; 2d nakagin 180 / 358; 3d concrete-forest 5 / 35; 3d nakagin 204 / 410; 5d concrete-forest 1 / 11 (+22 nested); 5d nakagin 180 / 358 (+716 nested); 5d capsule-dream 2880 / 5824 (+11 648 nested).
+- **New law (native, every registered example, 2d + 3d + 5d):** `every_registered_example_builds_its_document` in `P2|P3|P5/🧪️tests/🧪️every-example/🦀️.rs`, mounted from each subset root `P2|P3|P5/🦀️.rs` (`#[cfg(test)] mod every_example_tests`). It enumerates the subset's own `examples()` registry (the list `SubsetDeclaration.examples` hands the descriptor), so a new example cannot escape. Per example: the authored deferred DSL parses, `ExampleSource::document_json()` (the producer the probe runs) decodes to the same snapshot, and the snapshot round-trips through DSL and pack. Needs `--features component-app-assembly` (the subset root and `examples` are gated by it).
+
+### S3.2 Verification (cwd `/Users/ueli/Documents/semio`; cargo gated `rustc < 14`, `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/⚡️cache/cargo/target-nde-s3-puzzle` for tests, `--manifest-path ✏️s/Cargo.toml`)
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib -- every_registered_example dsl_asset_parses puzzle3d_example_fixtures` (11:19 → 11:53, 33 min cold) | **4 passed, 0 failed** (`every_registered_example_builds_its_document`, both `dsl_asset_parses_and_round_trips`, `puzzle3d_example_fixtures_parse_and_round_trip_as_dsl`); no `unexpected cfg` warning in the native test build |
+| `python3 T/🧪️w3-t-puzzle-oracle-selfcheck.py 3d` / `5d` | 3d: 16 vectors, 15 numpy placements, 8 time-travel cases, **0 failures**; 5d: 12 vectors, 8 cases, **0 failures** |
+| `bun ./📜️script.ts schema mutation-inputs\|mutation-payloads --under ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d\|🖐️5d` (cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`) | 3d 92/92 inputs, 58/58 payloads, 38/38 witnessed; 5d 99/99, 69/69, 39/39; **0 findings** each |
+| `bun ./📜️script.ts verify taxonomy report --scope <P2\|P3\|P5>/🧪️tests` | 3d, 5d clean; 2d 2 pre-existing `directory-kind-unresolved` (`🌐️third-party-puzzle-2d-1`, `🕸️third-party-puzzle-2d-1`), none for `🧪️every-example` |
+| `cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib` (whole suite, 12:00 → 12:32, peer `semio_framework_schema` → `…_schema_registry` rename forced a rebuild) | **899 passed, 9 failed** — analysed in S3.3 |
+| `cargo test -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib` (12:38) | **blocked**: peer mid-edit, `semio-framework-schema-registry` 28 errors (`ArtifactSchemaRegistry` defined twice, unresolved `semio_framework_os_kernel`, …) |
+
+### S3.3 Puzzle 3d suite — the 9 reds
+
+| Test | Cause | Action |
+|---|---|---|
+| `selection_time_travel::every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold` (3d) | **Harness, not leaves.** The law decoded the corpus through `serde_json::Value` (no `float_roundtrip`), which lands `1.9999999999999993` one ulp low (`…91`); the Rust leaves produce exactly the corpus value. | Both 3d and 5d corpus laws now parse with the framework JSON reader (`dsl::json::parse`, correctly rounded `str::parse::<f64>`). |
+| `a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction` | Test premise: the shipped 3d Nakagin has NO attraction (empty table); the predecessor's law was never run. | The law first attracts the compatible door pair `25b0dba0-…:link` → `5f0266bc-…:sl0_d0` (both unlocked), then drags. |
+| `relocate_target_volume_undoes_and_redoes_as_one_mutation` | Test premise: `addTargetVolume` grid-snaps its origin, so the gumball's `before` (1,2,3) was not the volume's pose; the relative leaf correctly moved the real pose by (3,3,3). | `before` = the volume's real pose, `after` = before + (3,3,3). |
+| `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` | Store units per translate: 22 (concrete forest, 1 object) vs **1590** (Nakagin, 180 objects); delete the same. The ladder is supposed to be document-independent. Nakagin could not load before this session's example fix, so this is the first run since the store changes of session 2. | **Open — owner guess S3-W1G** (store publication / prefix-snapshot ring per edit O(document)); routed to the coordinator. |
+| `an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes` | The second announcement of an already-requested mesh widens the scope again: `request_mesh_reupload` answered "new" twice, i.e. the standing request set did not survive the render between the two dispatches (precompute session swap). | **Open** (puzzle 3d brush/precompute session keying; not touched by this WP since session 1). |
+| `every_maintenance_unit_stays_inside_the_interactive_step_budget`, `brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin`, `penetration_of_flush_thousand_triangle_parts_stays_interactive`, `fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_nakagin` | Wall-clock laws (8 ms / 2 ms ceilings) on a debug build with 20–30 peer rustc running; the fill law's replay diverges once the recording run is clock-starved (93 vs 4249 turns). | Re-run in isolation when the load drops; not a code change. |
+
+### S3.4 Coordinator follow-ups (12:25)
+
+- **G7 `labelHandwritten`:** puzzle 3d `Puzzle3dSetActiveExampleWork` no longer sets `Emit.description` (`PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION` deleted); the row is labelled from its leaves. `🔬️example-switch` asserts `emit.description == None` (2 sites). 5d has no hand-written description.
+- **Closure census §(b) S3-PUZZLE:** B none, V none. The M items (Edit literals `coalesce_key: None`, 5d retire `puzzle5d_retire_optional_string_step(&mut owner.coalesce_key…)`, test asserts) die with the API in S3-CLOSURE's mechanical sweep; the F items wait for CLOSURE's derived-footprint helper (none exists yet: `ArtifactStoreOneItemFootprint` has only `for_one_invertible_item`/`for_one_item`). Nothing behavioural is left for this WP.
+- **N3 hook (chips + preview highlight), puzzle 3d and 5d — written, compile pending:**
+  - 3d `puzzle3d_entity_label` (typed snapshot; object = outliner label → kind catalog label/name → kind id; vortex `<object> · <vortex label|kind>`; attraction `<object> → <object>`; target volumes/references keep the generic label) + `ArtifactEditor::entity_label`.
+  - 3d highlight: `Puzzle3dInteractionSnapshot.referenced` (from `InteractionView::draft_references`), `Puzzle3dInstanceResidency::refresh(…, referenced)` stamps `"highlighted": true` on exactly the referenced instance records (fingerprinted, so open/close of a draft republishes only those records through the delta lane); both hosts already paint the `highlighted` instance row.
+  - 5d `puzzle5d_entity_label` (part = volume label → flat text → kind; grip `<part> · <grip kind>`; fastener `<part> → <part>`) + `entity_label`; world instances carry `highlighted`, the board scene's `highlighted_ids_json` = `Puzzle5dInteractionSnapshot::referenced_json()` (was a constant `[]`).
+  - Laws: 3d `history_edit_reference_chips_name_entities_as_the_outliner_does`, `a_history_edit_draft_highlights_exactly_the_objects_it_references` (app level: drag → `historyEditBegin` → world highlights the target → `historyEditExit` clears); 5d `history_edit_reference_chips_name_entities_as_the_outliner_does`, `world_instances_highlight_the_parts_a_history_draft_references`, `board_paints_the_live_selection_hover_and_history_draft_references`.

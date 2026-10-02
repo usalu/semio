@@ -1,0 +1,13 @@
+/** 📐️ Literal Block-owned primitive admission shared by its real document records. */
+import {parseBinary64,type Binary64} from "../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type BlockVector3=[Binary64,Binary64,Binary64];
+export type BlockVector4=[Binary64,Binary64,Binary64,Binary64];
+export const fail=(why:string):never=>{throw new Error("Block "+why)};
+export const row=(v:unknown):Record<string,unknown>=>v!==null&&typeof v==="object"&&!Array.isArray(v)?v as Record<string,unknown>:fail("object required");
+export const text=(v:unknown):string=>typeof v==="string"?v:fail("TEXT required");
+export const boolean=(v:unknown):boolean=>typeof v==="boolean"?v:fail("Boolean required");
+export const word=(v:unknown):Binary64=>parseBinary64(v);
+export const optional=<T>(v:unknown,parse:(v:unknown)=>T):T|null=>v===null?null:parse(v);
+export const list=<T>(v:unknown,parse:(v:unknown)=>T):T[]=>Array.isArray(v)?v.map(parse):fail("array required");
+export function vector3(v:unknown):BlockVector3{if(!Array.isArray(v)||v.length!==3)return fail("three words required");return[word(v[0]),word(v[1]),word(v[2])]}
+export function vector4(v:unknown):BlockVector4{if(!Array.isArray(v)||v.length!==4)return fail("four words required");return[word(v[0]),word(v[1]),word(v[2]),word(v[3])]}

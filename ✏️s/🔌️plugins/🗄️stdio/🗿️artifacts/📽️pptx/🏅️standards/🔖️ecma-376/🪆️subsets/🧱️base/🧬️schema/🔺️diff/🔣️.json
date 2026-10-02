@@ -630,16 +630,24 @@
       ],
       "properties": {
         "x": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "y": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cx": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cy": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         }
       }
     },

@@ -47,6 +47,20 @@ struct ProcedurePackRecord {
 }
 
 impl ProcedurePackRecord {
+    fn snapshot_record_controlled(snapshot: &ProcedureSnapshot, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::RecordValue, String> {
+        control.scoped_depth(64, |control| control.scoped_stage(|control| {
+            control.begin_stage(5)?;
+            let mut record = dsl::native_encoding::EncodedRecord::new(5, control)?;
+            record.insert(0, <String as dsl::DslField>::to_value_controlled(&snapshot.schema, control)?); control.step()?;
+            record.insert(1, <ProcedureFlowChild as dsl::DslField>::to_value_controlled(&snapshot.flow, control)?); control.step()?;
+            record.insert(2, <ProcedureTextChild as dsl::DslField>::to_value_controlled(&snapshot.text, control)?); control.step()?;
+            let path = match snapshot.flow.local_owner::<crate::ProcedureFlowWorkingData>() { Some(scene) => dsl::ToValue::to_value_controlled(&scene.path, control), None => dsl::ToValue::to_value_controlled(&crate::Path::new(), control) }.map_err(|error| error.to_string())?;
+            record.insert(3, dsl::FieldValue::Value(path)); control.step()?;
+            let seed = match snapshot.text.local_owner::<crate::ProcedureTextWorkingData>() { Some(scene) => dsl::ToValue::to_value_controlled(&scene.seed, control), None => dsl::ToValue::to_value_controlled(&std::collections::BTreeMap::<String, crate::Value>::new(), control) }.map_err(|error| error.to_string())?;
+            record.insert(4, dsl::FieldValue::Value(seed)); control.step()?;
+            Ok(record.take())
+        }))
+    }
     fn from_snapshot(snapshot: &ProcedureSnapshot) -> Self {
         let scene = crate::procedure_working_scene(snapshot);
         Self { schema: snapshot.schema.clone(), flow: snapshot.flow.clone(), text: snapshot.text.clone(), path: dsl::ToValue::to_value(&scene.path), seed: dsl::ToValue::to_value(&scene.seed) }
@@ -54,10 +68,20 @@ impl ProcedurePackRecord {
 
     fn into_snapshot(self) -> Result<ProcedureSnapshot, String> {
         let (mut flow, mut text) = (self.flow, self.text);
-        let seed: std::collections::BTreeMap<String, crate::Value> = dsl::FromValue::from_value(self.seed).map_err(|error| error.to_string())?;
-        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
+        let seed = neural_engine::ColdOwner::new(<std::collections::BTreeMap<String, crate::Value> as dsl::FromValue>::from_value(self.seed).map_err(|error| error.to_string())?);
         let path: crate::Path = dsl::FromValue::from_value(self.path).map_err(|error| error.to_string())?;
+        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed: seed.into_inner() }));
         flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
+        Ok(ProcedureSnapshot { schema: self.schema, flow, text })
+    }
+    fn into_snapshot_controlled(self, control: &mut dsl::NativeDecodeControl<'_>) -> Result<ProcedureSnapshot, store::TextError> {
+        let error = |error: dsl::ValueError| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1));
+        let seed = neural_engine::ColdOwner::new(<std::collections::BTreeMap<String, crate::Value> as dsl::FromValue>::from_value_controlled(&self.seed, control).map_err(error)?);
+        let path = <crate::Path as dsl::FromValue>::from_value_controlled(&self.path, control).map_err(error)?;
+        control.charge(std::mem::size_of::<crate::ProcedureFlowWorkingData>() + std::mem::size_of::<crate::ProcedureTextWorkingData>() + 4 * std::mem::size_of::<usize>()).map_err(|message| store::TextError::new(message, dsl::TextSpan::at(1, 1)))?;
+        let (mut flow, mut text) = (self.flow, self.text);
+        flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
+        text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed: seed.into_inner() }));
         Ok(ProcedureSnapshot { schema: self.schema, flow, text })
     }
 }
@@ -96,6 +120,7 @@ impl store::ArtifactDsl for ProcedureSnapshot {
 }
 
 impl store::ArtifactPack for ProcedureSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&ProcedurePackRecord::__dsl_spec(), &ProcedurePackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -152,3 +177,10 @@ pub fn print_procedure_dsl(snapshot: &ProcedureSnapshot) -> String {
 }
 //#endregion 🌉️ExternalCodecBridge
 
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

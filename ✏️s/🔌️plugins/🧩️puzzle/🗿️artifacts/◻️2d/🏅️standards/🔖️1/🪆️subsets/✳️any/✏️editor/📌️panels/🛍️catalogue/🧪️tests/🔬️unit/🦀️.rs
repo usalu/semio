@@ -20,7 +20,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle2dLabels {
-    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())
+    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🏗️ A synthetic fixture whose `meta.kindCatalogs.nodes` carries `kinds` rows.
@@ -93,7 +93,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
     drain_retired_ui_owners();
     let scene = scaled_scene(SCALE_KINDS);
     let (offset, rows) = (40u32, 9u32);
-    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(NODES_SECTION, Some(true), offset, rows)], ..Default::default() };
+    let view = semio_framework_plugin::ViewModel { tree_windows: vec![request(NODES_SECTION, Some(true), offset, rows)], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let windows = TreeWindows::for_body(&view, PUZZLE2D_PLAY_BODY_CATALOGUE);
     let tree = render(&scene, labels(), &windows).expect("a windowed catalogue must be admitted");
     let nodes = child_of(&tree, NODES_SECTION);

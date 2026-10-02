@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🧬️ Compiles one PascalCase `$defs` export of the `s.vcs` scope-owned draft-07 schema module.
@@ -100,7 +100,7 @@ export class NativeCodecCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveVcsNativeCodecReceipts(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "268435456" },
       groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }],

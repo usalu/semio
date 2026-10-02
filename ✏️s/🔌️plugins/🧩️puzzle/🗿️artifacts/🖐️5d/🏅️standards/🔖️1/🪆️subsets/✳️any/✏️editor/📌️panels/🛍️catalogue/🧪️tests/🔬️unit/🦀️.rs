@@ -30,7 +30,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle5dLabels {
-    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("an admitted host label axis")
+    crate::editor::puzzle5d::terminology::puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("an admitted host label axis")
 }
 
 /// 🏗️ A document whose `kindCatalogs.parts` carries `kinds` rows.
@@ -96,7 +96,7 @@ fn a_catalogue_window_materialises_its_slice_with_row_activations_intact() {
     let (offset, rows) = (70u32, 8u32);
     let view = semio_framework_plugin::ViewModel {
         tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: PARTS_SECTION.into(), open: Some(true), offset, rows }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let tree = render(&scene, labels(), &windows).expect("a windowed catalogue must be admitted");

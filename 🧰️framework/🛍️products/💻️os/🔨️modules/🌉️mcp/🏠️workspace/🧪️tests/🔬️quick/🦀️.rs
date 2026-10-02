@@ -168,7 +168,7 @@ fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
 }
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
@@ -502,7 +502,7 @@ fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
 }
 
 fn note_and_cad_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::source_builders::note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("note+cad fixture source compiles"))
+    Arc::new(crate::compile(&crate::source_builders::note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("note+cad fixture source compiles"))
 }
 
 #[test]
@@ -663,7 +663,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
         }
     }
     let descriptors = ["note", "cad"].map(|plugin_id| load_package_descriptor(&find_plugin_entry(&registry, plugin_id).expect("registered above").owner_root).expect("committed descriptor"));
-    let catalog = Arc::new(crate::compile(&crate::CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the real note+cad descriptors compile"));
+    let catalog = Arc::new(crate::compile(&crate::CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the real note+cad descriptors compile"));
     let first_app_verb = |plugin_id: &str| {
         catalog
             .entries

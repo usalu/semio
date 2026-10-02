@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. ASPRS LAS 1.0 §2.4 (Point Data Records) is the third normatively distinct region of the file (the header-length-and-count-declared array of fixed-size point records following the VLRs), so `insert-point`/`remove-point`/`set-point` are owned here rather than by `🎩️header`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `LasMutation` enum, its `apply`/diff dispatch and the real binary codec they compile into remain in `🎩️header` for the same family-module reuse rationale as `../../📼️vlr/🔮️oracles/🔣️.json`. This subset owns no new third-party oracle: `las-1-0-any-mutate` (declared by `../../🎩️header/🔮️oracles/🔣️.json`, merged into the shared registry) already reads back every point field -- decoded per the header's own declared Point Data Record Format (0 or 1 in LAS 1.0) -- through the SAME independent `las` crate reader used for the header/vlr mutations.",
   "oracles": [],
@@ -149,5 +149,6 @@
         "set-point"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

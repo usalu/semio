@@ -7,7 +7,8 @@
 //! a seeded sample.
 
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorPath, WFC_2D_DEFAULT_RELATION, WFC_2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "two-room-corridor";
 pub const ICON: &str = "workflow";

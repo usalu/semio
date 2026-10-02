@@ -11,8 +11,8 @@
 //! oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_mp4_mutation};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_mp4_mutation};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -76,11 +76,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp4::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_artifact_stdio_mp4_test_oracle::standards::v_isobmff::subsets::any::project_mp4_mutation;
+    use semio_repo_test_host::law;
 
     //#region 🔖️SpecReading
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read

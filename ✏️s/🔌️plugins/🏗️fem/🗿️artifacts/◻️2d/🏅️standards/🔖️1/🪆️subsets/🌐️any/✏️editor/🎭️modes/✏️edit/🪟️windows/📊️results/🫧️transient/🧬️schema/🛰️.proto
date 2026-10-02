@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message Fem2dResultsWindowTransient {
+  Fem2dPlaybackClock clock = 1;
+}
+
+message Fem2dPlaybackClock {
+  double phase = 1;
+  bool reverse = 2;
+}
+
+message SetPlaybackClock {
+  Fem2dPlaybackClock clock = 1;
+}

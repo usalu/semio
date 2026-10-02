@@ -13,7 +13,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseDagArtifact } from "../../🟦️.ts";
 import { parseDagSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseDagDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 /** 🪪️ Checks every committed DAG snapshot plus independent embedded-graph and editor-state refusals. */
 export function testDagDocumentContractOracle(): void {

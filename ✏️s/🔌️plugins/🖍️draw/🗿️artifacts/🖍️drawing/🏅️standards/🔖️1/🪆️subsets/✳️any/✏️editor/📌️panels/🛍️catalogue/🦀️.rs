@@ -12,10 +12,21 @@ use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{
-    tree_item_with_action, BuiltNode, LabelText, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedMap, UiText, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedMap;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_framework_ui_contract as ui;
 
 pub const DRAWING_PLAY_BODY_CATALOGUE: &str = "drawing.play.catalogue";
@@ -24,7 +35,7 @@ pub const DRAWING_PLAY_BODY_CATALOGUE: &str = "drawing.play.catalogue";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(DRAWING_PLAY_BODY_CATALOGUE.into()),
         children: Vec::new(),

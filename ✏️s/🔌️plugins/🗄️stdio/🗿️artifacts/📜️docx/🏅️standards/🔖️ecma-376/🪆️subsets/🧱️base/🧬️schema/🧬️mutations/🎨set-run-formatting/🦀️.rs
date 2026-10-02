@@ -23,8 +23,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunFormatting {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetRunFormatting(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set run formatting", "Formatierung des Textlaufs setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set run formatting", "Formatierung des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()

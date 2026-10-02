@@ -116,7 +116,7 @@ test("reference coverage gate is registered through its exact default-budget rou
   expect(branches).toHaveLength(1);
   const body = branches[0]!.thenStatement.getText(routerTree);
   for (const compiler of compilers) {
-    const calls: unknown[][] = [], operation = new Function("join", "process", "runTestBudgeted", compiler.compile("async function route(segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
+    const calls: unknown[][] = [], operation = new Function("join", "process", "runRepositoryTestCommand", compiler.compile("async function route(segments: string[]) " + body) + "\nreturn route;")(join, { execPath: "exact-bun" }, (...args: unknown[]) => { calls.push(args); });
     await operation.call({ repoRoot: root }, [expected.route, "--test-name-pattern", "retained-selector"]);
     expect(calls).toEqual([["exact-bun", ["test", join(import.meta.dir, "./🟦️.ts"), "--test-name-pattern", "retained-selector"], { cwd: root }]]);
   }

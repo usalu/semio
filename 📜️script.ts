@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+import { exactCargoGeneratedOutputHasLiveLease } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { resolveTestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { TEST_LEVELS, type TestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
 import { toolJobArtifactEnvelopeRejectionTransferSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts";
 import { toolJobLiveFixedReplaySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts";
@@ -8,6 +12,7 @@ import { toolJobArtifactRetainedCommandSelfTests } from "./🧰️framework/🛍
 import { interactivityAllAppDiscoverySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts";
 import { interactivityRuntimeSourceSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
 import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️interactivity-tool-run-policy/🟦️.ts";
+import { historyClosurePolicySelfTests } from "./🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️history-closure-policy/🟦️.ts";
 import { interactivityLiveReconcileSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
 import { interactivityMountedFrameTransactionSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-mounted-frame-transaction/🟦️.ts";
@@ -41,51 +46,12 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`).
  */
-import { dispatchOwnedScriptRoute, buildBudgetMs, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, exactCargoGeneratedOutputHasLiveLease, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, loadFrameworkOsPlaygroundSelections, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, resolveFrameworkOsPlaygroundPlugin, resolveTestLevel, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runTestBudgeted, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, TEST_LEVELS, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord, type TestLevel } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, loadFrameworkOsPlaygroundSelections, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, resolveFrameworkOsPlaygroundPlugin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import {
-  buildSemanticCensus,
-  fileKindIdForSourcePath,
-  createRustMutationCodecOwnershipInspector,
-  inspectRustMutationAggregateSpan,
-  inspectRustMutationMetadataFacts,
-  inspectRustModuleGraphFacts,
-  inspectRustModuleGraph,
-  inspectRustRunnableTests,
-  inspectRustStructure,
-  inspectRustChildKindMetadata,
-  inspectRustSourceIdentities,
-  createRustMutationInputInspector,
-  resolveRustPathAttributes,
-  renderSemanticCensusJson,
-  renderSemanticCensusMarkdown,
-  renderSemanticDuplicatesJson,
-  renderSemanticDuplicatesMarkdown,
-  taxonomyRelativePathIsExcluded,
-  taxonomyImplementationFilesystemFindings,
-  workspaceAuthorityPath,
-  noFollowDirectoryAncestry,
-  semanticOwnedInputFileSnapshot,
-  inventorySchemaScopes,
-  renderSchemaCatalog,
-  renderSchemaCatalogDocument,
-  renderSchemaCheckReport,
-  schemaRustEntryDiagnostics,
-  type SchemaRustEntryDump,
-  type SchemaScopeDiagnostic,
-  type SchemaScopeInventory,
-  loadCatalogTaxonomy,
-  mutationPayloadSchemaRelativePath,
-  mutationPayloadSchemaProblems,
-  jsonDocumentDuplicateKeys,
-  mutationOwnerIdentity,
-  pathEmojiStatuteFindings,
-  subsetDirectoryNameForId,
-  subsetIdForDirectoryName,
-  type PathEmojiEntry,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings, type PathEmojiEntry } from "./🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyLineOfIndex } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📍️source-coordinate/🟦️.ts";
@@ -5851,13 +5817,12 @@ function toolJobDrawingGestureOperationOwnerExact(drawingEditor: string, drawing
     !drawingEditor.includes("checkpoint_from_config") &&
     !drawingEditor.includes("raw_bytes: Vec<u8>") &&
     !drawingEditor.includes("serde_json::from_slice") &&
-    !drawingEditor.includes("command.dispatch(&doc") &&
+    !drawingEditor.replaceAll("input.command.dispatch(&doc, &cfg, &mut session)", "").includes("command.dispatch(&doc") &&
     !drawingEditor.includes("owner.session.clone()") &&
     !drawingEditor.includes("flatten_drawing_layers(&doc.layers)") &&
     !drawingEditor.includes("fn resolve_point_pick") &&
     !drawingEditor.includes("fn marquee_layer_hits") &&
     !drawingEditor.includes("fn commit_draft(") &&
-    !drawingEditor.includes("coalesce_key: Some(") &&
     !drawingEditor.includes("mod fsm") &&
     !drawingEditor.includes("Vec<TracePointerWork>") &&
     !drawingEditor.includes("drawing_gesture_preview_payload") &&
@@ -6428,8 +6393,8 @@ function toolJobArtifactRetainedCommandRuntimeLawExact(source: string): boolean 
 //#endregion 🧵️ Artifact Retained Command Checkpoint
 
 /** 🧪️ Loads the tool-job coverage self-tests on demand: they pull third-party oracles (Ajv) that no other command needs. */
-function toolJobCoverageSelfTestsModule(): Promise<typeof import("./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-coverage/🟦️.ts")> {
-  return import("./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-coverage/🟦️.ts");
+function toolJobCoverageSelfTestsModule(): Promise<typeof import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts")> {
+  return import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts");
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -7210,6 +7175,10 @@ export class VerifyScript extends Script {
       this.runMutationOutcomeLaw();
       return;
     }
+    if (segments[0] === "history-closure") {
+      this.runHistoryClosure(segments.slice(1));
+      return;
+    }
     if (segments[0] === "composed-child-refs") {
       this.runComposedChildRefs(segments.slice(1));
       return;
@@ -7909,6 +7878,27 @@ export class VerifyScript extends Script {
   }
 
   /**
+   * 🚫️ The non-destructive history closure gate (`HISTORY_CLOSURE_RULES`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`
+   * §20): the planted-violation self-test first, then one scan of the git-visible `✏️s`, `🧰️framework`, `🌎️hub` sources.
+   * `--self-test` runs only the planted cases; `--json` prints the per-rule census instead of failing.
+   */
+  private runHistoryClosure(segments: string[]): void {
+    const cases = historyClosurePolicySelfTests();
+    console.log(`[verify history-closure] self-test passed (${cases} cases).`);
+    if (segments.includes("--self-test")) return;
+    const findings = historyClosureFindings(historyClosureSources(this.root));
+    const census = Object.fromEntries(HISTORY_CLOSURE_RULES.map((rule) => [rule.id, findings.filter((finding) => finding.rule === rule.id).length]));
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify({ census, findings }, null, 2));
+      return;
+    }
+    for (const finding of findings) console.error(`[verify history-closure] ${finding.file}:${finding.line} ${finding.text}`);
+    console.log(`[verify history-closure] ${Object.entries(census).map(([rule, count]) => `${rule}=${count}`).join(" ")}`);
+    if (findings.length > 0) throw new Error(`[verify history-closure] ${findings.length} closure violation(s)`);
+    console.log("[verify history-closure] passed.");
+  }
+
+  /**
    * 🚫️Standalone entry point for `policySemanticVocabularyBreaches` — the only consumer of
    * `policyRepositoryOwnedRoots()`, so this is also the runnable proof that the walk roots are the
    * taxonomy's `clean` areas and nothing else. `high` breaches fail; the `Set*` dispatch-variant rule is
@@ -8315,13 +8305,13 @@ export class VerifyScript extends Script {
     console.log("[verify] region/host-contract script lints…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] framework owned-schema binding freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] TypeScript/JavaScript dependency direction…");
     this.runLayering([]);
     console.log("[verify] owner-root test taxonomy and feature contract…");
@@ -9407,7 +9397,6 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   interactivityToolRunPolicySelfTests();
   const toolRunSources = interactivityToolRunPolicySources(repoRoot, INTERACTIVITY_TOOL_RUN_REQUIREMENTS);
   for (const finding of [
-    ...interactivityToolRunAmendFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
     ...interactivityToolRunLocalLifecycleFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
     ...interactivityToolRunLegacyTraceFailures(toolRunSources),
     ...interactivityToolRunDeclarationFailures(toolRunSources, INTERACTIVITY_TOOL_RUN_REQUIREMENTS),
@@ -9686,16 +9675,13 @@ export function interactivityPuzzleFillP4eFailures(precomputeSource: string, fil
 /**
  * ⏯️ One tool the phase-4 inventory (`26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📓️audit-p4-tool-inventory.md`) classifies
  * `algorithmic-mutating`. `toolId` is the Tool/UtilityDefinition id expected under `root` (artifact subset or engine
- * dir); `scope` lists the tool's own files or dirs (relative to `root` unless repo-rooted) scanned for `Emit::amend`;
- * `actions` are the action ids its handlers publish under (history coalescing scan across `root`); `verbs` are
- * per-plugin run verbs and lifecycle states that must vanish from `root` once `run` is declared, `measures` the
+ * dir); `scope` lists the tool's own files or dirs (relative to `root` unless repo-rooted); `verbs` are per-plugin run verbs and lifecycle states that must vanish from `root` once `run` is declared, `measures` the
  * plugin-local progress/cancel measures that must vanish from `scope`; `lane` is the converting contract lane.
  */
 export type InteractivityToolRunRequirement = {
   readonly toolId: string;
   readonly root: string;
   readonly scope: readonly string[];
-  readonly actions: readonly string[];
   readonly verbs: readonly string[];
   readonly measures: readonly string[];
   readonly lane: string;
@@ -9710,7 +9696,7 @@ export type InteractivityToolRunFinding = { readonly file: string; readonly line
 
 type InteractivityToolRunDeclaration = { readonly id: string; readonly kind: "Tool" | "Utility"; readonly file: string; readonly line: number; readonly run: boolean };
 
-type InteractivityToolRunTool = { readonly label: string; readonly root: string; readonly scope: readonly string[]; readonly flat: boolean; readonly actions: readonly string[]; readonly verbs: readonly string[]; readonly measures: readonly string[]; readonly declared: boolean };
+type InteractivityToolRunTool = { readonly label: string; readonly root: string; readonly scope: readonly string[]; readonly flat: boolean; readonly verbs: readonly string[]; readonly measures: readonly string[]; readonly declared: boolean };
 
 type InteractivityToolRunIndex = { readonly code: ReadonlyMap<string, readonly string[]>; readonly declarations: readonly InteractivityToolRunDeclaration[] };
 
@@ -9725,35 +9711,35 @@ const INTERACTIVITY_TOOL_RUN_ANY = "🏅️standards/🔖️1/🪆️subsets/✳
  * `previewEval` runs are listed because they converted. A converting lane edits its row.
  */
 export const INTERACTIVITY_TOOL_RUN_REQUIREMENTS: readonly InteractivityToolRunRequirement[] = [
-  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🪣️fill-build-tick", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], actions: ["setFillCount", "fillBuildTick"], verbs: ["fillBuildTick", "fill_build_tick", "cancelFillBuild", "cancel_fill_build", "take_locked_into_fixture", "FILL_LOCK_PLACEMENTS_PER_TICK", "enqueue_fill_job", "fill_job_identity"], measures: ["cancel_measure", "progress_measure"], lane: "W1-B", inventory: "§1.1" },
-  { toolId: "importFixture", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-fixture"], actions: ["importFixture"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
-  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], actions: ["setFillCount"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
-  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill", "✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/🎮️commands/🛑️cancel-fill-build", "✏️editor/🧠️precompute"], actions: ["setFillCount"], verbs: ["cancelFillBuild", "cancel_fill_build"], measures: ["fill_cancel_measure", "fill_progress_measure"], lane: "W2-B", inventory: "§1.3" },
-  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], actions: [], verbs: ["cancelPreviewEval", "cancel_preview_eval", "CancelPreviewEval", "PREVIEW_CANCEL_ACTION_ID", "rearm_attached_previews"], measures: [], lane: "W3-2 procedural preview eval", inventory: "§2.1" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
-  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], actions: [], verbs: ["rearm", "Generation2dPreviewCommandWork", "generation2d-preview-evaluation"], measures: [], lane: "W3-2b generation2d preview eval", inventory: "§2.2" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.2" },
-  { toolId: "energySimulation", root: `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️simulation-session", "✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation"], actions: [], verbs: ["start-energy-simulation", "cancel-energy-simulation", "retry-energy-simulation", "discard-energy-simulation", "adopt-energy-simulation", "EnergySimulationStatus"], measures: [], lane: "W3 (1) energy", inventory: "§3.1" },
-  { toolId: "reconstruction", root: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🧵️reconstruction-session", "✏️editor/🎭️modes/🧊️model/🛠️tools/🏗️reconstruction", "✏️editor/📌️panels/🗿️artifact"], actions: ["runReconstruction", "advanceReconstruction", "retryStage", "runStage"], verbs: ["runReconstruction", "advanceReconstruction", "cancelReconstruction", "retryStage", "runStage"], measures: [], lane: "W3 (4) remodel", inventory: "§3.3" },
-  { toolId: "decimate", root: `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔷️mesh-edit", "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs"], actions: ["decimate"], verbs: [], measures: [], lane: "W3 (15) lowpoly", inventory: "§3.4" },
-  { toolId: "formatDocument", root: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧹️format-document"], actions: ["formatDocument"], verbs: [], measures: [], lane: "unassigned", inventory: "§4.1" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.3" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔄️layout"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.7" },
-  { toolId: "runAnalysis", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔬️analysis"], actions: ["runAnalysis"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
-  { toolId: "importProgram", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📤️exchange"], actions: ["importProgram"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize", "forceLayout"], verbs: ["forceLayout", "force-layout"], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.1" },
-  { toolId: "importCadFile", root: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️io"], actions: ["importCadFile"], verbs: [], measures: [], lane: "unassigned", inventory: "§5.4" },
-  { toolId: "run", root: `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏃️run"], actions: ["run"], verbs: [], measures: [], lane: "W3 (10) imperative", inventory: "§5.7" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.8" },
-  { toolId: "reorganize", root: `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], actions: ["reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.9" },
-  { toolId: "combineBoolean", root: `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔀️combine-boolean"], actions: ["combineBoolean"], verbs: [], measures: [], lane: "unassigned", inventory: "§6.1" },
-  { toolId: "inkApplyEvents", root: `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🖊️ink-apply-events"], actions: ["inkApplyEvents"], verbs: [], measures: [], lane: "W3 (14) note", inventory: "§6.2" },
-  { toolId: "exportStudioPack", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📦️export-studio-pack"], actions: ["exportStudioPack"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
-  { toolId: "exportMedia", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📤️export-media"], actions: ["exportMedia"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
-  { toolId: "reorganizeWorkflow", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/🗂️reorganize-workflow"], actions: ["reorganizeWorkflow"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🪣️fill-build-tick", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], verbs: ["fillBuildTick", "fill_build_tick", "cancelFillBuild", "cancel_fill_build", "take_locked_into_fixture", "FILL_LOCK_PLACEMENTS_PER_TICK", "enqueue_fill_job", "fill_job_identity"], measures: ["cancel_measure", "progress_measure"], lane: "W1-B", inventory: "§1.1" },
+  { toolId: "importFixture", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-fixture"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
+  { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill", "✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/🎮️commands/🛑️cancel-fill-build", "✏️editor/🧠️precompute"], verbs: ["cancelFillBuild", "cancel_fill_build"], measures: ["fill_cancel_measure", "fill_progress_measure"], lane: "W2-B", inventory: "§1.3" },
+  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], verbs: ["cancelPreviewEval", "cancel_preview_eval", "CancelPreviewEval", "PREVIEW_CANCEL_ACTION_ID", "rearm_attached_previews"], measures: [], lane: "W3-2 procedural preview eval", inventory: "§2.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.1" },
+  { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], verbs: ["rearm", "Generation2dPreviewCommandWork", "generation2d-preview-evaluation"], measures: [], lane: "W3-2b generation2d preview eval", inventory: "§2.2" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], verbs: [], measures: [], lane: "unassigned", inventory: "§2.2" },
+  { toolId: "energySimulation", root: `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️simulation-session", "✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation"], verbs: ["start-energy-simulation", "cancel-energy-simulation", "retry-energy-simulation", "discard-energy-simulation", "adopt-energy-simulation", "EnergySimulationStatus"], measures: [], lane: "W3 (1) energy", inventory: "§3.1" },
+  { toolId: "reconstruction", root: `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🧵️reconstruction-session", "✏️editor/🎭️modes/🧊️model/🛠️tools/🏗️reconstruction", "✏️editor/📌️panels/🗿️artifact"], verbs: ["runReconstruction", "advanceReconstruction", "cancelReconstruction", "retryStage", "runStage"], measures: [], lane: "W3 (4) remodel", inventory: "§3.3" },
+  { toolId: "decimate", root: `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔷️mesh-edit", "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️.rs"], verbs: [], measures: [], lane: "W3 (15) lowpoly", inventory: "§3.4" },
+  { toolId: "formatDocument", root: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🧹️format-document"], verbs: [], measures: [], lane: "unassigned", inventory: "§4.1" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🗺️reorganize"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.3" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔄️layout"], verbs: [], measures: [], lane: "W3-F layout-run", inventory: "§4.7" },
+  { toolId: "runAnalysis", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔬️analysis"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
+  { toolId: "importProgram", root: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📤️exchange"], verbs: [], measures: [], lane: "W3 (12) architect", inventory: "§4.8" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], verbs: ["forceLayout", "force-layout"], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.1" },
+  { toolId: "importCadFile", root: `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️io"], verbs: [], measures: [], lane: "unassigned", inventory: "§5.4" },
+  { toolId: "run", root: `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🏃️run"], verbs: [], measures: [], lane: "W3 (10) imperative", inventory: "§5.7" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.8" },
+  { toolId: "reorganize", root: `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🗂️reorganize"], verbs: [], measures: [], lane: "W3-F1 layout-run consumers", inventory: "§5.9" },
+  { toolId: "combineBoolean", root: `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🔀️combine-boolean"], verbs: [], measures: [], lane: "unassigned", inventory: "§6.1" },
+  { toolId: "inkApplyEvents", root: `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/🖊️ink-apply-events"], verbs: [], measures: [], lane: "W3 (14) note", inventory: "§6.2" },
+  { toolId: "exportStudioPack", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📦️export-studio-pack"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+  { toolId: "exportMedia", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/📤️export-media"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
+  { toolId: "reorganizeWorkflow", root: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", scope: ["🎮️commands/🗂️reorganize-workflow"], verbs: [], measures: [], lane: "W3 (13) space", inventory: "§6.4" },
 ];
 
-const INTERACTIVITY_TOOL_RUN_TRIGGER = /Emit::amend|coalesce_key|run\s*:\s*Some\s*\(|\.run\s*=\s*Some\s*\(|toolRun[A-Z]|TOOL_RUN_\w+_ACTION_ID|TRIED_|FillTried|WorldFillTried|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|FILL_PREVIEW_JSON|FillPreviewJson|fill_preview_json/;
+const INTERACTIVITY_TOOL_RUN_TRIGGER = /run\s*:\s*Some\s*\(|\.run\s*=\s*Some\s*\(|toolRun[A-Z]|TOOL_RUN_\w+_ACTION_ID|TRIED_|FillTried|WorldFillTried|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|FILL_PREVIEW_JSON|FillPreviewJson|fill_preview_json/;
 
 const INTERACTIVITY_TOOL_RUN_LEGACY_TRACE = /\b(?:\w*_TRIED_RING|\w*_TRIED_MAX|FillTried\w*|WorldFillTried\w*|push_tried|fillBuildPreview|FillBuildPreview|fill_build_preview|\w*FILL_PREVIEW_JSON\w*|FillPreviewJson\w*|fill_preview_json\w*)\b/;
 
@@ -9831,17 +9817,6 @@ function interactivityToolRunEnclosing(text: string, at: number, opener: RegExp)
   return enclosing;
 }
 
-/** 🧱️ The `{ … }` block opening at offset `open` of `text`, literal-safe. */
-function interactivityToolRunBlock(text: string, open: number): string {
-  const masked = policyMaskLiterals(text.slice(open));
-  let depth = 0;
-  for (let index = 0; index < masked.length; index += 1) {
-    depth += masked[index] === "{" ? 1 : masked[index] === "}" ? -1 : 0;
-    if (depth === 0) return text.slice(open, open + index + 1);
-  }
-  return text.slice(open);
-}
-
 /** 🗂️ Code lines per source plus every Tool/UtilityDefinition declaration under `✏️s/`, its resolved id and whether it declares `run`. */
 function interactivityToolRunIndex(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunIndex {
   const cached = INTERACTIVITY_TOOL_RUN_INDEXES.get(sources);
@@ -9889,7 +9864,7 @@ function interactivityToolRunIndex(sources: readonly InteractivityToolRunSource[
   return index;
 }
 
-/** 🧰️ Tools the amend and lifecycle predicates govern: every requirement row, plus every run-declaring tool no row names (scoped to its declaring directory). */
+/** 🧰️ Tools the lifecycle predicate governs: every requirement row, plus every run-declaring tool no row names (scoped to its declaring directory). */
 function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunTool[] {
   const { declarations } = interactivityToolRunIndex(sources);
   const rows = requirements.map((row) => ({
@@ -9897,7 +9872,6 @@ function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[
     root: row.root,
     scope: row.scope.map((entry) => interactivityToolRunScopePath(row.root, entry)),
     flat: false,
-    actions: row.actions,
     verbs: row.verbs,
     measures: row.measures,
     declared: declarations.some((declaration) => declaration.run && declaration.id === row.toolId && interactivityToolRunWithin(declaration.file, row.root)),
@@ -9906,7 +9880,7 @@ function interactivityToolRunTools(sources: readonly InteractivityToolRunSource[
     .filter((declaration) => declaration.run && !requirements.some((row) => row.toolId === declaration.id && interactivityToolRunWithin(declaration.file, row.root)))
     .map((declaration) => {
       const directory = declaration.file.slice(0, declaration.file.lastIndexOf("/"));
-      return { label: `${declaration.id} (${declaration.file}:${declaration.line})`, root: directory, scope: [directory], flat: true, actions: [], verbs: [], measures: [], declared: true };
+      return { label: `${declaration.id} (${declaration.file}:${declaration.line})`, root: directory, scope: [directory], flat: true, verbs: [], measures: [], declared: true };
     });
   return [...rows, ...discovered];
 }
@@ -9932,46 +9906,7 @@ export function interactivityToolRunPolicySources(repoRoot: string, requirements
     });
 }
 
-/** ⏯️ (1) No `Emit::amend` and no history-coalesced artifact emission inside a tool that declares `run` or is classified `algorithmic-mutating` (`📋️tool-run-contract.md` §1, §1.1). */
-export function interactivityToolRunAmendFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
-  const { code } = interactivityToolRunIndex(sources);
-  const findings: InteractivityToolRunFinding[] = [];
-  const nonEmptyArtifactMutations = /\bartifact_mutations\s*:(?!\s*(?:Vec::new\(\)|vec!\[\s*\]|Default::default\(\)))/;
-  for (const tool of interactivityToolRunTools(sources, requirements)) {
-    const text = (detail: string) => `[⏯️ amend] ${tool.label}: ${detail}; provisional work belongs to the ToolRun ledger and finalize publishes one Edit (contract §1, §2.7)`;
-    for (const [path, lines] of code) {
-      const joined = lines.join("\n");
-      const lineAt = (offset: number) => joined.slice(0, offset).split("\n").length;
-      if (interactivityToolRunInScope(tool, path)) {
-        lines.forEach((line, index) => {
-          if (/\b(?:Action)?Emit::amend\s*\(/.test(line)) findings.push({ file: path, line: index + 1, text: text("Emit::amend inside the tool") });
-        });
-        for (const match of joined.matchAll(/\bcoalesce_key\s*:\s*Some\s*\(/g)) {
-          const literal = interactivityToolRunEnclosing(joined, match.index, /\b(?:Action)?Emit\s*\{/g);
-          if (literal && nonEmptyArtifactMutations.test(literal)) findings.push({ file: path, line: lineAt(match.index), text: text("history-coalesced artifact emission inside the tool") });
-        }
-      }
-      if (tool.actions.length === 0 || !interactivityToolRunWithin(path, tool.root)) continue;
-      const quoted = tool.actions.map((action) => `"${action}"`);
-      for (const match of joined.matchAll(/\bcoalesce_key\s*=\s*match\b[^{]*\{/g)) {
-        const arms = interactivityToolRunBlock(joined, match.index + match[0].length - 1);
-        arms.split("\n").forEach((arm, offset) => {
-          if (/=>/.test(arm) && !/=>\s*None\b/.test(arm) && quoted.some((action) => arm.split("=>")[0]!.includes(action))) findings.push({ file: path, line: lineAt(match.index) + offset, text: text(`coalesce_key arm for ${arm.split("=>")[0]!.trim()}`) });
-        });
-      }
-      for (const action of quoted) {
-        for (const match of joined.matchAll(new RegExp(`==\\s*${action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|${action.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*==`, "g"))) {
-          const open = joined.indexOf("{", match.index);
-          const guarded = open >= 0 && !joined.slice(match.index, open).includes("\n") ? interactivityToolRunBlock(joined, open) : undefined;
-          if (guarded && /\bcoalesce_key\s*:\s*Some\s*\(/.test(guarded) && nonEmptyArtifactMutations.test(guarded)) findings.push({ file: path, line: lineAt(match.index), text: text(`history-coalesced artifact emission guarded by ${action}`) });
-        }
-      }
-    }
-  }
-  return findings;
-}
-
-/** ⏯️ (2) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
+/** ⏯️ (1) Once a tool declares `run`, no per-plugin run verb, lifecycle state or plugin-local progress/cancel measure survives (`📋️tool-run-contract.md` §2.5, §3.6). */
 export function interactivityToolRunLocalLifecycleFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];
@@ -9992,7 +9927,7 @@ export function interactivityToolRunLocalLifecycleFailures(sources: readonly Int
   return findings;
 }
 
-/** ⏯️ (3) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
+/** ⏯️ (2) No tried-candidate ring, `fillBuildPreview` tail or fill preview JSON cap survives anywhere; tested candidates travel only as trace pages (`📋️tool-run-contract.md` §3.2, §3.6). */
 export function interactivityToolRunLegacyTraceFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];
@@ -10005,7 +9940,7 @@ export function interactivityToolRunLegacyTraceFailures(sources: readonly Intera
   return findings;
 }
 
-/** ⏯️ (4) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
+/** ⏯️ (3) Every `algorithmic-mutating` tool of [[INTERACTIVITY_TOOL_RUN_REQUIREMENTS]] declares `run: Some(ToolRunDefinition)` on its Tool/UtilityDefinition, and every table row still points at real sources (`📋️tool-run-contract.md` §2.4, §3.7). */
 export function interactivityToolRunDeclarationFailures(sources: readonly InteractivityToolRunSource[], requirements: readonly InteractivityToolRunRequirement[]): InteractivityToolRunFinding[] {
   const { code, declarations } = interactivityToolRunIndex(sources);
   const paths = [...code.keys()];
@@ -10029,7 +9964,7 @@ export function interactivityToolRunDeclarationFailures(sources: readonly Intera
   return findings;
 }
 
-/** ⏯️ (5) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
+/** ⏯️ (4) `toolRun*` action ids are framework-reserved: plugins never declare, literal-copy or route them (`📋️tool-run-contract.md` §2.5). */
 export function interactivityToolRunReservedActionFailures(sources: readonly InteractivityToolRunSource[]): InteractivityToolRunFinding[] {
   const { code } = interactivityToolRunIndex(sources);
   const findings: InteractivityToolRunFinding[] = [];
@@ -10043,6 +9978,103 @@ export function interactivityToolRunReservedActionFailures(sources: readonly Int
   return findings;
 }
 //#endregion ⏯️ToolRunPolicy
+
+//#region 🚫️HistoryClosure
+/**
+ * 🚫️ One closure rule of the non-destructive history contract (ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`,
+ * `📋️design.md` §13.2, §17.5, §17.7, §20): a token that must not survive in the scanned trees. `anchors` are literal substrings a file must
+ * contain before the rule's `pattern` runs, `applies` narrows the files the rule reads, `allow` names the files whose hit is a deliberate negative case, `functions` the enclosing Rust functions
+ * whose hit is a declared whole-document intent.
+ */
+export type HistoryClosureRule = { readonly id: string; readonly anchors: readonly string[]; readonly pattern: RegExp; readonly applies: (path: string) => boolean; readonly allow: readonly string[]; readonly functions?: readonly string[]; readonly reason: string };
+
+/** 🚫️ One closure violation anchored to its rule, a repo-relative file and a 1-based line. */
+export type HistoryClosureFinding = { readonly rule: string; readonly file: string; readonly line: number; readonly text: string };
+
+const HISTORY_CLOSURE_ROOTS = ["✏️s", "🧰️framework", "🌎️hub"] as const;
+const HISTORY_CLOSURE_SOURCE = /\.(?:rs|ts|tsx|js|py|feature|json)$/;
+const HISTORY_CLOSURE_TESTS = /\/🧪️tests\/|\/🧪️testing\//;
+const HISTORY_CLOSURE_STORE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/";
+const HISTORY_CLOSURE_PLUGIN_TREES = ["✏️s/", "🌎️hub/🧩️compositions/"] as const;
+
+/** 🧩️ True for production (non-test) code of a plugin tree. */
+function historyClosurePluginProduction(path: string): boolean {
+  return HISTORY_CLOSURE_PLUGIN_TREES.some((tree) => path.startsWith(tree)) && !HISTORY_CLOSURE_TESTS.test(path) && path.endsWith(".rs");
+}
+
+/**
+ * 🚫️ The closure rules. Every lane commits through a tool transaction (artifact) or one plain config edit at gesture end
+ * (§20.1): no amend constructor, no `AmendLast*` command, no coalesce key on any emission, edit, wire frame or fixture, no
+ * gesture bracket verb, no host-snapshot bracket. Plugins never hand-build a `protocol::Edit` (the Store authority's
+ * `next_edit` mints it) and never hand-declare a fold footprint (derived from the leaf's `x-semio-inverse-rows`, §20.5).
+ */
+export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
+  { id: "amend-emit", anchors: ["Emit::amend", "amend_config"], pattern: /\b(?:Action)?Emit::amend\b|\bamend_config\b/, applies: () => true, allow: [], reason: "a gesture is a tool transaction (artifact lane) or one config edit at gesture end (config lane); no emission amends the previous edit" },
+  { id: "amend-last", anchors: ["AmendLast", "amendLast"], pattern: /\bAmendLast\w*|\bamendLast\w*/, applies: () => true, allow: [], reason: "the Store has no amend command on any lane; a transaction-scoped open edit (§15) is the only growing edit" },
+  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: [], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
+  { id: "preview-contract", anchors: ["UtilityPreviewContract"], pattern: /\bUtilityPreviewContract\b/, applies: () => true, allow: [], reason: "the actions-vs-tools contract is `🔖️ToolContract`; there is no preview pattern beside tool machines" },
+  { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
+  { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: () => true, allow: [], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation" },
+  { id: "edit-literal", anchors: ["Edit"], pattern: /\bprotocol::Edit\s*\{|(?<![\w:])Edit\s*\{\s*line\s*:/, applies: historyClosurePluginProduction, allow: [], reason: "plugins never hand-build an edit; `ArtifactStoreOneItemLiveAuthority::next_edit` mints it from the Store authority" },
+  { id: "footprint-hand", anchors: ["for_one_", "ArtifactStoreOneItemFootprint"], pattern: /\bfor_one_invertible_item\b|\bfor_one_item\b|\bArtifactStoreOneItemFootprint\s*\{\s*work_items\b/, applies: (path) => path.endsWith(".rs") && !path.startsWith(HISTORY_CLOSURE_STORE) && !HISTORY_CLOSURE_TESTS.test(path), allow: [], reason: "a fold footprint is derived from the leaf's `x-semio-inverse-rows` through `ArtifactStoreOneItemFootprint::for_leaf`; a hand count under-declares multi-row inverses" },
+];
+
+/** 🔎️ The Rust function enclosing `index` in `lines` (nearest preceding `fn name`), or `undefined`. */
+function historyClosureEnclosingFunction(lines: readonly string[], index: number): string | undefined {
+  for (let cursor = index; cursor >= 0; cursor--) {
+    const name = lines[cursor]!.match(/\bfn\s+(\w+)/)?.[1];
+    if (name) return name;
+  }
+  return undefined;
+}
+
+/** 🚫️ Every closure violation in `sources` under `rules` (default [[HISTORY_CLOSURE_RULES]]); pure, so planted-violation tests drive it directly. */
+export function historyClosureFindings(sources: readonly { readonly path: string; readonly text: string }[], rules: readonly HistoryClosureRule[] = HISTORY_CLOSURE_RULES): HistoryClosureFinding[] {
+  const findings: HistoryClosureFinding[] = [];
+  for (const { path, text } of sources) {
+    const active = rules.filter((rule) => rule.anchors.some((anchor) => text.includes(anchor)) && rule.applies(path) && !rule.allow.includes(path));
+    if (active.length === 0) continue;
+    const lines = text.split("\n");
+    lines.forEach((line, index) => {
+      for (const rule of active) {
+        if (!rule.anchors.some((anchor) => line.includes(anchor))) continue;
+        const hit = line.match(rule.pattern)?.[0];
+        if (hit === undefined) continue;
+        if (rule.functions && path.endsWith(".rs") && rule.functions.includes(historyClosureEnclosingFunction(lines, index) ?? "")) continue;
+        findings.push({ rule: rule.id, file: path, line: index + 1, text: `[🚫️ ${rule.id}] ${hit}: ${rule.reason}` });
+      }
+    });
+  }
+  return findings;
+}
+
+/** 🗂️ The git-visible (tracked + unignored) source files of the closure roots, read once. */
+export function historyClosureSources(repoRoot: string): { readonly path: string; readonly text: string }[] {
+  const listed = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...HISTORY_CLOSURE_ROOTS], { cwd: repoRoot });
+  if (listed.exitCode !== 0) throw new Error(`[verify history-closure] git-visible inventory failed: ${listed.stderr.toString()}`);
+  const paths = [...new Set(listed.stdout.toString().split("\0").map((path) => path.normalize("NFC")))].filter((path) => HISTORY_CLOSURE_SOURCE.test(path) && !path.split("/").some((segment) => POLICY_SKIP_DIRS.has(segment)));
+  return paths.flatMap((path) => {
+    try {
+      return [{ path, text: readFileSync(join(repoRoot, path), "utf8") }];
+    } catch {
+      return [];
+    }
+  });
+}
+
+/** 🚫️ The closure gate as breach records: one high-priority breach per finding. */
+export function policyHistoryClosureBreaches(repoRoot: string): BreachRecord[] {
+  return historyClosureFindings(historyClosureSources(repoRoot)).map((finding) => ({
+    id: `history-closure-${finding.rule}-${finding.file}:${finding.line}`,
+    summary: `${finding.file}:${finding.line} ${finding.text}`,
+    kind: `history-closure/${finding.rule}`,
+    scope: finding.file,
+    priority: "high",
+    reason: HISTORY_CLOSURE_RULES.find((rule) => rule.id === finding.rule)?.reason ?? finding.rule,
+    solution: "Delete the legacy path: commit gestures through a ToolTransaction or one config edit at gesture end, mint edits with `next_edit`, derive footprints with `for_leaf` (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING §20).",
+  }));
+}
+//#endregion 🚫️HistoryClosure
 
 
 
@@ -17191,13 +17223,13 @@ function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
       seenLines.add(line);
       breaches.push({
         id: `no-raw-spawn-${relPath}-${line}`,
-        summary: `"${relPath}:${line}" uses raw ${token}( — route subprocesses through runCmd/runCmdStatus/runProbe/runTestBudgeted from repo/lib/js/index.ts`,
+        summary: `"${relPath}:${line}" uses raw ${token}( — route subprocesses through runCmd/runCmdStatus/runProbe/runRepositoryTestCommand from repo/lib/js/index.ts`,
         kind: "budget/no-raw-spawn",
         scope: relPath,
         line,
         priority: "high",
         reason: "Raw child_process/Bun.spawn calls bypass the repo's wall-clock budget layer; script.ts files must use the budgeted runners so orchestrators, tool calls and tests cannot hang forever.",
-        solution: `Replace ${token}( at ${relPath}:${line} with runCmd, runCmdStatus, runProbe, or runTestBudgeted from repo/lib/js/index.ts (or orchestratorBudgetOpts/daemonBudgetOpts for long-running classes).`,
+        solution: `Replace ${token}( at ${relPath}:${line} with runCmd, runCmdStatus, runProbe, or runRepositoryTestCommand from repo/lib/js/index.ts (or orchestratorBudgetOpts/daemonBudgetOpts for long-running classes).`,
       });
     }
   }
@@ -24428,8 +24460,15 @@ export function policySchemaOverhaulPCBreaches(repoRoot: string): BreachRecord[]
  * constructor or an `InferredField::{plan,dep_input,compute}` body, never as durable state. */
 const POLICY_DISSOLVED_EPHEMERAL_REP_TYPES = ["HalfedgeMesh", "BrepEngineHost", "DrawingStore", "DrawingEngine", "EngineCache"] as const;
 
-/** 🧊️ Modules sanctioned to own an `EngineCache`: the wasm guest↔host boundary only. */
-const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"] as const;
+/** 🧊️ Canonical compute ownership and its retained plugin host constructor authority. */
+const POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS = ["🧰️framework/🔨️modules/◻️2d/🧮️compute", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"] as const;
+
+/** 🧭️ Constructor authority follows complete workspace-relative directory segments. */
+function policyEngineCacheConstructorOwner(relPath: string): boolean {
+  const normalized = relPath.replaceAll("\\", "/");
+  if (normalized.startsWith("/") || /^[A-Za-z]:/.test(normalized) || normalized.split("/").some((segment) => !segment || segment === "." || segment === "..")) return false;
+  return POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS.some((dir) => normalized === dir || normalized.startsWith(`${dir}/`));
+}
 
 /** 🧊️ Shrink-only. Every entry is a known tier-(d) escape awaiting its dissolution wave. */
 const POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST = new Set<string>([
@@ -24483,27 +24522,23 @@ function policyDissolvedRepEscapeBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🧊️ `EngineCache` reachable outside the wasm guest↔host boundary.
- *
- * Its general "kernel cache" role is over: derived values belong in a 💡️inference facet keyed by
- * DepHash, ephemeral representations in an EngineRep. No seed — the narrowed scope is the target
- * state going forward, so this fails on new violations rather than burning down a backlog. */
+/** 🧊️ `EngineCache` construction belongs to canonical compute or the retained plugin host.
+ * Derived values outside those owners belong in a 💡️inference facet keyed by DepHash;
+ * ephemeral working representations are rebuilt through EngineRep. */
 function policyDissolvedEngineCacheScopeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS.some((dir) => relPath.startsWith(dir))) continue;
-    const normalized = policyNormalizeRelPath(relPath);
-    if (POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST.has(normalized)) continue;
+    if (policyEngineCacheConstructorOwner(relPath)) continue;
     const content = policyReadFileSafe(repoRoot, relPath);
     if (!/\bEngineCache::new\b/.test(content)) continue;
     breaches.push({
       id: `dissolved-engine-cache-scope-${relPath}`,
-      summary: `"${relPath}" constructs or implements an engine cache outside the sanctioned wasm-boundary modules`,
+      summary: `"${relPath}" constructs an engine cache outside canonical compute or the retained plugin host`,
       kind: "dissolved-kernels/engine-cache-scope",
       scope: relPath,
       priority: "medium",
       reason:
-        "EngineCache survives only at the wasm guest↔host boundary, where byte serialization is unavoidable. Elsewhere a cache of derived values is state outside the ArtifactStore: derived values belong in a 💡️inference facet with a real DepHash chain, ephemeral representations in an EngineRep rebuilt from the snapshot.",
+        "EngineCache construction belongs to canonical compute or the retained plugin host. Elsewhere derived values belong in a 💡️inference facet with a real DepHash chain, and ephemeral representations are rebuilt through EngineRep from the snapshot.",
       solution: `Move the derived value in ${relPath} into a 💡️inference facet, or rebuild it per call via EngineRep::build(&base).`,
     });
   }

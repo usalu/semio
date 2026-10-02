@@ -6,10 +6,8 @@ use crate::DagSnapshot;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️Shared
-/// 🗑️ Builds the removal `DagMutation`s for the given node ids, or `None` when none of them exist —
-/// shared by `delete_selection::DeleteSelection` and `node_graph_edit::DagNodeGraphEditOp::DeleteSelection`
-/// (both were the same `handle_action` "deleteSelection" logic, reachable from two different action ids
-/// pre-migration). No config mutation clears the selection any more: the framework auto-prunes the
+/// 🗑️ Builds the removal `DagMutation`s for the given node ids, or `None` when none of them exist. No config mutation
+/// clears the selection any more: the framework auto-prunes the
 /// deleted ids out of `graph`'s selection via `DagPlayApp::interaction_topology`
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `remove_node::RemoveNode` deliberately
 /// does NOT use this helper: it only ever removes the one node it names.

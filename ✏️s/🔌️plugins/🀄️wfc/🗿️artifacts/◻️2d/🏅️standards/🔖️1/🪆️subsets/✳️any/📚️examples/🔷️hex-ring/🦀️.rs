@@ -7,7 +7,8 @@
 //! this the smallest honest test that the propagation really is following the authored edges.
 
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, WFC_2D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "hex-ring";
 pub const ICON: &str = "hexagon";

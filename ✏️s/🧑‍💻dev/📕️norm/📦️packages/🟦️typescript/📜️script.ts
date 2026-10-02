@@ -9,7 +9,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "norm-document-contract") {
-      const { testNormDocumentContractOracle } = await import("../../../../🔌️plugins/📕️norm/🧪️tests/🪪️document/🟦️.ts");
+      const { testNormDocumentContractOracle } = await import("../../../../🔌️plugins/📕️norm/🧪️tests/🪪️document-contract/🟦️.ts");
       await testNormDocumentContractOracle();
       const normRoot = join(this.repoRoot, "✏️s/🔌️plugins/📕️norm");
       const files = ["⚖️en1990", "⚡️din18599"].flatMap((artifact) => ["", "📸️snapshot", "🔺️diff"].map((facet) => join(normRoot, "🗿️artifacts", artifact, "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts")));

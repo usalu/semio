@@ -13,85 +13,8 @@
       "const": "updateRigExtrinsic"
     },
     "extrinsic": {
-      "type": "object",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RigExtrinsic",
       "title": "RigExtrinsic",
-      "additionalProperties": false,
-      "required": [
-        "cameraId",
-        "rotationWxyz",
-        "translationM"
-      ],
-      "properties": {
-        "cameraId": {
-          "type": "string",
-          "x-semio-ui": {
-            "widget": "reference",
-            "role": "target",
-            "label": {
-              "en": "Camera",
-              "de": "Kamera"
-            },
-            "description": {
-              "en": "The camera this rig pose belongs to.",
-              "de": "Kamera, zu der diese Rig-Lage gehört."
-            },
-            "ref": {
-              "kind": "camera"
-            },
-            "group": "target",
-            "order": 10
-          }
-        },
-        "rotationWxyz": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 4,
-          "maxItems": 4,
-          "x-semio-ui": {
-            "widget": "vector",
-            "role": "value",
-            "label": {
-              "en": "Rotation (Quaternion w, x, y, z)",
-              "de": "Rotation (Quaternion w, x, y, z)"
-            },
-            "description": {
-              "en": "Unit quaternion of the camera orientation.",
-              "de": "Einheitsquaternion der Kameraorientierung."
-            },
-            "step": 0.001,
-            "group": "pose",
-            "order": 20
-          }
-        },
-        "translationM": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3,
-          "x-semio-ui": {
-            "widget": "vector",
-            "role": "value",
-            "label": {
-              "en": "Translation (m)",
-              "de": "Translation (m)"
-            },
-            "description": {
-              "en": "Camera offset from the rig origin.",
-              "de": "Versatz der Kamera zum Rig-Ursprung."
-            },
-            "unit": "m",
-            "step": 0.001,
-            "group": "pose",
-            "order": 30
-          }
-        }
-      },
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -45,6 +45,12 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing = { path = "../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-writer-writer = { path = "../../../../../✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-space-home = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-space-space = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-artifact-infinite-dag = { workspace = true }

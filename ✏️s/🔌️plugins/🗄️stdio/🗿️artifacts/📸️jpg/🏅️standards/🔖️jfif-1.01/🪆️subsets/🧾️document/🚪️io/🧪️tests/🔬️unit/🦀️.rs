@@ -259,27 +259,7 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
-    /// `print_dsl`/`encode_pack` output of `demo_jpg_snapshot()` — `parse_dsl(fixture) ==
-    /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
-    /// fixtures can never silently drift back to a fake again.
-    ///
-    /// 🧪️ P2-FG2 deviation from png's own verbatim `fixture_honesty_law` shape (documented,
-    /// not a mistake): jpg is a LOSSY lifecycle format whose `parse_dsl`/`decode_pack` genuinely
-    /// `decode_jpg`-round-trip through real DCT/quantization/Huffman compression, then
-    /// canonicalize a FRESH `frame`/`quant_tables`/`huffman_tables`/`sof_marker` on re-decode
-    /// (matching `codec_retention_law`'s own already-established precedent above, and the
-    /// engine's own documented `EncodeScopeNote`) — a hand-authored `demo_jpg_snapshot()` (never
-    /// itself decoded) can therefore NEVER equal `parse_dsl(print_dsl(demo))` field-for-field
-    /// (confirmed live: a real `cargo test` run showed exactly this — decoded `frame`/
-    /// `quant_tables`/`huffman_tables` populated, `re_encode_quality` reset to `None`, pixels
-    /// DCT-lossy-shifted). The FORWARD direction (`print_dsl(demo) == FIXTURE_DSL`,
-    /// `encode_pack(demo) == FIXTURE_PACK`, byte-for-byte) still asserts the strong "fixture is
-    /// GENUINE encoder output" guarantee the recipe's law is really about; the REVERSE direction
-    /// asserts the same width/height/pixel-length invariant `codec_retention_law` already
-    /// establishes as this artifact's own honest lossy-round-trip contract, plus the ACTUAL
-    /// dimension bytes on wire (SOF0 width/height) matching, rather than asserting the
-    /// impossible byte-exact struct equality.
+    /// 🧪️ Shipped Text/Pack preserve every owned demo field and equal their declared codec output.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -291,12 +271,9 @@ mod conformance_laws {
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
 
         let parsed = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
-        assert_eq!(parsed.width, demo.width, "shipped .dsl.semio fixture decodes to a different width than demo_jpg_snapshot()");
-        assert_eq!(parsed.height, demo.height, "shipped .dsl.semio fixture decodes to a different height than demo_jpg_snapshot()");
-        assert_eq!(parsed.pixels.len(), demo.pixels.len(), "shipped .dsl.semio fixture decodes to a different pixel buffer length than demo_jpg_snapshot()");
-
-        let decoded = <JpgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
-        assert_eq!(decoded, parsed, "shipped .pack.semio fixture must decode identically to the shipped .dsl.semio fixture (same real JFIF bytes, two envelope shapes)");
+        assert_eq!(parsed,demo);
+        let decoded=<JpgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode owned Pack fixture");
+        assert_eq!(decoded,demo);
     }
 }
 //#endregion 🔖️ConformanceLaws

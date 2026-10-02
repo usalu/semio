@@ -1,0 +1,4 @@
+{
+  "owners": ["base", "text", "value", "audio", "video", "image", "flow", "table", "graph", "animation", "object", "kit", "mesh", "model", "cad", "document", "drawing", "presentation", "brep"],
+  "encodings": ["binary", "text"]
+}

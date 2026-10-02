@@ -179,7 +179,7 @@ fn retained_accessibility_select_record(control: &RetainedAccessibilityFixture) 
 }
 
 fn retained_panel_shell(surface: &str) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock_tabs = ShellDock::default();
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::leaf(surface, "Settings", "settings", 0));
@@ -269,7 +269,7 @@ fn a_completed_chrome_registry_is_not_pointer_authority_before_its_pixels_are_pr
     assert_eq!(row.operations, ["presentInitial", "completeCandidateChrome", "pressCandidate", "pressPresented"]);
     assert_eq!(row.expect.presented_generation, 1);
 
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
 
@@ -307,7 +307,7 @@ fn a_completed_chrome_registry_is_not_pointer_authority_before_its_pixels_are_pr
 fn presentation_acceptance_and_abort_are_generation_bound() {
     let fixture = fixture();
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
 
     input.register_hit(hit(&fixture.controls.presented));
@@ -345,7 +345,7 @@ fn presentation_acceptance_and_abort_are_generation_bound() {
 fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_until_acceptance() {
     let fixture = fixture();
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let presented = &fixture.replacement.presented;
     let moved = &fixture.replacement.moved;
@@ -394,7 +394,7 @@ fn presented_button_release_without_down_does_not_activate() {
     let fixture = fixture();
     let control = &fixture.replacement.presented;
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let mut document = publish_presented_button(&mut shell, &mut input, "presented-input.no-down", "no-down", control);
@@ -413,7 +413,7 @@ fn presented_button_cancelled_press_cannot_activate_on_later_release() {
     let fixture = fixture();
     let control = &fixture.replacement.presented;
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let mut document = publish_presented_button(&mut shell, &mut input, "presented-input.cancel", "cancel", control);
@@ -436,7 +436,7 @@ fn presented_button_press_a_release_b_activates_neither() {
     let control_a = &fixture.replacement.presented;
     let control_b = &fixture.replacement.moved;
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let mut document_a = publish_presented_button(&mut shell, &mut input, "presented-input.press-a", "press-a", control_a);
@@ -570,7 +570,7 @@ fn presented_interaction_invalidates_a_candidate_built_from_an_older_input_epoch
     let control = &fixture.replacement.presented;
     let surface = "presented-input.stale-interaction";
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let mut presented = publish_presented_button(&mut shell, &mut input, surface, "interaction-owner", control);

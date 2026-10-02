@@ -18,10 +18,10 @@ use crate::wgpu::paint::{push_stepper_chrome, push_stepper_icon};
 use crate::wgpu::tree::NodeFlags;
 use crate::wgpu::widgets::{register_input_meta, StepperMeta, WidgetContext};
 
-/// 🎯️ A stepper value as every wgpu surface prints it: at its precision when it has one (the contract's
-/// `format_ui_number_fixed`, React's `toFixed` twin), otherwise twelve significant digits.
-pub(crate) fn stepper_value_text(value: f64, precision: Option<u16>) -> String {
-    precision.map_or_else(|| ui_contract::format_ui_number(value), |precision| ui_contract::format_ui_number_fixed(value, precision))
+/// 🎯️ A stepper value as every wgpu surface prints it: its display value (`stored × display_factor`) at its precision when
+/// it has one (the contract's `format_ui_number_fixed`, React's `toFixed` twin), otherwise twelve significant digits.
+pub(crate) fn stepper_value_text(value: f64, precision: Option<u16>, display_factor: Option<f64>) -> String {
+    ui_contract::ui_number_display_text(value, display_factor, precision)
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]

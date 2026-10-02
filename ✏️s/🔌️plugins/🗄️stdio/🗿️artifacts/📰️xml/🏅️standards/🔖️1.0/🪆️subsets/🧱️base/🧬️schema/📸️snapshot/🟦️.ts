@@ -27,7 +27,7 @@ export type XmlExternalId =
   | { kind: 'system'; systemId: string }
   | { kind: 'public'; publicId: string; systemId: string };
 export type XmlDtdDeclaration = { kind: 'entity'; parameter: boolean; name: string; value: string };
-export interface XmlDoctype { prologPosition?: number; name: string; externalId?: XmlExternalId; declarations: XmlDtdDeclaration[]; }
+export interface XmlDoctype { prologPosition?: bigint; name: string; externalId?: XmlExternalId; declarations: XmlDtdDeclaration[]; }
 
 /** 📰 Well-formed XML document root. */
 export interface XmlDocument {
@@ -112,14 +112,6 @@ export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
   const version = stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`);
   const encoding = row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`);
   const quote = row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember<XmlQuote>(row["quote"], `${at}.quote`, ["double", "single"]);
-  const delimiter = quote === "single" ? "'" : '"';
-  if (version.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value contains its declaration quote delimiter");
-  if (!/^1\.[0-9]+$/u.test(version)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value is not a valid XML VersionNum");
-  if (encoding !== undefined) {
-    if (encoding.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value contains its declaration quote delimiter");
-    if (!/^[A-Za-z][A-Za-z0-9._-]*$/u.test(encoding)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value is not a valid XML EncName");
-    if (encoding.toLowerCase() !== "utf-8") stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value conflicts with the UTF-8 transport");
-  }
   return {
     version,
     encoding,
@@ -169,7 +161,7 @@ export function parseXmlNode(value: unknown, at = "$"): XmlNode {
 export function parseXmlDoctype(value: unknown, at = "$"): XmlDoctype {
   const row = stdioXml10BaseSnapshotGuardObject(value, at);
   return {
-    prologPosition: row["prologPosition"] === undefined ? 0 : stdioXml10BaseSnapshotGuardInteger(row["prologPosition"], `${at}.prologPosition`, { minimum: 0 }),
+    prologPosition: row["prologPosition"] === undefined ? 0n : parseXmlPosition(row["prologPosition"], `${at}.prologPosition`),
     name: stdioXml10BaseSnapshotGuardString(row["name"], `${at}.name`),
     externalId: row["externalId"] === undefined ? undefined : parseXmlExternalId(row["externalId"], `${at}.externalId`),
     declarations: row["declarations"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["declarations"], `${at}.declarations`).map((item, index) => parseXmlDtdDeclaration(item, `${at}.declarations[${index}]`)),
@@ -185,9 +177,29 @@ export function parseXmlDocument(value: unknown, at = "$"): XmlDocument {
     prolog: row["prolog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["prolog"], `${at}.prolog`).map((item, index) => parseXmlNode(item, `${at}.prolog[${index}]`)),
     epilog: row["epilog"] === undefined ? [] : stdioXml10BaseSnapshotGuardArray(row["epilog"], `${at}.epilog`).map((item, index) => parseXmlNode(item, `${at}.epilog[${index}]`)),
   };
+  return document;
+}
+
+/** 🧭️ Exact unsigned64 scalar at the canonical JSON boundary. */
+export function parseXmlPosition(value:unknown,at="$" ):bigint{if(typeof value!=="string"||!/^(0|[1-9][0-9]*)$/.test(value)||value.length>20)throw new Error(`${at}: expected canonical unsigned64 decimal text`);const position=BigInt(value);if(position>18446744073709551615n)throw new Error(`${at}: position exceeds unsigned64`);return position;}
+/** 📜️ Ordinary XML wire boundary policy, separate from owned logical snapshot admission. */
+export function validateXmlDocumentWireBoundary(document:XmlDocument,at="$" ):void{
+ if(document.declaration)validateXmlDeclarationWire(document.declaration,`${at}.declaration`);
   for (const [boundary, nodes] of [["prolog", document.prolog], ["epilog", document.epilog]] as const) {
     if (nodes.some((node) => node.kind !== "comment" && node.kind !== "processingInstruction")) stdioXml10BaseSnapshotGuardReject(`${at}.${boundary}`, "boundary contains a non-miscellaneous node");
   }
-  if ((document.doctype?.prologPosition ?? 0) > document.prolog.length) stdioXml10BaseSnapshotGuardReject(`${at}.doctype.prologPosition`, "position exceeds prolog length");
-  return document;
+  if ((document.doctype?.prologPosition ?? 0n) > BigInt(document.prolog.length)) stdioXml10BaseSnapshotGuardReject(`${at}.doctype.prologPosition`, "position exceeds prolog length");
+}
+
+/** 📜️ Declaration policy for an ordinary UTF-8 XML wire. */
+export function validateXmlDeclarationWire(declaration:XmlDeclaration,at="$" ):void{
+ const {version,encoding,quote}=declaration;
+  const delimiter = quote === "single" ? "'" : '"';
+  if (version.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value contains its declaration quote delimiter");
+  if (!/^1\.[0-9]+$/u.test(version)) stdioXml10BaseSnapshotGuardReject(`${at}.version`, "value is not a valid XML VersionNum");
+  if (encoding !== undefined) {
+    if (encoding.includes(delimiter)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value contains its declaration quote delimiter");
+    if (!/^[A-Za-z][A-Za-z0-9._-]*$/u.test(encoding)) stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value is not a valid XML EncName");
+    if (encoding.toLowerCase() !== "utf-8") stdioXml10BaseSnapshotGuardReject(`${at}.encoding`, "value conflicts with the UTF-8 transport");
+  }
 }

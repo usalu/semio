@@ -47,8 +47,8 @@ fn every_kind_is_distinct() {
 fn every_variant_carries_a_label_and_a_descriptor_that_agree_with_its_kind() {
     for mutation in every_variant() {
         let label = mutation.label();
-        for terminology in protocol::Terminology::ALL {
-            for locale in protocol::Locale::ALL {
+        for terminology in semio_framework_ui_locale::Terminology::ALL {
+            for locale in semio_framework_ui_locale::Locale::ALL {
                 assert!(!label.resolve(terminology, locale).is_empty(), "{:?} label is empty for {terminology:?}/{locale:?}", mutation.semantics().kind);
             }
         }

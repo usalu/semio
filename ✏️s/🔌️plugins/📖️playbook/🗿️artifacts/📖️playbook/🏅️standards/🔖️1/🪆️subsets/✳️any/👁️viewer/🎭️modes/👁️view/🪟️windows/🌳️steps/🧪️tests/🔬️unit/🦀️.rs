@@ -88,7 +88,7 @@ fn oversized_spec(blocks: usize) -> crate::PlaybookSnapshot {
 
 /// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(spec: &crate::PlaybookSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     projected_body(render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree"))
 }
 

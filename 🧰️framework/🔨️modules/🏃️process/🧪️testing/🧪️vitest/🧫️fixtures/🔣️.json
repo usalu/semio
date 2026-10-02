@@ -1,0 +1,39 @@
+{
+  "policy": {
+    "version": 1,
+    "cwd": "/owner",
+    "toolPath": "/tools/vitest.mjs",
+    "runtime": "bun",
+    "coverageRuntime": "node",
+    "cacheRoot": "/cache",
+    "coverageDirectory": "/coverage/owner",
+    "budgetMs": 15000
+  },
+  "arguments": [
+    "case.ts",
+    "--testNamePattern",
+    "portable"
+  ],
+  "config": "../../config.ts",
+  "expected": [
+    "/tools/vitest.mjs",
+    "run",
+    "--config",
+    "/config.ts",
+    "--testTimeout",
+    "15000",
+    "--hookTimeout",
+    "15000",
+    "--teardownTimeout",
+    "15000",
+    "case.ts",
+    "--testNamePattern",
+    "portable"
+  ],
+  "coverage": [
+    "--coverage.enabled",
+    "--coverage.provider=v8",
+    "--coverage.reporter=lcovonly",
+    "--coverage.reportsDirectory=/coverage/owner"
+  ]
+}

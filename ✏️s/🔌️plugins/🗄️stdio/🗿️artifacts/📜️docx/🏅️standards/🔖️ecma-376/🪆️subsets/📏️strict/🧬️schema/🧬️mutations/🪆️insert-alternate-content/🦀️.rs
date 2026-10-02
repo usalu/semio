@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertAlternat
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
         agg_inverse(&DocxStrictMutation::InsertAlternateContent(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -87,6 +87,67 @@
     {
       "lexeme": "0.1",
       "numeric": 0.1
+    },
+    {
+      "lexeme": "true",
+      "numeric": null
+    },
+    {
+      "lexeme": "null",
+      "numeric": null
+    },
+    {
+      "lexeme": "nan64_7ff8000000001234",
+      "numeric": null
+    },
+    {
+      "lexeme": "owned 世界\u0000\"\\",
+      "numeric": null
     }
-  ]
+  ],
+  "iJsonTypedNumberCases": [
+    {
+      "lexeme": "01",
+      "hard": true
+    },
+    {
+      "lexeme": "NaN",
+      "hard": true
+    },
+    {
+      "lexeme": "",
+      "hard": true
+    },
+    {
+      "lexeme": ".1",
+      "hard": true
+    },
+    {
+      "lexeme": "1e400",
+      "hard": true
+    },
+    {
+      "lexeme": "9007199254740992",
+      "hard": true
+    },
+    {
+      "lexeme": "1",
+      "hard": false
+    },
+    {
+      "lexeme": "-0.00e-2",
+      "hard": false
+    },
+    {
+      "lexeme": "0.1",
+      "hard": false
+    }
+  ],
+  "controlledNative": {
+    "nodes": 600,
+    "stringRepeat": 100000,
+    "cancelCompleted": 256,
+    "maxRows": 10,
+    "maxValueBytes": 4096
+  }
 }

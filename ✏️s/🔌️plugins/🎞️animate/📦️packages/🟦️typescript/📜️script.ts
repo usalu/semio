@@ -5,8 +5,8 @@ import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runVitest(this.root, segments, "../../🧪️tests/🎚️config/🟦️.ts");
+  async run(segments: string[]): Promise<void> {
+    await runVitest(this.root, segments, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

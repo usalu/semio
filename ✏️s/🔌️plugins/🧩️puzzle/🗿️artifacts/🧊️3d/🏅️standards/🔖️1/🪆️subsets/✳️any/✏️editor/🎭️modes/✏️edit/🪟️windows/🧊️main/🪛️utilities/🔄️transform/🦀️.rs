@@ -19,7 +19,9 @@ use crate::Puzzle3dSnapshot;
 use dsl::json;
 use dsl::os_pack::json::Value;
 use machine::Command;
-use semio_framework_plugin::{LocalizedLabel, UtilityDefinition, WindowMeasure};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
 use std::sync::Arc;
 

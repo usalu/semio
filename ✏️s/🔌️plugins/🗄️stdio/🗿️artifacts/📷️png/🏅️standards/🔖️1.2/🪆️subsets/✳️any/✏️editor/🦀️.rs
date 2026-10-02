@@ -9,8 +9,40 @@ use crate::standards::v1_2::subsets::any::schema::mutations::{PatchPixelsMutatio
 use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
 use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactBoundedFirstStepProof;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_2d::compute::EngineHandles;
 
 use semio_s_artifact_stdio_contract::editing;
 
@@ -73,7 +105,7 @@ fn pngEditor_retained_extent(command: &PngEditCommand, _snapshot: &PngSnapshot, 
 }
 fn pngEditor_retained_reduce(command: &PngEditCommand, _snapshot: &PngSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>, _operation: &AppOperationContext) -> Result<Emit<PngMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&pngEditor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() }),
+        PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&pngEditor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -391,7 +423,6 @@ impl ArtifactEditor for PngEditor {
         match command {
             PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&pngEditor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
             PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(_)) => Err(Fault::from("PNG pixel-region editing requires the cancellable retained route")),

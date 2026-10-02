@@ -5,7 +5,17 @@ use crate::{ZipMutation, ZipSnapshot};
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::app::{TextDraftView, TextWindowKit};
 use semio_framework_ui_contract as ui;
-use semio_framework_plugin::{tree_window_indexed_section, tree_window_item, BuiltNode, HasBase, Locale, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
+use semio_framework_plugin::tree_window_indexed_section;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
 
 #[path = "🧵️retained/🦀️.rs"]
 pub mod retained;
@@ -60,7 +70,6 @@ pub fn edit_node(snapshot: &ZipSnapshot, node_id: &str, value: &str, revision: &
                     comment: value.into(),
                     comment_utf8: crate::standards::v2_0::subsets::base::io::archive_comment_utf8_after_edit(snapshot.comment_utf8, value),
                 })],
-                description: Some("Set archive comment".into()),
                 ..Default::default()
             }
         });

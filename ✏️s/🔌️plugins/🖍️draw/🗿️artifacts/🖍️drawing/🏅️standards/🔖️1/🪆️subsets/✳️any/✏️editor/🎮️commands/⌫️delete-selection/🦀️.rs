@@ -55,7 +55,7 @@ pub(crate) fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_id
         if let DrawingLayerNode::Group(group)=layer {stack.push((group.children.as_slice(),0,editable,ancestor_selected || chosen));}
     }
     if found!=wanted {return Err(Fault::from("A selected layer no longer exists"));}
-    let mut emit=if mutations.is_empty() {Emit::default()}else {Emit::commit(mutations,if nodes {"Delete path points"}else {"Delete layers"})};
+    let mut emit=if mutations.is_empty() {Emit::default()}else {Emit::mutations(mutations)};
     emit.effects.push(point_selection_effect(&[]));
     let selection=if nodes {ids.iter().filter(|id|!deleted.contains(id.as_str())).cloned().collect::<Vec<_>>()}else {Vec::new()};
     emit.effects.push(interaction_select_effect(&selection,"replace"));

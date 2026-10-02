@@ -5,7 +5,7 @@
 //! derives from inside its own `src`). Ticket
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 
-// 🌿️ `semio_framework_os_kernel`'s crate root re-exports BOTH the `ToValue`/`FromValue` TRAITS
+// 🌿️ `semio_framework_value`'s crate root re-exports BOTH the `ToValue`/`FromValue` TRAITS
 // (from its own `os_dsl::schema`) AND the `#[derive(ToValue, FromValue)]` proc-macros themselves
 // under the same two names — see its `🦀️.rs`'s `🌱️`/`🌿️` docstrings — so importing them from
 // here alone brings in everything this file's `#[derive(...)]` lines and trait calls need. A
@@ -13,7 +13,7 @@
 // re-exported macro names (`E0252`, "defined multiple times ... macro namespace").
 #![deny(unreachable_code)]
 
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 
 //#region 🔖️UnitOnly — bare-string wire form, deny_unknown_fields not applicable (documented N/A)
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue)]

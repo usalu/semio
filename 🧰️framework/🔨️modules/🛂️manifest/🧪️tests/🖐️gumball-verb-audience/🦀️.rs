@@ -1,5 +1,5 @@
 //! 🖐️ The gumball-verb audience rule, driven by the language-agnostic `🧫️fixtures/🖐️gumball-verb-audience.json`: the
-//! handle toggle is window chrome, and the retired drag brackets are ordinary ids the rule leaves untouched.
+//! handle toggle is window chrome, and every pose and paint verb is an ordinary id the rule leaves untouched.
 
 use super::*;
 
@@ -33,7 +33,7 @@ struct GumballAction {
 #[test]
 fn gumball_verb_audience_matches_the_language_agnostic_fixture() {
     let fixture: GumballFixture = serde_json::from_str(include_str!("../../🧫️fixtures/🖐️gumball-verb-audience.json")).expect("gumball fixture parses");
-    assert!(fixture.cases.len() >= 8, "the fixture keeps the toggle, both retired brackets and the untouched ids");
+    assert!(fixture.cases.len() >= 8, "the fixture keeps the toggle and the untouched pose, paint and pointer ids");
     for case in fixture.cases {
         let mut action = ActionDefinition::new(case.action.id.clone(), LocalizedLabel::data(case.action.id.clone()), case.action.kind, "move").with_in_palette(case.action.in_palette);
         action.semantics.audience = case.action.audience;

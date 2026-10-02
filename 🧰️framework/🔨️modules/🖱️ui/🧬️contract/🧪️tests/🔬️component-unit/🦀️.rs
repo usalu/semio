@@ -165,7 +165,7 @@ fn tree_detail_relation_validates_and_copies_a_direct_diff_view_surface() {
 
 #[test]
 fn inline_tree_toolbar_relation_validates_and_copies_from_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).expect("inline controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).expect("inline controls fixture");
     let controls = fixture["controls"].as_array().expect("fixture controls");
     let nodes = serde_json::json!([
         {
@@ -333,10 +333,11 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
             other => panic!("unknown slider key {other}"),
         };
         let (current, min, max, step, large) = (row["current"].as_f64().expect("current"), row["min"].as_f64(), row["max"].as_f64(), row["step"].as_f64().expect("step"), row["large"].as_bool().expect("large"));
-        let value = crate::ui_number_key_value(current, min, max, step, fixture_snaps(&row["snaps"]), key, large);
+        let (precision, factor) = (row["precision"].as_u64().map(|precision| precision as u16), row["factor"].as_f64());
+        let value = crate::ui_number_key_value(current, min, max, step, precision, factor, fixture_snaps(&row["snaps"]), key, large);
         assert_eq!(value, row["expected"].as_f64().expect("expected"), "{}", row["case"]);
         if let (Some(min), Some(max)) = (min, max) {
-            assert_eq!(crate::slider_key_value(current, min, max, step, fixture_snaps(&row["snaps"]), key, large), value, "{}: the slider law is the bounded number law", row["case"]);
+            assert_eq!(crate::slider_key_value(current, min, max, step, precision, factor, fixture_snaps(&row["snaps"]), key, large), value, "{}: the slider law is the bounded number law", row["case"]);
         }
     }
     for row in fixture["fixed"].as_array().expect("fixed rows") {

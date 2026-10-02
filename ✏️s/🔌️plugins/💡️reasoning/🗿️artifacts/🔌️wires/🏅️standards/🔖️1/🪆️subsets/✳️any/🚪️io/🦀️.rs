@@ -1,19 +1,5 @@
-//! 🚪️ IO s.reasoning.wires (1/✳️any) — `io() -> IoDeclaration` (design.md §2/§3): the native codec
-//! plus every foreign hop, aggregated from the typed `Serializer<WiresSnapshot>`/
-//! `Deserializer<WiresSnapshot>` leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`.
-//! Replaces the old hand-rolled `ArtifactComposition`/`ComposerEntry` dispatch chain
-//! (`derived_composition`/`io_registry`) outright — all io now goes exclusively through the
-//! `io_mechanism` registry (design.md rule 3).
-//!
-//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
-//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
-//! impls for `WiresSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
-//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `WiresMutation`), and
-//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are computed,
-//! never authored). `NativeCodecs.{snapshot,diff,mutations,inferences}: LanguagePair { text: None,
-//! binary: None }` below leaves their `dsl::LanguageSpec` registration deferred — a real, supported
-//! shape per that type's own doc, matching the stdio pilot's identical documented deviation; the
-//! underlying codec impls these would point at are unchanged and independently tested either way.
+//! 🚪️ Wires native snapshot languages and owned artifact conversion routes.
+//! 📸️ Snapshot Text and Pack facets publish the literal flat domain records.
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
@@ -40,7 +26,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
     IoDeclaration {
         native: NativeCodecs {
-            snapshot: LanguagePair { text: None, binary: None },
+            snapshot: LanguagePair { text: Some(&snapshot_languages()[0]), binary: Some(&snapshot_languages()[1]) },
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
@@ -50,3 +36,10 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
+fn snapshot_languages()->&'static[dsl::LanguageSpec]{
+ static LANGUAGES:std::sync::OnceLock<Vec<dsl::LanguageSpec>>=std::sync::OnceLock::new();
+ LANGUAGES.get_or_init(||vec![
+ dsl::LanguageSpec{id:"reasoning.wires",extension:Some("wires"),role:dsl::LanguageRole::Document,grammar:Some(super::snapshot::text::COMPONENT_GRAMMAR_SEMIO),grammar_path:Some(super::snapshot::text::COMPONENT_GRAMMAR_PATH),protocol:Some(super::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(super::snapshot::binary::COMPONENT_PROTOCOL_PATH),hooks:dsl::passthrough_hooks("reasoning.wires")},
+ dsl::LanguageSpec{id:"reasoning.wires.pack",extension:None,role:dsl::LanguageRole::Pack,grammar:None,grammar_path:None,protocol:Some(super::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(super::snapshot::binary::COMPONENT_PROTOCOL_PATH),hooks:dsl::passthrough_hooks("reasoning.wires.pack")}
+ ]).as_slice()
+}

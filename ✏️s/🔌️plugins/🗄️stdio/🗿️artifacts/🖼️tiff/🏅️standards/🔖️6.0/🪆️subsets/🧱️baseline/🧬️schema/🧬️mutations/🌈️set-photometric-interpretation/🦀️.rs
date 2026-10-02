@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometr
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetPhotometricInterpretation(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

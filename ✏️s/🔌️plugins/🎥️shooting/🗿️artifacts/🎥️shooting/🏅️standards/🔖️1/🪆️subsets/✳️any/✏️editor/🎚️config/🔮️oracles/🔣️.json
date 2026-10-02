@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.shooting.shooting`'s editor (✏️editor/🎚️config): its mutation vocabulary `ShootingConfigMutation` over `ShootingConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-shooting-shooting-1-any-editor-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],
@@ -9,7 +9,7 @@
       "capabilities": [
         "shooting-shooting-1-any-editor-config-mutate"
       ],
-      "rationale": "`ShootingConfigMutation` is the config state lane of `s.shooting.shooting`'s ✏️editor/🎚️config surface: it holds the default shot and asset formats, the shot selection, the centre-model toggle, the viewport fit revision, the camera-label draft and the live camera. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-shot-selection`, `set-camera`, `set-center-model`, `set-camera-draft-label`, `replace-config`, `set-fit-revision`, `set-defaults`) changes exactly its own part of `ShootingConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "rationale": "`ShootingConfigMutation` is the config state lane of `s.shooting.shooting`'s ✏️editor/🎚️config surface: it holds the default shot and asset formats, the shot selection, the centre-model toggle, the viewport fit revision and the live camera. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-shot-selection`, `set-camera`, `set-center-model`, `replace-config`, `set-fit-revision`, `set-defaults`) changes exactly its own part of `ShootingConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -48,7 +48,6 @@
         "set-shot-selection",
         "set-camera",
         "set-center-model",
-        "set-camera-draft-label",
         "replace-config",
         "set-fit-revision",
         "set-defaults"
@@ -113,25 +112,6 @@
             "operation": "set-center-model",
             "bridgeVersion": 1,
             "variant": "SetCenterModel"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "shooting-shooting-1-any-editor-config-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-camera-draft-label",
-          "capability": "shooting-shooting-1-any-editor-config-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-camera-draft-label",
-            "bridgeVersion": 1,
-            "variant": "SetCameraDraftLabel"
           },
           "oracleRequirements": [
             {
@@ -460,71 +440,6 @@
       "reproducible": true,
       "family": "config-state-lane",
       "notes": "The owner's committed contract vector for `set-fit-revision` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
-    },
-    {
-      "schema": "semio.repository-test.fixture/v2",
-      "id": "set-camera-draft-label-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.shooting.shooting",
-        "standard": "1",
-        "subset": "any",
-        "surface": "✏️editor/🎚️config"
-      },
-      "mutation": "set-camera-draft-label",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "unitless"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/🏷️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:804d679ec08805d75879e67dd9308a7b148da825e87685d3432d7cd669e75b18",
-          "bytes": 365
-        },
-        {
-          "role": "mutation",
-          "path": "../🧫️fixtures/🏷️set-camera/✅️set/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:fdd226ffc9755ecfeba5195dfb1baefc6d394e6b82cff8053afe7d7fb18ba011",
-          "bytes": 61
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/🏷️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
-          "bytes": 375
-        },
-        {
-          "role": "expected-diff",
-          "path": "../🧫️fixtures/🏷️set-camera/✅️set/🔺️diff/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:6f05671e52d90a00e8229987e3d55a163d3211b62af3aa7dd10170c9eaced3a2",
-          "bytes": 375
-        },
-        {
-          "role": "declared-outcome",
-          "path": "../🧫️fixtures/🏷️set-camera/✅️set/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
-          "bytes": 44
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "config-state-lane",
-      "notes": "The owner's committed contract vector for `set-camera-draft-label` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
       "schema": "semio.repository-test.fixture/v2",

@@ -32,7 +32,7 @@ use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
+    use dsl::{DslValue, FromValue, ToValue};
     use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, Event, InvocationId, InvocationResult, MessageEndpoint, PluginInstanceId, UndoGroup};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -43,22 +43,17 @@ mod wasm_program_exchange {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn encode_wire<T: ToValue>(value: &T) -> Result<Vec<u8>, String> {
-        let dsl_value = to_dsl_value(value).map_err(|error| error.to_string())?;
-        Ok(pack_rt::encode_wire_value(&dsl_value))
+    fn encode_wire<T: ToValue>(value: &T) -> Vec<u8> {
+        pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(value))
     }
 
     fn decode_wire<T: FromValue>(bytes: &[u8]) -> Result<T, String> {
         let value = pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
-        from_dsl_value(value)
-    }
-
-    fn pack_view_state(view_state: &ViewModel) -> Result<Vec<u8>, String> {
-        encode_wire(view_state)
+        semio_framework_value::FromValue::from_value(value).map_err(|error| error.to_string())
     }
 
     fn app_frame_fault_summary(fault: &[u8]) -> String {
-        let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| from_dsl_value::<semio_framework::Fault>(value).ok());
+        let decoded = pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
         match decoded {
             Some(fault) => format!("{}: {}", fault.code.0, fault.message),
             None => String::from_utf8_lossy(fault).into_owned(),
@@ -75,7 +70,7 @@ mod wasm_program_exchange {
             return String::new();
         }
         let Ok(value) = pack_rt::decode_wire_value(report) else { return String::new() };
-        let Ok(decoded) = from_dsl_value::<protocol::DispatchReport>(value) else { return String::new() };
+        let Ok(decoded) = <protocol::DispatchReport as semio_framework_value::FromValue>::from_value(value) else { return String::new() };
         decoded
             .messages
             .iter()
@@ -297,7 +292,7 @@ mod wasm_program_exchange {
     pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let invocation: semio_framework::manifest::ActionInvocation = dsl::json::from_json_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
-        let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }];
+        let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation), view_state: encode_wire(view_state) }];
         let admission = client.reserve_product_replay_admission(instance_id)?;
         let mut outcome = exchange(client, instance_id, commands).await?;
         let replay = match outcome.take_product_replay_authority(instance_id, admission) {
@@ -326,7 +321,7 @@ mod wasm_program_exchange {
         let invocation: semio_framework::manifest::CommandInvocation = dsl::json::from_json_str(command_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let admission = client.reserve_product_replay_admission(instance_id)?;
-        let mut outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }]).await?;
+        let mut outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation), view_state: encode_wire(view_state) }]).await?;
         let replay = match outcome.take_product_replay_authority(instance_id, admission) {
             MountedProductReplayAdmission::None => None,
             MountedProductReplayAdmission::Admitted(authority) => Some(authority),
@@ -509,7 +504,7 @@ mod wasm_program_exchange {
     pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
         let kernel_surface = kernel_surface_id(instance_id, surface_id);
         let surface = SurfaceId::try_from(kernel_surface.as_str()).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
-        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: kernel_surface.clone(), body_key: body_key.to_string(), view_state: pack_view_state(view_state)? }]).await?;
+        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: kernel_surface.clone(), body_key: body_key.to_string(), view_state: encode_wire(view_state) }]).await?;
         if let Some(sink) = refresh_effects {
             sink.append(&mut outcome.effects);
         }
@@ -616,6 +611,7 @@ pub struct ProgramBridgeEntry {
 #[derive(Clone, Copy)]
 pub(crate) struct ProgramFixtureDocument {
     pub load: fn(u32, &protocol::DocumentArchivePack) -> Result<(), String>,
+    pub archive: fn(u32) -> Result<protocol::DocumentArchivePack, String>,
     pub history: fn(u32) -> Result<semio_framework::kernel::HistoryPatch, String>,
 }
 
@@ -843,6 +839,10 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, String> {
+        #[cfg(test)]
+        if let Some(document) = self.fixture_document {
+            return (document.archive)(instance_id);
+        }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_app_document_archive(client, instance_id).await,
@@ -1021,18 +1021,24 @@ impl ProgramBridgeEntry {
         }
     }
 
-    /// 🧾️ ticket §C5 — full history snapshot for an instance, native-only (mirrors every other
-    /// backbone/control call on this type; see `wasm_program_exchange::read_history`'s own doc).
-    #[cfg(not(target_arch = "wasm32"))]
+    /// 🧾️ ticket §C5 — full history snapshot for an instance: the native exchange's `ReadHistory`
+    /// (`wasm_program_exchange::read_history`), and on the browser build the JS bridge's `readHistory`, the same
+    /// command through the guest's `AppChannelClient` — what a restored document archive re-reads its rows and head from.
     pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
         #[cfg(test)]
         if let Some(document) = self.fixture_document {
             return (document.history)(instance_id);
         }
         match &self.backend {
+            #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_history(client, instance_id).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("read_history unavailable".into()),
+            ProgramBridgeBackend::Js(handle) => {
+                let args = Array::new();
+                args.push(&JsValue::from_f64(f64::from(instance_id)));
+                let text = call_js(handle, "readHistory", &args).await?.as_string().ok_or_else(|| "readHistory answered no JSON".to_string())?;
+                dsl::os_pack::json::from_json_str::<semio_framework::kernel::HistoryPatch>(&text).map_err(|error| error.to_string())
+            }
         }
     }
 }
@@ -1299,7 +1305,7 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
         });
     };
     let context_json = serde_json::json!({
-        "viewStatePack": view_state_pack_base64(view_state)?,
+        "viewStatePack": view_state_pack_base64(view_state),
         "actor": "local",
     })
     .to_string();
@@ -1354,7 +1360,7 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
 #[cfg(target_arch = "wasm32")]
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
-    let context_json = serde_json::json!({ "viewStatePack": view_state_pack_base64(view_state)?, "actor": "local" }).to_string();
+    let context_json = serde_json::json!({ "viewStatePack": view_state_pack_base64(view_state), "actor": "local" }).to_string();
     let invocation_pack = invocation_pack_base64(command_json)?;
     let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))? } else { result };
@@ -1406,7 +1412,7 @@ const BROWSER_DOCUMENT_ASSEMBLY_OPPORTUNITIES: usize = ui_contract::UI_DOCUMENT_
 #[cfg(target_arch = "wasm32")]
 async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
     let render = get_fn(handle.as_ref(), "renderDocument")?;
-    let view_json = view_state_pack_base64(view_state)?;
+    let view_json = view_state_pack_base64(view_state);
     let result = render
         .call4(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(surface_id), &JsValue::from_str(body_key), &JsValue::from_str(&view_json))
         .map_err(|error| format!("renderDocument failed: {}", describe_js_rejection(&error)))?;
@@ -1552,9 +1558,9 @@ fn invocation_pack_base64(invocation_json: &str) -> Result<String, String> {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn view_state_pack_base64(view_state: &ViewModel) -> Result<String, String> {
-    let value = dsl::to_dsl_value(view_state).map_err(|error| error.to_string())?;
-    Ok(dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value)))
+fn view_state_pack_base64(view_state: &ViewModel) -> String {
+    let value = semio_framework_value::ToValue::to_value(view_state);
+    dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value))
 }
 
 #[cfg(target_arch = "wasm32")]

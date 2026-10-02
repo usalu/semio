@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProjectUn
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {
         agg_inverse(&Ifc2x3Cv20Mutation::SetProjectUnits(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set project units", "Projekteinheiten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

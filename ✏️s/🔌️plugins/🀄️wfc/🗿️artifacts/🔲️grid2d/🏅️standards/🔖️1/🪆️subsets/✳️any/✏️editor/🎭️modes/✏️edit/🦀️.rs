@@ -3,7 +3,12 @@
 //! window binds its own definition and render in its own file.
 
 use crate::editor::grid2d::modes::edit::windows::{grid, preview};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, UtilityCategory, UtilityDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const GRID2D_EDIT_MODE_ID: &str = "edit";
 

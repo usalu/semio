@@ -1,6 +1,7 @@
 //! 🖼️ Shared semantic UI builders for procedural generation surfaces.
 
 use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_ui_locale::{Locale, Terminology};
 
 fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "fixed UI admission failed")

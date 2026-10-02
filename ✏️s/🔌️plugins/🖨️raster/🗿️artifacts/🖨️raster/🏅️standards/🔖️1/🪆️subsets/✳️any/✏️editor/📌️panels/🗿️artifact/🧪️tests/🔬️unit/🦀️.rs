@@ -20,7 +20,7 @@ fn oversized_document(top: usize, nested: usize) -> RasterDocument {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(document: &RasterDocument, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render(document, &RasterConfig::default(), &RasterPlayLabels::NATIVE_EN, &TreeWindows::for_body(&view, RASTER_PLAY_BODY_LAYERS)).expect("render the raster layer tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the raster layer tree")
 }
@@ -106,7 +106,7 @@ fn flatten_control_uses_the_current_language_and_artifact_command() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🥞️flatten-layers/🧫️fixtures/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let document=oversized_document(1,1);
-        let view=ViewModel::default();
+        let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
         let json=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
         assert!(json.contains(fixture["labels"][locale]["action"].as_str().unwrap()));
@@ -119,7 +119,7 @@ fn flatten_control_uses_the_current_language_and_artifact_command() {
 fn protected_tree_rows_remain_selectable_and_disable_structural_actions() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
-    let view=ViewModel {tree_windows:vec![open(RASTER_TREE_PREFIX,0,20),open(&nested_key("container"),0,20),open(&nested_key("locked-group"),0,20)],..Default::default()};
+    let view=ViewModel {tree_windows:vec![open(RASTER_TREE_PREFIX,0,20),open(&nested_key("container"),0,20),open(&nested_key("locked-group"),0,20)],..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)};
     for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
         let tree=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
         let mut pending=vec![&tree];let mut seen=0;
@@ -142,7 +142,7 @@ fn protected_tree_rows_remain_selectable_and_disable_structural_actions() {
 fn layer_creation_controls_include_nondestructive_adjustments_in_both_languages() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/➕️layer-creation/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
-        let document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();let view=ViewModel::default();
+        let document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let tree=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
         let json=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
         let projection:serde_json::Value=serde_json::from_str(&json).unwrap();let mut pending=vec![&projection];let mut found=0;
@@ -164,7 +164,7 @@ fn png_download_control_is_localized_and_not_disabled_by_layer_locks() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../📤️export/🧫️fixtures/🔣️.json")).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         let mut document=oversized_document(1,1);if let RasterLayerNode::Group {locked,..}=&mut document.layers[0]{*locked=true;}
-        let view=ViewModel::default();let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
+        let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
         let mut pending=vec![&node];let mut enabled=false;while let Some(item)=pending.pop(){if item.key.as_str()==format!("{RASTER_TREE_PREFIX}.export-png"){enabled=!item.disabled;}pending.extend(item.children.iter());}assert!(enabled);
         let json=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();assert!(json.contains(fixture["download"][locale].as_str().unwrap()));assert!(json.contains("exportPng"));
     }

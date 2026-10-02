@@ -23,4 +23,5 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 dsl_lsp = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

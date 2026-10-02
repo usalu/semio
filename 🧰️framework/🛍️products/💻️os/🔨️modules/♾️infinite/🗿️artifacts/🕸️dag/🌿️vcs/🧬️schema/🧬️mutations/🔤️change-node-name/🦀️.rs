@@ -21,8 +21,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeName {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ChangeNodeName(Self { id: self.id.clone(), new_name: node.name.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change node name {}", self.id), &format!("Knotenname {} ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change node name {}", self.id), &format!("Knotenname {} ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.id.clone()]

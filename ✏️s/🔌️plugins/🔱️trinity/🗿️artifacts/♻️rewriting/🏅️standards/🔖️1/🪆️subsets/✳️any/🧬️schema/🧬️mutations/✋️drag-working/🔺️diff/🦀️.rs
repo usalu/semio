@@ -10,8 +10,8 @@ pub fn diff(payload: &super::DragWorkingNodes, base: &RewritingSnapshot) -> prot
     }
     let moved = super::super::edit_working_graph_nodes(&base.before_fixture_json, &payload.targets, |node| {
         for (axis, offset) in [("x", payload.dx), ("y", payload.dy)] {
-            let at = node.get(axis).and_then(serde_json::Value::as_f64).unwrap_or(0.0);
-            node.insert(axis.to_string(), serde_json::Value::from(at + offset));
+            let at = node.get(axis).and_then(pack::JsonValue::as_f64).unwrap_or(0.0);
+            node.insert(axis, pack::JsonValue::from(at + offset));
         }
         true
     });

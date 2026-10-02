@@ -33,15 +33,15 @@ CREATE TABLE wfc2d_image (
 );
 CREATE TABLE wfc2d_slot (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL,
- x REAL, y REAL, width REAL, height REAL, pinned_tile_id INTEGER REFERENCES wfc2d_tile(id),
+ x REAL, y REAL, width REAL, height REAL, pinned_tile_id TEXT,
  x_ieee754_bits INTEGER NOT NULL, x_numeric_class TEXT NOT NULL, y_ieee754_bits INTEGER NOT NULL, y_numeric_class TEXT NOT NULL,
  width_ieee754_bits INTEGER NOT NULL, width_numeric_class TEXT NOT NULL, height_ieee754_bits INTEGER NOT NULL, height_numeric_class TEXT NOT NULL
 );
 CREATE TABLE wfc2d_slot_edge (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL,
- from_slot_id INTEGER NOT NULL REFERENCES wfc2d_slot(id), to_slot_id INTEGER NOT NULL REFERENCES wfc2d_slot(id), relation TEXT NOT NULL
+ from_slot_id TEXT NOT NULL, to_slot_id TEXT NOT NULL, relation TEXT NOT NULL
 );
 CREATE TABLE wfc2d_rule (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL,
- tile_a_id INTEGER NOT NULL REFERENCES wfc2d_tile(id), tile_b_id INTEGER NOT NULL REFERENCES wfc2d_tile(id), relation TEXT, allowed INTEGER NOT NULL CHECK(allowed IN (0,1))
+ tile_a_id TEXT NOT NULL, tile_b_id TEXT NOT NULL, relation TEXT, allowed INTEGER NOT NULL CHECK(allowed IN (0,1))
 );

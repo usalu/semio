@@ -1,8 +1,10 @@
 //! 🏷️ History row labels survive a reload, driven by the language-agnostic fixture
 //! `🧫️fixtures/🧫️history-label-reload/🔣️.json` whose cases the TypeScript twin (`🟦️.ts` beside this file) validates with
-//! Ajv and derives with its own implementation of the label rule: each command dispatches through the real typed lane,
-//! and its row reads the same English and German label live, after a text reload and after a pack reload, because the
-//! projection only reads persisted facts (the edit's locale-neutral `verb`, its description and its operations).
+//! Ajv and derives with its own implementation of the label rule: each command's emit publishes through the runtime's
+//! one publish seam (`dispatch_emit`, where every typed command's emit lands and the authoring verb is stamped), under a
+//! verb the app declares or one it does not (a peer's or another version's). Every row reads the same English and German
+//! label live, after a text reload and after a pack reload, because the projection only reads persisted facts (the edit's
+//! locale-neutral `verb`, its description and its operations).
 
 use super::*;
 use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
@@ -54,6 +56,17 @@ fn command(case: &Value) -> LabelReloadCommand {
     }
 }
 
+/// ✍️ The operations and description a fixture command authors.
+fn authored(command: &LabelReloadCommand) -> (Vec<TestMutation>, Option<String>) {
+    match command {
+        LabelReloadCommand::Rename { value } => (vec![set_label(value)], Some(format!("Renamed to {value}"))),
+        LabelReloadCommand::Retitle { value } => (vec![set_label(value)], Some(format!("Retitled to {value}"))),
+        LabelReloadCommand::Reset { value } => (vec![set_count(*value), set_label("reset")], None),
+        LabelReloadCommand::Count { value } => (vec![set_count(*value)], None),
+        LabelReloadCommand::Pair { value } => (vec![set_count(*value), set_label("pair")], None),
+    }
+}
+
 fn set_label(value: &str) -> TestMutation {
     SetLabel { value: value.to_string() }.into()
 }
@@ -102,19 +115,14 @@ impl ArtifactApp for LabelReloadApp {
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
-        _engines: &EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> ArtifactMutationOutcome<TestMutation, TestConfigMutation, NoDraftMutation> {
-        Ok(match command {
-            LabelReloadCommand::Rename { value } => Emit { artifact_mutations: vec![set_label(value)], description: Some(format!("Renamed to {value}")), ..Default::default() },
-            LabelReloadCommand::Retitle { value } => Emit { artifact_mutations: vec![set_label(value)], description: Some(format!("Retitled to {value}")), ..Default::default() },
-            LabelReloadCommand::Reset { value } => Emit { artifact_mutations: vec![set_count(*value), set_label("reset")], ..Default::default() },
-            LabelReloadCommand::Count { value } => Emit { artifact_mutations: vec![set_count(*value)], ..Default::default() },
-            LabelReloadCommand::Pair { value } => Emit { artifact_mutations: vec![set_count(*value), set_label("pair")], ..Default::default() },
-        })
+        let (artifact_mutations, description) = authored(command);
+        Ok(Emit { artifact_mutations, description, ..Default::default() })
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
+        built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -182,7 +190,7 @@ async fn manifest(fixture: &Value) -> App {
     for row in fixture["registry"].as_array().expect("registry") {
         builder = builder.mutation(text(&row["verb"]), LocalizedLabel::native(text(&row["label"]["en"]), text(&row["label"]["de"]))).await;
     }
-    App::from_builder(builder).await
+    App::from_builder(builder.interactive_jobs(semio_framework::InteractiveJobClassification::BatchOnlyPendingRewrite).await).await
 }
 
 /// 📜️ The edit rows of `app` in log order with their action id and English and German label.
@@ -203,17 +211,17 @@ async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
 
 /// ⚖️ LAW: every fixture command is one history row whose action id is its verb and whose English and German label are
 /// the fixture's, live, after a text reload and after a pack reload — an app-described, a verb-described and a
-/// leaf-described row alike — and the reloaded edits keep their verbs.
+/// leaf-described row alike — and the reloaded edits keep their verbs, declared by this app or not.
 #[semio_framework_async_macros::async_test]
 async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
     let fixture = fixture();
     let cases = fixture["cases"].as_array().expect("cases");
     let mut live = open(&fixture, "author").await;
-    let receiver = artifact_app_laws::meta("author").instance_id;
     for case in cases {
-        let meta = ActionMeta { view_state: Some(ViewModel::default()), ..artifact_app_laws::meta("author") };
-        live.dispatch_typed(command(case), &meta).await.unwrap_or_else(|fault| panic!("{}: {fault:?}", text(&case["id"])));
-        artifact_app_laws::settle_registered_typed_operation(&mut live, receiver).await.unwrap_or_else(|fault| panic!("{} settles: {fault:?}", text(&case["id"])));
+        let (id, verb) = (text(&case["id"]), text(&case["verb"]));
+        let (artifact_mutations, description) = authored(&command(case));
+        let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta("author") };
+        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations, description, ..Default::default() }, &meta).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();
     let verbs: Vec<Option<String>> = cases.iter().map(|case| Some(text(&case["verb"]).to_string())).collect();

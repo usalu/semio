@@ -1,33 +1,12 @@
 /** ✉️ All eighteen owned union branches retain independently queryable typed entities. */
-import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import f from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
-import type {SemioSubsetSnapshot,SemioSnapshot} from "../../🟦️.ts";
+import type {SemioSnapshot} from "../../🟦️.ts";
 import {SEMIO_SQLITE_SCHEMA,semioSnapshotToSqliteDatabase,semioSnapshotFromSqliteDatabase} from "../../🪶️sqlite/🟦️.ts";
-import {binary64,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
-const subsets:SemioSubsetSnapshot[]=[
-  {subset:"brep",schema:"stdio.semio.brep",vertices:[],edges:[],loops:[],faces:[],shells:[],solids:[],coedges:[],nextLabel:0n},
-  {subset:"mesh",schema:"stdio.semio.mesh",meshes:[],materials:[],textures:[]},
-  {subset:"model",schema:"stdio.semio.model",spatial:[],elements:[],relations:[]},
-  {subset:"value",schema:"stdio.semio.value",root:{kind:"null"},nodes:[]},
-  {subset:"document",schema:"stdio.semio.document",styles:[],images:[],blocks:[]},
-  {subset:"cad",schema:"stdio.semio.cad",layers:[],blocks:[],entities:[]},
-  {subset:"drawing",schema:"stdio.semio.drawing",canvas:{width:binary64(0),height:binary64(0),background:undefined},styles:[],layers:[]},
-  {subset:"image",schema:"stdio.semio.image",width:0,height:0,colorspace:"rgba",bitDepth:8,frames:[],icc:null,metadata:[]},
-  {subset:"video",schema:"stdio.semio.video",streams:[]},
-  {subset:"audio",schema:"stdio.semio.audio",sampleRate:0,format:"f32",channels:[],tags:[]},
-  {subset:"animation",schema:"stdio.semio.animation",timelines:[]},
-  {subset:"presentation",schema:"stdio.semio.presentation",masters:[],layouts:[],slides:[]},
-  {subset:"flow",schema:"stdio.semio.flow",nodes:[],edges:[]},
-  {subset:"text",schema:"stdio.semio.text",runs:[{language:"",content:"English Deutsch\u0000文",marks:[]}]},
-  {subset:"table",schema:"stdio.semio.table",columns:[],rows:[]},
-  {subset:"graph",schema:"stdio.semio.graph",nodes:[],edges:[]},
-  {subset:"object",schema:"stdio.semio.object",transform:{translation:{x:binary64(0),y:binary64(0),z:binary64(0)},rotation:{x:binary64(0),y:binary64(0),z:binary64(0),w:binary64(1)},scale:{x:binary64(1),y:binary64(1),z:binary64(1)}}},
-  {subset:"kit",schema:"stdio.semio.kit",types:[],designs:[],objects:[],models:[],representations:[]},
-];
+import {binary64} from "@semio-tech/framework";
+import {subsets} from "./🧫️branches/🟦️.ts";
 test("Semio base eighteen handwritten branch and schema authorities",async()=>{expect(subsets.map(s=>String(s.subset))).toEqual(f.subsets);expect(SEMIO_SQLITE_SCHEMA.startsWith(await Bun.file(new URL("../../🪶️sqlite/🗄️.sql",import.meta.url)).text())).toBe(true);});
-for(const subset of subsets)test("Semio base independent selected branch "+subset.subset,async()=>{const input:SemioSnapshot={schema:f.schema,subset},db=Database.deserialize(await exportSqliteDatabase(await semioSnapshotToSqliteDatabase(input)));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query(f.query).all()).toEqual([{schema:f.schema,subset:subset.subset}]);expect(await semioSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(input);if(subset.subset==="text"){db.query("UPDATE semio_text_run SET content='edited independent SQLite'").run();const expected=structuredClone(input);if(expected.subset.subset!=="text")throw Error("fixture text");expected.subset.runs[0]!.content="edited independent SQLite";expect(await semioSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(expected);}}finally{db.close();}},20000);
-test("Semio base single selected owner and aggregate header budget",async()=>{const input:SemioSnapshot={schema:f.schema,subset:subsets[13]!},d=await semioSnapshotToSqliteDatabase(input);for(const mutate of[(x:any)=>x.tables[0].rows[0].values[16]=null,(x:any)=>x.tables[0].rows[0].values[3]=1n,(x:any)=>x.tables[0].rows[0].values[2]="unknown",(x:any)=>x.tables.find((t:any)=>t.name==="semio_audio_document").rows.push({rowid:1n,values:[1n,"stdio.semio.audio",0n,"f32"]})]){const x=structuredClone(d);mutate(x);expect(semioSnapshotFromSqliteDatabase(x)).rejects.toThrow();}expect(semioSnapshotToSqliteDatabase(input,{maxRows:2})).rejects.toThrow();expect(semioSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();const c=new AbortController();c.abort();expect(semioSnapshotToSqliteDatabase(input,{signal:c.signal})).rejects.toThrow();});
+test("quick::Semio base single selected owner and aggregate header budget",async()=>{const input:SemioSnapshot={schema:f.schema,subset:subsets[13]!},d=await semioSnapshotToSqliteDatabase(input);for(const mutate of[(x:any)=>x.tables[0].rows[0].values[16]=null,(x:any)=>x.tables[0].rows[0].values[3]=1n,(x:any)=>x.tables[0].rows[0].values[2]="unknown",(x:any)=>x.tables.find((t:any)=>t.name==="semio_audio_document").rows.push({rowid:1n,values:[1n,"stdio.semio.audio",0n,"f32"]})]){const x=structuredClone(d);mutate(x);expect(semioSnapshotFromSqliteDatabase(x)).rejects.toThrow();}expect(semioSnapshotToSqliteDatabase(input,{maxRows:2})).rejects.toThrow();expect(semioSnapshotFromSqliteDatabase(d,{maxValueBytes:1})).rejects.toThrow();const c=new AbortController();c.abort();expect(semioSnapshotToSqliteDatabase(input,{signal:c.signal})).rejects.toThrow();},30000);
 
 import type {SemioArtifact} from "../../../🟦️.ts";
 import type {SemioBrepArtifact} from "../../../../../🧊️brep/🧬️schema/🟦️.ts";

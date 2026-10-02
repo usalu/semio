@@ -7,9 +7,9 @@
 //! INDEPENDENT `tobj` reader before the `semantic-mesh-v1` profile compares them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::geometry::{oracle_apply_mutation, oracle_document_projection, oracle_round_trip, oracle_snapshot_json};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
-use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
+use semio_s_artifact_stdio_obj_test_oracle::standards::v3_0::subsets::geometry::{oracle_apply_mutation, oracle_document_projection, oracle_round_trip, oracle_snapshot_json};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_plugin_stdio_mesh_test_oracle::project_obj;
 
 
 //#region 🔖️Input
@@ -247,7 +247,7 @@ mod subject {
     use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_obj::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, ObjMutation};
     use semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;

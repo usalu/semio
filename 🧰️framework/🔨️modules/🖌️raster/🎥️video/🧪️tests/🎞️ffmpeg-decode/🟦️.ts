@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { AvcPcmEncoder, bt601Cb, bt601Cr, bt601Luma, encodeVideoRuns } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 

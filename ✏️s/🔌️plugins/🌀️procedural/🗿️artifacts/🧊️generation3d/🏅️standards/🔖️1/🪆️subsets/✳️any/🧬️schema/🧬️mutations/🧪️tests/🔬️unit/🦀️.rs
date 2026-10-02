@@ -48,6 +48,12 @@ fn every_mutation() -> Vec<Generation3dMutation> {
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "generation-1".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "generation-1".into(), new_name: "Renamed".into() }),
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "generation-1".into(), question_id: "q1".into(), new_value: serde_json::json!(42).into() }),
+        change_slider_value::change_slider_value("height", 7.5),
+        drag_transforms::drag_transforms(vec!["extrude__gumball_translate".into()], [1.0, 0.0, 0.0]),
+        rotate_transforms::rotate_transforms(vec!["extrude__gumball_rotate".into()], [0.0, 0.0, 1.0], 0.5),
+        scale_transforms::scale_transforms(vec!["extrude__gumball_scale".into()], [2.0, 1.0, 1.0]),
+        move_nodes::move_nodes(vec!["extrude".into()], 4.0, -2.0),
+        change_widget_input::change_widget_input("extrude", "distance", change_widget_input::WidgetInputValue::Number(0.25)),
     ]
 }
 

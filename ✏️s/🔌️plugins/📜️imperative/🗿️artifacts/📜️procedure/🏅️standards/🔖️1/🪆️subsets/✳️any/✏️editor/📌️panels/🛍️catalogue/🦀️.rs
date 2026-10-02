@@ -3,7 +3,16 @@
 
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::IMPERATIVE_PLAY_APP_ID;
-use semio_framework_plugin::{tree_item_with_action, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";

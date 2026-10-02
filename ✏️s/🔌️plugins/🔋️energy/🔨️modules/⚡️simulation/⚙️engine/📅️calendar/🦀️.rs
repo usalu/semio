@@ -91,6 +91,14 @@ impl RunPeriod {
         hours
     }
 
+    /// 🗓️ Whether the period names a calendar interval of its year: both bounds are real dates of `year` and the start
+    /// does not lie after the end.
+    pub fn is_interval(&self) -> bool {
+        let leap = is_leap_year(self.year);
+        let exists = |month: u8, day: u8| (1..=12).contains(&month) && (1..=days_in_month(month, leap)).contains(&day);
+        exists(self.start_month, self.start_day) && exists(self.end_month, self.end_day) && (self.start_month, self.start_day) <= (self.end_month, self.end_day)
+    }
+
     /// 📅️ Iterator over (date, hour) pairs.
     pub fn hours(&self) -> RunPeriodHours {
         RunPeriodHours { current: SimDate::new(self.year, self.start_month, self.start_day), end: SimDate::new(self.year, self.end_month, self.end_day), hour: 0u8, index: 0u32, finished: false }

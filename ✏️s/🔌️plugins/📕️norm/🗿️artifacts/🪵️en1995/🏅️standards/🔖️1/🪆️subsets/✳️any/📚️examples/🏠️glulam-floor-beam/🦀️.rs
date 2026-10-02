@@ -1,6 +1,7 @@
 //! 📚️ Example compliant glulam floor beam with a bolted support connection (EN 1995-1-1, German annex).
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "glulam-floor-beam";
 pub fn label() -> LocalizedLabel {

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { leadingEmojiIdentity } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../🪪️identity/🧩️grapheme/🟦️.ts";
 
 const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
 

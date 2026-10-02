@@ -63,6 +63,8 @@ pub(crate) mod context {
     fn wires_manifest_for_tests() -> App {
         App { definition: create_wires_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
@@ -84,7 +86,7 @@ pub(crate) mod context {
     
     /// ♻️ Retires a seed envelope through its bounded owner retirement; an envelope may never reach `Drop` owning.
     pub fn retire_envelope(envelope: store::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
-        let mut retirement = store::retire_document_envelope(envelope, std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()));
+        let mut retirement = store::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()));
         while !matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("seed envelope retirement"), store::SnapshotRetirementStep::Complete) {}
         assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
@@ -116,7 +118,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
-        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let tree = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered tree")
     }
 }
@@ -357,7 +359,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     let mut instance_b = new_app().await;
     // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
     // as edits) so the only edits on the channel are A's and B's disjoint ones.
-    let seed_node = |id: &str| dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
+    let seed_node = |id: &str| semio_framework_value::ToValue::to_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }));
     let mut base = crate::empty_wires_snapshot();
     base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
     base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;

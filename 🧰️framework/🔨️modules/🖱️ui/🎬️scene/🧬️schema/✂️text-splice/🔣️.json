@@ -14,7 +14,8 @@
     "offsets",
     "hostTyping",
     "compositions",
-    "typingRuns"
+    "typingRuns",
+    "hostSignals"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -659,6 +660,45 @@
             "items": {
               "$ref": "#/definitions/splice"
             }
+          }
+        }
+      }
+    },
+    "hostSignals": {
+      "$comment": "How a text-editor host ends its typing run (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every host maps each signal to exactly this `typingCommit` reason, and every signal appears once.",
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "signal",
+          "commit",
+          "note"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "signal": {
+            "enum": [
+              "idle",
+              "caretMove",
+              "blur",
+              "hidden"
+            ]
+          },
+          "commit": {
+            "enum": [
+              "idle",
+              "selectionJump",
+              "blur",
+              "enter",
+              "hidden",
+              "apply",
+              "otherVerb"
+            ]
+          },
+          "note": {
+            "type": "string"
           }
         }
       }

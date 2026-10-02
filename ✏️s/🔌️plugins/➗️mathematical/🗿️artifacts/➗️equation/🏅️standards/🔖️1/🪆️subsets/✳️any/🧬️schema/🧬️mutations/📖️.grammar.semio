@@ -17,6 +17,8 @@ line = change-graph-directed
      / insert-point
      / remove-point
      / move-point
+     / move-nodes
+     / set-node-positions
 
 change-graph-directed = "change-graph-directed" SP boolean
 update-graph-algorithm = "update-graph-algorithm" SP text SP text?
@@ -32,6 +34,8 @@ replace-points = "replace-points" SP block
 insert-point = "insert-point" SP number SP number SP number
 remove-point = "remove-point" SP number
 move-point = "move-point" SP number SP number SP number
+move-nodes = "move-nodes" SP text SP number SP number
+set-node-positions = "set-node-positions" SP block
 
 id = OCTET+
 number = OCTET+

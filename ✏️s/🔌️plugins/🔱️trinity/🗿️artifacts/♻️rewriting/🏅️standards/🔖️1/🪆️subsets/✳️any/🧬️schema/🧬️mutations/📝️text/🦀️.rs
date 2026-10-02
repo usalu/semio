@@ -21,6 +21,9 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("PatchWorkingNodes", super::patch_working_nodes::text::TEXT_OPCODE),
     ("DragRuleNodes", super::drag_rule_nodes::text::TEXT_OPCODE),
     ("SetRuleLayoutPoints", super::set_rule_layout_points::text::TEXT_OPCODE),
+    ("DeleteWorkingNodes", super::delete_working_nodes::text::TEXT_OPCODE),
+    ("ConnectWorkingPorts", super::connect_working_ports::text::TEXT_OPCODE),
+    ("DisconnectWorkingEdges", super::disconnect_working_edges::text::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 
@@ -55,7 +58,7 @@ impl protocol::OpText for RewriteRuleMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -65,7 +68,7 @@ impl protocol::OpText for RewriteRuleMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

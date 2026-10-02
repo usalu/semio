@@ -1,6 +1,3 @@
-import delivery from "./📇️catalog.json" with { type: "json" };
-import metabolism from "../🌱️metabolism/🎨️representation/📇️catalog.json" with { type: "json" };
-
 export type MeshAsset = { readonly url: string; readonly source: string; readonly path: string };
 export type MeshDeliveryCatalog = readonly MeshAsset[];
 
@@ -68,15 +65,10 @@ export function parseMeshDeliveryCatalog(input: unknown, readCatalog: (path: str
   return Object.freeze(result);
 }
 
-export const MESH_DELIVERY_CATALOG = parseMeshDeliveryCatalog(delivery, path => {
-  if (path === "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json") return metabolism;
-  throw new Error(`Unknown mesh source catalog: ${path}`);
-});
-
 const indexes = new WeakMap<MeshDeliveryCatalog, ReadonlyMap<string, MeshAsset>>();
 
 /** 🔎️ Unknown and corrupted public mesh IDs are errors, never filename fallbacks. */
-export function resolveMeshAsset(url: string, catalog: MeshDeliveryCatalog = MESH_DELIVERY_CATALOG): MeshAsset {
+export function resolveMeshAsset(url: string, catalog: MeshDeliveryCatalog): MeshAsset {
   let index = indexes.get(catalog);
   if (!index) {
     index = new Map(catalog.map(entry => [entry.url, entry]));
@@ -88,6 +80,6 @@ export function resolveMeshAsset(url: string, catalog: MeshDeliveryCatalog = MES
 }
 
 /** 🌐️ Rewrites only the mesh namespace at the transport boundary; other asset domains retain ownership. */
-export function meshAssetTransportUrl(url: string, catalog: MeshDeliveryCatalog = MESH_DELIVERY_CATALOG): string {
+export function meshAssetTransportUrl(url: string, catalog: MeshDeliveryCatalog): string {
   return url.startsWith("/mesh/") ? `/mesh/${resolveMeshAsset(url, catalog).path}` : url;
 }

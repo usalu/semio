@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/dependency-policy-bootstrap-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases",
+    "freshness"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "taxonomy-link",
+              "taxonomy-parent-link",
+              "root-link",
+              "raw-missing-prefix",
+              "raw-linked-prefix",
+              "package-link",
+              "package-parent-link",
+              "plugin-root-link",
+              "plugin-absent",
+              "package-absent",
+              "package-invalid",
+              "root-ancestor-link",
+              "project-link",
+              "nx-link"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initialLocator",
+        "nextLocator",
+        "initialPlugins",
+        "nextPlugins",
+        "otherRootPlugins",
+        "owner",
+        "nextRole",
+        "nextExports",
+        "nextBannedStem"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initialLocator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextLocator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initialPlugins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "nextPlugins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "otherRootPlugins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextRole": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextExports": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "nextBannedStem": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

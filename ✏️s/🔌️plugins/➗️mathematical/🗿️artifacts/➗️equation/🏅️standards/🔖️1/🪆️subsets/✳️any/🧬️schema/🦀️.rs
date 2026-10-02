@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
 use crate::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 //#region 🔖️Artifact
 /// 🧬️ Full equation artifact across the artifact and config lanes. `notation`/`results`/
 /// `computed` mirror `EquationSnapshot`'s own composed-child slots (ticket
@@ -33,9 +33,9 @@ pub struct EquationArtifact {
 impl ToValue for EquationArtifact {
     fn to_value(&self) -> DslValue {
         DslValue::object([
-            ("notation".to_string(), to_dsl_value(&self.notation).unwrap_or(DslValue::Null)),
-            ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
-            ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
+            ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
+            ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
+            ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
             ("equation".to_string(), self.equation.to_value()),
         ])
     }
@@ -45,9 +45,9 @@ impl FromValue for EquationArtifact {
         let entries = DslValue::into_object(value)?;
         let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
-            notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
-            results: from_dsl_value(field("results")).map_err(ValueError::new)?,
-            computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
+            notation: semio_framework_value::FromValue::from_value(field("notation"))?,
+            results: semio_framework_value::FromValue::from_value(field("results"))?,
+            computed: semio_framework_value::FromValue::from_value(field("computed"))?,
             equation: EquationExprSnapshot::from_value(field("equation"))?,
         })
     }
@@ -85,25 +85,25 @@ impl EquationArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.mathematical.equation` — twenty handcrafted schema leaves.
-pub fn equation_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn equation_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.mathematical.equation",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

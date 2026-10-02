@@ -241,7 +241,7 @@ impl store::ArtifactPack for ProbeSnapshot {
 /// `From<DslValue> for serde_json::Value` conversions, reproducing exactly what a derived newtype
 /// struct encodes (the inner value, transparently).
 ///
-/// 🪲️ NEVER route this through `store::to_dsl_value`/`store::from_dsl_value`: since
+/// 🪲️ NEVER route this through `semio_framework_value::ToValue::to_value`/`semio_framework_value::FromValue::from_value`: since
 /// `🌱️value/🦀️.rs`'s serde-elimination those are `Ok(value.to_value())` / `T::from_value(value)`,
 /// so an impl that calls them is a two-frame infinite recursion that aborts the process with
 /// `fatal runtime error: stack overflow` the first time a probe document is committed. See
@@ -2591,7 +2591,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                 AppCommand::ReadHistory => match self.exchange_one_real(instance, store::AppCommand::ReadHistory { seq: 0 })? {
                     store::AppFrame::HistorySnapshot { history_patch, .. } => {
                         let value = store::pack_rt::decode_wire_value(&history_patch).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
-                        let patch: semio_framework::kernel::HistoryPatch = store::from_dsl_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
+                        let patch: semio_framework::kernel::HistoryPatch = semio_framework_value::FromValue::from_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
                         AppFrame::HistorySnapshot(RevisionStamp {
                             artifact_id: self.stamped_artifact_id(),
                             head_edit_id: patch.upserts.iter().find(|entry| entry.applied).map(|entry| entry.action_id.clone()).unwrap_or_default(),
@@ -3078,7 +3078,7 @@ fn guest_sqlite_import(schema: &str, dialect: &semio_framework::io_schema::Artif
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let limits = control.limits();
-    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding)?;
+    io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control)?;
     let bytes = sqlite_snapshot::export_sqlite_database(&database, limits, &mut |progress| control.checkpoint(progress.phase, progress.completed, progress.total).is_ok()).map_err(|error| IoError::from(error.to_string()))?;
     let cancel = GuestCallCancellation::default();
     let _reactor = hub_socket_reactor().map_err(|error| IoError::from(error.to_string()))?.enter();

@@ -354,5 +354,6 @@ async function main(argv: readonly string[]): Promise<number> {
   return 0;
 }
 
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
+// 🚰️ `exitCode`, never `process.exit()`: an explicit exit cuts a still-draining piped stdout at 64 KiB.
+if (import.meta.main) process.exitCode = await main(process.argv.slice(2));
 //#endregion 🚀️Entry

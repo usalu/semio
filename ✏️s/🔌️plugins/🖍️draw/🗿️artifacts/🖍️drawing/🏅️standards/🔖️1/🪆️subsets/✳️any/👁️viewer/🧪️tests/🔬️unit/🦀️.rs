@@ -99,7 +99,7 @@ fn drawing_viewer_camera_payload_validation_matches_the_host_shape() {
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_opens_and_closes_its_document_through_the_artifacts_owners() {
     let mut app = semio_framework_plugin::artifact_app_laws::new_viewer::<DrawingViewer>().await;
-    let tree = semio_framework_plugin::PluginApp::render(&mut app, canvas::BODY_KEY, None, &semio_framework_plugin::ViewModel::default()).await.expect("the viewer renders its default document");
+    let tree = semio_framework_plugin::PluginApp::render(&mut app, canvas::BODY_KEY, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("the viewer renders its default document");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the canvas projects");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

@@ -69,67 +69,32 @@ impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowHostSnapshot
 //#endregion 🔹DefaultsAndBridge
 
 //#region 🔹HandcraftedArtifactCodecs
-/// ✉️ ArtifactDsl — JSON body under envelope id `flow.flow`.
-///
-/// Does not call `semio_framework_artifact_flow_flow::FlowHostSnapshot`'s codecs: that framework type still emits envelope id `flow`,
-/// which `SemioEnvelope::from_envelope_id` rejects (`plugin.artifact` required). Fixup belongs in
-/// `semio-framework-os-flow`; this plugin snapshot owns a valid envelope of its own.
+/// ✉️ Literal persisted parent and child fields under the owned record grammar.
 impl store::ArtifactDsl for FlowSnapshot {
-    const EXTENSION: &'static str = "flow";
-    fn envelope_id() -> &'static str {
-        "flow.flow"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let trimmed = body.trim_start();
-        if trimmed.starts_with('{') {
-            let json: serde_json::Value = serde_json::from_str(trimmed).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-            let value: dsl::DslValue = json.into();
-            return dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)));
-        }
-        <semio_framework_artifact_flow_flow::FlowHostSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_host_snapshot)
-    }
-    fn print_dsl(&self) -> String {
-        let value = dsl::ToValue::to_value(self);
-        let json: serde_json::Value = value.into();
-        let body = serde_json::to_string_pretty(&json).expect("FlowSnapshot serde");
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
+ const EXTENSION:&'static str="flow";
+ fn envelope_id()->&'static str{"flow.flow"}
+ fn parse_dsl(text:&str)->Result<Self,store::TextError>{
+  let body=store::semio_format::split_text_preamble(text).map(|(_,body)|body).unwrap_or(text);
+  let record=dsl::parse(body,&Self::__dsl_spec(),&dsl::ParseOptions{limits:dsl::Limits::default(),mode:dsl::SourceMode::Document})?;Self::__dsl_from_record(&record)
+ }
+ fn print_dsl(&self)->String{
+  let body=dsl::print(&self.__dsl_to_record(),&Self::__dsl_spec(),dsl::JoinMode::Document);
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).expect("valid envelope identity");store::semio_format::wrap_text(&envelope,&body)
+ }
 }
-
-/// 📦️ ArtifactPack — JSON body under envelope id `flow.flow` (see ArtifactDsl note).
-impl store::ArtifactPack for FlowSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let value = dsl::ToValue::to_value(self);
-        let json: serde_json::Value = value.into();
-        let body = serde_json::to_vec(&json).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &body))
-    }
-    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        let our_id = <Self as store::ArtifactDsl>::envelope_id();
-        if !envelope.matches_identity(our_id, store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {our_id}.pack v1, got {}", envelope.binary_token())));
-        }
-        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        let value: dsl::DslValue = json.into();
-        dsl::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
-    }
-    /// 🧬️ The structural fingerprint `ArtifactCodec::pack_schema_hash` (`codec.pack-schema-hash`), the describe gate and the
-    /// hub's trusted catalog pin the `flow.host_snapshot` kind by — the snapshot record's own fields (`schema` + the composed
-    /// `content` child handle), derived by `dsl::DslRecord` above, exactly as stdio's hand-rolled `txt` codec does. The JSON
-    /// pack body is unaffected: the hash fingerprints the SNAPSHOT RECORD, not the pack container. `None` here made describe
-    /// refuse the whole bundle ("none of its 1 declared artifact kinds is owned"), since W4's identity set keyed the kind on
-    /// `FLOW_DOCUMENT_SCHEMA`.
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
+/// 📦️ Typed physical Pack record for the same six literal strings.
+impl store::ArtifactPack for FlowSnapshot{
+ fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
+  let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e|store::PackError::Schema(e.to_string()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
+ }
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
+  let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::Schema(e.to_string()))?;
+  if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::Schema("Flow pack identity differs".into()))}
+  let(record,_)=store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+ }
+ fn record_spec()->Option<dsl::RecordSpec>{Some(Self::__dsl_spec())}
 }
 //#endregion 🔹HandcraftedArtifactCodecs
 

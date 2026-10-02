@@ -63,7 +63,7 @@ import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from ${JSON.stringify(activationModule)};
 import { artifactFiles } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts"))};
-import { stageArtifacts } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"))};
+import { stageRepositoryArtifacts } from ${JSON.stringify(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"))};
 const fixture = ${JSON.stringify(fixture)}, repoRoot = process.cwd();
 const [operation, variant = fixture.variant, renderer = "wgpu", profile = fixture.profile] = process.argv.slice(2), moduleRoot = join(repoRoot, "modules", profile);
 const FONT_ASSET = "fonts.bin", MODULE_BRIDGE_FILE = "bridge.js", PREVIEW2_VENDOR_RELATIVE = "support", MODULE_SHARD_DIRECTORY = "shards", SHARD_WORKER_FILE = "worker.js";

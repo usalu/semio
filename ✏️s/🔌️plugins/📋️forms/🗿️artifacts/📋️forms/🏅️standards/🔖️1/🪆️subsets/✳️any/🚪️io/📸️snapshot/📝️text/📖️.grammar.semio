@@ -1,27 +1,24 @@
 dialect grammar
 grammar forms.forms
 extension forms
-use family-scene
 start document
+comment none
 
-# Real grammar for `FormsSnapshot::print_dsl`/`parse_dsl`: the derived spec-driven text of
-# `FormsSnapshot`'s own `dsl::DslRecord` spec (📝️text/🦀️.rs), the same record the pack encodes.
-# Definition and responses are durable. Fields are space-separated `key=value` tokens in any order; `title` is optional. A composed child
-# handle is the `ArtifactChild` record printed inline:
-# `child_id=<id> target=<artifactId>!<kind>@<standard>/<subset>`. A parsed document must also pass
-# `FormsSnapshot::validate`.
-artifact-mark = "semio forms.form.dsl v1"
-document = artifact-mark field*
-field = {"schema" "=" TEXT} | {"id" "=" TEXT} | {"version" "=" TEXT} | {"title" "=" TEXT} | {"definition" "=" definition} | {"responses" "=" "[" response* "]"} | {"structure" "=" child-handle} | {"results" "=" child-handle}
-child-handle = {"child_id" "=" TEXT} {"target" "=" TEXT}
-definition = {"steps" "=" "[" step* "]"}
-step = {"id" "=" TEXT} {"title" "=" TEXT} {"description" "=" TEXT}? {"blocks" "=" "[" question* "]"}
-question = {"id" "=" TEXT} {"label" "=" TEXT} {"kind" "=" TEXT} question-field*
-question-field = question-name "=" value | "condition" "{" expression? "}"
-question-name = "description" | "required" | "placeholder" | "default" | "min" | "max" | "step" | "unit" | "text" | "options" | "fields" | "schema" | "src" | "accept" | "fixture-slug" | "params"
-response = {"id" "=" TEXT} {"submitted-at" "=" TEXT} {"definition-version" "=" TEXT} {"answers" "=" "[" answer* "]"}
-answer = {"question-id" "=" TEXT} {"label" "=" TEXT} {"kind" "=" TEXT} {"value" "=" value}
-value = TEXT | "[" item* "]" | "{" entry* "}"
-item = entry | value
-entry = TEXT "=" value
-expression = {"const" "value" "=" value} | {"var" "name" "=" TEXT} | {"eq" "left" "{" expression "}" "right" "{" expression "}"} | {("and" | "or") "items" "{" expression* "}"} | {"truthy" "expr" "{" expression "}"}
+document = "semio" "forms.form.dsl" "v1" snapshot
+snapshot = "schema" "=" text "id" "=" text "version" "=" text {"title" "=" text}? "structure" "=" child "results" "=" child "steps" "=" "[" step* "]" "responses" "=" "[" response* "]" "values" "=" "[" value* "]" "conditions" "=" "[" condition* "]"
+child = "child_id" "=" text "target" "=" reference
+reference = "artifact-id" "=" text "artifact-kind" "=" text "standard" "=" text "subset" "=" text
+step = "{" "id" "=" text "title" "=" text {"description" "=" text}? "questions" "=" "[" question* "]" "}"
+question = "{" "id" "=" text "label" "=" text "kind" "=" text {"description" "=" text}? {"required" "=" boolean}? {"placeholder" "=" text}? {"default" "=" INT}? {"min" "=" number}? {"max" "=" number}? {"step" "=" number}? {"unit" "=" text}? {"text" "=" text}? {"options" "=" "[" option* "]"}? {"fields" "=" "[" vector* "]"}? {"schema" "=" text}? {"src" "=" text}? {"accept" "=" text}? {"fixture-slug" "=" text}? {"params" "=" INT}? {"condition" "=" INT}? "}"
+option = "{" "value" "=" text "label" "=" text "}"
+vector = "{" "key" "=" text {"label" "=" text}? {"value" "=" number}? "}"
+response = "{" "id" "=" text "submitted-at" "=" INT "definition-version" "=" text "answers" "=" "[" answer* "]" "}"
+answer = "{" "question-id" "=" text "label" "=" text "kind" "=" text "value" "=" INT "}"
+value = "{" "kind" "=" value-kind {"boolean" "=" boolean}? {"unsigned" "=" INT}? {"signed" "=" INT}? {"float-bits" "=" INT}? {"text" "=" text}? {"bytes" "=" text}? "items" "=" "[" INT* "]" "members" "=" "[" member* "]" "}"
+member = "{" "name" "=" text "value" "=" INT "}"
+condition = "{" "kind" "=" condition-kind {"value" "=" INT}? {"name" "=" text}? {"left" "=" INT}? {"right" "=" INT}? {"expression" "=" INT}? "items" "=" "[" INT* "]" "}"
+value-kind = "null" | "boolean" | "unsigned" | "signed" | "float" | "text" | "bytes" | "array" | "object"
+condition-kind = "const" | "var" | "eq" | "and" | "or" | "truthy"
+boolean = "true" | "false"
+number = FLOAT | INT | IDENT
+text = IDENT | TEXT

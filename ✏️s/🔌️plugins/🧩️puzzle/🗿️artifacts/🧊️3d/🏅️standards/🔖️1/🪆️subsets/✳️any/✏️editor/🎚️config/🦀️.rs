@@ -309,12 +309,12 @@ impl store::ArtifactDsl for Puzzle3dConfig {
 
 impl store::ArtifactPack for Puzzle3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map_err(store::PackError::Schema)
+        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 

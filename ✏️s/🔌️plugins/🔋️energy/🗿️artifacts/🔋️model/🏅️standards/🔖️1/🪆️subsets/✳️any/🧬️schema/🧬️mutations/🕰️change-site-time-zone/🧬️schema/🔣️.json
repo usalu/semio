@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-time-zone/schema.json",
+  "title": "ChangeSiteTimeZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newTimeZoneHours"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteTimeZone"
+    },
+    "newTimeZoneHours": {
+      "type": "number",
+      "minimum": -12,
+      "maximum": 14,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Time zone",
+          "de": "Zeitzone"
+        },
+        "description": {
+          "en": "Offset from UTC, -12 to 14 h.",
+          "de": "Abweichung von UTC, -12 bis 14 h."
+        },
+        "unit": "h",
+        "step": 0.25,
+        "precision": 2,
+        "softMin": -12,
+        "softMax": 14,
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

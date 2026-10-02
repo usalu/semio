@@ -23,7 +23,7 @@ const PANE: (f32, f32, f32, f32) = (534.4, 54.4, 1062.4, 913.6);
 const AIM: (f32, f32) = (PANE.0 + PANE.2 * 0.7, PANE.1 + PANE.3 * 0.45);
 
 fn shell_with_pane() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let _ = shell.world3d_states.try_insert("puzzle3d-main-perspective".into(), World3dState::new("puzzle3d-main-perspective".into(), "app.controller".into()));
     if let Some(state) = shell.world3d_states.get_mut("puzzle3d-main-perspective") {
         state.bounds = Rect::new(PANE.0, PANE.1, PANE.2, PANE.3);
@@ -86,10 +86,10 @@ fn a_wheel_outside_every_scene_rect_stays_with_the_chrome_that_owns_it() {
 //#region ⎋️DismissableLayers
 
 fn shell_with_escape_binding() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "engagementAbort".into(), args: None } }];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -97,7 +97,7 @@ fn shell_with_escape_binding() -> ShellState {
 /// picker — and says so, so the caller can decide whether the chord carries on.
 #[test]
 fn escape_dismisses_every_open_dismissable_layer_at_once() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(!shell.dismiss_dismissable_layers(), "⎋️ nothing open, nothing dismissed");
     shell.overlay_state = OverlayState::Dropdown("example".into());
     shell.open_selects.insert("widget.select".into(), true);
@@ -113,7 +113,7 @@ fn escape_dismisses_every_open_dismissable_layer_at_once() {
 #[test]
 fn the_palette_and_find_overlays_are_not_dismissable_layers() {
     for overlay in [OverlayState::Search, OverlayState::Find] {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.overlay_state = overlay.clone();
         assert!(!shell.dismiss_dismissable_layers(), "🧯️ {overlay:?} is a dialog, not a dismissable layer");
         assert_eq!(shell.overlay_state, overlay);
@@ -160,10 +160,10 @@ fn escape_under_an_open_picker_still_reaches_the_app_keybinding_rung() {
 /// and `redo` (`🗑️generated/w12c-parity-run-17/`).
 #[test]
 fn an_unowned_app_chord_falls_through_to_the_framework_edit_verbs() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "mod+z".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "undo".into(), args: None } }];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers { meta: true, ..PointerModifiers::default() };
 

@@ -1,5 +1,6 @@
+use semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12;
 
-use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_dxf_r12};
+use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip};
 use semio_repo_test_host::parse_json;
 
 const FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🚏️bus-shelter/🖊️.dxf");

@@ -18,7 +18,7 @@
 //   bun 📜️script.ts jpg-project --input <a.jpg>
 //   bun 📜️script.ts jpg-compare --input <expected.jpg> --input <actual.jpg>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🔬️probes/📜️script.ts — the sibling probe
 //      suite this file's CLI/dispatch/compare shape is mirrored from.
 // @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls,

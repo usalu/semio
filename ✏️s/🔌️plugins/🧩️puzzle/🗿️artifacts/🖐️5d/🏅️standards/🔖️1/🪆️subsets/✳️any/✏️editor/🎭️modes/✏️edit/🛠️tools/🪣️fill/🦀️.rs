@@ -13,7 +13,11 @@
 use crate::editor::puzzle5d::modes::edit::options::brush::distribution_children;
 use crate::editor::puzzle5d::terminology::{puzzle5d_fill_run_counters, puzzle5d_fill_run_reasons, puzzle5d_fill_run_stages, puzzle5d_fill_run_unit, Puzzle5dLabels};
 use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::{ActionDescriptor, LocalizedLabel, ToolDefinition, ToolRunView, WindowMeasure};
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunTraceKind, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
 
 //#region 🔖️Constants

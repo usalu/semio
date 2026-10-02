@@ -50,6 +50,8 @@ pub(crate) mod context {
         app.bind_instance_id(meta("local").instance_id).await;
         FlowAppFixture(app)
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("flow", FlowPlayApp, || semio_framework_plugin::App { definition: create_flow_app(), examples: Vec::new() }, "../..");
     
     /// 🧪️ Installs a hand-authored `flow.extension` manifest fixture (a "math" module contributing the
     /// `math.add` operator) so tests exercising the catalogue/extension surfaces have something real
@@ -117,7 +119,7 @@ pub(crate) mod context {
                 window_id: Some(window.id.clone()),
                 active_window_kind_id: Some(window.window_kind_id.clone()),
                 window_instances: vec![window],
-                ..Default::default()
+                ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             }),
             ..meta("local")
         }
@@ -164,7 +166,7 @@ pub(crate) mod context {
     
     pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
         let window = semio_framework_plugin::ViewWindowInstance { id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() };
-        let view = ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..Default::default() };
+        let view = ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         app.window_measures(&view).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
     
@@ -230,7 +232,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     let accepted = &fixture["accepted"][0]["command"];
     let started = dispatch(
         &mut app,
-        FlowCommand::AddWidget(add_widget::AddWidget { kind: accepted["kind"].as_str().expect("kind").to_string(), neuron_kind: accepted["neuronKind"].as_str().map(str::to_string), x: accepted["x"].as_f64(), y: accepted["y"].as_f64() }),
+        FlowCommand::AddWidget(add_widget::AddWidget { kind: accepted["kind"].as_str().expect("kind").to_string(), neuron_kind: accepted["neuronKind"].as_str().map(str::to_string), x: accepted["x"].as_f64(), y: accepted["y"].as_f64(), label: None, action: None, format: None }),
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
@@ -325,7 +327,7 @@ fn action_cohort_fixtures_match_the_exact_route_census() {
 
 async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or(Value::Null)
+    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
 
 //#region 🔖️CommandSurface
@@ -369,7 +371,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let cases: [(FlowCommand, &str, &str); 3] = [
-        (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
+        (FlowCommand::AddWidget(add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("math.add".into()), x: None, y: None, label: None, action: None, format: None }), "add-widget kind=neuron neuron-kind=math.add", "010002086d6174682e616464066e6575726f6e02000601010600"),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `SetGridVisible`'s binary
         // ordinal shifted 24 (0x18) → 18 (0x12) — seven rows ahead of it in `FlowCommand`
         // (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
@@ -392,7 +394,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 pub(super) fn every_command() -> Vec<FlowCommand> {
     use semio_framework_artifact_flow_flow::CameraJson;
     vec![
-        FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
+        FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None, label: None, action: None, format: None }),
         FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
         FlowCommand::DuplicateWidget(duplicate_widget::DuplicateWidget { widget_id: "n1".into() }),
         FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}),
@@ -404,12 +406,12 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
         FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations: vec![
-                node_graph_edit::FlowNodeGraphEditOp::SetHostSnapshot { host_snapshot_json: "{}".into() },
-                node_graph_edit::FlowNodeGraphEditOp::DeleteSelection,
+                node_graph_edit::FlowNodeGraphEditOp::Delete { node_ids: vec!["n1".into()], synapse_ids: vec!["s1".into()] },
+                node_graph_edit::FlowNodeGraphEditOp::InsertPort { node_id: "n2".into(), side: "input".into(), index: 1 },
                 node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
             ],
         }),
-        FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
+        FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::Disconnect { synapse_id: "s1".into() }] }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
         FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
         FlowCommand::Evaluate(evaluate::Evaluate {}),
@@ -506,7 +508,7 @@ async fn undo_restores_fixture_after_add_widget() {
     let receiver = meta("local").instance_id;
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
     let before = flow_child_node_count(&app, &child_id).await;
-    dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
+    dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
     settle_registered_typed_operation(&mut *app, receiver).await.expect("addWidget child publication");
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
     settle_history_verb(&mut *app, "undo", receiver).await;
@@ -622,9 +624,9 @@ async fn two_instances_converge_on_disjoint_edits() {
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0) }), &metadata_a).await.expect("a applies its edit");
+    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &metadata_b).await.expect("b applies its disjoint edit");
+    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b).await.expect("b applies its disjoint edit");
     settle_registered_typed_operation(&mut *instance_b, metadata_b.instance_id).await.expect("b's edit publishes");
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
@@ -763,7 +765,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");

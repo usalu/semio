@@ -26,13 +26,45 @@ use crate::op::NoteMutation;
 use crate::schema::empty_note_snapshot;
 use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
-    WindowMeasure,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 👁️✏️ C2 §2.1: the hand-written app id is retired — the canonical surface id
@@ -46,11 +78,11 @@ pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 //#endregion 🔖️Constants
 
 //#region 🧬️AppSchema
-fn note_app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
-    framework_schema::AppSchemaDescriptor {
+fn note_app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDescriptor {
+    semio_framework_schema_registry::AppSchemaDescriptor {
         id: "s.note.note",
-        config: framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
-        presence: framework_schema::FacetLeaves {
+        config: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" },
+        presence: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("👥️presence/🧬️schema/🔗️.graphql"),
@@ -546,7 +578,7 @@ impl ArtifactEditor for NotePlayApp {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(note_app_schema_descriptor())
     }
 
@@ -959,7 +991,7 @@ pub(crate) mod unit_tests;
 
 
 /// 🏷️ Admits Note display text into a bounded semantic label.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_locale::Label> {
     value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
 }
 

@@ -27,8 +27,8 @@
     "annex": {
       "type": "string",
       "enum": [
-        "en",
-        "de"
+        "En",
+        "De"
       ],
       "x-semio-state": "artifact"
     },
@@ -1024,7 +1024,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "boltsPerRow": {
           "type": "integer",
@@ -1037,7 +1038,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "pitch": {
           "type": "number",
@@ -1106,7 +1108,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "plateThickness": {
           "type": "number",
@@ -1261,7 +1264,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -1304,7 +1308,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         },
         "method": {
           "type": "string",
@@ -1916,7 +1921,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         },
         "method": {
           "type": "string",

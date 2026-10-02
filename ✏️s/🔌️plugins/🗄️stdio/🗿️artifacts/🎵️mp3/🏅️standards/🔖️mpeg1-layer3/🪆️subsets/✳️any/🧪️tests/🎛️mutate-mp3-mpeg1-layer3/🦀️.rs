@@ -14,8 +14,8 @@
 //! that merely projects and returns passes whenever the reference did not error.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_mp3};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_mp3};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable, reparsed_not_copied, round_trip_preserves_within};
 
 
 //#region 🔖️Profile
@@ -87,11 +87,11 @@ mod subject {
     use super::{mutable_input, MP3_TOLERANCE, MP3_WRITER_FREEDOM};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::io::{decode_mp3, encode_mp3};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_mp3::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::{apply_mp3_mutation, Mp3Mutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::project_mp3;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
+    use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores_within, round_trip_preserves_within};
 
     //#region 🔖️Mutation
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read

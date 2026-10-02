@@ -1,6 +1,10 @@
 //! ✍️ Fill and submit a form in a dedicated window layout.
 use crate::editor::forms::modes::blueprint::windows::try_wizard::FORMS_PLAY_WINDOW_TRY;
-use semio_framework_plugin::{create_default_layout, create_named_layout, LocalizedLabel, ModeDefinition, NamedLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_plugin::create_named_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::NamedLayout;
 
 pub const MODE: &str = "fill";
 pub const LAYOUT: &str = "forms-fill";

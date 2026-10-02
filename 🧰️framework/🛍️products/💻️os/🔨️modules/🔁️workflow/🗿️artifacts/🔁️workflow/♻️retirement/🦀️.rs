@@ -1,8 +1,8 @@
 //! ♻️ Field-by-field retirement for the workflow types owned by this module.
 
 use super as workflow;
-use store::os_store::retirement::{leaf, sequence, RetireOwned, RetirementCursor};
-use store::{artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
+use semio_framework_value::retirement::{leaf, sequence, RetireOwned, RetirementCursor};
+use semio_framework_value::{artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
 retire_struct!(workflow::WorkflowNodePosition { node_id, x, y });
 retire_struct!(workflow::WorkflowNode { id, plugin_id, app_id, label, yields, artifact_ref, config_ref, x, y, width, height, inputs, outputs });

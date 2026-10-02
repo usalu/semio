@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeBetaComput
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change computed reliability index β", "Berechneten Zuverlässigkeitsindex β ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change computed reliability index β", "Berechneten Zuverlässigkeitsindex β ändern")
     }
 }
 //#endregion 🔖️Payload

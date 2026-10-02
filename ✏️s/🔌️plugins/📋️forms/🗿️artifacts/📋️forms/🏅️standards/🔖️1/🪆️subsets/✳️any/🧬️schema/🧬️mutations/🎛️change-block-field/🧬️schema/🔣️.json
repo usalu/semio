@@ -2,7 +2,23 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-block-field/schema.json",
   "title": "ChangeBlockField",
-  "description": "Sets ONE field of one question to an absolute value (null clears an optional field).",
+  "description": "Sets ONE field of one question to an absolute value (null clears an optional field). Payload-intrinsic breaches are hard bounds; the base-dependent ones the diff refuses as `mutation.invariant` are declared in `x-semio-invariant`.",
+  "x-semio-invariant": [
+    {
+      "id": "bounds-ordered",
+      "description": {
+        "en": "The question's minimum never exceeds its maximum.",
+        "de": "Das Minimum der Frage überschreitet nie ihr Maximum."
+      }
+    },
+    {
+      "id": "default-answers-kind",
+      "description": {
+        "en": "A default is a value the question's kind can answer.",
+        "de": "Ein Standardwert ist ein Wert, den der Fragetyp beantworten kann."
+      }
+    }
+  ],
   "oneOf": [
     {
       "type": "object",
@@ -1150,6 +1166,7 @@
             "object",
             "null"
           ],
+          "additionalProperties": {},
           "x-semio-ui": {
             "role": "value",
             "label": {
@@ -1225,7 +1242,7 @@
         "value": {
           "oneOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Expression"
+              "$ref": "#/$defs/Expression"
             },
             {
               "type": "null"
@@ -1503,5 +1520,268 @@
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "Expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "const",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "value": {
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Value",
+                  "de": "Wert"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Constant",
+              "de": "Konstante"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "var",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "name": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Question",
+                  "de": "Frage"
+                },
+                "description": {
+                  "en": "Id of the question whose answer is read.",
+                  "de": "ID der Frage, deren Antwort gelesen wird."
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Answer of",
+              "de": "Antwort von"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "left",
+            "right"
+          ],
+          "properties": {
+            "kind": {
+              "const": "eq",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "left": {
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Left",
+                  "de": "Links"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            },
+            "right": {
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Right",
+                  "de": "Rechts"
+                },
+                "group": "condition",
+                "order": 30
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Equals",
+              "de": "Gleich"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expr"
+          ],
+          "properties": {
+            "kind": {
+              "const": "truthy",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "expr": {
+              "$ref": "#/$defs/Expression",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Expression",
+                  "de": "Ausdruck"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Is set",
+              "de": "Ist gesetzt"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "and",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Expression"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Conditions",
+                  "de": "Bedingungen"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "All of",
+              "de": "Alle von"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "or",
+              "x-semio-ui": {
+                "widget": "hidden",
+                "role": "discriminator",
+                "label": {
+                  "en": "Kind",
+                  "de": "Art"
+                }
+              }
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Expression"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Conditions",
+                  "de": "Bedingungen"
+                },
+                "group": "condition",
+                "order": 20
+              }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Any of",
+              "de": "Eines von"
+            }
+          }
+        }
+      ]
+    }
+  }
 }

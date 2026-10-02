@@ -1,0 +1,1285 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "factory": "dwg_xrecord_value_spec",
+      "owner": "DwgXRecordValue",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "string",
+              "ordinal": 0
+            },
+            {
+              "label": "real",
+              "ordinal": 1
+            },
+            {
+              "label": "boolean",
+              "ordinal": 2
+            },
+            {
+              "label": "integer8",
+              "ordinal": 3
+            },
+            {
+              "label": "integer16",
+              "ordinal": 4
+            },
+            {
+              "label": "integer32",
+              "ordinal": 5
+            },
+            {
+              "label": "integer64",
+              "ordinal": 6
+            },
+            {
+              "label": "point3d",
+              "ordinal": 7
+            },
+            {
+              "label": "binary",
+              "ordinal": 8
+            },
+            {
+              "label": "handle",
+              "ordinal": 9
+            },
+            {
+              "label": "objectId",
+              "ordinal": 10
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "group_code",
+          "optional": false,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "string_value",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "real_value",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "boolean_value",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "integer_value",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "point_value",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 7,
+          "key": "binary_octets",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 8,
+          "key": "handle_value",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_table_control_entry_spec",
+      "owner": "DwgTableControlEntry",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "has_handle",
+          "optional": false,
+          "labels": []
+        },
+        {
+          "id": 1,
+          "key": "handle",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "table_control_body_spec",
+      "owner": "DwgTableControlBody",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 1,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "block",
+              "ordinal": 0
+            },
+            {
+              "label": "layer",
+              "ordinal": 1
+            },
+            {
+              "label": "textStyle",
+              "ordinal": 2
+            },
+            {
+              "label": "linetype",
+              "ordinal": 3
+            },
+            {
+              "label": "view",
+              "ordinal": 4
+            },
+            {
+              "label": "ucs",
+              "ordinal": 5
+            },
+            {
+              "label": "viewport",
+              "ordinal": 6
+            },
+            {
+              "label": "registeredApplication",
+              "ordinal": 7
+            },
+            {
+              "label": "dimensionStyle",
+              "ordinal": 8
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "key": "entries",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "block",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "linetype",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "dimensionStyle",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_complex_color_value_spec",
+      "owner": "DwgComplexColorValue",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "none",
+              "ordinal": 0
+            },
+            {
+              "label": "byLayer",
+              "ordinal": 1
+            },
+            {
+              "label": "byBlock",
+              "ordinal": 2
+            },
+            {
+              "label": "byColor",
+              "ordinal": 3
+            },
+            {
+              "label": "byAci",
+              "ordinal": 4
+            },
+            {
+              "label": "byPen",
+              "ordinal": 5
+            },
+            {
+              "label": "foreground",
+              "ordinal": 6
+            },
+            {
+              "label": "layerOff",
+              "ordinal": 7
+            },
+            {
+              "label": "layerFrozen",
+              "ordinal": 8
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "red",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "green",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "blue",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "index",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "table_record_body_spec",
+      "owner": "DwgTableRecordBody",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 1,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "registeredApplication",
+              "ordinal": 0
+            },
+            {
+              "label": "textStyle",
+              "ordinal": 1
+            },
+            {
+              "label": "layer",
+              "ordinal": 2
+            },
+            {
+              "label": "linetype",
+              "ordinal": 3
+            },
+            {
+              "label": "blockHeader",
+              "ordinal": 4
+            },
+            {
+              "label": "viewport",
+              "ordinal": 5
+            },
+            {
+              "label": "dimensionStyle",
+              "ordinal": 6
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "key": "registeredApplication",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "textStyle",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "layer",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "linetype",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "blockHeader",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 7,
+          "key": "viewport",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 8,
+          "key": "dimensionStyle",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_evaluation_variant_spec",
+      "owner": "DwgEvaluationVariant",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "integer32",
+              "ordinal": 0
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "integer32",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_evaluation_expression_value_spec",
+      "owner": "DwgEvaluationExpressionValue",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "empty",
+              "ordinal": 0
+            },
+            {
+              "label": "double",
+              "ordinal": 1
+            },
+            {
+              "label": "pointGroup10",
+              "ordinal": 2
+            },
+            {
+              "label": "pointGroup11",
+              "ordinal": 3
+            },
+            {
+              "label": "string",
+              "ordinal": 4
+            },
+            {
+              "label": "integer32",
+              "ordinal": 5
+            },
+            {
+              "label": "objectReference",
+              "ordinal": 6
+            },
+            {
+              "label": "integer16",
+              "ordinal": 7
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "double",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "point_group_10",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "point_group_11",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "string",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "integer32",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "object_reference",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 7,
+          "key": "integer16",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_visual_style_property_spec",
+      "owner": "DwgVisualStyleProperty",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "value",
+          "optional": false,
+          "labels": []
+        },
+        {
+          "id": 1,
+          "key": "operation",
+          "optional": false,
+          "labels": [
+            {
+              "label": "inherit",
+              "ordinal": 0
+            },
+            {
+              "label": "set",
+              "ordinal": 1
+            },
+            {
+              "label": "disable",
+              "ordinal": 2
+            },
+            {
+              "label": "enable",
+              "ordinal": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "factory": "dwg_constraint_node_spec",
+      "owner": "DwgConstraintNode",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "constrainedImplicitPoint",
+              "ordinal": 0
+            },
+            {
+              "label": "pointCurveConstraint",
+              "ordinal": 1
+            },
+            {
+              "label": "constrainedBoundedLine",
+              "ordinal": 2
+            },
+            {
+              "label": "pointCoincidenceConstraint",
+              "ordinal": 3
+            },
+            {
+              "label": "distanceConstraint",
+              "ordinal": 4
+            },
+            {
+              "label": "perpendicularConstraint",
+              "ordinal": 5
+            },
+            {
+              "label": "horizontalConstraint",
+              "ordinal": 6
+            },
+            {
+              "label": "parallelConstraint",
+              "ordinal": 7
+            },
+            {
+              "label": "midPointConstraint",
+              "ordinal": 8
+            },
+            {
+              "label": "equalLengthConstraint",
+              "ordinal": 9
+            },
+            {
+              "label": "colinearConstraint",
+              "ordinal": 10
+            },
+            {
+              "label": "constrainedDatumLine",
+              "ordinal": 11
+            },
+            {
+              "label": "fixedConstraint",
+              "ordinal": 12
+            },
+            {
+              "label": "verticalConstraint",
+              "ordinal": 13
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "constrained_implicit_point",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "geometric_constraint",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "constrained_bounded_line",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "distance_constraint",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "axis_constraint",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "constrained_datum_line",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_entity_body_spec",
+      "owner": "DwgEntityBody",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "line",
+              "ordinal": 0
+            },
+            {
+              "label": "arc",
+              "ordinal": 1
+            },
+            {
+              "label": "lwPolyline",
+              "ordinal": 2
+            },
+            {
+              "label": "blockBegin",
+              "ordinal": 3
+            },
+            {
+              "label": "blockEnd",
+              "ordinal": 4
+            },
+            {
+              "label": "insert",
+              "ordinal": 5
+            },
+            {
+              "label": "dimensionLinear",
+              "ordinal": 6
+            },
+            {
+              "label": "viewport",
+              "ordinal": 7
+            },
+            {
+              "label": "point",
+              "ordinal": 8
+            },
+            {
+              "label": "circle",
+              "ordinal": 9
+            },
+            {
+              "label": "ellipse",
+              "ordinal": 10
+            },
+            {
+              "label": "text",
+              "ordinal": 11
+            },
+            {
+              "label": "spline",
+              "ordinal": 12
+            },
+            {
+              "label": "face3d",
+              "ordinal": 13
+            },
+            {
+              "label": "polyline3d",
+              "ordinal": 14
+            },
+            {
+              "label": "polyfaceMesh",
+              "ordinal": 15
+            },
+            {
+              "label": "vertex",
+              "ordinal": 16
+            },
+            {
+              "label": "polyfaceFace",
+              "ordinal": 17
+            },
+            {
+              "label": "sequenceEnd",
+              "ordinal": 18
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "line",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "arc",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "lw_polyline",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "block_begin",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "block_end",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "insert",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 7,
+          "key": "dimension_linear",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 8,
+          "key": "viewport",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 9,
+          "key": "point",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 10,
+          "key": "circle",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 11,
+          "key": "ellipse",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 12,
+          "key": "text",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 13,
+          "key": "spline",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 14,
+          "key": "face3d",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 15,
+          "key": "polyline3d",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 16,
+          "key": "polyface_mesh",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 17,
+          "key": "vertex",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 18,
+          "key": "polyface_face",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 19,
+          "key": "sequence_end",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    },
+    {
+      "factory": "dwg_logical_object_body_spec",
+      "owner": "DwgLogicalObjectBody",
+      "keyword": null,
+      "layout": "inline",
+      "fields": [
+        {
+          "id": 0,
+          "key": "kind",
+          "optional": false,
+          "labels": [
+            {
+              "label": "dictionary",
+              "ordinal": 0
+            },
+            {
+              "label": "tableControl",
+              "ordinal": 1
+            },
+            {
+              "label": "tableRecord",
+              "ordinal": 2
+            },
+            {
+              "label": "xrecord",
+              "ordinal": 3
+            },
+            {
+              "label": "entity",
+              "ordinal": 4
+            },
+            {
+              "label": "associativeDependency",
+              "ordinal": 5
+            },
+            {
+              "label": "associativeValueDependency",
+              "ordinal": 6
+            },
+            {
+              "label": "associativeGeometryDependency",
+              "ordinal": 7
+            },
+            {
+              "label": "blockGripLocationComponent",
+              "ordinal": 8
+            },
+            {
+              "label": "dynamicBlockProxyNode",
+              "ordinal": 9
+            },
+            {
+              "label": "associativeVariable",
+              "ordinal": 10
+            },
+            {
+              "label": "associativeDimensionDependencyBody",
+              "ordinal": 11
+            },
+            {
+              "label": "visualStyle",
+              "ordinal": 12
+            },
+            {
+              "label": "blockParameterDependencyBody",
+              "ordinal": 13
+            },
+            {
+              "label": "blockRepresentationData",
+              "ordinal": 14
+            },
+            {
+              "label": "dynamicBlockPurgePreventer",
+              "ordinal": 15
+            },
+            {
+              "label": "evaluationGraph",
+              "ordinal": 16
+            },
+            {
+              "label": "blockFlipParameter",
+              "ordinal": 17
+            },
+            {
+              "label": "blockVisibilityParameter",
+              "ordinal": 18
+            },
+            {
+              "label": "placeholder",
+              "ordinal": 19
+            },
+            {
+              "label": "dictionaryVariable",
+              "ordinal": 20
+            },
+            {
+              "label": "annotationScale",
+              "ordinal": 21
+            },
+            {
+              "label": "sortEntitiesTable",
+              "ordinal": 22
+            },
+            {
+              "label": "tableStyle",
+              "ordinal": 23
+            },
+            {
+              "label": "mlineStyle",
+              "ordinal": 24
+            },
+            {
+              "label": "mLeaderStyle",
+              "ordinal": 25
+            },
+            {
+              "label": "material",
+              "ordinal": 26
+            },
+            {
+              "label": "blockMoveAction",
+              "ordinal": 27
+            },
+            {
+              "label": "assocNetwork",
+              "ordinal": 28
+            },
+            {
+              "label": "assoc2dConstraintGroup",
+              "ordinal": 29
+            },
+            {
+              "label": "blockLinearParameter",
+              "ordinal": 30
+            },
+            {
+              "label": "blockLinearGrip",
+              "ordinal": 31
+            },
+            {
+              "label": "blockFlipGrip",
+              "ordinal": 32
+            },
+            {
+              "label": "blockVisibilityGrip",
+              "ordinal": 33
+            },
+            {
+              "label": "blockAlignmentParameter",
+              "ordinal": 34
+            },
+            {
+              "label": "blockAlignmentGrip",
+              "ordinal": 35
+            },
+            {
+              "label": "blockStretchAction",
+              "ordinal": 36
+            },
+            {
+              "label": "blockScaleAction",
+              "ordinal": 37
+            },
+            {
+              "label": "blockFlipAction",
+              "ordinal": 38
+            },
+            {
+              "label": "blockBasePointParameter",
+              "ordinal": 39
+            },
+            {
+              "label": "blockVerticalConstraintParameter",
+              "ordinal": 40
+            },
+            {
+              "label": "blockHorizontalConstraintParameter",
+              "ordinal": 41
+            },
+            {
+              "label": "layout",
+              "ordinal": 42
+            }
+          ]
+        },
+        {
+          "id": 1,
+          "key": "dictionary",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 2,
+          "key": "table_control",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 3,
+          "key": "table_record",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 4,
+          "key": "xrecord",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 5,
+          "key": "entity",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 6,
+          "key": "associative_dependency",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 7,
+          "key": "associative_value_dependency",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 8,
+          "key": "associative_geometry_dependency",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 9,
+          "key": "block_grip_location_component",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 10,
+          "key": "dynamic_block_proxy_node",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 11,
+          "key": "associative_variable",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 12,
+          "key": "associative_dimension_dependency_body",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 13,
+          "key": "visual_style",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 14,
+          "key": "block_parameter_dependency_body",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 15,
+          "key": "block_representation_data",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 16,
+          "key": "dynamic_block_purge_preventer",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 17,
+          "key": "evaluation_graph",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 18,
+          "key": "block_flip_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 19,
+          "key": "block_visibility_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 20,
+          "key": "placeholder",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 21,
+          "key": "dictionary_variable",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 22,
+          "key": "annotation_scale",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 23,
+          "key": "sort_entities_table",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 24,
+          "key": "table_style",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 25,
+          "key": "mline_style",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 26,
+          "key": "m_leader_style",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 27,
+          "key": "material",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 28,
+          "key": "block_move_action",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 29,
+          "key": "assoc_network",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 30,
+          "key": "assoc_2d_constraint_group",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 31,
+          "key": "block_linear_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 32,
+          "key": "block_linear_grip",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 33,
+          "key": "block_flip_grip",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 34,
+          "key": "block_visibility_grip",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 35,
+          "key": "block_alignment_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 36,
+          "key": "block_alignment_grip",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 37,
+          "key": "block_stretch_action",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 38,
+          "key": "block_scale_action",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 39,
+          "key": "block_flip_action",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 40,
+          "key": "block_base_point_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 41,
+          "key": "block_vertical_constraint_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 42,
+          "key": "block_horizontal_constraint_parameter",
+          "optional": true,
+          "labels": []
+        },
+        {
+          "id": 43,
+          "key": "layout",
+          "optional": true,
+          "labels": []
+        }
+      ]
+    }
+  ],
+  "genericWitnesses": [
+    {
+      "type": "u32",
+      "valueShape": "UInt"
+    },
+    {
+      "type": "DwgTableControlEntry",
+      "valueShape": "Record"
+    }
+  ]
+}

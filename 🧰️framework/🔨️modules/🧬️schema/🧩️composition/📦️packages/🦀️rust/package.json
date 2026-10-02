@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/schema-composition-rs",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/schema-composition-rs:test --skip-nx-cache",
+    "test-quick": "bun nx run @semio-tech/schema-composition-rs:test-quick --skip-nx-cache",
+    "test-long": "bun nx run @semio-tech/schema-composition-rs:test-long --skip-nx-cache",
+    "test-exhaustive": "bun nx run @semio-tech/schema-composition-rs:test-exhaustive --skip-nx-cache"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution to the repository test platform: the `image` 0.25 reference codec registered specifically for JFIF 1.01 mutation coverage (distinct from the shared `image-jpeg` entry's `jpg-raster` capability), the exhaustive JpgMutation vocabulary it is measured against, and the coarse-tolerance comparison profile a lossy round trip through two independently written codecs needs.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
       "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🦀️oracle.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
           "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
@@ -1912,5 +1912,6 @@
       "family": "jpg-carrier",
       "notes": "PatchSnapshot{edits:[set /jfifXDensity = 300]} is the editor's compact path-addressed patch: the JFIF APP0 horizontal density changes in place and every other member stays untouched."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

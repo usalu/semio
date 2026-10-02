@@ -1,9 +1,403 @@
 {
   "mutation": "replaceDense",
   "dense": {
-    "positions": "AAAAAAAAAAAAAAAAAACAPQAAAD0AAAC+AAAAPgAAgD0AAIC+AABAPgAAwD0AAMC+AACAPgAAAD4AAAC/AACgPgAAID4AACC/AADAPgAAQD4AAEC/AADgPgAAYD4AAGC/AAAAPwAAgD4AAIC/AAAQPwAAkD4AAJC/AAAgPwAAoD4AAKC/AAAwPwAAsD4AALC/AABAPwAAwD4AAMC/AABQPwAA0D4AANC/AABgPwAA4D4AAOC/AABwPwAA8D4AAPC/AACAPwAAAD8AAADAAACIPwAACD8AAAjAAACQPwAAED8AABDAAACYPwAAGD8AABjAAACgPwAAID8AACDAAACoPwAAKD8AACjAAACwPwAAMD8AADDAAAC4PwAAOD8AADjA",
-    "colors": "ABEiM0RVZneImaq7zN3u/xAhMkNUZXaHmKm6y9zt/g8gMUJTZHWGl6i5ytvs/Q4fMEFSY3SFlqe4ydrr/A0eL0BRYnOElaa3",
-    "confidence": "AACAPgAAoD4AAMA+AADgPgAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AACAPgAAoD4AAMA+AADgPgAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/",
-    "classification": "BgICAgIGAgICAgYCAgICBgICAgIGAgIC"
+    "positions": {
+      "kind": "inline",
+      "values": [
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "3d800000"
+        },
+        {
+          "bits": "3d000000"
+        },
+        {
+          "bits": "be000000"
+        },
+        {
+          "bits": "3e000000"
+        },
+        {
+          "bits": "3d800000"
+        },
+        {
+          "bits": "be800000"
+        },
+        {
+          "bits": "3e400000"
+        },
+        {
+          "bits": "3dc00000"
+        },
+        {
+          "bits": "bec00000"
+        },
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "3e000000"
+        },
+        {
+          "bits": "bf000000"
+        },
+        {
+          "bits": "3ea00000"
+        },
+        {
+          "bits": "3e200000"
+        },
+        {
+          "bits": "bf200000"
+        },
+        {
+          "bits": "3ec00000"
+        },
+        {
+          "bits": "3e400000"
+        },
+        {
+          "bits": "bf400000"
+        },
+        {
+          "bits": "3ee00000"
+        },
+        {
+          "bits": "3e600000"
+        },
+        {
+          "bits": "bf600000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "bf800000"
+        },
+        {
+          "bits": "3f100000"
+        },
+        {
+          "bits": "3e900000"
+        },
+        {
+          "bits": "bf900000"
+        },
+        {
+          "bits": "3f200000"
+        },
+        {
+          "bits": "3ea00000"
+        },
+        {
+          "bits": "bfa00000"
+        },
+        {
+          "bits": "3f300000"
+        },
+        {
+          "bits": "3eb00000"
+        },
+        {
+          "bits": "bfb00000"
+        },
+        {
+          "bits": "3f400000"
+        },
+        {
+          "bits": "3ec00000"
+        },
+        {
+          "bits": "bfc00000"
+        },
+        {
+          "bits": "3f500000"
+        },
+        {
+          "bits": "3ed00000"
+        },
+        {
+          "bits": "bfd00000"
+        },
+        {
+          "bits": "3f600000"
+        },
+        {
+          "bits": "3ee00000"
+        },
+        {
+          "bits": "bfe00000"
+        },
+        {
+          "bits": "3f700000"
+        },
+        {
+          "bits": "3ef00000"
+        },
+        {
+          "bits": "bff00000"
+        },
+        {
+          "bits": "3f800000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "c0000000"
+        },
+        {
+          "bits": "3f880000"
+        },
+        {
+          "bits": "3f080000"
+        },
+        {
+          "bits": "c0080000"
+        },
+        {
+          "bits": "3f900000"
+        },
+        {
+          "bits": "3f100000"
+        },
+        {
+          "bits": "c0100000"
+        },
+        {
+          "bits": "3f980000"
+        },
+        {
+          "bits": "3f180000"
+        },
+        {
+          "bits": "c0180000"
+        },
+        {
+          "bits": "3fa00000"
+        },
+        {
+          "bits": "3f200000"
+        },
+        {
+          "bits": "c0200000"
+        },
+        {
+          "bits": "3fa80000"
+        },
+        {
+          "bits": "3f280000"
+        },
+        {
+          "bits": "c0280000"
+        },
+        {
+          "bits": "3fb00000"
+        },
+        {
+          "bits": "3f300000"
+        },
+        {
+          "bits": "c0300000"
+        },
+        {
+          "bits": "3fb80000"
+        },
+        {
+          "bits": "3f380000"
+        },
+        {
+          "bits": "c0380000"
+        }
+      ]
+    },
+    "colors": [
+      0,
+      17,
+      34,
+      51,
+      68,
+      85,
+      102,
+      119,
+      136,
+      153,
+      170,
+      187,
+      204,
+      221,
+      238,
+      255,
+      16,
+      33,
+      50,
+      67,
+      84,
+      101,
+      118,
+      135,
+      152,
+      169,
+      186,
+      203,
+      220,
+      237,
+      254,
+      15,
+      32,
+      49,
+      66,
+      83,
+      100,
+      117,
+      134,
+      151,
+      168,
+      185,
+      202,
+      219,
+      236,
+      253,
+      14,
+      31,
+      48,
+      65,
+      82,
+      99,
+      116,
+      133,
+      150,
+      167,
+      184,
+      201,
+      218,
+      235,
+      252,
+      13,
+      30,
+      47,
+      64,
+      81,
+      98,
+      115,
+      132,
+      149,
+      166,
+      183
+    ],
+    "confidence": {
+      "kind": "inline",
+      "values": [
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "3ea00000"
+        },
+        {
+          "bits": "3ec00000"
+        },
+        {
+          "bits": "3ee00000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "3f100000"
+        },
+        {
+          "bits": "3f200000"
+        },
+        {
+          "bits": "3f300000"
+        },
+        {
+          "bits": "3f400000"
+        },
+        {
+          "bits": "3f500000"
+        },
+        {
+          "bits": "3f600000"
+        },
+        {
+          "bits": "3f700000"
+        },
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "3ea00000"
+        },
+        {
+          "bits": "3ec00000"
+        },
+        {
+          "bits": "3ee00000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "3f100000"
+        },
+        {
+          "bits": "3f200000"
+        },
+        {
+          "bits": "3f300000"
+        },
+        {
+          "bits": "3f400000"
+        },
+        {
+          "bits": "3f500000"
+        },
+        {
+          "bits": "3f600000"
+        },
+        {
+          "bits": "3f700000"
+        }
+      ]
+    },
+    "classification": [
+      6,
+      2,
+      2,
+      2,
+      2,
+      6,
+      2,
+      2,
+      2,
+      2,
+      6,
+      2,
+      2,
+      2,
+      2,
+      6,
+      2,
+      2,
+      2,
+      2,
+      6,
+      2,
+      2,
+      2
+    ]
   }
 }

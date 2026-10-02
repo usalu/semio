@@ -6,8 +6,9 @@
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
+use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
+    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
 use crate::editor::puzzle3d::precompute::geometry::{

@@ -1,10 +1,54 @@
-/** 🗿️ En1990Artifact — hierarchical basis-of-design subject (SI: N, m, Hz). */
+/** 🧬️ `En1990Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireArray, normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
-export type AnnexChoice = "En" | "De";
+export interface En1990Artifact {
+  /** @state artifact */
+  annex: "En" | "De";
+  /** @state artifact */
+  projectId: string;
+  /** @state artifact */
+  structureKind: string;
+  /** @state artifact */
+  altitudeM: number;
+  /** @state artifact */
+  consequenceClass: number;
+  /** @state artifact */
+  reliabilityClass: number;
+  /** @state artifact */
+  designWorkingLifeCategory: number;
+  /** @state artifact */
+  designWorkingLifeYears: number;
+  /** @state artifact */
+  referencePeriodYears: number;
+  /** @state artifact */
+  supervisionLevel: string;
+  /** @state artifact */
+  inspectionLevel: string;
+  /** @state artifact */
+  kFiDeclared: number;
+  /** @state artifact */
+  betaComputed: number;
+  /** @state artifact */
+  permanents: PermanentAction[];
+  /** @state artifact */
+  variables: VariableAction[];
+  /** @state artifact */
+  accidentals: AccidentalAction[];
+  /** @state artifact */
+  seismics: SeismicAction[];
+  /** @state artifact */
+  members: Member[];
+  /** @state artifact */
+  bridgeSls: BridgeSls[];
+  /** @state artifact */
+  effects: MemberEffect[];
+}
 
 export interface PermanentAction {
   id: string;
-  kind: string;
+  kind: "g_sup" | "g_inf" | "prestress";
   gk: number;
 }
 
@@ -19,12 +63,10 @@ export interface AccidentalAction {
   ad: number;
 }
 
-export type ImportanceClass = "I" | "II" | "III" | "IV";
-
 export interface SeismicAction {
   id: string;
   aEk: number;
-  importanceClass: ImportanceClass;
+  importanceClass: "I" | "II" | "III" | "IV";
 }
 
 export interface Member {
@@ -43,6 +85,12 @@ export interface Member {
   vibrationFrequencyMin: number;
 }
 
+export interface MemberEffect {
+  memberId: string;
+  actionId: string;
+  influence: number;
+}
+
 export interface BridgeSls {
   id: string;
   memberId: string;
@@ -54,207 +102,11 @@ export interface BridgeSls {
   bridgeDeflectionLimit: number;
 }
 
-export interface MemberEffect {
-  memberId: string;
-  actionId: string;
-  influence: number;
-}
-
-export interface En1990Artifact {
-  annex: AnnexChoice;
-  projectId: string;
-  structureKind: string;
-  altitudeM: number;
-  consequenceClass: number;
-  reliabilityClass: number;
-  designWorkingLifeCategory: number;
-  designWorkingLifeYears: number;
-  referencePeriodYears: number;
-  supervisionLevel: string;
-  inspectionLevel: string;
-  kFiDeclared: number;
-  betaComputed: number;
-  permanents: PermanentAction[];
-  variables: VariableAction[];
-  accidentals: AccidentalAction[];
-  seismics: SeismicAction[];
-  members: Member[];
-  bridgeSls: BridgeSls[];
-  effects: MemberEffect[];
-}
-
-export type En1990Snapshot = En1990Artifact;
-
-/** 🧱 Typed structural parse error for En1990 artifact JSON. */
-export class En1990ParseError extends Error {
-  readonly path: string;
-  readonly code: "not_object" | "missing" | "mistyped" | "invalid_enum";
-
-  constructor(code: En1990ParseError["code"], path: string, detail: string) {
-    super(`${code} at ${path}: ${detail}`);
-    this.name = "En1990ParseError";
-    this.path = path;
-    this.code = code;
-  }
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function expectObject(value: unknown, at: string): Record<string, unknown> {
-  if (!isObject(value)) {
-    throw new En1990ParseError("not_object", at, `expected object, got ${typeof value}`);
-  }
-  return value;
-}
-
-function expectString(value: unknown, at: string): string {
-  if (typeof value !== "string") {
-    throw new En1990ParseError("mistyped", at, `expected string, got ${typeof value}`);
-  }
-  return value;
-}
-
-function expectNumber(value: unknown, at: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new En1990ParseError("mistyped", at, `expected finite number, got ${typeof value}`);
-  }
-  return value;
-}
-
-function expectUnsigned8(value: unknown, at: string): number {
-  const number = expectNumber(value, at);
-  if (!Number.isInteger(number) || number < 0 || number > 255) throw new En1990ParseError("mistyped", at, "expected unsigned8 integer");
-  return number;
-}
-
-function requireKey(obj: Record<string, unknown>, key: string, at: string): unknown {
-  if (!(key in obj)) {
-    throw new En1990ParseError("missing", `${at}.${key}`, `required field '${key}' is missing`);
-  }
-  return obj[key];
-}
-
-function expectArray(value: unknown, at: string): unknown[] {
-  if (!Array.isArray(value)) {
-    throw new En1990ParseError("mistyped", at, `expected array, got ${typeof value}`);
-  }
-  return value;
-}
-
-function parsePermanent(value: unknown, at: string): PermanentAction {
-  const o = expectObject(value, at);
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    kind: expectString(requireKey(o, "kind", at), `${at}.kind`),
-    gk: expectNumber(requireKey(o, "gk", at), `${at}.gk`),
-  };
-}
-
-function parseVariable(value: unknown, at: string): VariableAction {
-  const o = expectObject(value, at);
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    category: expectString(requireKey(o, "category", at), `${at}.category`),
-    qk: expectNumber(requireKey(o, "qk", at), `${at}.qk`),
-  };
-}
-
-function parseAccidental(value: unknown, at: string): AccidentalAction {
-  const o = expectObject(value, at);
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    ad: expectNumber(requireKey(o, "ad", at), `${at}.ad`),
-  };
-}
-
-function parseSeismic(value: unknown, at: string): SeismicAction {
-  const o = expectObject(value, at);
-  const importanceClass = expectString(requireKey(o, "importanceClass", at), `${at}.importanceClass`);
-  if (!["I", "II", "III", "IV"].includes(importanceClass)) {
-    throw new En1990ParseError("invalid_enum", `${at}.importanceClass`, `expected I|II|III|IV, got '${importanceClass}'`);
-  }
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    aEk: expectNumber(requireKey(o, "aEk", at), `${at}.aEk`),
-    importanceClass: importanceClass as ImportanceClass,
-  };
-}
-
-function parseMember(value: unknown, at: string): Member {
-  const o = expectObject(value, at);
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    labelEn: expectString(requireKey(o, "labelEn", at), `${at}.labelEn`),
-    labelDe: expectString(requireKey(o, "labelDe", at), `${at}.labelDe`),
-    rdStr: expectNumber(requireKey(o, "rdStr", at), `${at}.rdStr`),
-    rdGeo: expectNumber(requireKey(o, "rdGeo", at), `${at}.rdGeo`),
-    rdEquStab: expectNumber(requireKey(o, "rdEquStab", at), `${at}.rdEquStab`),
-    rdEquDestab: expectNumber(requireKey(o, "rdEquDestab", at), `${at}.rdEquDestab`),
-    rdFat: expectNumber(requireKey(o, "rdFat", at), `${at}.rdFat`),
-    span: expectNumber(requireKey(o, "span", at), `${at}.span`),
-    deflectionW: expectNumber(requireKey(o, "deflectionW", at), `${at}.deflectionW`),
-    deflectionLimitRatio: expectNumber(requireKey(o, "deflectionLimitRatio", at), `${at}.deflectionLimitRatio`),
-    vibrationFrequency: expectNumber(requireKey(o, "vibrationFrequency", at), `${at}.vibrationFrequency`),
-    vibrationFrequencyMin: expectNumber(requireKey(o, "vibrationFrequencyMin", at), `${at}.vibrationFrequencyMin`),
-  };
-}
-
-function parseBridgeSls(value: unknown, at: string): BridgeSls {
-  const o = expectObject(value, at);
-  return {
-    id: expectString(requireKey(o, "id", at), `${at}.id`),
-    memberId: expectString(requireKey(o, "memberId", at), `${at}.memberId`),
-    deckAcceleration: expectNumber(requireKey(o, "deckAcceleration", at), `${at}.deckAcceleration`),
-    deckAccelerationLimit: expectNumber(requireKey(o, "deckAccelerationLimit", at), `${at}.deckAccelerationLimit`),
-    deckTwist: expectNumber(requireKey(o, "deckTwist", at), `${at}.deckTwist`),
-    deckTwistLimit: expectNumber(requireKey(o, "deckTwistLimit", at), `${at}.deckTwistLimit`),
-    bridgeDeflection: expectNumber(requireKey(o, "bridgeDeflection", at), `${at}.bridgeDeflection`),
-    bridgeDeflectionLimit: expectNumber(requireKey(o, "bridgeDeflectionLimit", at), `${at}.bridgeDeflectionLimit`),
-  };
-}
-
-function parseEffect(value: unknown, at: string): MemberEffect {
-  const o = expectObject(value, at);
-  return {
-    memberId: expectString(requireKey(o, "memberId", at), `${at}.memberId`),
-    actionId: expectString(requireKey(o, "actionId", at), `${at}.actionId`),
-    influence: expectNumber(requireKey(o, "influence", at), `${at}.influence`),
-  };
-}
-
-/** 🧱 Structurally validate and decode an En1990 artifact (rejects missing/mistyped required fields). */
-export function parseEn1990Artifact(value: unknown, at = "$"): En1990Artifact {
-  const o = expectObject(value, at);
-  const annex = expectString(requireKey(o, "annex", at), `${at}.annex`);
-  if (annex !== "En" && annex !== "De") {
-    throw new En1990ParseError("invalid_enum", `${at}.annex`, `expected En|De, got '${annex}'`);
-  }
-  return {
-    annex,
-    projectId: expectString(requireKey(o, "projectId", at), `${at}.projectId`),
-    structureKind: expectString(requireKey(o, "structureKind", at), `${at}.structureKind`),
-    altitudeM: expectNumber(requireKey(o, "altitudeM", at), `${at}.altitudeM`),
-    consequenceClass: expectUnsigned8(requireKey(o, "consequenceClass", at), `${at}.consequenceClass`),
-    reliabilityClass: expectUnsigned8(requireKey(o, "reliabilityClass", at), `${at}.reliabilityClass`),
-    designWorkingLifeCategory: expectUnsigned8(requireKey(o, "designWorkingLifeCategory", at), `${at}.designWorkingLifeCategory`),
-    designWorkingLifeYears: expectNumber(requireKey(o, "designWorkingLifeYears", at), `${at}.designWorkingLifeYears`),
-    referencePeriodYears: expectNumber(requireKey(o, "referencePeriodYears", at), `${at}.referencePeriodYears`),
-    supervisionLevel: expectString(requireKey(o, "supervisionLevel", at), `${at}.supervisionLevel`),
-    inspectionLevel: expectString(requireKey(o, "inspectionLevel", at), `${at}.inspectionLevel`),
-    kFiDeclared: expectNumber(requireKey(o, "kFiDeclared", at), `${at}.kFiDeclared`),
-    betaComputed: expectNumber(requireKey(o, "betaComputed", at), `${at}.betaComputed`),
-    permanents: expectArray(requireKey(o, "permanents", at), `${at}.permanents`).map((item, i) => parsePermanent(item, `${at}.permanents[${i}]`)),
-    variables: expectArray(requireKey(o, "variables", at), `${at}.variables`).map((item, i) => parseVariable(item, `${at}.variables[${i}]`)),
-    accidentals: expectArray(requireKey(o, "accidentals", at), `${at}.accidentals`).map((item, i) => parseAccidental(item, `${at}.accidentals[${i}]`)),
-    seismics: expectArray(requireKey(o, "seismics", at), `${at}.seismics`).map((item, i) => parseSeismic(item, `${at}.seismics[${i}]`)),
-    members: expectArray(requireKey(o, "members", at), `${at}.members`).map((item, i) => parseMember(item, `${at}.members[${i}]`)),
-    bridgeSls: expectArray(requireKey(o, "bridgeSls", at), `${at}.bridgeSls`).map((item, i) => parseBridgeSls(item, `${at}.bridgeSls[${i}]`)),
-    effects: expectArray(requireKey(o, "effects", at), `${at}.effects`).map((item, i) => parseEffect(item, `${at}.effects[${i}]`)),
-  };
-}
-
-export function parseEn1990Fields(value: unknown, _partial: boolean, at = "$"): Partial<En1990Artifact> {
-  return parseEn1990Artifact(value, at);
-}
+export const parseEn1990Artifact: NormWireReader<En1990Artifact> = normWireObject<En1990Artifact>({ annex: normWireRequired(normWireLiteral("En", "De")), projectId: normWireRequired(normWireString), structureKind: normWireRequired(normWireString), altitudeM: normWireRequired(normWireNumber), consequenceClass: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), reliabilityClass: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), designWorkingLifeCategory: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":255})), designWorkingLifeYears: normWireRequired(normWireNumber), referencePeriodYears: normWireRequired(normWireNumber), supervisionLevel: normWireRequired(normWireString), inspectionLevel: normWireRequired(normWireString), kFiDeclared: normWireRequired(normWireNumber), betaComputed: normWireRequired(normWireNumber), permanents: normWireRequired(normWireArray(normWireRef(() => parsePermanentAction))), variables: normWireRequired(normWireArray(normWireRef(() => parseVariableAction))), accidentals: normWireRequired(normWireArray(normWireRef(() => parseAccidentalAction))), seismics: normWireRequired(normWireArray(normWireRef(() => parseSeismicAction))), members: normWireRequired(normWireArray(normWireRef(() => parseMember))), bridgeSls: normWireRequired(normWireArray(normWireRef(() => parseBridgeSls))), effects: normWireRequired(normWireArray(normWireRef(() => parseMemberEffect))) });
+export const parsePermanentAction: NormWireReader<PermanentAction> = normWireObject<PermanentAction>({ id: normWireRequired(normWireString), kind: normWireRequired(normWireLiteral("g_sup", "g_inf", "prestress")), gk: normWireRequired(normWireNumber) });
+export const parseVariableAction: NormWireReader<VariableAction> = normWireObject<VariableAction>({ id: normWireRequired(normWireString), category: normWireRequired(normWireString), qk: normWireRequired(normWireNumber) });
+export const parseAccidentalAction: NormWireReader<AccidentalAction> = normWireObject<AccidentalAction>({ id: normWireRequired(normWireString), ad: normWireRequired(normWireNumber) });
+export const parseSeismicAction: NormWireReader<SeismicAction> = normWireObject<SeismicAction>({ id: normWireRequired(normWireString), aEk: normWireRequired(normWireNumber), importanceClass: normWireRequired(normWireLiteral("I", "II", "III", "IV")) });
+export const parseMember: NormWireReader<Member> = normWireObject<Member>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), rdStr: normWireRequired(normWireNumber), rdGeo: normWireRequired(normWireNumber), rdEquStab: normWireRequired(normWireNumber), rdEquDestab: normWireRequired(normWireNumber), rdFat: normWireRequired(normWireNumber), span: normWireRequired(normWireNumber), deflectionW: normWireRequired(normWireNumber), deflectionLimitRatio: normWireRequired(normWireNumber), vibrationFrequency: normWireRequired(normWireNumber), vibrationFrequencyMin: normWireRequired(normWireNumber) });
+export const parseMemberEffect: NormWireReader<MemberEffect> = normWireObject<MemberEffect>({ memberId: normWireRequired(normWireString), actionId: normWireRequired(normWireString), influence: normWireRequired(normWireNumber) });
+export const parseBridgeSls: NormWireReader<BridgeSls> = normWireObject<BridgeSls>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), deckAcceleration: normWireRequired(normWireNumber), deckAccelerationLimit: normWireRequired(normWireNumber), deckTwist: normWireRequired(normWireNumber), deckTwistLimit: normWireRequired(normWireNumber), bridgeDeflection: normWireRequired(normWireNumber), bridgeDeflectionLimit: normWireRequired(normWireNumber) });

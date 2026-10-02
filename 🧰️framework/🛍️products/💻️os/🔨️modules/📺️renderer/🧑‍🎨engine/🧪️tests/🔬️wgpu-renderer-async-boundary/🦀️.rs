@@ -1632,7 +1632,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         assert!(action_owners.try_push(ActionDescriptor { controller_id: format!("owner-{index}"), action: "close".to_string(), args: None }).is_ok());
     }
     let interaction = AppInteractionState {
-        shell: ShellState::new(Vec::new(), "maintenance-owner".to_string()),
+        shell: ShellState::new(Vec::new(), "maintenance-owner".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: InputState::default(),
         theme: Theme::default(),
         theme_dark: false,

@@ -1,5 +1,6 @@
 """🧪️ S2-W2C third-party check: every shared shell corpus the wgpu shell reads validates against its JSON Schema
-(python `jsonschema` + `referencing`, with the kernel history-patch schema registered for its `$ref`s).
+(python `jsonschema` + `referencing`, with the kernel history-patch and the os.config payload
+schemas registered for the corpora's `$ref`s).
 
 Run: `cd /Users/ueli/Documents/semio && python3 <this file>`; prints one line per corpus and exits non-zero on a breach.
 """
@@ -15,11 +16,12 @@ ROOT = pathlib.Path("/Users/ueli/Documents/semio")
 ENGINE = ROOT / "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine"
 HELPERS = ENGINE / "🧱️elements/🛠️ShellHelpers"
 KERNEL = ROOT / "🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️history-patch/🔣️.json"
+OS_CONFIG = ROOT / "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema"
 
 CORPORA = [
-    (HELPERS / "🧫️fixtures/🧫️time-travel-focus/🔣️.json", HELPERS / "🧬️schema/🔣️time-travel-focus/🔣️.json"),
     (HELPERS / "🧫️fixtures/🧫️time-travel-band/🔣️.json", HELPERS / "🧬️schema/🔣️time-travel-band/🔣️.json"),
-    (ENGINE / "🧫️fixtures/📎️local-folder-bindings/🔣️.json", ENGINE / "🧬️schema/📎️local-folder-bindings/🔣️.json"),
+    (ENGINE / "🧫️fixtures/📎️local-folder-bindings/🔣️.json", ENGINE / "🧬️schema/🔣️local-folder-bindings/🔣️.json"),
+    (ENGINE / "🧫️fixtures/🧫️wgpu-backbone-folder-door/🔣️.json", ENGINE / "🧬️schema/🔣️wgpu-backbone-folder-door/🔣️.json"),
 ]
 
 
@@ -29,6 +31,10 @@ def load(path):
 
 kernel = load(KERNEL)
 registry = Registry().with_resource(kernel["$id"], Resource.from_contents(kernel))
+for path in OS_CONFIG.rglob("🔣️.json"):
+    document = load(path)
+    if isinstance(document, dict) and isinstance(document.get("$id"), str) and "$schema" in document:
+        registry = registry.with_resource(document["$id"], Resource.from_contents(document))
 failed = False
 for corpus_path, schema_path in CORPORA:
     if not schema_path.exists():

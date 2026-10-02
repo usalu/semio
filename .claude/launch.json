@@ -564,6 +564,49 @@
         "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
         "PROCTOR_PORT": "8791"
       }
+    },
+    {
+      "name": "framework-snapshot-sqlite",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite"]
+    },
+    {
+      "name":"framework-deflate-encoding",
+      "runtimeExecutable":"bun",
+      "runtimeArgs":["nx","run","@semio-tech/framework-rs:test-deflate-encoding"]
+    },
+    {
+      "name": "framework-snapshot-sqlite-native",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-native"]
+    },
+    {
+      "name": "framework-snapshot-sqlite-source",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-source"]
+    },
+    {
+      "name": "framework-snapshot-sqlite-io",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-rs:test-snapshot-sqlite-io"]
+    },
+    {
+      "name": "value-controlled-construction",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/value-rs:test-controlled-construction"
+      ]
+    },
+    {
+      "name": "value-controlled-construction-source",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-value:test-controlled-construction-source"
+      ]
     }
   ]
 }

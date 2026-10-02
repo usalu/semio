@@ -4,7 +4,15 @@ use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::editor::sourcing::{sourcing_table, sourcing_table_action, sourcing_table_row};
 use crate::{CuratedItem, CurationSnapshot, ObjectKind, SortDirection};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableCell, UiAssemblyResult, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TableCell;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiTreeActionPlacement;
+use semio_framework_plugin::UiTreeItemAction;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_CURATED: &str = "sourcing-curated";

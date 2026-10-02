@@ -5,24 +5,16 @@ pub mod layout {
     //! 📐️ Window layouts, panel tab constants, and engagement rails.
 
     use crate::wgpu::IconName;
-    use dsl::DslValue;
-    // 🌱️ `dsl` (the `semio_framework_os_kernel` alias) re-exports BOTH the `ToValue`/`FromValue`
-    // TRAIT (type namespace) and the identically named `#[derive(ToValue, FromValue)]` macro
-    // (macro namespace) under its own crate root already — see that crate's `🦀️.rs`:
-    // `pub use crate::os_dsl::schema::{..., FromValue, ToValue, ...};` (trait) alongside
-    // `pub use semio_framework_value_derive::{FromValue, ToValue};` (macro). So a SINGLE `use
-    // dsl::{FromValue, ToValue};` here brings in both namespaces at once — importing
-    // `semio_framework_value_derive` directly here too would re-import the macro namespace a
-    // second time (`E0252`). The trait half is what lets the hand-written
-    // `WindowLayoutChild`/`WindowLayoutRoot` `impl`s below (untagged enums the derive cannot
-    // express) call `.to_value()`/`Type::from_value(...)` directly.
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue;
+    use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use ui_contract::UiFixedList;
 
     //#region 🔖️Action
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    /// 🎬️ One action a control fires; the default (an empty action name) is the unbound marker `fired_action` answers `None`
+    /// for.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct ActionDescriptor {
@@ -858,7 +850,7 @@ pub mod layout {
     }
 
     impl FromValue for WindowLayoutChild {
-        fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+        fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
             match window_layout_node_is_stack(&value)? {
                 true => WindowLayoutStackNode::from_value(value).map(WindowLayoutChild::Stack),
                 false => WindowLayoutAxisNode::from_value(value).map(WindowLayoutChild::Axis),
@@ -895,7 +887,7 @@ pub mod layout {
     }
 
     impl FromValue for WindowLayoutRoot {
-        fn from_value(value: DslValue) -> Result<Self, dsl::ValueError> {
+        fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
             match window_layout_node_is_stack(&value)? {
                 true => WindowLayoutStackNode::from_value(value).map(WindowLayoutRoot::Stack),
                 false => WindowLayoutAxisNode::from_value(value).map(WindowLayoutRoot::Axis),
@@ -903,10 +895,10 @@ pub mod layout {
         }
     }
 
-    fn window_layout_node_is_stack(value: &DslValue) -> Result<bool, dsl::ValueError> {
-        let DslValue::Object(entries) = value else { return Err(dsl::ValueError::new("expected window layout object".to_string())) };
-        let kind = entries.iter().find(|(key, _)| key == "kind").and_then(|(_, value)| value.as_str()).ok_or_else(|| dsl::ValueError::new("missing field `kind`".to_string()))?;
-        window_layout_kind_is_stack(kind).map_err(dsl::ValueError::new)
+    fn window_layout_node_is_stack(value: &DslValue) -> Result<bool, semio_framework_value::ValueError> {
+        let DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::new("expected window layout object".to_string())) };
+        let kind = entries.iter().find(|(key, _)| key == "kind").and_then(|(_, value)| value.as_str()).ok_or_else(|| semio_framework_value::ValueError::new("missing field `kind`".to_string()))?;
+        window_layout_kind_is_stack(kind).map_err(semio_framework_value::ValueError::new)
     }
 
     fn serde_window_layout_node_is_stack(value: &serde_json::Value) -> Result<bool, String> {
@@ -1438,8 +1430,8 @@ pub mod utilities {
 
     use super::layout::ActionDescriptor;
     use crate::wgpu::IconName;
-    use dsl::DslValue;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue;
+    use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -1672,8 +1664,8 @@ pub mod role_chrome {
 
     use super::layout::{ContextMenuItemSpec, ShellMenuAction};
     use super::utilities::{UtilityCategory, UtilityNode};
-    use dsl::DslValue;
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue;
+    use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
     //#region 🔖️ChromeRole
@@ -1891,11 +1883,8 @@ pub mod ui {
 
     use crate::wgpu::IconName;
     use crate::wgpu::Label;
-    use dsl::DslValue;
-    // 🌱️ Same `dsl::{FromValue, ToValue}` re-export as `super::layout` above — `dsl` already
-    // carries both the trait AND the derive macro under these names, so this single `use` covers
-    // `#[derive(ToValue, FromValue)]` sites in this module (only `SurfaceKind` so far).
-    use dsl::{FromValue, ToValue};
+    use semio_framework_value::DslValue;
+    use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
@@ -2019,7 +2008,8 @@ pub mod ui {
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    /// ⌨️ A retained text, number, date, colour or file field — the contract's `InputProps`.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiInputNode {
@@ -2056,6 +2046,14 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub snaps: Vec<f64>,
+        /// 🪁️ A number field shows and reads `stored × display_factor` — the contract's `InputProps.display_factor`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub display_factor: Option<f64>,
+        /// 🚧️ The hard range a typed number must keep — the contract's `InputProps.limits`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub limits: Option<ui_contract::UiNumberLimits>,
         pub on_change: ActionDescriptor,
         /// ⏎️ React's `SearchInput.onSubmit` — the line the user CONFIRMS with Enter, dispatched
         /// through [`ui_contract::Trigger::Submit`]. Distinct from `on_change`, which React fires on
@@ -2176,7 +2174,10 @@ pub mod ui {
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    /// 🧿️ A retained slider or dial — the contract's `SliderProps`: values are stored values, the readout, the spoken value
+    /// and a typed value are display values (`display_factor`, `precision`, `display_unit` else `unit`), a typed value is
+    /// refused by `limits` (the travel itself when absent).
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiSliderNode {
@@ -2185,13 +2186,33 @@ pub mod ui {
         pub min: f64,
         pub max: f64,
         pub step: f64,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        #[value(skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         /// 🧲️ Detents — the contract's `SliderProps.snaps`, painted as ticks and applied by the shared law.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[value(default, skip_serializing_if = "Vec::is_empty")]
         pub snaps: Vec<f64>,
+        /// 🎡️ A straight track or a rotary dial — the contract's `SliderProps.appearance`.
+        #[serde(default, skip_serializing_if = "ui_contract::SliderAppearance::is_track")]
+        #[value(default, skip_serializing_if = "ui_contract::SliderAppearance::is_track")]
+        pub appearance: ui_contract::SliderAppearance,
+        /// 📈️ A linear or log axis — the contract's `SliderProps.scale`.
+        #[serde(default, skip_serializing_if = "ui_contract::UiNumberScale::is_linear")]
+        #[value(default, skip_serializing_if = "ui_contract::UiNumberScale::is_linear")]
+        pub scale: ui_contract::UiNumberScale,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub precision: Option<u16>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub display_unit: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub display_factor: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub limits: Option<ui_contract::UiNumberLimits>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
         #[value(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2201,7 +2222,31 @@ pub mod ui {
         pub menu: Option<UiMenuRef>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    impl UiSliderNode {
+        /// 🔤️ The readout of a stored `value`: its display text (`stored × display_factor` at `precision`, else twelve digits).
+        pub fn readout(&self, value: f64) -> String {
+            ui_contract::ui_number_display_text(value, self.display_factor, self.precision)
+        }
+
+        /// 🏷️ The unit the slider shows — `display_unit`, else `unit`.
+        pub fn shown_unit(&self) -> Option<&str> {
+            self.display_unit.as_deref().or(self.unit.as_deref()).filter(|unit| !unit.is_empty())
+        }
+
+        /// 🪧️ React's external readout beside a slider with a unit: the declared value's display text and the shown unit.
+        pub fn unit_label(&self) -> Option<String> {
+            self.shown_unit().map(|unit| format!("{} {unit}", self.readout(self.value)))
+        }
+
+        /// 🪐️ The travel's axis — linear or log — as the contract's axis law reads it.
+        pub fn axis_position(&self, value: f64) -> f64 {
+            ui_contract::slider_axis_position(value, self.min, self.max, self.scale)
+        }
+    }
+
+    /// 🪜️ A retained number stepper — the contract's `NumberStepperProps`, its detents, shown unit (`display_unit` else
+    /// `unit`), display factor and limits included.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiNumberStepperNode {
@@ -2219,6 +2264,20 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub precision: Option<u16>,
+        /// 📍️ Detents its page keys stop on — the contract's `NumberStepperProps.snaps`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
+        pub snaps: Vec<f64>,
+        /// 🫧️ The unit shown beside the value (the contract's `display_unit`, else `unit`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub unit: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub display_factor: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub limits: Option<ui_contract::UiNumberLimits>,
         pub on_absolute: ActionDescriptor,
         pub on_delta: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2227,6 +2286,14 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
+    }
+
+    impl UiNumberStepperNode {
+        /// 🛰️ The text a stored `value` shows: its display text, and the shown unit when the stepper has one.
+        pub fn value_text(&self, value: f64) -> String {
+            let text = ui_contract::ui_number_display_text(value, self.display_factor, self.precision);
+            self.unit.as_deref().filter(|unit| !unit.is_empty()).map_or_else(|| text.clone(), |unit| format!("{text} {unit}"))
+        }
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2725,6 +2792,7 @@ pub mod ui {
                 on_abort: None,
                 on_repeat_last: None,
                 presence: UiPresence::default(),
+                ..Default::default()
             })),
             description: None,
             required: None,
@@ -2744,7 +2812,7 @@ pub mod ui {
             menu: None,
             id: id.clone(),
             label: label.into(),
-            child: Box::new(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id, value: mixed.value, step, uniform: mixed.uniform, min: None, max: None, precision: None, on_absolute: action.clone(), on_delta: action, presence: UiPresence::default() })),
+            child: Box::new(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id, value: mixed.value, step, uniform: mixed.uniform, min: None, max: None, precision: None, on_absolute: action.clone(), on_delta: action, presence: UiPresence::default(), ..Default::default() })),
             description: None,
             required: None,
             error: None,

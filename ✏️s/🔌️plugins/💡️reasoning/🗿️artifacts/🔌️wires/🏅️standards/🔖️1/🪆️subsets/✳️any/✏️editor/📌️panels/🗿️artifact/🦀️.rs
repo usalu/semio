@@ -10,9 +10,18 @@ use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_label, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH, WIRES_PLAY_APP_ID};
 use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
 use crate::WiresSnapshot;
-use semio_framework_plugin::{
-    BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract::{Buildable, HasBase};
 
 //#region 🔖️Constants

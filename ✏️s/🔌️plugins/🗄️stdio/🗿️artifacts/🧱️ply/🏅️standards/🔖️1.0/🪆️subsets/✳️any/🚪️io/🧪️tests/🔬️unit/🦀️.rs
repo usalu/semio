@@ -465,10 +465,11 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
-        let text = store::ArtifactDsl::print_dsl(&demo_ply_snapshot());
-        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
-        let reconstructed = format!("{}\n{body}", envelope.envelope_id());
-        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        let mut intermediate=demo_ply_snapshot();intermediate.schema="independent PLY state".into();intermediate.elements[0].count=u64::MAX;intermediate.elements[0].rows[0].values=vec![PlyValue::List(vec![PlyValue::Double(f64::from_bits(0xfff0000000001234)),PlyValue::List(vec![])])];
+        for snapshot in[demo_ply_snapshot(),PlySnapshot::default(),intermediate]{
+            let text=store::ArtifactDsl::print_dsl(&snapshot);
+            assert!(recognizer.recognize(&text).expect("recognize"),"grammar did not recognize owned snapshot:\n{text}");
+        }
     }
 
     #[semio_framework_async_macros::async_test]

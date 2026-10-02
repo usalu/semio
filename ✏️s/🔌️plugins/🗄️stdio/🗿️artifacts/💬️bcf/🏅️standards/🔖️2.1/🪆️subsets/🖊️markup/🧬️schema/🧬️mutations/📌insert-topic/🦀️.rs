@@ -20,8 +20,8 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
         agg_inverse(&BcfMutation::InsertTopic(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert topic", "Thema einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

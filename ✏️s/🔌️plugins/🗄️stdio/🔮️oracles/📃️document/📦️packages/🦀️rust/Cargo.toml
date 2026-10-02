@@ -1,0 +1,25 @@
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-document-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_stdio_document_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:lopdf", "dep:pdf-writer", "dep:quick-xml", "dep:zip"]
+
+[dependencies]
+"lopdf" = { version = "0.44", optional = true }
+"pdf-writer" = { version = "0.15", optional = true }
+"quick-xml" = { version = "0.42", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"zip" = { version = "6", optional = true, default-features = false, features = ["deflate"] }

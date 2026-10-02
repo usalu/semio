@@ -61,7 +61,7 @@ bool = "0" | "1"
 # `SemioPoint2.x`/`.y` and every `f64` field print via plain Rust `{v}` Display — the shared
 # lexer's `INT`/`FLOAT` scanners already capture a leading `-` when digit-adjacent (P2-M1's
 # trailing-dot-float work), matching `enc_f64` lexeme-for-lexeme.
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `handle`/`name`/`content`/

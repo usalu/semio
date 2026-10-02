@@ -1,0 +1,23 @@
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-archive-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_stdio_archive_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:flate2", "dep:zip"]
+
+[dependencies]
+"flate2" = { version = "1", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"zip" = { version = "6", optional = true, default-features = false, features = ["deflate"] }

@@ -67,8 +67,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeExt
         vec![super::GltfMutation::ChangeNodeExtensionData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Node Extension Data", "Erweiterungsdaten des Knotens ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Node Extension Data", "Erweiterungsdaten des Knotens ändern")
     }
 
     fn target(&self) -> Vec<String> {

@@ -32,7 +32,10 @@ pub type PresenceInteraction = super::PresenceInteraction;
 
 //#region 🔖️ScopeSchemaExports
 
-use semio_framework_schema::{register_scope_schema_exports as register_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
+use semio_framework_schema_registry::register_scope_schema_exports as register_exports;
+use semio_framework_schema_registry::FacetLeaves;
+use semio_framework_schema_registry::SchemaExport;
+use semio_framework_schema_registry::ScopeSchemaExports;
 
 /// 🍃 The four format leaves this module publishes; every named export resolves to the same
 /// documents because one `🧬️schema/` module carries them all. No proto leaf exists here.
@@ -59,7 +62,7 @@ const EXPORTS: [SchemaExport; 16] = [
 ];
 
 /// 📌️ Registers `framework.interaction`'s named exports into the OS-wide export catalog.
-/// See `📋️execution-contract.md` §C and `semio_framework_schema::resolve_schema_export`.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
 // 🚫️async: E1 pure registration helper (no I/O) — see R9
 pub fn register_scope_exports() {
     register_exports(ScopeSchemaExports { scope: "framework.interaction", exports: &EXPORTS }).expect("framework.interaction scope schema exports");

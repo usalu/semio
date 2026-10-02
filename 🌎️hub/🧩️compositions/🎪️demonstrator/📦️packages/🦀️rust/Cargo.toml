@@ -150,6 +150,8 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-demonstrator-playground = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

@@ -1019,6 +1019,9 @@ def undo_address(collection, element, arguments, noun):
 # region 🔖️Carrier
 PREAMBLE = re.compile(r"^semio\s+(\S+)\s+v(\d+)\n")
 TABLE_HEAD = re.compile(r"^(\S+) \[([^\]]*)\] \{$")
+#: 🧱 The record and list delimiters a field line may carry between its `key=value` fields — `[ { id=… } ]` writes a list of
+#: records — kept as written, because they are carrier bytes, not a grammar to infer.
+BRACKETS = frozenset("{}[]")
 
 
 def split_fields(line):
@@ -1071,6 +1074,9 @@ def parse_dsl(envelope, text):
             continue
         fields = []
         for token in split_fields(line):
+            if token in BRACKETS:
+                fields.append([token, None])
+                continue
             key, separator, value = token.partition("=")
             if separator != "=":
                 raise AssertionError(
@@ -1132,7 +1138,7 @@ def print_dsl(document):
     lines = []
     for block in document["blocks"]:
         if "fields" in block:
-            lines.append(" ".join("%s=%s" % (key, value) for key, value in block["fields"]))
+            lines.append(" ".join(key if value is None else "%s=%s" % (key, value) for key, value in block["fields"]))
             lines.extend(row["indent"] + " ".join(row["fields"]) for row in block.get("body", []))
             continue
         lines.append("%s [%s] {" % (block["table"], " ".join(":".join(column) for column in block["columns"])))

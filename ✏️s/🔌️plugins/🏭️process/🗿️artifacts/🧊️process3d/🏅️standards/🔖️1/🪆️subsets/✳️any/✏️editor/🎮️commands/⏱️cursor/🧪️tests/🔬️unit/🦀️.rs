@@ -27,13 +27,12 @@ async fn an_unset_cursor_resolves_every_step_and_a_set_one_clamps() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn every_cursor_verb_is_one_coalesced_config_write_and_no_document_edit() {
+async fn every_cursor_verb_is_one_config_write_and_no_document_edit() {
     let snapshot = timeline(4);
     let config = Process3dConfig::default();
     let back = moved(&snapshot, &config, |doc, cfg, ctx| step_cursor_back::handle(&step_cursor_back::StepCursorBack {}, doc, cfg, ctx));
     assert!(back.artifact_mutations.is_empty(), "the cursor is never a document mutation");
     assert_eq!(back.config_mutations, vec![Process3dConfigMutation::SetCursor { value: Some(3) }], "back from every step resolves one fewer");
-    assert_eq!(back.coalesce_key.as_deref(), Some(PROCESS3D_CURSOR_COALESCE_KEY));
     let forward = moved(&snapshot, &Process3dConfig { resolved_up_to: Some(4), ..Process3dConfig::default() }, |doc, cfg, ctx| step_cursor_forward::handle(&step_cursor_forward::StepCursorForward {}, doc, cfg, ctx));
     assert!(forward.config_mutations.is_empty(), "forward past the timeline end clamps to where it already is");
     let set = moved(&snapshot, &config, |doc, cfg, ctx| set_cursor::handle(&set_cursor::SetCursor { value: Some(99) }, doc, cfg, ctx));

@@ -4,7 +4,16 @@ use crate::schema::mutations::{PatchPixelsMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArgSchema;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ACTION_ID: &str = "set-pixel-region";
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.png.command.patch-pixel-region.v1";
@@ -220,10 +229,8 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         }
         self.complete = true;
         let mutations = std::mem::take(&mut self.mutations);
-        let description = (!mutations.is_empty()).then(|| format!("Paint PNG region {}/{}/{}×{}", command.x, command.y, command.width, command.height));
         Ok(ArtifactCommandWorkStep::Complete(Emit {
             artifact_mutations: mutations,
-            description,
             ..Default::default()
         }))
     }

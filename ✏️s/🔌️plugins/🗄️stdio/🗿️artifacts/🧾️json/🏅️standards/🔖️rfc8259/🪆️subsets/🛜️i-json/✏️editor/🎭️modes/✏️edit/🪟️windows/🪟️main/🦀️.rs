@@ -8,7 +8,14 @@
 use crate::schema::snapshot::{write_json_pretty, JsonMember, JsonValue};
 use crate::JsonSnapshot;
 use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;

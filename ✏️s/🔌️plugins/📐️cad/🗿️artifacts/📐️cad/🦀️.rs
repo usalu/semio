@@ -69,9 +69,6 @@ pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 /// 🪪️ Parses and validates one exact CAD child handle before it enters a parent diff.
 pub fn cad_child_from_uri<S>(child_id: &str, target_uri: &str, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
     let target = store::os_io::ArtifactRef::parse_uri(target_uri).map_err(|error| format!("CAD child target is not an artifact URI: {error}"))?;
-    if child_id != target.artifact_id {
-        return Err(format!("CAD child id `{child_id}` does not equal target artifact id `{}`", target.artifact_id));
-    }
     if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
         return Err(format!("CAD child target must use s.stdio.semio@v1/{expected_subset}"));
     }
@@ -458,7 +455,7 @@ pub use crate::schema::snapshot::CadSnapshot;
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.cad".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D CAD", "3D-CAD"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D CAD", "3D-CAD"),
         source_format: "cad.scene".into(),
         component_kind: "cad".into(),
         dimension: "3d".into(),

@@ -12,7 +12,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "rewriting-document-contract") {
-      const { testRewritingDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
+      const { testRewritingDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testRewritingDocumentContractOracle();
       return;
     }
@@ -27,7 +27,7 @@ if (segments[0] === "rewriting-map-ownership") {
 if (segments[0] === "rewriting-window-config") {
       const { testRewritingDocumentRetirementOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts");
       testRewritingDocumentRetirementOracle();
-      const { testRewritingWindowConfigOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window/🟦️.ts");
+      const { testRewritingWindowConfigOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🟦️.ts");
       testRewritingWindowConfigOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");

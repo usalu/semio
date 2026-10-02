@@ -27,8 +27,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Set layer {} adjustment kind to {}", self.layer_id, self.new_adjustment_kind), &format!("Korrekturart von Ebene {} auf {} setzen", self.layer_id, self.new_adjustment_kind))
+        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer {} adjustment kind to {}", self.layer_id, self.new_adjustment_kind), &format!("Korrekturart von Ebene {} auf {} setzen", self.layer_id, self.new_adjustment_kind))
         }
 
         fn target(&self) -> Vec<String> {

@@ -20,8 +20,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetFmt(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

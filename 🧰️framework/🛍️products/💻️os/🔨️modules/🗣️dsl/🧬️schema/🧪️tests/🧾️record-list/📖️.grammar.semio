@@ -1,0 +1,12 @@
+dialect grammar
+grammar record-list-boundaries
+start document
+
+document = "items" "=" record-list
+record-list = "[" braced-record* "]"
+braced-record = "{" row "}"
+row = minimum? maximum? label? children?
+minimum = "min" "=" NUM
+maximum = "max" "=" NUM
+label = "label" "=" TEXT
+children = "children" "=" record-list

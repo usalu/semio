@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNo
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove property #{} from node \"{}\"", self.index, self.node_id.value), &format!("Eigenschaft #{} aus Knoten \"{}\" entfernen", self.index, self.node_id.value))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove property #{} from node \"{}\"", self.index, self.node_id.value), &format!("Eigenschaft #{} aus Knoten \"{}\" entfernen", self.index, self.node_id.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.value.clone(), self.index.to_string()]

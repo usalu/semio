@@ -44,7 +44,7 @@ fn only_declared_preview_kinds_are_evaluation_windows() {
     use semio_framework_plugin::ViewWindowInstance;
     let view = ViewModel {
         window_instances: vec![ViewWindowInstance { id: "main".into(), window_kind_id: "procedural-main".into() }, ViewWindowInstance { id: "view-preview".into(), window_kind_id: "procedural-view-preview".into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let viewer_kinds: &[&'static str] = &["procedural-view-preview"];
     assert_eq!(attached_preview_windows(Some(&view), viewer_kinds), vec![("view-preview", "procedural-view-preview")]);

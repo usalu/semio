@@ -23,8 +23,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntityArg {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::InsertEntityArg(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

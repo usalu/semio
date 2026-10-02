@@ -23,8 +23,8 @@ impl MutationKind<FlowSnapshot, FlowMutation> for ReorderWidgets {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder widget \"{}\" to {}", self.id, self.to_index), &format!("Widget \"{}\" an Position {} verschieben", self.id, self.to_index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder widget \"{}\" to {}", self.id, self.to_index), &format!("Widget \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

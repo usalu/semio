@@ -1,0 +1,1689 @@
+{
+  "version": 1,
+  "localeAuthority": "explicit",
+  "axes": {
+    "locales": [
+      "en",
+      "de"
+    ],
+    "terminologies": [
+      "native",
+      "reuse"
+    ]
+  },
+  "labels": [
+    {
+      "id": "add-widget",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Add Widget"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Widget hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Add Part"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Teil hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"Add Widget\",\"de\":\"Widget hinzufügen\"},\"reuse\":{\"en\":\"Add Part\",\"de\":\"Teil hinzufügen\"}}",
+      "accepted": true,
+      "errorPath": null,
+      "cells": {
+        "native.en": "Add Widget",
+        "native.de": "Widget hinzufügen",
+        "reuse.en": "Add Part",
+        "reuse.de": "Teil hinzufügen"
+      }
+    },
+    {
+      "id": "rename-layer",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Rename layer \"roof\" to \"deck\""
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Ebene \"roof\" in \"deck\" umbenennen"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Rename layer \"roof\" to \"deck\""
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Ebene \"roof\" in \"deck\" umbenennen"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"Rename layer \\\"roof\\\" to \\\"deck\\\"\",\"de\":\"Ebene \\\"roof\\\" in \\\"deck\\\" umbenennen\"},\"reuse\":{\"en\":\"Rename layer \\\"roof\\\" to \\\"deck\\\"\",\"de\":\"Ebene \\\"roof\\\" in \\\"deck\\\" umbenennen\"}}",
+      "accepted": true,
+      "errorPath": null,
+      "cells": {
+        "native.en": "Rename layer \"roof\" to \"deck\"",
+        "native.de": "Ebene \"roof\" in \"deck\" umbenennen",
+        "reuse.en": "Rename layer \"roof\" to \"deck\"",
+        "reuse.de": "Ebene \"roof\" in \"deck\" umbenennen"
+      }
+    },
+    {
+      "id": "locale-invariant-data",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "os.setThemeId"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "os.setThemeId"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "os.setThemeId"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "os.setThemeId"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"os.setThemeId\",\"de\":\"os.setThemeId\"},\"reuse\":{\"en\":\"os.setThemeId\",\"de\":\"os.setThemeId\"}}",
+      "accepted": true,
+      "errorPath": null,
+      "cells": {
+        "native.en": "os.setThemeId",
+        "native.de": "os.setThemeId",
+        "reuse.en": "os.setThemeId",
+        "reuse.de": "os.setThemeId"
+      }
+    },
+    {
+      "id": "missing-locale",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Widget hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Teil hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"de\":\"Widget hinzufügen\"},\"reuse\":{\"de\":\"Teil hinzufügen\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "missing-terminology",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Add Widget"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Widget hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"Add Widget\",\"de\":\"Widget hinzufügen\"}}",
+      "accepted": false,
+      "errorPath": "reuse",
+      "cells": null
+    },
+    {
+      "id": "unknown-locale",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Add Widget"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Widget hinzufügen"
+                  }
+                ],
+                [
+                  "fr",
+                  {
+                    "kind": "string",
+                    "value": "Ajouter un widget"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "Add Part"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Teil hinzufügen"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"Add Widget\",\"de\":\"Widget hinzufügen\",\"fr\":\"Ajouter un widget\"},\"reuse\":{\"en\":\"Add Part\",\"de\":\"Teil hinzufügen\"}}",
+      "accepted": false,
+      "errorPath": "native.fr",
+      "cells": null
+    },
+    {
+      "id": "null-root",
+      "value": {
+        "kind": "null"
+      },
+      "rawJson": "null",
+      "accepted": false,
+      "errorPath": "$",
+      "cells": null
+    },
+    {
+      "id": "boolean-root",
+      "value": {
+        "kind": "boolean",
+        "value": true
+      },
+      "rawJson": "true",
+      "accepted": false,
+      "errorPath": "$",
+      "cells": null
+    },
+    {
+      "id": "number-root",
+      "value": {
+        "kind": "number",
+        "value": 4
+      },
+      "rawJson": "4",
+      "accepted": false,
+      "errorPath": "$",
+      "cells": null
+    },
+    {
+      "id": "string-root",
+      "value": {
+        "kind": "string",
+        "value": "label"
+      },
+      "rawJson": "\"label\"",
+      "accepted": false,
+      "errorPath": "$",
+      "cells": null
+    },
+    {
+      "id": "array-root",
+      "value": {
+        "kind": "array",
+        "items": []
+      },
+      "rawJson": "[]",
+      "accepted": false,
+      "errorPath": "$",
+      "cells": null
+    },
+    {
+      "id": "null-row",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "null"
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":null,\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "array-row",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "array",
+              "items": []
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":[],\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "string-row",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "string",
+              "value": "row"
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":\"row\",\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "wrong-cell-type",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "number",
+                    "value": 3
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":3,\"de\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "unknown-terminology",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "other",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"},\"other\":{\"en\":\"N EN\",\"de\":\"N DE\"}}",
+      "accepted": false,
+      "errorPath": "other",
+      "cells": null
+    },
+    {
+      "id": "empty-text-cells",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": ""
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": ""
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": ""
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": ""
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"\",\"de\":\"\"},\"reuse\":{\"en\":\"\",\"de\":\"\"}}",
+      "accepted": true,
+      "errorPath": null,
+      "cells": {
+        "native.en": "",
+        "native.de": "",
+        "reuse.en": "",
+        "reuse.de": ""
+      }
+    },
+    {
+      "id": "unicode-cells",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "snow 雪\u0000💎"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "Schnee 雪\u0000💎"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "ä"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "ä"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"snow 雪\\u0000💎\",\"de\":\"Schnee 雪\\u0000💎\"},\"reuse\":{\"en\":\"ä\",\"de\":\"ä\"}}",
+      "accepted": true,
+      "errorPath": null,
+      "cells": {
+        "native.en": "snow 雪\u0000💎",
+        "native.de": "Schnee 雪\u0000💎",
+        "reuse.en": "ä",
+        "reuse.de": "ä"
+      }
+    },
+    {
+      "id": "duplicate-terminology",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"},\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "duplicate-locale",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.de",
+      "cells": null
+    },
+    {
+      "id": "escaped-duplicate-locale",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"\\u0064e\":\"N DE\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.de",
+      "cells": null
+    },
+    {
+      "id": "null-cell",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "null"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":null,\"de\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "boolean-cell",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "boolean",
+                    "value": false
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":false,\"de\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "array-cell",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "array",
+                    "items": []
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":[],\"de\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "object-cell",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "object",
+                    "entries": []
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":{},\"de\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.en",
+      "cells": null
+    },
+    {
+      "id": "boolean-row",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "boolean",
+              "value": false
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":false,\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "number-row",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "number",
+              "value": 7
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":7,\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "missing-native-de",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"text\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native.de",
+      "cells": null
+    },
+    {
+      "id": "missing-reuse-en",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "text"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"},\"reuse\":{\"de\":\"text\"}}",
+      "accepted": false,
+      "errorPath": "reuse.en",
+      "cells": null
+    },
+    {
+      "id": "missing-native-terminology",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "native",
+      "cells": null
+    },
+    {
+      "id": "duplicate-reuse-terminology",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\"}}",
+      "accepted": false,
+      "errorPath": "reuse",
+      "cells": null
+    },
+    {
+      "id": "duplicate-reuse-en",
+      "value": {
+        "kind": "object",
+        "entries": [
+          [
+            "native",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "N EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "N DE"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "reuse",
+            {
+              "kind": "object",
+              "entries": [
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ],
+                [
+                  "de",
+                  {
+                    "kind": "string",
+                    "value": "R DE"
+                  }
+                ],
+                [
+                  "en",
+                  {
+                    "kind": "string",
+                    "value": "R EN"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "rawJson": "{\"native\":{\"en\":\"N EN\",\"de\":\"N DE\"},\"reuse\":{\"en\":\"R EN\",\"de\":\"R DE\",\"en\":\"R EN\"}}",
+      "accepted": false,
+      "errorPath": "reuse.en",
+      "cells": null
+    }
+  ],
+  "locales": [
+    {
+      "id": "id-en",
+      "mode": "id",
+      "input": "en",
+      "accepted": true,
+      "locale": "en"
+    },
+    {
+      "id": "id-de",
+      "mode": "id",
+      "input": "de",
+      "accepted": true,
+      "locale": "de"
+    },
+    {
+      "id": "id-missing",
+      "mode": "id",
+      "input": null,
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "id-empty",
+      "mode": "id",
+      "input": "",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "id-unknown",
+      "mode": "id",
+      "input": "fr",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "id-prefix",
+      "mode": "id",
+      "input": "depot",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "id-region-refused",
+      "mode": "id",
+      "input": "de-DE",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "tag-en-us",
+      "mode": "tag",
+      "input": "en-US",
+      "accepted": true,
+      "locale": "en"
+    },
+    {
+      "id": "tag-de-de",
+      "mode": "tag",
+      "input": "de-DE",
+      "accepted": true,
+      "locale": "de"
+    },
+    {
+      "id": "tag-case",
+      "mode": "tag",
+      "input": "DE-de",
+      "accepted": true,
+      "locale": "de"
+    },
+    {
+      "id": "tag-script-region",
+      "mode": "tag",
+      "input": "de-Latn-DE",
+      "accepted": true,
+      "locale": "de"
+    },
+    {
+      "id": "tag-region-number",
+      "mode": "tag",
+      "input": "en-001",
+      "accepted": true,
+      "locale": "en"
+    },
+    {
+      "id": "tag-empty",
+      "mode": "tag",
+      "input": "",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "tag-malformed",
+      "mode": "tag",
+      "input": "de--DE",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "tag-underscore",
+      "mode": "tag",
+      "input": "en_US",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "tag-unsupported",
+      "mode": "tag",
+      "input": "fr-CA",
+      "accepted": false,
+      "locale": null
+    },
+    {
+      "id": "tag-prefix",
+      "mode": "tag",
+      "input": "depot",
+      "accepted": false,
+      "locale": null
+    }
+  ],
+  "ownership": {
+    "uiManifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "uiRoot": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🦀️.rs",
+    "wgpuRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs",
+    "axisProjection": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📽️projection/🟦️.ts",
+    "wireTest": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-component-ui-ui-node-wire-format/🦀️.rs",
+    "oldLocaleSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🦀️.rs",
+    "localeManifest": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+    "localeSource": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🦀️.rs",
+    "kernelRoot": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+    "pluginSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+    "package": "semio-framework-ui-locale",
+    "forbidden": "semio-framework-os-kernel",
+    "viewport": "semio_framework_ui_viewport::Viewport2d",
+    "localeAuthority": "explicit"
+  }
+}

@@ -172,7 +172,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     assert!(scene.node_graph.is_none(), "an empty doc payload renders the host's own empty viewport rather than refusing the record");
 
     // 🖌️ …and the arena that came out of it actually paints.
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
     assert!(ui.publish_document("procedural-main", document));
     reconcile_ui_window(&mut ui, "procedural-main", "generation3d", law["document"]["generation"].as_u64().expect("generation"));
@@ -433,7 +433,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     let minted_second = ui_document_ingress_generation(Some((first_revision, minted_first)), second_revision);
     assert!(minted_second > minted_first, "a republished surface must mint a STRICTLY greater ingress generation");
 
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ingest_once(&mut ui, "second-document", &law, &ids, minted_first, first_revision, None), "the first document is admitted");
     assert!(!arena_keys(&ui, "second-document").contains(&added_key), "the first document does not carry the addition");
 
@@ -444,7 +444,7 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     // 🩸️ …and the producer the browser actually shipped: the same constant for both documents.
     let constant = law["ingressGeneration"]["constantProducerIsRefused"]["generations"].as_array().expect("constant generations").iter().map(|value| value.as_u64().expect("generation")).collect::<Vec<_>>();
     assert!(constant.windows(2).all(|pair| pair[0] == pair[1]), "the shipped producer's generations were all equal — that is the defect");
-    let mut refused = Ui::new();
+    let mut refused = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ingest_once(&mut refused, "constant", &law, &ids, constant[0], first_revision, None), "its first document is admitted");
     assert!(!ingest_once(&mut refused, "constant", &law, &survivors, constant[1], second_revision, Some(&addition)), "a repeat generation is never ADMITTED — `document_status` answers Published and the ingress is skipped");
     assert!(!arena_keys(&refused, "constant").contains(&added_key), "…so the arena keeps the first tree, which is exactly what 6118 painted");
@@ -862,7 +862,7 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: crate::wgpu::
 /// ledger stuck at `generation: 0` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
 #[test]
 fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
     assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
     reconcile_ui_window(&mut ui, "gis2d-main", "gis", 11);

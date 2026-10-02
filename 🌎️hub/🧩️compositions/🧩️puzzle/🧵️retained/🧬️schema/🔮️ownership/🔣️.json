@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "shared",
+    "sharedSha256",
+    "sharedOriginal",
+    "leafMount",
+    "artifacts",
+    "mutations",
+    "sharedRewrites"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "shared": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sharedSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sharedOriginal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "leafMount": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "owner",
+          "editor",
+          "editorSha256",
+          "fixture",
+          "fixtureSha256",
+          "root",
+          "rootSha256",
+          "project",
+          "manifest",
+          "manifestSha256",
+          "script",
+          "scriptSha256",
+          "leaf",
+          "positive",
+          "negative"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "2d",
+              "3d",
+              "5d"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "editor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "editorSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "fixture": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fixtureSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rootSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "project": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifestSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "script": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scriptSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "leaf": {
+            "type": "string",
+            "minLength": 1
+          },
+          "positive": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "negative": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "mutations": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "previous",
+          "current",
+          "pointer"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previous": {
+            "type": "string",
+            "minLength": 1
+          },
+          "current": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pointer": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sharedRewrites": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "previous",
+          "current"
+        ],
+        "properties": {
+          "previous": {
+            "type": "string",
+            "minLength": 1
+          },
+          "current": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -374,10 +374,29 @@ pub mod generation_forms {
 
     use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
     use serde::{Deserialize, Serialize};
-    use ui_wgpu::wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
-        UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    };
+    use ui_wgpu::wgpu::build_text_editor_scene;
+    use ui_wgpu::wgpu::ui_stack_vertical;
+    use ui_wgpu::wgpu::ui_text;
+    use ui_wgpu::wgpu::ActionDescriptor;
+    use semio_framework_ui_locale::Label;
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework_ui_locale::Terminology;
+    use ui_wgpu::wgpu::TextEditorScene;
+    use ui_wgpu::wgpu::UiControlNode;
+    use ui_wgpu::wgpu::UiFieldNode;
+    use ui_wgpu::wgpu::UiInputNode;
+    use ui_wgpu::wgpu::UiNode;
+    use ui_wgpu::wgpu::UiPresence;
+    use ui_wgpu::wgpu::UiSelectItem;
+    use ui_wgpu::wgpu::UiSelectNode;
+    use ui_wgpu::wgpu::UiSliderNode;
+    use ui_wgpu::wgpu::UiToggleNode;
+    use ui_wgpu::wgpu::UiTreeActionPlacement;
+    use ui_wgpu::wgpu::UiTreeItemAction;
+    use ui_wgpu::wgpu::UiTreeItemNode;
+    use ui_wgpu::wgpu::UiTreeNode;
+    use ui_wgpu::wgpu::UiTreeSectionNode;
 
     //#region 🔖️Types
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -717,6 +736,7 @@ pub mod generation_forms {
                 snaps: Vec::new(),
                 on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }),
             "number" => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
@@ -734,6 +754,7 @@ pub mod generation_forms {
                 snaps: Vec::new(),
                 on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }),
             "slider" => UiControlNode::Slider(UiSliderNode {
                 id: format!("{field_id}.slider"),
@@ -746,6 +767,7 @@ pub mod generation_forms {
                 snaps: Vec::new(),
                 presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }),
             "boolean" => UiControlNode::Toggle(UiToggleNode {
                 appearance: Default::default(),
@@ -806,6 +828,7 @@ pub mod generation_forms {
                                 snaps: Vec::new(),
                                 on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                                 menu: None,
+                                ..Default::default()
                             })),
                             description: None,
                             required: None,
@@ -835,6 +858,7 @@ pub mod generation_forms {
                 snaps: Vec::new(),
                 on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }),
         };
         Some(UiNode::Field(UiFieldNode {

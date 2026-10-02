@@ -58,7 +58,7 @@ option-geometry-ref = "[" "0" "]" | "[" "1" "," geometry-ref "]"
 option-psets = "[" "0" "]" | "[" "1" "," "[" pset-list? "]" "]"
 option-relation-kind = "[" "0" "]" | "[" "1" "," relation-kind "]"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the

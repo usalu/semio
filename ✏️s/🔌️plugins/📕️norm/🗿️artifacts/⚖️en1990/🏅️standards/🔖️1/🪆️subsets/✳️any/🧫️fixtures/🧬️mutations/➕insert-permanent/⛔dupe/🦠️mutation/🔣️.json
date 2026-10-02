@@ -1,9 +1,9 @@
 {
+  "mutation": "insertPermanent",
   "index": 2,
   "item": {
-    "gk": 12000.0,
     "id": "G-finish",
-    "kind": "g_sup"
-  },
-  "mutation": "insertPermanent"
+    "kind": "g_sup",
+    "gk": 12000.0
+  }
 }

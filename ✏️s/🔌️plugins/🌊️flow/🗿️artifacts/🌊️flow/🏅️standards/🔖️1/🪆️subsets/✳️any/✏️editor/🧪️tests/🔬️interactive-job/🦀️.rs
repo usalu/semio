@@ -199,7 +199,7 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
     let snapshot = FlowSnapshot::default();
     let config = main::config::FlowMainWindowConfig::default();
     let mut session = FlowEvalSession::new();
-    let view_state = semio_framework_plugin::ViewModel::default();
+    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let labels = flow_play_labels(&view_state);
     let bodies = [
         main::render(&snapshot, &config, &session, &[]),

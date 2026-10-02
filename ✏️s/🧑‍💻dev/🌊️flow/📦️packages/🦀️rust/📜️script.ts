@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌊️ First-party Flow composition has its own bounded native and portable law runner. */
-import { runExactCargoLaws, buildBudgetMs, runBun } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, runBun } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { testFlowCompositionOwnership, flowCompositionLaws } from "../../🧪️tests/🏷️ownership/🟦️.ts";
@@ -11,7 +12,7 @@ class SourceScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testFlowCompositionOwnership();
-    await runExactCargoLaws({ cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000,
+    await runRepositoryExactCargoLaws({ cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: buildBudgetMs(), lawBudgetMs: 600_000,
       groups: flowCompositionLaws().map(group => ({ package: "semio-s-flow-composition", target: { kind: "test", name: group.target }, laws: group.laws })) });
   }
 }
@@ -20,7 +21,7 @@ class CanonicalScript extends BundleScript {
     if (args.length !== 0) throw new Error("canonical-architecture takes no arguments");
     testFlowCompositionOwnership();
     runBun(["test","../../🧪️tests/🔌️port-sides/🟦️.ts"],import.meta.dir);
-    await runExactCargoLaws({ cwd:this.repoRoot,cargoArgs:["--locked"],buildBudgetMs:buildBudgetMs(),lawBudgetMs:600_000,
+    await runRepositoryExactCargoLaws({ cwd:this.repoRoot,cargoArgs:["--locked"],buildBudgetMs:buildBudgetMs(),lawBudgetMs:600_000,
       groups:flowCompositionLaws().map(group => ({ package:"semio-s-flow-composition",target:{kind:"test",name:group.target},laws:group.laws })) });
   }
 }

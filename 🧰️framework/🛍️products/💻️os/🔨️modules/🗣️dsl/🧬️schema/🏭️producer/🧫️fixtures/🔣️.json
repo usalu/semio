@@ -1,0 +1,14 @@
+{
+  "schema": "semio.native-schema-producer/v1",
+  "fields": [
+    {"id": 0, "key": "empty", "shape": "text", "optional": false},
+    {"id": 1, "key": "世界\u0000=@/!", "shape": "uint", "optional": true},
+    {"id": 2, "key": "nested", "shape": "record", "optional": false},
+    {"id": 3, "key": "octets", "shape": "bytes", "optional": false}
+  ],
+  "copy": {"seed": "世界\u0000=@/!", "repeatCount": 16384, "cancelAt": 65536},
+  "frontier": {"fieldCount": 1024, "cancelAt": 256},
+  "maximumBytes": 16777216,
+  "tinyMaximumBytes": 1,
+  "recursiveDepth": 5
+}

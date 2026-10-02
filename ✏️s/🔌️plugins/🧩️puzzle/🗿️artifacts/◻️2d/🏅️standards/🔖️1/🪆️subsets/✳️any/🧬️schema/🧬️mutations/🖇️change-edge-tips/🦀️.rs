@@ -32,8 +32,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeTi
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change edge \"{}\" tips", self.id), &format!("Spitzen von Kante \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edge \"{}\" tips", self.id), &format!("Spitzen von Kante \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

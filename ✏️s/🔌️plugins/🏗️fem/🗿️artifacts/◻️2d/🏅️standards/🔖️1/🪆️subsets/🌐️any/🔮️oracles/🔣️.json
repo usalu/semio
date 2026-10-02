@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.fem.fem2d` is a semio-NATIVE structural MODEL — nine id-keyed collections and one settings record — and its vocabulary edits the model, never the analysis, so a finite-element solver has nothing to adjudicate. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
   "oracles": [

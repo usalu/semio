@@ -205,16 +205,17 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     crate::wgpu::UiNode::Input(input) => node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone())),
                     crate::wgpu::UiNode::Slider(slider) => {
                         let value = arena_node.state.slider_draft_value.unwrap_or(slider.value);
-                        node.value_now = Some(value);
-                        node.value_text = Some(crate::wgpu::layout::slider_unit_label(value, slider.unit.as_deref()).unwrap_or_else(|| ui_contract::format_ui_number(value)));
+                        let shown = ui_contract::ui_number_display(value, slider.display_factor);
+                        node.value_now = Some(if slider.display_factor.is_some() { ui_contract::format_ui_number(shown).parse().unwrap_or(shown) } else { value });
+                        node.value_text = Some(crate::wgpu::layout::slider_unit_label(&slider.readout(value), slider.shown_unit()).unwrap_or_else(|| slider.readout(value)));
                         if let Some(edit) = arena_node.state.edit.as_ref() {
                             node.focused = false;
                             slider_editor_text = Some(edit.text.clone());
                         }
                     }
                     crate::wgpu::UiNode::NumberStepper(stepper) => {
-                        node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision) } else { String::new() }));
-                        node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or_else(|| stepper.uniform.then_some(stepper.value));
+                        node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { stepper.value_text(stepper.value) } else { String::new() }));
+                        node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or_else(|| stepper.uniform.then(|| ui_contract::ui_number_display(stepper.value, stepper.display_factor)));
                     }
                     crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
                     crate::wgpu::UiNode::Toggle(toggle) => match toggle.appearance {
@@ -222,6 +223,9 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                         ui_contract::ToggleAppearance::Checkbox => node.checked = Some(toggle.presence.selected),
                     },
                     _ => {}
+                }
+                if let Some(refusal) = arena_node.state.number_refusal.as_deref().filter(|refusal| !refusal.is_empty() && arena_node.state.edit.is_some()) {
+                    node.description = Some(node.description.take().map_or_else(|| refusal.to_string(), |description| format!("{refusal} · {description}")));
                 }
                 if let Some(open) = tree.disclosure_open(mounted) {
                     node.expanded = Some(open);

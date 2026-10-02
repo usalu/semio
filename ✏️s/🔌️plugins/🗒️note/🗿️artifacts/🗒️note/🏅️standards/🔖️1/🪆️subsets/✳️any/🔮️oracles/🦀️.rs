@@ -9,13 +9,13 @@
 //!
 //! Every function below DELEGATES to an already-registered, already-oracle-qualified projector this
 //! crate carries for OTHER subsets, rather than re-implementing a DXF/XML/PDF reader a third time:
-//! `crate::artifacts::dxf::standards::v_r12::subsets::header::project_dxf_r12` is the same qualifying
+//! `semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12` is the same qualifying
 //! `dxf` 0.6 reader `s.stdio.dxf@r12/✳️any` registers under `dxf-crate-r12-mutate`; the DXF bytes
 //! `NoteIntoDxf` writes are ordinary DXF R12 (only ever containing `LINE` entities), so the reader
 //! that already qualifies against the full grammar reads this narrower subset of it for free.
-//! `crate::markup::live::{parse_markup, project_markup}` is the `quick-xml` 0.42 tree reader/semantic
+//! `semio_s_plugin_stdio_markup_test_oracle::live::{parse_markup, project_markup}` is the `quick-xml` 0.42 tree reader/semantic
 //! projector this crate's `📰markup` family module already carries for the `🎨️svg` subsets — SVG is
-//! XML, so nothing note-specific is needed to read it. `crate::document::project_pdf` is the `lopdf`
+//! XML, so nothing note-specific is needed to read it. `semio_s_plugin_stdio_document_test_oracle::project_pdf` is the `lopdf`
 //! 0.44 reader already registered under `pdf-edit`/`pdf-parse`.
 //!
 //! WHAT THE PROJECTIONS DO AND DO NOT WITNESS, per `./🔣️.json`'s `mutationManifests`
@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// qualifying `dxf` reader `s.stdio.dxf@r12/✳️any` registers.
 #[cfg(feature = "oracles")]
 pub fn project_note_dxf(bytes: &[u8]) -> Result<Json, String> {
-    crate::artifacts::dxf::standards::v_r12::subsets::header::project_dxf_r12(bytes)
+    semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12(bytes)
 }
 
 /// 🎨️ Independent semantic projection of the SVG XML `NoteIntoSvg` wrote (via the real semio/drawing
@@ -46,15 +46,15 @@ pub fn project_note_dxf(bytes: &[u8]) -> Result<Json, String> {
 /// note-specific is needed to read it.
 #[cfg(feature = "oracles")]
 pub fn project_note_svg(bytes: &[u8]) -> Result<Json, String> {
-    let doc = crate::markup::live::parse_markup(bytes)?;
-    Ok(crate::markup::live::project_markup(&doc))
+    let doc = semio_s_plugin_stdio_markup_test_oracle::live::parse_markup(bytes)?;
+    Ok(semio_s_plugin_stdio_markup_test_oracle::live::project_markup(&doc))
 }
 
 /// 📄️ Independent semantic projection (media box + `Tj` text operands per page) of the PDF
 /// `NoteIntoPdf` wrote, via this crate's shared `lopdf` reader.
 #[cfg(feature = "oracles")]
 pub fn project_note_pdf(bytes: &[u8]) -> Result<Json, String> {
-    crate::document::project_pdf(bytes)
+    semio_s_plugin_stdio_document_test_oracle::project_pdf(bytes)
 }
 
 /// 🚫️ Without the `oracles` feature no reference implementation is linked at all.

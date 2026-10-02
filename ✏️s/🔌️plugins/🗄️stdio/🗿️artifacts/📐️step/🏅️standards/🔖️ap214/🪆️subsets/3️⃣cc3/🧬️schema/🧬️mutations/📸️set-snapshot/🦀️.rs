@@ -23,8 +23,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc3Mutation> for SetSnapshot {
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc3Mutation> {
         vec![StepCc3Mutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set the whole CC3 snapshot", "Gesamte CC3-Momentaufnahme setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set the whole CC3 snapshot", "Gesamte CC3-Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,8 +22,8 @@ impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutati
         vec![Self { camera: base.camera.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Writer Window Camera", "Kamera des Schreibfensters setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

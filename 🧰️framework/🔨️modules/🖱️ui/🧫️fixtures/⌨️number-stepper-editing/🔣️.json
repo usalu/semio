@@ -1,7 +1,8 @@
 {
   "uniform": { "value": 2, "step": 1, "uniform": true, "min": 0, "max": 5, "focusDisplay": "2", "focusCaret": 1 },
   "mixed": { "value": 0, "step": 1, "uniform": false, "min": -5, "max": 5, "focusDisplay": "0", "focusCaret": 1 },
-  "validEdit": { "input": "9", "expectedValue": 5, "expectedDisplay": "5" },
+  "validEdit": { "input": "3", "expectedValue": 3, "expectedDisplay": "3" },
+  "refusedEdit": { "input": "9", "expectedDisplay": "9" },
   "boundedKeys": [
     { "id": "delta-at-max-stays-visible-at-max", "value": 5, "key": "ArrowUp", "binding": "delta", "expectedField": "delta", "expectedActionValue": 1, "expectedDisplay": "5" },
     { "id": "absolute-at-max-commits-the-bound", "value": 5, "key": "ArrowUp", "binding": "absolute", "expectedField": "value", "expectedActionValue": 5, "expectedDisplay": "5" },

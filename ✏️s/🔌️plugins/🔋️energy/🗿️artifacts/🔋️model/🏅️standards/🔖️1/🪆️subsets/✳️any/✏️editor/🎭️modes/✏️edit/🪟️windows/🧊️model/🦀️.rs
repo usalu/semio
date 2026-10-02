@@ -19,8 +19,28 @@ pub mod config;
 
 use crate::editor::model::interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
 use crate::scene::{energy_model_scene, EnergySceneStyle};
-use semio_framework_plugin::plugin_app_close_prelude::{column, image, row, text, Buildable, HasBase, HasChildren, HasStackLayout, Label as SemanticLabel, SurfaceKind as SemanticSurfaceKind, UiText};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::column;
+use semio_framework_plugin::plugin_app_close_prelude::image;
+use semio_framework_plugin::plugin_app_close_prelude::row;
+use semio_framework_plugin::plugin_app_close_prelude::text;
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::HasStackLayout;
+use semio_framework_ui_contract::Label as SemanticLabel;
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
+use semio_framework_plugin::plugin_app_close_prelude::UiText;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use std::collections::HashMap;
 
 //#region 🔖️Constants

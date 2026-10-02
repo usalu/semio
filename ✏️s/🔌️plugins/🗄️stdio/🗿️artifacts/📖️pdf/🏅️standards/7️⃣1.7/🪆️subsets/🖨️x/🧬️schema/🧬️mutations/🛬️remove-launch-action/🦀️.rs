@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveLaunchAction {
         support::action_with(base, "Launch", "F", &self.target).map(|_| PdfXMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {

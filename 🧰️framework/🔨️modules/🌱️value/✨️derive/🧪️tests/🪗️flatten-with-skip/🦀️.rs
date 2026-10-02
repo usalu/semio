@@ -9,11 +9,11 @@
 //! this derive produces is byte-identical (same keys, same values, same JSON text once both sides
 //! are funneled through `serde_json::to_string`) to what `#[derive(serde::Serialize)]` +
 //! `#[serde(flatten)]` produces for the equivalent struct shape.
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 use std::collections::BTreeMap;
 
 // 🌿️ See the sibling `🛡️deny-unknown-fields-enums.rs` test file's identical docstring for why
-// `semio_framework_os_kernel` alone (not a separate `semio_framework_value_derive` import) is the
+// `semio_framework_value` alone (not a separate `semio_framework_value_derive` import) is the
 // correct single import here.
 
 //#region 🔖️Flatten — nested-struct field
@@ -98,7 +98,7 @@ fn flatten_absorbs_unknown_keys_without_deny_unknown_fields() {
 
 //#region 🔖️With — serialize_with/deserialize_with shorthand
 mod hex_u32 {
-    use semio_framework_os_kernel::{DslValue, ValueError};
+    use semio_framework_value::{DslValue, ValueError};
 
     /// 🔟 Encodes as a `0x`-prefixed hex string instead of `u32`'s own plain-number `ToValue`.
     pub fn to_value(value: &u32) -> DslValue {
@@ -204,7 +204,7 @@ fn skip_with_default_path_uses_that_path_not_type_default() {
 /// `expand_from_value`'s call sites, not just the impl header, since the struct below only compiles
 /// at all if every one of them resolves under this non-default path.
 mod value_root {
-    pub use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+    pub use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueShape};
 }
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue)]
@@ -293,7 +293,7 @@ fn missing_option_variant_field_defaults_to_none_like_serde() {
 //#region 🔖️VariantFieldAttrs — skip_serializing_if / skip / serialize_with / deserialize_with on a
 // named field of an enum variant (as opposed to a plain struct field, already covered above)
 mod byte_len_bridge {
-    use semio_framework_os_kernel::{DslValue, ValueError};
+    use semio_framework_value::{DslValue, ValueError};
 
     /// 🔟 Stand-in for a hand-written wire bridge, shaped like 🏪️store's real
     /// `operation_envelope_serde`/`envelope_serde` modules backing `ArtifactActorMsg::

@@ -27,8 +27,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditLhs 
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit lhs", "Linke Regelseite bearbeiten")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit lhs", "Linke Regelseite bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

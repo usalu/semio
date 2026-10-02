@@ -3,7 +3,6 @@
 //! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
-use semio_framework_value_derive::{FromValue, ToValue};
 
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
 // below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
@@ -1457,6 +1456,9 @@ pub enum VcsError {
     UnknownTransaction(String),
     /// 🧱️ The document's edit history holds `capacity` edits and is full: the edit was refused before anything was recorded.
     HistoryFull { capacity: usize },
+    /// 🐢️ A local history step (undo, redo, checkout, alternative switch, checkpoint or supersession) still replays across
+    /// turns on this store: no other history step may be authored before it is adopted or discarded.
+    HistoryReplaying,
 }
 
 impl std::fmt::Display for VcsError {
@@ -1488,6 +1490,7 @@ impl std::fmt::Display for VcsError {
             Self::TransactionOpen { transaction_id } => write!(formatter, "tool transaction {transaction_id} is open on this store"),
             Self::UnknownTransaction(transaction_id) => write!(formatter, "tool transaction {transaction_id} is not open on this store"),
             Self::HistoryFull { capacity } => write!(formatter, "the edit history holds at most {capacity} edits and is full"),
+            Self::HistoryReplaying => formatter.write_str("a history step still replays on this store"),
         }
     }
 }
@@ -1508,7 +1511,7 @@ impl From<MutationApplyError> for VcsError {
 }
 
 /// 🚨️ Every `VcsError` is a module fault; the refusals a runtime surfaces as their own notices carry their own codes:
-/// `toolTransaction.open`, `toolTransaction.unknown` and `history.full`.
+/// `toolTransaction.open`, `toolTransaction.unknown`, `history.full` and `history.replaying`.
 impl crate::os_dsl::FaultFrom for VcsError {
     fn fault_origin(&self) -> crate::os_dsl::FaultOrigin {
         crate::os_dsl::FaultOrigin::Module
@@ -1519,6 +1522,7 @@ impl crate::os_dsl::FaultFrom for VcsError {
             Self::TransactionOpen { .. } => "toolTransaction.open",
             Self::UnknownTransaction(_) => "toolTransaction.unknown",
             Self::HistoryFull { .. } => "history.full",
+            Self::HistoryReplaying => "history.replaying",
             _ => "module.vcs",
         })
     }

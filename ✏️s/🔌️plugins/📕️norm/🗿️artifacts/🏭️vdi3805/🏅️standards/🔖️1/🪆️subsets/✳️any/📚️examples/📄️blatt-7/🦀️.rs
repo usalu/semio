@@ -1,6 +1,7 @@
 //! 📚️ Example conforming Blatt 7.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-7";
 pub fn label() -> LocalizedLabel {

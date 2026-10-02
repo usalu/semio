@@ -1,3 +1,6 @@
+import { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
+import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import type { ShellBrand } from "@semio-tech/framework";
@@ -13,7 +16,7 @@ import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/�
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
@@ -28,7 +31,7 @@ return defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConf
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
-const { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveAssetServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
 const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
 const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
 void _semioPlaygroundGraphAnchor;
@@ -236,7 +239,7 @@ return {
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
-    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveAssetServeMode(process.env.SEMIO_ASSET_SERVE_MODE)),
+    ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, PLAYGROUND_ASSET_PROVIDERS_V1, resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE)),
     ...(renderer === "wgpu" ? uiTailwindBuildPlugins() : [uiReactBuildPlugin(), semioPlaygroundReactRefreshCoherenceVitePlugin(), ...uiTailwindBuildPlugins()]),
   ],
   optimizeDeps: {

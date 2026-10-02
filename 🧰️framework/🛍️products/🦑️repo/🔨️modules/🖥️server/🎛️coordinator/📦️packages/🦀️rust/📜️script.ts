@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-coordinator-rs` router: `bun ./📜️script.ts build|test|run`. */
-import { devToolingEnv, resolveTestLevel, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, runRepositoryCargoTests, runCmd, runCmdStatus } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -15,7 +16,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted([CRATE], this.repoRoot, rest);
+    await runRepositoryCargoTests([CRATE], this.repoRoot, rest);
   }
 }
 

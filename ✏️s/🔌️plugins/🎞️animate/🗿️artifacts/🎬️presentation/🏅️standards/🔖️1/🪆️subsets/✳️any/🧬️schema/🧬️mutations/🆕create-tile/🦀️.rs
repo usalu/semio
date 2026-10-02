@@ -30,8 +30,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for CreateTile {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create tile \"{}\"", self.tile.name), &format!("Kachel \"{}\" erstellen", self.tile.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create tile \"{}\"", self.tile.name), &format!("Kachel \"{}\" erstellen", self.tile.name))
     }
 
     fn target(&self) -> Vec<String> {

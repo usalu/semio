@@ -36,8 +36,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceSte
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace measure of step \"{}\"", self.id), &format!("Maß von Schritt \"{}\" ersetzen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace measure of step \"{}\"", self.id), &format!("Maß von Schritt \"{}\" ersetzen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

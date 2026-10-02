@@ -1,0 +1,110 @@
+{
+  "schema": "semio.stdio.jpg.snapshot-schema-producer/v1",
+  "fields": [
+    {
+      "id": 1,
+      "key": "schema",
+      "shape": "Text",
+      "optional": false
+    },
+    {
+      "id": 2,
+      "key": "width",
+      "shape": "UInt",
+      "optional": false
+    },
+    {
+      "id": 3,
+      "key": "height",
+      "shape": "UInt",
+      "optional": false
+    },
+    {
+      "id": 4,
+      "key": "pixels",
+      "shape": "Bytes64",
+      "optional": false
+    },
+    {
+      "id": 5,
+      "key": "reEncodeQuality",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 6,
+      "key": "jfifVersion",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 7,
+      "key": "jfifDensityUnits",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 8,
+      "key": "jfifXDensity",
+      "shape": "UInt",
+      "optional": false
+    },
+    {
+      "id": 9,
+      "key": "jfifYDensity",
+      "shape": "UInt",
+      "optional": false
+    },
+    {
+      "id": 10,
+      "key": "jfifThumbnail",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 11,
+      "key": "frame",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 12,
+      "key": "sofMarker",
+      "shape": "UInt",
+      "optional": false
+    },
+    {
+      "id": 13,
+      "key": "arithmetic",
+      "shape": "Bool",
+      "optional": false
+    },
+    {
+      "id": 14,
+      "key": "quantTables",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 15,
+      "key": "huffmanTables",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 16,
+      "key": "restartInterval",
+      "shape": "Value",
+      "optional": false
+    },
+    {
+      "id": 17,
+      "key": "otherSegments",
+      "shape": "Value",
+      "optional": false
+    }
+  ],
+  "maximumBytes": 65536,
+  "tinyMaximumBytes": 1,
+  "cancelAt": 2
+}

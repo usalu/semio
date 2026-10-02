@@ -18,8 +18,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberEffe
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-effective-depth", kind: "change-member-effective-depth", record: "ChangedChangeMemberEffectiveDepth" };
     fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change effective depth of member {}", self.member_id), &format!("Statische Nutzhöhe von Bauteil {} ändern", self.member_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change effective depth of member {}", self.member_id), &format!("Statische Nutzhöhe von Bauteil {} ändern", self.member_id))
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }

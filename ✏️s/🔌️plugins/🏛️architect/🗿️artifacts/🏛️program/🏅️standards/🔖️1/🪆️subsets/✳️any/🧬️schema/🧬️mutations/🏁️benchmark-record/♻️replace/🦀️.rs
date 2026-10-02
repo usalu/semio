@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceBenchmarkRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace benchmark record \"{}\"", self.benchmark_record.header.name), &format!("Benchmark-Datensatz \"{}\" ersetzen", self.benchmark_record.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace benchmark record \"{}\"", self.benchmark_record.header.name), &format!("Benchmark-Datensatz \"{}\" ersetzen", self.benchmark_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.benchmark_record.header.id.0.clone()]

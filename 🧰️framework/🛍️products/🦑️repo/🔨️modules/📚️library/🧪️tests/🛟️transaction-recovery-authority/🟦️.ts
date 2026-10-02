@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, lstatSync, readdirSync, renameSync, symlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -8,7 +9,7 @@ import Ajv from "ajv";
 import { getNodeValue, parseTree } from "jsonc-parser";
 import ts from "typescript";
 
-const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
+const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath);
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛟️transaction-recovery-authority/🔣️.json"), "utf8"));
 const functionNames = ["reconcileTransactionOwnedTuples", "validateForwardMoveSourceInputs", "validateForwardGeneratorInputs", "validateResumeTuples"];

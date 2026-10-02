@@ -1,21 +1,3 @@
-/** 📦️ One losslessly retained OPC package part. */
-export interface OpcPart { path: string; contentType: string; bytes: number[] }
-/** 🔗️ One OPC relationship. */
-export interface OpcRelationship { id: string; relType: string; target: string; targetMode: 'internal' | 'external' }
-/** 📦️ The complete OPC container, including the ZIP comment. */
-export interface OpcPackage {
-  parts: OpcPart[];
-  contentTypes: { defaults: [string, string][]; overrides: [string, string][] };
-  relationships: Record<string, OpcRelationship[]>;
-  comment: string;
-}
-/** 🏷️ One XML attribute. */
-export interface XmlAttr { name: string; value: string }
-/** 🌳 Raw XML retained for unmodeled WordprocessingML properties. */
-export type XmlNode =
-  | { kind: 'element'; name: string; attrs: XmlAttr[]; children: XmlNode[] }
-  | { kind: 'text' | 'cData' | 'comment'; text: string }
-  | { kind: 'processingInstruction'; target: string; data: string };
 /** ✍️ One WordprocessingML text run. */
 export interface DocxRun { text: string; bold: boolean; italic: boolean; underline: boolean; extraRunProperties: XmlNode[] }
 /** 📄️ One WordprocessingML paragraph. */
@@ -42,4 +24,8 @@ export interface DocxSnapshot {
   /** @state artifact */ opc: OpcPackage;
   /** @state artifact */ xmlParts: DocxXmlPart[];
 }
-import type { XmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlDocument,XmlNode,XmlAttr } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+
+import type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
+export type{OpcPackage,OpcPart,OpcRelationship}from"../../../../../../../🎒️zip/📦️opc/🟦️.ts";
+export type{XmlDocument,XmlNode,XmlAttr}from"../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";

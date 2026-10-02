@@ -28,15 +28,58 @@ use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedTo
 use semio_framework_plugin::ArtifactReservedJob;
 #[cfg(test)]
 use semio_framework_plugin::App;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, DraftView, DslValue, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
-    WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::ContextMenuSurfaceTarget;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementPossible;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::CLEAR_SELECTION_ACTION_ID;
+use semio_framework_plugin::INTERACTION_HOVER_ACTION_ID;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::{AppOperationContext, ArtifactToolPublicationContract, ArtifactToolPublicationLane};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 
 //#region 🔖️Constants
@@ -55,7 +98,7 @@ pub fn layout_action(action: &str, args: Option<semio_framework_plugin::UiValue>
 }
 
 /// 🏷️ Admits display text into the bounded semantic label contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_locale::Label> {
     value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout label admission failed"))
 }
 
@@ -1095,6 +1138,56 @@ impl store::ArtifactStoreOneItemPreparationFactory<LayoutSnapshot, LayoutMutatio
 }
 //#endregion 🧺️ArtifactPreparation
 
+//#region 🪧️EntityLabels
+/// 🪧️ What a history-edit reference chip reads for the layout entity `id` (gap N3): a frame (`kinds` names `frame`, or
+/// none is declared) by its kind word — a text frame quoting the start of its story, an image frame its linked file, any
+/// other frame its ordinal among the frames of its kind on its page when there are several — then its page name. Pages,
+/// layers and styles name themselves through the framework's generic walk (their `name`); `None` for every other id.
+pub(crate) fn layout_entity_label(document: &LayoutSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+    if !(kinds.is_empty() || kinds.iter().any(|kind| kind == "frame")) {
+        return None;
+    }
+    let pages = document.pages.iter().map(|page| (page.name.as_str(), page.frames.as_slice())).chain(document.parent_pages.iter().map(|page| (page.name.as_str(), page.frames.as_slice())));
+    let (page, frames) = pages.into_iter().find(|(_, frames)| frames.iter().any(|frame| frame.id() == id))?;
+    let frame = frames.iter().find(|frame| frame.id() == id)?;
+    let quoted = match frame {
+        Frame::Text { story_id, .. } => document.stories.iter().find(|story| &story.id == story_id).and_then(|story| layout_label_excerpt(&story.content)),
+        Frame::Image { link_id, .. } => document.links.iter().find(|link| &link.id == link_id).and_then(|link| link.path.rsplit(['/', '\\']).next().and_then(layout_label_excerpt)),
+        Frame::Rect { .. } => None,
+    };
+    let siblings: Vec<&Frame> = frames.iter().filter(|other| other.kind_str() == frame.kind_str()).collect();
+    let ordinal = (siblings.len() > 1).then(|| siblings.iter().position(|other| other.id() == id).map_or(1, |index| index + 1));
+    let (kind, page) = (frame.kind_str().to_string(), page.to_string());
+    Some(LocalizedLabel::from_fn(move |terminology, locale| {
+        let labels = <LayoutLabels as semio_framework_ui_locale::AppLabels>::labels(locale, terminology);
+        let word = match kind.as_str() {
+            "text" => labels.kind_text,
+            "image" => labels.kind_image,
+            _ => labels.kind_rect,
+        }
+        .as_str();
+        let (open, close) = match locale {
+            semio_framework_ui_locale::Locale::De => ("\u{201e}", "\u{201c}"),
+            semio_framework_ui_locale::Locale::En => ("\u{201c}", "\u{201d}"),
+        };
+        match (&quoted, ordinal) {
+            (Some(quoted), _) => format!("{word} {open}{quoted}{close} \u{b7} {page}"),
+            (None, Some(ordinal)) => format!("{word} {ordinal} \u{b7} {page}"),
+            (None, None) => format!("{word} \u{b7} {page}"),
+        }
+    }))
+}
+
+/// ✂️ The first non-blank line of `content`, trimmed and cut to [`LAYOUT_LABEL_EXCERPT_CHARS`] characters with an ellipsis.
+fn layout_label_excerpt(content: &str) -> Option<String> {
+    let line = content.lines().map(str::trim).find(|line| !line.is_empty())?;
+    Some(if line.chars().count() > LAYOUT_LABEL_EXCERPT_CHARS { format!("{}\u{2026}", line.chars().take(LAYOUT_LABEL_EXCERPT_CHARS).collect::<String>()) } else { line.to_string() })
+}
+
+/// 📏️ The longest story or file excerpt a frame chip quotes.
+const LAYOUT_LABEL_EXCERPT_CHARS: usize = 24;
+//#endregion 🪧️EntityLabels
+
 //#region 🔖️LayoutPlayApp
 /// 🧪️ Stateless app shell; exact window owners hold persisted view preferences and ephemeral input.
 #[derive(Default)]
@@ -1190,6 +1283,11 @@ impl ArtifactEditor for LayoutPlayApp {
             HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
         };
         Some(LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, phase: Some("abort".into()), reason: Some(reason.as_str().into()) }))
+    }
+
+    /// 🪧️ A history-edit reference chip names a frame by its kind, content and page ([`layout_entity_label`]).
+    fn entity_label(snapshot: &LayoutSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+        layout_entity_label(snapshot, kinds, id)
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1436,7 +1534,7 @@ impl ArtifactEditor for LayoutPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &[])
     }
 
@@ -1448,7 +1546,7 @@ impl ArtifactEditor for LayoutPlayApp {
         interaction: &InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let fallback = LayoutInteractionSnapshot::from_interaction(interaction).ids;
         layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &fallback)
     }
@@ -1463,7 +1561,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("Layout", "Layout"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("Layout", "Layout"),
                 source_format: "layout.layout".into(),
                 component_kind: "layout".into(),
                 dimension: "2d".into(),

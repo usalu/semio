@@ -37,7 +37,7 @@ async fn opening_the_show_mode_section_materialises_its_rows() {
     let mut app = app().await;
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: MODES_SECTION.into(), open: Some(true), offset: 1, rows: 2 }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
     close(app);
@@ -87,7 +87,7 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
         let mut app = app().await;
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.inputs", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: input_section.items.len() as u32 }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
         close(app);
@@ -104,7 +104,7 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
     let mut app = app().await;
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key: format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.outputs", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR), open: Some(true), offset: 0, rows: outputs.items.len() as u32 }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let json = render_with_view(&mut app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
     close(app);
@@ -129,7 +129,7 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
         let node_key = format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.{}", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR, section.id);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key, open: Some(true), offset: index as u32, rows: 1 }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let json = render_with_view(&mut neuron_app, GENERATION2D_PLAY_BODY_CATALOGUE, &view).await;
         close(neuron_app);

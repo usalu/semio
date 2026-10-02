@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:stdio.semio:registered-controlled-native-owners",
+  "type": "object",
+  "required": ["owners", "encodings"],
+  "additionalProperties": false,
+  "properties": {
+    "owners": {"type": "array", "minItems": 19, "maxItems": 19, "uniqueItems": true, "items": {"enum": ["base", "text", "value", "audio", "video", "image", "flow", "table", "graph", "animation", "object", "kit", "mesh", "model", "cad", "document", "drawing", "presentation", "brep"]}},
+    "encodings": {"const": ["binary", "text"]}
+  }
+}

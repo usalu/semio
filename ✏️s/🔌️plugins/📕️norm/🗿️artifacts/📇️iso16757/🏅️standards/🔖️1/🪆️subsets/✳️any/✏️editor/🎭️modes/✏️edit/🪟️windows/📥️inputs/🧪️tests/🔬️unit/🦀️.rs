@@ -1,7 +1,11 @@
 use super::*;
 use crate::editor::iso16757::unit_tests::context;
 use crate::Iso16757Snapshot;
-use semio_framework_plugin::{Locale, TreeWindowRequest, TreeWindows, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {
@@ -44,7 +48,7 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
             rows: 16,
         }],
         tree_viewport_rows: Some(16),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let collapsed = render(&document, Locale::En, "norm.iso16757", &TreeWindows::for_body(&collapsed_view, BODY_INPUTS)).expect("collapsed assemble");
     let collapsed_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(collapsed)).expect("collapsed retire");
@@ -65,7 +69,7 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
             TreeWindowRequest { body_key: BODY_INPUTS.into(), node_key: objects_path, open: Some(true), offset: 0, rows: 8 },
         ],
         tree_viewport_rows: Some(16),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let expanded = render(&document, Locale::En, "norm.iso16757", &TreeWindows::for_body(&expanded_view, BODY_INPUTS)).expect("expanded assemble");
     let expanded_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(expanded)).expect("expanded retire");

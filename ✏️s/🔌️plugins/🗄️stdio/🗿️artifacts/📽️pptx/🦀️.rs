@@ -90,6 +90,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .subset_validators(pptx_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("*") })
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("strict") })
+        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: "s.stdio.pptx", standard: semio_framework_plugin::StandardId("ecma-376"), subset: semio_framework_plugin::SubsetId("transitional") })
         .try_build()
 }
 
@@ -180,7 +182,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.pptx".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Pptx", "Pptx"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Pptx", "Pptx"),
         source_format: STDIO_PPTX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

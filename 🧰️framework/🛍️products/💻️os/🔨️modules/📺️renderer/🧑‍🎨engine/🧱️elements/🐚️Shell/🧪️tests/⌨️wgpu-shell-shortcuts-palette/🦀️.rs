@@ -126,7 +126,7 @@ fn the_edit_chords_are_shadowable_and_carry_the_react_redo_alias() {
 /// ⚖️ LAW: a chord only fires when the user is NOT typing, and a bare key is never a shell chord.
 #[test]
 fn a_focused_content_field_swallows_every_shell_chord() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     input.focused_id = Some("app.content.field".into());
     let (action, modifiers) = chord_event("meta+b");
@@ -188,7 +188,7 @@ fn each_panel_anchor_chord_toggles_its_own_anchor() {
 /// that closes them (the regression `🔬️wgpu-shell-input` pins for `mod+p` — re-asserted here for `mod+f`).
 #[test]
 fn the_overlay_chords_toggle_through_the_same_table() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+f");
     shell.handle_keyboard(action.clone(), &modifiers, &mut input);
@@ -201,7 +201,7 @@ fn the_overlay_chords_toggle_through_the_same_table() {
 
 #[test]
 fn dismissing_and_reopening_a_palette_preserves_its_query() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+p");
     shell.handle_keyboard(action.clone(), &modifiers, &mut input);
@@ -214,12 +214,12 @@ fn dismissing_and_reopening_a_palette_preserves_its_query() {
 }
 
 fn two_window_shell() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let app = test_app(Vec::new(), Vec::new());
     shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.active_window_id = Some("main".into());
     shell.active_window_id = Some("main".into());
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -310,7 +310,7 @@ fn fuzzy_normalization_matches_the_neutral_nfkd_oracle() {
 #[test]
 fn built_in_command_labels_match_the_neutral_react_locale_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for row in fixture["producer"]["localizedCommands"].as_array().expect("localized command rows") {
         let command_id = row["id"].as_str().expect("localized command id");
         for locale in ["en", "de"] {
@@ -350,8 +350,8 @@ fn palette_shell() -> ShellState {
         CommandDefinition::new("app.compose", LocalizedLabel::data("Compose"), "app", "play", ActionKind::Shell).with_args([select_arg("value"), ActionArgDef::text("note", LocalizedLabel::data("Note"))]),
         CommandDefinition::new("app.rename", LocalizedLabel::data("Rename"), "app", "play", ActionKind::Shell).with_args([ActionArgDef::text("name", LocalizedLabel::data("Name"))]),
     ];
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(commands, Vec::new()), view_state: ViewModel::default() });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: test_app(commands, Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -667,7 +667,7 @@ fn the_palette_rows_follow_the_react_declaration_order() {
 
 #[test]
 fn a_palette_without_a_session_is_empty_like_react() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(shell.build_search_items().is_empty());
 }
 

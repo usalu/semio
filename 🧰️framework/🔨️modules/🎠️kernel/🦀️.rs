@@ -1871,7 +1871,7 @@ pub struct HistoryMutationEntry {
     pub mutation_id: String,
     pub position: u32,
     pub op_index: u32,
-    pub label: dsl::LocalizedLabel,
+    pub label: semio_framework_ui_locale::LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none", with = "history_severity_serde::option")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub worst: Option<Severity>,
@@ -1942,7 +1942,7 @@ pub struct HistoryTimeTravel {
     pub target: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub target_label: Option<dsl::LocalizedLabel>,
+    pub target_label: Option<semio_framework_ui_locale::LocalizedLabel>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub done: Option<u32>,
@@ -1998,7 +1998,7 @@ pub struct HistoryEntry {
     /// 🏷️ Every shell locale's text for this row, resolved by the renderer against the
     /// active locale — never a pre-resolved string, so switching the shell locale re-renders the
     /// whole ledger instead of leaving already-logged rows in the locale they were dispatched in.
-    pub label: dsl::LocalizedLabel,
+    pub label: semio_framework_ui_locale::LocalizedLabel,
     pub kind: String,
     pub timestamp: String,
     /// 📜️ The newest forward operations of this row's edit, newest last — a bounded preview; `op_count` says how many the
@@ -2046,6 +2046,23 @@ impl HistoryEntry {
     }
 }
 
+/// 📡️ The replay a remote history change (another replica's supersession, or the undo or redo of one) needs before this
+/// replica adopts it, stepped per reactor turn (design §16.6): replayed operations of the total, whether the user paused
+/// it (`historyEditCancelReplay` while no session is open; `historyEditRerun` resumes) and the code of a refused adoption.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct HistoryRemoteReplay {
+    pub done: u32,
+    pub total: u32,
+    #[serde(default)]
+    #[value(default)]
+    pub paused: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fault: Option<String>,
+}
+
 /// 🧾️ Ordered history delta returned in the same response as an accepted interaction.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -2076,11 +2093,33 @@ pub struct HistoryPatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub time_travel: Option<HistoryTimeTravel>,
+    /// 📡️ The remote history change waiting for its replay; absent while none waits.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub remote_replay: Option<HistoryRemoteReplay>,
+}
+
+/// 📢️ Framework-owned EN/DE notices of the store refusals a history-lane dispatch answers outside a history-edit session,
+/// by fault code — every shell shows these bytes; `{n}` is the edit count a refusal names. Fixture
+/// `🧫️fixtures/🧫️history-notices/🔣️.json`; TS twin `HISTORY_NOTICE_LABELS`.
+pub const HISTORY_NOTICE_LABELS: [(&str, &str, &str); 3] = [
+    ("toolTransaction.open", "A tool is still recording — finish or cancel it first.", "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen."),
+    ("toolTransaction.unknown", "The tool's recording has already ended.", "Die Aufzeichnung des Werkzeugs ist bereits beendet."),
+    ("history.full", "This document's history is full ({n} edits).", "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen)."),
+];
+
+/// 🔔️ The `(en, de)` notice of a history-lane refusal `code` ([`HISTORY_NOTICE_LABELS`]); `None` for any other code.
+pub fn history_notice(code: &str) -> Option<(&'static str, &'static str)> {
+    HISTORY_NOTICE_LABELS.iter().find(|(known, _, _)| *known == code).map(|(_, en, de)| (*en, *de))
 }
 
 #[cfg(test)]
 #[path = "🧪️tests/🧪️history-patch/🦀️.rs"]
 mod history_patch_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history-notices/🦀️.rs"]
+mod history_notices_tests;
 //#endregion 🔖️HistoryWire
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]

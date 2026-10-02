@@ -2,7 +2,7 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel).
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 3D app; one field per label makes every locale combination compile-checked.
     pub struct Process3dLabels {
         stock: native_en "Stock", native_de "Rohteil", reuse_en "Stock", reuse_de "Rohteil";
@@ -68,7 +68,7 @@ pub fn process3d_measure_icon(measure: &crate::ProcessMeasure) -> &'static str {
 }
 
 /// 🗣️ The localized label a process measure's kind renders with, used by the inspector's step group title.
-pub fn process3d_measure_label(measure: &crate::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_plugin::LabelText {
+pub fn process3d_measure_label(measure: &crate::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_ui_locale::LabelText {
     match measure {
         crate::ProcessMeasure::Cut { .. } => labels.cut,
         crate::ProcessMeasure::Drill { .. } => labels.drill,

@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/schema-validator-ts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-shape": "nx run @semio-tech/schema-validator-ts:test-shape"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

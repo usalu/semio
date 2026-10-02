@@ -12,10 +12,10 @@
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none —
 //! so every law this case claims is asserted INSIDE the subject handler, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_repo_test_host::law;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🏷️metadata/🧬️schema/🧬️mutations/🦀️.rs` — duplicated,
@@ -35,9 +35,9 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "rename-layer" => (
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames/🦠️mutation/🔣️.json"),
-            include_str!("../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/🦠️mutation/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-locked" => (
             include_str!("../../../🏷️metadata/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json"),
@@ -90,7 +90,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_draw_drawing::standards::v1::subsets::any::schema::mutations::{apply_drawing_mutation_json, undo_drawing_mutation_json};
 
     /// 📥️ Splits a bridge answer into the resulting document and the diagnostic codes it raised.

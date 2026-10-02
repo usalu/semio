@@ -23,8 +23,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for MoveNode {
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move node \"{}\"", self.id), &format!("Knoten \"{}\" verschieben", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move node \"{}\"", self.id), &format!("Knoten \"{}\" verschieben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -2,7 +2,7 @@
 
 use crate::{EnergyStructureChild, EnergyZonesChild};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️LinkSlotDelta
 /// 🔗️ A link slot's delta. The field is `Option<EnergyLinkSlotDelta>`, and ABSENT means the slot did
@@ -57,8 +57,8 @@ impl ToValue for EnergyModelDiff {
             ("artifact".to_string(), self.artifact.to_value()),
             ("schema".to_string(), self.schema.to_value()),
             ("model".to_string(), self.model.to_value()),
-            ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
-            ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
+            ("structure".to_string(), semio_framework_value::ToValue::to_value(&self.structure)),
+            ("zones".to_string(), semio_framework_value::ToValue::to_value(&self.zones)),
             ("referencedModel".to_string(), self.referenced_model.to_value()),
             ("weatherLink".to_string(), self.weather_link.to_value()),
             ("resultsJson".to_string(), self.results_json.to_value()),
@@ -73,8 +73,8 @@ impl FromValue for EnergyModelDiff {
             artifact: Option::from_value(field("artifact"))?,
             schema: Option::from_value(field("schema"))?,
             model: Option::from_value(field("model"))?,
-            structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
-            zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
+            structure: semio_framework_value::FromValue::from_value(field("structure"))?,
+            zones: semio_framework_value::FromValue::from_value(field("zones"))?,
             referenced_model: Option::from_value(field("referencedModel"))?,
             weather_link: Option::from_value(field("weatherLink"))?,
             results_json: Option::from_value(field("resultsJson"))?,

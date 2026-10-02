@@ -9,13 +9,11 @@ IMPLEMENTATION, written in another language from the format's own committed spec
   `0x89 'S' 'E' 'M' 0D 0A 1A 0A` magic + little-endian u32 token length + token for binary — is
   specified in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s `🔖️Envelope`/
   `🔖️Binary`/`🔖️Text` regions, the carrier's normative description;
-* the child handle's `target` string is the ONE dialect-coordinate codec in the repository,
-  `<artifact_id>!<kind>@<standard>/<subset>`, specified by `ArtifactRef::to_uri`/`parse_uri` in
-  `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs`;
+* the child target retains four independently framed artifact/dialect strings;
 * the DSL body is the committed grammar
   `../../🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line transform-line brep-line mesh-line properties-line`,
-  `child = "[" "]" | "[" hex "," hex "]"`, `number = INT | FLOAT`);
+  `child = "[" "]" | "[" hex "," reference "]"`, `number = INT | FLOAT`);
 * the JSON projection is the committed schema `…/📸️snapshot/🔣️.json`;
 * the nine verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
@@ -23,7 +21,7 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
   `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
   frame — "`transform` (10 fixed f64 LE) plus the three optional child-handle slots
-  (`brep`/`mesh`/`properties`, each a presence byte + two length-prefixed strings when present)".
+  (`brep`/`mesh`/`properties`, each a presence byte + five length-prefixed strings when present)".
   That named-but-unframed layout was written out here from the protocol's own sentence and is
   PINNED by `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte, which a
   misreading could not do.
@@ -72,22 +70,31 @@ def text_of(hexed: str) -> str:
 
 
 def number_of(lexeme: str) -> float:
-    """🔢️ `number = INT | FLOAT` in the reading direction."""
+    """🔢️ Parses finite scalars, infinities and exact binary64 NaN words."""
+    if lexeme.startswith("nan64_"):
+        word = lexeme[6:]
+        if len(word) != 16 or any(digit not in "0123456789abcdefABCDEF" for digit in word):
+            raise AssertionError("invalid binary64 NaN word")
+        bits = int(word, 16)
+        if bits & 0x7ff0000000000000 != 0x7ff0000000000000 or bits & 0xfffffffffffff == 0:
+            raise AssertionError("binary64 NaN word has non-NaN class")
+        return struct.unpack("<d", bits.to_bytes(8, "little"))[0]
     return float(lexeme)
 
 
 def print_number(value: float) -> str:
-    """🔢️ `number = INT | FLOAT` in the writing direction — an integral magnitude prints without a
-    fractional part, which is what the committed artifact's `transform=[1,2,3,0,0,0,1,1,1,1]` shows
-    the lexeme convention to be."""
-    if value != value or value in (float("inf"), float("-inf")):
-        raise AssertionError("the grammar's `number` has no lexeme for %r" % value)
+    """🖨️ Preserves every binary64 scalar word in the native textual form."""
+    bits = int.from_bytes(struct.pack("<d", value), "little")
+    if bits & 0x7ff0000000000000 == 0x7ff0000000000000:
+        if bits & 0xfffffffffffff:
+            return "nan64_%016x" % bits
+        return "-inf" if bits >> 63 else "inf"
+    if bits == 0x8000000000000000:
+        return "-0"
     if value == int(value) and abs(value) < 1e16:
         return str(int(value))
-    lexeme = repr(float(value))
-    if "e" in lexeme or "E" in lexeme:
-        raise AssertionError("%r has no plain-decimal lexeme" % value)
-    return lexeme
+    from decimal import Decimal
+    return format(Decimal(repr(value)), "f")
 
 
 def split_preamble(text: str) -> str:
@@ -98,24 +105,47 @@ def split_preamble(text: str) -> str:
     return rest.lstrip("\r\n")
 
 
-def ref_to_uri(target: dict) -> str:
-    """🔗️ `ArtifactRef::to_uri` — `<artifact_id>!<kind>@<standard>/<subset>`."""
+def reference_fields(target: dict) -> tuple:
+    """🔗️ Returns the four independent persisted reference strings."""
     dialect = target["dialect"]
-    return "%s!%s@%s/%s" % (target["artifactId"], dialect["artifactKind"], dialect["standard"], dialect["subset"])
+    return (target["artifactId"], dialect["artifactKind"], dialect["standard"], dialect["subset"])
 
 
-def ref_from_uri(uri: str) -> dict:
-    """🔗️ `ArtifactRef::parse_uri` — splits on the FIRST `!`, then `@`, then the LAST `/`."""
-    artifact_id, separator, coordinate = uri.partition("!")
-    if separator == "" or artifact_id == "":
-        raise AssertionError("artifact ref uri %r has no artifact id" % uri)
-    kind, separator, rest = coordinate.partition("@")
-    if separator == "":
-        raise AssertionError("artifact ref uri %r is missing '@'" % uri)
-    standard, separator, subset = rest.rpartition("/")
-    if separator == "" or kind == "" or standard == "" or subset == "":
-        raise AssertionError("artifact ref uri %r has an empty dialect component" % uri)
-    return {"artifactId": artifact_id, "dialect": {"artifactKind": kind, "standard": standard, "subset": subset}}
+def reference_from_fields(fields: list) -> dict:
+    """🪪️ Reconstructs independent artifact and dialect fields without URI lowering."""
+    if len(fields) != 4:
+        raise AssertionError("a reference requires four strings")
+    return {"artifactId": fields[0], "dialect": {"artifactKind": fields[1], "standard": fields[2], "subset": fields[3]}}
+
+
+def read_reference(reader) -> dict:
+    """📖️ Reads the exact bracketed four-string reference production."""
+    reader.take("[")
+    fields = [reader.hex()]
+    for _ in range(3):
+        reader.take(",")
+        fields.append(reader.hex())
+    reader.take("]")
+    return reference_from_fields(fields)
+
+
+def print_reference(target: dict) -> str:
+    """🖨️ Prints the literal reference production."""
+    return "[" + ",".join(hex_of(field) for field in reference_fields(target)) + "]"
+
+
+def read_pack_reference(body: bytes, at: int) -> tuple:
+    """💾️ Reads four length-prefixed reference strings."""
+    fields = []
+    for _ in range(4):
+        field, at = read_string(body, at)
+        fields.append(field)
+    return reference_from_fields(fields), at
+
+
+def write_pack_reference(target: dict) -> bytes:
+    """📦️ Writes four length-prefixed reference strings."""
+    return b"".join(write_string(field) for field in reference_fields(target))
 
 
 # endregion 🔖️Carrier
@@ -156,14 +186,14 @@ class Reader:
 
 
 def read_child(reader: Reader) -> dict:
-    """🧒️ `child = "[" "]" | "[" hex "," hex "]"` — an absent slot is the empty pair of brackets."""
+    """🧒️ `child = "[" "]" | "[" hex "," reference "]"` — an absent slot is the empty pair of brackets."""
     reader.take("[")
     if reader.peek() == "]":
         reader.take("]")
         return {}
     child_id = reader.hex()
     reader.take(",")
-    target = ref_from_uri(reader.hex())
+    target = read_reference(reader)
     reader.take("]")
     return {"childId": child_id, "target": target}
 
@@ -172,7 +202,7 @@ def print_child(child: dict) -> str:
     """🧒️ The writing direction of `child`."""
     if not child:
         return "[]"
-    return "[%s,%s]" % (hex_of(child["childId"]), hex_of(ref_to_uri(child["target"])))
+    return "[%s,%s]" % (hex_of(child["childId"]), print_reference(child["target"]))
 
 
 def parse_dsl(text: str) -> dict:
@@ -324,8 +354,8 @@ def parse_pack(data: bytes) -> dict:
             raise AssertionError("the %s presence byte is %d, not 0 or 1" % (slot, present))
         if present:
             child_id, at = read_string(body, at)
-            uri, at = read_string(body, at)
-            document[slot] = {"childId": child_id, "target": ref_from_uri(uri)}
+            target, at = read_pack_reference(body, at)
+            document[slot] = {"childId": child_id, "target": target}
     if at != len(body):
         raise AssertionError("%d trailing byte(s) after the last slot" % (len(body) - at))
     return document
@@ -343,7 +373,7 @@ def pack_bytes(document: dict) -> bytes:
             continue
         body.append(1)
         body += write_string(child["childId"])
-        body += write_string(ref_to_uri(child["target"]))
+        body += write_pack_reference(child["target"])
     token = PACK_TOKEN.encode("utf-8")
     return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
 

@@ -72,7 +72,10 @@ export function parseBlock5dInference(value: unknown, at = "$"): Block5dInferenc
 export function parseBoundingBox3d(value: unknown, at = "$"): BoundingBox3d {
   const row = blockBlock5dInferenceGuardObject(value, at);
   return {
-    min: blockBlock5dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.min[${index}]`)),
-    max: blockBlock5dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.max[${index}]`)),
+    min: blockBlock5dInferenceGuardArray(row["min"], `${at}.min`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.min[${index}]`)) as [number, number, number],
+    max: blockBlock5dInferenceGuardArray(row["max"], `${at}.max`, {"minItems": 3, "maxItems": 3}).map((item, index) => blockBlock5dInferenceGuardNumber(item, `${at}.max[${index}]`)) as [number, number, number],
   };
 }
+
+/** 📦️ Admit the actual derived optional bounds and unsigned vertex count. */
+export function parseBlock5dBounds(value:unknown,at='$'):Block5dBounds{const row=blockBlock5dInferenceGuardObject(value,at);return{boundingBox:row.boundingBox===null?null:parseBoundingBox3d(row.boundingBox,at+'.boundingBox'),vertexCount:blockBlock5dInferenceGuardInteger(row.vertexCount,at+'.vertexCount',{minimum:0})}}

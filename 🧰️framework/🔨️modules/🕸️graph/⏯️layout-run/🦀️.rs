@@ -11,14 +11,14 @@
 //!
 //! Schema of record: `🧬️schema/🔣️.json`. Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §3.7, §5 W3-F.
 
-use dsl::{FromValue, ToValue};
+use semio_framework_value::{FromValue, ToValue};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter,
     ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
 };
 use serde::{Deserialize, Serialize};
-use ui::wgpu::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Limits
 /// 🚰️ Estimated tick bytes after which an iteration or compaction tick is flushed (one 16 KiB job payload page).

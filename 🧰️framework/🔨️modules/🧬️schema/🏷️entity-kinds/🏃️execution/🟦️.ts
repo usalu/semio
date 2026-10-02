@@ -1,9 +1,8 @@
 /** 🏃️ Entity-kind generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
 import { relative } from "node:path";
-import { getWorkspaceRoot } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
-import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { entityKindIndexByEmoji } from "../../🟦️.ts";
 import { GENERATOR_ID, REFRESH_COMMAND, readEntityCatalog } from "../📥️source/🟦️.ts";
 import { generatedTargets } from "../📋️plan/🟦️.ts";
@@ -12,8 +11,8 @@ import { generatedTargets } from "../📋️plan/🟦️.ts";
 /** 🧾️ Emits the canonical read-only generator protocol from the same byte plan as generate/check. */
 export class PreviewGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
-    const nodes = generatedTargets(repoRoot, readEntityCatalog(repoRoot))
+    const repoRoot = this.repoRoot;
+    const nodes = generatedTargets(readEntityCatalog(repoRoot))
       .map((target) => ({ bytesBase64: Buffer.from(target.content).toString("base64"), mode: 0o644, nodeKind: "file" as const, path: relative(repoRoot, target.path).replaceAll("\\", "/").normalize("NFC") }))
       .sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
     process.stdout.write(`${JSON.stringify({ contractId: GENERATOR_ID, nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
@@ -24,13 +23,13 @@ export class PreviewGeneratedScript extends BundleScript {
 //#region 🔖️generate
 export class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = this.repoRoot;
     const source = readEntityCatalog(repoRoot);
-    for (const target of generatedTargets(repoRoot, source)) {
+    for (const target of generatedTargets(source)) {
       writeGeneratedFileIfChanged(target.path, target.content);
     }
     const shadowed = source.kinds.length - entityKindIndexByEmoji(source.kinds).size;
-    console.log(`entity catalog refreshed (${source.kinds.length} entity kinds, ${shadowed} emoji-shadowed, sha256 ${source.sha256}) -> 🤖️generated/🏷️entity-kinds/🟦️.ts, ⌨️cli/🏷️entity-kinds/🐹️.go, 🤖️generated/🏷️entity-kinds/🦀️.rs`);
+    console.log(`entity catalog refreshed (${source.kinds.length} entity kinds, ${shadowed} emoji-shadowed, sha256 ${source.sha256}) -> 🤖️generated/🏷️entity-kinds/🟦️.ts, 🤖️generated/🏷️entity-kinds/🦀️.rs`);
   }
 }
 //#endregion 🔖️generate
@@ -39,9 +38,9 @@ export class GenerateScript extends BundleScript {
 /** 🔎️ Renders the catalog in memory and byte-compares it against the committed generated files — never writes. */
 export class CheckScript extends BundleScript {
   run(_segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = this.repoRoot;
     const source = readEntityCatalog(repoRoot);
-    const stale = generatedTargets(repoRoot, source)
+    const stale = generatedTargets(source)
       .filter((target) => !existsSync(target.path) || readFileSync(target.path, "utf8") !== target.content)
       .map((target) => target.path);
     if (stale.length > 0) {

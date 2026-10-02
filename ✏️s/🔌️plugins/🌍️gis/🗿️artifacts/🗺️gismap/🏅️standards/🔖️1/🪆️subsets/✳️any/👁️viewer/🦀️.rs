@@ -14,7 +14,7 @@ use semio_framework_plugin::{
     AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer, ConfigView, Dialect, Emit, Fault, FaultCode, FaultOrigin, HistoryView,
     InteractiveJobClassification, NoConfig, NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, ViewEmit, Viewer, ViewerApp,
 };
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this VIEWER, exactly once: the map window's camera.
@@ -98,9 +98,7 @@ fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_
     let mutation = map::config::GisMapViewerWindowConfigMutation::SetCamera(map::config::SetCamera { camera });
     Ok(Emit {
         window_config_mutations: vec![map::config::addressed(view, mutation)?],
-        description: Some("Set camera".into()),
         ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
-        coalesce_key: Some(format!("gis.map.viewer.camera:{}", view.window_id.as_deref().unwrap_or_default())),
         ..Default::default()
     })
 }
@@ -366,7 +364,7 @@ impl ArtifactViewer for GisMapViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             map::BODY_KEY => map::render(doc.snapshot, map::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

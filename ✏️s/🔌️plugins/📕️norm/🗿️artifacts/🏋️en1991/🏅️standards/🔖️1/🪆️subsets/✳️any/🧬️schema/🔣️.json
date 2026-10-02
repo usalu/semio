@@ -22,6 +22,25 @@
     "width",
     "depth",
     "assumedDeltaT",
+    "tMax",
+    "tMin",
+    "t0",
+    "thermalElementType",
+    "thermalBridgeType",
+    "deltaTM",
+    "storeyCount",
+    "fireMode",
+    "fireCurve",
+    "fireDuration",
+    "assumedGasTemperature",
+    "assumedHNet",
+    "fireCompartmentArea",
+    "fireCompartmentHeight",
+    "fireOpeningFactor",
+    "fireThermalInertia",
+    "fireOccupancy",
+    "fireLoadDensityQf",
+    "assumedQfD",
     "constructionActivity",
     "assumedConstructionQk",
     "structureKind",
@@ -32,6 +51,9 @@
     "assumedBridgeUdl",
     "assumedBridgeLm2",
     "assumedBridgeFootway",
+    "assumedBridgeLm3",
+    "assumedBridgeLm4",
+    "bridgeLoadGroup",
     "craneClaimed",
     "craneClass",
     "hoistClass",
@@ -52,29 +74,7 @@
     "selfWeightElements",
     "roofs",
     "windFaces",
-    "accidentalCases",
-    "tMax",
-    "tMin",
-    "t0",
-    "thermalElementType",
-    "thermalBridgeType",
-    "deltaTM",
-    "storeyCount",
-    "fireMode",
-    "fireCurve",
-    "fireDuration",
-    "assumedGasTemperature",
-    "assumedHNet",
-    "fireCompartmentArea",
-    "fireCompartmentHeight",
-    "fireOpeningFactor",
-    "fireThermalInertia",
-    "fireOccupancy",
-    "fireLoadDensityQf",
-    "assumedQfD",
-    "assumedBridgeLm3",
-    "assumedBridgeLm4",
-    "bridgeLoadGroup"
+    "accidentalCases"
   ],
   "properties": {
     "annex": {
@@ -161,6 +161,69 @@
       "format": "double",
       "x-semio-state": "artifact"
     },
+    "tMax": {
+      "type": "number"
+    },
+    "tMin": {
+      "type": "number"
+    },
+    "t0": {
+      "type": "number"
+    },
+    "thermalElementType": {
+      "type": "string"
+    },
+    "thermalBridgeType": {
+      "type": "integer"
+    },
+    "deltaTM": {
+      "type": "number"
+    },
+    "storeyCount": {
+      "type": "integer"
+    },
+    "fireMode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "nominal",
+        "parametric"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "fireCurve": {
+      "type": "string"
+    },
+    "fireDuration": {
+      "type": "number"
+    },
+    "assumedGasTemperature": {
+      "type": "number"
+    },
+    "assumedHNet": {
+      "type": "number"
+    },
+    "fireCompartmentArea": {
+      "type": "number"
+    },
+    "fireCompartmentHeight": {
+      "type": "number"
+    },
+    "fireOpeningFactor": {
+      "type": "number"
+    },
+    "fireThermalInertia": {
+      "type": "number"
+    },
+    "fireOccupancy": {
+      "type": "string"
+    },
+    "fireLoadDensityQf": {
+      "type": "number"
+    },
+    "assumedQfD": {
+      "type": "number"
+    },
     "constructionActivity": {
       "type": "string",
       "x-semio-state": "artifact"
@@ -213,6 +276,15 @@
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
+    },
+    "assumedBridgeLm3": {
+      "type": "number"
+    },
+    "assumedBridgeLm4": {
+      "type": "number"
+    },
+    "bridgeLoadGroup": {
+      "type": "string"
     },
     "craneClaimed": {
       "type": "boolean",
@@ -323,78 +395,6 @@
         "$ref": "#/definitions/AccidentalCase"
       },
       "x-semio-state": "artifact"
-    },
-    "tMax": {
-      "type": "number"
-    },
-    "tMin": {
-      "type": "number"
-    },
-    "t0": {
-      "type": "number"
-    },
-    "thermalElementType": {
-      "type": "string"
-    },
-    "thermalBridgeType": {
-      "type": "integer"
-    },
-    "deltaTM": {
-      "type": "number"
-    },
-    "storeyCount": {
-      "type": "integer"
-    },
-    "fireMode": {
-      "type": "string",
-      "enum": [
-        "none",
-        "nominal",
-        "parametric"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireCurve": {
-      "type": "string"
-    },
-    "fireDuration": {
-      "type": "number"
-    },
-    "assumedGasTemperature": {
-      "type": "number"
-    },
-    "assumedHNet": {
-      "type": "number"
-    },
-    "fireCompartmentArea": {
-      "type": "number"
-    },
-    "fireCompartmentHeight": {
-      "type": "number"
-    },
-    "fireOpeningFactor": {
-      "type": "number"
-    },
-    "fireThermalInertia": {
-      "type": "number"
-    },
-    "fireOccupancy": {
-      "type": "string"
-    },
-    "fireLoadDensityQf": {
-      "type": "number"
-    },
-    "assumedQfD": {
-      "type": "number"
-    },
-    "assumedBridgeLm3": {
-      "type": "number"
-    },
-    "assumedBridgeLm4": {
-      "type": "number"
-    },
-    "bridgeLoadGroup": {
-      "type": "string"
     }
   },
   "definitions": {
@@ -520,8 +520,8 @@
         "cPi",
         "cS",
         "cD",
-        "assumedWp",
-        "loadedArea"
+        "loadedArea",
+        "assumedWp"
       ],
       "properties": {
         "id": {
@@ -548,10 +548,10 @@
         "cD": {
           "type": "number"
         },
-        "assumedWp": {
+        "loadedArea": {
           "type": "number"
         },
-        "loadedArea": {
+        "assumedWp": {
           "type": "number"
         }
       }

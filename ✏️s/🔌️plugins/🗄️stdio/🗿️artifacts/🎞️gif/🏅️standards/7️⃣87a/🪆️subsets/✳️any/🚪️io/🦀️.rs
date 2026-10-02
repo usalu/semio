@@ -675,7 +675,7 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
     crate::io_registry::register();
-    ::framework_schema::register_artifact_schema_descriptor(crate::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
@@ -687,7 +687,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the

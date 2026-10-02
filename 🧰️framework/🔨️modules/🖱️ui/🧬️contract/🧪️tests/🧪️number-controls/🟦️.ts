@@ -28,7 +28,7 @@ type Fixture = {
   readonly limits: readonly { readonly case: string; readonly value: number; readonly min: number | null; readonly max: number | null; readonly limits: { readonly min?: { readonly value: number; readonly exclusive?: boolean }; readonly max?: { readonly value: number; readonly exclusive?: boolean } } | null; readonly crossed: "min" | "max" | null }[];
   readonly documents: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly violation: string | null }[];
   readonly adjacent: readonly { readonly case: string; readonly current: number; readonly snaps: readonly number[]; readonly forward: boolean; readonly expected: number | null }[];
-  readonly keys: readonly { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly expected: number }[];
+  readonly keys: readonly { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly precision?: number | null; readonly factor?: number | null; readonly expected: number }[];
   readonly fixed: readonly { readonly case: string; readonly value: number; readonly precision: number; readonly expected: string; readonly rounded: number }[];
   readonly valueTexts: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly valueText: string; readonly valueNow?: number | null; readonly valueMin?: number | null; readonly valueMax?: number | null }[];
 };
@@ -50,7 +50,7 @@ function numberRangeVerdict(component: Record<string, unknown>): boolean {
 /** 🧾️ Normalizes a sparse fixture component the way the typed wire decoder does (absent optionals are `null`). */
 function normalizedComponent(component: Record<string, unknown>): Component {
   const numeric = { min: null, max: null, precision: null, unit: null, displayUnit: null, displayFactor: null, snaps: [], ...component, limits: normalizedLimits(component.limits as Fixture["limits"][number]["limits"]) };
-  return (component.type === "input" ? { kind: "text", placeholder: null, commit: null, step: null, accept: null, ...numeric } : numeric) as Component;
+  return (component.type === "input" ? { kind: "text", placeholder: null, commit: null, step: null, accept: null, ...numeric } : numeric) as unknown as Component;
 }
 
 const read = (path: string): unknown => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
@@ -67,11 +67,13 @@ type DecimalValue = { plus(other: DecimalValue | string): DecimalValue; minus(ot
 /** 🪙️ decimal.js's half-up rounding mode constant. */
 const DECIMAL_ROUND_HALF_UP = 4;
 
-/** 🪜️ decimal.js ladder oracle for an arrow key: the rung count (a position within the ladder tolerance of a rung is that rung) and
- * rung value computed in exact decimal arithmetic, cleaned to the decimals of the twelve-digit origin and step (at most twelve), then
- * clamped. */
+/** 🪜️ decimal.js ladder oracle for an arrow key: the step (`step`, else `10^-precision` display units over the factor, else 1), the
+ * rung count (a position within the ladder tolerance of a rung is that rung) and rung value computed in exact decimal arithmetic,
+ * cleaned to the decimals of the twelve-digit origin and step (at most twelve), rounded half away from zero at the precision in
+ * display units and divided back, then clamped. */
 function ladderOracle(Decimal: new (value: string) => DecimalValue, row: Fixture["keys"][number]): number {
-  const rung = Number.isFinite(row.step) && row.step > 0 ? String(row.step) : "1";
+  const factor = row.factor ?? null;
+  const rung = Number.isFinite(row.step) && row.step > 0 ? String(row.step) : row.precision == null ? "1" : new Decimal(`1e-${row.precision}`).div(String(factor ?? 1)).toString();
   const forward = row.key === "increment";
   const origin = String(row.min ?? 0);
   const position = new Decimal(String(row.current)).minus(origin).div(rung);
@@ -79,7 +81,8 @@ function ladderOracle(Decimal: new (value: string) => DecimalValue, row: Fixture
   const base = position.isInteger() ? position : Math.abs(position.toNumber() - nearest) <= 1e-9 * Math.max(1, Math.abs(nearest)) ? new Decimal(String(nearest)) : forward ? position.floor() : position.ceil();
   const rungs = String(row.large ? SLIDER_PAGE_STEPS : 1);
   const digits = Math.min(12, Math.max(new Decimal(formatUiNumber(Number(origin))).decimalPlaces(), new Decimal(formatUiNumber(Number(rung))).decimalPlaces()));
-  const value = new Decimal(origin).plus((forward ? base.plus(rungs) : base.minus(rungs)).times(rung)).toDecimalPlaces(digits, DECIMAL_ROUND_HALF_UP).toNumber();
+  const walked = new Decimal(origin).plus((forward ? base.plus(rungs) : base.minus(rungs)).times(rung)).toDecimalPlaces(digits, DECIMAL_ROUND_HALF_UP);
+  const value = row.precision == null ? walked.toNumber() : new Decimal(String(walked.toNumber() * (factor ?? 1))).toDecimalPlaces(row.precision, DECIMAL_ROUND_HALF_UP).div(String(factor ?? 1)).toNumber();
   return Math.min(row.max ?? Number.POSITIVE_INFINITY, Math.max(row.min ?? Number.NEGATIVE_INFINITY, value));
 }
 
@@ -136,7 +139,7 @@ export function numberControlsSelfTests(): number {
   for (const row of fixture.limits) {
     const limits = normalizedLimits(row.limits);
     const crossed = uiNumberCrossedBound(row.value, row.min, row.max, limits);
-    const lower = limits ? limits.min : row.min == null ? null : { value: row.min };
+    const lower = limits ? (limits.min ?? null) : row.min == null ? null : { value: row.min };
     assert.equal(crossed === null ? null : lower !== null && crossed.value === lower.value && (limits === null || crossed === limits.min) ? "min" : "max", row.crossed, row.case);
     checks++;
   }
@@ -145,10 +148,10 @@ export function numberControlsSelfTests(): number {
     checks++;
   }
   for (const row of fixture.keys) {
-    assert.equal(uiNumberKeyValue(row.current, row.min, row.max, row.step, row.snaps, row.key, row.large), row.expected, row.case);
+    assert.equal(uiNumberKeyValue(row.current, row.min, row.max, row.step, row.precision ?? null, row.factor ?? null, row.snaps, row.key, row.large), row.expected, row.case);
     checks++;
     if (row.min != null && row.max != null) {
-      assert.equal(sliderKeyValue(row.current, row.min, row.max, row.step, row.snaps, row.key, row.large), row.expected, `${row.case}: the slider law is the bounded number law`);
+      assert.equal(sliderKeyValue(row.current, row.min, row.max, row.step, row.precision ?? null, row.factor ?? null, row.snaps, row.key, row.large), row.expected, `${row.case}: the slider law is the bounded number law`);
       checks++;
     }
     if ((row.key === "increment" || row.key === "decrement") && !row.snaps.includes(row.expected)) {

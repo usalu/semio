@@ -4,7 +4,13 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::with_host_from_snapshot;
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use ui_wgpu::wgpu::TextEditorScene;
 

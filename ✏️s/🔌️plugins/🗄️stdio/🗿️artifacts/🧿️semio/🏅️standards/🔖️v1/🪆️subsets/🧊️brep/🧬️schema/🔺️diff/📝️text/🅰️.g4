@@ -49,7 +49,8 @@ shellFace: '[' HEX ',' bool ']';
 shellFaceList: '[' (shellFace (',' shellFace)*)? ']';
 solidShell: '[' HEX ',' bool ']';
 solidShellList: '[' (solidShell (',' solidShell)*)? ']';
-hexList: '[' (HEX (',' HEX)*)? ']';
+hexList: '[' (loopId (',' loopId)*)? ']';
+loopId: '[' HEX ']';
 
 curve: 'L' '[' point3 ',' point3 ']'
      | 'C' '[' point3 ',' point3 ',' number ']'
@@ -68,9 +69,12 @@ point3: '[' number ',' number ',' number ']';
 point3List: '[' (point3 (',' point3)*)? ']';
 numberList: '[' (number (',' number)*)? ']';
 bool: '0' | '1';
-number: INT | FLOAT;
+number: INT | FLOAT | IEEE;
 
 HEX: [0-9a-f]*;
 INT: '-'? [0-9]+;
 FLOAT: '-'? [0-9]+ '.' [0-9]+;
 SP: ' ';
+
+IEEE: '-'? 'inf' | 'nan64_' WORD WORD WORD WORD;
+fragment WORD: [0-9a-f] [0-9a-f] [0-9a-f] [0-9a-f];

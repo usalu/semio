@@ -74,31 +74,31 @@ impl Puzzle3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.puzzle.puzzle3d` — twenty handcrafted schema leaves.
-pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
-    ::semio_framework_schema::ArtifactSchemaDescriptor {
+pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle3d",
-        artifact: ::semio_framework_schema::FacetLeaves {
+        artifact: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: ::semio_framework_schema::FacetLeaves {
+        snapshot: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: ::semio_framework_schema::FacetLeaves {
+        diff: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: ::semio_framework_schema::FacetLeaves {
+        mutations: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -923,15 +923,6 @@ impl FillRunCheckpoint {
     }
 }
 
-/// 🪪️ `objectId:vortexId`, unless the vortex id already carries its owner's prefix.
-pub(crate) fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
-    if vortex_id.contains(':') {
-        vortex_id.to_string()
-    } else {
-        format!("{object_id}:{vortex_id}")
-    }
-}
-
 pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
 }
@@ -965,7 +956,7 @@ impl protocol::OpText for Puzzle3dEngineCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -975,7 +966,7 @@ impl protocol::OpText for Puzzle3dEngineCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

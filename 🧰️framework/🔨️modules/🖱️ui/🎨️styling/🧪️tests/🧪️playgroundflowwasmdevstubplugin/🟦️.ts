@@ -1,9 +1,12 @@
+import type { AssetDeliveryDeclarationV1 } from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import type { TileProxyAssetSpecV1 } from "../../../../🖼️assets/🗺️tile-proxy/🟦️.ts";
+import type { MeshCollectionAssetSpecV1 } from "../../🏗️builder/🌐️vite/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "resolveAssetServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "symlinkSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
-  const { PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
-  type PlaygroundAssetSpec = any;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts"), "MESH_DELIVERY_CATALOG"> & Pick<typeof import("../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts"), "createAssetBuildPluginsV1" | "createAssetHttpServerV1" | "resolveAssetDeliveryModeV1"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "TILE_PROXY_ASSET_PROVIDER_V1" | "MESH_COLLECTION_ASSET_PROVIDER_V1" | "STATIC_DIRECTORY_ASSET_PROVIDER_V1" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "meshCollectionVitePlugin" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "symlinkSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
+  const { MESH_DELIVERY_CATALOG, TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, createAssetBuildPluginsV1, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetDeliveryModeV1, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, createAssetHttpServerV1, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
 
+  const ASSET_PROVIDERS_V1 = [TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1];
   const { describe, expect, it } = vitest;
   const repoRoot = resolve(fileURLToPath(new URL(".", source.url)), "../../../../../..");
 
@@ -67,20 +70,35 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
-  describe("resolveAssetServeMode", () => {
+  describe("resolveAssetDeliveryModeV1", () => {
+    it("executes the complete asset builder with all product runtime and type loading refused", async () => {
+      const { spawnSync } = await import("node:child_process");
+      const { dirname } = await import("node:path");
+      const { readFileSync } = await import("node:fs");
+      const directory = dirname(fileURLToPath(source.url));
+      const products = resolve(directory, "../../../../../🛍️products").replaceAll("\\", "/") + "/";
+      const corpus = JSON.parse(readFileSync(resolve(directory, "../../../../🖼️assets/🗺️tile-proxy/🧫️fixtures/🔣️.json"), "utf8"));
+      const program = `import {tileProxyVitePlugin} from ${JSON.stringify(fileURLToPath(source.url))};import {resolveAssetDeliveryModeV1} from ${JSON.stringify(resolve(directory, "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts"))};console.log(JSON.stringify(${JSON.stringify(corpus.cases)}.map(row=>{try{return{accepted:true,plugins:tileProxyVitePlugin(${JSON.stringify(directory)},row.value,resolveAssetDeliveryModeV1("bundle")).map(plugin=>plugin.name)}}catch{return{accepted:false,plugins:[]}}})));`;
+      const standalone = String.raw`import { build } from "esbuild";import ts from "typescript";import { readFileSync } from "node:fs";import { dirname,resolve } from "node:path";const products=${JSON.stringify(products)};const bundle=await build({stdin:{contents:${JSON.stringify(program)},resolveDir:${JSON.stringify(directory)}},define:{"import.meta.vitest":"undefined","import.meta.url":${JSON.stringify(JSON.stringify(source.url))}},bundle:true,platform:"node",format:"esm",write:false,plugins:[{name:"neutral-asset-builder",setup(builder){builder.onLoad({filter:/.*/},input=>{if(input.path.replaceAll("\\","/").startsWith(products))return{errors:[{text:"Asset builder loads a concrete product: "+input.path}]};if(/\.[cm]?tsx?$/.test(input.path)){const unit=ts.createSourceFile(input.path,readFileSync(input.path,"utf8"),ts.ScriptTarget.Latest,true);for(const statement of unit.statements){if((ts.isImportDeclaration(statement)||ts.isExportDeclaration(statement))&&statement.moduleSpecifier&&ts.isStringLiteral(statement.moduleSpecifier)&&statement.moduleSpecifier.text.startsWith(".")){const dependency=resolve(dirname(input.path),statement.moduleSpecifier.text).replaceAll("\\","/");if(dependency.startsWith(products))return{errors:[{text:"Asset builder type or value interface loads a concrete product: "+dependency}]}}}}})}}]});await import("data:text/javascript;base64,"+Buffer.from(bundle.outputFiles[0].text).toString("base64"));`;
+      const native = spawnSync("node", ["--input-type=module"], { cwd: directory, input: standalone, encoding: "utf8" });
+      expect(native.status, native.stderr).toBe(0);
+      const actual = JSON.parse(native.stdout);
+      expect(actual).toEqual(corpus.cases.map((row: { accepted: boolean; value: { route: string } }) => ({ accepted: row.accepted, plugins: row.accepted ? ["tile-proxy-serve" + row.value.route, "tile-proxy-build" + row.value.route] : [] })));
+    });
+
     it("defaults to fetch", () => {
-      expect(resolveAssetServeMode(undefined)).toBe("fetch");
-      expect(resolveAssetServeMode("")).toBe("fetch");
-      expect(() => resolveAssetServeMode("online")).toThrow();
+      expect(resolveAssetDeliveryModeV1(undefined)).toBe("fetch");
+      expect(resolveAssetDeliveryModeV1("")).toBe("fetch");
+      expect(() => resolveAssetDeliveryModeV1("online")).toThrow();
     });
 
     it("selects bundle only for bundle", () => {
-      expect(resolveAssetServeMode("bundle")).toBe("bundle");
+      expect(resolveAssetDeliveryModeV1("bundle")).toBe("bundle");
     });
   });
 
   describe("tileProxyVitePlugin", () => {
-    const osmSpec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> = {
+    const osmSpec: TileProxyAssetSpecV1 = {
       kind: "tile-proxy",
       route: "/osm",
       upstream: "https://fixture.example/{z}/{x}/{y}.png",
@@ -96,13 +114,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
-  describe("playgroundAssetVitePlugins", () => {
+  describe("createAssetBuildPluginsV1", () => {
     it("dispatches each asset kind to its generic factory and dedupes by kind+route", () => {
-      const specs: PlaygroundAssetSpec[] = [
+      const specs: AssetDeliveryDeclarationV1[] = [
         { kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🧫️fixtures" },
         { kind: "static-dir", route: "/cad-fixture", root: "✏️s/🔌️plugins/📐️cad/🧫️fixtures" },
       ];
-      const plugins = playgroundAssetVitePlugins(repoRoot, specs);
+      const plugins = createAssetBuildPluginsV1(repoRoot, specs, ASSET_PROVIDERS_V1);
       expect(plugins.filter((plugin) => plugin.name === "static-dir-serve/cad-fixture")).toHaveLength(1);
     });
   });
@@ -283,17 +301,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("meshCollectionVitePlugin", () => {
-    const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
+    const puzzle3dMeshSpec: MeshCollectionAssetSpecV1 = {
       kind: "mesh-collection",
       route: "/mesh",
       catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
     };
 
     it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
-      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule_J.glb").source))).toBe(true);
-      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule-with-balcony_slash.glb").source))).toBe(true);
-      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb").source))).toBe(true);
-      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️placeholder.glb").source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule_J.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule-with-balcony_slash.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
+      expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️placeholder.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
     });
 
     it("registers serve and build plugins named after the route", () => {
@@ -301,16 +319,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(plugins.map((plugin) => plugin.name)).toEqual(["mesh-collection-serve/mesh", "mesh-collection-build/mesh"]);
     });
 
-    it("startAssetServer serves 🧊️base.glb as model/gltf-binary", async () => {
+    it("createAssetHttpServerV1 serves 🧊️base.glb as model/gltf-binary", async () => {
       const probe = createServer();
       await new Promise<void>((resolveListen) => probe.listen(0, "127.0.0.1", () => resolveListen()));
       const address = probe.address();
       if (!address || typeof address === "string") throw new Error("expected TCP address");
       const port = address.port;
       await new Promise<void>((resolveClose, reject) => probe.close((err) => (err ? reject(err) : resolveClose())));
-      const server = startAssetServer(repoRoot, port, [puzzle3dMeshSpec]);
+      const server = createAssetHttpServerV1(repoRoot, port, [puzzle3dMeshSpec], ASSET_PROVIDERS_V1);
       try {
-        const response = await fetch(`http://127.0.0.1:${port}${meshAssetTransportUrl("/mesh/🧊️base.glb")}`);
+        const response = await fetch(`http://127.0.0.1:${port}${meshAssetTransportUrl("/mesh/🧊️base.glb", MESH_DELIVERY_CATALOG)}`);
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toBe("model/gltf-binary");
         const bytes = new Uint8Array(await response.arrayBuffer());

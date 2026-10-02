@@ -39,7 +39,7 @@ pub mod results_window_config {
 #[path = "🖥️app-surface/🦀️.rs"]
 pub mod app_surface;
 
-#[path = "../../🗿️artifacts/🦀️.rs"]
+#[path = "🧾️definition/🦀️.rs"]
 pub mod definition;
 
 use semio_framework_value_derive::{FromValue, ToValue};

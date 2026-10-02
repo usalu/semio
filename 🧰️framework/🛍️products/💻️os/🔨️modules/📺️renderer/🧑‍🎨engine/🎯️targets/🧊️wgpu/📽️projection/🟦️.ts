@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 import { loadCatalogTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, registryCatalogInputView, resolveWorkspaceTaxonomyAuthority, validateTaxonomy, type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */

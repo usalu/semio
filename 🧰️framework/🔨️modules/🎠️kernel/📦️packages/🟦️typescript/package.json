@@ -12,7 +12,8 @@
     "@semio-tech/framework-actor": "workspace:*"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-kernel:test"
+    "test": "bun nx run @semio-tech/framework-kernel:test",
+    "test-localized-label": "nx run @semio-tech/framework-kernel:test-localized-label"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

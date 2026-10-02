@@ -1,3 +1,4 @@
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -153,7 +154,7 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   const current = plan();
   checkpoint("initial-plan");
   writeFileSync(join(owner, "📝️.md"), "# Historical Markdown Transaction\n\nThis isolated fixture retains all source and recovery evidence; no cleanup is performed.\n", { flag: "wx" });
-  writeFileSync(join(owner, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), normalization.canonicalJson(current) + "\n", { flag: "wx" });
+  writeFileSync(join(owner, "../../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), canonicalJson(current) + "\n", { flag: "wx" });
   expect(current.unresolved).toEqual([]);
   expect(current.moves).toHaveLength(1);
   expect(current.regenerations).toHaveLength(0);

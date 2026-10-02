@@ -7,10 +7,10 @@
       "protectionThickness": 0.03,
       "sectionFactor": 150.0,
       "mu0": 0.5,
+      "designTemperature": 550.0,
       "protectionConductivity": 0.2,
       "protectionDensity": 800.0,
-      "protectionSpecificHeat": 1700.0,
-      "designTemperature": 550.0
+      "protectionSpecificHeat": 1700.0
     }
   }
 }

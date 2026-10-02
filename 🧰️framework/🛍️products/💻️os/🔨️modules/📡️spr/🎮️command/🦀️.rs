@@ -438,7 +438,7 @@ where
 pub struct MutationDescriptor {
     id: crate::os_spr::ids::SchemaId,
     schema_version: crate::os_spr::ids::SchemaVersion,
-    state_class: crate::os_spr::StateClass,
+    state_class: semio_framework_schema_state::StateClass,
     leaf: MutationLeafDescriptor,
     semantics: SemanticDescriptor,
     fingerprint: [u8; 32],
@@ -446,7 +446,7 @@ pub struct MutationDescriptor {
 
 impl MutationDescriptor {
     /// 🏗️ Validates all required metadata and fingerprints the complete immutable identity.
-    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
+    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
         if id.0.trim().is_empty() {
             return Err(MutationDescriptorError::InvalidField { field: "id", requirement: "must be nonblank" });
         }
@@ -473,7 +473,7 @@ impl MutationDescriptor {
     pub fn schema_version(&self) -> crate::os_spr::ids::SchemaVersion {
         self.schema_version
     }
-    pub fn state_class(&self) -> crate::os_spr::StateClass {
+    pub fn state_class(&self) -> semio_framework_schema_state::StateClass {
         self.state_class
     }
     pub fn leaf(&self) -> &MutationLeafDescriptor {
@@ -487,13 +487,13 @@ impl MutationDescriptor {
     }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass, leaf: &MutationLeafDescriptor, semantics: &SemanticDescriptor) -> [u8; 32] {
+fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: &MutationLeafDescriptor, semantics: &SemanticDescriptor) -> [u8; 32] {
     #[derive(ToValue)]
     #[value(rename_all = "camelCase")]
     struct Canonical<'a> {
         id: &'a str,
         schema_version: u32,
-        state_class: crate::os_spr::StateClass,
+        state_class: semio_framework_schema_state::StateClass,
         leaf: MutationLeafDescriptor,
         semantics: SemanticDescriptor,
     }
@@ -599,7 +599,7 @@ pub trait MutationUpcaster<Op> {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct MutationEvent {
     pub mutation_id: crate::os_spr::ids::MutationId,
-    pub state_class: crate::os_spr::StateClass,
+    pub state_class: semio_framework_schema_state::StateClass,
     pub payload: protocol::value::DslValue,
 }
 //#endregion 🔖️Events

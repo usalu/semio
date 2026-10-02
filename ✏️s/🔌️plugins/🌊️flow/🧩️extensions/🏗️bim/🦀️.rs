@@ -1,6 +1,7 @@
 //! 🏗️ Flow bim module: semantic building information modeling operators.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VariadicSpec};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
+use semio_framework_value::ValueType;
 
 // #region 🔖️Schemas
 fn material_schema() -> Schema {

@@ -1,9 +1,97 @@
 {
   "schema": "semio.framework.sqlite-native-encoding-admission/v1",
   "cases": [
-    { "id": "missing-owner", "guarded": false, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": false, "encoded": false },
-    { "id": "expansion-bound", "guarded": true, "outputBytes": 4096, "maximumBytes": 128, "cancelEncoding": false, "encoded": false },
-    { "id": "cancel-before-encoding", "guarded": true, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": true, "encoded": false },
-    { "id": "bounded-encoding", "guarded": true, "outputBytes": 16, "maximumBytes": 4096, "cancelEncoding": false, "encoded": true }
-  ]
+    {
+      "id": "missing-owner",
+      "guarded": false,
+      "outputBytes": 16,
+      "maximumBytes": 4096,
+      "cancelEncoding": false,
+      "encoded": false,
+      "controlled": false
+    },
+    {
+      "id": "preflight-without-controlled-owner",
+      "guarded": true,
+      "controlled": false,
+      "outputBytes": 16,
+      "maximumBytes": 4096,
+      "cancelEncoding": false,
+      "encoded": false
+    },
+    {
+      "id": "expansion-bound",
+      "guarded": true,
+      "outputBytes": 4096,
+      "maximumBytes": 128,
+      "cancelEncoding": false,
+      "encoded": false,
+      "controlled": true
+    },
+    {
+      "id": "cancel-before-encoding",
+      "guarded": true,
+      "outputBytes": 16,
+      "maximumBytes": 4096,
+      "cancelEncoding": true,
+      "encoded": false,
+      "controlled": true
+    },
+    {
+      "id": "bounded-encoding",
+      "guarded": true,
+      "outputBytes": 16,
+      "maximumBytes": 4096,
+      "cancelEncoding": false,
+      "encoded": true,
+      "controlled": true
+    }
+  ],
+  "interiorEncoding": {
+    "outputBytes": 131072,
+    "maximumBytes": 1048576,
+    "cancelAt": 65536,
+    "expectedCanceled": true
+  },
+  "typedProjection": {
+    "count": 1024,
+    "cancelAt": 256,
+    "maximumBytes": 1048576
+  },
+  "exactEncodingAdmission": {
+    "outputBytes": 32768,
+    "estimateMultiplier": 32,
+    "maximumBytes": 32768,
+    "maximumFileBytes": 32768
+  },
+  "physicalLiteralTexts": [
+    "",
+    "nan64_text",
+    "nan32_text",
+    "nan64_zzzzzzzzzzzzzzzz",
+    "nan64_7ff0000000000001",
+    "nan32_7f800001",
+    "inf",
+    "infGPa",
+    "true",
+    "null",
+    "_",
+    "日本語/é",
+    "arrow->edge",
+    "\u0000\\\"\n\r\t",
+    "a-b/c.d",
+    "a--b"
+  ],
+  "physicalBytes": {
+    "length": 131072,
+    "maximumBytes": 16777216,
+    "cancelAt": 65536
+  },
+  "physicalText": {
+    "seed": "😀\u0000\\\"\n\r\t",
+    "repeatCount": 16384,
+    "maximumBytes": 16777216,
+    "cancelAt": 65536,
+    "maximumFileBytes": 128
+  }
 }

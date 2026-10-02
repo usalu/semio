@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "contract": "repo-entity-kinds-owner-v1",
+  "generatorId": "repo-entity-kinds",
+  "output": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
+  "catalogLength": 58,
+  "emojiLength": 56,
+  "firstWins": [
+    {
+      "emoji": "🌱️",
+      "id": "technology-mono"
+    },
+    {
+      "emoji": "📝️",
+      "id": "draft"
+    }
+  ]
+}

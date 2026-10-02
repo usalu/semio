@@ -26,8 +26,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart2d {
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Move part \"{}\" (2d)", self.id), &format!("Bauteil \"{}\" (2D) verschieben", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move part \"{}\" (2d)", self.id), &format!("Bauteil \"{}\" (2D) verschieben", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

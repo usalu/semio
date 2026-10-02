@@ -1,4 +1,10 @@
 #!/usr/bin/env bun
+import { runExactCargoLaws } from "../../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
  *
  * The wasm gates are the point of this crate: the contract is what `wasm32-wasip2` plugin components
@@ -7,7 +13,7 @@
  * `#[cfg(target_arch = "wasm32")]` code — which is why these run on every acceptance. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { testRuntimeTreeRetirement } from "../../♻️retirement/🌲️tree/🧪️tests/🔬️runtime-tree-retirement/🟦️.ts";
@@ -21,7 +27,7 @@ class TreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testRuntimeTreeRetirement();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
       cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
       groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
         "runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads",
@@ -37,7 +43,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     console.log(`surface-ownership-oracle checks=${surfaceOwnershipSelfTests()}`);
-    await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env));
   }
 }
 //#endregion 🔖️test
@@ -45,10 +51,10 @@ class TestScript extends BundleScript {
 //#region 🔖️check-wasm
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
-  run(): void {
-    const check = (args: string[]) => runCmd("cargo", ["check", "-p", "semio-framework-ui-runtime", ...args], { cwd: packageRoot, budgetMs: buildBudgetMs() });
-    check(["--target", "wasm32-wasip2"]);
-    check(["--target", "wasm32-unknown-unknown"]);
+  async run(): Promise<void> {
+    const check = (args: string[]) => runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
+    await check(["--target", "wasm32-wasip2"]);
+    await check(["--target", "wasm32-unknown-unknown"]);
   }
 }
 //#endregion 🔖️check-wasm

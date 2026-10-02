@@ -1,7 +1,7 @@
 //! 🧬️ Ifc2x3Artifact schema — full artifact state for the `2x3` standard (buildingSMART
 //! Coordination View 2.0 era, ISO/PAS 16739:2005 schema). Sibling of `4️⃣4`'s `IfcArtifact`, own
 //! distinct schema id `s.stdio.ifc.2x3` so the two standards' descriptors never collide in the
-//! flat `::framework_schema::register_artifact_schema_descriptor` registry.
+//! flat `::semio_framework_schema_registry::register_artifact_schema_descriptor` registry.
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use framework_schema::ArtifactSchema;
@@ -53,25 +53,25 @@ impl Ifc2x3Artifact {
 
 //#region 🔖️Descriptor
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc2x3_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn ifc2x3_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.ifc.2x3",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -301,7 +301,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// `89a::engine::register` doc comment gives).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    ::framework_schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
     semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_plugin::StandardId("2x3"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA))
@@ -319,7 +319,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role

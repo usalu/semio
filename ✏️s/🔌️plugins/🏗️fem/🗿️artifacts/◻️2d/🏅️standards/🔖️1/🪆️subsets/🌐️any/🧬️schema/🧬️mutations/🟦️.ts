@@ -1,90 +1,9 @@
+import type {Binary64} from "../📸️snapshot/🟦️.ts";
 /** ⚡️ Fem2d direct-mutation discriminated union — TS mirror of the Rust `Fem2dMutation` dispatch enum. */
 
-//#region 🔖️Entities
-/** 📍️ A structural node in plan (x, y in meters). */
-export interface FemNode {
-  id: string;
-  x: number;
-  y: number;
-}
+import type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 
-/** 🔒️ A DOF tag mirroring the FEM 2D degrees of freedom. */
-export type FemDof = "Tx" | "Ty" | "Tz" | "Rx" | "Ry" | "Rz";
-
-/** 🔩️ A 2-node structural member — axial-only bar or axial+bending beam. */
-export type FemElement =
-  | { kind: "bar"; id: string; start: string; end: string; materialId: string; sectionId: string }
-  | { kind: "beam"; id: string; start: string; end: string; materialId: string; sectionId: string };
-
-/** 🧱️ An isotropic material — Young's modulus `e` (Pa), Poisson's ratio `nu`, density `rho` (kg/m3). */
-export interface FemMaterial {
-  id: string;
-  name: string;
-  e: number;
-  nu: number;
-  rho: number;
-}
-
-/** 📏️ A cross-section — area (m2) and strong-axis moment of inertia `iy` (m4). */
-export interface FemSection {
-  id: string;
-  name: string;
-  area: number;
-  iy: number;
-}
-
-/** 🛡️ A support: the subset of a node's DOFs restrained to zero displacement. */
-export interface FemSupport {
-  id: string;
-  nodeId: string;
-  fixed: FemDof[];
-}
-
-/** 🏋️ A load — a concentrated nodal force/moment, a member UDL, or a pressure over a meshed region. */
-export type FemLoad =
-  | { kind: "nodal"; id: string; nodeId: string; dof: FemDof; value: number }
-  | { kind: "memberUdl"; id: string; elementId: string; wx: number; wy: number }
-  | { kind: "area"; id: string; regionId: string; pressure: number };
-
-/** 📦️ A named set of loads applied together for one analysis run, optionally including self-weight. */
-export interface FemLoadCase {
-  id: string;
-  name: string;
-  loads: FemLoad[];
-  selfWeight: boolean;
-}
-
-/** 🟩️ A meshed continuum region — a polygon (with optional holes) filled at solve time. */
-export interface FemRegion {
-  id: string;
-  name: string;
-  outline: [number, number][];
-  holes: [number, number][][];
-  thickness: number;
-  materialId: string;
-  meshSize: number;
-}
-
-/** 🔗️ One combination term — a referenced load case id and its scale factor. */
-export interface FemCombinationTerm {
-  caseId: string;
-  factor: number;
-}
-
-/** 🧮️ A linear combination of load cases — terms superposed at solve time. */
-export interface FemCombination {
-  id: string;
-  name: string;
-  terms: FemCombinationTerm[];
-}
-
-/** ⚙️ Analysis settings — modal/buckling mode counts and the viewport deformation scale factor. */
-export interface FemAnalysisSettings {
-  modalCount: number;
-  bucklingCount: number;
-  deformationScale: number;
-}
-//#endregion 🔖️Entities
 
 //#region 🔖️Mutations
 /** 🌱⚪️ Brings a new structural node into existence. */
@@ -248,13 +167,13 @@ export interface ReplaceCombination {
 export interface MoveSelection {
   nodeIds: string[];
   regionIds: string[];
-  pivotX: number;
-  pivotY: number;
-  dx: number;
-  dy: number;
-  angle: number;
-  sx: number;
-  sy: number;
+  pivotX: Binary64;
+  pivotY: Binary64;
+  dx: Binary64;
+  dy: Binary64;
+  angle: Binary64;
+  sx: Binary64;
+  sy: Binary64;
 }
 //#endregion 🔖️Mutations
 

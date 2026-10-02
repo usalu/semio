@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSa
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

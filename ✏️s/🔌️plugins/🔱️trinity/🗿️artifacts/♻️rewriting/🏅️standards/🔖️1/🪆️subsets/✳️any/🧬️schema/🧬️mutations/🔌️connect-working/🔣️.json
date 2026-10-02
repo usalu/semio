@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working",
+  "semanticKind": "connect-working-ports",
+  "displayName": "Connect Working Ports",
+  "emoji": "🔌️",
+  "aggregateVariant": "ConnectWorkingPorts",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "connect-working-ports",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

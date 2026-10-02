@@ -33,10 +33,12 @@ pub(crate) mod context {
     /// 🪟️ A one-window view model addressing the named window kind.
     pub fn view(kind: &str) -> ViewModel {
         let id = if kind == edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
-        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
+        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
 
     pub(super) fn manifest() -> App { App { definition: create_fem3d_app(), examples: Vec::new() } }
+
+    semio_framework_plugin::history_edit_acceptance_law!("fem", Fem3dPlayApp, manifest, "../..");
 
     /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
     pub const FEM3D_TEST_INSTANCE: u32 = 1;
@@ -451,7 +453,8 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn manifest_labels_resolve_german_3d() {
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let definition = create_fem3d_app();
     let window = definition.window_kinds.iter().find(|w| w.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     assert_eq!(window.label.resolve(Terminology::Native, Locale::De), "Modell");

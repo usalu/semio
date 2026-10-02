@@ -20,7 +20,7 @@
 //   bun 📜️script.ts avi-project --input <a.avi>
 //   bun 📜️script.ts avi-compare --input <expected.avi> --input <actual.avi>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)

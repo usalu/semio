@@ -12,7 +12,11 @@ use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_v
 use crate::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
 use crate::FormQuestion;
 use dsl::os_pack::json::{Object, Value};
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract as ui;
 use std::collections::HashMap;
 use std::collections::HashSet;

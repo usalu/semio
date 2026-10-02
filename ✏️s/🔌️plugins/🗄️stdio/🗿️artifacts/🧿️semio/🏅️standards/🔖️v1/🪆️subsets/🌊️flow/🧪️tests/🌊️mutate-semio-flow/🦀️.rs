@@ -38,7 +38,7 @@ mod subject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{
         decode_semio_flow_pack, decode_semio_flow_snapshot_json, encode_semio_flow_pack, encode_semio_flow_snapshot_json, parse_semio_flow_dsl, print_semio_flow_dsl, SemioFlowSnapshot,
     };
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Input
     /// 🌊️ The two-node demo pipeline, in both encodings the domain commits for it — small, but the

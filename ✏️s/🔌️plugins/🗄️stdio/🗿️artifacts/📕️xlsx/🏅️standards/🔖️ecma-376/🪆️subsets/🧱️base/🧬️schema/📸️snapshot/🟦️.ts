@@ -1,13 +1,7 @@
 import type { XmlDocument } from '../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
 
-export interface OpcPart { path: string; contentType: string; bytes: number[] }
-export interface OpcRelationship { id: string; relType: string; target: string; targetMode: 'internal' | 'external' }
-export interface OpcPackage {
-  parts: OpcPart[];
-  contentTypes: { defaults: [string, string][]; overrides: [string, string][] };
-  relationships: Record<string, OpcRelationship[]>;
-  comment: string;
-}
+import type {OpcPackage} from '../../../../../../../🎒️zip/📦️opc/🟦️.ts';
+export type {OpcPart,OpcRelationship,OpcPackage} from '../../../../../../../🎒️zip/📦️opc/🟦️.ts';
 export type XlsxCellValue =
   | { kind: 'number'; value: number }
   | { kind: 'sharedString'; value: number }

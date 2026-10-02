@@ -1,6 +1,7 @@
 //! 📚️ Example `compliant-two-zone`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "compliant-two-zone";
 pub fn label() -> LocalizedLabel {

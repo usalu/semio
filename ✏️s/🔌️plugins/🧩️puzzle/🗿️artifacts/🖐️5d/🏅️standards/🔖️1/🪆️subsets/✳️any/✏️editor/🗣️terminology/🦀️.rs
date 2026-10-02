@@ -2,12 +2,16 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_locale::AppLabels;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::Terminology;
 use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition};
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the 5d app; one field per label, all four locale×terminology cells required.
     pub struct Puzzle5dLabels {
         parts: native_en "Parts", native_de "Teile", reuse_en "Building components", reuse_de "Baukomponenten";

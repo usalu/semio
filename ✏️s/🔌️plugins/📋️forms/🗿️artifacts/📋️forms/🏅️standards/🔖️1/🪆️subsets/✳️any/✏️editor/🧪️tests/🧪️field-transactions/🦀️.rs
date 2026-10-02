@@ -118,13 +118,18 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
     let rows = edit_rows(&mut app).await;
     let target = rows.last().and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the added question's mutation");
     patch(&mut app, &id, "max", 90.0, Some(("q.max:6", false))).await;
+    eprintln!("[DEBUG] frozen law: tick settled");
     accepted(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(target))]).await;
+    eprintln!("[DEBUG] frozen law: begin accepted");
     let args = object(vec![("questionIds", DslValue::Array(vec![DslValue::String(id.clone())])), ("field", DslValue::String("max".into())), ("value", DslValue::float(80.0)), ("gesture", DslValue::String("q.max:6".into())), ("commit", DslValue::Bool(false))]);
-    let refused = app.handle_action("patchQuestions", Some(&args), &meta("local")).await.expect_err("the frozen press keeps moving: its ticks are refused");
+    let Err(refused) = app.handle_action("patchQuestions", Some(&args), &meta("local")).await else { panic!("the frozen press keeps moving: its ticks are refused") };
     assert_eq!(refused.code.0.as_str(), "timeTravel.frozen");
+    eprintln!("[DEBUG] frozen law: frozen tick refused");
     accepted(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    eprintln!("[DEBUG] frozen law: session closed, pending typed operations {}", app.has_pending_typed_operations());
     patch(&mut app, &id, "max", 70.0, Some(("q.max:6", true))).await;
+    eprintln!("[DEBUG] frozen law: late release settled");
     assert_eq!((question(&app, &id).max, edit_rows(&mut app).await.len()), (Some(100.0), rows.len()), "the frozen press leaves zero trace, its late release stays silent");
 }
 //#endregion 🎚️ScrubLaws

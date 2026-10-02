@@ -137,7 +137,7 @@ pub const TRINITY_REWRITING_DIALECT: semio_framework_plugin::Dialect = semio_fra
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.rewriting".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Rewrite Rule", "Trinity-Umschreibregel"),
         source_format: REWRITE_RULE_SCHEMA.into(),
         component_kind: "trinity".into(),
         dimension: "text".into(),
@@ -462,6 +462,125 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/🧪️tests/📐️clears/🦀️.rs"]
                             mod tests_clears_the_shaft_layout_point;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod drag_working_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/🧪️tests/✋️moves/🦀️.rs"]
+                            mod tests_drags_node_b_of_the_working_graph;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-working/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod patch_working_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/🧪️tests/🩹️renames/🦀️.rs"]
+                            mod tests_renames_node_a_of_the_working_graph;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod drag_rule_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/🧪️tests/🫳️moves/🦀️.rs"]
+                            mod tests_drags_two_rule_nodes;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod set_rule_layout_points {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/🧪️tests/📍️places/🦀️.rs"]
+                            mod tests_places_one_rule_node_and_clears_one;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod delete_working_nodes {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/🧪️tests/✂️deletes/🦀️.rs"]
+                            mod tests_deletes_node_a_and_its_edges;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-working/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod connect_working_ports {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/🧪️tests/🔌️connects/🦀️.rs"]
+                            mod tests_connects_c_to_a;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-working/📝️text/🦀️.rs"]
+                            pub mod text;
+                        }
+                        #[path = "."]
+                        pub mod disconnect_working_edges {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/💾️binary/🦀️.rs"]
+                            pub mod binary;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/🧪️tests/🪚️cuts/🦀️.rs"]
+                            mod tests_cuts_edge_b_c;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️disconnect-working/📝️text/🦀️.rs"]
                             pub mod text;
                         }
                     }

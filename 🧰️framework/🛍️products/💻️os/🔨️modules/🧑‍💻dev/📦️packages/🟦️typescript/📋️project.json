@@ -576,6 +576,24 @@
         "forwardAllArgs": true
       }
     },
+    "time-travel": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "playwright"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify time-travel",
+        "forwardAllArgs": true
+      }
+    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "options": {

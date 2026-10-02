@@ -52,7 +52,7 @@ bool = "0" | "1"
 
 # `SemioPoint2.x`/etc and every `f64`/`f32` field print via plain Rust `{v}` Display — the shared
 # lexer's `INT`/`FLOAT` scanners already capture a leading `-` when digit-adjacent.
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 option-rgba = "[" "0" "]" | "[" "1" "," rgba "]"
 option-number = "[" "0" "]" | "[" "1" "," number "]"

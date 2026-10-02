@@ -1,7 +1,8 @@
 //! 📥️ EN 1991 play app — structured inputs editor over the design-load subject.
 
 use crate::En1991Snapshot;
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-en1991-inputs";
@@ -19,7 +20,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🗂️ Projects the flat SI subject into ≤32-child groups so `UiFixedList` (cap 32) can admit the tree.
 pub fn render(
     document: &En1991Snapshot,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

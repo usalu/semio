@@ -2,9 +2,18 @@
 
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY, VCS_PLAY_APP_ID};
-use semio_framework_plugin::{
-    tree_item_with_action, HistoryView, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::HistoryView;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_BODY_ARTIFACT: &str = "vcs.play.artifact";

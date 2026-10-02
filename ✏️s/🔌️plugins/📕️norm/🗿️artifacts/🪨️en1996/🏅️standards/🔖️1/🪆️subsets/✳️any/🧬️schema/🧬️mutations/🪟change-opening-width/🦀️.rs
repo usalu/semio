@@ -25,8 +25,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeOpeningWid
     fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change opening width", "Öffnungsbreite ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change opening width", "Öffnungsbreite ändern")
     }
 }
 

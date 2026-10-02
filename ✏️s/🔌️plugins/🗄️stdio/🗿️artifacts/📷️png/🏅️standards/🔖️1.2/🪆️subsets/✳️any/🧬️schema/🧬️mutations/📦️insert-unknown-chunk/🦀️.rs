@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for InsertUnknownChunkMuta
             vec![PngMutation::RemoveUnknownChunk(crate::schema::mutations::RemoveUnknownChunkMutation { index: (*index).min(base.unknown_chunks.len()) })]
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert unknown chunk", "Unbekannten Chunk einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert unknown chunk", "Unbekannten Chunk einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-unknown-chunk".into()]

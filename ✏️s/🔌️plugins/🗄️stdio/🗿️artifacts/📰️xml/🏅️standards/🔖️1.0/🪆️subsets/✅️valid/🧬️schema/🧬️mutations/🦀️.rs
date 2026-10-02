@@ -215,7 +215,7 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
         },
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id }) => match document_element_name(base) {
             None => rejected("declare-doctype: the document has no document element, so §2.8 gives the DOCTYPE no Name to carry".to_string()),
-            Some(name) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: base.doc.prolog.len(), name: name.to_string(), external_id: external_id.clone(), declarations: base.doc.doctype.as_ref().map(|d| d.declarations.clone()).unwrap_or_default() })),
+            Some(name) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype { prolog_position: base.doc.prolog.len() as u64, name: name.to_string(), external_id: external_id.clone(), declarations: base.doc.doctype.as_ref().map(|d| d.declarations.clone()).unwrap_or_default() })),
         },
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name }) => match (document_element_name(base), base.doc.doctype.as_ref()) {
             (None, _) => rejected("rename-document-element: the document has no document element to rename".to_string()),

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The Video for Windows AVI 1.0 RIFF layout (`RIFF('AVI ' hdrl movi idx1)`) defines `movi` as the top-level LIST chunk carrying the actual interleaved video/audio sample data (`00dc`/`01wb`-style stream data chunks), normatively distinct from the `hdrl` LIST that only describes the streams. `insert-chunk`/`remove-chunk`/`set-chunk-keyframe`/`add-unknown-chunk`/`remove-unknown-chunk` are that data list's own vocabulary, owned here rather than by `🎛️hdrl`. (A per-chunk video/audio STREAM TYPE split was considered instead, but `strh`/`strf` are one shared record shape for both, distinguished only by a runtime `fccType` value, not a separate schema location -- `hdrl`/`movi`/`idx1` are the format's real, normative top-level chunk structure.) The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `AviMutation` enum, its diff dispatch and the real RIFF codec they compile into remain in `🎛️hdrl` (one shared, always-co-resident implementation across the whole container -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `riff-avi-1-0-mutate-reader` (declared by `../../🎛️hdrl/🔮️oracles/🔣️.json`, merged into the shared registry) already reads `movi` chunks back.",
   "oracles": [],
@@ -497,5 +497,6 @@
         "remove-unknown-chunk"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

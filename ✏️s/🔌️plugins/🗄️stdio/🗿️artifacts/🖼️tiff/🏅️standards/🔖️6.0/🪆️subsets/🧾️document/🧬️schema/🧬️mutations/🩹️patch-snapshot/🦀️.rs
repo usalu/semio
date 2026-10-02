@@ -31,8 +31,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PatchSnapshot {
         editing::inverse_snapshot_patch(base, &self.patch).map(|patch| vec![TiffMutation::PatchSnapshot(Self { patch })]).unwrap_or_default()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
     }
 
     fn target(&self) -> Vec<String> {

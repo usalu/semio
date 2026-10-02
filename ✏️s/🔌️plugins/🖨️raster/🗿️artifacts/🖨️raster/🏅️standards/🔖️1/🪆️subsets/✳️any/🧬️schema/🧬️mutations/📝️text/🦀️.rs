@@ -5,7 +5,7 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
+use crate::mutations::{fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
 use crate::{RasterImageAsset, RasterLayerNode};
 use protocol::OpText;
@@ -139,6 +139,16 @@ enum RasterMutationDsl {
         ys: Vec<f64>,
         selection: Option<String>,
     },
+    FillRegion {
+        #[dsl(key = "id")]
+        layer_id: String,
+        target: String,
+        x: u32,
+        y: u32,
+        tolerance: u32,
+        color: Vec<f64>,
+        selection: Option<String>,
+    },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -149,7 +159,7 @@ impl OpText for RasterMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -159,7 +169,7 @@ impl OpText for RasterMutationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -204,6 +214,15 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
             ys: payload.points.iter().map(|point| point.y).collect(),
             selection: payload.selection.as_ref().map(dsl::json::to_json_string),
         },
+        RasterMutation::FillRegion(payload) => RasterMutationDsl::FillRegion {
+            layer_id: payload.layer_id.clone(),
+            target: payload.target.clone(),
+            x: payload.seed.x,
+            y: payload.seed.y,
+            tolerance: payload.tolerance,
+            color: payload.color.clone(),
+            selection: payload.selection.as_ref().map(dsl::json::to_json_string),
+        },
     }
 }
 
@@ -232,6 +251,14 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
             tool,
             brush: paint_stroke::RasterBrush { size, hardness, opacity, color },
             points: xs.into_iter().zip(ys).map(|(x, y)| paint_stroke::RasterStrokePoint { x, y }).collect(),
+            selection: selection.and_then(|spans| dsl::json::from_json_str(&spans).ok()),
+        }),
+        RasterMutationDsl::FillRegion { layer_id, target, x, y, tolerance, color, selection } => RasterMutation::FillRegion(fill_region::FillRegion {
+            layer_id,
+            target,
+            seed: fill_region::RasterSeed { x, y },
+            tolerance,
+            color,
             selection: selection.and_then(|spans| dsl::json::from_json_str(&spans).ok()),
         }),
     }

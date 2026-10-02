@@ -77,13 +77,24 @@ pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> V
 }
 //#endregion 🧾️PayloadWire
 
+//#region 🪆️DoubleOption
+/// 🪆️ Decodes a PRESENT key of an `Option<Option<T>>` field as `Some(inner)`, so a present `null` is `Some(None)` (cleared,
+/// removed, valueless) and only an absent key (the field's bare `#[value(default)]`) is `None` (untouched): the value derive's
+/// blanket `Option<T>` impl reads `Null` as absence at any depth and would collapse both. Paired with
+/// `skip_serializing_if = "Option::is_none"`, `payload_value()` and `with_payload_value()` round-trip — the
+/// `deserialize_double_option` shape the value derive's own docs name (`🧰️framework/🔨️modules/🌱️value/✨️derive`).
+pub fn deserialize_double_option<T: kernel::FromValue>(value: kernel::DslValue) -> Result<Option<Option<T>>, kernel::ValueError> {
+    <Option<T> as kernel::FromValue>::from_value(value).map(Some)
+}
+//#endregion 🪆️DoubleOption
+
 /// 📚️ The `s.stdio.registry` shared schema documents: contracts several stdio artifacts `$ref` that no single artifact
 /// owns — `$defs/SnapshotPatch` of every `patch-snapshot` leaf. Every package that runs those artifacts' editors declares
 /// them (`PluginBuilder::schema_documents`: `stdio` itself and its `stdio-image`/`stdio-media` hosts), so the runtime
 /// input reader (`registered_input_schema_document`) resolves them.
-pub const STDIO_REGISTRY_SCHEMA_DOCUMENTS: semio_framework_schema::ScopeSchemaExports = semio_framework_schema::ScopeSchemaExports {
+pub const STDIO_REGISTRY_SCHEMA_DOCUMENTS: semio_framework_schema_registry::ScopeSchemaExports = semio_framework_schema_registry::ScopeSchemaExports {
     scope: "s.stdio.registry",
-    exports: &[semio_framework_schema::SchemaExport { id: "schema", leaves: semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../🧬️schema/🔣️.json"), proto: "" } }],
+    exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../🧬️schema/🔣️.json"), proto: "" } }],
 };
 
 /// 🧩 One schema definition paired with its optional executable declaration.
@@ -1074,7 +1085,7 @@ macro_rules! impl_serde_op_codec {
 /// (`SET_ACTIVE_EXAMPLE_ACTION_ID` in the renderer's own `🛠️ShellHelpers`). An app that does not
 /// declare it is hidden from the picker outright by `appSwitchesExamples`, and the shell then never
 /// announces a boot example — the pane opens the app's genesis document instead of its curated one.
-pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = "setActiveExample";
+pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = semio_framework_plugin::app::CATALOGUE_EXAMPLE_ACTION_ID;
 
 /// 📚️ Reads the example id out of a shell `{action, args}` pair. The shells spell it `exampleId`;
 /// the palette, a context menu and a replayed shell command may spell it `id` or `value`, and an
@@ -1179,7 +1190,8 @@ pub fn addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefini
 /// 🔐️ Declares a table cell address guarded by the rendered document revision.
 pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
     use semio_framework_plugin::app::{TableWindowKit, WindowKit};
-    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    use semio_framework_plugin::ActionArgDef;
+    use semio_framework_ui_locale::LocalizedLabel;
     let mut definition = TableWindowKit::editable_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
     action.args = vec![
@@ -1193,7 +1205,8 @@ pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowK
 
 /// 🔐️ Declares a table cell address guarded by its row's own revision — a target token, not the document's.
 pub fn row_revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    use semio_framework_plugin::ActionArgDef;
+    use semio_framework_ui_locale::LocalizedLabel;
     let mut definition = revision_addressed_table_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("the revision-addressed table declares set-cell");
     let revision = action.args.iter_mut().find(|argument| argument.id == "revision").expect("set-cell declares revision");
@@ -1210,7 +1223,11 @@ pub const SET_TABLE_HEADER_ACTION_ID: &str = "set-header";
 /// 🧱️ Declares direct structural table edits beside revision-addressed cell editing — retained routes, classified
 /// `Migrated` here like the kit scaffold classifies its own rows, so every app declaring the table assembles.
 pub fn structural_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
-    use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, InteractiveJobClassification, LocalizedLabel};
+    use semio_framework_plugin::ActionArgDef;
+    use semio_framework_plugin::ActionDefinition;
+    use semio_framework_plugin::ActionKind;
+    use semio_framework_plugin::InteractiveJobClassification;
+    use semio_framework_ui_locale::LocalizedLabel;
     let revision = || ActionArgDef::document_revision("revision", LocalizedLabel::native("Document revision", "Dokumentrevision"));
     let mut definition = revision_addressed_table_window_kind();
     let structural = [
@@ -1316,7 +1333,7 @@ pub fn render_structural_table(
     editable_headers: bool,
     controller_id: &str,
     revision: &str,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     windows: &semio_framework_plugin::TreeWindows<'_>,
     table: impl FnOnce() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -1324,8 +1341,8 @@ pub fn render_structural_table(
     use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, PluginAssemblyError, RowActionPlacement, Trigger};
     use semio_framework_ui_contract::{self as ui, Label as UiLabel};
     let labels = match locale {
-        semio_framework_plugin::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
-        semio_framework_plugin::Locale::En => ("Add row", "Add column", "Headers", "Header", "Actions", "Remove column"),
+        semio_framework_ui_locale::Locale::De => ("Zeile hinzufügen", "Spalte hinzufügen", "Spaltenköpfe", "Spaltenkopf", "Aktionen", "Spalte entfernen"),
+        semio_framework_ui_locale::Locale::En => ("Add row", "Add column", "Headers", "Header", "Actions", "Remove column"),
     };
     let action = |name: &str| ActionId::try_v1(controller_id, name).ok_or_else(|| PluginAssemblyError::new("stdio.table.action", format!("invalid action {name}")));
     let add_row = ui::button(UiLabel::try_from(labels.0).map_err(|_| PluginAssemblyError::new("stdio.table.add-row", "button label admission"))?)
@@ -1379,7 +1396,8 @@ pub fn window_kit_revisioned_editable_cells(rows: &[Vec<String>], action_id: &st
 /// 🎯️ Declares a stable, revision-guarded spreadsheet cell address.
 pub fn stable_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
     use semio_framework_plugin::app::{TableWindowKit, WindowKit};
-    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    use semio_framework_plugin::ActionArgDef;
+    use semio_framework_ui_locale::LocalizedLabel;
     let mut definition = TableWindowKit::editable_window_kind();
     let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
     action.args = vec![
@@ -1471,17 +1489,20 @@ pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'stat
 }
 
 /// 📇️ The picker's own action declaration — one row per stdio editor, so the nine editors cannot
-/// drift on label, kind or icon. The caller still chains `.action_args(..)`, `.action_destructive(..)`
+/// drift on label, kind or icon. Its label is the framework's own localized label of the load-example verb
+/// (`app::runtime_verb_label`, design §20.6 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), so the history row a load
+/// records never reads a hand-written description. The caller still chains `.action_args(..)`, `.action_destructive(..)`
 /// and `.action_interactive_job(.., Migrated)`: only `Migrated` survives UI dispatch, and only a
 /// destructive row makes the MCP gateway ask before replacing a document.
 pub fn set_active_example_action() -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition::new(SET_ACTIVE_EXAMPLE_ACTION_ID, semio_framework_plugin::LocalizedLabel::native("Load Example", "Beispiel laden"), semio_framework_plugin::ActionKind::Mutation, "file")
+    let label = semio_framework_plugin::app::runtime_verb_label(SET_ACTIVE_EXAMPLE_ACTION_ID).expect("the framework labels its load-example verb");
+    semio_framework_plugin::ActionDefinition::new(SET_ACTIVE_EXAMPLE_ACTION_ID, label, semio_framework_plugin::ActionKind::Mutation, "file")
 }
 
 /// 💬️ The agent-facing description of every stdio editor's `setActiveExample` — one sentence for all formats,
 /// beside the argument form every stdio editor already shares.
-pub fn set_active_example_description() -> semio_framework_plugin::LocalizedLabel {
-    semio_framework_plugin::LocalizedLabel::native(
+pub fn set_active_example_description() -> semio_framework_ui_locale::LocalizedLabel {
+    semio_framework_ui_locale::LocalizedLabel::native(
         "Replaces the whole open document with one of the bundled examples for its format, by example id.",
         "Ersetzt das gesamte offene Dokument durch eines der mitgelieferten Beispiele für sein Format, anhand der Beispiel-Id.",
     )
@@ -1489,8 +1510,8 @@ pub fn set_active_example_description() -> semio_framework_plugin::LocalizedLabe
 
 /// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
 /// to the one the pane boots.
-pub fn set_active_example_args(options: &[(&str, semio_framework_plugin::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
-    vec![semio_framework_plugin::ActionArgDef::select("exampleId", semio_framework_plugin::LocalizedLabel::native("Example", "Beispiel"), options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect())
+pub fn set_active_example_args(options: &[(&str, semio_framework_ui_locale::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
+    vec![semio_framework_plugin::ActionArgDef::select("exampleId", semio_framework_ui_locale::LocalizedLabel::native("Example", "Beispiel"), options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect())
         .default_value(&default_example_id.to_string())]
 }
 //#endregion 🎬️ExampleSwitch

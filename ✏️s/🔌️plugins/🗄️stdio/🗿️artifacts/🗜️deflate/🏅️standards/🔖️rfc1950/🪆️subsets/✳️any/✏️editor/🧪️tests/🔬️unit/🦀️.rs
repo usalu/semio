@@ -21,7 +21,7 @@ async fn editor_declares_the_main_window() {
 #[semio_framework_async_macros::async_test]
 async fn parse_header_summary_round_trips_a_rendered_snapshot() {
     let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
-    let node = main::render(&document, semio_framework_plugin::Locale::En).expect("render");
+    let node = main::render(&document, semio_framework_ui_locale::Locale::En).expect("render");
     let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the text scene with its lanes");
     let (method, window_bits, level_hint, dict_id) = parse_header_summary(&scene.buffer).expect("well-formed summary must parse");
     assert_eq!(method, 8);
@@ -45,12 +45,52 @@ fn text_edit_requires_source_text_and_rejects_out_of_schema_headers_atomically()
     let text = "method=8\nwindowBits=255\nlevelHint=default\npresetDictionary=none";
     let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(text.into()))]);
     let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("complete text argument");
-    assert!(deflate_text_emit(&command).is_err());
+    assert!(deflate_text_emit(&command, &DeflateSnapshot::default()).is_err());
+}
+
+/// ⚖️ LAW: an explicit Apply of the header summary is the header leaves it changed and nothing else — the parameters alone, the
+/// dictionary alone, both, or none for an unchanged summary — each labelled from its leaf (no static description).
+#[test]
+fn an_applied_summary_is_only_the_header_leaves_it_changed() {
+    let base = DeflateSnapshot::default();
+    let emit = |text: &str| {
+        let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(text.into()))]);
+        let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("complete text argument");
+        deflate_text_emit(&command, &base).expect("a valid summary")
+    };
+    let unchanged = emit("method=8\nwindowBits=7\nlevelHint=default\npresetDictionary=none");
+    assert!(unchanged.artifact_mutations.is_empty() && unchanged.description.is_none(), "an unchanged summary moves nothing: {:?}", unchanged.artifact_mutations);
+    let window = emit("method=8\nwindowBits=5\nlevelHint=default\npresetDictionary=none");
+    assert!(matches!(window.artifact_mutations.as_slice(), [DeflateMutation::SetCompressionParams(params)] if params.window_bits == 5), "{:?}", window.artifact_mutations);
+    assert!(window.description.is_none(), "the history row is labelled from its leaf");
+    let dictionary = emit("method=8\nwindowBits=7\nlevelHint=default\npresetDictionary=7");
+    assert!(matches!(dictionary.artifact_mutations.as_slice(), [DeflateMutation::SetPresetDictionary(set)] if set.dict_id == Some(7)), "{:?}", dictionary.artifact_mutations);
+    let both = emit("method=8\nwindowBits=5\nlevelHint=default\npresetDictionary=7");
+    assert!(matches!(both.artifact_mutations.as_slice(), [DeflateMutation::SetCompressionParams(_), DeflateMutation::SetPresetDictionary(_)]), "{:?}", both.artifact_mutations);
+}
+
+/// ⚖️ LAW (design §20.3): a document-details edit is the domain leaves it changed — `set-compression-params` for the window bits,
+/// `set-preset-dictionary` for the dictionary id, `set-payload` for the payload — never a whole `set-snapshot`, with no
+/// description; an unchanged value moves nothing.
+#[test]
+fn a_document_details_edit_is_only_the_domain_leaves_it_changed() {
+    use semio_s_artifact_stdio_contract::editing::{SnapshotEditEvent, SnapshotEditingEditor};
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::schema::deflate_artifact_schema_descriptor()]).expect("register deflate schema");
+    let base = DeflateSnapshot::default();
+    let edit = |path: &str, value: dsl::DslValue| <DeflateEditor as SnapshotEditingEditor>::snapshot_edit_emit(&SnapshotEditEvent::SetValue { path: path.into(), value }, &base).expect("the details edit publishes");
+    let window = edit("/windowBits", dsl::DslValue::uint(5));
+    assert!(matches!(window.artifact_mutations.as_slice(), [DeflateMutation::SetCompressionParams(params)] if params.window_bits == 5), "{:?}", window.artifact_mutations);
+    assert!(window.description.is_none(), "the history row is labelled from its leaf");
+    let dictionary = <DeflateEditor as SnapshotEditingEditor>::snapshot_edit_emit(&SnapshotEditEvent::InsertValue { path: "/dictId".into(), value: dsl::DslValue::uint(7) }, &base).expect("the details edit publishes");
+    assert!(matches!(dictionary.artifact_mutations.as_slice(), [DeflateMutation::SetPresetDictionary(set)] if set.dict_id == Some(7)), "{:?}", dictionary.artifact_mutations);
+    assert!(edit("/windowBits", dsl::DslValue::uint(u64::from(base.window_bits))).artifact_mutations.is_empty(), "an unchanged value moves nothing");
+    let payload = DeflateSnapshot { payload: b"hello".to_vec(), ..DeflateSnapshot::default() };
+    assert_eq!(super::deflate_net_mutations(&base, &payload), vec![DeflateMutation::SetPayload(crate::schema::mutations::set_payload::SetPayload { payload: b"hello".to_vec() })], "a changed payload is ONE set-payload");
 }
 
 #[test]
 fn details_reject_window_bits_outside_the_normative_schema_atomically() {
-    semio_framework_schema::register_artifact_schema_descriptors(vec![crate::schema::deflate_artifact_schema_descriptor()]).expect("register deflate schema");
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::schema::deflate_artifact_schema_descriptor()]).expect("register deflate schema");
     let base = DeflateSnapshot::default();
     let accepted = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit_for_dialect(
         &base,

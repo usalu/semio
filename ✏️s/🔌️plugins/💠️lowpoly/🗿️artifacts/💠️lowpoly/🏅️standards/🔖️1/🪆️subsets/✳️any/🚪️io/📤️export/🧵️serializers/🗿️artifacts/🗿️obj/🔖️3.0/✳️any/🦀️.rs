@@ -33,7 +33,7 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, store::TextE
         obj.vertices.extend(part.positions.iter().map(|p| ObjVertex { x: p[0], y: p[1], z: p[2], w: None }));
         let mut object = ObjObject { name, faces: Vec::with_capacity(part.faces.len()) };
         for face in &part.faces {
-            object.faces.push(obj.faces.len());
+            object.faces.push(u64::try_from(obj.faces.len()).map_err(|_| crate::io::mesh_geometry::text_error("OBJ face occurrence exceeds u64"))?);
             obj.faces.push(ObjFace { vertices: face.iter().map(|&v| ObjFaceVertex { vertex: v + offset, texcoord: None, normal: None }).collect() });
         }
         obj.objects.push(object);

@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/framework/workflow/run/snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "workflowRef",
+    "workflowCheckpointId",
+    "inputCollectionRef",
+    "inputSnapshotId",
+    "parameterValues",
+    "outputCollectionRef",
+    "status",
+    "trigger",
+    "nodeRecords",
+    "logs",
+    "startedAt",
+    "sealed"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "workflowRef": {
+      "type": "string"
+    },
+    "workflowCheckpointId": {
+      "type": "string"
+    },
+    "inputCollectionRef": {
+      "type": "string"
+    },
+    "inputSnapshotId": {
+      "type": "string"
+    },
+    "parameterValues": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/parameter"
+      }
+    },
+    "outputCollectionRef": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "canceled"
+      ]
+    },
+    "trigger": {
+      "$ref": "#/definitions/trigger"
+    },
+    "nodeRecords": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/node"
+      }
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/log"
+      }
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sealed": {
+      "type": "boolean"
+    }
+  },
+  "definitions": {
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameterId",
+        "value"
+      ],
+      "properties": {
+        "parameterId": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "portId",
+        "fingerprint"
+      ],
+      "properties": {
+        "portId": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "portId",
+        "artifactId",
+        "path"
+      ],
+      "properties": {
+        "portId": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "log": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "level",
+        "message",
+        "at"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "status",
+        "documentFingerprint",
+        "configFingerprint",
+        "inputFingerprints",
+        "outputFingerprints",
+        "outputs",
+        "durationMs"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "computed",
+            "cacheHit",
+            "failed"
+          ]
+        },
+        "documentFingerprint": {
+          "type": "string"
+        },
+        "configFingerprint": {
+          "type": "string"
+        },
+        "inputFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fingerprint"
+          }
+        },
+        "outputFingerprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/fingerprint"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/output"
+          }
+        },
+        "durationMs": {
+          "type": "number"
+        }
+      }
+    },
+    "trigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "actor"
+          ],
+          "properties": {
+            "kind": {
+              "const": "manual"
+            },
+            "actor": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "automationRef",
+            "eventFingerprint"
+          ],
+          "properties": {
+            "kind": {
+              "const": "automation"
+            },
+            "automationRef": {
+              "type": "string"
+            },
+            "eventFingerprint": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

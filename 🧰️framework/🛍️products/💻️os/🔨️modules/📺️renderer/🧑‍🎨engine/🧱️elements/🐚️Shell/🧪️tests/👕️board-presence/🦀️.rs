@@ -49,7 +49,7 @@ fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> ShellState {
 /// 🖱️ [`painted_board`] plus the input state its paint registered the board's retained hits in — what the renderer's pointer
 /// routing reads to let a published board surface claim a move.
 fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, InputState<ActionDescriptor>) {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
     let scene = ui_wgpu::wgpu::Board2dScene::base("{}".into(), camera.to_string(), true);

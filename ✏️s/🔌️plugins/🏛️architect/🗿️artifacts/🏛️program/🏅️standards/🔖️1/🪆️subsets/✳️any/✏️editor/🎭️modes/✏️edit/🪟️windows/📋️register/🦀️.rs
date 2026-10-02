@@ -3,7 +3,12 @@
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{BlockListScene, Label, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BlockListScene;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

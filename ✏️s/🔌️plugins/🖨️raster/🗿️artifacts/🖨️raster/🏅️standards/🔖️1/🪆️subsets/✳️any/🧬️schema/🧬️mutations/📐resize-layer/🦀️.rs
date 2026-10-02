@@ -28,8 +28,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
+        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
         }
 
         fn target(&self) -> Vec<String> {

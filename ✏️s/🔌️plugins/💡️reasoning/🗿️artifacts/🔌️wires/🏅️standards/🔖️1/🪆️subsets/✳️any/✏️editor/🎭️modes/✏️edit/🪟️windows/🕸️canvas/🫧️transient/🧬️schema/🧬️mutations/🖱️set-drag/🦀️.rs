@@ -29,8 +29,8 @@ impl protocol::MutationKind<WiresCanvasTransient, WiresCanvasTransientMutation> 
     fn inverse(&self, base: &WiresCanvasTransient) -> Vec<WiresCanvasTransientMutation> {
         vec![WiresCanvasTransientMutation::SetDrag(Self { node_id: base.drag_node_id.clone(), start_x: base.drag_start_x, start_y: base.drag_start_y, last_x: base.drag_last_x, last_y: base.drag_last_y, zoom: base.drag_zoom })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Drag", "Ziehvorgang setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Drag", "Ziehvorgang setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["drag".into()]

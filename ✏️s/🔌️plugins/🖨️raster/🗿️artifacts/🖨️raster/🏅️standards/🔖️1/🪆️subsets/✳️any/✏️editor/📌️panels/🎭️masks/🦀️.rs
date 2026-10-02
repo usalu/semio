@@ -9,7 +9,16 @@ use crate::editor::raster::{mask_row_id, raster_action, ui_label, ui_value_list,
 use crate::{RasterLayerMask, RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
 use semio_framework_ui_contract as ui;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_MASKS: &str = "raster.play.masks";

@@ -1,1 +1,31 @@
-{"schemaSql":"CREATE TABLE explicit_entity (id INTEGER PRIMARY KEY, label TEXT NOT NULL)","table":"explicit_entity","label":"a","tooLong":"too long","maxValueBytes":9,"cancelAfterRows":256,"inputRows":300,"octetsSql":"CREATE TABLE owned_octets (id INTEGER PRIMARY KEY, bytes BLOB NOT NULL)","octets":[0,255,17]}
+{
+  "schemaSql": "CREATE TABLE explicit_entity (id INTEGER PRIMARY KEY, label TEXT NOT NULL)",
+  "table": "explicit_entity",
+  "label": "a",
+  "tooLong": "too long",
+  "maxValueBytes": 9,
+  "cancelAfterRows": 256,
+  "inputRows": 300,
+  "octetsSql": "CREATE TABLE owned_octets (id INTEGER PRIMARY KEY, bytes BLOB NOT NULL)",
+  "octets": [
+    0,
+    255,
+    17
+  ],
+  "keyedOrder": {
+    "input": [
+      "3",
+      "-9223372036854775808",
+      "2",
+      "9223372036854775807"
+    ],
+    "expected": [
+      "-9223372036854775808",
+      "2",
+      "3",
+      "9223372036854775807"
+    ],
+    "rows": 1024,
+    "cancelAt": 256
+  }
+}

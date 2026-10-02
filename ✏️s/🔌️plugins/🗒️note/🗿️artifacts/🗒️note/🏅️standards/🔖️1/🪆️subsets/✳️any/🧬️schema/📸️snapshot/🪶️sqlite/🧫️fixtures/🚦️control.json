@@ -1,0 +1,6 @@
+{
+  "longTextBytes": 131072,
+  "cancelAt": 65536,
+  "nativeValueBudget": 128,
+  "directRows": 1
+}

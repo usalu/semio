@@ -4,7 +4,8 @@
 //! jobs (`crate::editor::remodeling::reconstruction_session`).
 
 use crate::editor::remodeling::reconstruction_session::reconstruction_run_definition;
-use semio_framework_plugin::{LocalizedLabel, ToolDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "reconstruction";

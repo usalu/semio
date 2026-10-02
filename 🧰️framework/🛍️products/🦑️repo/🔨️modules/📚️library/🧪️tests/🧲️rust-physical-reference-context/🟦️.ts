@@ -10,7 +10,8 @@ import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
 import * as rustDiscovery from "../../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph } from "../../🔍️discovery/🟦️.ts";
-import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 //#endregion Imports
 
 //#region Authority

@@ -21,8 +21,8 @@ impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for 
     fn inverse(&self, base: &PresentationConfig) -> Vec<PresentationConfigMutation> {
         vec![PresentationConfigMutation::SetEngagementInput(Self { value: base.engagement_input.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Engagement Input", "Interaktionseingabe setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["engagementInput".into()]

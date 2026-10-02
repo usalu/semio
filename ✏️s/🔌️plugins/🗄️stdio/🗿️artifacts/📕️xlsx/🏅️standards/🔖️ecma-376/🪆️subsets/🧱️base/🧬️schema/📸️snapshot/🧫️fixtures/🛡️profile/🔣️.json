@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "id": "strict",
+      "subset": "strict",
+      "xmlns": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "relationshipsNamespace": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "conformance": "strict",
+      "vml": false,
+      "missingWorksheet": false,
+      "expected": []
+    },
+    {
+      "id": "transitional",
+      "subset": "transitional",
+      "xmlns": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "relationshipsNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "conformance": null,
+      "vml": false,
+      "missingWorksheet": false,
+      "expected": []
+    },
+    {
+      "id": "strict-missing-conformance",
+      "subset": "strict",
+      "xmlns": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "relationshipsNamespace": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "conformance": null,
+      "vml": false,
+      "missingWorksheet": false,
+      "expected": [
+        "conformance-attribute"
+      ]
+    },
+    {
+      "id": "transitional-strict-claim",
+      "subset": "transitional",
+      "xmlns": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "relationshipsNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "conformance": "strict",
+      "vml": false,
+      "missingWorksheet": false,
+      "expected": [
+        "conformance-attribute"
+      ]
+    },
+    {
+      "id": "strict-vml",
+      "subset": "strict",
+      "xmlns": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "relationshipsNamespace": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "conformance": "strict",
+      "vml": true,
+      "missingWorksheet": false,
+      "expected": [
+        "vml-forbidden"
+      ]
+    },
+    {
+      "id": "transitional-vml",
+      "subset": "transitional",
+      "xmlns": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+      "relationshipsNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "conformance": null,
+      "vml": true,
+      "missingWorksheet": false,
+      "expected": []
+    },
+    {
+      "id": "strict-warning",
+      "subset": "strict",
+      "xmlns": "http://purl.oclc.org/ooxml/spreadsheetml/main",
+      "relationshipsNamespace": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "conformance": "strict",
+      "vml": false,
+      "missingWorksheet": true,
+      "expected": [
+        "worksheet-content-type-missing"
+      ]
+    },
+    {
+      "id": "foreign-namespaces",
+      "subset": "strict",
+      "xmlns": "foreign世界",
+      "relationshipsNamespace": "foreign",
+      "conformance": "strict",
+      "vml": false,
+      "missingWorksheet": false,
+      "expected": [
+        "namespace-mismatch",
+        "relationships-namespace-mismatch"
+      ]
+    }
+  ],
+  "largeTextCharacters": 100000,
+  "cancelAfter": 256,
+  "smallValueBudget": 1024
+}

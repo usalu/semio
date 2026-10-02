@@ -38,14 +38,14 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for PatchWor
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = match self.targets.len() {
             1 => ("1 node".to_string(), "1 Knoten".to_string()),
             count => (format!("{count} nodes"), format!("{count} Knoten")),
         };
         match self.field.as_str() {
-            "kind" => protocol::LocalizedLabel::native(&format!("Set the kind of {items_en} to “{}”", self.value), &format!("Art von {items_de} auf „{}“ setzen", self.value)),
-            _ => protocol::LocalizedLabel::native(&format!("Rename {items_en} to “{}”", self.value), &format!("{items_de} in „{}“ umbenennen", self.value)),
+            "kind" => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the kind of {items_en} to “{}”", self.value), &format!("Art von {items_de} auf „{}“ setzen", self.value)),
+            _ => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename {items_en} to “{}”", self.value), &format!("{items_de} in „{}“ umbenennen", self.value)),
         }
     }
     fn target(&self) -> Vec<String> {

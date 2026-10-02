@@ -1,6 +1,3 @@
-/** 🍃 mutation payload — mirrors `ChangeExchangeProcess`. */
-import type { ExchangeProcess } from "../../🟦️.ts";
-
-export interface ChangeExchangeProcess {
-  newExchangeProcess: ExchangeProcess;
-}
+/** 🔄️ `change-exchange-process` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseChangeExchangeProcess, type ChangeExchangeProcess } from "../🧬️schema/🟦️.ts";

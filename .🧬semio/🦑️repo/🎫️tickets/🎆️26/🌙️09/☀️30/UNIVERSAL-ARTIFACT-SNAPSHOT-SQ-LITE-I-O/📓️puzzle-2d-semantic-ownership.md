@@ -1,0 +1,35 @@
+# Puzzle 2D Semantic Snapshot Ownership
+
+The persisted owner is `Puzzle2dSnapshot`: schema, camera, ordered nodes with ordered handles, ordered edges, ordered target regions, and metadata. Metadata contains optional manifest identity, ordered compatibility rules, and an optional kind catalog. A present empty catalog differs from an absent catalog. Catalogs include ordered node/handle/edge/wire kinds, ordered bases, representations and tags, handle templates, attributes, authors, and handle compatibility entries.
+
+Twenty authored relational tables now describe that exact ownership. Every binary64 field has a raw signed word and class companion; optional numbers preserve absent versus zero, signed zero and NaN. Optional Boolean and text cells distinguish absence from false and empty text. Signed author ranks and handle order use the exact Rust i32 domain. Domain identifiers and unresolved references remain literal strings; surrogate primary keys and ordinals describe ownership rather than imposing accidental domain uniqueness.
+
+The current actual native declaration in the subset root already uses the typed snapshot and mutation codec. The editor's retained `Puzzle2dPlaySnapshot` is a separate typed authority wrapper with a deferred legacy value projection; it needs an explicit forwarding owner if its separate codec is used. Its existence must not be hidden by claiming the domain declaration proves every wrapper.
+
+The source facade currently exposes only types. SQLite source and Rust providers are not implemented or activated. Schema-first neutral fixtures and independent Ajv/Bun SQLite laws are the next step; no runtime result is claimed.
+# Registered First Test Invocation
+
+The neutral fixture now covers all persisted board/catalog fields, present/absent optional values, false/true flags, empty and duplicate literal identifiers, all six compatibility variants, and both i32 endpoints. It carries nine binary64 words, 18 independently applied malicious SQL edits, and unchanged explicit 2048-member/131073-byte control frontiers. Independent source laws validate the neutral JSON against the authored JSON schemas and execute the 20-table DDL with Bun SQLite. They require full queryable round trips, catalog presence, every floating-point word, exact row limits, malformed ownership refusal and nested tag cancellation.
+
+Three Rust baseline laws are mounted before implementing a provider: the typed native capability, complete neutral fields compared with test-only serde and both ordinary native directions, and all 43 present board/catalog binary64 fields through ordinary Text and Pack. They are not executed yet.
+
+The Rust package router now exposes the existing shared snapshot SQLite commands and a strict public-facade verification command. All four targets call its owning `📜️script.ts`; launch and seed catalogs contain matching 408.572–575 entries. The first registered source invocation is running with explicit quick level and no cache reuse. Its result is pending; no source or native success is inferred.
+# Executed Source Baseline and Provider Activation
+
+The registered baseline reached all 37 laws: two independent schema/SQL laws passed, 35 missing-provider laws failed, seven assertions executed, and no selected law remained unrun (1.316 seconds of Bun assertions). Its retained log is `🗑️generated/puzzle2d-source-red.log`. These are genuine runtime failures, not a graph or compiler prerequisite.
+
+Following that result, the handwritten source provider was activated beside its twenty-table DDL. It preserves the complete board and all nested catalog ownership, exact raw scalar companions, optional presence, literal identifiers and dense per-owner ordinals. Reconstruction admits lookup workspace before creating Maps/Sets and emits explicit known collection checkpoints. The public facade explicitly exports the first-party scalar-bearing types and both directions. The temporary baseline-only consumer augmentation has been removed so the next public verification checks the actual API. No current source success or native capability is inferred from this activation.
+## Current Verification Boundary
+
+The first activated provider invocation completed all 37 source laws: five passed and 32 failed because two nested loops shadowed the parent row in their own initializer. The same actual public gate reported four TypeScript diagnostics for those two sites. Both loops are now repaired with distinct child variables. The fresh registered source/public invocation is running; no successful current provider result is claimed.
+## Fresh Complete Source and Public Consumer Result
+
+The corrected registered quick source suite now executed all 37/37 laws successfully, zero failures, 69 assertions, 26.39 seconds. The strict public consumer passed in the same uncached invocation, whose combined Nx status is successful. Independent Bun SQLite queried all twenty tables and all board/catalog ownership, optional presence, all nine words across present floating-point fields, eighteen malformed SQL edits and known nested tag cancellation. Retained log: `🗑️generated/root-source-catalog-current.log`. Three native baselines are still unexecuted. The complete explicit Rust board/catalog reconstruction draft is being prepared without activating a capability before its real baseline.
+## Explicit Rust Owner Draft
+
+The independent Rust provider draft now covers all twenty authored tables without inferring domain records from SQLite or putting a native serialization into one cell. It explicitly projects every board and catalog field, including dense nested member ordinals, optional catalog presence, exact IEEE words/classes and signed i32 endpoints. Reconstruction validates complete positive aliased entities, charges relationship and identity maps before allocation, rejects every unmatched parent or duplicate ordinal, and admits typed vectors and actual text copies cumulatively. Native decoding predicts the same explicit row ownership before the controlled binder; preflight remains admission only while physical output ownership is unfinished.
+
+The draft is not mounted. The existing three native laws must reach assertions first. That baseline can expose ordinary native reference validation or quantity-angle fidelity defects independently of adding SQLite; none is presumed repaired or successful.
+
+
+The fresh typed native baseline executed three laws (Nextest f6cff032-84c9-46c0-86bc-47c19a5eea16, 0.292s): the full neutral serde/native equivalence and all 43 exact board/catalog scalar words passed; only the missing typed SQLite capability failed authentically. The 20-table typed owner is now mounted after that RED, binding genuine controlled derived record metadata/fields. It remains unverified until fresh runtime. The distinct Play snapshot's lazy typed authority needs its own declared forwarding ownership and literal native Text behavior; two explicit laws are now authored before repairing that view, and no Play capability is claimed yet.

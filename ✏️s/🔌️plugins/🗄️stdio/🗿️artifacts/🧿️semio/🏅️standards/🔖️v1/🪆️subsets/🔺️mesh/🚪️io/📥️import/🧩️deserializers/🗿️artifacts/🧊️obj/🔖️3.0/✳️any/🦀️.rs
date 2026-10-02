@@ -83,19 +83,21 @@ impl ArtifactDeserializer for SemioMeshFromObj {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let build_primitive = |id: String, face_indices: Vec<usize>| -> Result<SemioPrimitive, store::PackError> {
+        let build_primitive = |id: String, face_indices: Vec<u64>| -> Result<SemioPrimitive, store::PackError> {
             let mut positions = Vec::new();
             let mut normals = Vec::new();
             let mut uvs = Vec::new();
             for &fi in &face_indices {
-                let face = from.faces.get(fi).ok_or_else(|| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
+                let index = usize::try_from(fi).map_err(|_| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
+                let face = from.faces.get(index).ok_or_else(|| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
                 append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
             }
             Ok(SemioPrimitive { id, topology: SemioTopology::Triangles, positions, normals, uvs, colors: Vec::new(), indices: Vec::new(), material_id: None })
         };
 
         let meshes = if from.objects.is_empty() {
-            let all_faces: Vec<usize> = (0..from.faces.len()).collect();
+            let face_count = u64::try_from(from.faces.len()).map_err(|_| store::PackError::Schema("SemioMeshFromObj: face count exceeds schema word".into()))?;
+            let all_faces: Vec<u64> = (0..face_count).collect();
             vec![SemioMesh { id: "mesh-0".to_string(), primitives: vec![build_primitive("mesh-0-prim-0".to_string(), all_faces)?] }]
         } else {
             let mut meshes = Vec::with_capacity(from.objects.len());

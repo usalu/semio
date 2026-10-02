@@ -8,9 +8,9 @@ pub use semio_s_artifact_stdio_contract::{ArtifactAssembly, CapabilityCounts, Ca
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 📚️ Schema exports authored by this concrete deployment owner.
-pub const CATALOG_SCHEMA_DOCUMENTS: semio_framework_schema::ScopeSchemaExports = semio_framework_schema::ScopeSchemaExports {
+pub const CATALOG_SCHEMA_DOCUMENTS: semio_framework_schema_registry::ScopeSchemaExports = semio_framework_schema_registry::ScopeSchemaExports {
     scope: "hub.compositions.stdio.catalog",
-    exports: &[semio_framework_schema::SchemaExport { id: "schema", leaves: semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../../📇️catalog/🧬️schema/🔣️.json"), proto: "" } }],
+    exports: &[semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("../../📇️catalog/🧬️schema/🔣️.json"), proto: "" } }],
 };
 
 /// 📦 Reads the guest's canonical component identity from its Cargo component contract.

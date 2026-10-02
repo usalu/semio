@@ -1,6 +1,7 @@
 //! 📚️ Example `noncompliant-detached`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "noncompliant-detached";
 pub fn label() -> LocalizedLabel {

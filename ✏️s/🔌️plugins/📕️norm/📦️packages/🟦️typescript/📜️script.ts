@@ -103,5 +103,12 @@ class OracleSourceScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("oracle-source", OracleSourceScript);
+/** 🧾️ Runs the wire-twin witness: every committed norm mutation and snapshot against its generated TypeScript twin and the strict Ajv oracle. */
+class WireTwinsScript extends BundleScript {
+  run(): void {
+    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🧪️wire-twins/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("oracle-source", OracleSourceScript).register("wire-twins", WireTwinsScript);
 await runScriptMain(router, { defaultCommand: "test" });

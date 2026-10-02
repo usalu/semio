@@ -7,7 +7,12 @@
 //! (`ViewEmit`), so this render duplicates the small, pure structural layer instead of sharing it.
 
 use crate::{widget_id, Generation2dSnapshot};
-use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "generation2d-view-preview";

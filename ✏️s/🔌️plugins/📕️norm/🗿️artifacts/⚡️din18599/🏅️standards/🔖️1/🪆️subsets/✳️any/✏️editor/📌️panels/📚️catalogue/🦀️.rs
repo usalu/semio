@@ -7,7 +7,12 @@ use crate::artifact_schema::{
 };
 use crate::document::ClauseId;
 use crate::MonthlyClimate;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.din18599.play.catalogue";
@@ -210,7 +215,7 @@ fn potsdam_monthly_climate() -> CatalogueTable {
 /// 📚️ Lists every `ExampleSource` plus normative reference tables with windowed catalogue rows.
 pub fn render(
     examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

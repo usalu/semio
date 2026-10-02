@@ -27,8 +27,8 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
         vec![Self { camera: base.camera.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Camera", "Kamera setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Camera", "Kamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

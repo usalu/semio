@@ -37,8 +37,8 @@ fn examples() -> &'static [ExampleSource] {
     EXAMPLES.get_or_init(|| vec![crate::examples::puzzle3d::concrete_forest::SOURCE.clone(), crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.clone()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::puzzle3d_artifact_inference_descriptor()]).as_slice()
 }
 
@@ -70,3 +70,7 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
         examples: examples(),
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️every-example/🦀️.rs"]
+mod every_example_tests;

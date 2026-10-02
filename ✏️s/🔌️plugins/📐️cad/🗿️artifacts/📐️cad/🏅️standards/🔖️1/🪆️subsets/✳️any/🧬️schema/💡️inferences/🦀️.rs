@@ -58,10 +58,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.cad.cad.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `cad_artifact_schema_descriptor`'s registration.
-pub fn cad_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn cad_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.cad.cad.inference",
-        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

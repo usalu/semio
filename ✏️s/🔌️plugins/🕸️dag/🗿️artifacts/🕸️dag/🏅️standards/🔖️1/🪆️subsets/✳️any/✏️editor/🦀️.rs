@@ -29,12 +29,44 @@ use semio_framework::kernel::Effect;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionFactory, ActionKind, AppActionRegistry, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-};
-use store::EngineHandles;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_APP_ID: &str = "s.dag.dag@1/*#editor";
@@ -93,7 +125,7 @@ pub use semio_framework_plugin::ui_node_list;
 /// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
 /// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
 /// `interactionSelect` argument map is ever built.
-pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_plugin::plugin_app_close_prelude::Label>>(
+pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_ui_locale::Label>>(
     id: I,
     label: L,
     description: Option<String>,
@@ -153,7 +185,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
     if let Some(edge_id) = hit_edge_id {
         menu = menu.group("transfer", |m| m.action_args("disconnect", dsl::DslValue::object([("edgeId".to_string(), dsl::DslValue::String(edge_id))])));
     }
-    if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+    if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
         menu = menu.item(spec);
     }
     menu.build()
@@ -245,7 +277,6 @@ fn dag_retained_document_reduce(
     let cfg = ConfigView { snapshot: config, window: None };
     match command {
         DagCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, &cfg, interaction),
-        DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply_with_state(payload, &doc, &cfg, interaction),
         _ => command.dispatch(&doc, &cfg),
     }
 }
@@ -274,6 +305,9 @@ fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
         Some(dsl::DslValue::String(raw)) => raw.trim().parse::<f64>().ok(),
         _ => None,
     };
+    let required = |keys: &[&str], code: &str, message: &str| {
+        Some(text(keys, "")).filter(|value| !value.is_empty()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message))
+    };
     match action {
         "setActiveExample" => Ok(DagCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
         "addNode" => Ok(DagCommand::AddNode(add_node::AddNode { kind: text(&["kind", "value"], "computation"), x: number(&["x"]), y: number(&["y"]) })),
@@ -285,32 +319,46 @@ fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
             viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]).unwrap_or_default(), y: number(&["y"]).unwrap_or_default(), zoom: number(&["zoom"]).unwrap_or(1.0) },
         })),
         "nodeGraphEdit" => node_graph_edit::NodeGraphEdit::from_action_args(args).map(DagCommand::NodeGraphEdit),
-        "moveMediaNode" => match (number(&["x"]), number(&["y"])) {
-            (Some(x), Some(y)) => Ok(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: text(&["nodeId", "node_id", "id"], ""), x, y })),
-            _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.move-media-node.malformed"), "moveMediaNode needs a numeric x and y")),
-        },
-        "patchDagNodes" => Ok(DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes {
-            node_ids: match lookup(&["nodeIds", "node_ids"]) {
+        "moveMediaNode" => {
+            let node_id = required(&["nodeId", "node_id", "id"], "dag.move-media-node.malformed", "moveMediaNode needs a nodeId")?;
+            match (number(&["x"]), number(&["y"])) {
+                (Some(x), Some(y)) => Ok(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id, x, y })),
+                _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.move-media-node.malformed"), "moveMediaNode needs a numeric x and y")),
+            }
+        }
+        "patchDagNodes" => {
+            let node_ids: Vec<String> = match lookup(&["nodeIds", "node_ids"]) {
                 Some(dsl::DslValue::Array(ids)) => ids.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect(),
                 _ => Vec::new(),
-            },
-            field: text(&["field"], ""),
-            value: match lookup(&["value"]) {
+            };
+            let field = required(&["field"], "dag.patch-dag-nodes.malformed", "patchDagNodes needs a field")?;
+            let value = match lookup(&["value"]) {
                 Some(dsl::DslValue::Number(value)) => value.as_f64().to_string(),
-                _ => text(&["value"], ""),
-            },
-        })),
-        "renameDagNode" => Ok(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: text(&["oldId", "old_id"], ""), value: text(&["value"], "") })),
+                Some(_) => text(&["value"], ""),
+                None => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs a value")),
+            };
+            if node_ids.is_empty() {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.patch-dag-nodes.malformed"), "patchDagNodes needs at least one node id"));
+            }
+            Ok(DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids, field, value }))
+        }
+        "renameDagNode" => {
+            let old_id = required(&["oldId", "old_id"], "dag.rename-dag-node.malformed", "renameDagNode needs an oldId")?;
+            match lookup(&["value"]) {
+                Some(_) => Ok(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id, value: text(&["value"], "") })),
+                None => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.rename-dag-node.malformed"), "renameDagNode needs a value")),
+            }
+        }
         "connectMediaPorts" => Ok(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
-            source_node_id: text(&["sourceNodeId"], ""),
+            source_node_id: required(&["sourceNodeId"], "dag.connect-media-ports.malformed", "connectMediaPorts needs a sourceNodeId")?,
             source_port_id: text(&["sourcePortId"], "out"),
-            target_node_id: text(&["targetNodeId"], ""),
+            target_node_id: required(&["targetNodeId"], "dag.connect-media-ports.malformed", "connectMediaPorts needs a targetNodeId")?,
             target_port_id: text(&["targetPortId"], "in"),
         })),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("dag.unhandled-action"),
-            format!("action '{other}' carries a payload no shell `{{action,args}}` pair can express (it is dispatched through the typed command channel only)"),
+            format!("dag declares no action '{other}'"),
         )),
     }
 }
@@ -753,7 +801,7 @@ impl ArtifactEditor for DagPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::dag::config::schema::app_schema_descriptor())
     }
 
@@ -807,7 +855,6 @@ impl ArtifactEditor for DagPlayApp {
     ) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             DagCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
-            DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
             _ => command.dispatch(doc, cfg),
         }
     }

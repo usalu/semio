@@ -1010,7 +1010,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
                     Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
                     Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(
-                        &dsl::to_dsl_value(&fault).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.request-fault-encode"), error.to_string()))?,
+                        &semio_framework_value::ToValue::to_value(&fault),
                     )),
                 };
                 inbound_request_effects.push(Effect::Respond { req, result });
@@ -2047,7 +2047,7 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
 // `kernel_effect_to_wit`'s own `pack` helper above — `world actor` imports no `host-async`.
 fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
-    if let Ok(effect) = dsl::from_dsl_value::<Effect>(value.clone()) {
+    if let Ok(effect) = <Effect as semio_framework_value::FromValue>::from_value(value.clone()) {
         return Ok(effect);
     }
     if let Ok(effect) = serde_json::from_value::<Effect>(value.clone().into()) {
@@ -2097,7 +2097,7 @@ fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect
 
 fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
-    dsl::from_dsl_value(value).map_err(|_| ())
+    semio_framework_value::FromValue::from_value(value).map_err(|_| ())
 }
 
 #[cfg(test)]

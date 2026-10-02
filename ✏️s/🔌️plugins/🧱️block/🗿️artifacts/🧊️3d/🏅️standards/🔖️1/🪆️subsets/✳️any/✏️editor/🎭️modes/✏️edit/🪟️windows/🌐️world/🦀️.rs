@@ -8,7 +8,15 @@ use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrush
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
 use crate::editor::block3d::BLOCK3D_PLAY_SURFACE_ID;
-use semio_framework_plugin::{world3d_fit_json, World3dScene, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::world3d_fit_json;
+use semio_framework_plugin::World3dScene;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly (flow's `🌊️main` window does the same).

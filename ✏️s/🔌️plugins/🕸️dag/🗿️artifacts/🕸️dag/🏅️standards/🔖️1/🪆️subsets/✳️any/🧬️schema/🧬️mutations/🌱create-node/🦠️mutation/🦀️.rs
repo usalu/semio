@@ -36,8 +36,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]

@@ -21,6 +21,6 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for SetSnapsho
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         vec![SemioBrepMutation::SetSnapshot(Self { snapshot: base.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set snapshot", "Momentaufnahme setzen") }
     fn target(&self) -> Vec<String> { Vec::new() }
 }

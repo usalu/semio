@@ -104,8 +104,8 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Keep \"{}\" on this device", self.name), &format!("\"{}\" auf diesem Gerät behalten", self.name))
     }
 
     fn target(&self) -> Vec<String> {

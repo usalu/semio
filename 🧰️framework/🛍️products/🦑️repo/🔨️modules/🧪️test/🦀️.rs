@@ -5,10 +5,10 @@
 //! results, fixtures and adapters, and about no file format, plugin or product whatsoever.
 //!
 //! Reference implementations live with the owner of the format they reference and are contributed
-//! through that owner's `🔣️oracle.json` manifest, which the platform discovers by
+//! through that owner's `🔮️oracles/🔣️.json` manifest, which the platform discovers by
 //! convention. Adding an artifact family therefore never edits this crate.
 //!
-//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json
+//! @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json
 
 //#region 🔖️Modules
 #[path = "📡️protocol/🦀️.rs"]
@@ -16,6 +16,8 @@ pub mod protocol;
 
 #[path = "🏃️runner/🦀️.rs"]
 pub mod runner;
+#[path = "⚖️law/🦀️.rs"]
+pub mod law;
 //#endregion 🔖️Modules
 
 //#region 🔖️Surface

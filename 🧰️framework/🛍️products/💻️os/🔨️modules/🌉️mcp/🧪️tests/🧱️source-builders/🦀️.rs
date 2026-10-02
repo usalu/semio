@@ -24,7 +24,8 @@ use semio_framework::manifest::{
     WindowKinds,
 };
 use semio_framework::{ArtifactDialect, IconName};
-use semio_framework_ui::wgpu::{LocalizedLabel, SurfaceKind};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui::wgpu::SurfaceKind;
 
 //#region 🔖️Helpers
 /// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.

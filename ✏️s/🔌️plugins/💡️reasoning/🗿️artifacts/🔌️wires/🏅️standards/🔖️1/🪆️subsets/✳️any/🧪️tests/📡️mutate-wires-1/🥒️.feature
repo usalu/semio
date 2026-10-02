@@ -8,7 +8,7 @@ Feature: Apply every typed wires mutation to its committed vector, to a real-eff
   value tree — `wiresFixture` holding `identities`, `relationships` and a nested `board` — edited one
   scalar key at a time through this facet's own `set_node_field`. No reference LIBRARY exists. The
   second producer a differential comparison needs is therefore a second IMPLEMENTATION, and
-  `🐍️component.py` beside this file is it: all ten kinds of this vocabulary, written in Python from
+  `🐍️component.py` beside this file is it: all twelve kinds of this vocabulary, written in Python from
   this subset's own committed `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json` and each
   mutation's own payload schema, and from
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md`'s
@@ -21,9 +21,9 @@ Feature: Apply every typed wires mutation to its committed vector, to a real-eff
   path — and, for the six no-op kinds, `🔺️diff` — is a declared `asset://` fixture rather than an
   `include_str!`-only literal, so the plan pins its digest and a Python reference can resolve it.
 
-  What genuinely distinguishes this vocabulary is the shape of its committed evidence. Ten kinds,
-  ten handcrafted specification vectors under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/` — and SIX of them are
+  What genuinely distinguishes this vocabulary is the shape of its committed evidence. Twelve kinds,
+  twelve handcrafted specification vectors under
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/` — and EIGHT of them are
   NO-OP vectors, not refusals. Every single-field node verb here degrades to an `applied` outcome
   carrying a `Warning`-level `mutation.no-op` when the field already holds the requested value:
   retyping "Thesis" over "Thesis", setting a `topic` node to `topic`, resizing a radius-24 node to
@@ -73,6 +73,8 @@ Feature: Apply every typed wires mutation to its committed vector, to a real-eff
       | set-node-root     | 🚩set-node-root    | 🧪️reports   | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
       | connect-nodes     | 🤝️connect-nodes    | 🧪️rejects                 | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
       | disconnect-nodes  | ✂️disconnect-nodes | 🧪️rejects             | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
+      | move-nodes        | 🚚️move-nodes       | 🧪️reports             | move-nodes       | mutation.no-op          | Warning | {"mutation": "moveNodes", "nodeIds": ["node-alpha", "node-beta"], "dx": 36.0, "dy": -12.5}                                                                                                                           |
+      | set-node-positions| 📍️set-node-positions| 🧪️reports            | set-node-positions| mutation.no-op         | Warning | {"mutation": "setNodePositions", "positions": [{"nodeId": "node-alpha", "x": 48.0, "y": 36.0}]}                                                                                                                      |
 
   @id-inverse
   @level-exhaustive
@@ -99,6 +101,8 @@ Feature: Apply every typed wires mutation to its committed vector, to a real-eff
       | set-node-root     | 🚩set-node-root    | 🧪️reports   | set-node-root    | mutation.no-op          | Warning | {"mutation": "setNodeRoot", "nodeId": "node-leaf", "newRoot": true}                                                                                                                                                  |
       | connect-nodes     | 🤝️connect-nodes    | 🧪️rejects                 | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "connectNodes", "edge": {"id": "edge-mentions", "edgeKind": "wires.owns", "source": "node-source", "target": "node-sink"}, "relationship": {"relationshipId": 2.0, "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0, "edgeId": "edge-mentions"}} |
       | disconnect-nodes  | ✂️disconnect-nodes | 🧪️rejects             | disconnect-nodes | mutation.target-missing | Error   | {"mutation": "disconnectNodes", "edgeId": "edge-owns"}                                                                                                                                                               |
+      | move-nodes        | 🚚️move-nodes       | 🧪️reports             | move-nodes       | mutation.no-op          | Warning | {"mutation": "moveNodes", "nodeIds": ["node-alpha", "node-beta"], "dx": 36.0, "dy": -12.5}                                                                                                                           |
+      | set-node-positions| 📍️set-node-positions| 🧪️reports            | set-node-positions| mutation.no-op         | Warning | {"mutation": "setNodePositions", "positions": [{"nodeId": "node-alpha", "x": 48.0, "y": 36.0}]}                                                                                                                      |
 
   @id-identity-round-trip
   @level-long

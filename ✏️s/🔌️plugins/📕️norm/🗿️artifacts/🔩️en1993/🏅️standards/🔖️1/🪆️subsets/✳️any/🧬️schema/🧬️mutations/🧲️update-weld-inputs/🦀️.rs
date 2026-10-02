@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateWeldInputs
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update member action {}", self.member_action.id),
             &format!("Bauteilbeanspruchung {} aktualisieren", self.member_action.id),
         )

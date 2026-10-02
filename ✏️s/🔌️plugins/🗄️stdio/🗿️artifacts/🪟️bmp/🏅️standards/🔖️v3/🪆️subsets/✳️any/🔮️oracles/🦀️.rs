@@ -211,7 +211,7 @@ mod oracles {
                 8
             }
             Content::Direct { rgba } => {
-                out = crate::raster::oracle_create_image(&crate::raster::RasterSpec { width: doc.width, height: doc.height, rgba: rgba.clone() }, FORMAT)?;
+                out = semio_s_plugin_stdio_raster_test_oracle::oracle_create_image(&semio_s_plugin_stdio_raster_test_oracle::RasterSpec { width: doc.width, height: doc.height, rgba: rgba.clone() }, FORMAT)?;
                 24
             }
         };

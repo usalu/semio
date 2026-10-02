@@ -92,7 +92,7 @@ pub fn project_wav_mutation(_input: &[u8]) -> Result<Json, String> {
 //#region 🔖️Reference
 #[cfg(feature = "oracles")]
 mod reference {
-    use crate::audio::{PcmWav, PcmWavFormat};
+    use semio_s_plugin_stdio_audio_test_oracle::{PcmWav, PcmWavFormat};
     use riff::{Chunk, ChunkContents, ChunkId, RIFF_ID};
     use semio_repo_test_host::Json;
     use std::io::Cursor;

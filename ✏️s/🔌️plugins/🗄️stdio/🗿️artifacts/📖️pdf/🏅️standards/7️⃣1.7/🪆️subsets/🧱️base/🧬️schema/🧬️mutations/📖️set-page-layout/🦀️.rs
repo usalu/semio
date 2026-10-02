@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLayout {
         vec![PdfMutation::SetPageLayout(SetPageLayout { layout: base.page_layout.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
     }
 
     fn target(&self) -> Vec<String> {

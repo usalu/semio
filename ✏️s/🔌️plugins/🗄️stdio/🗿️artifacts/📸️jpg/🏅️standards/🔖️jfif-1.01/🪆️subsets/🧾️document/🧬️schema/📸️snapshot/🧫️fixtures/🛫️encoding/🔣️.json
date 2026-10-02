@@ -1,0 +1,6 @@
+{
+  "octets": 131072,
+  "cancelAfter": 65536,
+  "valueBudget": 128,
+  "rowBudget": 1
+}

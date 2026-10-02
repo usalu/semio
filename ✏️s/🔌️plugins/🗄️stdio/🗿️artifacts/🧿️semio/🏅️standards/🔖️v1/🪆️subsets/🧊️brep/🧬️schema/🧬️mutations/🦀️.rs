@@ -26,6 +26,7 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
+use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::brep::schema::diff::{
     dec_curve, dec_list, dec_point3, dec_shell_face, dec_solid_shell, dec_str, dec_surface, enc_bool, enc_curve, enc_list, enc_point3, enc_shell_face, enc_solid_shell, enc_str, enc_surface, parse_f64, SemioBrepDiff,
 };
@@ -135,12 +136,12 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
 fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
         SemioBrepMutation::SetSnapshot(p) => format!("set-snapshot snapshot={}", hex_encode(pack::to_json_string(&p.snapshot).as_bytes())),
-        SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), p.tol),
+        SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), p.tol),
+        SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol)),
         SemioBrepMutation::DeleteEdge(p) => format!("delete-edge id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateFace(p) => {
-            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| enc_str(s)), enc_surface(&p.surface), enc_bool(p.orientation), p.tol)
+            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| crate::standards::v1::subsets::brep::schema::snapshot::enc_loop_id(s)), enc_surface(&p.surface), enc_bool(p.orientation), NativeF64(p.tol))
         }
         SemioBrepMutation::DeleteFace(p) => format!("delete-face id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateShell(p) => format!("create-shell id={} faces={}", enc_str(&p.id), enc_list(&p.faces, enc_shell_face)),
@@ -174,7 +175,7 @@ fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::CreateFace {
             id: dec_str(arg("id")?)?,
             outer_loop: dec_str(arg("outer")?)?,
-            inner_loops: dec_list(arg("inner")?, dec_str)?,
+            inner_loops: dec_list(arg("inner")?, crate::standards::v1::subsets::brep::schema::snapshot::dec_loop_id)?,
             surface: dec_surface(arg("surface")?)?,
             orientation: crate::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?)?,
             tol: parse_f64(arg("tol")?)?,

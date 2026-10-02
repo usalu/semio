@@ -76,6 +76,7 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 semio-s-artifact-stdio-ifc = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-bcf = { workspace = true, features = ["component-app-assembly"] }
 # /🧩️ Composition Dependencies
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

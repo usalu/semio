@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "oracles": [
     {
@@ -534,12 +534,5 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-      "rationale": "⚖️ Linked for its `law` module only (`law::vector` over this subset's `mutation_report_json` bridge), without the `oracles` feature: the case's reference is the independent Python implementation."
-    }
-  ]
+  "oracleHostPackages": []
 }

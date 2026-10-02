@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. Since ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION split every s.note.note mutation out to a real, non-wildcard owning subset (ink/text/math/table/asset/block/canvas/document — see ../🔣️.json), this subset owns zero mutations of its own and declares no mutationManifests/mutationCatalogs/fixtureManifests here. What DOES stay here is the shared, artifact-wide oracle registry those eight subsets' fixtureManifests cite by id: the whole-document note-python-independent cross-implementation oracle, and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) — semio.repository-test's loadOracleRegistry merges every subset's contribution into one flat registry, so a fixture anywhere can reference an oracle declared here without redeclaring it.",
   "oracles": [
@@ -148,7 +148,7 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "📄️ `lopdf` is ALREADY an approved test-oracle in this repository (`🔒️dependencies.json` — capabilities `pdf-edit`/`pdf-parse`, linked into the very crate `../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml` this registration reuses); this entry is a second registration of that crate against `note-1-mutate` rather than a new dependency.\n\n`NoteIntoPdf::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs`) flattens the document's `title` (if any) followed by EVERY `Text` block's paragraph runs, space-joined, onto ONE `PdfPage.text` field of a single-page `PdfSnapshot` — real page geometry (`PageDoc`/`w`/`h`) and a real `encode_pdf`, never a stub. Two consequences read directly from that body: (1) `rename-note` IS witnessable here — the title is the first thing concatenated — even though it is invisible to both DXF and SVG. (2) exactly like the DXF path, `flatten_blocks` here is never filtered by `block_visible`, so `change-block-visible` on a Text block leaves the PDF text unchanged (the same cross-carrier inconsistency the DXF entry reports, independently confirmed on a second serializer). Position, block existence order beyond concatenation order, and every non-Text block kind (Ink/Image/Table/Math/Group) are invisible: the serializer never reads their fields at all."
+      "rationale": "📄️ `lopdf` is ALREADY an approved test-oracle in this repository (`🔒️dependencies.json` — capabilities `pdf-edit`/`pdf-parse`, linked into the very crate `../../../../../../../../🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml` this registration reuses); this entry is a second registration of that crate against `note-1-mutate` rather than a new dependency.\n\n`NoteIntoPdf::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs`) flattens the document's `title` (if any) followed by EVERY `Text` block's paragraph runs, space-joined, onto ONE `PdfPage.text` field of a single-page `PdfSnapshot` — real page geometry (`PageDoc`/`w`/`h`) and a real `encode_pdf`, never a stub. Two consequences read directly from that body: (1) `rename-note` IS witnessable here — the title is the first thing concatenated — even though it is invisible to both DXF and SVG. (2) exactly like the DXF path, `flatten_blocks` here is never filtered by `block_visible`, so `change-block-visible` on a Text block leaves the PDF text unchanged (the same cross-carrier inconsistency the DXF entry reports, independently confirmed on a second serializer). Position, block existence order beyond concatenation order, and every non-Text block kind (Ink/Image/Table/Math/Group) are invisible: the serializer never reads their fields at all."
     }
   ],
   "probes": [
@@ -419,7 +419,7 @@
     {
       "id": "semantic-note-dxf-ink-v1",
       "description": "note→DXF compared by the SET of Line entities' (start,end) coordinate pairs the Ink blocks produce. Layer name, group codes and entity order are writer freedom. Position/rotation/visibility/lock/width are NOT carried by this serializer and are out of this profile's scope by construction.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "arrays": "set",
       "ignoreKeys": [
         "layer",
@@ -429,7 +429,7 @@
     {
       "id": "semantic-note-svg-drawing-v1",
       "description": "note→SVG compared by each surviving (visible) block's kind, its <g transform=\"…\"> translate+rotate, and kind-specific content: Ink path d + stroke-width, Text joined value, Image mime+bytes when a referenced asset exists, Table/Math/Group outline width/height. Style ids, path command formatting and XML attribute order are writer freedom.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": [
         "styleId",
         "id"
@@ -454,5 +454,6 @@
     }
   ],
   "mutationManifests": [],
-  "fixtureManifests": []
+  "fixtureManifests": [],
+  "oracleHostPackages": []
 }

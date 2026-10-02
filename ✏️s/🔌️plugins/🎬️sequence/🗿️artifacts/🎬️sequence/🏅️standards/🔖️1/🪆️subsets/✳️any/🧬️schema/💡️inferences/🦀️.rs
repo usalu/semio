@@ -73,10 +73,10 @@ impl ArtifactInferrer for SequenceInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `sequence_artifact_schema_descriptor`'s registration.
-pub fn sequence_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn sequence_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.sequence.sequence.inference",
-        inference: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        inference: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }
 }
 //#endregion 🔖️Descriptor

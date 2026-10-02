@@ -20,8 +20,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for RemoveRecord {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         agg_inverse(&CsvMutation::RemoveRecord(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove record", "Datensatz entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove record", "Datensatz entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

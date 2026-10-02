@@ -7,13 +7,13 @@
 //!
 //! 🫧️ The frame lands in the results window's TRANSIENT partition — one `Arc` root, no history —
 //! never in its config: a coalesced config amend per frame grew the tick cost with every frame
-//! played and displaced three retirement owners a tick. Only the transitions touch the config:
-//! a `Once` run that reaches its end stops the transport there, and a tick that finds the
-//! transport stopped PARKS the clock — folds its phase and direction into the resting config and
+//! played and displaced three retirement owners a tick. Only the transitions touch the config, each as
+//! ONE plain config edit (design §20.1: no amend on any lane): a `Once` run that reaches its end stops
+//! the transport there, and a tick that finds the transport stopped PARKS the clock — folds its phase and direction into the resting config and
 //! clears the transient — and re-arms nothing. That is how a pause, a closed window or a second
 //! chain that raced the first dies out instead of spinning the guest forever.
 
-use crate::editor::fem3d::commands::set_result_animation::{playback_dirty_scope, rearm_effect, Fem3dPlaybackStep, PLAYBACK_COALESCE_KEY};
+use crate::editor::fem3d::commands::set_result_animation::{playback_dirty_scope, rearm_effect, Fem3dPlaybackStep};
 use crate::editor::fem3d::modes::edit::windows::results;
 use crate::editor::fem3d::modes::edit::windows::results::config::{Fem3dResultsAnimation, Fem3dResultsWindowConfig, ANIMATION_TICK_SECONDS};
 use crate::editor::fem3d::modes::edit::windows::results::transient::Fem3dPlaybackClock;
@@ -52,7 +52,7 @@ pub fn step(payload: &ResultAnimationTick, cfg: &ConfigView<'_, NoConfig>, view:
         let Some(clock) = clock else { return Ok(Fem3dPlaybackStep::default()) };
         let parked = Fem3dResultsWindowConfig { animation: clock.parked_into(settings), ..current.clone() };
         return Ok(Fem3dPlaybackStep {
-            emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, parked)], coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: playback_dirty_scope(), ..Default::default() },
+            emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, parked)], ui_scope: playback_dirty_scope(), ..Default::default() },
             window_transient: vec![results::transient::addressed_to(&window_id, None)],
         });
     }
@@ -61,7 +61,7 @@ pub fn step(payload: &ResultAnimationTick, cfg: &ConfigView<'_, NoConfig>, view:
     if !running {
         let stopped = Fem3dResultsWindowConfig { animation: Fem3dResultsAnimation { playing: false, ..next.parked_into(settings) }, ..current.clone() };
         return Ok(Fem3dPlaybackStep {
-            emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, stopped)], coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: playback_dirty_scope(), ..Default::default() },
+            emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, stopped)], ui_scope: playback_dirty_scope(), ..Default::default() },
             window_transient: vec![results::transient::addressed_to(&window_id, None)],
         });
     }

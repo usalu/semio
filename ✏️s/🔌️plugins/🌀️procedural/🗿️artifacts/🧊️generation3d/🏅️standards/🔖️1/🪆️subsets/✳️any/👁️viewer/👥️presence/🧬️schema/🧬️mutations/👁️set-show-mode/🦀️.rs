@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMu
         vec![Self { value: base.show_mode.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Show Mode", "Anzeigemodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

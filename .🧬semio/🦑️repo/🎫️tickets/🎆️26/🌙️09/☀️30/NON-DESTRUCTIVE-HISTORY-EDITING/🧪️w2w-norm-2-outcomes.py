@@ -3,6 +3,7 @@ every leaf descriptor's `outcomeClasses` equal to what its diff can produce, and
 feature's Examples tables equal to the fixture tree. Writes ONLY inside the given norm artifact directory.
 
   python3 🧪️w2w-norm-2-outcomes.py refusals <artifact-dir-name> <kind>=<slug> ...   e.g. ⚖️en1990 insert-effect=dupe
+                                                     (`<kind>=rule:<lexeme>` names the out-of-bounds value)
   python3 🧪️w2w-norm-2-outcomes.py classes <artifact-dir-name>
   python3 🧪️w2w-norm-2-outcomes.py sync <artifact-dir-name> <catalog-id> <case-dir-name>
   python3 🧪️w2w-norm-2-outcomes.py suite <artifact-dir-name>                       one of my four crates' vector suite
@@ -12,8 +13,8 @@ insert then repeats an id the document already holds (`⛔dupe`), a remove addre
 (`❓gone`) and a change sets the value the field already has (`🟰noop`). Before and after are therefore both the
 canonical after-snapshot, byte for byte. A `📏clamp` vector is the canonical insert asked for a position past the list's
 end: it lands where the canonical one (an append) does, under a `mutation.clamped` warning. A `🚫rule` vector is the
-canonical change asked for a value below the bound its leaf schema states: a `mutation.invariant` refusal on the canonical
-before-snapshot.
+canonical change asked for a value below the bound its leaf schema states (`-1.0`, or the lexeme `rule:<lexeme>` names): a
+`mutation.invariant` refusal on the canonical before-snapshot.
 """
 
 import json
@@ -71,7 +72,8 @@ def refusals(artifact, requests):
     known = leaves(artifact)
     fixtures = f"{subset(artifact)}/🧫️fixtures/🧬️mutations"
     for request in requests:
-        kind, slug = request.split("=")
+        kind, request_slug = request.split("=")
+        slug, _, lexeme = request_slug.partition(":")
         directory, outcome = OUTCOMES[slug]
         source, target = f"{fixtures}/{known[kind]}/{CANONICAL}", f"{fixtures}/{known[kind]}/{directory}"
         assert load(f"{source}/🎯️outcome/🔣️.json")["status"] == "applied", source
@@ -92,7 +94,7 @@ def refusals(artifact, requests):
             text = open(f"{source}/🦠️mutation/🔣️.json", encoding="utf-8").read()
             value = r'("new[A-Za-z0-9]*": )-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?'
             assert len(re.findall(value, text)) == 1, source
-            open(f"{target}/🦠️mutation/🔣️.json", "w", encoding="utf-8").write(re.sub(value, lambda match: match.group(1) + OUT_OF_BOUNDS, text))
+            open(f"{target}/🦠️mutation/🔣️.json", "w", encoding="utf-8").write(re.sub(value, lambda match: match.group(1) + (lexeme or OUT_OF_BOUNDS), text))
         dump(f"{target}/🎯️outcome/🔣️.json", outcome)
         if clamped:
             shutil.copytree(f"{source}/🔺️diff", f"{target}/🔺️diff")

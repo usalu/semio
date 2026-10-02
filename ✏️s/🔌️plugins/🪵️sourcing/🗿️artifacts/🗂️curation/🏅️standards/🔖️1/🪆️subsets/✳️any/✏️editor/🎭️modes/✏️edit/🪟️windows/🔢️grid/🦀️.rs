@@ -10,7 +10,17 @@ use crate::CurationSnapshot;
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::ObjectKind;
 use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::world3d_default_camera;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeshView;
+use semio_framework_plugin::MeshWindowKit;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_GRID: &str = "sourcing-grid";

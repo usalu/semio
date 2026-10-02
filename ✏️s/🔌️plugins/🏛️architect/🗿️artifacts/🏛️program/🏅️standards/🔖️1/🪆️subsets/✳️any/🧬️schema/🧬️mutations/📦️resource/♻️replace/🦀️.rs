@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceResource {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace resource \"{}\"", self.resource.header.name), &format!("Ressource \"{}\" ersetzen", self.resource.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace resource \"{}\"", self.resource.header.name), &format!("Ressource \"{}\" ersetzen", self.resource.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.resource.header.id.0.clone()]

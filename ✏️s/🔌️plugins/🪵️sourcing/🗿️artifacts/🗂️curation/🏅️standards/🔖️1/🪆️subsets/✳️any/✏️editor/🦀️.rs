@@ -15,17 +15,55 @@ use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview
 use crate::editor::sourcing::presence::{self, SourcingCurationPresence, SourcingCurationPresenceMutation};
 use crate::editor::sourcing::terminology::sourcing_curation_labels;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
-    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, WindowMeasure,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports (keyed off
@@ -1029,7 +1067,7 @@ impl ArtifactEditor for SourcingCurationApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
@@ -1201,7 +1239,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("Kind Catalogue", "Typenkatalog"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("Kind Catalogue", "Typenkatalog"),
                 source_format: "catalogue.kinds".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),
@@ -1218,7 +1256,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // which declares the SAME `kit.catalog` shape independently).
             .artifact_kind(ArtifactKindSpec {
                 id: "kit.catalog".into(),
-                label: semio_framework_plugin::LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
+                label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
                 source_format: "kit.catalog".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),

@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeStatus {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change status to \"{}\"", self.new_status), &format!("Status auf \"{}\" ändern", self.new_status))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change status to \"{}\"", self.new_status), &format!("Status auf \"{}\" ändern", self.new_status))
     }
 }
 //#endregion 🔖️Mutation

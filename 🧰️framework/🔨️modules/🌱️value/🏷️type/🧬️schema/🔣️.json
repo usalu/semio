@@ -1,0 +1,267 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "types": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/$defs/valueType"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/valueKind"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 63,
+      "maxItems": 63,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "kind": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "kind",
+          "accepted"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "wire": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/valueType"
+      }
+    },
+    "refused": {
+      "type": "array",
+      "minItems": 10
+    },
+    "ownership": {
+      "type": "object",
+      "properties": {
+        "originalInputs": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "originalTypeBlockSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "neuralRemainderSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "originalInputs",
+        "originalTypeBlockSha",
+        "neuralRemainderSha"
+      ],
+      "additionalProperties": false
+    },
+    "graphValues": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "graphCases": {
+      "type": "array",
+      "minItems": 63,
+      "maxItems": 63,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "value",
+          "accepted"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "types",
+    "kinds",
+    "cases",
+    "wire",
+    "refused",
+    "ownership",
+    "graphValues",
+    "graphCases"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "valueType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "boolean",
+                "integer",
+                "decimal",
+                "text",
+                "any"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "of": {
+              "$ref": "#/$defs/valueType"
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "schema"
+            },
+            "of": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "of"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "valueKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "null",
+                "boolean",
+                "integer",
+                "decimal",
+                "text"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "dictionary"
+            },
+            "schema": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

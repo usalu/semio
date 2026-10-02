@@ -1,0 +1,54 @@
+{
+  "dialect": "s.block.block5d@1/*",
+  "schema": "block.5d",
+  "binary64Bits": [
+    "0000000000000000",
+    "8000000000000000",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000042",
+    "ffffffffffffffff"
+  ],
+  "wordSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "bits"
+    ],
+    "properties": {
+      "bits": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    }
+  },
+  "tableRowCounts": {
+    "block5_document": 1,
+    "block5_kind": 1,
+    "block5_part2d": 1,
+    "block5_part3d": 1,
+    "block5_representation": 1,
+    "block5_representation_tag": 2,
+    "block5_representation_attribute": 1,
+    "block5_grip_kind": 1,
+    "block5_grip": 1,
+    "block5_compatibility": 1,
+    "block5_attribute": 1,
+    "block5_author": 1,
+    "block5_camera2d": 1,
+    "block5_camera3d": 1,
+    "block5_meta": 1
+  },
+  "malformedSql": [
+    "UPDATE block5_part2d SET width_ieee754_bits=1",
+    "UPDATE block5_part3d SET scale_x_ieee754_bits=NULL",
+    "UPDATE block5_camera2d SET x_numeric_class='finite' WHERE x_numeric_class='nan'",
+    "UPDATE block5_camera2d SET x=1 WHERE x IS NULL",
+    "UPDATE block5_compatibility SET bidirectional=2",
+    "UPDATE block5_representation_tag SET ordinal=9 WHERE ordinal=1",
+    "DELETE FROM block5_meta",
+    "UPDATE block5_grip SET document_id=999"
+  ]
+}

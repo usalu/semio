@@ -19,7 +19,7 @@ use semio_framework_plugin::{
     built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
     StandardId, SubsetId,
 };
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract: this file's own surface-id
@@ -48,7 +48,7 @@ impl protocol::OpText for Pdf17UaEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -58,7 +58,7 @@ impl protocol::OpText for Pdf17UaEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -68,7 +68,7 @@ impl protocol::OpBinary for Pdf17UaEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -86,7 +86,7 @@ impl protocol::OpBinary for Pdf17UaEditorCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -166,7 +166,7 @@ impl ArtifactEditor for Pdf17UaEditor {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { page, item, revision, text }) => {
                 let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
-                Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+                Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
             }
                         semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::PageEdit { action, payload }) => {
                 crate::editor::page::emit_page_edit(doc.snapshot, action, payload)
@@ -186,7 +186,7 @@ impl ArtifactEditor for Pdf17UaEditor {
                 &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -231,7 +231,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::SetPage { page, item, revision, text }) => {
                 let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
-                Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+                Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
             }
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17UaEditorCommand::PageEdit { action, payload }) => {
                 crate::editor::page::emit_page_edit(snapshot, action, payload)

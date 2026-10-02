@@ -12,9 +12,9 @@ impl protocol::MutationKind<DrawingSnapshot,DrawingMutation> for SetGroupIsolati
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"set",entity:"group",kind:"set-group-isolation",record:"SetGroupIsolation"};
     fn diff(&self,base:&DrawingSnapshot)->protocol::MutationOutcome<DrawingDiff> {super::diff::diff(self,base)}
     fn inverse(&self,base:&DrawingSnapshot)->Vec<DrawingMutation> {super::inverse::inverse(self,base)}
-    fn label(&self)->protocol::LocalizedLabel {
-        if self.isolation {protocol::LocalizedLabel::native(&format!("Isolate group \"{}\"",self.layer_id),&format!("Gruppe \"{}\" isolieren",self.layer_id))}
-        else {protocol::LocalizedLabel::native(&format!("Pass group \"{}\" blending through",self.layer_id),&format!("Mischung von Gruppe \"{}\" durchreichen",self.layer_id))}
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {
+        if self.isolation {semio_framework_ui_locale::LocalizedLabel::native(&format!("Isolate group \"{}\"",self.layer_id),&format!("Gruppe \"{}\" isolieren",self.layer_id))}
+        else {semio_framework_ui_locale::LocalizedLabel::native(&format!("Pass group \"{}\" blending through",self.layer_id),&format!("Mischung von Gruppe \"{}\" durchreichen",self.layer_id))}
     }
     fn target(&self)->Vec<String> {vec![self.layer_id.clone()]}
 }

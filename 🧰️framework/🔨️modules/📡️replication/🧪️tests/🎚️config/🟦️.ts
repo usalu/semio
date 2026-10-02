@@ -2,14 +2,13 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { repoCacheDirectory } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { testCacheDirectoryV1 } from "../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 // #endregion 🔌️Adapters
 
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const root = resolve(configDir, "../.."); // 📡️replication module root — owner of 🟦️.ts
-const repoRoot = resolve(configDir, "../../../../..");
 
 /**
  * 🧪️ Vitest for `@semio-tech/framework-replication` (inline `import.meta.vitest`).
@@ -25,7 +24,7 @@ const repoRoot = resolve(configDir, "../../../../..");
  */
 export default defineConfig({
   root: testRoot,
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "framework-replication"),
+  cacheDir: testCacheDirectoryV1(process.env, "framework-replication"),
   resolve: {
     alias: {
       "@semio-tech/framework-replication": resolve(root, "📦️packages/🟦️typescript/🟦️.ts"),

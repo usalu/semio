@@ -44,13 +44,13 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DragPathPoints
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (drawing_label_number(self.dx), drawing_label_number(self.dy));
         let (en, de) = match self.targets.len() {
             1 => ("1 path point".to_string(), "1 Pfadpunkt".to_string()),
             count => (format!("{count} path points"), format!("{count} Pfadpunkte")),
         };
-        protocol::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         drag_path_points_layers(&self.targets)

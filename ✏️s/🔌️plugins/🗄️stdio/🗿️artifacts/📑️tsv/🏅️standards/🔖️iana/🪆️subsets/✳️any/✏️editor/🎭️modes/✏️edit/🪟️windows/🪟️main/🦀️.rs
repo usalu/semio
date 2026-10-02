@@ -5,7 +5,13 @@
 
 use crate::TsvSnapshot;
 use semio_framework_plugin::app::{editable_table_window_row_at, row_action, row_target, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{BuiltNode, UiLabel, Locale, LocalizedLabel, RowActionPlacement, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::UiLabel;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

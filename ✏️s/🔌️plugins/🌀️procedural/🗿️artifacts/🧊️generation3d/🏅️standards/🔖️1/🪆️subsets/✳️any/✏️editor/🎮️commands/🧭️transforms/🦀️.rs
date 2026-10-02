@@ -264,15 +264,43 @@ pub struct GumballGestures {
     revision: u64,
 }
 
+/// 🧲️ The selection a gumball gesture carries onto the operators it transforms: the `graph` nodes and, for a
+/// mesh-component selection, the components re-addressed onto the component operator (`granularity`, ids). The commit
+/// lands it as replacing interaction writes; an open gesture's previews paint it without touching the interaction store.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GumballSelection {
+    pub nodes: Vec<String>,
+    pub components: Option<(String, Vec<String>)>,
+}
+
+impl GumballSelection {
+    /// ✍️ The replacing interaction writes the commit lands.
+    pub fn writes(&self) -> Vec<InteractionWrite> {
+        let mut writes = vec![InteractionWrite::replace("graph", "node", self.nodes.iter().cloned())];
+        if let Some((granularity, components)) = &self.components {
+            writes.push(InteractionWrite::replace(DOMAIN, granularity, components.iter().cloned()));
+        }
+        writes
+    }
+}
+
+/// 🔭️ What every open gesture shows on one base: the rows a derived view folds in (each gesture's splice, then its ONE
+/// net relative leaf) and the selections those rows carry the gestures' marks onto — a preview, never history.
+#[derive(Default)]
+pub struct GumballPreview {
+    pub rows: Vec<Generation3dMutation>,
+    pub selections: Vec<GumballSelection>,
+}
+
 /// 🧩️ What one gumball selection needs on `host_snapshot`: the absolute splice rows that insert every missing transform
-/// operator (none when they exist), the operator ids the motion composes into, and the selection writes that follow the
+/// operator (none when they exist), the operator ids the motion composes into, and the selection that follows the
 /// gesture onto them. A mesh-component selection splices ONE component operator for the whole component set.
-pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operation: &str) -> Result<(Vec<Generation3dMutation>, Vec<String>, Vec<InteractionWrite>), Fault> {
+pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operation: &str) -> Result<(Vec<Generation3dMutation>, Vec<String>, GumballSelection), Fault> {
     with_host(host_snapshot, |host| {
-        let (targets, writes) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
+        let (targets, selection) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
             let (id, mode, components) = ensure_component_node(host, ids, operation).map_err(Fault::from)?;
-            let writes = vec![InteractionWrite::replace("graph", "node", [id.clone()]), InteractionWrite::replace(DOMAIN, &mode, components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")))];
-            (vec![id], writes)
+            let addressed = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
+            (vec![id.clone()], GumballSelection { nodes: vec![id], components: Some((mode, addressed)) })
         } else {
             let mut targets: Vec<String> = Vec::new();
             for id in ids {
@@ -281,10 +309,9 @@ pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operatio
                     targets.push(next);
                 }
             }
-            let writes = vec![InteractionWrite::replace("graph", "node", targets.clone())];
-            (targets, writes)
+            (targets.clone(), GumballSelection { nodes: targets, components: None })
         };
-        Ok((commit_host_snapshot(host_snapshot, &host.host_snapshot), targets, writes))
+        Ok((commit_host_snapshot(host_snapshot, &host.host_snapshot), targets, selection))
     })
 }
 
@@ -313,18 +340,19 @@ impl GumballGestures {
         true
     }
 
-    /// 👁️ The rows a derived view folds onto `host_snapshot` to show every open gesture: each gesture's splice re-derived
-    /// on that base, then its ONE net relative leaf — a preview, never history.
-    pub fn provisional(&self, host_snapshot: &FlowHostSnapshot) -> Vec<Generation3dMutation> {
-        let mut rows = Vec::new();
+    /// 👁️ What a derived view folds onto `host_snapshot` to show every open gesture: each gesture's splice re-derived on
+    /// that base, then its ONE net relative leaf, and the selection the gesture carries onto its operators — a preview,
+    /// never history and never the interaction store.
+    pub fn provisional(&self, host_snapshot: &FlowHostSnapshot) -> GumballPreview {
+        let mut preview = GumballPreview::default();
         for gesture in self.open.values() {
-            let Some(leaf) = gesture.runner.transaction().and_then(|transaction| transaction.entries().iter().find(|(key, _)| key == GENERATION3D_GUMBALL_LEAF_KEY).map(|(_, leaf)| leaf.clone())) else { continue };
-            let Some(motion) = GumballMotion::of_leaf(&leaf) else { continue };
-            let Ok((splice, targets, _)) = gumball_splice(host_snapshot, &gesture.ids, motion.operation()) else { continue };
-            rows.extend(splice);
-            rows.push(motion.leaf(targets));
+            let Some(motion) = gesture.runner.transaction().and_then(|transaction| transaction.entries().iter().find(|(key, _)| key == GENERATION3D_GUMBALL_LEAF_KEY).and_then(|(_, leaf)| GumballMotion::of_leaf(leaf))) else { continue };
+            let Ok((splice, targets, selection)) = gumball_splice(host_snapshot, &gesture.ids, motion.operation()) else { continue };
+            preview.rows.extend(splice);
+            preview.rows.push(motion.leaf(targets));
+            preview.selections.push(selection);
         }
-        rows
+        preview
     }
 
     /// 🛠️ Drives `request.window`'s gumball tool through ONE dispatch. `Once` commits the motion as one transaction;
@@ -367,7 +395,7 @@ impl GumballGestures {
                 base_revision: request.base_revision,
             },
         };
-        let (splice, targets, writes) = gumball_splice(host_snapshot, &gesture.ids, request.motion.operation())?;
+        let (splice, targets, selection) = gumball_splice(host_snapshot, &gesture.ids, request.motion.operation())?;
         let record = GumballRecord { targets, motion: request.motion };
         let event = match request.phase {
             GumballPhase::Stream => gumball_tool::Event::Stream(record),
@@ -379,7 +407,7 @@ impl GumballGestures {
             ToolStep::Committed(transaction, leaves) => {
                 let rows: Vec<Generation3dMutation> = splice.into_iter().chain(leaves).collect();
                 let emit = if request.authoring_seed.is_empty() { Emit::mutations(rows) } else { Emit::commit_transaction(transaction, rows) };
-                Emit { interaction_writes: writes, ..emit }
+                Emit { interaction_writes: selection.writes(), ..emit }
             }
             _ => {
                 retire_rows(splice);

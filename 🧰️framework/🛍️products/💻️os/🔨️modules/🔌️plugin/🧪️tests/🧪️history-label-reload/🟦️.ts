@@ -1,6 +1,6 @@
 /** 🏷️ TypeScript twin of the plugin runtime's history row label rule (`build_history_view` and `backfilled_edit_label` in
  * `🦀️.rs`), checked against the language-agnostic fixture `🧫️fixtures/🧫️history-label-reload/🔣️.json` that
- * `🧪️tests/🧪️history-label-reload/🦀️.rs` drives through the real typed lane and two reloads. Independent where it
+ * `🧪️tests/🧪️history-label-reload/🦀️.rs` drives through the runtime's publish seam (`dispatch_emit`) and two reloads. Independent where it
  * counts: Ajv (2020-12) validates the fixture against its schema, and the rule is derived here from the fixture's facts
  * alone, never from a Rust projection. */
 import assert from "node:assert/strict";

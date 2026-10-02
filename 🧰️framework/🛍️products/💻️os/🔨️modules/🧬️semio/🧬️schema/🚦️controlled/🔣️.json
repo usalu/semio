@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "bodyBytes",
+    "textBody"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "textBody": {
+      "type": "string"
+    }
+  }
+}

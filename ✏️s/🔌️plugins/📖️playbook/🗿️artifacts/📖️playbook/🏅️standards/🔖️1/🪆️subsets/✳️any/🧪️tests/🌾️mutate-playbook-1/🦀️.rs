@@ -8,7 +8,7 @@
 //! therefore never dispatched for it. Registering an oracle handler here would be dead code that
 //! reads as coverage in every listing, so there is none; every law this case claims is asserted
 //! inside the subject handlers, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module.
 //!
 //! ⚠️ Eight of the nine committed vectors pin a rejection or a no-op branch, because
 //! `PlaybookSnapshot` keeps its step flow behind a content-addressed `s.stdio.semio.flow` child
@@ -64,7 +64,7 @@ mod subject {
     };
     use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
     use semio_s_artifact_playbook_playbook::PlaybookSnapshot;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     //#region 🔖️VectorReading
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory

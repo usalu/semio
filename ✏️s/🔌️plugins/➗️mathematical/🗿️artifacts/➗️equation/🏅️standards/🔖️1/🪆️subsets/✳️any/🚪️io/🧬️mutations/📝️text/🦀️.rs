@@ -15,7 +15,7 @@ use crate::standards::v1::subsets::{
     geometry::schema::mutations::{insert_point::InsertPoint, move_point::MovePoint, remove_point::RemovePoint, replace_points::ReplacePoints},
     graph::schema::mutations::{
         change_graph_directed::ChangeGraphDirected, change_node_label::ChangeNodeLabel, connect_nodes::ConnectNodes, create_node::CreateNode, delete_node::DeleteNode, delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode,
-        replace_graph::ReplaceGraph, update_graph_algorithm::UpdateGraphAlgorithm,
+        move_nodes::MoveNodes, replace_graph::ReplaceGraph, set_node_positions::{EquationNodePosition, SetNodePositions}, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
 use crate::{EquationGraph, EquationPoint};
@@ -192,6 +192,8 @@ fn print_equation_mutation(mutation: &EquationMutation) -> String {
         EquationMutation::RemovePoint(p) => format!("remove-point index={}", enc_usize(p.index)),
         EquationMutation::MovePoint(p) => format!("move-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
         EquationMutation::ChangeCoefficient(p) => format!("change-coefficient label={} numer={} denom={}", enc_usize(p.label.0 as usize), enc_str(&p.numer), enc_str(&p.denom)),
+        EquationMutation::MoveNodes(p) => format!("move-nodes ids={} dx={} dy={}", enc_str(&pack::json::to_json_string(&p.ids)), enc_f64(p.dx), enc_f64(p.dy)),
+        EquationMutation::SetNodePositions(p) => format!("set-node-positions positions={}", enc_str(&pack::json::to_json_string(&p.positions))),
     }
 }
 
@@ -215,6 +217,8 @@ fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
         "remove-point" => Ok(EquationMutation::RemovePoint(RemovePoint { index: dec_usize(&arg("index")?)? })),
         "move-point" => Ok(EquationMutation::MovePoint(MovePoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "change-coefficient" => Ok(EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(dec_usize(&arg("label")?)? as u64), numer: dec_str(&arg("numer")?)?, denom: dec_str(&arg("denom")?)? })),
+        "move-nodes" => Ok(EquationMutation::MoveNodes(MoveNodes { ids: pack::json::from_json_str(&dec_str(&arg("ids")?)?).map_err(|e| e.to_string())?, dx: dec_f64(&arg("dx")?)?, dy: dec_f64(&arg("dy")?)? })),
+        "set-node-positions" => Ok(EquationMutation::SetNodePositions(SetNodePositions { positions: pack::json::from_json_str::<Vec<EquationNodePosition>>(&dec_str(&arg("positions")?)?).map_err(|e| e.to_string())? })),
         other => Err(format!("equation mutation: unknown keyword {other:?}")),
     }
 }
@@ -285,6 +289,8 @@ impl protocol::OpBinary for EquationMutation {
             EquationMutation::RemovePoint(_) => 12,
             EquationMutation::MovePoint(_) => 13,
             EquationMutation::ChangeCoefficient(_) => 14,
+            EquationMutation::MoveNodes(_) => 15,
+            EquationMutation::SetNodePositions(_) => 16,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -340,6 +346,22 @@ impl protocol::OpBinary for EquationMutation {
                 store::pack_rt::write_varint_u64(&mut out, p.label.0);
                 write_str_bin(&mut out, &p.numer);
                 write_str_bin(&mut out, &p.denom);
+            }
+            EquationMutation::MoveNodes(p) => {
+                store::pack_rt::write_varint_u64(&mut out, p.ids.len() as u64);
+                for id in &p.ids {
+                    write_str_bin(&mut out, id);
+                }
+                out.extend_from_slice(&p.dx.to_le_bytes());
+                out.extend_from_slice(&p.dy.to_le_bytes());
+            }
+            EquationMutation::SetNodePositions(p) => {
+                store::pack_rt::write_varint_u64(&mut out, p.positions.len() as u64);
+                for position in &p.positions {
+                    write_str_bin(&mut out, &position.id);
+                    out.extend_from_slice(&position.x.to_le_bytes());
+                    out.extend_from_slice(&position.y.to_le_bytes());
+                }
             }
         }
         Ok(out)
@@ -417,6 +439,21 @@ impl protocol::OpBinary for EquationMutation {
                 let denom = read_str_bin(&mut reader).map_err(|e| malformed("denom", reader.position(), e))?;
                 Ok(EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(label), numer, denom }))
             }
+            15 => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("ids", reader.position(), e.to_string()))?;
+                let ids = (0..count).map(|_| read_str_bin(&mut reader)).collect::<Result<Vec<_>, _>>().map_err(|e| malformed("ids", reader.position(), e))?;
+                let dx = reader.read_f64_le().map_err(|e| malformed("dx", reader.position(), e.to_string()))?;
+                let dy = reader.read_f64_le().map_err(|e| malformed("dy", reader.position(), e.to_string()))?;
+                Ok(EquationMutation::MoveNodes(MoveNodes { ids, dx, dy }))
+            }
+            16 => {
+                let count = reader.read_varint_u64().map_err(|e| malformed("positions", reader.position(), e.to_string()))?;
+                let positions = (0..count)
+                    .map(|_| -> Result<EquationNodePosition, String> { Ok(EquationNodePosition { id: read_str_bin(&mut reader)?, x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? }) })
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|e| malformed("positions", reader.position(), e))?;
+                Ok(EquationMutation::SetNodePositions(SetNodePositions { positions }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -445,6 +482,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
         EquationMutation::RemovePoint(RemovePoint { index: 0 }),
         EquationMutation::MovePoint(MovePoint { index: 0, x: 7.0, y: 8.0 }),
         EquationMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(3), numer: "5".into(), denom: "2".into() }),
+        EquationMutation::MoveNodes(MoveNodes { ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 }),
+        EquationMutation::SetNodePositions(SetNodePositions { positions: vec![EquationNodePosition { id: "a".into(), x: 120.0, y: 40.0 }, EquationNodePosition { id: "b".into(), x: -30.5, y: 260.0 }] }),
     ]
 }
 //#endregion 🔖️DemoCases

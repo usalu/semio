@@ -37,8 +37,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create Equipment Gain {} at index {}", self.id.0, self.index), &format!("Gerätewärmegewinn {} an Index {} erstellen", self.id.0, self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Equipment Gain {} at index {}", self.id.0, self.index), &format!("Gerätewärmegewinn {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

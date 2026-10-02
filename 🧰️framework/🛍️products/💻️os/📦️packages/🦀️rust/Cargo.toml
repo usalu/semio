@@ -58,6 +58,11 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-validator = { workspace = true }
+semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { workspace = true }
@@ -154,6 +159,7 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework-schema = { workspace = true }
 blake3 = "1.8.2"
 semio-framework-pack = { workspace = true, features = ["corruption-testing"] }
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

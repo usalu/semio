@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, PackedF32, PackedU8,
+    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, Float32Buffer, ByteBuffer,
     QcReportSnapshot, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
 };
 
@@ -37,9 +37,9 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
     scene.params.mesh.texture_size = 4096;
-    scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
+    scene.results.sparse = Some(SparseCloud { points: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(ByteBuffer::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
     scene.results.dense =
-        Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
+        Some(DenseCloud { positions: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(ByteBuffer::from_u8_slice(&[0, 0, 255])), confidence: Some(Float32Buffer::from_f32_slice(&[0.9])), classification: Some(ByteBuffer::from_u8_slice(&[2])) });
     scene.results.mesh = RemodelingMesh {
         mesh: crate::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
         source: MeshSource::Reconstructed,

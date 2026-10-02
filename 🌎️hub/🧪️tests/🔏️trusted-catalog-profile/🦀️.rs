@@ -19,7 +19,6 @@ use crate::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperat
 use crate::inference::VerifiedGisMapArtifactBindingV1;
 use directory::os_directory::hex_lower;
 use directory::os_store;
-use semio_framework::to_dsl_value;
 use semio_framework_hash::{Hasher, Sha256};
 
 const SYNTHETIC_COMPONENT: &[u8] = b"synthetic-gis-component-for-hub-integration-fixtures-profile";
@@ -110,8 +109,8 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     descriptor.hashes.wasm_sha256 = component_sha256.clone();
     descriptor.hashes.core_wasm_sha256 = component_sha256.clone();
     descriptor.hashes.descriptor_sha256.clear();
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor self-hash projection failed: {error}")))?)));
-    let descriptor_bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(|error| AuthorityError::Catalog(format!("GIS descriptor projection failed: {error}")))?);
+    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
+    let descriptor_bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .map_err(|error| AuthorityError::Catalog(format!("GIS native codec receipts unavailable: {error:?}")))?
         .into_iter()

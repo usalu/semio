@@ -1,13 +1,15 @@
-//! 🎚️ Typed operator inputs and source text are editable through the document's event history.
+//! 🎚️ Typed operator inputs and source text are editable through the document's event history: a committed field is ONE
+//! absolute `change-widget-input` leaf (design §19), so a history edit changes exactly that typed value.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host, mutations::text::Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
+use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::{neural::{ColdRetire, Dictionary, Value}, Widget};
-use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use dsl::{FromValue as _, ToValue as _};
+use dsl::ToValue as _;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-widget-input")]
@@ -40,30 +42,30 @@ pub(crate) fn edit_input_value(types: &[String], current: Option<&dsl::DslValue>
     Ok(dsl::DslValue::Object(fields))
 }
 
-/// ✍️ Validates the selected input before emitting any document mutation.
-pub(crate) fn apply_to_host(host: &mut FlowHost, payload: &SetWidgetInput) -> Result<(), String> {
+/// ✍️ The ONE `change-widget-input` leaf a committed field edit is, validated against the operator's declared port before
+/// any document mutation (an unconnected scalar input of a declared literal type); a text source's `text` is a text
+/// input. `None` when the input already holds the edited value — an unchanged field is no edit.
+pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetInput) -> Result<Option<Generation3dMutation>, String> {
     if payload.value.len() > 1_048_576 { return Err("Input text exceeds 1 MiB".into()); }
-    let widget = host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.widget_id).ok_or("The selected widget no longer exists")?;
-    if matches!(widget, Widget::InputNote { .. }) && payload.channel == "text" && payload.component.is_none() { host.set_note_text(&payload.widget_id, &payload.value); return Ok(()); }
+    let widget = host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.widget_id).ok_or("The selected widget no longer exists")?;
+    if let Widget::InputNote { text, .. } = widget {
+        if payload.channel != "text" || payload.component.is_some() { return Err("Select an operator input or a text source".into()); }
+        return Ok((*text != payload.value).then(|| change_widget_input(&payload.widget_id, "text", WidgetInputValue::Text(payload.value.clone()))));
+    }
     let Widget::Neuron { neuron_kind, params, .. } = widget else { return Err("Select an operator input or a text source".into()) };
-    if host.host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.widget_id && synapse.to_port == payload.channel) { return Err("This input is connected; edit its source or disconnect it first".into()); }
+    if host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.widget_id && synapse.to_port == payload.channel) { return Err("This input is connected; edit its source or disconnect it first".into()); }
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
     let port = infos.get(neuron_kind).and_then(|info| info.inputs.iter().find(|input| input.name == payload.channel)).ok_or("The selected operator input is unavailable")?;
     if port.cardinality.is_collection() { return Err("Connect a collection output to this input".into()); }
-    let current = params.get(&payload.channel).or(port.default.as_ref()).map(|value| value.to_value());
+    let stored = params.get(&payload.channel).map(|value| value.to_value());
+    let current = stored.clone().or_else(|| port.default.as_ref().map(|value| value.to_value()));
     let edited = edit_input_value(&port.value_types, current.as_ref(), &payload.value, payload.component.as_deref())?;
-    let value = Value::from_value(edited).map_err(|error| error.to_string())?;
-    let patch = Dictionary::new().insert(&payload.channel, value);
-    let json = dsl::json::to_json_string(&patch.to_value());
-    patch.retire_cold();
-    host.set_neuron_params(&payload.widget_id, &json).map_err(|error| error.to_string())
+    let input = WidgetInputValue::of_literal(&edited).ok_or("Unsupported input schema")?;
+    Ok((stored.as_ref().and_then(WidgetInputValue::of_literal).as_ref() != Some(&input)).then(|| change_widget_input(&payload.widget_id, &payload.channel, input)))
 }
 
 pub fn handle(payload: &SetWidgetInput, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    with_host(&doc.snapshot.host_snapshot, |host| {
-        apply_to_host(host, payload).map_err(Fault::from)?;
-        Ok(Emit::mutations(commit_host_snapshot(&doc.snapshot.host_snapshot, &host.host_snapshot)))
-    })
+    Ok(Emit::mutations(input_leaf(&doc.snapshot.host_snapshot, payload).map_err(Fault::from)?.into_iter().collect()))
 }
 
 

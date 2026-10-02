@@ -128,8 +128,10 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
         let mode = case["patch"]["value"].as_str().unwrap();
         let accepted = case["accepted"].as_bool().unwrap();
         let mutation = crate::mutations::set_layer_blend_mode("shape-a".into(), mode.into());
+        let blocked = protocol::Mutation::<DrawingSnapshot>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+        assert_eq!(!blocked, accepted, "{mode}");
         let mut document = original.clone();
-        assert_eq!(apply_drawing_mutation(&mut document, &mutation).is_ok(), accepted, "{mode}");
+        apply_drawing_mutation(&mut document, &mutation).expect("a refused edit folds as a no-op");
         let delta = crate::diff::diff_set_layer_blend_mode("shape-a", mode);
         assert_eq!(delta.apply(&original).is_ok(), accepted, "{mode}");
         if !accepted { assert_eq!(document, original); }

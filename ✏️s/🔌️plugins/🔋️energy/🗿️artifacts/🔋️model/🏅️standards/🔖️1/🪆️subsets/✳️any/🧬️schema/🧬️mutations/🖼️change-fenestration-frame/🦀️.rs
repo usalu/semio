@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fenestration {} frame conductance to {} W/K", self.id.0, self.new_frame_conductance_w_k), &format!("Rahmen-Wärmeleitwert von Fenster {} auf {} W/K ändern", self.id.0, self.new_frame_conductance_w_k))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change fenestration {} frame conductance to {} W/K", self.id.0, self.new_frame_conductance_w_k), &format!("Rahmen-Wärmeleitwert von Fenster {} auf {} W/K ändern", self.id.0, self.new_frame_conductance_w_k))
     }
 
     fn target(&self) -> Vec<String> {

@@ -43,7 +43,7 @@ mod subject {
         decode_semio_table_pack, decode_semio_table_snapshot_json, encode_semio_table_pack, encode_semio_table_snapshot_json, parse_semio_table_dsl, print_semio_table_dsl, SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot,
     };
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Input
     /// 📃️ The three-row demo sheet, in both encodings the domain commits for it — small, but the

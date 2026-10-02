@@ -4,12 +4,12 @@ use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfig
 use crate::standards::v1::subsets::any::schema::host_operations;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{change_slider_value, move_nodes};
-use semio_framework_tool_machine::{node_drag_commit, NodeDragRecord, NODE_DRAG_OPERATION};
+use semio_framework_tool_machine::{node_drag_commit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -18,71 +18,84 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-/// 🌉️ `operations_json` is a locally-defined array of sub-operation descriptors (not a framework
-/// boundary type) — parsed generically via `pack::json`'s raw tree, not `serde_json`.
-fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
-    dsl::json::parse(text).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default()
+/// 🧾️ The rows of one `nodeGraphEdit` batch through the ONE shared closed decoder (`🛠️tool-machine`
+/// [`node_graph_edit_rows`], design §13.3): a whole fixture (`setHostSnapshot`), an ambient-selection delete, an absolute
+/// move, an unknown operation or any malformed row refuses the whole batch before anything is authored.
+pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
+    let operations = dsl::json::parse(&payload.operations_json).map_err(|error| Fault::from(format!("nodeGraphEdit operations are not JSON: {error}")))?;
+    node_graph_edit_rows(&dsl::DslValue::object([("operations".to_string(), dsl::json::to_dsl_value(&operations))])).map_err(Fault::from)
 }
 
-/// 🧾️ The sub-operations the node-graph surfaces dispatch, and the leaf each one yields:
+/// ✂️ Cuts the wire `synapse_id`. When operator kinds are not yet contributed, the host rebuild can drop unresolved wires
+/// before the cut runs; the canvas still names the document synapse, so that cut lands as a document-level
+/// `disconnect-synapse`. A wire neither holds is refused.
+fn cut(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, synapse_id: &str, document_cuts: &mut Vec<Generation2dMutation>) -> Result<(), String> {
+    match host.disconnect(synapse_id) {
+        Ok(()) => Ok(()),
+        Err(_) if host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) => {
+            document_cuts.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string()));
+            Ok(())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// 🧾️ The leaves one decoded batch yields:
 /// - `setSlider {widgetId, value}` — the inline slider overlay's value: the ABSOLUTE `change-slider-value` leaf. A dragged
 ///   knob carries its press as the dispatch's own top-level `gesture`/`commit`, so the framework scrub machine (design
 ///   §13.1) keeps every tick provisional and commits the release as ONE edit; this handler never reads a gesture.
 /// - `move {gestureId, nodeIds, dx, dy}` — the node-graph gesture record of a released node drag (design §13.3): the
 ///   relative `move-nodes` leaf, committed through the ONE node-drag machine as ONE tool transaction.
-/// - `setHostSnapshot`, `connect`, `disconnect`, `deleteSelection` — one-shot structural edits, authored as the host diff of
-///   the graph they leave behind. When operator kinds are not yet contributed, the host rebuild can drop unresolved wires
-///   before a `disconnect` runs; the canvas still names the document synapse, so that cut falls back to a document-level
-///   `disconnect-synapse`.
-fn apply_operations(doc: &ArtifactView<'_, Generation2dSnapshot>, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
+/// - `connect`, `disconnect`, `insertPort`, `delete {nodeIds, synapseIds}` — structural edits by the ids they name, authored
+///   as the id-keyed leaves of the graph they leave behind; a refused host edit refuses the batch.
+fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEditRow]) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
-    let operation = |row: &dsl::json::Value| row.get("operation").and_then(|value| value.as_str()).unwrap_or("").to_string();
-    let structural: Vec<&dsl::json::Value> = sub_operations.iter().filter(|row| matches!(operation(row).as_str(), "setHostSnapshot" | "deleteSelection" | "connect" | "disconnect")).collect();
-    let mut document_disconnects = Vec::new();
-    let mut leaves = if structural.is_empty() {
-        Vec::new()
-    } else {
+    let structural = rows.iter().any(|row| matches!(row, NodeGraphEditRow::Connect { .. } | NodeGraphEditRow::Disconnect { .. } | NodeGraphEditRow::InsertPort { .. } | NodeGraphEditRow::Delete { .. }));
+    let mut document_cuts = Vec::new();
+    let mut refusal = None;
+    let mut leaves = if structural {
         host_operations(host_snapshot, |host| {
-            for row in &structural {
-                match operation(row).as_str() {
-                    "setHostSnapshot" => {
-                        if let Some(host_snapshot) = row.get("hostSnapshotJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostSnapshot>(json).ok()) {
-                            host.replace_host_snapshot(host_snapshot);
-                        }
+            refusal = rows
+                .iter()
+                .try_for_each(|row| match row {
+                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(|error| error.to_string()),
+                    NodeGraphEditRow::Disconnect { synapse_id } => cut(host, host_snapshot, synapse_id, &mut document_cuts),
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => host.add_input_port(node_id, *index as usize).map_err(|error| error.to_string()),
+                    NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => host.add_output_port(node_id, *index as usize).map_err(|error| error.to_string()),
+                    NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                        synapse_ids.iter().try_for_each(|synapse_id| cut(host, host_snapshot, synapse_id, &mut document_cuts))?;
+                        node_ids.iter().try_for_each(|node_id| host.remove_widget(node_id).map_err(|error| error.to_string()))
                     }
-                    "deleteSelection" => {
-                        for id in selected {
-                            let _ = host.remove_widget(id);
-                        }
-                    }
-                    "connect" => {
-                        let text = |key: &str| row.get(key).and_then(|value| value.as_str());
-                        if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (text("sourceNodeId"), text("sourcePortId"), text("targetNodeId"), text("targetPortId")) {
-                            let _ = host.connect_ports(from, from_port, to, to_port);
-                        }
-                    }
-                    _ => {
-                        if let Some(synapse_id) = row.get("synapseId").and_then(|value| value.as_str()) {
-                            if host.disconnect(synapse_id).is_err() && host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) {
-                                document_disconnects.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string()));
-                            }
-                        }
-                    }
-                }
-            }
+                    NodeGraphEditRow::Move(_) | NodeGraphEditRow::SetSlider { .. } => Ok(()),
+                })
+                .err();
         })
+    } else {
+        Vec::new()
     };
-    leaves.extend(document_disconnects);
-    leaves.extend(sub_operations.iter().filter(|row| operation(row) == "setSlider").filter_map(|row| slider_leaf(host_snapshot, row)));
-    let records: Vec<NodeDragRecord> = sub_operations.iter().filter(|row| operation(row) == NODE_DRAG_OPERATION).filter_map(|row| NodeDragRecord::from_row(&dsl::json::to_dsl_value(row)).ok()).collect();
-    let sliders_only = !sub_operations.is_empty() && sub_operations.iter().all(|row| operation(row) == "setSlider");
+    if let Some(reason) = refusal {
+        for leaf in leaves.into_iter().chain(document_cuts) {
+            leaf.retire_cold();
+        }
+        return Err(Fault::from(format!("nodeGraphEdit refusal: {reason}")));
+    }
+    leaves.extend(document_cuts);
+    leaves.extend(rows.iter().filter_map(|row| match row {
+        NodeGraphEditRow::SetSlider { widget_id, value } => slider_leaf(host_snapshot, widget_id, *value),
+        _ => None,
+    }));
+    let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| match row {
+        NodeGraphEditRow::Move(record) => Some(record.clone()),
+        _ => None,
+    }).collect();
+    let sliders_only = !rows.is_empty() && rows.iter().all(|row| matches!(row, NodeGraphEditRow::SetSlider { .. }));
     let ui_scope = if sliders_only { slider_gesture_ui_scope() } else { UiDirtyScope::default() };
     if records.is_empty() {
-        return Emit { artifact_mutations: leaves, ui_scope, ..Default::default() };
+        return Ok(Emit { artifact_mutations: leaves, ui_scope, ..Default::default() });
     }
     leaves.extend(generation2d_node_drag_leaves(host_snapshot, &records));
     let gesture = records.first().map_or(NODE_GRAPH_EDIT_VERB, |record| record.gesture_id.as_str());
-    generation2d_node_drag_emit(doc, NODE_GRAPH_EDIT_VERB, gesture, leaves)
+    Ok(generation2d_node_drag_emit(doc, NODE_GRAPH_EDIT_VERB, gesture, leaves))
 }
 
 /// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.
@@ -101,11 +114,9 @@ pub(crate) fn generation2d_node_drag_emit(doc: &ArtifactView<'_, Generation2dSna
     }
 }
 
-/// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a malformed row, a widget that is no
-/// slider, or the value the slider already holds.
-pub(crate) fn slider_leaf(host_snapshot: &FlowHostSnapshot, row: &dsl::json::Value) -> Option<Generation2dMutation> {
-    let widget_id = row.get("widgetId").and_then(|value| value.as_str())?;
-    let value = row.get("value").and_then(dsl::json::Value::as_f64).filter(|value| value.is_finite())?;
+/// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a widget that is no slider or the
+/// value the slider already holds.
+pub(crate) fn slider_leaf(host_snapshot: &FlowHostSnapshot, widget_id: &str, value: f64) -> Option<Generation2dMutation> {
     host_snapshot
         .widgets
         .iter()
@@ -146,31 +157,10 @@ pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
     }
 }
 
-/// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
-/// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
-/// reachable only through that macro-generated path (`Generation2dPlayApp::handle` always routes this
-/// command through `apply` below instead), so `"deleteSelection"` sub-operations degrade to treating
-/// the selection as empty.
+/// 🕹️ The one entry every route takes — `app_commands!`'s generated dispatch and the retained reducer alike: the decoded
+/// rows name every entity they edit, so no route reads an ambient selection.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    apply_selected(payload, doc, &[])
-}
-
-pub fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation2dSnapshot>, selected: &[String]) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(doc, &sub_operations, selected))
-}
-
-/// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
-/// field — no config mutation needed afterwards, the framework auto-prunes the deleted ids out of
-/// `graph`'s selection.
-pub fn apply(
-    payload: &NodeGraphEdit,
-    doc: &ArtifactView<'_, Generation2dSnapshot>,
-    _cfg: &ConfigView<'_, Generation2dConfig>,
-    interaction: &InteractionView<'_>,
-    _session: &mut FlowEvalSession,
-) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    apply_selected(payload, doc, &interaction.selection("graph").ids)
+    apply_rows(doc, &rows(payload)?)
 }
 
 //#region 🧪️Tests

@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::unit_tests::context::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&ViewModel::default()).expect("an admitted host label axis")
+    puzzle5d_labels(&ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("an admitted host label axis")
 }
 
 fn drain() {
@@ -87,7 +87,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn empty_selection_renders_the_document_summary() {
 #[test]
 fn a_selected_part_renders_its_field_group_with_both_flag_rows() {
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
-    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["part-0".into()], hovered: Vec::new() };
+    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["part-0".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
     let rows = row_keys(&node);
     for key in ["puzzle5d-play-inspector.part.id", "puzzle5d-play-inspector.part.kind", "puzzle5d-play-inspector.part.x", "puzzle5d-play-inspector.part.hidden", "puzzle5d-play-inspector.part.locked"] {
@@ -115,7 +115,7 @@ fn a_selected_part_renders_its_field_group_with_both_flag_rows() {
 #[test]
 fn a_selected_grip_renders_the_grip_field_group() {
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
-    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_GRIP.into(), selected: vec![puzzle5d_grip_full_id("part-1", "g0")], hovered: Vec::new() };
+    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_GRIP.into(), selected: vec![puzzle5d_grip_full_id("part-1", "g0")], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
     let rows = row_keys(&node);
     assert!(rows.iter().any(|row| row == "puzzle5d-play-inspector.grip.full-id"), "{rows:?}");
@@ -129,7 +129,7 @@ fn a_selected_grip_renders_the_grip_field_group() {
 #[test]
 fn a_selected_fastener_renders_every_joint_scalar() {
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
-    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), selected: vec!["fastener-0".into()], hovered: Vec::new() };
+    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_FASTENER.into(), selected: vec!["fastener-0".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
     let rows = row_keys(&node);
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt"] {
@@ -144,7 +144,7 @@ fn a_selected_fastener_renders_every_joint_scalar() {
 #[test]
 fn a_granularity_less_selection_falls_through_to_the_part_group() {
     let mut scene = scene(&["part-0".into(), "part-1".into()]);
-    scene.interaction = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: vec!["part-1".into()], hovered: Vec::new() };
+    scene.interaction = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: vec!["part-1".into()], hovered: Vec::new(), referenced: Vec::new() };
     let node = unhosted(&scene);
     let rows = row_keys(&node);
     assert!(rows.iter().any(|row| row == "puzzle5d-play-inspector.part.id"), "{rows:?}");
@@ -159,7 +159,7 @@ fn a_granularity_less_selection_falls_through_to_the_part_group() {
 fn a_wide_selection_stamps_every_id_and_materialises_only_its_window() {
     let ids: Vec<String> = (0..120).map(|index| format!("part-{index}")).collect();
     let mut scene = scene(&ids);
-    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: ids.clone(), hovered: Vec::new() };
+    scene.interaction = Puzzle5dInteractionSnapshot { granularity: PUZZLE5D_GRANULARITY_PART.into(), selected: ids.clone(), hovered: Vec::new(), referenced: Vec::new() };
     let node = inspect(&scene, &hosted(vec![request(IDS_SECTION, Some(true), 0, 8)]));
     let section = node.children.iter().find(|child| child.key.as_str() == IDS_SECTION).expect("the ids section");
     let window = match &section.component {

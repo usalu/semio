@@ -22,8 +22,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamFormat {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::SetStreamFormat(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set stream format", "Datenstromformat setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set stream format", "Datenstromformat setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -23,7 +23,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
   try {
     put(join(temporary, "package.json"), JSON.stringify(lifecycle.storage.package));
     mkdirSync(join(temporary, lifecycle.storage.modules));
-    const { collectArtifactFiles } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts"));
+    const { collectArtifactFiles } = await import(join(workspace, "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts"));
     const oracle = (await require("fast-glob")("**/*", { cwd: source, dot: true, onlyFiles: true, followSymbolicLinks: false })).sort();
     assert.deepEqual([...(await collectArtifactFiles(source)).keys()], oracle);
     const output = join(temporary, "output"), progress: string[] = [];

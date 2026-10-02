@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddPla
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add plant equipment {} to plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenkomponente {} zu Anlagenkreislauf {} hinzufügen", self.equipment_id.0, self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add plant equipment {} to plant loop {}", self.equipment_id.0, self.id.0), &format!("Anlagenkomponente {} zu Anlagenkreislauf {} hinzufügen", self.equipment_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -796,7 +796,7 @@ pub struct AdminIntentOutcomeV1 {
 
 /// 🎟️ One-display-only secret result, never stored in an audit fact or query projection.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", retire_with = "std::mem::drop")]
 pub struct AdminIntentResultV1 {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub invite_token: Option<String>,

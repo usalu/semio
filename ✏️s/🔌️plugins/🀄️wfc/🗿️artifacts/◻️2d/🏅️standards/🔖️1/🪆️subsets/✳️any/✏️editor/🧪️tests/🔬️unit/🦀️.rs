@@ -158,69 +158,55 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
 }
 
 //#region 🕹️GraphGestures
-/// 🕹️ Every canvas gesture arrives as ONE `nodeGraphEdit`; the wasm node-graph surface hands back the
-/// WHOLE graph, so a drag is read as the record of the node whose position moved — ONE relative `drag-slots` leaf in
-/// document units.
-#[test]
-fn a_dragged_node_lands_exactly_one_drag_slots_leaf() {
-    let document = crate::examples::two_room_corridor::document();
-    let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
-    let corridor = document.slots.iter().find(|slot| slot.id == "corridor").expect("corridor");
-    let room_b = document.slots.iter().find(|slot| slot.id == "room-b").expect("room-b");
-    let snapshot = format!(
-        "{{\"schema\":\"dag.host_snapshot\",\"camera\":{{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},\"nodes\":[{{\"id\":\"room-a\",\"x\":{},\"y\":{}}},{{\"id\":\"corridor\",\"x\":{},\"y\":{}}},{{\"id\":\"room-b\",\"x\":{},\"y\":{}}}],\"edges\":[{{\"id\":\"edge-a-corridor\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"}},{{\"id\":\"edge-corridor-b\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}}]}}",
-        7.0 * scale,
-        3.0 * scale,
-        corridor.x * scale,
-        corridor.y * scale,
-        room_b.x * scale,
-        room_b.y * scale
-    );
-    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot));
-    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a drag is one edit") };
-    assert_eq!(emit.artifact_mutations.len(), 1, "one gesture is one edit");
-    assert!(matches!(&emit.artifact_mutations[0], crate::Wfc2dMutation::DragSlots(drag) if drag.targets == ["room-a"]), "{:?}", emit.artifact_mutations);
-    assert_eq!(emit.description.as_deref(), Some("Drag room-a"));
-    let mut next = document;
-    crate::mutations::apply_wfc2d_mutation(&mut next, &emit.artifact_mutations[0]).expect("the drag applies");
-    let slot = next.slots.iter().find(|slot| slot.id == "room-a").expect("room-a survives its own drag");
-    assert!((slot.x - 7.0).abs() < 1e-9 && (slot.y - 3.0).abs() < 1e-9, "the canvas' own units are divided back out: {slot:?}");
+/// 🔗️ The shared node-graph record contract (`🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows`), as JSON.
+fn node_graph_rows_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"))).expect("the node-graph row fixture is JSON")
 }
 
-/// ✋️ A host that journals the release (React Flow, wgpu) sends the node-graph gesture record: its ONE canvas offset
-/// becomes ONE `drag-slots` leaf over every moved slot, in document units; a malformed record is refused by name.
+fn graph_edit(rows: serde_json::Value) -> Result<semio_framework_plugin::Emit<crate::Wfc2dMutation, crate::editor::wfc2d::config::Wfc2dConfigMutation>, semio_framework_plugin::Fault> {
+    dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: rows.to_string() }, &crate::examples::two_room_corridor::document(), &Wfc2dConfig::default())
+}
+
+/// 🔗️ Against the shared contract: every accepted row decodes — `setSlider` and `insertPort` are refused BY NAME, a wfc
+/// slot graph has neither inline sliders nor variadic ports — and every refused row (the deleted `setHostSnapshot` and
+/// `deleteSelection` included) refuses its whole batch.
+#[test]
+fn node_graph_rows_follow_the_shared_contract() {
+    let fixture = node_graph_rows_fixture();
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        let result = graph_edit(serde_json::json!([case["row"].clone()]));
+        match case["row"]["operation"].as_str() {
+            Some("setSlider" | "insertPort") => assert_eq!(result.err().map(|fault| fault.code.0), Some("wfc2d.node-graph.row".into()), "{}", case["id"]),
+            _ => assert!(result.is_ok(), "{}: {result:?}", case["id"]),
+        }
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        let Err(fault) = graph_edit(serde_json::json!([{ "operation": "disconnect", "synapseId": "edge-a-corridor" }, case["row"].clone()])) else { panic!("{} must refuse its batch", case["id"]) };
+        assert_eq!(fault.code.0, "wfc2d.node-graph.row", "{}", case["id"]);
+    }
+}
+
+/// ✋️ A released drag (the `move` record) lands ONE relative `drag-slots` leaf over every moved slot, in document units;
+/// an absolute move row is no record and is refused by name.
 #[test]
 fn a_journaled_drag_record_lands_one_relative_leaf_and_a_malformed_one_is_refused() {
-    let document = crate::examples::two_room_corridor::document();
     let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
-    let operations = format!("[{{\"operation\":\"move\",\"gestureId\":\"node-drag:1\",\"nodeIds\":[\"room-a\",\"room-b\",\"ghost\"],\"dx\":{},\"dy\":{}}}]", 2.0 * scale, -0.5 * scale);
-    let emit = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()).expect("a record dispatches");
+    let emit = graph_edit(serde_json::json!([{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": ["room-a", "room-b", "ghost"], "dx": 2.0 * scale, "dy": -0.5 * scale }])).expect("a record dispatches");
     assert_eq!(emit.artifact_mutations, vec![crate::mutations::drag_slots(vec!["room-a".into(), "room-b".into()], 2.0, -0.5)], "slots only, offset in document units");
-    let malformed = "[{\"operation\":\"move\",\"nodeId\":\"room-a\",\"x\":1.0,\"y\":2.0}]".to_string();
-    let Err(fault) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: malformed }, &document, &Wfc2dConfig::default()) else { panic!("an absolute move row is no gesture record") };
+    let Err(fault) = graph_edit(serde_json::json!([{ "operation": "move", "nodeId": "room-a", "x": 1.0, "y": 2.0 }])) else { panic!("an absolute move row is no gesture record") };
     assert_eq!(fault.code.0, "wfc2d.node-graph.row");
 }
 
-/// 📐️ An align that moved several nodes by DIFFERENT offsets is one record per offset — several leaves, still ONE
-/// edit.
+/// 📐️ Two records of one batch moving nodes by DIFFERENT offsets are two leaves, still ONE edit.
 #[test]
-fn an_align_moving_nodes_by_different_offsets_is_one_edit_of_several_leaves() {
-    let document = crate::examples::two_room_corridor::document();
+fn two_records_moving_by_different_offsets_are_one_edit_of_two_leaves() {
     let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
-    let at = |id: &str| document.slots.iter().find(|slot| slot.id == id).map(|slot| (slot.x, slot.y)).expect("slot");
-    let ((ax, ay), (cx, cy), (bx, by)) = (at("room-a"), at("corridor"), at("room-b"));
-    let snapshot = format!(
-        "{{\"nodes\":[{{\"id\":\"room-a\",\"x\":{},\"y\":{}}},{{\"id\":\"corridor\",\"x\":{},\"y\":{}}},{{\"id\":\"room-b\",\"x\":{},\"y\":{}}}],\"edges\":[{{\"id\":\"e1\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"}},{{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}}]}}",
-        ax * scale,
-        (ay + 1.0) * scale,
-        cx * scale,
-        (cy + 2.0) * scale,
-        bx * scale,
-        by * scale
-    );
-    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot));
-    let emit = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()).expect("an align dispatches");
-    assert_eq!(emit.artifact_mutations.len(), 2, "two offsets, two leaves: {:?}", emit.artifact_mutations);
+    let emit = graph_edit(serde_json::json!([
+        { "operation": "move", "gestureId": "align:1", "nodeIds": ["room-a"], "dx": 0.0, "dy": scale },
+        { "operation": "move", "gestureId": "align:1", "nodeIds": ["corridor"], "dx": 0.0, "dy": 2.0 * scale }
+    ]))
+    .expect("an align dispatches");
+    assert_eq!(emit.artifact_mutations, vec![crate::mutations::drag_slots(vec!["room-a".into()], 0.0, 1.0), crate::mutations::drag_slots(vec!["corridor".into()], 0.0, 2.0)]);
 }
 
 /// 🧾️ With command authority (an admission's seed) the gesture is ONE `ToolTransaction` of `<appId>#nodeGraphEdit`;
@@ -233,47 +219,39 @@ fn a_seeded_gesture_is_one_tool_transaction_and_nothing_moved_is_zero_trace() {
     let first = crate::editor::wfc2d::dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: record("node-drag:1", 1.0) }, &document, &Wfc2dConfig::default(), "seed-one").expect("the drag dispatches");
     let transaction = first.transaction.clone().expect("the release is a tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc2d@1/*#editor#nodeGraphEdit", "{transaction:?}");
-    assert!(first.coalesce_key.is_none(), "a committed transaction is a plain edit");
     let second = crate::editor::wfc2d::dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: record("node-drag:2", 1.0) }, &document, &Wfc2dConfig::default(), "seed-two").expect("the second drag dispatches");
     assert_ne!(second.transaction.expect("second ref").id, transaction.id, "two gestures are two transactions");
     let idle = crate::editor::wfc2d::dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: record("node-drag:3", 0.0) }, &document, &Wfc2dConfig::default(), "seed-three").expect("a release that moved nothing dispatches");
     assert!(idle.artifact_mutations.is_empty() && idle.transaction.is_none(), "a release that moved nothing leaves zero trace");
 }
 
-/// 🔗️ A wire the canvas drew between two slot nodes lands as `connect-slots` with a fresh edge id.
+/// 🔗️ A wire drawn between two slots lands as ONE `connect-slots` with a fresh edge id; one already there leaves nothing.
 #[test]
 fn a_drawn_wire_lands_exactly_one_connect_slots() {
-    let document = crate::examples::two_room_corridor::document();
-    let snapshot = "{\"schema\":\"dag.host_snapshot\",\"camera\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0},\"nodes\":[],\"edges\":[{\"id\":\"e1\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"},{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"},{\"id\":\"e3\",\"source\":\"room-a@adjacent-out\",\"target\":\"room-b@adjacent-in\"}]}";
-    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot.to_string()));
-    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a wire is one edit") };
-    assert_eq!(emit.artifact_mutations.len(), 1);
-    assert_eq!(emit.description.as_deref(), Some("Connect room-a to room-b"));
+    let emit = graph_edit(serde_json::json!([{ "operation": "connect", "sourceNodeId": "room-a", "sourcePortId": "adjacent-out", "targetNodeId": "room-b", "targetPortId": "adjacent-in" }])).expect("a wire dispatches");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [crate::Wfc2dMutation::ConnectSlots(wire)] if wire.edge.from_slot_id == "room-a" && wire.edge.to_slot_id == "room-b"), "{:?}", emit.artifact_mutations);
+    let again = graph_edit(serde_json::json!([{ "operation": "connect", "sourceNodeId": "corridor", "sourcePortId": "adjacent-out", "targetNodeId": "room-a", "targetPortId": "adjacent-in" }])).expect("a wire dispatches");
+    assert!(again.artifact_mutations.is_empty(), "room-a already borders the corridor, in either direction");
 }
 
-/// ✂️ A wire the canvas removed lands as `disconnect-slots` naming the document's own edge id.
+/// ✂️ A cut wire lands as ONE `disconnect-slots` naming the document's own edge id.
 #[test]
-fn a_removed_wire_lands_exactly_one_disconnect_slots() {
-    let document = crate::examples::two_room_corridor::document();
-    let snapshot = "{\"schema\":\"dag.host_snapshot\",\"camera\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0},\"nodes\":[],\"edges\":[{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}]}";
-    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot.to_string()));
-    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a removed wire is one edit") };
-    assert_eq!(emit.description.as_deref(), Some("Disconnect edge-a-corridor"));
+fn a_cut_wire_lands_exactly_one_disconnect_slots() {
+    let emit = graph_edit(serde_json::json!([{ "operation": "disconnect", "synapseId": "edge-a-corridor" }])).expect("a cut dispatches");
+    assert_eq!(emit.artifact_mutations, vec![crate::mutations::disconnect_slots("edge-a-corridor".into())]);
 }
 
-/// 🧘 A gesture that only panned the camera is not an edit at all.
+/// 🗑️ A delete row cuts the named adjacencies and deletes the named slots (each cascading its own wires), once each.
 #[test]
-fn a_camera_only_gesture_is_no_edit() {
-    let document = crate::examples::two_room_corridor::document();
-    let scale = crate::editor::wfc2d::WFC_2D_GRAPH_VIEW_SCALE;
-    let snapshot = format!(
-        "{{\"schema\":\"dag.host_snapshot\",\"camera\":{{\"x\":120.0,\"y\":-40.0,\"zoom\":2.5}},\"nodes\":[{{\"id\":\"room-a\",\"x\":0.0,\"y\":0.0}},{{\"id\":\"corridor\",\"x\":{},\"y\":0.0}},{{\"id\":\"room-b\",\"x\":{},\"y\":0.0}}],\"edges\":[{{\"id\":\"e1\",\"source\":\"room-a@adjacent-out\",\"target\":\"corridor@adjacent-in\"}},{{\"id\":\"e2\",\"source\":\"corridor@adjacent-out\",\"target\":\"room-b@adjacent-in\"}}]}}",
-        2.0 * scale,
-        4.0 * scale
-    );
-    let operations = format!("[{{\"operation\":\"setHostSnapshot\",\"hostSnapshotJson\":{}}}]", protocol::json::to_json_string(&snapshot));
-    let Ok(emit) = dispatch(&Wfc2dEditorCommand::NodeGraphEdit { operations_json: operations }, &document, &Wfc2dConfig::default()) else { panic!("a pan is no edit") };
-    assert!(emit.artifact_mutations.is_empty(), "a camera-only gesture must mint nothing");
+fn a_delete_row_cuts_its_wires_and_deletes_its_slots() {
+    let emit = graph_edit(serde_json::json!([{ "operation": "delete", "nodeIds": ["room-b", "ghost"], "synapseIds": ["edge-a-corridor", "edge-a-corridor-ghost"] }])).expect("a delete dispatches");
+    assert_eq!(emit.artifact_mutations, vec![crate::mutations::disconnect_slots("edge-a-corridor".into()), crate::mutations::delete_slot("room-b".into())]);
+}
+
+/// 🧘 An empty batch (a host abort) is not an edit at all.
+#[test]
+fn an_empty_batch_is_no_edit() {
+    assert!(graph_edit(serde_json::json!([])).expect("an empty batch dispatches").artifact_mutations.is_empty());
 }
 
 /// 🛂️ A verb aimed at an id the document does not hold is refused BY NAME rather than minting an edit
@@ -378,3 +356,5 @@ fn every_retained_tool_is_a_declared_migrated_action_of_the_built_manifest() {
 fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("wfc", Wfc2dEditor, || semio_framework_plugin::App { definition: create_wfc2d_editor(), examples: Vec::new() }, "../..");

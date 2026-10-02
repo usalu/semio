@@ -202,10 +202,10 @@ pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `gisterrain_artifact_schema_descriptor`'s registration.
-pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
-        inference: ::semio_framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }

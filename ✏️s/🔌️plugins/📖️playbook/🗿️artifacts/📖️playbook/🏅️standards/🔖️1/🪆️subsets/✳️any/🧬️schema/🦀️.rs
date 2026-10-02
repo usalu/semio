@@ -69,8 +69,8 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookArtifact {
             ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
             ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
             ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
-            ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
-            ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
+            ("document".to_string(), semio_framework_value::ToValue::to_value(&self.document)),
+            ("flow".to_string(), semio_framework_value::ToValue::to_value(&self.flow)),
         ])
     }
 }
@@ -84,8 +84,8 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
             id: ::semio_framework_os_kernel::FromValue::from_value(field("id")?)?,
             version: ::semio_framework_os_kernel::FromValue::from_value(field("version")?)?,
             title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
-            document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
-            flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+            document: semio_framework_value::FromValue::from_value(field("document")?)?,
+            flow: semio_framework_value::FromValue::from_value(field("flow")?)?,
         })
     }
 }
@@ -93,25 +93,25 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.playbook.playbook` — twenty handcrafted schema leaves.
-pub fn playbook_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn playbook_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.playbook.playbook",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

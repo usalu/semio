@@ -4,11 +4,27 @@ use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{dag_action, ui_node_list, ui_value_list, ui_value_map, ui_value_text};
 use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
-use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Label, Trigger, UiText};
-use semio_framework_plugin::{
-    tree_item_desc, ui_inspector_mixed_number, ui_inspector_mixed_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
-};
+use semio_framework_plugin::plugin_app_close_prelude::input;
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_plugin::plugin_app_close_prelude::HasChildren;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_framework_ui_contract::Label;
+use semio_framework_plugin::plugin_app_close_prelude::Trigger;
+use semio_framework_plugin::plugin_app_close_prelude::UiText;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_inspector_mixed_number;
+use semio_framework_plugin::ui_inspector_mixed_text;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_framework_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER;
 use semio_framework_ui_contract::{tree_item, BuiltNode};
 
 //#region 🔖️Constants

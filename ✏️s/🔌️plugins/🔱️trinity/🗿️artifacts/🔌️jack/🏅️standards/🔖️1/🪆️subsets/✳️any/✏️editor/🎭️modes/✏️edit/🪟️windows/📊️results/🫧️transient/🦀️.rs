@@ -59,10 +59,10 @@ struct JackResultsWindowTransientRetirement {
 
 impl JackResultsWindowTransientRetirement {
     fn new(execution_id: Option<String>, result: Option<crate::ast::QueryResult>, error: Option<String>) -> Self {
-        let mut children = vec![store::retirement::owned_retirement((execution_id, error))];
+        let mut children = vec![semio_framework_value::retirement::owned_retirement((execution_id, error))];
         if let Some(result) = result {
             let crate::ast::QueryResult { kind: _, columns, rows, graph_fixture } = result;
-            children.push(store::retirement::owned_retirement((columns, rows)));
+            children.push(semio_framework_value::retirement::owned_retirement((columns, rows)));
             if let Some(snapshot) = graph_fixture {
                 children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::schema::wire_runtime::JackSnapshotRetirementFactory, *snapshot));
             }

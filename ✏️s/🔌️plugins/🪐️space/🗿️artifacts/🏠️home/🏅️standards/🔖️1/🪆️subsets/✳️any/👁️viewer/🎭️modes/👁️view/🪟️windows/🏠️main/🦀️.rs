@@ -12,7 +12,8 @@
 
 use crate::HomeTableLabels;
 use semio_framework_plugin::app::{table_window_row, TableWindowKit, TreeWindows, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const S_HOME_VIEW_WINDOW: &str = "s-home-view-main";
@@ -38,7 +39,7 @@ pub fn definition() -> WindowKindDefinition {
 /// empty once any other test has created a studio).
 fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
-        return semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(labels.empty_message.as_str().to_string()))
+        return semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(labels.empty_message.as_str().to_string()))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
     }
     let columns = [labels.column_name.as_str(), labels.column_kind.as_str(), labels.column_visibility.as_str(), labels.column_members.as_str(), labels.column_updated.as_str(), labels.column_origin.as_str()];

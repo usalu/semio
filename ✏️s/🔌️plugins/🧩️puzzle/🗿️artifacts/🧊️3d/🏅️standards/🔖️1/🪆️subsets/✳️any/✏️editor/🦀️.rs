@@ -38,14 +38,77 @@ use crate::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 use semio_framework_job::{CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::{
-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactInstanceOperationOwnerHandle, ArtifactOwnedToolJobFactory,
-    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionVerb, InteractionWrite, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, PluginCloseStep,
-    MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement,
-    WindowMeasure, FRAMEWORK_HISTORY_BODY_KEY, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
-};
-use store::EngineHandles;
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::panel_tab_element_id;
+use semio_framework_plugin::panel_tab_first_draggable_element_id;
+use semio_framework_plugin::window_element_id;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ActionRef;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DialogDefinition;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::ArtifactReservedJob;
+use semio_framework_plugin::ArtifactReservedToolInput;
+use semio_framework_plugin::ArtifactReservedToolJob;
+use semio_framework_plugin::ArtifactReservedToolJobRequest;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_plugin::InteractionVerb;
+use semio_framework_plugin::InteractionWrite;
+use semio_framework_plugin::IntroductionDefinition;
+use semio_framework_plugin::IntroductionInteraction;
+use semio_framework_plugin::IntroductionPlacement;
+use semio_framework_plugin::IntroductionStepDefinition;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::PluginCloseStep;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPortDirection;
+use semio_framework_plugin::MediaPortSpec;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PortMultiplicity;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
+use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
+use semio_framework_2d::compute::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
 // replaces `ArtifactApp` as the authoring trait; `EditorApp<E>` is the runtime `ArtifactApp`
 // adapter, needed by this file's own test harness (`VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>`).
@@ -900,6 +963,37 @@ pub fn puzzle3d_object_display_label(object: &Puzzle3dObject, fixture: &Puzzle3d
         .unwrap_or_else(|| object.id.clone())
 }
 
+/// 🪧️ What a history-edit reference chip reads for one entity of the typed document (design §16.4) — the outliner's
+/// names: an object as [`puzzle3d_object_display_label`] names it (authored label, else its kind's catalog label or
+/// name, else the kind id), a vortex as `<object> · <vortex label or kind>`, an attraction as `<attracting object> →
+/// <attracted object>`. Target volumes and references carry no authored name, so they keep the framework's
+/// `<Kind> <short id>`; so does an id that is not one of `kinds`.
+pub fn puzzle3d_entity_label(snapshot: &Puzzle3dSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+    let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
+    let text = |value: &Option<String>| value.clone().filter(|text| !text.is_empty());
+    let object_label = |object: &crate::Puzzle3dObject| {
+        text(&object.label)
+            .or_else(|| {
+                let kind = object.object_kind.as_deref()?;
+                let entry = snapshot.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.objects.iter().find(|entry| entry.id == kind));
+                Some(entry.and_then(|entry| [&entry.label, &entry.name].into_iter().find(|name| !name.is_empty()).cloned()).unwrap_or_else(|| kind.to_string()))
+            })
+            .unwrap_or_else(|| object.id.clone())
+    };
+    let port = |full_id: &str| snapshot.objects.iter().find_map(|object| object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).map(|vortex| (object, vortex)));
+    let label = if let Some(object) = wants(PUZZLE3D_GRANULARITY_OBJECT).then(|| snapshot.objects.iter().find(|object| object.id == id)).flatten() {
+        Some(object_label(object))
+    } else if let Some((object, vortex)) = wants(PUZZLE3D_GRANULARITY_VORTEX).then(|| port(id)).flatten() {
+        Some(format!("{} \u{b7} {}", object_label(object), text(&vortex.label).or_else(|| text(&vortex.vortex_kind)).unwrap_or_else(|| vortex.id.clone())))
+    } else if let Some(attraction) = wants(PUZZLE3D_GRANULARITY_ATTRACTION).then(|| snapshot.attractions.iter().find(|attraction| attraction.id == id)).flatten() {
+        let end = |full_id: &str| port(full_id).map_or_else(|| full_id.to_string(), |(object, _)| object_label(object));
+        Some(format!("{} \u{2192} {}", end(&attraction.attracting), end(&attraction.attracted)))
+    } else {
+        None
+    };
+    label.filter(|label| label != id).map(|label| LocalizedLabel::data(&label))
+}
+
 /// 🔢️ The next distinct object label for one kind — first instance takes the catalog name; further ones append ` 2`, ` 3`, … to the root taken from peers.
 pub fn puzzle3d_next_object_label(objects: &[Puzzle3dObject], fixture: &Puzzle3dFixture, kind_id: &str) -> String {
     let catalog_base = puzzle3d_kind_catalog_label(fixture, kind_id);
@@ -1073,17 +1167,19 @@ pub struct Puzzle3dInteractionSnapshot {
     pub granularity: String,
     pub selected: Vec<String>,
     pub hovered: Vec<String>,
+    pub referenced: Vec<String>,
 }
 
 impl Puzzle3dInteractionSnapshot {
-    /// 🕹️ Reads the live `vortex` domain: its selection plus its `"pointer"`-channel hover.
+    /// 🕹️ Reads the live `vortex` domain: its selection, its `"pointer"`-channel hover and the ids the open time-travel
+    /// draft references (what the world paints highlighted while a history edit is open).
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
         let selection = interaction.selection(PUZZLE3D_INTERACTION_DOMAIN);
         let hover = interaction.hover(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_HOVER_CHANNEL);
         let leftover_ids = interaction.leftover_selected_ids();
         let selected = if selection.ids.is_empty() { leftover_ids } else { selection.ids.clone() };
         let granularity = if !selection.granularity.is_empty() { selection.granularity.clone() } else if !selected.is_empty() { PUZZLE3D_GRANULARITY_OBJECT.to_string() } else { selection.granularity.clone() };
-        Self { granularity, selected, hovered: hover.ids.clone() }
+        Self { granularity, selected, hovered: hover.ids.clone(), referenced: interaction.draft_references(PUZZLE3D_INTERACTION_DOMAIN).to_vec() }
     }
 
     /// 🕹️ The retained-reducer twin — the same read from the raw `InteractionState`/hover map a
@@ -1095,7 +1191,7 @@ impl Puzzle3dInteractionSnapshot {
         let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
         let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
         let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE3D_GRANULARITY_OBJECT.to_string() });
-        Self { granularity, selected, hovered }
+        Self { granularity, selected, hovered, referenced: Vec::new() }
     }
 
     pub fn selected_ids(&self, granularity: &str) -> &[String] {
@@ -3143,11 +3239,11 @@ impl Puzzle3dPlayApp {
     /// `instance_record_fingerprint` moved are re-serialized; the mesh declarations and the outliner
     /// memo stay keyed on the (now allocation-free) whole-fixture `fixture_geometry_fingerprint`, which
     /// is what actually changes when the catalogs or the mesh set do.
-    fn geometry_jsons(&self, fixture: &Puzzle3dFixture, provisional: &std::collections::BTreeSet<u64>) -> (String, String, Option<String>) {
+    fn geometry_jsons(&self, fixture: &Puzzle3dFixture, provisional: &std::collections::BTreeSet<u64>, referenced: &[String]) -> (String, String, Option<String>) {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
         let mut residency = self.instance_residency.lock().expect("instance residency");
         let residency = residency.get_or_insert_with(Box::<main::Puzzle3dInstanceResidency>::default);
-        let republished = residency.refresh(fixture, provisional);
+        let republished = residency.refresh(fixture, provisional, referenced);
         let mut meshes = self.mesh_cache.lock().expect("mesh cache");
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {
@@ -5145,7 +5241,6 @@ enum Puzzle3dSetActiveExampleStage {
 /// by ten and made a real example load overrun its own declared envelope.
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 8;
-const PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION: &str = "Set Active Example";
 
 struct Puzzle3dSetActiveExampleWork {
     stage: Puzzle3dSetActiveExampleStage,
@@ -5409,7 +5504,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     artifact_mutations: std::mem::take(&mut self.mutations),
                     config_mutations,
                     ui_scope: puzzle3d_scope(Puzzle3dScopeClass::Chrome),
-                    description: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION.into()),
                     ..Default::default()
                 }))
             }
@@ -7183,6 +7277,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         declared.then(|| puzzle3d_scope(Puzzle3dScopeClass::Interaction(verb)))
     }
 
+    /// 🪧️ A history-edit reference chip names its world entity as the outliner does ([`puzzle3d_entity_label`]).
+    fn entity_label(snapshot: &Puzzle3dPlaySnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+        puzzle3d_entity_label(snapshot.typed(), kinds, id)
+    }
+
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         window_ownership::register_transient(registry)
     }
@@ -7370,7 +7469,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle3dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::puzzle3d::config::schema::app_schema_descriptor())
     }
 
@@ -7683,7 +7782,7 @@ impl Puzzle3dPlayApp {
             match base_body_key {
                 main::BODY_KEY => {
                     let provisional = doc.tool_run().map(|run| std::sync::Arc::clone(&run.provisional_entities)).unwrap_or_default();
-                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.fixture, &provisional);
+                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.fixture, &provisional, &interaction.referenced);
                     let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())
@@ -8204,3 +8303,6 @@ mod mutation_latency;
 #[path = "🧪️tests/🔬️selection-scale/🦀️.rs"]
 mod selection_scale;
 //#endregion 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🧵️retained-wiring/🦀️.rs"]
+mod retained_wiring_tests;

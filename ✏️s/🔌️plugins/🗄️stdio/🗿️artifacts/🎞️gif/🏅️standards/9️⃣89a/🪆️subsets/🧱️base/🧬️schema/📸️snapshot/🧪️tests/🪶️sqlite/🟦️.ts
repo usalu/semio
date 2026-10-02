@@ -1,6 +1,17 @@
 import { Database } from "bun:sqlite";
+import owned from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";
+import ownedSchema from "../../../../../../../../🧫️fixtures/🪶️sqlite/🫳️ownership/🧬️schema/🔣️.json";
 import { expect,test } from "bun:test";
 import Ajv from "ajv";
+
+test("GIF89 literal dimensions and intrinsic index sequence preserve independent owned state",async()=>{
+ const snapshot=structuredClone(fixture) as GifSnapshot;snapshot.frames[0]!.width=owned.width;snapshot.frames[0]!.height=owned.height;snapshot.frames[0]!.indices=[...owned.indices];
+ const ajv=new Ajv({strict:false});expect(ajv.validate(ownedSchema,owned)).toBe(true);expect(ajv.validate(schema,snapshot)).toBe(true);
+ const database=await gifSnapshotToSqliteDatabase(snapshot);expect(await gifSnapshotFromSqliteDatabase(database)).toEqual(snapshot);
+ const db=Database.deserialize(await exportSqliteDatabase(database));try{
+  expect(db.query("SELECT ordinal,color_index FROM gif89_pixel WHERE frame_id=1 ORDER BY ordinal").all()).toEqual(owned.indices.map((color_index,ordinal)=>({ordinal,color_index})));
+ }finally{db.close();}
+});
 import fixture from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import schema from "../../🔣️.json";
 import type { GifDisposal,GifSnapshot } from "../../🟦️.ts";
@@ -20,7 +31,7 @@ test("GIF89 full animation, plain-text and application corpus exposes semantic S
 test("GIF89 optionals, disposal policies, full widths and owned relationship constraints",async()=>{
  const snapshot=structuredClone(fixture)as GifSnapshot;const database=await gifSnapshotToSqliteDatabase(snapshot);
  for(const disposal of ["unspecified","doNotDispose","restoreToBackground","restoreToPrevious"]as GifDisposal[]){snapshot.frames[0]!.disposal=disposal;for(const loopCount of [null,0,65535]){snapshot.loopCount=loopCount;expect(await gifSnapshotFromSqliteDatabase(await gifSnapshotToSqliteDatabase(snapshot))).toEqual(snapshot);}}
- for(const change of ["UPDATE gif89_plain_text SET id=999","UPDATE gif89_application_byte SET application_id=999 WHERE id=1","UPDATE gif89_comment SET ordinal=0 WHERE ordinal=1","UPDATE gif89_pixel SET x=0 WHERE frame_id=1","UPDATE gif89_frame SET transparent_color_index=256 WHERE ordinal=0","UPDATE gif89_frame SET disposal='foreign' WHERE ordinal=0","UPDATE gif89_application SET authentication_1=256 WHERE ordinal=0"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(change);await expect(gifSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}
+ for(const change of ["UPDATE gif89_plain_text SET id=999","UPDATE gif89_application_byte SET application_id=999 WHERE id=1","UPDATE gif89_comment SET ordinal=0 WHERE ordinal=1","UPDATE gif89_pixel SET ordinal=0 WHERE frame_id=1","UPDATE gif89_frame SET transparent_color_index=256 WHERE ordinal=0","UPDATE gif89_frame SET disposal='foreign' WHERE ordinal=0","UPDATE gif89_application SET authentication_1=256 WHERE ordinal=0"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(change);await expect(gifSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow();}finally{db.close();}}
  await expect(gifSnapshotToSqliteDatabase(snapshot,{maxValueBytes:0})).rejects.toThrow();await expect(gifSnapshotFromSqliteDatabase(database,{maxRows:1})).rejects.toThrow();
  const controller=new AbortController();snapshot.appExtensions[0]!.data=new Array<number>(2000).fill(1);await expect(gifSnapshotToSqliteDatabase(snapshot,{signal:controller.signal,onProgress:event=>{if(event.completed>=256)controller.abort();}})).rejects.toHaveProperty("name","AbortError");
 });

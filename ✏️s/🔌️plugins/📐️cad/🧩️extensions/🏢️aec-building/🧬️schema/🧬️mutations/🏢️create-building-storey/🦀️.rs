@@ -36,8 +36,8 @@ impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildin
         planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
     }
 
     fn target(&self) -> Vec<String> {

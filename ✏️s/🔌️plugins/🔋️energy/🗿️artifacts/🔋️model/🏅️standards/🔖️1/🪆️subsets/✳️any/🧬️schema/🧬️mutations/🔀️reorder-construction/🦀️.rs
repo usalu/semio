@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Reorde
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder construction {} into {} layers", self.id.0, self.new_layer_material_ids.len()), &format!("Konstruktion {} in {} Schichten neu ordnen", self.id.0, self.new_layer_material_ids.len()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder construction {} into {} layers", self.id.0, self.new_layer_material_ids.len()), &format!("Konstruktion {} in {} Schichten neu ordnen", self.id.0, self.new_layer_material_ids.len()))
     }
 
     fn target(&self) -> Vec<String> {

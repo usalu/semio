@@ -16,7 +16,7 @@ fn requests(value: &serde_json::Value) -> Vec<semio_framework::kernel::IconRende
 fn icon_export_effect_admits_large_batches_and_scopes_cancellation_to_existing_requests() {
     let fixture = fixture();
     for scenario in fixture["queueCases"].as_array().unwrap() {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let groups = scenario["groups"].as_array().unwrap();
         for index in 0..=groups.len() {
             if scenario["cancelBeforeGroup"].as_u64() == Some(index as u64) { shell.cancel_icon_export(); }
@@ -84,7 +84,7 @@ fn icon_export_batch_cancel_discards_queued_items_incrementally() {
 #[test]
 fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activation() {
     let fixture = fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.queue_host_effects("export-law", vec![semio_framework::kernel::Effect::IconRenderExport { items: requests(&fixture) }]);
     assert!(shell.settle_pump_pending());
     let mut cursor = super::super::ShellChromeChildCursor::default();

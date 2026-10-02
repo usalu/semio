@@ -1,18 +1,21 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌉️ `@semio-tech/framework-os-mcp-rs` task router: `bun ./📜️script.ts <build|check|test|dev>`. */
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { buildBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveTestLevel, runCargo, runCargoTestBudgeted, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, orchestratorBudgetOpts, runCargo, runRepositoryCargoTests, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 
-import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 
 const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as {
   cargoPackage: string;
@@ -79,7 +82,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -88,13 +91,13 @@ class BuildScript extends BundleScript {
  * Mirrors `os-hub`'s own `BuildScript` (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `["--release",
  * "--bin", …]`): the only differences are this crate's explicit `--package` selector and a separate
  * `dist/build-release` deliverable root, so the dev-loop `dist/build` artifact every black-box gate
- * and `.mcp.json` exec stays exactly where it was. `stageArtifacts` publishes through a fresh
+ * and `.mcp.json` exec stays exactly where it was. `stageRepositoryArtifacts` publishes through a fresh
  * directory and one rename rather than writing over the previous binary, and the staged executable
  * is re-signed afterwards so a macOS copy cannot inherit a signature that no longer matches it. */
 class BuildReleaseScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { output: "dist/build-release" });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { output: "dist/build-release" });
     const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
     if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
     signExecutableForDistribution(staged);
@@ -128,7 +131,7 @@ class InstalledServiceCheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-os-mcp"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, rest);
   }
 }
 

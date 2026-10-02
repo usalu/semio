@@ -25,7 +25,6 @@ Feature: Apply every config state-lane mutation of s.shooting.shooting's ✏️e
       | set-shot-selection |
       | set-center-model |
       | set-fit-revision |
-      | set-camera-draft-label |
       | set-camera |
       | set-defaults |
 
@@ -42,6 +41,5 @@ Feature: Apply every config state-lane mutation of s.shooting.shooting's ✏️e
       | set-shot-selection |
       | set-center-model |
       | set-fit-revision |
-      | set-camera-draft-label |
       | set-camera |
       | set-defaults |

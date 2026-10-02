@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "generatorId",
+    "output",
+    "catalogLength",
+    "emojiLength",
+    "firstWins"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "repo-entity-kinds-owner-v1"
+    },
+    "generatorId": {
+      "const": "repo-entity-kinds"
+    },
+    "output": {
+      "type": "string"
+    },
+    "catalogLength": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "emojiLength": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "firstWins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "emoji",
+          "id"
+        ],
+        "properties": {
+          "emoji": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

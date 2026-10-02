@@ -13,7 +13,7 @@ use crate::editor::sourcing::unit_tests::context::{new_app, render as render_bod
 async fn preview_renders_selected_mesh_id() {
     let document = crate::schema::default_document();
     let object_id = crate::stock_of(&document)[0].id.clone();
-    let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded preview");
+    let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded preview");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID), "the selected box-built kind draws from the unit box mesh");
     assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced");
@@ -23,7 +23,7 @@ async fn preview_renders_selected_mesh_id() {
 #[semio_framework_async_macros::async_test]
 async fn preview_shows_placeholder_without_selection() {
     let document = crate::schema::default_document();
-    let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded placeholder");
+    let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded placeholder");
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains("No selection"));
 }

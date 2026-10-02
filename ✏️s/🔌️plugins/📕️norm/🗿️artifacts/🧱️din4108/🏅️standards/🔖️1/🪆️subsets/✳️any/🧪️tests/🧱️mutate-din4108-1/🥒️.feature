@@ -28,6 +28,16 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
   restored document, because the restored one is always the before-snapshot and projecting only it
   would make the differential vacuous.
 
+  Further rows witness every outcome class a leaf declares. `<kind>-dupe` re-applies a zone, element or
+  bridge insert to its own after-snapshot, whose id is already held — a `mutation.duplicate-id` refusal;
+  `<kind>-clamp` asks the same insert for a position past its list's end: both sides insert last, where
+  the canonical append landed, and production reports it as a `mutation.clamped` warning;
+  `<kind>-noop` re-applies a document-scalar change to its own after-snapshot — a `mutation.no-op`
+  warning with an empty diff; `<kind>-rule` asks the indoor-climate changes for a value outside the bound
+  their leaf payload schema states (θ_i above absolute zero, φ_i within [0, 1], n₅₀ ≥ 0) — a
+  `mutation.invariant` refusal. Refused and no-op rows leave the document bit-identical, so none of them
+  has an inverse row.
+
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed example
   `asset://🎬️demo/🗣️.dsl.semio`. The carrier has no published grammar (the subset's `📖️.grammar.semio` is the
   repository-wide `payload = OCTET+` placeholder), so the two implementations are compared on the
@@ -46,50 +56,66 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id                                 | dir                                 | fixture |
-      | change-climate-zone                | 🌦️change-climate-zone               | ✅apply  |
-      | change-usage                       | 🗂️change-usage                      | ✅apply  |
-      | change-t-int-c                     | 🌡️change-t-int-c                    | ✅apply  |
-      | change-rh-int                      | 💧️change-rh-int                     | ✅apply  |
-      | change-airtightness-n50            | 💨️change-airtightness-n50           | ✅apply  |
-      | change-has-mechanical-ventilation  | 💨change-has-mechanical-ventilation  | ✅apply  |
-      | change-bb2-details-conform         | ✅️change-bb2-details-conform        | ✅apply  |
-      | insert-zone                        | ➕️insert-zone                       | ✅apply  |
-      | remove-zone                        | ➖️remove-zone                       | ✅apply  |
-      | change-zone-floor-area             | 📐️change-zone-floor-area            | ✅apply  |
-      | change-zone-heaviness              | 🧱change-zone-heaviness              | ✅apply  |
-      | change-zone-night-ventilation      | 🌙change-zone-night-ventilation      | ✅apply  |
-      | insert-zone-window                 | 🪟insert-zone-window                 | ✅apply  |
-      | remove-zone-window                 | 🚫️remove-zone-window                | ✅apply  |
-      | change-zone-window-area            | 📏change-zone-window-area            | ✅apply  |
-      | change-zone-window-g-value         | ☀️change-zone-window-g-value        | ✅apply  |
-      | change-zone-window-shading-fc      | ⛱️change-zone-window-shading-fc     | ✅apply  |
-      | insert-element                     | 🏠️insert-element                    | ✅apply  |
-      | remove-element                     | 🚫️remove-element                    | ✅apply  |
-      | change-element-area                | 📐️change-element-area               | ✅apply  |
-      | change-element-adjacent            | ↔️change-element-adjacent           | ✅apply  |
-      | change-element-kind                | 🏷️change-element-kind               | ✅apply  |
-      | insert-layer                       | ➕️insert-layer                      | ✅apply  |
-      | remove-layer                       | ➖️remove-layer                      | ✅apply  |
-      | reorder-layers                     | 🔀️reorder-layers                    | ✅apply  |
-      | change-layer-thickness             | 📏️change-layer-thickness            | ✅apply  |
-      | change-layer-lambda                | 🌡change-layer-lambda                | ✅apply  |
-      | change-layer-mu                    | 💧change-layer-mu                    | ✅apply  |
-      | change-layer-material-id           | 🧽️change-layer-material-id          | ✅apply  |
-      | insert-thermal-bridge              | 🌉️insert-thermal-bridge             | ✅apply  |
-      | remove-thermal-bridge              | 🧊remove-thermal-bridge              | ✅apply  |
-      | change-thermal-bridge-psi          | 🔘change-thermal-bridge-psi          | ✅apply  |
-      | change-thermal-bridge-length       | ↔️change-thermal-bridge-length      | ✅apply  |
-      | change-element-orientation-deg     | 🧭change-element-orientation-deg     | ✅apply  |
-      | change-element-inclination-deg     | 📐change-element-inclination-deg     | ✅apply  |
-      | change-element-delta-ug            | 📈️change-element-delta-ug           | ✅apply  |
-      | change-element-delta-uf            | 📈️change-element-delta-uf           | ✅apply  |
-      | change-element-delta-ur            | 📈️change-element-delta-ur           | ✅apply  |
-      | change-thermal-bridge-bb2-type     | 🏷change-thermal-bridge-bb2-type     | ✅apply  |
-      | change-zone-window-orientation     | 🧭change-zone-window-orientation     | ✅apply  |
-      | change-zone-window-inclination-deg | 📐change-zone-window-inclination-deg | ✅apply  |
-      | change-layer-application-type      | 🏷️change-layer-application-type     | ✅apply  |
-      | change-layer-compressive-class     | 🏷️change-layer-compressive-class    | ✅apply  |
+      | id                                     | dir                                 | fixture |
+      | change-climate-zone                    | 🌦️change-climate-zone               | ✅apply  |
+      | change-climate-zone-noop               | 🌦️change-climate-zone               | 🟰noop   |
+      | change-usage                           | 🗂️change-usage                      | ✅apply  |
+      | change-usage-noop                      | 🗂️change-usage                      | 🟰noop   |
+      | change-t-int-c                         | 🌡️change-t-int-c                    | ✅apply  |
+      | change-t-int-c-rule                    | 🌡️change-t-int-c                    | 🚫rule   |
+      | change-t-int-c-noop                    | 🌡️change-t-int-c                    | 🟰noop   |
+      | change-rh-int                          | 💧️change-rh-int                     | ✅apply  |
+      | change-rh-int-rule                     | 💧️change-rh-int                     | 🚫rule   |
+      | change-rh-int-noop                     | 💧️change-rh-int                     | 🟰noop   |
+      | change-airtightness-n50                | 💨️change-airtightness-n50           | ✅apply  |
+      | change-airtightness-n50-rule           | 💨️change-airtightness-n50           | 🚫rule   |
+      | change-airtightness-n50-noop           | 💨️change-airtightness-n50           | 🟰noop   |
+      | change-has-mechanical-ventilation      | 💨change-has-mechanical-ventilation  | ✅apply  |
+      | change-has-mechanical-ventilation-noop | 💨change-has-mechanical-ventilation  | 🟰noop   |
+      | change-bb2-details-conform             | ✅️change-bb2-details-conform        | ✅apply  |
+      | change-bb2-details-conform-noop        | ✅️change-bb2-details-conform        | 🟰noop   |
+      | insert-zone                            | ➕️insert-zone                       | ✅apply  |
+      | insert-zone-dupe                       | ➕️insert-zone                       | ⛔dupe   |
+      | insert-zone-clamp                      | ➕️insert-zone                       | 📏clamp  |
+      | remove-zone                            | ➖️remove-zone                       | ✅apply  |
+      | change-zone-floor-area                 | 📐️change-zone-floor-area            | ✅apply  |
+      | change-zone-heaviness                  | 🧱change-zone-heaviness              | ✅apply  |
+      | change-zone-night-ventilation          | 🌙change-zone-night-ventilation      | ✅apply  |
+      | insert-zone-window                     | 🪟insert-zone-window                 | ✅apply  |
+      | remove-zone-window                     | 🚫️remove-zone-window                | ✅apply  |
+      | change-zone-window-area                | 📏change-zone-window-area            | ✅apply  |
+      | change-zone-window-g-value             | ☀️change-zone-window-g-value        | ✅apply  |
+      | change-zone-window-shading-fc          | ⛱️change-zone-window-shading-fc     | ✅apply  |
+      | insert-element                         | 🏠️insert-element                    | ✅apply  |
+      | insert-element-dupe                    | 🏠️insert-element                    | ⛔dupe   |
+      | insert-element-clamp                   | 🏠️insert-element                    | 📏clamp  |
+      | remove-element                         | 🚫️remove-element                    | ✅apply  |
+      | change-element-area                    | 📐️change-element-area               | ✅apply  |
+      | change-element-adjacent                | ↔️change-element-adjacent           | ✅apply  |
+      | change-element-kind                    | 🏷️change-element-kind               | ✅apply  |
+      | insert-layer                           | ➕️insert-layer                      | ✅apply  |
+      | remove-layer                           | ➖️remove-layer                      | ✅apply  |
+      | reorder-layers                         | 🔀️reorder-layers                    | ✅apply  |
+      | change-layer-thickness                 | 📏️change-layer-thickness            | ✅apply  |
+      | change-layer-lambda                    | 🌡change-layer-lambda                | ✅apply  |
+      | change-layer-mu                        | 💧change-layer-mu                    | ✅apply  |
+      | change-layer-material-id               | 🧽️change-layer-material-id          | ✅apply  |
+      | insert-thermal-bridge                  | 🌉️insert-thermal-bridge             | ✅apply  |
+      | insert-thermal-bridge-dupe             | 🌉️insert-thermal-bridge             | ⛔dupe   |
+      | insert-thermal-bridge-clamp            | 🌉️insert-thermal-bridge             | 📏clamp  |
+      | remove-thermal-bridge                  | 🧊remove-thermal-bridge              | ✅apply  |
+      | change-thermal-bridge-psi              | 🔘change-thermal-bridge-psi          | ✅apply  |
+      | change-thermal-bridge-length           | ↔️change-thermal-bridge-length      | ✅apply  |
+      | change-element-orientation-deg         | 🧭change-element-orientation-deg     | ✅apply  |
+      | change-element-inclination-deg         | 📐change-element-inclination-deg     | ✅apply  |
+      | change-element-delta-ug                | 📈️change-element-delta-ug           | ✅apply  |
+      | change-element-delta-uf                | 📈️change-element-delta-uf           | ✅apply  |
+      | change-element-delta-ur                | 📈️change-element-delta-ur           | ✅apply  |
+      | change-thermal-bridge-bb2-type         | 🏷change-thermal-bridge-bb2-type     | ✅apply  |
+      | change-zone-window-orientation         | 🧭change-zone-window-orientation     | ✅apply  |
+      | change-zone-window-inclination-deg     | 📐change-zone-window-inclination-deg | ✅apply  |
+      | change-layer-application-type          | 🏷️change-layer-application-type     | ✅apply  |
+      | change-layer-compressive-class         | 🏷️change-layer-compressive-class    | ✅apply  |
 
   @id-inverse
   @level-exhaustive

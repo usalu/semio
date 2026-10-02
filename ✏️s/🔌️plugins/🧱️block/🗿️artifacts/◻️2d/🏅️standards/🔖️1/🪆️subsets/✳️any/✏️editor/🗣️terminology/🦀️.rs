@@ -2,7 +2,7 @@
 //! reaches for.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the block-2d app; one field per label makes every locale×terminology combination compile-checked.
     pub struct Block2dLabels {
         window_board: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";

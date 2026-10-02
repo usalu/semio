@@ -1,7 +1,8 @@
+import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { startNativeProgress } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
+
 import { cargoDirectionInventory, cargoDirectionMetadata, cargoDependencyDirectionReport, type CargoDirectionPolicy } from "../🟦️.ts";
 
 /** 🦀️ Checks every authored Cargo declaration with independent manifest and metadata inventories. */

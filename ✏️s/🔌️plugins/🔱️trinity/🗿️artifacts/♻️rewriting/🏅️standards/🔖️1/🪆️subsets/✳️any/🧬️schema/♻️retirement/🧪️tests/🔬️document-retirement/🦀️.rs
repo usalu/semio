@@ -28,15 +28,15 @@ fn rewriting_window_config_document_retirement_respects_exact_grants() {
             let value: RewritingSnapshot = pack::from_json_str(&row["value"].to_string()).unwrap();
             let expected = row["bytes"].as_u64().unwrap() as usize;
             let root = std::sync::Arc::new(value.clone());
-            let mut shared = store::retirement::shared_retirement(std::sync::Arc::clone(&root));
+            let mut shared = semio_framework_value::retirement::shared_retirement(std::sync::Arc::clone(&root));
             assert!(matches!(shared.close_step(items, bytes).unwrap(), store::SnapshotRetirementStep::Blocked));
             drop(root);
             assert_eq!(drain(shared, items, bytes), expected);
-            assert_eq!(drain(store::retirement::owned_retirement(value), items, bytes), expected);
+            assert_eq!(drain(semio_framework_value::retirement::owned_retirement(value), items, bytes), expected);
         }
         for row in fixture["mutations"].as_array().unwrap() {
             let value: RewriteRuleMutation = pack::from_json_str(&row["value"].to_string()).unwrap();
-            assert_eq!(drain(store::retirement::owned_retirement(value), items, bytes), row["bytes"].as_u64().unwrap() as usize);
+            assert_eq!(drain(semio_framework_value::retirement::owned_retirement(value), items, bytes), row["bytes"].as_u64().unwrap() as usize);
         }
     }
 }

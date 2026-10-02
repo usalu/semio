@@ -66,7 +66,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchPixelsMutation {
         if end > base.pixels.len() || apply(&base.pixels, self).is_err() { return Vec::new(); }
         vec![PngMutation::PatchPixels(PatchPixelsMutation { index: self.index, remove_count: self.pixels.len() as u64, pixels: base.pixels[index..end].to_vec(), move_to: None })]
     }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Patch pixels", "Pixel bearbeiten") }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Patch pixels", "Pixel bearbeiten") }
     fn target(&self) -> Vec<String> { vec!["pixels".into(), self.index.to_string()] }
 }
 

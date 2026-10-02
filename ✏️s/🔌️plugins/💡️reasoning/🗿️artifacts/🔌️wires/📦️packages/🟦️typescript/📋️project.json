@@ -1,0 +1,64 @@
+{
+  "name": "@semio-tech/reasoning-wires",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": [
+    "language:typescript",
+    "role:artifact",
+    "family:reasoning"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

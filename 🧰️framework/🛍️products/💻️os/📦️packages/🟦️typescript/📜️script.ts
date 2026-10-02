@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
+import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { getWorkspaceRoot, resolveTestLevel, runBunx, runVitest } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, runBunx, runVitest } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
@@ -12,6 +14,23 @@ class InstalledServiceCheckScript extends BundleScript {
   async run(): Promise<void> {
     const { verifyInstalledServiceLawsV1 } = await import("../../🔨️modules/💡️inference/🔌️service/🧪️tests/🟦️.ts");
     console.log("installed-service-check", verifyInstalledServiceLawsV1());
+  }
+}
+
+/** 🎬️ Runs the actual OS media parser against the shared language-neutral corpus. */
+class MediaTransportTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("media-transport accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts")], this.repoRoot, "os-media-transport", TEST_LEVEL_BUDGET_MS.fundamental);
+  }
+}
+
+/** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction) under `bun:test`. */
+class StoreOraclesTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-store-oracles accepts no arguments");
+    const oracles = ["🧪️supersede-replay", "🧪️tool-transaction"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle, "🟦️.ts"));
+    await runOwnedCommand(process.execPath, ["test", ...oracles], this.repoRoot, "os-store-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
   }
 }
 
@@ -167,6 +186,8 @@ class TypecheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
+  .register("test-media-transport", MediaTransportTestScript)
+  .register("test-store-oracles", StoreOraclesTestScript)
   .register("typecheck", TypecheckScript)
   .register("mutation-verb-vocabulary-check", MutationVerbVocabularyCheckScript)
   .register("installed-service-check", InstalledServiceCheckScript)

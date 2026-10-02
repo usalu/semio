@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateDeliveryConstraint
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create delivery constraint \"{}\"", self.delivery_constraint.header.name), &format!("Lieferrandbedingung \"{}\" erstellen", self.delivery_constraint.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create delivery constraint \"{}\"", self.delivery_constraint.header.name), &format!("Lieferrandbedingung \"{}\" erstellen", self.delivery_constraint.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.delivery_constraint.header.id.0.clone()]

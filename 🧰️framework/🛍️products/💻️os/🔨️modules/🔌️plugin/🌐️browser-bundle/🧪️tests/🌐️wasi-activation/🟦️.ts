@@ -1,3 +1,4 @@
+import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { fileURLToPath as testFileUrlToPath, pathToFileURL } from "node:url";
 const testSourceDirectory = testFileUrlToPath(new URL("../../🧫️fixtures/🌐️wasi-activation", import.meta.url));
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
@@ -6,7 +7,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 
 /** 🗣️ Exercises installed and vendored CLI streams against the neutral fragmented-line trace. */
 export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<void> {
@@ -177,7 +178,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
   mkdirSync(artifactBase, { recursive: true });
   const evidence = mkdtempSync(join(artifactBase, "browser-wasi-activation-"));
-  const oracle = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+  const oracle = await captureOwnedProcess("node", ["--input-type=module", "-e", `
     import assert from "node:assert/strict";
     import { readFileSync } from "node:fs";
     import { pathToFileURL } from "node:url";

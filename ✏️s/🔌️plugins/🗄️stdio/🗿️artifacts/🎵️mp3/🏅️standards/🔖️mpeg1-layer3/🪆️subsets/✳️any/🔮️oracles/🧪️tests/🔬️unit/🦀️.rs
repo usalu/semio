@@ -70,7 +70,7 @@ fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
 /// padding-slot change (frames 0 and 1 are 417 bytes, frame 2 is 418), so the packed headers land on both
 /// branches of the frame-size formula.
 fn feature_example_rows() -> Vec<Json> {
-    crate::law::feature_rows(include_str!("../../../🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
+    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🎛️mutate-mp3-mpeg1-layer3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]

@@ -21,6 +21,7 @@ name = "semio-framework-plugin-describe"
 path = "💾️binary/🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 # 🛂️ `PackageDescriptor`/`ContributionSet`/`PackageHashes` (packet A3, this crate = `🛂️manifest`
 # mounted inside `semio_framework`).
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }

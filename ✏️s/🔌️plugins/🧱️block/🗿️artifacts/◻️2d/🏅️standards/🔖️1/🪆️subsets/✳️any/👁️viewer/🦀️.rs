@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema;
 use crate::viewer::block2d::modes::view;
 use crate::viewer::block2d::modes::view::windows::board;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -117,7 +117,7 @@ impl ArtifactViewer for Block2dViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             board::BODY_KEY => board::render(doc.snapshot)?,
-            _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer unknown-body label admission failed"))?,
+            _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }

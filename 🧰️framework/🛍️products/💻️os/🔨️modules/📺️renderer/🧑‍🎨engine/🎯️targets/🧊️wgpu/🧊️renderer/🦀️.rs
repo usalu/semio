@@ -112,6 +112,9 @@ pub mod scenes;
 #[path = "../../../🧱️elements/📐️Canvas2dHost/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub(crate) mod canvas2d_gumball;
 
+#[path = "../../../🧱️elements/📐️Canvas2dHost/🎨️paint/🦀️.rs"]
+pub(crate) mod canvas2d_paint;
+
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../🕰️native-temporal/🦀️.rs"]
 mod native_temporal;
@@ -10903,10 +10906,7 @@ pub fn semio_wgpu_set_host_platform(platform: String) {
 /// (`navigator.language`, `"de-AT"`) folds onto the chrome's two tongues. `""` is "the host said
 /// nothing", which leaves the door unset rather than pinning a tongue nobody chose.
 pub fn host_locale_from_tag(tag: &str) -> Option<&'static str> {
-    if tag.is_empty() {
-        return None;
-    }
-    Some(if tag.to_ascii_lowercase().starts_with("de") { "de" } else { "en" })
+    semio_framework_ui_locale::Locale::from_language_tag(tag).ok().map(|locale| locale.as_str())
 }
 
 thread_local! {
@@ -18837,7 +18837,8 @@ async fn boot_runtime(
     #[cfg(not(target_arch = "wasm32"))]
     let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root).await?, &plugin_filter);
 
-    let mut shell = ShellState::new(entries, plugin_filter.clone());
+    let (locale, terminology) = shell::shell_language_axes()?;
+    let mut shell = ShellState::new(entries, plugin_filter.clone(), locale, terminology);
     shell.install_document_services(services);
     shell.screen_w = css_width;
     shell.screen_h = css_height;
@@ -19186,6 +19187,7 @@ pub async fn run_socket_grant_probe() -> i32 {
         timestamp: HybridLogicalTimestamp::new(0, 0),
         transaction: None,
         verb: None,
+        line: None,
     };
     if channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: vec![envelope(1)] }).is_err() {
         host.close_key(&channels.document_key);
@@ -19248,7 +19250,11 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
         }
     };
     let entries = filter_plugins(loaded, plugin_filter);
-    let mut shell = ShellState::new(entries, plugin_filter.to_string());
+    let (locale, terminology) = match shell::shell_language_axes() {
+        Ok(axes) => axes,
+        Err(error) => { eprintln!("smoke: {error}"); return 1; }
+    };
+    let mut shell = ShellState::new(entries, plugin_filter.to_string(), locale, terminology);
     shell.install_document_services(services);
     if let Err(error) = shell.boot().await {
         eprintln!("smoke: shell.boot() failed: {error}");

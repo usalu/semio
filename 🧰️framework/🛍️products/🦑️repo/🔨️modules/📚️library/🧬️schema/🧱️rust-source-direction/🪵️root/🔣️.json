@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cases",
+    "native",
+    "freshness"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "regular-absolute",
+              "regular-relative",
+              "linked-root",
+              "linked-ancestor",
+              "file-root",
+              "missing-root",
+              "raw-dot-root",
+              "raw-parent-root",
+              "linked-prefix-cancellation",
+              "empty-root",
+              "nul-root",
+              "drive-relative-root"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "regular",
+              "relative",
+              "root-link",
+              "ancestor-link",
+              "file",
+              "missing",
+              "dot",
+              "parent",
+              "cancelled-link",
+              "empty",
+              "nul",
+              "drive-relative"
+            ]
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "admitted"
+                  },
+                  "reason": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "rejected"
+                  },
+                  "reason": {
+                    "enum": [
+                      "linked-root",
+                      "non-directory-root",
+                      "missing-root",
+                      "unsafe-root"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "native": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "markers"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "linked-root",
+              "linked-prefix-cancellation"
+            ]
+          },
+          "markers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "declared",
+                "foreign"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "expected",
+        "cancellation"
+      ],
+      "properties": {
+        "identity": {
+          "const": "root-replacement"
+        },
+        "expected": {
+          "const": "linked-root"
+        },
+        "cancellation": {
+          "const": "checked-before-targets"
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ use crate::standards::v1::subsets::base::schema::snapshot::sqlite::native::Bound
 use super::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot, sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text, reconstruct_blob}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
 use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;
 
 fn number(value: usize) -> Result<i64, String> { i64::try_from(value).map_err(|error| error.to_string()) }
 fn identity(row: &SqliteRow, columns: usize) -> Result<(), String> { if row.rowid <= 0 || row.integer(0)? != row.rowid || row.values.len() != columns { Err("invalid Semio value identity or columns".into()) } else { Ok(()) } }
@@ -37,7 +38,7 @@ pub fn reconstruct_value_forest(database: &SqliteDatabase, tables: ValueSqliteTa
             let mut ids = BTreeSet::new(); for row in &database.table(table)?.rows { identity(row, columns)?; if !ids.insert(row.rowid) { return Err("duplicate Semio value relationship identifier".into()); } let parent = row.integer(1)?; let kind = values.get(&parent).ok_or("dangling Semio value parent")?.text(1)?; if kind != if map { "map" } else { "list" } { return Err("Semio value relationship has wrong parent kind".into()); } children.entry(parent).or_default().push((row.integer(2)?, row.integer(if map { 4 } else { 3 })?, if map { Some(row.text(3)?) } else { None })); count += 1; if count % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, count, 0)?; } }
         }
         for links in children.values_mut() { links.sort_by_key(|link| link.0); for (ordinal, link) in links.iter().enumerate() { if link.0 != number(ordinal)? { return Err("Semio value member ordinals must be contiguous".into()); } } }
-        let mut seen = BTreeSet::new(); let mut complete = BTreeMap::<i64, SemioValue>::new(); let mut restored = Vec::new();
+        let mut seen = BTreeSet::new(); let mut complete = Owned::new(BTreeMap::<i64, SemioValue>::new()); let mut restored = Owned::new(Vec::new());
         for &root in roots {
             let mut pending = vec![(root, false)];
             while let Some((id, exit)) = pending.pop() {
@@ -48,17 +49,22 @@ pub fn reconstruct_value_forest(database: &SqliteDatabase, tables: ValueSqliteTa
                 let value = match row.text(1)? {
                     "null" => SemioValue::Null, "bool" => SemioValue::Bool { value: match row.integer(2)? { 0 => false, 1 => true, _ => return Err("invalid Semio boolean".into()) } },
                     "int" => SemioValue::Int { lexeme: reconstruct_text(control,row.text(3)?)? }, "float" => SemioValue::Float { lexeme: reconstruct_text(control,row.text(4)?)? }, "str" => SemioValue::Str { value: reconstruct_text(control,row.text(5)?)? }, "bytes" => SemioValue::Bytes { value: reconstruct_blob(control,row.blob(6)?)? }, "ref" => SemioValue::Ref { id: ValueId { value: match names { Some(names) => reconstruct_text(control,names.get(&row.integer(7)?).ok_or("dangling Semio value graph reference")?)?, None => reconstruct_text(control,row.text(7)?)? } } },
-                    "list" => SemioValue::List { items: children.remove(&id).unwrap_or_default().into_iter().map(|link| complete.remove(&link.1).ok_or_else(|| "invalid Semio list ownership".into())).collect::<Result<_, String>>()? },
-                    "map" => SemioValue::Map { entries: children.remove(&id).unwrap_or_default().into_iter().map(|link| Ok(SemioValueEntry { key: reconstruct_text(control,link.2.ok_or("missing Semio map member key")?)?, value: complete.remove(&link.1).ok_or("invalid Semio map ownership")? })).collect::<Result<_, String>>()? }, _ => unreachable!()
-                }; complete.insert(id, value);
+                    "list" => { let mut items=Owned::new(Vec::new()); for link in children.remove(&id).unwrap_or_default(){items.get_mut().push(complete.get_mut().remove(&link.1).ok_or("invalid Semio list ownership")?);} SemioValue::List{items:items.take()} },
+                    "map" => { let mut entries=Owned::new(Vec::new()); for link in children.remove(&id).unwrap_or_default(){let key=reconstruct_text(control,link.2.ok_or("missing Semio map member key")?)?;let value=complete.get_mut().remove(&link.1).ok_or("invalid Semio map ownership")?;entries.get_mut().push(SemioValueEntry{key,value});} SemioValue::Map{entries:entries.take()} }, _ => unreachable!()
+                }; complete.get_mut().insert(id, value);
             }
-            restored.push(complete.remove(&root).ok_or("missing Semio value root")?);
+            restored.get_mut().push(complete.get_mut().remove(&root).ok_or("missing Semio value root")?);
         }
-        if seen.len() != values.len() || !children.is_empty() || !complete.is_empty() { return Err("unowned Semio value entity".into()); }
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, count, count)?; Ok(restored)
+        if seen.len() != values.len() || !children.is_empty() || !complete.get_mut().is_empty() { return Err("unowned Semio value entity".into()); }
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, count, count)?; Ok(restored.take())
 }
 
 impl ArtifactSqliteSnapshot for SemioValueSnapshot {
+fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned::new(self));}
+
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+
+ fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
@@ -89,9 +95,13 @@ impl SemioValueSnapshot {
         let document = database.table("semio_value_document")?.single_row()?; identity(document, 3)?; if document.rowid != 1 { return Err("Semio value document requires identifier 1".into()); }
         let nodes = database.table("semio_value_node")?.ordered_rows(2)?; let mut names = BTreeMap::new(); let mut unique_names = BTreeSet::new(); let mut roots = vec![document.integer(2)?];
         for node in &nodes { identity(node, 5)?; if node.integer(1)? != 1 || !unique_names.insert(node.text(3)?) || names.insert(node.rowid, node.text(3)?).is_some() { return Err("invalid Semio value graph node".into()); } roots.push(node.integer(4)?); }
-        let restored = reconstruct_value_forest(database, VALUE_TABLES, &roots, Some(&names), control)?;
-        let mut restored = restored.into_iter(); let root = restored.next().ok_or("missing Semio value document root")?; let nodes = nodes.into_iter().zip(restored).map(|(node, value)| Ok(SemioValueNode { id: ValueId { value: reconstruct_text(control,node.text(3)?)? }, value })).collect::<Result<_, String>>()?;
-        Ok(Self { schema: reconstruct_text(control,document.text(1)?)?, root, nodes })
+        let mut restored = Owned::new(reconstruct_value_forest(database, VALUE_TABLES, &roots, Some(&names), control)?);
+        restored.get_mut().reverse();
+        let schema=reconstruct_text(control,document.text(1)?)?;
+        let root=restored.get_mut().pop().ok_or("missing Semio value document root")?;
+        let mut snapshot=Owned::new(Self{schema,root,nodes:Vec::new()});
+        for node in nodes {let id=ValueId{value:reconstruct_text(control,node.text(3)?)?};let value=restored.get_mut().pop().ok_or("missing Semio graph node value")?;snapshot.get_mut().nodes.push(SemioValueNode{id,value});}
+        Ok(snapshot.take())
     }
 }
 

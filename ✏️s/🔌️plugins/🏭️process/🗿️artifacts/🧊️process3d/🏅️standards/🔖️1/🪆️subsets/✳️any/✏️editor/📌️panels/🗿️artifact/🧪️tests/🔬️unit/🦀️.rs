@@ -30,7 +30,7 @@ async fn document_panel_lists_every_step_payload_in_order() {
         ],
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default());
-    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
     // node's `BuiltChildren` only serialises through the retained page transport.
     let rendered = project(&fixture, &semio_framework_plugin::TreeWindows::unhosted());
@@ -85,13 +85,13 @@ fn project(document: &Process3dSnapshot, windows: &semio_framework_plugin::TreeW
 
 /// 🔎️ The projected body at the viewer's replay cursor `resolved_up_to`.
 fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::default());
+    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(document, resolved_up_to, labels, windows).expect("document tree renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("document projection")
 }
 
 fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..Default::default() }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ⚖️ LAW (a)/(d): an oversized timeline states its full extent, materialises at most its slice, and

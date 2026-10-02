@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for RemoveTextChunkMutatio
             None => Vec::new(),
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove text chunk", "Text-Chunk entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove text chunk", "Text-Chunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-text-chunk".into()]
@@ -66,8 +66,8 @@ pub fn chunk_order_remove_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-text-chunk/🎯️direct/🦠️mutation/🔣️.json")).expect("committed remove-text-chunk payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-text-chunk/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-text-chunk payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

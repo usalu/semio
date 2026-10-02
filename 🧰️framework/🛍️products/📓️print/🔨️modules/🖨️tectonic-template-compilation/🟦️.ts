@@ -1,3 +1,4 @@
+import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { printDocuments, printDocument, printDocumentOutputDirectory, printLibrarySources, printSourceDateEpoch } from "./📇️catalog/🟦️.ts";
 import { prepareTectonic, preparedTectonic } from "./🔧️toolchain/📜️script.ts";
 import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";
@@ -7,9 +8,9 @@ import { pathToFileURL } from "node:url";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { basename, dirname, join, relative } from "node:path";
-import { buildBudgetMs } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+
 import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { stageArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { printFontSearchPaths, stagePrintFonts } from "../🔤print-font-catalog/🟦️.ts";
 import { resolvePrintPanelGlassStyle, type PrintTheme } from "../🎨print-design-token-paints/🟦️.ts";
 
@@ -82,7 +83,7 @@ export async function publishPrintArtifact(document: PrintArtifact, signal?: Abo
     const files = new Map((document.dark ? Object.values(names) : [names.light]).map(name => [name, join(output, printCompilerName(name))]));
     for (const file of files.values()) if (readFileSync(file).subarray(0, 5).toString() !== "%PDF-") throw new Error(`Invalid compiled PDF: ${file}`);
     signal?.throwIfAborted();
-    await stageArtifacts(document.output, document.owner, files, { signal });
+    await stageRepositoryArtifacts(document.output, document.owner, files, { signal });
     console.log(`[print] Published ${document.id}: ${files.size} PDFs`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

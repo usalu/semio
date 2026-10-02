@@ -1,9 +1,10 @@
 import type { FormsAnswer, FormsResponse } from "../🟦️.ts";
+import{formsValueJson}from"../../🌱️value/🔣️json/🟦️.ts";
 export type FormsResponseExportFormat = "json" | "csv";
 export const RESPONSE_COLUMNS = ["responseId", "submittedAt", "definitionVersion", "questionId", "label", "kind", "valueJson"] as const;
 
 function responseRow(response: FormsResponse, answer: FormsAnswer): string[] {
-  return [response.id, String(response.submittedAt), response.definitionVersion, answer.questionId, answer.label, answer.kind, JSON.stringify(answer.value)];
+  return [response.id, String(response.submittedAt), response.definitionVersion, answer.questionId, answer.label, answer.kind, formsValueJson(answer.value)];
 }
 
 function csvRecord(row: readonly string[]): string {
@@ -22,7 +23,8 @@ export function* exportResponseChunks(responses: readonly FormsResponse[], forma
     const response = responses[index];
     if (format === "json") yield (index ? "," : "") + '{"id":' + JSON.stringify(response.id) + ',"submittedAt":' + response.submittedAt + ',"definitionVersion":' + JSON.stringify(response.definitionVersion) + ',"answers":[';
     for (let answer = 0; answer < response.answers.length; answer++) {
-      yield format === "csv" ? csvRecord(responseRow(response, response.answers[answer])) : (answer ? "," : "") + JSON.stringify(response.answers[answer]);
+      const value=response.answers[answer]!;
+      yield format === "csv" ? csvRecord(responseRow(response,value)) : (answer ? "," : "") + '{"questionId":'+JSON.stringify(value.questionId)+',"label":'+JSON.stringify(value.label)+',"kind":'+JSON.stringify(value.kind)+',"value":'+formsValueJson(value.value)+'}';
     }
     if (format === "json") yield "]}";
   }

@@ -61,7 +61,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                         ViewWindowInstance { id: right_id.into(), window_kind_id: FlowMainWindowConfigOwner::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: generation_id.into(), window_kind_id: "flow-generations".into() },
                     ],
-                    ..Default::default()
+                    ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
@@ -147,9 +147,9 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     let reopened_right = scene(&mut reopened, &right).await?.viewport.ok_or("reopened right Flow viewport missing")?;
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                     if reopened_left != left_viewport || reopened_right != right_viewport { return Err("Flow persisted window config changed during restore".into()); }
-                    let stale = ViewModel { window_id: Some("lost-flow-window".into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                    let stale = ViewModel { window_id: Some("lost-flow-window".into()), window_instances: view.window_instances.clone(), ..semio_framework_plugin::ViewModel::new(view.locale, view.terminology) };
                     if addressed(&stale, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted stale window identity".into()); }
-                    let wrong = ViewModel { window_id: Some(generation_id.into()), window_instances: view.window_instances.clone(), ..Default::default() };
+                    let wrong = ViewModel { window_id: Some(generation_id.into()), window_instances: view.window_instances.clone(), ..semio_framework_plugin::ViewModel::new(view.locale, view.terminology) };
                     if addressed(&wrong, FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
                     Ok(())
                 }.await;
@@ -201,7 +201,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 let window_id = "flow-one-turn-window";
                 let view = ViewModel {
                     window_instances: vec![ViewWindowInstance { id: window_id.into(), window_kind_id: FlowMainWindowConfigOwner::WINDOW_KIND_ID.into() }],
-                    ..Default::default()
+                    ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let window = view.for_window_instance(window_id).unwrap();
                 let mut app: Box<FlowRuntime> = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);

@@ -8,7 +8,8 @@
 //! the pin lane, the mask lane and the non-uniform geometry at once, and is still satisfiable.
 
 use crate::schema::snapshot::{Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dSnapshot, Grid3dTile, Grid3dTileMedia, WFC_GRID3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blocks";
 pub const ICON: &str = "building";

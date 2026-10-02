@@ -51,7 +51,7 @@ fn retained_composite_cancellation_keeps_the_last_complete_image(){
 
 #[test]
 fn paint_image_transform_matches_pixel_gesture_coordinates() {
-    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let mut host=RasterHost::new();
         host.set_size(100,100,1.0);
@@ -435,7 +435,7 @@ fn pointer_down_button1_pans_on_move() {
 
 #[test]
 fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels() {
-    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️editing/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let mut host = RasterHost::new();
         host.set_size(100, 100, 1.0);

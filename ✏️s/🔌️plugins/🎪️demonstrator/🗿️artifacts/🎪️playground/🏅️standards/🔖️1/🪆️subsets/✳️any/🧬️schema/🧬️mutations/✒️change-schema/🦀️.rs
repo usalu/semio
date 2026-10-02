@@ -22,8 +22,8 @@ impl protocol::MutationKind<PlaygroundSnapshot, PlaygroundMutation> for ChangeSc
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change playground schema to \"{}\"", self.new_schema), &format!("Playground-Schema auf \"{}\" ändern", self.new_schema))
     }
 
     fn target(&self) -> Vec<String> {

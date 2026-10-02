@@ -55,18 +55,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetCameraDraftLabel"
-      ],
-      "properties": {
-        "SetCameraDraftLabel": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/app/shooting/shooting/config/mutation/set-camera-draft-label/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetCamera"
       ],
       "properties": {

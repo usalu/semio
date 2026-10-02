@@ -25,8 +25,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for InsertLoadCase {
     fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert load case", "Lastfall einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert load case", "Lastfall einfügen")
     }
 }
 

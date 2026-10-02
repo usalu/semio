@@ -1,5 +1,8 @@
 //! 🚪️ IO s.puzzle5d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from this file's own `io_registry::register()`), not per-leaf register().
+#[path="🔣️json/🦀️.rs"]
+pub(crate) mod puzzle5d_json;
+
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt", "stdio.zip"]
 }

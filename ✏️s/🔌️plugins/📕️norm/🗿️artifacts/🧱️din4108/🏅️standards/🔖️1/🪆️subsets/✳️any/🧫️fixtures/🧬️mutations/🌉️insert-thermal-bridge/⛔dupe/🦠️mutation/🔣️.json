@@ -1,0 +1,11 @@
+{
+  "InsertThermalBridge": {
+    "index": 2,
+    "bridge": {
+      "id": "tb-extra",
+      "psi": 0.08,
+      "lengthM": 5.0,
+      "bb2Type": "categoryB"
+    }
+  }
+}

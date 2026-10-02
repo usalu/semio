@@ -10,14 +10,1661 @@
   "gcps": null,
   "results": {
     "sparse": {
-      "points": "AACAPwAA4D0AAMi9AACAPwAA1L4AAM4+AACAPwAAjL4AAES/AACAPwAAYL0AAES+AACAPwAAOL8AALw+AACAPwAAJb8AAB+/AACAPwAAWD4AAMK+AACAPwAANj8AAJy9AACAPwAA/r4AAEi+AACAPwAAqr4AAA0/AACAPwAAR78AANi9AACAPwAA8D4AABA+AACAPwAAbD4AABO/AACAPwAACL0AABw/AACAPwAAAT8AAKC9AACAPwAADz8AABU/AACAPwAAMD8AAEC/AACAPwAAjL0AAMS9AACAPwAAnD4AANQ+AACAPwAAhL0AACC+AACAPwAABj8AAEe/AACAPwAANL8AACS/AACAvwAAD78AADy+AACAvwAAEj8AALA8AACAvwAAPD4AACi9AACAvwAAUL4AABo/AACAvwAAQb8AAAA/AACAvwAAgj4AAOy9AACAvwAAIz8AAEe/AACAvwAAkr4AAJS+AACAvwAA9r4AAHg+AACAvwAA4D0AAJY+AACAvwAAnj4AAJw+AACAvwAAsr4AAGi9AACAvwAAwL4AADW/AACAvwAAnj4AAJC+AACAvwAA0r4AAAM/AACAvwAAFD4AADO/AACAvwAA+L4AAHw+AACAvwAADL8AAKK+AACAvwAAP78AACi/AACAvwAAEL4AALC8AACAvwAAij4AAHA+AACAvwAAoD4AABu/AACSvgAAgD8AAPQ9AAAovwAAgD8AAEW/AACevgAAgD8AAGw+AAAtvwAAgD8AADg+AADAvgAAgD8AAC2/AAAwvQAAgD8AACA/AABMPgAAgD8AAPw9AAB0PgAAgD8AABq/AABEvwAAgD8AAGw+AACGPgAAgD8AAMI+AAD8PgAAgD8AACy/AACwvgAAgD8AAKA8AADIPgAAgD8AAL4+AABwPgAAgD8AAEy+AAAjvwAAgD8AADA/AABcvgAAgD8AAL6+AACOPgAAgD8AAAU/AADQvgAAgD8AABK/AAA0PgAAgD8AADQ+AACovgAAgD8AAMw+AAB0vgAAgD8AAFC8AAA8PwAAgD8AABu/AAAQvgAAgL8AAMw+AAARvwAAgL8AAAC9AACMPgAAgL8AABa/AACwPAAAgL8AADA/AAApvwAAgL8AAGi+AAA4PwAAgL8AANy9AAAuvwAAgL8AABm/AAC0vgAAgL8AAAy+AACQvQAAgL8AAIa+AADEvQAAgL8AADG/AAC8vQAAgL8AAAO/AABAPgAAgL8AAEE/AABAvAAAgL8AADS/AACWvgAAgL8AAEc/AAAdPwAAgL8AAIy+AABwPQAAgL8AAC4/AACSvgAAgL8AANQ+AAB4PQAAgL8AACK/AAAFPwAAgL8AAPC8AAALvwAAgL8AAHA+AAD2vgAAgL8AAEi+AAAKvwAAgL8AAEA9AADCvgAAtr4AAIA/AADSvgAAqj4AAIA/AAANvwAA9j4AAIA/AACAvgAA8r4AAIA/AAAgvwAALT8AAIA/AABQvgAA+D0AAIA/AAAYPwAACD8AAIA/AADCvgAAzL0AAIA/AADgPgAArj4AAIA/AADgPgAAsj4AAIA/AABYPQAABL4AAIA/AABUPgAAlL4AAIA/AAAlvwAAKD4AAIA/AAAXPwAAAD8AAIA/AAA/vwAA8j4AAIA/AADoPgAALL8AAIA/",
-      "colors": "ACVKb5S53gMoTXKXvOEGK1B1mr/kCS5TeJ3C5wwxVnugxeoPNFl+o8jtEjdcgabL8BU6X4SpzvMYPWKHrNH2G0Bliq/U+R5DaI2y1/whRmuQtdr/JEluk7jdAidMcZa74AUqT3SZvuMILVJ3nMHmCzBVep/E6Q4zWH2ix+wRNluApcrvFDleg6jN8hc8YYar0PUaP2SJrtP4HUJnjLHW+yBFao+02f4jSG2St9wBJktwlbrfBClOc5i94gcsUXabwOUKL1R5nsPoDTJXfKHG6xA1Wn+kye4TOF2Cp8zxFjtgharP9Bk+Y4it0vccQWaLsNX6H0RpjrPY/SJHbJG22wAlSm+Uud4DKE1yl7zhBitQdZq/5AkuU3idwucMMVZ7oMXqDzRZfqPI7RI3XIGmy/AVOl+Eqc7z"
+      "points": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3de00000"
+          },
+          {
+            "bits": "bdc80000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bed40000"
+          },
+          {
+            "bits": "3ece0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "be8c0000"
+          },
+          {
+            "bits": "bf440000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bd600000"
+          },
+          {
+            "bits": "be440000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf380000"
+          },
+          {
+            "bits": "3ebc0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf250000"
+          },
+          {
+            "bits": "bf1f0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e580000"
+          },
+          {
+            "bits": "bec20000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f360000"
+          },
+          {
+            "bits": "bd9c0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "befe0000"
+          },
+          {
+            "bits": "be480000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "beaa0000"
+          },
+          {
+            "bits": "3f0d0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf470000"
+          },
+          {
+            "bits": "bdd80000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ef00000"
+          },
+          {
+            "bits": "3e100000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e6c0000"
+          },
+          {
+            "bits": "bf130000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bd080000"
+          },
+          {
+            "bits": "3f1c0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f010000"
+          },
+          {
+            "bits": "bda00000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f0f0000"
+          },
+          {
+            "bits": "3f150000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "bf400000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bd8c0000"
+          },
+          {
+            "bits": "bdc40000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e9c0000"
+          },
+          {
+            "bits": "3ed40000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bd840000"
+          },
+          {
+            "bits": "be200000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f060000"
+          },
+          {
+            "bits": "bf470000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf340000"
+          },
+          {
+            "bits": "bf240000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf0f0000"
+          },
+          {
+            "bits": "be3c0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f120000"
+          },
+          {
+            "bits": "3cb00000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e3c0000"
+          },
+          {
+            "bits": "bd280000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be500000"
+          },
+          {
+            "bits": "3f1a0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf410000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e820000"
+          },
+          {
+            "bits": "bdec0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f230000"
+          },
+          {
+            "bits": "bf470000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be920000"
+          },
+          {
+            "bits": "be940000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bef60000"
+          },
+          {
+            "bits": "3e780000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3de00000"
+          },
+          {
+            "bits": "3e960000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e9e0000"
+          },
+          {
+            "bits": "3e9c0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "beb20000"
+          },
+          {
+            "bits": "bd680000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bec00000"
+          },
+          {
+            "bits": "bf350000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e9e0000"
+          },
+          {
+            "bits": "be900000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bed20000"
+          },
+          {
+            "bits": "3f030000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e140000"
+          },
+          {
+            "bits": "bf330000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bef80000"
+          },
+          {
+            "bits": "3e7c0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf0c0000"
+          },
+          {
+            "bits": "bea20000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf3f0000"
+          },
+          {
+            "bits": "bf280000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be100000"
+          },
+          {
+            "bits": "bcb00000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e8a0000"
+          },
+          {
+            "bits": "3e700000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3ea00000"
+          },
+          {
+            "bits": "bf1b0000"
+          },
+          {
+            "bits": "be920000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3df40000"
+          },
+          {
+            "bits": "bf280000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf450000"
+          },
+          {
+            "bits": "be9e0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e6c0000"
+          },
+          {
+            "bits": "bf2d0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e380000"
+          },
+          {
+            "bits": "bec00000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf2d0000"
+          },
+          {
+            "bits": "bd300000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f200000"
+          },
+          {
+            "bits": "3e4c0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3dfc0000"
+          },
+          {
+            "bits": "3e740000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf1a0000"
+          },
+          {
+            "bits": "bf440000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e6c0000"
+          },
+          {
+            "bits": "3e860000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ec20000"
+          },
+          {
+            "bits": "3efc0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf2c0000"
+          },
+          {
+            "bits": "beb00000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ca00000"
+          },
+          {
+            "bits": "3ec80000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ebe0000"
+          },
+          {
+            "bits": "3e700000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "be4c0000"
+          },
+          {
+            "bits": "bf230000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "be5c0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bebe0000"
+          },
+          {
+            "bits": "3e8e0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f050000"
+          },
+          {
+            "bits": "bed00000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf120000"
+          },
+          {
+            "bits": "3e340000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e340000"
+          },
+          {
+            "bits": "bea80000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ecc0000"
+          },
+          {
+            "bits": "be740000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bc500000"
+          },
+          {
+            "bits": "3f3c0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf1b0000"
+          },
+          {
+            "bits": "be100000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3ecc0000"
+          },
+          {
+            "bits": "bf110000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bd000000"
+          },
+          {
+            "bits": "3e8c0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf160000"
+          },
+          {
+            "bits": "3cb00000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "bf290000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be680000"
+          },
+          {
+            "bits": "3f380000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bddc0000"
+          },
+          {
+            "bits": "bf2e0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf190000"
+          },
+          {
+            "bits": "beb40000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be0c0000"
+          },
+          {
+            "bits": "bd900000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be860000"
+          },
+          {
+            "bits": "bdc40000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf310000"
+          },
+          {
+            "bits": "bdbc0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf030000"
+          },
+          {
+            "bits": "3e400000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f410000"
+          },
+          {
+            "bits": "bc400000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf340000"
+          },
+          {
+            "bits": "be960000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f470000"
+          },
+          {
+            "bits": "3f1d0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be8c0000"
+          },
+          {
+            "bits": "3d700000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f2e0000"
+          },
+          {
+            "bits": "be920000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3ed40000"
+          },
+          {
+            "bits": "3d780000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bf220000"
+          },
+          {
+            "bits": "3f050000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "bcf00000"
+          },
+          {
+            "bits": "bf0b0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3e700000"
+          },
+          {
+            "bits": "bef60000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "be480000"
+          },
+          {
+            "bits": "bf0a0000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3d400000"
+          },
+          {
+            "bits": "bec20000"
+          },
+          {
+            "bits": "beb60000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bed20000"
+          },
+          {
+            "bits": "3eaa0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf0d0000"
+          },
+          {
+            "bits": "3ef60000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "be800000"
+          },
+          {
+            "bits": "bef20000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf200000"
+          },
+          {
+            "bits": "3f2d0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "be500000"
+          },
+          {
+            "bits": "3df80000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f180000"
+          },
+          {
+            "bits": "3f080000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bec20000"
+          },
+          {
+            "bits": "bdcc0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "3eae0000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "3eb20000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3d580000"
+          },
+          {
+            "bits": "be040000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3e540000"
+          },
+          {
+            "bits": "be940000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf250000"
+          },
+          {
+            "bits": "3e280000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f170000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "bf3f0000"
+          },
+          {
+            "bits": "3ef20000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3ee80000"
+          },
+          {
+            "bits": "bf2c0000"
+          },
+          {
+            "bits": "3f800000"
+          }
+        ]
+      },
+      "colors": [
+        0,
+        37,
+        74,
+        111,
+        148,
+        185,
+        222,
+        3,
+        40,
+        77,
+        114,
+        151,
+        188,
+        225,
+        6,
+        43,
+        80,
+        117,
+        154,
+        191,
+        228,
+        9,
+        46,
+        83,
+        120,
+        157,
+        194,
+        231,
+        12,
+        49,
+        86,
+        123,
+        160,
+        197,
+        234,
+        15,
+        52,
+        89,
+        126,
+        163,
+        200,
+        237,
+        18,
+        55,
+        92,
+        129,
+        166,
+        203,
+        240,
+        21,
+        58,
+        95,
+        132,
+        169,
+        206,
+        243,
+        24,
+        61,
+        98,
+        135,
+        172,
+        209,
+        246,
+        27,
+        64,
+        101,
+        138,
+        175,
+        212,
+        249,
+        30,
+        67,
+        104,
+        141,
+        178,
+        215,
+        252,
+        33,
+        70,
+        107,
+        144,
+        181,
+        218,
+        255,
+        36,
+        73,
+        110,
+        147,
+        184,
+        221,
+        2,
+        39,
+        76,
+        113,
+        150,
+        187,
+        224,
+        5,
+        42,
+        79,
+        116,
+        153,
+        190,
+        227,
+        8,
+        45,
+        82,
+        119,
+        156,
+        193,
+        230,
+        11,
+        48,
+        85,
+        122,
+        159,
+        196,
+        233,
+        14,
+        51,
+        88,
+        125,
+        162,
+        199,
+        236,
+        17,
+        54,
+        91,
+        128,
+        165,
+        202,
+        239,
+        20,
+        57,
+        94,
+        131,
+        168,
+        205,
+        242,
+        23,
+        60,
+        97,
+        134,
+        171,
+        208,
+        245,
+        26,
+        63,
+        100,
+        137,
+        174,
+        211,
+        248,
+        29,
+        66,
+        103,
+        140,
+        177,
+        214,
+        251,
+        32,
+        69,
+        106,
+        143,
+        180,
+        217,
+        254,
+        35,
+        72,
+        109,
+        146,
+        183,
+        220,
+        1,
+        38,
+        75,
+        112,
+        149,
+        186,
+        223,
+        4,
+        41,
+        78,
+        115,
+        152,
+        189,
+        226,
+        7,
+        44,
+        81,
+        118,
+        155,
+        192,
+        229,
+        10,
+        47,
+        84,
+        121,
+        158,
+        195,
+        232,
+        13,
+        50,
+        87,
+        124,
+        161,
+        198,
+        235,
+        16,
+        53,
+        90,
+        127,
+        164,
+        201,
+        238,
+        19,
+        56,
+        93,
+        130,
+        167,
+        204,
+        241,
+        22,
+        59,
+        96,
+        133,
+        170,
+        207,
+        244,
+        25,
+        62,
+        99,
+        136,
+        173,
+        210,
+        247,
+        28,
+        65,
+        102,
+        139,
+        176,
+        213,
+        250,
+        31,
+        68,
+        105,
+        142,
+        179,
+        216,
+        253,
+        34,
+        71,
+        108,
+        145,
+        182,
+        219,
+        0,
+        37,
+        74,
+        111,
+        148,
+        185,
+        222,
+        3,
+        40,
+        77,
+        114,
+        151,
+        188,
+        225,
+        6,
+        43,
+        80,
+        117,
+        154,
+        191,
+        228,
+        9,
+        46,
+        83,
+        120,
+        157,
+        194,
+        231,
+        12,
+        49,
+        86,
+        123,
+        160,
+        197,
+        234,
+        15,
+        52,
+        89,
+        126,
+        163,
+        200,
+        237,
+        18,
+        55,
+        92,
+        129,
+        166,
+        203,
+        240,
+        21,
+        58,
+        95,
+        132,
+        169,
+        206,
+        243
+      ]
     },
     "dense": {
-      "positions": "AAAAAAAAAAAAAAAAAACAPQAAAD0AAAC+AAAAPgAAgD0AAIC+AABAPgAAwD0AAMC+AACAPgAAAD4AAAC/AACgPgAAID4AACC/AADAPgAAQD4AAEC/AADgPgAAYD4AAGC/AAAAPwAAgD4AAIC/AAAQPwAAkD4AAJC/AAAgPwAAoD4AAKC/AAAwPwAAsD4AALC/AABAPwAAwD4AAMC/AABQPwAA0D4AANC/AABgPwAA4D4AAOC/AABwPwAA8D4AAPC/AACAPwAAAD8AAADAAACIPwAACD8AAAjAAACQPwAAED8AABDAAACYPwAAGD8AABjAAACgPwAAID8AACDAAACoPwAAKD8AACjAAACwPwAAMD8AADDAAAC4PwAAOD8AADjA",
-      "colors": "ABEiM0RVZneImaq7zN3u/xAhMkNUZXaHmKm6y9zt/g8gMUJTZHWGl6i5ytvs/Q4fMEFSY3SFlqe4ydrr/A0eL0BRYnOElaa3",
-      "confidence": "AACAPgAAoD4AAMA+AADgPgAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/AACAPgAAoD4AAMA+AADgPgAAAD8AABA/AAAgPwAAMD8AAEA/AABQPwAAYD8AAHA/",
-      "classification": "BgICAgIGAgICAgYCAgICBgICAgIGAgIC"
+      "positions": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "00000000"
+          },
+          {
+            "bits": "3d800000"
+          },
+          {
+            "bits": "3d000000"
+          },
+          {
+            "bits": "be000000"
+          },
+          {
+            "bits": "3e000000"
+          },
+          {
+            "bits": "3d800000"
+          },
+          {
+            "bits": "be800000"
+          },
+          {
+            "bits": "3e400000"
+          },
+          {
+            "bits": "3dc00000"
+          },
+          {
+            "bits": "bec00000"
+          },
+          {
+            "bits": "3e800000"
+          },
+          {
+            "bits": "3e000000"
+          },
+          {
+            "bits": "bf000000"
+          },
+          {
+            "bits": "3ea00000"
+          },
+          {
+            "bits": "3e200000"
+          },
+          {
+            "bits": "bf200000"
+          },
+          {
+            "bits": "3ec00000"
+          },
+          {
+            "bits": "3e400000"
+          },
+          {
+            "bits": "bf400000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "3e600000"
+          },
+          {
+            "bits": "bf600000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "3e800000"
+          },
+          {
+            "bits": "bf800000"
+          },
+          {
+            "bits": "3f100000"
+          },
+          {
+            "bits": "3e900000"
+          },
+          {
+            "bits": "bf900000"
+          },
+          {
+            "bits": "3f200000"
+          },
+          {
+            "bits": "3ea00000"
+          },
+          {
+            "bits": "bfa00000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "3eb00000"
+          },
+          {
+            "bits": "bfb00000"
+          },
+          {
+            "bits": "3f400000"
+          },
+          {
+            "bits": "3ec00000"
+          },
+          {
+            "bits": "bfc00000"
+          },
+          {
+            "bits": "3f500000"
+          },
+          {
+            "bits": "3ed00000"
+          },
+          {
+            "bits": "bfd00000"
+          },
+          {
+            "bits": "3f600000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "bfe00000"
+          },
+          {
+            "bits": "3f700000"
+          },
+          {
+            "bits": "3ef00000"
+          },
+          {
+            "bits": "bff00000"
+          },
+          {
+            "bits": "3f800000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "c0000000"
+          },
+          {
+            "bits": "3f880000"
+          },
+          {
+            "bits": "3f080000"
+          },
+          {
+            "bits": "c0080000"
+          },
+          {
+            "bits": "3f900000"
+          },
+          {
+            "bits": "3f100000"
+          },
+          {
+            "bits": "c0100000"
+          },
+          {
+            "bits": "3f980000"
+          },
+          {
+            "bits": "3f180000"
+          },
+          {
+            "bits": "c0180000"
+          },
+          {
+            "bits": "3fa00000"
+          },
+          {
+            "bits": "3f200000"
+          },
+          {
+            "bits": "c0200000"
+          },
+          {
+            "bits": "3fa80000"
+          },
+          {
+            "bits": "3f280000"
+          },
+          {
+            "bits": "c0280000"
+          },
+          {
+            "bits": "3fb00000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "c0300000"
+          },
+          {
+            "bits": "3fb80000"
+          },
+          {
+            "bits": "3f380000"
+          },
+          {
+            "bits": "c0380000"
+          }
+        ]
+      },
+      "colors": [
+        0,
+        17,
+        34,
+        51,
+        68,
+        85,
+        102,
+        119,
+        136,
+        153,
+        170,
+        187,
+        204,
+        221,
+        238,
+        255,
+        16,
+        33,
+        50,
+        67,
+        84,
+        101,
+        118,
+        135,
+        152,
+        169,
+        186,
+        203,
+        220,
+        237,
+        254,
+        15,
+        32,
+        49,
+        66,
+        83,
+        100,
+        117,
+        134,
+        151,
+        168,
+        185,
+        202,
+        219,
+        236,
+        253,
+        14,
+        31,
+        48,
+        65,
+        82,
+        99,
+        116,
+        133,
+        150,
+        167,
+        184,
+        201,
+        218,
+        235,
+        252,
+        13,
+        30,
+        47,
+        64,
+        81,
+        98,
+        115,
+        132,
+        149,
+        166,
+        183
+      ],
+      "confidence": {
+        "kind": "inline",
+        "values": [
+          {
+            "bits": "3e800000"
+          },
+          {
+            "bits": "3ea00000"
+          },
+          {
+            "bits": "3ec00000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "3f100000"
+          },
+          {
+            "bits": "3f200000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "3f400000"
+          },
+          {
+            "bits": "3f500000"
+          },
+          {
+            "bits": "3f600000"
+          },
+          {
+            "bits": "3f700000"
+          },
+          {
+            "bits": "3e800000"
+          },
+          {
+            "bits": "3ea00000"
+          },
+          {
+            "bits": "3ec00000"
+          },
+          {
+            "bits": "3ee00000"
+          },
+          {
+            "bits": "3f000000"
+          },
+          {
+            "bits": "3f100000"
+          },
+          {
+            "bits": "3f200000"
+          },
+          {
+            "bits": "3f300000"
+          },
+          {
+            "bits": "3f400000"
+          },
+          {
+            "bits": "3f500000"
+          },
+          {
+            "bits": "3f600000"
+          },
+          {
+            "bits": "3f700000"
+          }
+        ]
+      },
+      "classification": [
+        6,
+        2,
+        2,
+        2,
+        2,
+        6,
+        2,
+        2,
+        2,
+        2,
+        6,
+        2,
+        2,
+        2,
+        2,
+        6,
+        2,
+        2,
+        2,
+        2,
+        6,
+        2,
+        2,
+        2
+      ]
     },
     "mesh": {
       "mesh": {

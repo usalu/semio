@@ -23,8 +23,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::InsertShape(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert shape", "Form einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert shape", "Form einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

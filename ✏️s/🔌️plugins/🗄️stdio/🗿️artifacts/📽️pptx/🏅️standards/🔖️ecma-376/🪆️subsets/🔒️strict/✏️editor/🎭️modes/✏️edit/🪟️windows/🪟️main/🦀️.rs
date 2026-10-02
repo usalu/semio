@@ -7,7 +7,11 @@
 use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;

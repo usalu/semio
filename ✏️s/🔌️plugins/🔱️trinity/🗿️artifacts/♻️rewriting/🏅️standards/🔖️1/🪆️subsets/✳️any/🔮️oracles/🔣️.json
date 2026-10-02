@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.trinity.rewriting` is a semio-NATIVE graph-rewriting RULE document — three whole JSON documents carried as strings plus two string-keyed maps — not a rewriting engine, so a rewriting library has nothing to adjudicate. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
   "oracles": [
@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.trinity.rewriting` rule document and all seven typed mutations, in Python, at `../../../../../🧪️tests/mutate-rewriting-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the five members, with the three `contentMediaType: application/json` strings and the two maps), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the seven verbs and their positional argument lists) and the seven committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: GrGen, AGG and `networkx`'s isomorphism module implement graph REWRITING, while this artifact is the rule DOCUMENT — a before-fixture, a pattern, a right-hand side, the parameter bindings and the editor layout — which none of them models, none reads `.dsl.semio`, and none has an opinion on whether `change-parameter-binding` on an absent key inserts or refuses. This reference deliberately does NOT read the carrier: `.rewriting.dsl.semio` has no prose document and mixes three value encodings in one file — a backslash-escaped quoted string, a braced block and a fenced ```json block — with nothing stating which member gets which, so the reading is done once in a recorded derivation script and the carrier's own byte-exact law stays asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `rewriting-1-mutate`'s external-oracle requirement for its 7-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 7 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "A second implementation of the `s.trinity.rewriting` rule document and all fourteen typed mutations, in Python, at `../../../../../🧪️tests/mutate-rewriting-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the five members, with the three `contentMediaType: application/json` strings and the two maps), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the fourteen verbs and their positional argument lists) and the fourteen committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: GrGen, AGG and `networkx`'s isomorphism module implement graph REWRITING, while this artifact is the rule DOCUMENT — a before-fixture, a pattern, a right-hand side, the parameter bindings and the editor layout — which none of them models, none reads `.dsl.semio`, and none has an opinion on whether `change-parameter-binding` on an absent key inserts or refuses. This reference deliberately does NOT read the carrier: `.rewriting.dsl.semio` has no prose document and mixes three value encodings in one file — a backslash-escaped quoted string, a braced block and a fenced ```json block — with nothing stating which member gets which, so the reading is done once in a recorded derivation script and the carrier's own byte-exact law stays asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `rewriting-1-mutate`'s external-oracle requirement for its 7-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 7 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -133,6 +133,83 @@
               "directoryName": "📐️clears"
             }
           ]
+        },
+        {
+          "mutationId": "drag-working-nodes",
+          "sourceMutationDirectoryName": "✋️drag-working",
+          "mutationDirectoryName": "✋️drag-working",
+          "scenarios": [
+            {
+              "id": "drags-node-b-of-the-working-graph",
+              "directoryName": "✋️moves"
+            }
+          ]
+        },
+        {
+          "mutationId": "patch-working-nodes",
+          "sourceMutationDirectoryName": "🩹️patch-working",
+          "mutationDirectoryName": "🩹️patch-working",
+          "scenarios": [
+            {
+              "id": "renames-node-a-of-the-working-graph",
+              "directoryName": "🩹️renames"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-rule-nodes",
+          "sourceMutationDirectoryName": "🫳️drag-rule",
+          "mutationDirectoryName": "🫳️drag-rule",
+          "scenarios": [
+            {
+              "id": "drags-two-rule-nodes",
+              "directoryName": "🫳️moves"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-rule-layout-points",
+          "sourceMutationDirectoryName": "📍️set-rule-layout",
+          "mutationDirectoryName": "📍️set-rule-layout",
+          "scenarios": [
+            {
+              "id": "places-one-rule-node-and-clears-one",
+              "directoryName": "📍️places"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-working-nodes",
+          "sourceMutationDirectoryName": "✂️delete-working",
+          "mutationDirectoryName": "✂️delete-working",
+          "scenarios": [
+            {
+              "id": "deletes-node-a-and-its-edges",
+              "directoryName": "✂️deletes"
+            }
+          ]
+        },
+        {
+          "mutationId": "connect-working-ports",
+          "sourceMutationDirectoryName": "🔌️connect-working",
+          "mutationDirectoryName": "🔌️connect-working",
+          "scenarios": [
+            {
+              "id": "connects-c-to-a",
+              "directoryName": "🔌️connects"
+            }
+          ]
+        },
+        {
+          "mutationId": "disconnect-working-edges",
+          "sourceMutationDirectoryName": "🪚️disconnect-working",
+          "mutationDirectoryName": "🪚️disconnect-working",
+          "scenarios": [
+            {
+              "id": "cuts-edge-b-c",
+              "directoryName": "🪚️cuts"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -142,7 +219,14 @@
         "change-parameter-binding",
         "remove-parameter-binding",
         "change-rule-layout-point",
-        "remove-rule-layout-point"
+        "remove-rule-layout-point",
+        "drag-working-nodes",
+        "patch-working-nodes",
+        "drag-rule-nodes",
+        "set-rule-layout-points",
+        "delete-working-nodes",
+        "connect-working-ports",
+        "disconnect-working-edges"
       ]
     }
   ],
@@ -187,6 +271,48 @@
             "operation": "change-rule-layout-point",
             "bridgeVersion": 1,
             "variant": "ChangeRuleLayoutPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-rule-nodes",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-rule-nodes",
+            "bridgeVersion": 1,
+            "variant": "DragRuleNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-working-nodes",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-working-nodes",
+            "bridgeVersion": 1,
+            "variant": "DragWorkingNodes"
           },
           "oracleRequirements": [
             {
@@ -256,6 +382,27 @@
           ]
         },
         {
+          "id": "patch-working-nodes",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-working-nodes",
+            "bridgeVersion": 1,
+            "variant": "PatchWorkingNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "remove-parameter-binding",
           "capability": "rewriting-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -287,6 +434,88 @@
             "operation": "remove-rule-layout-point",
             "bridgeVersion": 1,
             "variant": "RemoveRuleLayoutPoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-rule-layout-points",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-rule-layout-points",
+            "bridgeVersion": 1,
+            "variant": "SetRuleLayoutPoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "delete-working-nodes",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-working-nodes",
+            "bridgeVersion": 1,
+            "variant": "DeleteWorkingNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "connect-working-ports",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "connect-working-ports",
+            "bridgeVersion": 1,
+            "variant": "ConnectWorkingPorts"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "rewriting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "disconnect-working-edges",
+          "capability": "rewriting-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "disconnect-working-edges",
+            "bridgeVersion": 1,
+            "variant": "DisconnectWorkingEdges"
           },
           "oracleRequirements": [
             {

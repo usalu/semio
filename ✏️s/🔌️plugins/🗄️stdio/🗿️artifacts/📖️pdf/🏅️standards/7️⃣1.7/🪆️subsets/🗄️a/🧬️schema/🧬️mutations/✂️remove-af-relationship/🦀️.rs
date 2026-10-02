@@ -33,8 +33,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
             .collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove AF relationship from \"{}\"", self.file_name), &format!("AF-Beziehung aus \"{}\" entfernen", self.file_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove AF relationship from \"{}\"", self.file_name), &format!("AF-Beziehung aus \"{}\" entfernen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

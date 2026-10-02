@@ -14,3 +14,14 @@ segment payload varint bytes
 footer fixed 64
 field artifact_mark utf8
 field body_crc32 u32
+record snapshot
+field 0 schema text
+field 1 content record child
+record child
+field 0 childId text
+field 1 target record artifactRef
+record artifactRef
+field 0 artifactId text
+field 1 artifactKind text
+field 2 standard text
+field 3 subset text

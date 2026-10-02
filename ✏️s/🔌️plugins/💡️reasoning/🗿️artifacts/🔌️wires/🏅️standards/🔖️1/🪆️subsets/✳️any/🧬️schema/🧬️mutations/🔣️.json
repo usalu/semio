@@ -32,6 +32,12 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/disconnect-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/set-node-positions/schema.json"
     }
   ]
 }

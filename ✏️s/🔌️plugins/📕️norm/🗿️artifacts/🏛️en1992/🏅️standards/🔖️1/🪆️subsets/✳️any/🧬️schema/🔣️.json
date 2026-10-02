@@ -18,8 +18,8 @@
   ],
   "properties": {
     "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "$ref": "#/$defs/AnnexChoice"
     },
     "title": {
       "type": "string",
@@ -40,57 +40,47 @@
     "concreteGrades": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ConcreteGrade"
+        "$ref": "#/$defs/ConcreteGrade"
       },
       "x-semio-state": "artifact"
     },
     "reinforcementGrades": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ReinforcementGrade"
+        "$ref": "#/$defs/ReinforcementGrade"
       },
       "x-semio-state": "artifact"
     },
     "prestressSteels": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/PrestressSteel"
+        "$ref": "#/$defs/PrestressSteel"
       },
       "x-semio-state": "artifact"
     },
     "members": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/RcMember"
+        "$ref": "#/$defs/RcMember"
       },
       "x-semio-state": "artifact"
     },
     "anchors": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Anchor"
+        "$ref": "#/$defs/Anchor"
       },
       "x-semio-state": "artifact"
     }
   },
-  "definitions": {
+  "$defs": {
     "ConcreteGrade": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
         "name",
-        "fCk",
-        "fCkCube",
-        "fCm",
-        "fCtm",
-        "fCtk005",
-        "eCm",
-        "epsC2",
-        "epsCu2",
-        "epsC3",
-        "epsCu3",
-        "nParabola"
+        "fCk"
       ],
       "properties": {
         "id": {
@@ -101,38 +91,14 @@
         },
         "fCk": {
           "type": "number"
-        },
-        "fCkCube": {
-          "type": "number"
-        },
-        "fCm": {
-          "type": "number"
-        },
-        "fCtm": {
-          "type": "number"
-        },
-        "fCtk005": {
-          "type": "number"
-        },
-        "eCm": {
-          "type": "number"
-        },
-        "epsC2": {
-          "type": "number"
-        },
-        "epsCu2": {
-          "type": "number"
-        },
-        "epsC3": {
-          "type": "number"
-        },
-        "epsCu3": {
-          "type": "number"
-        },
-        "nParabola": {
-          "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ReinforcementGrade": {
       "type": "object",
@@ -142,6 +108,7 @@
         "name",
         "fYk",
         "eS",
+        "ductility",
         "k",
         "epsUk"
       ],
@@ -158,13 +125,27 @@
         "eS": {
           "type": "number"
         },
+        "ductility": {
+          "type": "string",
+          "enum": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
         "k": {
           "type": "number"
         },
         "epsUk": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PrestressSteel": {
       "type": "object",
@@ -188,9 +169,16 @@
         "fP01k": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BarLayer": {
+      "title": "BarLayer",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -208,30 +196,103 @@
           "type": "string"
         },
         "diameter": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Bar diameter Ø",
+              "de": "Stabdurchmesser Ø"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.001,
+            "precision": 0
+          }
         },
         "count": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Number of bars n",
+              "de": "Stabanzahl n"
+            },
+            "step": 1,
+            "precision": 0
+          },
+          "maximum": 4294967295
         },
         "position": {
           "type": "string"
         },
         "anchorageLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Anchorage length l_bd",
+              "de": "Verankerungslänge l_bd"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "lapLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Lap length l₀",
+              "de": "Übergreifungslänge l₀"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "bondCondition": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Bond condition",
+              "de": "Verbundbedingung"
+            },
+            "description": {
+              "en": "good or poor (EN 1992-1-1 8.4.2).",
+              "de": "gut oder mäßig (EN 1992-1-1 8.4.2)."
+            },
+            "widget": "text"
+          }
         },
         "aggregateSize": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum aggregate size d_g",
+              "de": "Größtkorn d_g"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Stirrups": {
+      "title": "Stirrups",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -241,18 +302,58 @@
       ],
       "properties": {
         "diameter": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Stirrup diameter",
+              "de": "Bügeldurchmesser"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "spacing": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Stirrup spacing s",
+              "de": "Bügelabstand s"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.01,
+            "precision": 0
+          }
         },
         "legs": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "x-semio-ui": {
+            "label": {
+              "en": "Number of legs",
+              "de": "Schnittigkeit"
+            },
+            "widget": "stepper",
+            "step": 1,
+            "precision": 0
+          },
+          "maximum": 4294967295
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PunchingSpec": {
+      "title": "PunchingSpec",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -263,20 +364,71 @@
       ],
       "properties": {
         "columnWidth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Column width c₁",
+              "de": "Stützenbreite c₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "columnDepth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Column depth c₂",
+              "de": "Stützentiefe c₂"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "columnPosition": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Column position",
+              "de": "Stützenlage"
+            },
+            "description": {
+              "en": "interior, edge or corner.",
+              "de": "Innen-, Rand- oder Eckstütze."
+            },
+            "widget": "text"
+          }
         },
         "asw": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Punching shear reinforcement A_sw",
+              "de": "Durchstanzbewehrung A_sw"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "precision": 2
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PrestressSpec": {
+      "title": "PrestressSpec",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -287,36 +439,146 @@
       ],
       "properties": {
         "force": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Prestressing force P",
+              "de": "Vorspannkraft P"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "area": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Prestressing steel area A_p",
+              "de": "Spannstahlfläche A_p"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "precision": 2
+          }
         },
         "eccentricity": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Tendon eccentricity e_p",
+              "de": "Exzentrizität des Spannglieds e_p"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "lossRatio": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Prestress losses",
+              "de": "Spannkraftverluste"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 0
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FireSpec": {
+      "title": "FireSpec",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "rating",
-        "axisDistance"
+        "axisDistance",
+        "columnMethod",
+        "slabSystem"
       ],
       "properties": {
         "rating": {
-          "type": "string"
+          "$ref": "#/$defs/FireRating",
+          "x-semio-ui": {
+            "label": {
+              "en": "Fire resistance class",
+              "de": "Feuerwiderstandsklasse"
+            },
+            "description": {
+              "en": "R30, R60, R90 or R120 (EN 1992-1-2).",
+              "de": "R30, R60, R90 oder R120 (EN 1992-1-2)."
+            }
+          }
         },
         "axisDistance": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Axis distance a",
+              "de": "Achsabstand a"
+            },
+            "description": {
+              "en": "Axis distance of the longitudinal bars to the exposed face (EN 1992-1-2 §5).",
+              "de": "Achsabstand der Längsbewehrung zur beflammten Oberfläche (EN 1992-1-2 §5)."
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
+        },
+        "columnMethod": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Column fire method",
+              "de": "Brandschutzverfahren für Stützen"
+            },
+            "description": {
+              "en": "Method A or B (EN 1992-1-2 5.3).",
+              "de": "Methode A oder B (EN 1992-1-2 5.3)."
+            },
+            "widget": "text"
+          }
+        },
+        "slabSystem": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Slab system",
+              "de": "Deckensystem"
+            },
+            "widget": "text"
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "LoadCaseActions": {
+      "title": "LoadCaseActions",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -341,38 +603,140 @@
           "type": "string"
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Action category",
+              "de": "Einwirkungskategorie"
+            },
+            "widget": "text"
+          }
         },
         "source": {
           "type": "string"
         },
         "gKLine": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Permanent line load g_k",
+              "de": "Ständige Streckenlast g_k"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "qKLine": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Variable line load q_k",
+              "de": "Veränderliche Streckenlast q_k"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "pointForce": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Point load",
+              "de": "Einzellast"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "mK": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic bending moment M_k",
+              "de": "Charakteristisches Biegemoment M_k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "nK": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic axial force N_k",
+              "de": "Charakteristische Normalkraft N_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "vK": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic shear force V_k",
+              "de": "Charakteristische Querkraft V_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "tK": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic torsional moment T_k",
+              "de": "Charakteristisches Torsionsmoment T_k"
+            },
+            "widget": "stepper",
+            "unit": "N·m",
+            "displayUnit": "kN·m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         },
         "vKPunch": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic punching load V_k",
+              "de": "Charakteristische Durchstanzlast V_k"
+            },
+            "widget": "stepper",
+            "unit": "N",
+            "displayUnit": "kN",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "RcMember": {
+      "title": "RcMember",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -402,149 +766,432 @@
         "liquidFCtEff",
         "liquidSRMax",
         "bridgeSigmaC",
-        "bridgeDeltaSigmaS"
+        "bridgeDeltaSigmaS",
+        "stirrups",
+        "punching",
+        "prestress",
+        "fire",
+        "tightness"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
         "labelEn": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (English)",
+              "de": "Bezeichnung (Englisch)"
+            },
+            "widget": "text"
+          }
         },
         "labelDe": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Label (German)",
+              "de": "Bezeichnung (Deutsch)"
+            },
+            "widget": "text"
+          }
         },
         "kind": {
-          "type": "string"
+          "$ref": "#/$defs/MemberKind"
         },
         "concreteGradeId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete strength class",
+              "de": "Betonfestigkeitsklasse"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "concreteGrade"
+            }
+          }
         },
         "reinforcementGradeId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reinforcing steel",
+              "de": "Betonstahl"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "reinforcementGrade"
+            }
+          }
         },
         "prestressSteelId": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Prestressing steel",
+              "de": "Spannstahl"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "prestressSteel"
+            }
+          }
         },
         "exposure": {
-          "type": "string"
+          "$ref": "#/$defs/ExposureClass",
+          "x-semio-ui": {
+            "label": {
+              "en": "Exposure class",
+              "de": "Expositionsklasse"
+            },
+            "description": {
+              "en": "EN 1992-1-1 Table 4.1: X0, Xc1–Xc4, Xd1–Xd3, Xs1–Xs3, Xf1–Xf4 or Xa1–Xa3.",
+              "de": "Nach EN 1992-1-1 Tabelle 4.1: X0, Xc1–Xc4, Xd1–Xd3, Xs1–Xs3, Xf1–Xf4 oder Xa1–Xa3."
+            }
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Cross-section width b",
+              "de": "Querschnittsbreite b"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Cross-section height h",
+              "de": "Querschnittshöhe h"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "effectiveDepth": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Effective depth d",
+              "de": "Statische Nutzhöhe d"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "cover": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Nominal concrete cover c_nom",
+              "de": "Nennmaß der Betondeckung c_nom"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "span": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Effective span l_eff",
+              "de": "Stützweite l_eff"
+            },
+            "unit": "m",
+            "step": 0.05,
+            "precision": 2
+          }
         },
         "support": {
-          "type": "string"
+          "$ref": "#/$defs/SupportCondition",
+          "x-semio-ui": {
+            "label": {
+              "en": "Support conditions",
+              "de": "Lagerungsbedingungen"
+            }
+          }
         },
         "bucklingLength": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Effective (buckling) length l₀",
+              "de": "Ersatzlänge l₀"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2
+          }
         },
         "longitudinal": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/BarLayer"
+            "$ref": "#/$defs/BarLayer"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Longitudinal reinforcement layers",
+              "de": "Lagen der Längsbewehrung"
+            }
           }
         },
         "stirrups": {
-          "anyOf": [
+          "oneOf": [
             {
-              "$ref": "#/definitions/Stirrups"
+              "$ref": "#/$defs/Stirrups"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Stirrups",
+              "de": "Bügel"
+            }
+          }
         },
         "punching": {
-          "anyOf": [
+          "oneOf": [
             {
-              "$ref": "#/definitions/PunchingSpec"
+              "$ref": "#/$defs/PunchingSpec"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Punching shear data",
+              "de": "Angaben zum Durchstanzen"
+            }
+          }
         },
         "prestress": {
-          "anyOf": [
+          "oneOf": [
             {
-              "$ref": "#/definitions/PrestressSpec"
+              "$ref": "#/$defs/PrestressSpec"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Prestress",
+              "de": "Vorspannung"
+            }
+          }
         },
         "fire": {
-          "anyOf": [
+          "oneOf": [
             {
-              "$ref": "#/definitions/FireSpec"
+              "$ref": "#/$defs/FireSpec"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Fire design",
+              "de": "Brandschutzbemessung"
+            }
+          }
         },
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/LoadCaseActions"
+            "$ref": "#/$defs/LoadCaseActions"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Load-case actions",
+              "de": "Einwirkungen je Lastfall"
+            }
           }
         },
         "useFem": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Use FEM results",
+              "de": "FEM-Ergebnisse verwenden"
+            },
+            "widget": "toggle"
+          }
         },
         "udl": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Uniformly distributed load",
+              "de": "Gleichstreckenlast"
+            },
+            "widget": "stepper",
+            "unit": "N/m",
+            "displayUnit": "kN/m",
+            "displayFactor": 0.001,
+            "precision": 2
+          }
+        },
+        "deflectionSensitive": {
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deflection-sensitive finishes",
+              "de": "Verformungsempfindlicher Ausbau"
+            },
+            "widget": "toggle"
+          }
         },
         "tightness": {
-          "anyOf": [
+          "oneOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/TightnessClass"
             },
             {
               "type": "null"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Tightness class",
+              "de": "Dichtheitsklasse"
+            }
+          }
         },
         "hdOverH": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Hydrostatic head to wall thickness h_D/h",
+              "de": "Verhältnis Wasserdruckhöhe zu Bauteildicke h_D/h"
+            },
+            "widget": "stepper",
+            "precision": 2
+          }
         },
         "liquidSigmaS": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel stress σ_s (liquid retaining)",
+              "de": "Stahlspannung σ_s (Flüssigkeitsbehälter)"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "liquidRhoPEff": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Effective reinforcement ratio ρ_p,eff",
+              "de": "Wirksamer Bewehrungsgrad ρ_p,eff"
+            },
+            "widget": "stepper",
+            "unit": "1",
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "precision": 2
+          }
         },
         "liquidFCtEff": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Effective tensile strength f_ct,eff",
+              "de": "Wirksame Zugfestigkeit f_ct,eff"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "liquidSRMax": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum crack spacing s_r,max",
+              "de": "Maximaler Rissabstand s_r,max"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "bridgeSigmaC": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Concrete compressive stress σ_c (bridge)",
+              "de": "Betondruckspannung σ_c (Brücke)"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "bridgeDeltaSigmaS": {
-          "type": "number"
-        },
-        "deflectionSensitive": {
-          "type": "boolean"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Steel stress range Δσ_s (bridge)",
+              "de": "Spannungsschwingbreite Δσ_s (Brücke)"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Anchor": {
+      "title": "Anchor",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -556,45 +1203,434 @@
         "aS",
         "d",
         "c1",
-        "nEd",
-        "vEd",
-        "fCk"
+        "fCk",
+        "actions"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
         "hEf": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Effective embedment depth h_ef",
+              "de": "Effektive Verankerungstiefe h_ef"
+            },
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "step": 0.005,
+            "precision": 0
+          }
         },
         "cracked": {
-          "type": "boolean"
+          "type": "boolean",
+          "x-semio-ui": {
+            "label": {
+              "en": "Cracked concrete",
+              "de": "Gerissener Beton"
+            },
+            "widget": "toggle"
+          }
         },
         "fUk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic steel tensile strength f_uk",
+              "de": "Charakteristische Zugfestigkeit des Stahls f_uk"
+            },
+            "widget": "stepper",
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "precision": 1
+          }
         },
         "fYk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic yield strength f_yk",
+              "de": "Charakteristische Streckgrenze f_yk"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 5000000.0,
+            "precision": 0
+          }
         },
         "aS": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Stressed cross-section A_s",
+              "de": "Spannungsquerschnitt A_s"
+            },
+            "unit": "m²",
+            "displayUnit": "cm²",
+            "displayFactor": 10000,
+            "step": 1e-06,
+            "precision": 2
+          }
         },
         "d": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Anchor diameter d",
+              "de": "Dübeldurchmesser d"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "c1": {
-          "type": "number"
-        },
-        "nEd": {
-          "type": "number"
-        },
-        "vEd": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Edge distance c₁",
+              "de": "Randabstand c₁"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1
+          }
         },
         "fCk": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Characteristic compressive cylinder strength f_ck",
+              "de": "Charakteristische Zylinderdruckfestigkeit f_ck"
+            },
+            "unit": "Pa",
+            "displayUnit": "N/mm²",
+            "displayFactor": 1e-06,
+            "step": 1000000.0,
+            "precision": 0
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoadCaseActions"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Load-case actions",
+              "de": "Einwirkungen je Lastfall"
+            }
+          }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
+    },
+    "AnnexChoice": {
+      "title": "AnnexChoice",
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "En": {
+            "en": "Recommended CEN values (EN)",
+            "de": "Empfohlene CEN-Werte (EN)"
+          },
+          "De": {
+            "en": "German national annex (DIN EN)",
+            "de": "Deutscher Nationaler Anhang (DIN EN)"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "ExposureClass": {
+      "title": "ExposureClass",
+      "type": "string",
+      "enum": [
+        "X0",
+        "Xc1",
+        "Xc2",
+        "Xc3",
+        "Xc4",
+        "Xd1",
+        "Xd2",
+        "Xd3",
+        "Xs1",
+        "Xs2",
+        "Xs3",
+        "Xf1",
+        "Xf2",
+        "Xf3",
+        "Xf4",
+        "Xa1",
+        "Xa2",
+        "Xa3"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "X0": {
+            "en": "X0",
+            "de": "X0"
+          },
+          "Xc1": {
+            "en": "XC1",
+            "de": "XC1"
+          },
+          "Xc2": {
+            "en": "XC2",
+            "de": "XC2"
+          },
+          "Xc3": {
+            "en": "XC3",
+            "de": "XC3"
+          },
+          "Xc4": {
+            "en": "XC4",
+            "de": "XC4"
+          },
+          "Xd1": {
+            "en": "XD1",
+            "de": "XD1"
+          },
+          "Xd2": {
+            "en": "XD2",
+            "de": "XD2"
+          },
+          "Xd3": {
+            "en": "XD3",
+            "de": "XD3"
+          },
+          "Xs1": {
+            "en": "XS1",
+            "de": "XS1"
+          },
+          "Xs2": {
+            "en": "XS2",
+            "de": "XS2"
+          },
+          "Xs3": {
+            "en": "XS3",
+            "de": "XS3"
+          },
+          "Xf1": {
+            "en": "XF1",
+            "de": "XF1"
+          },
+          "Xf2": {
+            "en": "XF2",
+            "de": "XF2"
+          },
+          "Xf3": {
+            "en": "XF3",
+            "de": "XF3"
+          },
+          "Xf4": {
+            "en": "XF4",
+            "de": "XF4"
+          },
+          "Xa1": {
+            "en": "XA1",
+            "de": "XA1"
+          },
+          "Xa2": {
+            "en": "XA2",
+            "de": "XA2"
+          },
+          "Xa3": {
+            "en": "XA3",
+            "de": "XA3"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "FireRating": {
+      "title": "FireRating",
+      "type": "string",
+      "enum": [
+        "R30",
+        "R60",
+        "R90",
+        "R120"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "R30": {
+            "en": "R30",
+            "de": "R30"
+          },
+          "R60": {
+            "en": "R60",
+            "de": "R60"
+          },
+          "R90": {
+            "en": "R90",
+            "de": "R90"
+          },
+          "R120": {
+            "en": "R120",
+            "de": "R120"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "MemberKind": {
+      "title": "MemberKind",
+      "type": "string",
+      "enum": [
+        "Beam",
+        "Slab",
+        "Column",
+        "Wall",
+        "FlatSlab",
+        "RibbedSlab",
+        "TensionMember",
+        "Bridge",
+        "LiquidRetaining"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Beam": {
+            "en": "Beam",
+            "de": "Balken"
+          },
+          "Slab": {
+            "en": "Slab",
+            "de": "Platte"
+          },
+          "Column": {
+            "en": "Column",
+            "de": "Stütze"
+          },
+          "Wall": {
+            "en": "Wall",
+            "de": "Wand"
+          },
+          "FlatSlab": {
+            "en": "Flat slab",
+            "de": "Flachdecke"
+          },
+          "RibbedSlab": {
+            "en": "Ribbed slab",
+            "de": "Rippendecke"
+          },
+          "TensionMember": {
+            "en": "Tension member",
+            "de": "Zugglied"
+          },
+          "Bridge": {
+            "en": "Bridge",
+            "de": "Brücke"
+          },
+          "LiquidRetaining": {
+            "en": "Liquid-retaining structure",
+            "de": "Flüssigkeitsbehälter"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "SupportCondition": {
+      "title": "SupportCondition",
+      "type": "string",
+      "enum": [
+        "SimplySupported",
+        "Continuous",
+        "Cantilever",
+        "Fixed"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "SimplySupported": {
+            "en": "Simply supported",
+            "de": "Einfeldträger"
+          },
+          "Continuous": {
+            "en": "Continuous",
+            "de": "Durchlaufträger"
+          },
+          "Cantilever": {
+            "en": "Cantilever",
+            "de": "Kragarm"
+          },
+          "Fixed": {
+            "en": "Fixed at both ends",
+            "de": "Beidseitig eingespannt"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
+    },
+    "TightnessClass": {
+      "title": "TightnessClass",
+      "type": "string",
+      "enum": [
+        "Tc0",
+        "Tc1",
+        "Tc2"
+      ],
+      "x-semio-ui": {
+        "options": {
+          "Tc0": {
+            "en": "Tightness class 0",
+            "de": "Dichtheitsklasse 0"
+          },
+          "Tc1": {
+            "en": "Tightness class 1",
+            "de": "Dichtheitsklasse 1"
+          },
+          "Tc2": {
+            "en": "Tightness class 2",
+            "de": "Dichtheitsklasse 2"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     }
   }
 }

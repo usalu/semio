@@ -21,8 +21,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetBackgroundColorInde
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetBackgroundColorIndex(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set background color index", "Hintergrundfarbindex setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set background color index", "Hintergrundfarbindex setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -53,7 +53,7 @@ impl protocol::OpText for Generation3dPreviewWindowTransientMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -62,7 +62,7 @@ impl protocol::OpText for Generation3dPreviewWindowTransientMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| spec()).expect("preview mutation variant exists");
+        let spec = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("preview mutation variant exists");
         dsl::print(&record, &spec, dsl::JoinMode::Inline)
     }
 }
@@ -105,12 +105,12 @@ impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3d
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
-store::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text });
+semio_framework_value::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text });
 
-impl store::retirement::RetireOwned for Generation3dPreviewWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for Generation3dPreviewWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self::SetPreviewEval { eval_text } = self;
-        store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(eval_text)])
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(eval_text)])
     }
 }
 
@@ -133,8 +133,8 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dPreviewWindowT
     type State = Generation3dPreviewWindowTransient;
     type Mutation = Generation3dPreviewWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

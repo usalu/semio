@@ -8,7 +8,8 @@ import MarkdownIt from "markdown-it";
 import ts from "typescript";
 import { parse as parseJsonc } from "jsonc-parser";
 import { ownedFilesystemEntries } from "../🔍️filesystem/🟦️.ts";
-import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, planTaxonomy, typescriptLeadingDocumentationReferenceAuthority } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy, typescriptLeadingDocumentationReferenceAuthority } from "../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { validateTaxonomy, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 
 type Mapping = Readonly<{ id: string; source: string; destination: string; kindId: string; size: number; sha256: string }>;

@@ -22,6 +22,7 @@ use crate::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_s_artifact_stdio_contract::deserialize_double_option;
 use semio_s_artifact_stdio_xml::schema::diff::{XmlChildrenDiff, XmlDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
@@ -176,11 +177,6 @@ pub struct DocxStyleDiff {
     /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = based_on cleared, `Some(Some(id))` = set.
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub based_on: Option<Option<String>>,
-}
-
-/// 🏳️ Preserves a present null as an explicit clear; an omitted field remains unchanged.
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -610,8 +610,8 @@ fn layout_run_definition_matches_the_schema_tool_run_table() {
     let table = &schema["x-semio-toolRun"];
     let definition = layout_run_definition(JobKindId::new("graph.layoutRun"));
     definition.validate().expect("definition is valid");
-    let text = |label: &LocalizedLabel, locale: ui::wgpu::Locale| label.resolve(ui::wgpu::Terminology::Native, locale).to_string();
-    let locales = |label: &LocalizedLabel| serde_json::json!({ "en": text(label, ui::wgpu::Locale::En), "de": text(label, ui::wgpu::Locale::De) });
+    let text = |label: &LocalizedLabel, locale: semio_framework_ui_locale::Locale| label.resolve(semio_framework_ui_locale::Terminology::Native, locale).to_string();
+    let locales = |label: &LocalizedLabel| serde_json::json!({ "en": text(label, semio_framework_ui_locale::Locale::En), "de": text(label, semio_framework_ui_locale::Locale::De) });
     let stages: Vec<Value> = LayoutRunStage::ALL.iter().zip(&definition.stages).map(|(stage, row)| serde_json::json!({ "index": stage.index(), "id": row.id, "label": locales(&row.label) })).collect();
     assert_eq!(Value::Array(stages), table["stages"]);
     let counters: Vec<Value> = LayoutRunCounter::ALL.iter().zip(&definition.counters).map(|(counter, row)| serde_json::json!({ "index": counter.index(), "id": row.id, "fixedPoint": counter.fixed_point(), "label": locales(&row.label) })).collect();

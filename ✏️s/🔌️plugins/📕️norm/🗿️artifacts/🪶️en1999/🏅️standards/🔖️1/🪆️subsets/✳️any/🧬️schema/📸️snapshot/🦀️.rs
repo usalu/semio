@@ -277,7 +277,7 @@ pub struct En1999Snapshot {
 
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1999Snapshot, extension = "en1999", envelope_id = "norm.en1999");
+crate::impl_norm_artifact_record!(En1999Snapshot, extension = "en1999", envelope_id = "norm.en1999", sqlite = crate::snapshot::sqlite::codec);
 
 fn is_zero_f64(v: &f64) -> bool { *v == 0.0 }
 fn is_non_tube_od(v: &f64) -> bool { *v == 0.0 }
@@ -695,3 +695,9 @@ pub fn encode_en1999_pack(snapshot: &En1999Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 //#endregion 🌉️ExternalCodecBridge
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

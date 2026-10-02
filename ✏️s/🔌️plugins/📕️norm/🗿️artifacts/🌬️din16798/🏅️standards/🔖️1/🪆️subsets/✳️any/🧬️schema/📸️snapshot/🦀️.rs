@@ -4,6 +4,12 @@ use crate::document::AnnexChoice;
 use crate::{VentSystemDocument, ZoneDocument};
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -40,7 +46,7 @@ pub struct Din16798Snapshot {
     pub night_setback_k: f64,
 }
 
-crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", envelope_id = "norm.din16798");
+crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", envelope_id = "norm.din16798", sqlite = sqlite::sqlite_codec);
 
 impl Default for Din16798Snapshot {
     fn default() -> Self {

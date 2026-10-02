@@ -1,6 +1,7 @@
 import { posix } from "node:path";
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { createRustMutationCodecOwnershipInspector, createRustMutationInputInspector, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustRunnableTests, inspectRustSourceIdentities, inspectRustStructure, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🟦️.ts";
+import type { BreachRecord } from "../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🟦️.ts";
+import { createRustMutationCodecOwnershipInspector, createRustMutationInputInspector, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustMutationMetadataFacts, inspectRustRunnableTests, inspectRustSourceIdentities, inspectRustStructure, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyStructuralSourceView } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";
@@ -325,12 +326,13 @@ export function inspectMutationRootReachabilityView(view: MutationTaxonomyStruct
   const identity = (leafName: string): string => policyMutationSemanticIdentity(mutationsRel, leafName, taxonomy);
   const unresolved = (leafName: string, reason: string): MutationRootReachability => ({ leafName, variantName: policyKebabToPascal(identity(leafName)), moduleName: identity(leafName).replaceAll("-", "_"), mounted: false, wrapped: false, origin: null, reason });
   const graph = inspectRustModuleGraphFacts(rootSource), aggregates = inspectRustStructure(rootSource).enums.filter((item) => item.name.endsWith("Mutation") && item.visibility === "pub");
+  if (rustModuleScopeProof(graph, []).state === "unresolved") return leafNames.map((leafName) => unresolved(leafName, "requires a proven aggregate module scope"));
   if (aggregates.length !== 1 || aggregates[0]!.conditional) return leafNames.map((leafName) => unresolved(leafName, "requires exactly one unconditional public top-level aggregate Mutation enum"));
   const variants = aggregates[0]!.variants;
   return leafNames.map((leafName) => {
     const moduleName = identity(leafName).replaceAll("-", "_"), variantName = policyKebabToPascal(identity(leafName));
     const namedMounts = graph.modules.filter((module) => module.modulePath.length === 1 && module.name === moduleName);
-    const mount = namedMounts.filter((module) => module.visibility === "pub" && !module.inline && !module.conditional && module.pathTarget === `${leafName}/${rustFilename}`);
+    const mount = namedMounts.filter((module) => !module.unresolved && module.visibility === "pub" && !module.inline && !module.conditional && module.pathTarget === `${leafName}/${rustFilename}`);
     if (namedMounts.length !== 1 || mount.length !== 1) return unresolved(leafName, "requires exactly one unconditional public canonical direct-leaf mount");
     const leafRel = `${mutationsRel}/${leafName}`, leafPath = `${leafRel}/${rustFilename}`, leafSource = policyStructuralSource(view, leafPath);
     if (leafSource === null) return { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: `mounted direct leaf type source is ${policyStructuralNodeState(view, leafPath)} or outside the captured source view` };
@@ -340,14 +342,15 @@ export function inspectMutationRootReachabilityView(view: MutationTaxonomyStruct
     const leafMetadata = inspectRustMutationMetadataFacts(leafSource);
     for (const candidate of declarations(leafSource, leafPath, [])) add(candidate.origin.declarationName, candidate.origin, candidate.conditional);
     const leafGraph = inspectRustModuleGraphFacts(leafSource);
+    if (rustModuleScopeProof(leafGraph, []).state === "unresolved") return { leafName, variantName, moduleName, mounted: true, wrapped: false, origin: null, reason: "requires a proven direct leaf module scope" };
     for (const use of leafMetadata.crateAliases.filter((entry) => entry.modulePath.length === 0 && entry.kind === "reexport" && !entry.restricted)) {
       const match = /^([A-Za-z_][A-Za-z0-9_]*)::([A-Za-z_][A-Za-z0-9_]*)$/u.exec(use.source);
-      const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && !entry.inline && entry.pathTarget !== null) : [];
-      const inlineChildren = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1] && entry.visibility === "pub" && entry.inline) : [];
-      const child = children.length + inlineChildren.length === 1 ? [...children, ...inlineChildren][0] : undefined;
+      const children = match ? leafGraph.modules.filter((entry) => entry.modulePath.length === 1 && entry.name === match[1]) : [];
+      const child = children.length === 1 && !children[0]!.unresolved && children[0]!.visibility === "pub" && (children[0]!.inline || children[0]!.pathTarget !== null) ? children[0] : undefined;
       if (!match || !child) continue;
       const childPath = child.inline ? leafPath : `${leafRel}/${child.pathTarget!}`, childSource = child.inline ? leafSource : policyStructuralSource(view, childPath);
       if (childSource === null) continue;
+      if (rustModuleScopeProof(inspectRustModuleGraphFacts(childSource), child.inline ? [child.name] : []).state === "unresolved") continue;
       const childOrigins = declarations(childSource, childPath, child.inline ? [child.name] : []).filter((candidate) => candidate.origin.declarationName === match[2]!);
       if (childOrigins.length === 1) add(use.alias, childOrigins[0]!.origin, childOrigins[0]!.conditional || child.conditional === true || use.conditional);
     }

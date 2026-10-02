@@ -7,7 +7,7 @@ use crate::{FormExpr, FormMutation, FormQuestion, FormQuestionOption, FormVector
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🎛️BlockField
-/// 🎛️ One settable question field and its typed value (`None` clears an optional field) — on the wire `{field, value}`.
+/// 🔣️ One settable question field and its typed value (`None` clears an optional field) — on the wire `{field, value}`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[value(tag = "field", content = "value", rename_all = "camelCase")]
 pub enum BlockField {
@@ -139,7 +139,7 @@ impl BlockField {
 //#endregion 🎛️BlockField
 
 //#region 🎛️ChangeBlockField
-/// 🎛️ Sets `change`'s field of the question `block_id` (in whichever step holds it) to `change`'s value.
+/// 🎚️ Sets `change`'s field of the question `block_id` (in whichever step holds it) to `change`'s value.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -158,9 +158,9 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeBlockField {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_change_block_field(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = self.change.labels();
-        protocol::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change {en} of question \"{}\"", self.block_id), &format!("{de} der Frage \"{}\" ändern", self.block_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.block_id.clone()]

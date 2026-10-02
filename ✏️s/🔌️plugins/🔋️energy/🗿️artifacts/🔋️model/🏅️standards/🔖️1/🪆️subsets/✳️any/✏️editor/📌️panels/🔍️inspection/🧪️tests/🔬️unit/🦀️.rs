@@ -207,7 +207,7 @@ async fn a_thermostat_control_round_trips_the_typed_number_through_the_action_br
     );
 }
 
-/// 📍️ Same round trip for the site's five-scalar payload.
+/// 📍️ Same round trip for a site control: it names its own field and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn a_site_control_round_trips_the_typed_number_through_the_action_bridge() {
     let mut model = crate::examples::demo::model();
@@ -218,14 +218,8 @@ async fn a_site_control_round_trips_the_typed_number_through_the_action_bridge()
     let command = bridged(control, "30");
     assert_eq!(
         command,
-        crate::editor::model::EnergyModelEditorCommand::SetSite {
-            latitude_deg: model.site.latitude_deg,
-            longitude_deg: model.site.longitude_deg,
-            elevation_m: model.site.elevation_m,
-            time_zone_hours: model.site.time_zone_hours,
-            north_axis_deg: 30.0,
-        },
-        "the north-axis control writes 30.0, not the bridge's 0.0 default: {json}"
+        crate::editor::model::EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) },
+        "the north-axis control writes 30.0 into its own field only, not the bridge's 0.0 default: {json}"
     );
 }
 

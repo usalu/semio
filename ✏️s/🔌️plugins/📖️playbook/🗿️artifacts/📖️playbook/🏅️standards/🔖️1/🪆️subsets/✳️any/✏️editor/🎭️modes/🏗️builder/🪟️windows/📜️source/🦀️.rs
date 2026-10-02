@@ -1,7 +1,10 @@
 //! 📜️ Playbook source window — a read-only TextEditor surface for the authored snapshot wire.
 
 use crate::PlaybookSnapshot;
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_scene::TextEditorScene;
 
 pub const PLAYBOOK_PLAY_WINDOW_SOURCE: &str = "playbook-source";

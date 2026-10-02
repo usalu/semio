@@ -79,6 +79,7 @@
   "properties": {
     "annex": {
       "type": "string",
+      "enum": ["En", "De"],
       "x-semio-state": "artifact"
     },
     "snowZone": {
@@ -337,13 +338,17 @@
       "type": "string"
     },
     "thermalBridgeType": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
     },
     "deltaTM": {
       "type": "number"
     },
     "storeyCount": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
     },
     "fireMode": {
       "type": "string",
@@ -355,7 +360,8 @@
       "x-semio-state": "artifact"
     },
     "fireCurve": {
-      "type": "string"
+      "type": "string",
+      "enum": ["standard", "external", "hydrocarbon", "parametric"]
     },
     "fireDuration": {
       "type": "number"

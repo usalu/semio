@@ -1,0 +1,161 @@
+{
+  "schema": "s.puzzle2d.history-edit-runtime.v1",
+  "description": "⏪️ Runtime acceptance of non-destructive history editing with puzzle 2d as the witness (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). One board; each scenario authors `log` (one edit per leaf, oldest first; `row` indices address these edits), edits it in a history session through the reserved `historyEdit*` verbs and checks the session, the per-mutation outcomes, the history-edit rows and the document head at each step. `heads` name documents: the board with `log` folded after replacing or dropping the leaves `edits` names; the Rust law (`🧪️tests/🧪️history-edit-runtime/🦀️.rs`) checks the app's head against them and against a fresh app folding that edited log, and the Python oracle (`🐍️.py` beside it) re-folds them independently with shapely and validates every leaf against its payload schema.",
+  "board": {
+    "schema": "puzzle.2d.fixture",
+    "nodes": [
+      { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "text": "Left", "handles": [] },
+      { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Middle", "handles": [] },
+      { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "text": "Pin", "locked": true, "handles": [] }
+    ],
+    "edges": []
+  },
+  "scenarios": [
+    {
+      "id": "several-drafts-from-a-review-finalize-once",
+      "log": [
+        { "mutation": "dragSelection", "targets": ["left"], "dx": 10.0, "dy": 0.0 },
+        { "mutation": "dragSelection", "targets": ["mid"], "dx": 0.0, "dy": 10.0 }
+      ],
+      "heads": {
+        "original": { "edits": [], "nodes": { "left": { "x": -190.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 10.0 }, "pin": { "x": 200.0, "y": 0.0, "locked": true } } },
+        "edited": {
+          "edits": [
+            { "index": 0, "leaf": { "mutation": "dragSelection", "targets": ["left"], "dx": 30.0, "dy": 0.0 } },
+            { "index": 1, "leaf": { "mutation": "dragSelection", "targets": ["mid"], "dx": 0.0, "dy": 20.0 } }
+          ],
+          "nodes": { "left": { "x": -170.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 20.0 }, "pin": { "x": 200.0, "y": 0.0, "locked": true } }
+        }
+      },
+      "steps": [
+        { "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } },
+        { "translate": { "select": ["mid"], "dx": 0.0, "dy": 1.0, "step": 10.0 }, "expect": { "rows": 2, "head": "original" } },
+        { "begin": { "row": 0 }, "expect": { "stage": "editing" } },
+        { "input": { "path": "/dx", "value": 30.0 } },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "acceptedCount": 1 } },
+        { "begin": { "row": 1 }, "expect": { "stage": "editing", "acceptedCount": 1 } },
+        { "input": { "path": "/dy", "value": 20.0 } },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "acceptedCount": 2 } },
+        { "finalize": "overwrite", "expect": { "stage": null, "head": "edited", "historyEdits": [{ "en": "History edited — overwrite: 2 mutations", "de": "Verlauf bearbeitet — überschrieben: 2 Mutationen" }] } },
+        { "undo": null, "expect": { "head": "original", "historyEdits": [{ "en": "History edit undone — overwrite: 2 mutations", "de": "Verlaufsbearbeitung rückgängig — überschrieben: 2 Mutationen" }, { "en": "History edited — overwrite: 2 mutations", "de": "Verlauf bearbeitet — überschrieben: 2 Mutationen" }] } },
+        { "redo": null, "expect": { "head": "edited" } }
+      ]
+    },
+    {
+      "id": "a-replay-is-cancelled-and-run-again",
+      "log": [
+        { "mutation": "dragSelection", "targets": ["left"], "dx": 10.0, "dy": 0.0 },
+        { "mutation": "dragSelection", "targets": ["mid"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "heads": {
+        "original": { "edits": [], "nodes": { "left": { "x": -190.0, "y": 0.0 }, "mid": { "x": 10.0, "y": 0.0 }, "pin": { "x": 200.0, "y": 0.0, "locked": true } } }
+      },
+      "steps": [
+        { "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } },
+        { "translate": { "select": ["mid"], "dx": 1.0, "dy": 0.0, "step": 10.0 } },
+        { "begin": { "row": 0 } },
+        { "input": { "path": "/dx", "value": 50.0 } },
+        { "acceptPending": null, "expect": { "stage": "replaying", "acceptedCount": 1 } },
+        { "cancelReplay": null, "expect": { "stage": "reviewing", "review": "needsReplay", "fault": "timeTravel.cancelled", "rerunnable": true, "acceptedCount": 1 } },
+        { "rerun": null, "expect": { "stage": "reviewing", "review": "ready", "rerunnable": false } },
+        { "exit": null, "expect": { "stage": null, "head": "original", "historyEdits": [] } }
+      ]
+    },
+    {
+      "id": "an-introduced-warning-persists-after-finalize-and-reload",
+      "log": [
+        { "mutation": "changeNodeLocked", "id": "pin", "newLocked": false },
+        { "mutation": "dragSelection", "targets": ["left", "pin"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "heads": {
+        "withdrawn": { "edits": [{ "index": 0, "withdrawn": true }], "nodes": { "left": { "x": -190.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 0.0 }, "pin": { "x": 200.0, "y": 0.0, "locked": true } } }
+      },
+      "steps": [
+        { "ingest": { "mutation": "changeNodeLocked", "id": "pin", "newLocked": false } },
+        { "translate": { "select": ["left", "pin"], "dx": 1.0, "dy": 0.0, "step": 10.0 }, "expect": { "rows": 2 } },
+        { "begin": { "row": 0 } },
+        { "withdraw": null },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "worst": "warning", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": true }] } },
+        { "finalize": "overwrite", "expect": { "stage": null, "head": "withdrawn", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": false }], "words": { "row": 1, "en": "Warning", "de": "Warnung" } } },
+        { "reload": "text", "expect": { "stage": null, "head": "withdrawn", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": false }], "words": { "row": 1, "en": "Warning", "de": "Warnung" } } },
+        { "reload": "pack", "expect": { "stage": null, "head": "withdrawn", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"], "introduced": false }], "words": { "row": 1, "en": "Warning", "de": "Warnung" } } }
+      ]
+    },
+    {
+      "id": "fatal-and-error-resolved-then-overwritten-undone-and-redone",
+      "log": [
+        { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+        { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 600.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+        { "mutation": "dragSelection", "targets": ["extra"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "heads": {
+        "original": { "edits": [], "nodes": { "extra": { "x": 410.0, "y": 0.0 }, "late": { "x": 600.0, "y": 0.0 }, "left": { "x": -200.0, "y": 0.0 } } },
+        "fixed": {
+          "edits": [
+            { "index": 0, "leaf": { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+            { "index": 1, "withdrawn": true },
+            { "index": 2, "leaf": { "mutation": "dragSelection", "targets": ["late"], "dx": 10.0, "dy": 0.0 } }
+          ],
+          "nodes": { "late": { "x": 410.0, "y": 0.0 }, "left": { "x": -200.0, "y": 0.0 } },
+          "absent": ["extra"]
+        }
+      },
+      "steps": [
+        { "ingest": { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+        { "ingest": { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 600.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+        { "translate": { "select": ["extra"], "dx": 1.0, "dy": 0.0, "step": 10.0 }, "expect": { "rows": 3, "head": "original" } },
+        { "begin": { "row": 0 } },
+        { "input": { "path": "/node/id", "value": "late" } },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "blocked", "blocking": true, "worst": "fatal", "outcomes": [{ "row": 1, "worst": "fatal", "code": "mutation.duplicate-id" }, { "row": 2, "worst": "error", "code": "mutation.target-missing", "target": ["extra"], "introduced": true }], "nextProblem": { "row": 1 } } },
+        { "begin": "nextProblem", "expect": { "stage": "editing" } },
+        { "withdraw": null },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "blocked", "blocking": true, "worst": "error", "nextProblem": { "row": 2 } } },
+        { "begin": "nextProblem", "expect": { "stage": "editing" } },
+        { "select": ["late"] },
+        { "useSelection": "/targets", "expect": { "draft": { "/targets": ["late"] } } },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "acceptedCount": 3 } },
+        { "finalize": "overwrite", "expect": { "stage": null, "head": "fixed", "historyEdits": [{ "en": "History edited — overwrite: 3 mutations", "de": "Verlauf bearbeitet — überschrieben: 3 Mutationen" }] } },
+        { "undo": null, "expect": { "head": "original" } },
+        { "redo": null, "expect": { "head": "fixed" } }
+      ]
+    },
+    {
+      "id": "fatal-and-error-resolved-then-kept-as-a-new-alternative",
+      "log": [
+        { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+        { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 600.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+        { "mutation": "dragSelection", "targets": ["extra"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "heads": {
+        "original": { "edits": [], "nodes": { "extra": { "x": 410.0, "y": 0.0 }, "late": { "x": 600.0, "y": 0.0 } } },
+        "fixed": {
+          "edits": [
+            { "index": 0, "leaf": { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+            { "index": 1, "withdrawn": true },
+            { "index": 2, "leaf": { "mutation": "dragSelection", "targets": ["late"], "dx": 10.0, "dy": 0.0 } }
+          ],
+          "nodes": { "late": { "x": 410.0, "y": 0.0 } },
+          "absent": ["extra"]
+        }
+      },
+      "steps": [
+        { "ingest": { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+        { "ingest": { "mutation": "createNode", "index": null, "node": { "id": "late", "shape": "circle", "x": 600.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } } },
+        { "translate": { "select": ["extra"], "dx": 1.0, "dy": 0.0, "step": 10.0 } },
+        { "begin": { "row": 0 } },
+        { "input": { "path": "/node/id", "value": "late" } },
+        { "accept": null, "expect": { "review": "blocked", "nextProblem": { "row": 1 } } },
+        { "begin": "nextProblem" },
+        { "withdraw": null },
+        { "accept": null, "expect": { "review": "blocked", "nextProblem": { "row": 2 } } },
+        { "begin": "nextProblem" },
+        { "select": ["late"] },
+        { "useSelection": "/targets" },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false } },
+        { "finalize": { "alternative": "Fixed" }, "expect": { "stage": null, "head": "fixed", "alternative": "Fixed", "historyEdits": [{ "en": "History edited — alternative Fixed: 3 mutations", "de": "Verlauf bearbeitet — Alternative Fixed: 3 Mutationen" }] } },
+        { "undo": null, "expect": { "head": "original", "alternative": "Fixed" } },
+        { "redo": null, "expect": { "head": "fixed", "alternative": "Fixed" } }
+      ]
+    }
+  ]
+}

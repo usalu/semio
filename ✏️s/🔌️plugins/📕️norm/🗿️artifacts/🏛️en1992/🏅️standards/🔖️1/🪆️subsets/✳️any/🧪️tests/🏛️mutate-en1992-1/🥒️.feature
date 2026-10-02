@@ -73,7 +73,7 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
       | remove-anchor                 | 🗑️remove-anchor                 | ✅apply  |
       | remove-anchor-gone            | 🗑️remove-anchor                 | ❓gone   |
       | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✅apply  |
-      | change-anchor-as              | 🧷change-anchor-a-s              | ✅apply  |
+      | change-anchor-as              | 🧷change-anchor-as               | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -114,7 +114,7 @@ Feature: Apply every typed EN 1992 mutation against an independent Python implem
       | insert-anchor                 | ⚓️insert-anchor                 | ✅apply  |
       | remove-anchor                 | 🗑️remove-anchor                 | ✅apply  |
       | change-anchor-h-ef            | 📍change-anchor-h-ef             | ✅apply  |
-      | change-anchor-as              | 🧷change-anchor-a-s              | ✅apply  |
+      | change-anchor-as              | 🧷change-anchor-as               | ✅apply  |
 
   @id-identity-round-trip
   @level-long

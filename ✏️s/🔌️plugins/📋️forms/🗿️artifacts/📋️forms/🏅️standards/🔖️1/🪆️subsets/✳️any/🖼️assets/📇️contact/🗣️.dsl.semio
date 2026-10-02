@@ -1,15 +1,14 @@
 semio forms.form.dsl v1
 schema=forms.form id=default version="1" title=Contact
-definition=steps=[
-  id=contact title=Contact blocks=[
-    id=name label=Name kind=text required=true placeholder="Your name"
-    condition {}
-    id=email label=Email kind=text required=true placeholder="you@example.com"
-    condition {}
-    id=message label=Message kind=longText placeholder="How can we help?"
-    condition {}
-  ]
+structure=child_id=contact-structure target=artifact-id=contact-structure artifact-kind=s.stdio.semio standard=v1 subset=value
+results=child_id=contact-results target=artifact-id=contact-results artifact-kind=s.stdio.semio standard=v1 subset=table
+steps=[
+ { id=contact title=Contact questions=[
+  { id=name label=Name kind=text required=true placeholder="Your name" }
+  { id=email label=Email kind=text required=true placeholder="you@example.com" }
+  { id=message label=Message kind=longText placeholder="How can we help?" }
+ ] }
 ]
 responses=[]
-structure=child_id=contact-structure target="contact-structure!s.stdio.semio@v1/value"
-results=child_id=contact-results target="contact-results!s.stdio.semio@v1/table"
+values=[]
+conditions=[]

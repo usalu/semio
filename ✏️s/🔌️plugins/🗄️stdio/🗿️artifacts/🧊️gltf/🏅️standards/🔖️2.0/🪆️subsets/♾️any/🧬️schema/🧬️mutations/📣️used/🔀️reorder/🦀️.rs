@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderUsedEx
         vec![super::GltfMutation::ReorderUsedExtensions(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Used Extensions", "Verwendete Erweiterungen umordnen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Reorder Used Extensions", "Verwendete Erweiterungen umordnen")
     }
 
     fn target(&self) -> Vec<String> {

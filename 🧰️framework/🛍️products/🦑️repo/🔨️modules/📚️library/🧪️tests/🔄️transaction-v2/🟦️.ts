@@ -1,3 +1,4 @@
+import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — Transaction Plan/Journal v2 crash, recovery, and concurrency proof.
@@ -8,9 +9,10 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFileSync, chmodSync, constants, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
-import { terminateOwnedProcessTree } from "../../🏃️process/🟦️.ts";
+
 import { getWorkspaceRoot } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, parseTaxonomyPlan, planTaxonomy, taxonomyPlanDigest, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, inventoryTaxonomy, noFollowTreeDigest, parseTaxonomyPlan, planTaxonomy, taxonomyPlanDigest, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort } from "../🔍️filesystem/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -305,7 +307,7 @@ function generatorFixture(name: string): Fixture {
     writeFiles(join(row.workspace, "🧪️generator"), {
       "📋️project.json": project,
       "📜️script.ts": [
-        "import { BundleScript, ScriptRouter, runBundleScriptMain } from \"@semio-tech/repo-lib/routing\";",
+        "import { BundleScript, ScriptRouter, runScriptMain } from \"@semio-tech/repo-lib/routing\";",
         "import { runFixtureGenerator } from \"./⚙️engine/🟦️.ts\";",
         "class PreviewScript extends BundleScript {",
         "  run(): void { runFixtureGenerator(this.root,\"preview-generated\"); }",
@@ -316,7 +318,7 @@ function generatorFixture(name: string): Fixture {
         "class CheckScript extends BundleScript {",
         "  run(): void { runFixtureGenerator(this.root,\"check\"); }",
         "}",
-        "await runBundleScriptMain(new ScriptRouter(import.meta.dir).register(\"preview-generated\",PreviewScript).register(\"generate\",GenerateScript).register(\"check\",CheckScript),import.meta.url);",
+        "await runScriptMain(new ScriptRouter(import.meta.dir).register(\"preview-generated\",PreviewScript).register(\"generate\",GenerateScript).register(\"check\",CheckScript),import.meta.url);",
         "",
       ].join("\n"),
       "⚙️engine/🟦️.ts": [

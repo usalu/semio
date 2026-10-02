@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The transient state lane of `s.block.3d`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient): its mutation vocabulary `Block3dWorldWindowTransientMutation` over `Block3dWorldWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-block-3d-1-any-editor-edit-world-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],

@@ -23,7 +23,7 @@ fn actions_are_localized_and_registered_as_interactive() {
     assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
     for action in &own {
         assert!(
-            semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, Locale::En) != action.label.resolve(terminology, Locale::De)),
+            semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, Locale::En) != action.label.resolve(terminology, Locale::De)),
             "action {} is not really translated",
             action.id
         );

@@ -32,7 +32,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, decode_semio_audio_mutation_json, inverse_semio_audio_mutation, set_snapshot, SemioAudioMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};

@@ -23,7 +23,7 @@ fn scene_with(interaction: Puzzle5dInteractionSnapshot, runtime: Puzzle5dRuntime
 }
 
 fn part_selection() -> Puzzle5dInteractionSnapshot {
-    Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new() }
+    Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: Vec::new(), referenced: Vec::new() }
 }
 
 /// 🕹️ Law: a part the framework `vortex` domain holds selected paints as `selected` on its world
@@ -31,13 +31,25 @@ fn part_selection() -> Puzzle5dInteractionSnapshot {
 #[test]
 fn world_instances_paint_the_live_selection_and_hover() {
     let document = document_with_one_gripped_part();
-    let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()] };
+    let marked = Puzzle5dInteractionSnapshot { granularity: crate::editor::puzzle5d::PUZZLE5D_GRANULARITY_PART.into(), selected: vec!["teil-ä".into()], hovered: vec!["teil-ä".into()], referenced: Vec::new() };
     let instances: Value = serde_json::from_str::<serde_json::Value>(&world_instances_json(&document, &marked, None)).expect("instancesJson");
     assert_eq!(instances[0]["selected"], serde_json::json!(true));
     assert_eq!(instances[0]["hovered"], serde_json::json!(true));
     let idle: Value = serde_json::from_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None)).expect("instancesJson");
     assert_eq!(idle[0]["selected"], serde_json::json!(false));
     assert_eq!(idle[0]["hovered"], serde_json::json!(false));
+}
+
+/// 🔗️ N3 law (design §16.4): a part the open time-travel draft references paints `highlighted` on its world instance —
+/// the row both hosts paint as the secondary highlight — and no part does while no draft is open.
+#[test]
+fn world_instances_highlight_the_parts_a_history_draft_references() {
+    let document = document_with_one_gripped_part();
+    let drafted = Puzzle5dInteractionSnapshot { referenced: vec!["teil-ä".into()], ..Puzzle5dInteractionSnapshot::default() };
+    let instances: Value = serde_json::from_str::<serde_json::Value>(&world_instances_json(&document, &drafted, None)).expect("instancesJson");
+    assert_eq!(instances[0]["highlighted"], serde_json::json!(true), "the referenced part is highlighted");
+    let idle: Value = serde_json::from_str(&world_instances_json(&document, &Puzzle5dInteractionSnapshot::default(), None)).expect("instancesJson");
+    assert_eq!(idle[0]["highlighted"], serde_json::json!(false), "nothing is highlighted without a draft");
 }
 
 /// 🎯️ Law: the world selection payload carries the live ids and the hovered part, so `World3dHost`
@@ -283,7 +295,7 @@ fn world_markers_declare_this_domains_granularities() {
 #[test]
 fn the_interaction_lane_carries_the_hovered_grip_and_the_open_suggestion_menu() {
     let labels = &Puzzle5dLabels::NATIVE_EN;
-    let hovered = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: Vec::new(), hovered: vec!["teil-ä:g1".into()] };
+    let hovered = Puzzle5dInteractionSnapshot { granularity: String::new(), selected: Vec::new(), hovered: vec!["teil-ä:g1".into()], referenced: Vec::new() };
     let idle: Value = serde_json::from_str(&world_interaction_json(&scene_with(hovered.clone(), Puzzle5dRuntime::default(), "select"), labels, None)).expect("interactionJson");
     assert_eq!(idle["hoveredVortexFullId"], serde_json::json!("teil-ä:g1"));
     assert_eq!(idle["suggestionMenu"], Value::Null, "no menu is open");

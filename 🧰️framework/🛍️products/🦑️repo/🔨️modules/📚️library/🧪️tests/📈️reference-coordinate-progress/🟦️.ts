@@ -6,6 +6,7 @@ import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import { dirname as oracleDirname } from "pathe";
 import ts from "typescript";
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📈️reference-coordinate-progress";
 const root = resolve(import.meta.dir, ...owner.split("/").map(() => ".."));
@@ -33,10 +34,10 @@ function input(path: string): Buffer {
 }
 
 if (join(root, owner) !== import.meta.dir) throw new Error("Wrong test owner");
-input(owner + "./🟦️.ts");
-const vector = JSON.parse(input(owner + "../../🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
-const grammar = JSON.parse(input(owner + "../../🧬️schema/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
-const source = input(sourcePath).toString("utf8");
+input(owner + "/🟦️.ts");
+const vector = JSON.parse(input(library + "/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
+const grammar = JSON.parse(input(library + "/🧬️schema/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
+const source = normalizationSourceDeclarations(join(root, sourcePath), (path) => input(relative(root, path).replaceAll("\\", "/")));
 input(library + "/🔍️discovery/🟦️.ts");
 input(library + "/🔣️taxonomy.json");
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
@@ -134,7 +135,7 @@ function execute(compiler: typeof compiled[number], row: Case, withProgress = tr
 test("neutral coordinate progress contract has independent schema and directory-order parity", () => {
   const validate = new Ajv({ strict: false, allErrors: true }).compile(grammar);
   expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
-  expect(parseJsonc(input(owner + "../../🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"))).toEqual(vector);
+  expect(parseJsonc(input(library + "/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"))).toEqual(vector);
   expect(new Set(vector.cases.map((row: Case) => row.id)).size).toBe(vector.cases.length);
   expect(validate({ ...vector, unknown: true })).toBe(false);
   expect(validate({ ...vector, semantics: { ...vector.semantics, current: "attempted-candidates" } })).toBe(false);

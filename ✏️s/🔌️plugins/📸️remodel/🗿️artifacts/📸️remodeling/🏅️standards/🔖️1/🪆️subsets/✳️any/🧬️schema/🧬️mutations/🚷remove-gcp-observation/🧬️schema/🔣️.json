@@ -48,7 +48,8 @@
         "precision": 0,
         "group": "media",
         "order": 20
-      }
+      },
+      "maximum": 4294967295
     }
   }
 }

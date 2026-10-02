@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for SetConformance
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
         agg_inverse(&DocxStrictMutation::SetConformanceAttribute(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

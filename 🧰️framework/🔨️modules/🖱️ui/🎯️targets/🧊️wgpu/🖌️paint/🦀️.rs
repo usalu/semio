@@ -1237,11 +1237,13 @@ pub(crate) fn paint_node_step_with_driver(
                 _ => retained_presence_step(draw, bounds, theme, presence),
             },
             UiNode::Input(input_node) => {
+                let shown = input_node.display_factor.filter(|_| input_node.input_kind == "number").and_then(|factor| input_node.value.trim().parse::<f64>().ok().map(|stored| ui_contract::ui_number_display_text(stored, Some(factor), input_node.precision)));
+                let refused = node.state.number_refusal.is_some() && node.state.edit.is_some();
                 let display = node.state.edit.as_ref().map(|edit| edit.text.as_str()).filter(|text| !text.is_empty()).unwrap_or_else(|| {
                     if input_node.value.is_empty() {
                         input_node.placeholder.as_ref().map_or("", Label::as_str)
                     } else {
-                        input_node.value.as_str()
+                        shown.as_deref().unwrap_or(input_node.value.as_str())
                     }
                 });
                 let swatch = (input_node.input_kind == "color").then(|| color_input_swatch(bounds, display)).flatten();
@@ -1249,7 +1251,7 @@ pub(crate) fn paint_node_step_with_driver(
                 match cursor.phase {
                     0 => {
                         let result = retained_fixed_output(draw, |draw| {
-                            push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
+                            push_control_border(draw, bounds, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
                             if let Some((swatch, color, _)) = swatch {
                                 draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
                             }
@@ -1261,7 +1263,7 @@ pub(crate) fn paint_node_step_with_driver(
                             RetainedNodePaintStep::Pending
                         }
                     }
-                    1 => match retained_text_node_step(display, text_bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
+                    1 => match retained_text_node_step(display, text_bounds, theme.font_size_body, if refused { theme.error } else if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
                         RetainedNodePaintStep::Complete => {
                             cursor.advance(2);
                             RetainedNodePaintStep::Pending
@@ -1506,77 +1508,77 @@ pub(crate) fn paint_node_step_with_driver(
                     }
                 }
             }
-            UiNode::Slider(slider) => match cursor.phase {
-                0 => {
-                    let value = node.state.slider_draft_value.unwrap_or(slider.value);
-                    let unit_label = crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref());
-                    let presentation = crate::wgpu::layout::slider_control_presentation(bounds, value, slider.min, slider.max, unit_label.as_ref().map(|_| layout.inline_suffix_width), theme.gap_standard, inline).slider;
-                    let result = retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS.max(3 + slider.snaps.len()), |draw| {
-                        draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
-                        draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
-                        for tick in crate::wgpu::slider::slider_tick_rects(presentation.rail, slider.min, slider.max, &slider.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
-                            draw.push_solid([tick.x, tick.y, tick.w, tick.h], theme.text_element.with_alpha(theme.text_element.a * 0.6));
-                        }
-                        draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
-                    });
-                    cursor.advance(1);
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
+            UiNode::Slider(slider) => {
+                let value = node.state.slider_draft_value.unwrap_or(slider.value);
+                let unit_label = slider.unit_label();
+                let control = crate::wgpu::layout::slider_control_presentation(bounds, slider.axis_position(value), 0.0, 1.0, unit_label.as_ref().map(|_| layout.inline_suffix_width), theme.gap_standard, inline);
+                let presentation = control.slider;
+                let refusal = node.state.number_refusal.as_deref().filter(|_| node.state.edit.is_some());
+                match cursor.phase {
+                    0 if refusal.is_some_and(|text| !text.is_empty()) => {
+                        cursor.advance(1);
                         RetainedNodePaintStep::Pending
                     }
-                }
-                1 => {
-                    let value = node.state.slider_draft_value.unwrap_or(slider.value);
-                    let unit_label = crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref());
-                    let presentation = crate::wgpu::layout::slider_control_presentation(bounds, value, slider.min, slider.max, unit_label.as_ref().map(|_| layout.inline_suffix_width), theme.gap_standard, inline).slider;
-                    let formatted = ui_contract::format_ui_number(value);
-                    let label = node.state.edit.as_ref().map_or(formatted.as_str(), |edit| edit.text.as_str());
-                    let color = if node.state.edit.is_some() { theme.text } else { theme.text_element };
-                    let size = if node.state.edit.is_some() { unscoped_body_font_size } else { theme.font_size_small };
-                    match retained_text_end_step(label, presentation.value_cell, size, color, inline, atlas, draw, cursor) {
+                    0 => {
+                        let result = retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS.max(4 + slider.snaps.len()), |draw| paint_slider_travel(slider, value, presentation, theme, draw));
+                        cursor.advance(2);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    1 => match retained_text_node_step(refusal.unwrap_or_default(), presentation.track_cell, theme.font_size_small, theme.error, atlas, draw, cursor) {
                         RetainedNodePaintStep::Complete => {
                             cursor.advance(2);
                             RetainedNodePaintStep::Pending
                         }
                         step => step,
-                    }
-                }
-                2 => {
-                    let Some(edit) = node.state.edit.as_ref().filter(|edit| node.state.caret_visible && edit.anchor == edit.caret) else {
-                        cursor.advance(3);
-                        return RetainedNodePaintStep::Pending;
-                    };
-                    let unit_label = crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref());
-                    let presentation =
-                        crate::wgpu::layout::slider_control_presentation(bounds, node.state.slider_draft_value.unwrap_or(slider.value), slider.min, slider.max, unit_label.as_ref().map(|_| layout.inline_suffix_width), theme.gap_standard, inline)
-                            .slider;
-                    let alignment = if inline.is_rtl() { RetainedCaretAlignment::Start } else { RetainedCaretAlignment::End };
-                    match retained_caret_step(&edit.text, edit.caret, presentation.value_cell, unscoped_body_font_size, alignment, theme.accent, atlas, draw, cursor) {
-                        RetainedNodePaintStep::Complete => {
-                            cursor.advance(3);
-                            RetainedNodePaintStep::Pending
+                    },
+                    2 => {
+                        let formatted = slider.readout(value);
+                        let label = node.state.edit.as_ref().map_or(formatted.as_str(), |edit| edit.text.as_str());
+                        let color = if refusal.is_some() { theme.error } else if node.state.edit.is_some() { theme.text } else { theme.text_element };
+                        let size = if node.state.edit.is_some() { unscoped_body_font_size } else { theme.font_size_small };
+                        match retained_text_end_step(label, presentation.value_cell, size, color, inline, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.advance(3);
+                                RetainedNodePaintStep::Pending
+                            }
+                            step => step,
                         }
-                        step => step,
                     }
-                }
-                3 => {
-                    let Some(label) = crate::wgpu::layout::slider_unit_label(slider.value, slider.unit.as_deref()) else {
-                        cursor.advance(4);
-                        return RetainedNodePaintStep::Pending;
-                    };
-                    let presentation = crate::wgpu::layout::slider_control_presentation(bounds, node.state.slider_draft_value.unwrap_or(slider.value), slider.min, slider.max, Some(layout.inline_suffix_width), theme.gap_standard, inline);
-                    let Some(unit_cell) = presentation.unit_cell else { return RetainedNodePaintStep::Fault };
-                    match retained_tree_text_step(&label, unit_cell, unscoped_body_font_size, theme.text_muted, inline, atlas, draw, cursor) {
-                        RetainedNodePaintStep::Complete => {
+                    3 => {
+                        let Some(edit) = node.state.edit.as_ref().filter(|edit| node.state.caret_visible && edit.anchor == edit.caret) else {
                             cursor.advance(4);
-                            RetainedNodePaintStep::Pending
+                            return RetainedNodePaintStep::Pending;
+                        };
+                        let alignment = if inline.is_rtl() { RetainedCaretAlignment::Start } else { RetainedCaretAlignment::End };
+                        match retained_caret_step(&edit.text, edit.caret, presentation.value_cell, unscoped_body_font_size, alignment, theme.accent, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.advance(4);
+                                RetainedNodePaintStep::Pending
+                            }
+                            step => step,
                         }
-                        step => step,
                     }
+                    4 => {
+                        let Some(label) = unit_label else {
+                            cursor.advance(5);
+                            return RetainedNodePaintStep::Pending;
+                        };
+                        let Some(unit_cell) = control.unit_cell else { return RetainedNodePaintStep::Fault };
+                        match retained_tree_text_step(&label, unit_cell, unscoped_body_font_size, theme.text_muted, inline, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.advance(5);
+                                RetainedNodePaintStep::Pending
+                            }
+                            step => step,
+                        }
+                    }
+                    _ => retained_presence_step(draw, bounds, theme, presence),
                 }
-                _ => retained_presence_step(draw, bounds, theme, presence),
-            },
+            }
             UiNode::NumberStepper(stepper) => {
                 let [decrement, value_segment, increment] = crate::wgpu::layout::number_stepper_segments(bounds, inline, theme.stroke_hairline);
                 match cursor.phase {
@@ -1617,11 +1619,11 @@ pub(crate) fn paint_node_step_with_driver(
                             }
                             label
                         } else if stepper.uniform {
-                            crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision)
+                            stepper.value_text(stepper.value)
                         } else {
                             UI_INSPECTOR_MIXED_PLACEHOLDER.to_string()
                         };
-                        let color = if stepper.uniform || node.state.edit.is_some() { theme.text } else { theme.text_muted };
+                        let color = if node.state.number_refusal.is_some() && node.state.edit.is_some() { theme.error } else if stepper.uniform || node.state.edit.is_some() { theme.text } else { theme.text_muted };
                         match retained_stepper_text_step(&label, value_segment, color, theme, atlas, draw, cursor) {
                             RetainedNodePaintStep::Complete => {
                                 cursor.advance(4);
@@ -3097,21 +3099,48 @@ fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &m
 
 #[cfg(test)]
 fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
-    let unit_label = crate::wgpu::layout::slider_unit_label(node.value, node.unit.as_deref());
+    let unit_label = node.unit_label();
     let unit_width = unit_label.as_ref().map(|label| atlas.measure_text(label, theme.font_size_body).0);
-    let control = crate::wgpu::layout::slider_control_presentation(bounds, node.value, node.min, node.max, unit_width, theme.gap_standard, ui_contract::FlowInline::Ltr);
+    let control = crate::wgpu::layout::slider_control_presentation(bounds, node.axis_position(node.value), 0.0, 1.0, unit_width, theme.gap_standard, ui_contract::FlowInline::Ltr);
     let presentation = control.slider;
-    draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
-    draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
-    for tick in crate::wgpu::slider::slider_tick_rects(presentation.rail, node.min, node.max, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
-        draw.push_solid([tick.x, tick.y, tick.w, tick.h], theme.text_element.with_alpha(theme.text_element.a * 0.6));
-    }
-    draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
-    let text = ui_contract::format_ui_number(node.value);
+    paint_slider_travel(node, node.value, presentation, theme, draw);
+    let text = node.readout(node.value);
     let (width, _) = atlas.measure_text(&text, theme.font_size_small);
     draw_text_on(draw, atlas, &text, presentation.value_cell.x + (presentation.value_cell.w - width).max(0.0), presentation.value_cell.y + (presentation.value_cell.h + theme.font_size_small) * 0.5, theme.font_size_small, theme.text_element);
     if let (Some(label), Some(unit_cell)) = (unit_label, control.unit_cell) {
         draw_text_on(draw, atlas, &label, unit_cell.x, unit_cell.y + (unit_cell.h + theme.font_size_body) * 0.5, theme.font_size_body, theme.text_muted);
+    }
+}
+
+/// 🎚️ A slider's travel at `value`: a track's rail, filled range, one tick per detent at its axis position and the thumb —
+/// or a dial's face, one radial tick per detent, the needle at the value's angle and its thumb on the rim. Shared by the
+/// retained painter and the test painter, so both draw every detent the same way.
+fn paint_slider_travel(node: &crate::wgpu::component::ui::UiSliderNode, value: f64, presentation: crate::wgpu::layout::SliderPresentation, theme: &Theme, draw: &mut DrawList) {
+    let tick_color = theme.text_element.with_alpha(theme.text_element.a * 0.6);
+    match node.appearance {
+        ui_contract::SliderAppearance::Dial => {
+            let face = crate::wgpu::slider::dial_face(presentation.track_cell);
+            let diameter = face.radius * 2.0;
+            draw.push_rounded([face.cx - face.radius, face.cy - face.radius, diameter, diameter], theme.text_element, face.radius);
+            let inset = theme.stroke_hairline.max(1.0);
+            draw.push_rounded([face.cx - face.radius + inset, face.cy - face.radius + inset, diameter - inset * 2.0, diameter - inset * 2.0], theme.muted, face.radius - inset);
+            for [x0, y0, x1, y1] in crate::wgpu::slider::dial_tick_lines(face, node) {
+                draw.push_line(x0, y0, x1, y1, tick_color, theme.stroke_hairline.max(1.0));
+            }
+            let angle = ui_contract::dial_angle(node.axis_position(value));
+            let (x, y) = crate::wgpu::slider::dial_point(face, angle, 0.82);
+            draw.push_line(face.cx, face.cy, x, y, theme.accent, (face.radius * 0.14).max(1.5));
+            let knob = (face.radius * 0.3).max(2.0);
+            draw.push_rounded([x - knob * 0.5, y - knob * 0.5, knob, knob], theme.text_element, knob * 0.5);
+        }
+        ui_contract::SliderAppearance::Track => {
+            draw.push_rounded([presentation.rail.x, presentation.rail.y, presentation.rail.w, presentation.rail.h], theme.muted, presentation.rail.h * 0.5);
+            draw.push_rounded([presentation.range.x, presentation.range.y, presentation.range.w, presentation.range.h], theme.text_element, presentation.range.h * 0.5);
+            for tick in crate::wgpu::slider::slider_tick_rects(presentation.rail, node.min, node.max, node.scale, &node.snaps, theme.stroke_hairline.max(1.0), presentation.thumb.h * 0.75) {
+                draw.push_solid([tick.x, tick.y, tick.w, tick.h], tick_color);
+            }
+            draw.push_rounded([presentation.thumb.x, presentation.thumb.y, presentation.thumb.w, presentation.thumb.h], theme.text_element, presentation.thumb.h * 0.5);
+        }
     }
 }
 
@@ -3146,7 +3175,7 @@ fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFla
     draw.push_scissor(bounds);
     push_stepper_chrome(draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, theme);
     push_stepper_icon(draw, icons, "minus", minus, ui_contract::FlowInline::Ltr, theme);
-    let (text, color) = if node.uniform { (crate::wgpu::stepper::stepper_value_text(node.value, node.precision), theme.text) } else { (UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
+    let (text, color) = if node.uniform { (node.value_text(node.value), theme.text) } else { (UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted) };
     let width = atlas.measure_text(&text, theme.font_size_body).0;
     draw_text_on(draw, atlas, &text, center.x + (center.w - width).max(0.0) * 0.5, center.y + (center.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, color);
     push_stepper_icon(draw, icons, "plus", plus, ui_contract::FlowInline::Ltr, theme);

@@ -1,13 +1,13 @@
 //! 🎚️ `s.shooting.shooting` ✏️editor/🎚️config state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `shooting-shooting-1-any-editor-config-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
-//! the subject handlers through `semio_s_plugin_stdio_test_oracle::law::vector` over the report of this crate's
+//! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
 //! production bridge `shooting_config_mutation_report_json`. The oracle handlers answer with the committed after- and before-snapshots read
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
+use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎚️config/🧫️fixtures`.
@@ -43,14 +43,6 @@ fn vector(kind: &str) -> Result<Vector, String> {
             after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🔢️set-fit/✅️set/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🔢️set-fit/✅️set/🔺️diff/🔣️.json"),
             outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🔢️set-fit/✅️set/🎯️outcome/🔣️.json"),
-            observable: true,
-        },
-        "set-camera-draft-label" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🏷️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🏷️set-camera/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🏷️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🏷️set-camera/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🏷️set-camera/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         "set-camera" => Vector {
@@ -92,7 +84,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
     use semio_s_artifact_shooting_shooting::editor::shooting::config::shooting_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {

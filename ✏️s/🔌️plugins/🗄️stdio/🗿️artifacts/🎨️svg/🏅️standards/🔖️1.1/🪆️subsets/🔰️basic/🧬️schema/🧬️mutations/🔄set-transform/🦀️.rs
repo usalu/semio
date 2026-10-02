@@ -22,8 +22,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetTransform {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::SetTransform(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set transform", "Transformation setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set transform", "Transformation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

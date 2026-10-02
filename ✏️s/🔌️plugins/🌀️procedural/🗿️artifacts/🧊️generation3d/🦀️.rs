@@ -49,7 +49,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.generation".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D Generation", "3D-Generierung"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Generation", "3D-Generierung"),
         source_format: "generation.3d".into(),
         component_kind: "generation3d".into(),
         dimension: "3d".into(),
@@ -220,15 +220,15 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod disconnect_synapse {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/✂️cuts/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/✂️cuts/🦀️.rs"]
                             mod tests_cuts_wire_ab_leaving_both_nodes;
                         }
                         #[path = "."]
@@ -535,7 +535,7 @@ pub mod examples {
     pub mod art_generation3d_box_shell_preview;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🦀️.rs"]
     pub mod art_generation3d_face_sweep_extrude;
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🦀️.rs"]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🦀️.rs"]
     pub mod art_generation3d_hexagonal_mushroom_column;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🦀️.rs"]
     pub mod art_generation3d_rectangle_extrude_volume;
@@ -555,7 +555,7 @@ pub mod examples {
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧩️example/🦀️.rs"]
     mod face_sweep_extrude_tests;
     #[cfg(test)]
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🧪️tests/🧩️example/🦀️.rs"]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧩️example/🦀️.rs"]
     mod hexagonal_mushroom_column_tests;
     #[cfg(test)]
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧩️example/🦀️.rs"]
@@ -647,7 +647,7 @@ pub mod editor {
             pub mod flow_eval_release;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
             pub mod flow_tessellate_cancel_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs"]
             pub mod generation;
@@ -671,7 +671,7 @@ pub mod editor {
             pub mod remove_generation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🦀️.rs"]
             pub mod remove_widget;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-generation/🦀️.rs"]
             pub mod rename_generation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🦀️.rs"]
             pub mod reorganize;
@@ -681,7 +681,7 @@ pub mod editor {
             pub mod scale_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-generation/🦀️.rs"]
             pub mod select_generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
@@ -689,7 +689,7 @@ pub mod editor {
             pub mod cycle_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🦀️.rs"]
             pub mod cycle_show_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
             pub mod set_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️.rs"]
             pub mod set_show_mode;
@@ -798,11 +798,11 @@ pub mod viewer {
             pub mod flow_eval_release;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
             pub mod flow_tessellate_cancel_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
             pub mod set_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🦀️.rs"]
             pub mod set_show_mode;
@@ -816,7 +816,7 @@ pub mod viewer {
             pub mod toggle_sun;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📤️export-document/🦀️.rs"]
             pub mod export_document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
         }
 

@@ -27,8 +27,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveParame
             ops
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} entfernen", self.parameter_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} entfernen", self.parameter_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameters".into(), self.parameter_id.clone()]

@@ -4,7 +4,8 @@
 //! (`semio_framework_pixels::editing::paint_stroke_in_place`), so a history edit of the brush or of the points
 //! replays onto whatever base it lands on. The painted image becomes a new content-addressed asset in the lossless
 //! image-pack carrier, the layer (or its mask) points at it, and the image it replaced leaves the pool once nothing
-//! else shows it. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
+//! else shows it. The canvas — resolving the target image, filing a repainted one and restoring it — is shared with
+//! `🪣️fill-region`. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use crate::diff::{RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta};
 use crate::io::{raster_image_pack_asset, semio_image_from_rgba8};
@@ -71,12 +72,12 @@ pub fn paint_stroke(layer_id: impl Into<String>, target: &str, tool: &str, brush
 
 //#region 🎨️Raster
 /// 🔢️ One unit channel as the byte the rasterizer paints.
-fn channel_byte(value: f64) -> u8 {
+pub(crate) fn channel_byte(value: f64) -> u8 {
     (value.clamp(0.0, 1.0) * 255.0).round() as u8
 }
 
 /// 🌗️ The coverage a mask brush of `color` paints: the colour's Rec. 709 grey level as a byte.
-fn grey_byte(color: &[f64]) -> u8 {
+pub(crate) fn grey_byte(color: &[f64]) -> u8 {
     (255.0 * (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2])).clamp(0.0, 255.0).round() as u8
 }
 
@@ -97,8 +98,14 @@ fn invariant(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
     if !(brush.size.is_finite() && (0.1..=4096.0).contains(&brush.size)) || !unit(brush.hardness) || !unit(brush.opacity) || brush.color.len() != 4 || !brush.color.iter().all(|channel| unit(*channel)) {
         return Err(("brush", "The brush needs a size of 0.1 to 4096 pixels, hardness and opacity within 0..1 and four colour channels within 0..1.".to_string()));
     }
+    selection_invariant(payload.selection.as_deref())
+}
+
+/// ✂️ The selection law every repaint states (`ordered-selection-runs`): runs are non-empty, ordered, disjoint and cover at
+/// most 255.
+pub(crate) fn selection_invariant(selection: Option<&[RasterSelectionSpan]>) -> Result<(), (&'static str, String)> {
     let mut next = 0_u64;
-    for span in payload.selection.iter().flatten() {
+    for span in selection.into_iter().flatten() {
         if span.length == 0 || span.coverage > 255 || u64::from(span.start) < next {
             return Err(("selection", "Selection runs are non-empty, ordered, disjoint and cover at most 255.".to_string()));
         }
@@ -108,7 +115,7 @@ fn invariant(payload: &PaintStroke) -> Result<(), (&'static str, String)> {
 }
 
 /// ✂️ The per-pixel coverage `spans` select on an image of `count` pixels; `None` when a run reaches past the image.
-fn selection_mask(spans: &[RasterSelectionSpan], count: usize) -> Option<Vec<u8>> {
+pub(crate) fn selection_mask(spans: &[RasterSelectionSpan], count: usize) -> Option<Vec<u8>> {
     let mut mask = vec![0_u8; count];
     for span in spans {
         let start = span.start as usize;
@@ -135,19 +142,20 @@ fn operation(payload: &PaintStroke) -> PixelOperation {
     }
 }
 
-/// 🖼️ The image a stroke paints into and where it sits: the source image (decoded, so its profile and metadata ride
-/// along), its asset key, the key prefix of the image the stroke mints, and the layer's mask when the target is one.
-struct Canvas {
-    source: SemioImageSnapshot,
+/// 🖼️ The image a repaint (a stroke, a region fill) paints into and where it sits: the source image (decoded, so its
+/// profile and metadata ride along), its asset key, the key prefix of the image the repaint mints, and the layer's mask
+/// when the target is one.
+pub(crate) struct Canvas {
+    pub(crate) source: SemioImageSnapshot,
     previous: Option<String>,
     prefix: &'static str,
     mask: Option<RasterLayerMask>,
     extent: (Option<u32>, Option<u32>),
 }
 
-/// ⚠️ Why a stroke cannot land: a state-dependent Error (the layer or its image is not there, or does not take this
-/// stroke) or a Fatal application fault, with the target it names.
-enum Refusal {
+/// ⚠️ Why a repaint cannot land: a state-dependent Error (the layer or its image is not there, or does not take this
+/// repaint) or a Fatal application fault, with the target it names.
+pub(crate) enum Refusal {
     Error(&'static str, String),
     Fatal(&'static str, String),
 }
@@ -169,22 +177,22 @@ fn blank(width: u32, height: u32, pixel: [u8; 4]) -> Result<SemioImageSnapshot, 
     Ok(semio_image_from_rgba8(width, height, pixel.repeat(count)))
 }
 
-/// 🖼️ Resolves the image `payload` paints into on `base`.
-fn canvas(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Canvas, Refusal> {
-    let layer = find_layer(&base.layers, &payload.layer_id).ok_or_else(|| Refusal::Error("mutation.target-missing", format!("Layer \"{}\" is not in the document.", payload.layer_id)))?;
-    if !layer_protection(&base.layers, &payload.layer_id).is_some_and(|protection| protection.editable) {
-        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{}\" is locked.", payload.layer_id)));
+/// 🖼️ Resolves the image a repaint of `layer_id`'s `target` (`pixels` or `mask`) paints into on `base`.
+pub(crate) fn canvas(layer_id: &str, target: &str, base: &RasterSnapshot) -> Result<Canvas, Refusal> {
+    let layer = find_layer(&base.layers, layer_id).ok_or_else(|| Refusal::Error("mutation.target-missing", format!("Layer \"{layer_id}\" is not in the document.")))?;
+    if !layer_protection(&base.layers, layer_id).is_some_and(|protection| protection.editable) {
+        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" is locked.")));
     }
     let layer_extent = match layer {
         RasterLayerNode::Pixel { width, height, .. } => (width.unwrap_or(512), height.unwrap_or(512)),
         _ => (512, 512),
     };
-    if payload.target == "mask" {
+    if target == "mask" {
         let mask = match layer {
             RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. } => mask.clone(),
             RasterLayerNode::Adjustment { .. } => None,
         }
-        .ok_or_else(|| Refusal::Error("mutation.target-mismatch", format!("Layer \"{}\" has no mask.", payload.layer_id)))?;
+        .ok_or_else(|| Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" has no mask.")))?;
         let source = match &mask.image_key {
             Some(key) => {
                 let mut image = asset_image(base, key)?;
@@ -201,7 +209,7 @@ fn canvas(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Canvas, Refusa
         return Ok(Canvas { source, previous: mask.image_key.clone(), prefix: "mask", mask: Some(mask), extent: (None, None) });
     }
     let RasterLayerNode::Pixel { image_key, width, height, .. } = layer else {
-        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{}\" holds no pixels.", payload.layer_id)));
+        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" holds no pixels.")));
     };
     let source = match image_key {
         Some(key) => asset_image(base, key)?,
@@ -210,16 +218,25 @@ fn canvas(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Canvas, Refusa
     Ok(Canvas { source, previous: image_key.clone(), prefix: "pixels", mask: None, extent: (*width, *height) })
 }
 
-/// 🎨️ What one stroke did: the canvas it painted, the painted image as an asset, and the key it is filed under.
-struct Painted {
+/// 🎨️ What one repaint did: the canvas it painted, the painted image as an asset, and the key it is filed under.
+pub(crate) struct Painted {
     canvas: Canvas,
     asset: crate::RasterImageAsset,
     key: String,
 }
 
+/// 🗄️ Files `pixels` repainted on `canvas` as a new content-addressed asset of `layer_id` in the lossless carrier.
+pub(crate) fn painted(canvas: Canvas, pixels: Vec<u8>, layer_id: &str) -> Painted {
+    let mut image = canvas.source.clone();
+    image.frames[0].rgba8 = pixels;
+    let asset = raster_image_pack_asset(&image);
+    let key = store::content_id(&format!("{}-{layer_id}", canvas.prefix), &asset.data);
+    Painted { canvas, asset, key }
+}
+
 /// 🖌️ Rasterizes `payload` on `base`; `Ok(None)` when no pixel changes (out of reach, or already painted).
 fn paint(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Option<Painted>, Refusal> {
-    let canvas = canvas(payload, base)?;
+    let canvas = canvas(&payload.layer_id, &payload.target, base)?;
     let Some(frame) = canvas.source.frames.first() else { return Err(Refusal::Fatal("mutation.apply.image-invalid", "The target image has no frame.".to_string())) };
     let mut image = RasterImage { width: canvas.source.width, height: canvas.source.height, pixels: frame.rgba8.clone() };
     let selection = match &payload.selection {
@@ -229,11 +246,7 @@ fn paint(payload: &PaintStroke, base: &RasterSnapshot) -> Result<Option<Painted>
     if paint_stroke_in_place(&mut image, &operation(payload), selection.as_deref()).map_err(|error| Refusal::Fatal("mutation.apply.rasterize", error.to_string()))?.is_none() || image.pixels == frame.rgba8 {
         return Ok(None);
     }
-    let mut painted = canvas.source.clone();
-    painted.frames[0].rgba8 = image.pixels;
-    let asset = raster_image_pack_asset(&painted);
-    let key = store::content_id(&format!("{}-{}", canvas.prefix, payload.layer_id), &asset.data);
-    Ok(Some(Painted { canvas, asset, key }))
+    Ok(Some(painted(canvas, image.pixels, &payload.layer_id)))
 }
 
 /// 🗑️ Whether the image `key` that `layer_id`'s `target` stops showing is shown by nothing else and so leaves the pool.
@@ -258,15 +271,27 @@ pub fn diff(payload: &PaintStroke, base: &RasterSnapshot) -> protocol::MutationO
     if let Err((field, message)) = invariant(payload) {
         return protocol::MutationOutcome::fatal("mutation.invariant", message, [field.to_string()]);
     }
-    let painted = match paint(payload, base) {
-        Ok(Some(painted)) => painted,
-        Ok(None) => return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The stroke changes no pixel of layer \"{}\".", payload.layer_id)),
-        Err(Refusal::Error(code, message)) => return protocol::MutationOutcome::error(code, message, [payload.layer_id.clone()]),
-        Err(Refusal::Fatal(code, message)) => return protocol::MutationOutcome::fatal(code, message, [payload.layer_id.clone()]),
-    };
-    let release = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, &payload.layer_id, &payload.target)).map(str::to_string);
+    match paint(payload, base) {
+        Ok(Some(painted)) => painted_diff(painted, base, &payload.layer_id, &payload.target),
+        Ok(None) => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The stroke changes no pixel of layer \"{}\".", payload.layer_id)),
+        Err(refusal) => refused(refusal, &payload.layer_id),
+    }
+}
+
+/// ⚠️ The outcome a refused repaint of `layer_id` raises.
+pub(crate) fn refused(refusal: Refusal, layer_id: &str) -> protocol::MutationOutcome<RasterDiff> {
+    match refusal {
+        Refusal::Error(code, message) => protocol::MutationOutcome::error(code, message, [layer_id.to_string()]),
+        Refusal::Fatal(code, message) => protocol::MutationOutcome::fatal(code, message, [layer_id.to_string()]),
+    }
+}
+
+/// 🔺️ The diff a repaint of `layer_id`'s `target` makes on `base`: the painted image filed under its content key, the
+/// layer (or its mask) pointed at it, the replaced image released when nothing else shows it.
+pub(crate) fn painted_diff(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str) -> protocol::MutationOutcome<RasterDiff> {
+    let release = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)).map(str::to_string);
     if !base.assets.contains_key(&painted.key) && base.assets.len() >= crate::RASTER_OWNED_MAP_CAPACITY {
-        return protocol::MutationOutcome::fatal("mutation.apply.capacity", format!("The asset pool already holds {} images.", base.assets.len()), [payload.layer_id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.apply.capacity", format!("The asset pool already holds {} images.", base.assets.len()), [layer_id.to_string()]);
     }
     let patch = match painted.canvas.mask {
         Some(mask) => RasterLayerPatch { mask_content: Some(RasterMaskContent { mask: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask }) }), ..Default::default() },
@@ -278,7 +303,7 @@ pub fn diff(payload: &PaintStroke, base: &RasterSnapshot) -> protocol::MutationO
         entries.insert(release, None);
     }
     protocol::MutationOutcome::new(RasterDiff {
-        layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: payload.layer_id.clone(), patch }], ..Default::default() }),
+        layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }),
         assets: Some(RasterAssetsDelta { entries }),
         ..Default::default()
     })
@@ -290,20 +315,27 @@ pub fn diff(payload: &PaintStroke, base: &RasterSnapshot) -> protocol::MutationO
 /// the restored child is the exact one), the layer (or its mask) pointed back at it, and the painted image released
 /// when the stroke brought it in. Nothing when the stroke changed nothing.
 pub fn inverse(payload: &PaintStroke, base: &RasterSnapshot) -> Vec<RasterMutation> {
-    use crate::mutations::{add_layer_asset::AddLayerAsset, change_layer_mask::ChangeLayerMask, change_layer_pixels::ChangeLayerPixels, remove_layer_asset::RemoveLayerAsset};
     if invariant(payload).is_err() {
         return Vec::new();
     }
     let Ok(Some(painted)) = paint(payload, base) else { return Vec::new() };
+    painted_inverse(painted, base, &payload.layer_id, &payload.target)
+}
+
+/// ↩️ The steps that undo a repaint of `layer_id`'s `target` on `base`: the image it released back into the pool (in the
+/// lossless carrier, so the restored child is the exact one), the layer (or its mask) pointed back at it, and the painted
+/// image released when the repaint brought it in.
+pub(crate) fn painted_inverse(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str) -> Vec<RasterMutation> {
+    use crate::mutations::{add_layer_asset::AddLayerAsset, change_layer_mask::ChangeLayerMask, change_layer_pixels::ChangeLayerPixels, remove_layer_asset::RemoveLayerAsset};
     let mut steps = Vec::new();
-    if let Some(previous) = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, &payload.layer_id, &payload.target)) {
+    if let Some(previous) = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)) {
         let Ok(image) = asset_image(base, previous) else { return Vec::new() };
         steps.push(RasterMutation::AddLayerAsset(AddLayerAsset { asset_id: previous.to_string(), asset: raster_image_pack_asset(&image) }));
     }
     match &painted.canvas.mask {
-        Some(mask) => steps.push(RasterMutation::ChangeLayerMask(ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask.clone() }), mask: Some(mask.clone()) })),
+        Some(mask) => steps.push(RasterMutation::ChangeLayerMask(ChangeLayerMask { layer_id: layer_id.to_string(), expected: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask.clone() }), mask: Some(mask.clone()) })),
         None => steps.push(RasterMutation::ChangeLayerPixels(ChangeLayerPixels {
-            layer_id: payload.layer_id.clone(),
+            layer_id: layer_id.to_string(),
             expected_image_key: Some(painted.key.clone()),
             content: RasterPixelContent { image_key: painted.canvas.previous.clone(), width: painted.canvas.extent.0, height: painted.canvas.extent.1 },
             transform: None,
@@ -328,7 +360,7 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for PaintStroke {
         inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let count = self.points.len();
         let (en_points, de_points) = if count == 1 { ("1 point".to_string(), "1 Punkt".to_string()) } else { (format!("{count} points"), format!("{count} Punkten")) };
         let (en, de) = match (self.target.as_str(), self.tool.as_str()) {
@@ -337,7 +369,7 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for PaintStroke {
             (_, "eraser") => ("Eraser stroke", "Radierstrich"),
             _ => ("Brush stroke", "Pinselstrich"),
         };
-        protocol::LocalizedLabel::native(&format!("{en} of {en_points} on layer {}", self.layer_id), &format!("{de} mit {de_points} auf Ebene {}", self.layer_id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("{en} of {en_points} on layer {}", self.layer_id), &format!("{de} mit {de_points} auf Ebene {}", self.layer_id))
     }
 
     fn target(&self) -> Vec<String> {
@@ -345,3 +377,9 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for PaintStroke {
     }
 }
 //#endregion 🔖️Kind
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

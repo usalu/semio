@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_print_target(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_print_target {
             Some(target) => format!("Set print target to \"{target}\""),
             None => "Clear print target".into(),

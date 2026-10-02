@@ -24,8 +24,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPoint {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::SetPoint(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set point", "Punkt setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set point", "Punkt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

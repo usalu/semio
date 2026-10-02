@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSampler
         vec![super::GltfMutation::CreateSampler(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Sampler", "Sampler erstellen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Sampler", "Sampler erstellen")
     }
 
     fn target(&self) -> Vec<String> {

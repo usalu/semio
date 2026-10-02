@@ -1,0 +1,4523 @@
+# UI Ring Press Contract Runtime Refusal
+
+Sole Native genuine unchanged full engine run selected767,ran313:312passed,1failed,0skipped,454unrun after failfast. every_retained_control_commits_its_own_guest_action refused ring-reads-its-own-circle because fixture omitted expected.press and original native assertion demands no gesture/commit. Actual real router emitted onefalse tick then onetrue release under main/1:5. Log goal-stdio/current-ui-native-original-targets-2.log, trace dOUbq9. No tests/compiler run by this audit.
+
+Existing original a_ring_drag_is_one_press_and_a_lost_capture_cancels_it instead explicitly requires Ring PointerDown value0+commitfalse, move.25false, release.5true under onegesture, and a second down+PointerCancel must tickfalse thenabort captureLost. The same UiRingNode API has no mode. Current producer accurately implements continuous Ring at is_continuous_control, pointer_commit and PointerUp; removing this classification would break the existing scrub law. No arbitrary action-name/point-based suppression is justified.
+
+Actual React RingView uses useContinuousTriggerLane, lane.offer on each change and queued lane.commit onpointerup; continuous-presses original DOM test requires ring commits plus cancellation. The retained-control TypeScript test expectedPress function excludes Ring and the language-neutral continuousPress rule also omits Ring. Thus this is a genuine outdated fixture/reference policy contradictory with current explicit React and Rust scrub contracts. No correction has been chosen or source edited yet. Any explicit contract correction must retain all scalar/action/args and original law body, add independently tested continuous ring ownership, and disclose fixture expectation change; it is not a runtime fix merely making a failing assertion disappear.
+
+## 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs
+
+SHA256 a7f7c0efafb7607b000af2f438c7dda8e53f642a7e7e411feed38847566d9c72
+
+```rust
+// #region events
+//! 🎯️ Retained-mode input routing (`UiEvent` in, `UiCommand` out): reverse-paint-order hit testing
+//! with clip pruning and overlay priority, pointer capture, Tab-order focus, and parent-chain
+//! bubbling. Conceptually replaces the old immediate-mode `input` region's per-frame
+//! `hit_targets`/`DragState` bookkeeping, but that region stays fully in place — `widgets`/`chrome`
+//! and, transitively, `framework/renderer/wgpu` and `infinite_world` still consume it directly, and
+//! the cutover to this module is later-phase renderer-thinning work (see the plan). `events` is
+//! purely additive: it depends on `tree`/`component`/`geometry` only, never on `input`.
+
+use std::collections::{BTreeMap, HashMap};
+
+use crate::wgpu::arena::NodeId;
+use crate::wgpu::chrome::UiDriverDrag;
+use crate::wgpu::component::layout::ActionDescriptor;
+use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
+use crate::wgpu::geometry::Rect;
+use crate::wgpu::layout::{
+    number_stepper_segments, ring_t_at, slider_control_presentation, tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics,
+};
+use crate::wgpu::select;
+use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
+use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer, INTENT_VALUE_FIELD};
+use semio_framework_value::DslValue;
+use ui_contract::{FlowInline, Trigger, UiFlow};
+
+//#region 🔖️UiEvent
+/// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PointerButton {
+    Primary,
+    Secondary,
+    Middle,
+}
+
+/// ⌨️ Modifier keys held during a keyboard OR pointer event. A minimal fresh type rather than reusing
+/// `input::PointerModifiers`, so this module stays decoupled from the region it conceptually
+/// replaces (see module doc comment).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct EventModifiers {
+    pub shift: bool,
+    pub ctrl: bool,
+    pub alt: bool,
+    pub meta: bool,
+}
+
+/// 📥️ Input events the host feeds into `EventRouter::dispatch`.
+///
+/// 🖱️ The POINTER variants carry `modifiers` for the same reason the key variants do: React reads
+/// `event.shiftKey`/`ctrlKey`/`metaKey`/`altKey` off the DOM `PointerEvent` itself
+/// (`⚙️VirtualFileSystem/🟦️.tsx:520-521`'s `additiveKey`/`rangeKey`, `marqueeModeFromModifiers` in
+/// `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:900`), so every merge-mode-from-modifiers decision downstream is a
+/// property of the press, not of some separately tracked keyboard state.
+///
+/// 🩸️ They used to carry none, and the whole modifier half of selection was structurally
+/// unreachable through this router: `UiCommand::Scene` handed the surface handlers an event with no
+/// modifier field at all, so `vfs_selection_for_click(…, false, false)` was the only call that could
+/// ever be written and shift-extend/ctrl-toggle could not be expressed on ANY list surface
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
+#[derive(Clone, Debug, PartialEq)]
+pub enum UiEvent {
+    PointerCancel,
+    PointerDown {
+        x: f32,
+        y: f32,
+        button: PointerButton,
+        modifiers: EventModifiers,
+    },
+    PointerUp {
+        x: f32,
+        y: f32,
+        button: PointerButton,
+        modifiers: EventModifiers,
+    },
+    PointerMove {
+        x: f32,
+        y: f32,
+        modifiers: EventModifiers,
+    },
+    Scroll {
+        x: f32,
+        y: f32,
+        delta_x: f32,
+        delta_y: f32,
+        modifiers: EventModifiers,
+    },
+    KeyDown {
+        key: String,
+        modifiers: EventModifiers,
+    },
+    KeyUp {
+        key: String,
+        modifiers: EventModifiers,
+    },
+    TextInput {
+        text: String,
+    },
+    /// 📋️ Host-delivered clipboard text in response to a `UiCommand::ClipboardPasteRequested` (the
+    /// actual OS clipboard read is a `host`-region/renderer-integration concern; this is just the
+    /// inbound half of the round trip). Routed identically to `TextInput`: inserted at the focused
+    /// `EditState`'s caret, replacing any selection.
+    Paste {
+        text: String,
+    },
+    /// 🈶️ IME composition lifecycle for the focused editable node. Shapes `EditState::composition`
+    /// is ready to receive; actually wiring winit's `Ime` events (native) or a hidden DOM input
+    /// (web) to *produce* these is later `host`-region work, out of scope here.
+    Ime(ImeEvent),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum AccessibilityUiEvent {
+    Focus,
+    Blur,
+    Activate,
+    Value(String),
+}
+
+/// 🈶️ One IME composition step — see `UiEvent::Ime`.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ImeEvent {
+    Start,
+    /// `cursor` is the IME's own preedit-relative cursor, informational only (not routed into
+    /// `EditState::caret` — the composition is still uncommitted).
+    Update {
+        text: String,
+        cursor: usize,
+    },
+    /// 🈶️ Finalizes the composition: clears `EditState::composition` and inserts `text` at the caret
+    /// exactly like `TextInput`.
+    Commit {
+        text: String,
+    },
+    Cancel,
+}
+//#endregion 🔖️UiEvent
+
+//#region 🔖️HitTest
+/// 🎯️ Reverse-paint-order hit test from `root`: `paint::paint_stack` walks first_child→last_child
+/// (parent background first, then children in that order, each drawn over the last), so the
+/// topmost node at any point is the *last*-painted one — this walk visits children last-first to
+/// match. Overlay-flagged (`NodeFlags::OVERLAY`) children are tested before normal siblings at
+/// every level, so a popup always wins over base content underneath it. `CLIPS_CHILDREN` prunes
+/// early: a point outside that node's own bounds skips testing its children entirely, even if a
+/// child's own (unclipped) rect would nominally contain the point. `HIT_TRANSPARENT` nodes are
+/// skipped for the match itself (their children are still tested — pass-through). Returns the
+/// deepest/topmost matching node.
+pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+    hit_test_node(tree, root, 0.0, 0.0, x, y, false, None)
+}
+
+/// 🪟️ An OPEN floating overlay is tested at the placement it was painted at, never at its in-flow
+/// position — one origin rule shared with the retained paint/hit walk (`UiTree::overlay_origins`).
+fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Option<NodeId> {
+    let node = tree.node(id)?;
+    let layout = tree.accepted_layout(id)?;
+    let (origin_x, origin_y) = tree.overlay_walk_origin(id).unwrap_or((origin_x, origin_y));
+    let abs_x = origin_x + layout.x;
+    let abs_y = origin_y + layout.y;
+    let inside = Rect::new(abs_x, abs_y, layout.width, layout.height).contains(x, y);
+    if node.flags.contains(NodeFlags::CLIPS_CHILDREN) && !inside {
+        return None;
+    }
+    let mut overlays: Vec<NodeId> = Vec::new();
+    let mut normal: Vec<NodeId> = Vec::new();
+    if tree.disclosure_open(id).unwrap_or(true) {
+        for child in tree.children(id) {
+            match tree.node(child) {
+                Some(child_node) if child_node.flags.contains(NodeFlags::OVERLAY) => overlays.push(child),
+                _ => normal.push(child),
+            }
+        }
+    }
+    let (child_x, child_y) = tree.child_walk_origin(id, (origin_x, origin_y))?;
+    for child in overlays.into_iter().rev().chain(normal.into_iter().rev()) {
+        if let Some(hit) = hit_test_node(tree, child, child_x, child_y, x, y, reversed, tree_metrics) {
+            return Some(hit);
+        }
+    }
+    // A bare `Stack` is a layout-only container with no interaction semantics of its own — it
+    // must never be the hit result itself, only a pass-through to its children (same intent as
+    // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
+    // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
+    // a registered drag source — any of those make it a real interaction target.
+    let inside_self = if tree.disclosure_is_interactive(id) { disclosure_header_band(tree, id, Rect::new(abs_x, abs_y, layout.width, layout.height), reversed, tree_metrics).contains(x, y) } else { inside };
+    let is_plain_container = is_plain_stack_container(tree, id, node);
+    if inside_self && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
+        Some(id)
+    } else {
+        None
+    }
+}
+
+fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Rect {
+    let tree_section = tree.node(id).and_then(|node| Some((tree.node(node.parent?)?, &node.key))).and_then(|(parent, key)| match (&parent.spec.0, key) {
+        (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
+        _ => None,
+    });
+    let scoped_metrics = tree_metrics.map(|metrics| crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, metrics));
+    match (tree_section, scoped_metrics.as_ref()) {
+        (Some(section), Some(metrics)) => tree_section_header_band(rect, tree_section_header_height(section, metrics), reversed),
+        (None, Some(metrics)) if tree.authored_tree_item(id).is_some() => tree_section_header_band(rect, metrics.row_height, reversed),
+        _ if matches!(tree.node(id).map(|node| &node.spec.0), Some(UiNode::Section(_))) => Rect::new(rect.x, rect.y, rect.w, crate::wgpu::mounted_layout::retained_section_title_height(tree, id).min(rect.h)),
+        _ => Rect::new(rect.x, rect.y, rect.w, scoped_metrics.map_or(0.0, |metrics| metrics.row_height).min(rect.h)),
+    }
+}
+
+/// 🎯️🌳️ W2 wiring: a `Stack` (`node.spec.0`) stops being a plain pass-through container the moment
+/// it carries `activate`/`drop_action` of its own, or is a registered `NodeFlags::DRAG_SOURCE`
+/// (`paint::sync_interactive_state` keeps that flag synced with `Tree` rows' `draggable` field, and
+/// `dispatch`'s `PointerDown` handling can only ever register a drag payload on a node that's
+/// actually reachable as a hit-test target in the first place — see `find_tree_item_spec`'s own
+/// caller in `dispatch`). ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: a `Tree`
+/// row's per-item `hover_action`/`unhover_action` exception is deleted — hover on a tree row is now
+/// dispatched through the row's `UiTreeNode.interaction_domain` binding (`interactionHover`),
+/// never an ad hoc per-item action. A tree or table row carrying Row-placed actions is a target too:
+/// its action slots resolve in `EventRouter::pointer_row_action`.
+fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
+    let UiNode::Stack(stack) = &node.spec.0 else { return false };
+    stack.activate.is_none()
+        && stack.drop_action.is_none()
+        && !node.flags.contains(NodeFlags::DRAG_SOURCE)
+        && !tree.disclosure_is_interactive(id)
+        && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == crate::wgpu::UiTreeActionPlacement::Row))
+}
+
+//#region 🔖️TreeItemLookup
+/// 🌳️ Re-derives a `Tree` row's *original* `UiTreeItemNode` spec — `draggable`/`drag_data`, fields
+/// `UiStackNode` (the row's synthesized retained shape, see
+/// `reconcile::children_of`'s `Tree` arm) has no room for at all — by walking up from `row` to the
+/// nearest ancestor `UiNode::Tree` and searching its still-fully-intact spec (`reconcile` never
+/// drops fields, only clones them into `WidgetSpec` — see that module's own doc comment) for the
+/// item whose `id` matches this row's own stable key (`NodeKey::Explicit(item.id)`, exactly what
+/// `reconcile::tree_item_row` keys the row with). `None` for anything that isn't a keyed descendant
+/// of a `Tree` (ordinary `Stack`s, a `Tree`'s section rows, which are keyed by `section.id` instead).
+fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
+    let NodeKey::Explicit(row_id) = &tree.node(row)?.key else { return None };
+    let mut ancestor = tree.node(row)?.parent;
+    while let Some(candidate) = ancestor {
+        let candidate_node = tree.node(candidate)?;
+        if let UiNode::Tree(tree_node) = &candidate_node.spec.0 {
+            return find_item_in_sections(&tree_node.sections, row_id);
+        }
+        ancestor = candidate_node.parent;
+    }
+    None
+}
+
+fn find_item_in_sections<'a>(sections: &'a [UiTreeSectionNode], id: &str) -> Option<&'a UiTreeItemNode> {
+    sections.iter().find_map(|section| find_item_in_items(&section.items, id))
+}
+
+fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a UiTreeItemNode> {
+    for item in items {
+        if item.id == id {
+            return Some(item);
+        }
+        if let Some(nested) = &item.items {
+            if let Some(found) = find_item_in_items(nested, id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+//#endregion 🔖️TreeItemLookup
+
+/// 📐️ Uses the same scroll and overlay placement as the retained paint walk.
+pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
+    tree.absolute_rect(id)
+}
+
+/// 🎯️ Tests a placed subtree in window coordinates, including open overlays outside ancestor clips.
+pub(crate) fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+    let rect = tree.absolute_rect(subtree_root)?;
+    let layout = tree.accepted_layout(subtree_root)?;
+    hit_test_node(tree, subtree_root, rect.x - layout.x, rect.y - layout.y, x, y, false, None)
+}
+//#endregion 🔖️HitTest
+
+//#region 🔖️Capture
+/// ↕️ Which axis a `CaptureKind::ScrollThumb` drag maps pointer delta onto.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScrollAxis {
+    Horizontal,
+    Vertical,
+}
+
+/// 🫳️ What kind of interaction currently holds pointer capture. A coarser-grained, retained-mode
+/// replacement for the old `input::DragState`/`TreeDragState` pair. `Drag` is a generic
+/// `DragSession` (see 🔖️DragDrop below) promoted from `Press` once pointer movement past a small
+/// threshold is observed on a node with a registered `DragPayload`. `ScrollThumb` is a scrollbar
+/// thumb (painted by `paint`, registered via `EventRouter::register_scroll_thumb`) dragging its
+/// owning `NodeFlags::SCROLLABLE` node's `WidgetState::scroll_offset` along one axis.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CaptureKind {
+    Press,
+    Drag,
+    ScrollThumb(ScrollAxis),
+}
+
+/// 🔒️ Once a node captures, subsequent pointer-move/up events route directly to it regardless of
+/// what's actually under the pointer, until released on `PointerUp` (or explicit `release`).
+#[derive(Clone, Copy, Debug, Default)]
+struct CaptureState {
+    target: Option<(u64, NodeId, CaptureKind)>,
+}
+
+impl CaptureState {
+    fn release(&mut self, pointer_id: u64) -> Option<(NodeId, CaptureKind)> {
+        if !self.target.is_some_and(|(owner, _, _)| owner == pointer_id) {
+            return None;
+        }
+        self.target.take().map(|(_, node, kind)| (node, kind))
+    }
+
+    fn release_any(&mut self) -> Option<(NodeId, CaptureKind)> {
+        self.target.take().map(|(_, node, kind)| (node, kind))
+    }
+}
+//#endregion 🔖️Capture
+
+//#region 🔖️Focus
+/// 🎯️ Which `UiNode` variants participate in Tab-order focus cycling.
+fn is_focusable(node: &UiNode) -> bool {
+    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_)) && node.presence().state != UiState::Disabled
+}
+
+fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {
+    tree.node(id).is_some_and(|node| (is_focusable(&node.spec.0) || tree.disclosure_is_interactive(id)) && node.spec.0.presence().state != UiState::Disabled)
+}
+
+fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
+    if let Some(node) = tree.node(id) {
+        if node_is_focusable(tree, id) {
+            out.push(id);
+        }
+    }
+    if !tree.disclosure_open(id).unwrap_or(true) {
+        return;
+    }
+    for child in tree.children(id) {
+        collect_focusable(tree, child, out);
+    }
+}
+
+/// 🔦️ Currently-focused node plus a lazily-rebuilt document-order Tab cycle over focusable nodes.
+struct FocusState {
+    focused: Option<NodeId>,
+    tab_order: Vec<NodeId>,
+}
+
+impl FocusState {
+    fn new() -> Self {
+        Self { focused: None, tab_order: Vec::new() }
+    }
+
+    /// 🎯️ Sets/clears focus, flipping `NodeFlags::FOCUSED` on the old and new targets and marking
+    /// both `DIRTY_PAINT` (a focus ring likely needs repainting) via `UiTree::mark_dirty`. A no-operation
+    /// (no flag churn) when `node` already matches the current focus. Also owns `EditState`'s
+    /// lifecycle: blurring a node clears its `WidgetState::edit` (the buffer relinquishes control,
+    /// so the node's declarative `value` governs again on the next `apply_tree`); focusing a
+    /// editable node for the first time seeds `edit` from that declarative `value` with the caret
+    /// at the end — see `tree::WidgetState`'s own doc comment for why reconcile never clobbers this.
+    ///
+    /// 🎬️ Returns the BLURRED node — its id alongside its commit action — when that node commits on
+    /// blur (`commits_on_blur` — React's `commitOnBlur`), so the caller can address the intent at the
+    /// node that actually fired it rather than at whatever now holds focus. Losing focus is the only
+    /// moment such a node's typed value is ever dispatched, and this is the one place blur happens.
+    fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>, focus_visible: bool) -> Option<(NodeId, FiredAction)> {
+        if self.focused == node {
+            return None;
+        }
+        let mut committed = None;
+        if let Some(previous) = self.focused {
+            if let Some(previous_node) = tree.node_mut(previous) {
+                previous_node.flags.set(NodeFlags::FOCUSED, false);
+                previous_node.flags.set(NodeFlags::FOCUS_VISIBLE, false);
+                previous_node.state.caret_visible = false;
+                previous_node.state.slider_readout_click_at = None;
+                let refusal = if matches!(previous_node.spec.0, UiNode::Slider(_)) { previous_node.state.number_refusal.clone() } else { edit_refusal(previous_node) };
+                previous_node.state.number_refusal = refusal.clone();
+                let buffer = if refusal.is_some() { None } else { previous_node.state.edit.take() };
+                let press = matches!(previous_node.spec.0, UiNode::Input(_) | UiNode::NumberStepper(_)).then(|| previous_node.state.scrub_gesture.take()).flatten();
+                let offered = previous_node.state.scrub_offered.take();
+                if let Some(edit) = buffer.as_ref().filter(|_| commits_on_blur(&previous_node.spec.0)) {
+                    committed = edit_commit_action(previous_node, &edit.text).map(|fired| (previous, fired));
+                } else if let Some(gesture) = press {
+                    let value = buffer.and_then(|edit| edit_commit_action(previous_node, &edit.text)).and_then(|mut fired| fired.input.take()).or(offered);
+                    committed = match value {
+                        Some(value) => press_release(&previous_node.spec.0, gesture, value),
+                        None => press_cancel(&previous_node.spec.0, gesture, "blur"),
+                    }
+                    .map(|fired| (previous, fired));
+                }
+            }
+            tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+        }
+        if let Some(next) = node {
+            if let Some(next_node) = tree.node_mut(next) {
+                next_node.flags.set(NodeFlags::FOCUSED, true);
+                next_node.flags.set(NodeFlags::FOCUS_VISIBLE, focus_visible);
+                if next_node.state.edit.is_none() {
+                    if let Some(value) = editable_value(&next_node.spec.0) {
+                        let caret = value.len();
+                        next_node.state.edit = Some(EditState { text: value.to_string(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                    }
+                }
+                next_node.state.caret_visible = next_node.state.edit.is_some();
+            }
+            tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
+        }
+        self.focused = node;
+        committed
+    }
+
+    fn clear_focus(&mut self, tree: &mut UiTree) -> Option<(NodeId, FiredAction)> {
+        self.set_focus(tree, None, false)
+    }
+
+    fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
+        self.tab_order.clear();
+        collect_focusable(tree, root, &mut self.tab_order);
+    }
+
+    fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) -> Option<(NodeId, FiredAction)> {
+        self.rebuild_tab_order(tree, root);
+        if self.tab_order.is_empty() {
+            return self.set_focus(tree, None, true);
+        }
+        let next_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
+            Some(index) => (index + 1) % self.tab_order.len(),
+            None => 0,
+        };
+        self.set_focus(tree, Some(self.tab_order[next_index]), true)
+    }
+
+    fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) -> Option<(NodeId, FiredAction)> {
+        self.rebuild_tab_order(tree, root);
+        if self.tab_order.is_empty() {
+            return self.set_focus(tree, None, true);
+        }
+        let previous_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
+            Some(index) => (index + self.tab_order.len() - 1) % self.tab_order.len(),
+            None => self.tab_order.len() - 1,
+        };
+        self.set_focus(tree, Some(self.tab_order[previous_index]), true)
+    }
+}
+//#endregion 🔖️Focus
+
+//#region 🔖️Commit
+// 🎬️ THE ONE commit authority for a retained document's form controls. Every `UiNode` variant that
+// carries a value — `Input`, `Toggle`, `Slider`, `NumberStepper`, `Ring`, `IconSelect` — turns its
+// own gesture into a `UiIntentCommand` addressed at the node that fired it (`EventRouter::
+// build_intent`), and hands it to the host as `UiCommand::App`. The host admits it by `seq` and then
+// collapses it to an address through `UiIntentCommand::descriptor`, which is where its authored args
+// and its trigger payload finally merge — `publish_retained_action` stamps `windowId` and reserves it
+// from there, exactly as it already did.
+//
+// 🌉️ The spec-carried `ActionDescriptor` never leaves this module on its own any more: it is the
+// CARRIER for `controller_id`/name/authored args, and the intent is the DISPATCH. React draws the
+// same line — `UiInterpreterContext.onAction` is reserved for its unowned scene hosts while every
+// semantic control goes through `onIntent` (`🗣️Interpreter/🟦️.tsx`).
+//
+// 🩸️ Before this region the retained router documented "committing the edited value via `on_change`
+// is not implemented", and the shell's own immediate-mode `commit_focused_input`/`stepper_metas`
+// system (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) only ever saw ids minted by the CHROME's immediate-mode
+// widget walk — never a retained document's. Editing a generation's parameters on wgpu was therefore
+// fully cosmetic: a live caret, a live knob, and nothing reaching the guest (ticket
+// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+//
+// Parity reference — React's own retained interpreter, NOT its older declarative-control path:
+// `🗣️Interpreter/🟦️.tsx`'s `dispatchTrigger` → `UiDocumentStore::emitIntent` → `🛠️ShellHelpers/🟦️.tsx`'s
+// `uiIntentPayload`/`uiInputField`. Two rules come from there and are reproduced verbatim below:
+// a scalar payload is NAMED by its trigger (`delta` for `Trigger::Delta`, `value` for every other),
+// and it is MERGED OVER the node's authored args rather than replacing them.
+
+/// 🎬️ One gesture, before it is addressed: which `Trigger` fired, the spec-carried descriptor whose
+/// `controller_id`/`action`/AUTHORED args it inherits, and the trigger's own payload — kept apart
+/// from the args exactly as `ui_contract::UiIntent` keeps `args` and `input` apart.
+/// [`UiIntentCommand::payload`] is the single place they merge, on the way to the host.
+#[derive(Clone, Debug, PartialEq)]
+struct FiredAction {
+    trigger: Trigger,
+    action: ActionDescriptor,
+    input: Option<DslValue>,
+}
+
+/// 🎬️ One gesture against `action`'s binding. `None` when the node declares no binding for this
+/// trigger — `reconcile::record_action_or_inert` marks that by an EMPTY action name, which is exactly
+/// the condition React's `emitIntent` answers `undefined` for.
+fn fired_action(action: &ActionDescriptor, trigger: Trigger, input: DslValue) -> Option<FiredAction> {
+    if action.action.is_empty() {
+        return None;
+    }
+    Some(FiredAction { trigger, action: action.clone(), input: Some(input) })
+}
+
+/// 🎬️ A gesture that carries no payload of its own (`Activate`, a focus commit's own re-dispatch).
+fn bare_action(action: &ActionDescriptor, trigger: Trigger) -> Option<FiredAction> {
+    if action.action.is_empty() {
+        return None;
+    }
+    Some(FiredAction { trigger, action: action.clone(), input: None })
+}
+
+/// 🆔️ The versioned [`ui_contract::ActionId`] a bare descriptor stands for, for the nodes no document
+/// published (chrome widgets, testkit trees) and for a binding the record no longer carries. The
+/// descriptor's `controller_id` IS the id's scope — the same identity React's
+/// `uiIntentToActionDescriptor` maps in the other direction.
+fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contract::ActionId> {
+    ui_contract::ActionId::try_v1(&action.controller_id, &action.action)
+}
+
+/// ✍️ Which `UiNode` variants own a live `EditState` text buffer. `Input` is the obvious one;
+/// `IconSelect`'s value IS its icon string, which React edits through the `IconSelector`'s own
+/// textarea (`🎴️IconSelector/🟦️.tsx`'s `onEditorChange`), so the retained target edits it the same
+/// way rather than inventing a second gesture for it.
+fn editable_value(node: &UiNode) -> Option<String> {
+    match node {
+        UiNode::Input(input) => Some(match input.display_factor.filter(|_| input.input_kind == "number").zip(input.value.trim().parse::<f64>().ok()) {
+            Some((_, stored)) => number_field_text(input, stored),
+            None => input.value.clone(),
+        }),
+        UiNode::IconSelect(select) => Some(select.value.clone()),
+        UiNode::NumberStepper(stepper) => Some(crate::wgpu::stepper::stepper_value_text(stepper.value, stepper.precision, stepper.display_factor)),
+        _ => None,
+    }
+}
+
+/// ⏎️ Whether an editable node commits only on Enter/blur (`Trigger::Commit`, `commit == "blur"`)
+/// rather than on every keystroke (`Trigger::Change`) — React's `InputView`'s own `commitOnBlur`.
+fn commits_on_blur(node: &UiNode) -> bool {
+    matches!(node, UiNode::Input(input) if input.commit.as_deref() == Some("blur"))
+}
+
+/// ✍️ The action an editable node's CURRENT buffer commits: `{value: <text>}`, numeric for a
+/// `Component::Input` of kind `number` (React's `InputView`: `kind === "number" ? Number(raw) : raw`),
+/// and constrained by that input's own `min`/`max`/`step` before it leaves — the canvas twin of the
+/// `<input type="number" min max step>` attributes React hands the browser to enforce
+/// (`🗣️Interpreter/🟦️.tsx`'s `InputView`). The trigger is the node's own commit moment: `Commit` for a
+/// `commit: "blur"` input, `Change` otherwise, exactly as `reconcile::input_commit_action` resolved
+/// the binding it is firing.
+fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
+    match &node.spec.0 {
+        UiNode::Input(input) => {
+            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else { DslValue::String(text.to_string()) };
+            let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
+            fired_action(&input.on_change, trigger, value)
+        }
+        UiNode::IconSelect(select) => fired_action(&select.on_change, Trigger::Change, DslValue::String(text.to_string())),
+        UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).ok().map(|value| constrain_stepper_value(value, stepper)).and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
+        _ => None,
+    }
+}
+
+/// ⏎️⎋️🔁️ The three moments React's window-search line binds BESIDE `onChange` — `Trigger::Submit`
+/// (Enter, carrying the TRIMMED line, React's `input.onSubmit(draft.trim())`), `Trigger::Abort`
+/// (Escape, bare) and `Trigger::RepeatLast` (Space on an empty line, bare). Producing them here is
+/// what makes a retained command line behave like React's: `onChange` keeps firing on every
+/// keystroke — that is the guest's autocomplete feed — while Enter runs the verb, instead of the
+/// single keystroke-or-blur dispatch every `Input` used to be reduced to
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`, `onKeyDown`).
+///
+/// ⚖️ `None` for a node that binds nothing for this moment, which is precisely when the caller must
+/// fall through to the ordinary edit behaviour (Escape closes an overlay, Space types a space).
+fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> Option<FiredAction> {
+    let UiNode::Input(input) = &node.spec.0 else { return None };
+    match trigger {
+        Trigger::Submit => fired_action(input.on_submit.as_ref()?, Trigger::Submit, DslValue::String(text.trim().to_string())),
+        Trigger::Abort => bare_action(input.on_abort.as_ref()?, Trigger::Abort),
+        Trigger::RepeatLast => bare_action(input.on_repeat_last.as_ref()?, Trigger::RepeatLast),
+        _ => None,
+    }
+}
+
+/// 🔢️ Clamps to `[min, max]` and snaps to the nearest `step` off `min` — the three `InputProps`
+/// constraints the wire has always carried and this target used to drop on the floor, letting a
+/// number field commit `999` into a `max: 10` parameter that React's own DOM input refuses. A `NaN`
+/// (an unparseable buffer) passes through untouched so the guest still sees the refusal rather than a
+/// silently invented number.
+pub fn constrain_number_input(value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> f64 {
+    if value.is_nan() {
+        return value;
+    }
+    let stepped = match step.filter(|step| *step > 0.0) {
+        Some(step) => {
+            let origin = min.unwrap_or(0.0);
+            origin + ((value - origin) / step).round() * step
+        }
+        None => value,
+    };
+    stepped.max(min.unwrap_or(f64::NEG_INFINITY)).min(max.unwrap_or(f64::INFINITY))
+}
+
+/// 🎯️ A number field's committed value: a detent kept exactly (it may sit off the step ladder), else
+/// [`constrain_number_input`] rounded to its precision.
+fn constrain_number_field(value: f64, input: &crate::wgpu::component::ui::UiInputNode) -> f64 {
+    if input.snaps.contains(&value) {
+        return value;
+    }
+    let constrained = constrain_number_input(value, input.min, input.max, input.step);
+    match (input.precision, input.display_factor) {
+        (None, _) => constrained,
+        (Some(precision), None) => ui_contract::round_ui_number(constrained, precision),
+        (Some(precision), Some(factor)) => ui_contract::round_ui_number(constrained * factor, precision) / factor,
+    }
+}
+
+fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
+    let clamped = value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY));
+    match (stepper.precision, stepper.display_factor) {
+        (None, _) => clamped,
+        (Some(precision), None) => ui_contract::round_ui_number(clamped, precision),
+        (Some(precision), Some(factor)) => ui_contract::round_ui_number(clamped * factor, precision) / factor,
+    }
+}
+
+/// 🦉️ A stepper's live stored value: its edit buffer read back from display units (a candidate keeping its exact stored
+/// value), else its declared value.
+fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
+    node.state.edit.as_ref().and_then(|edit| edit.text.trim().parse::<f64>().ok()).filter(|value| value.is_finite()).map(|typed| ui_contract::ui_number_typed_value(typed, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()))).unwrap_or(stepper.value)
+}
+
+fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
+    node.state.slider_draft_value.unwrap_or(slider.value)
+}
+
+/// 🧲️ A detent is kept exactly (it may sit off the step ladder); every other value is stepped and clamped.
+fn constrain_slider_value(value: f64, slider: &UiSliderNode) -> f64 {
+    if slider.snaps.contains(&value) {
+        return value;
+    }
+    if slider.precision.is_some() {
+        return value.clamp(slider.min, slider.max.max(slider.min));
+    }
+    constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))
+}
+
+/// 🪐️ The stored number a typed text of a numeric control means (display units read back by the contract's
+/// `ui_number_typed_value`, a candidate keeping its exact stored value), or `Err` with the refusal a renderer shows — the
+/// crossed bound's producer-localized text (empty for an unlabelled bound or an unreadable text). A refused text is never
+/// dispatched; the draft is kept.
+pub(crate) fn typed_number(text: &str, display_factor: Option<f64>, precision: Option<u16>, candidates: impl IntoIterator<Item = f64>, min: Option<f64>, max: Option<f64>, limits: Option<&ui_contract::UiNumberLimits>) -> Result<f64, String> {
+    let typed = text.trim().parse::<f64>().ok().filter(|value| value.is_finite()).ok_or_else(String::new)?;
+    let stored = ui_contract::ui_number_typed_value(typed, display_factor, precision, candidates);
+    match ui_contract::ui_number_crossed_bound(stored, min, max, limits) {
+        Some(bound) => Err(bound.refusal.map(|label| label.0.as_str().to_string()).unwrap_or_default()),
+        None => Ok(stored),
+    }
+}
+
+/// 🛰️ A number field's stored value and detents — the candidates a typed display value keeps exactly.
+fn current_stored(input: &crate::wgpu::component::ui::UiInputNode) -> impl Iterator<Item = f64> + '_ {
+    input.value.trim().parse::<f64>().ok().into_iter().chain(input.snaps.iter().copied())
+}
+
+/// 🧿️ The text a number field's edit buffer shows for a stored value: its display text at its precision.
+fn number_field_text(input: &crate::wgpu::component::ui::UiInputNode, stored: f64) -> String {
+    ui_contract::ui_number_display_text(stored, input.display_factor, input.precision)
+}
+
+/// 🚧️ The refusal a numeric control's current edit buffer earns, `None` when it is admitted (or the node is no numeric
+/// control) — the one verdict commit, blur and paint share.
+pub(crate) fn edit_refusal(node: &Node) -> Option<String> {
+    let text = node.state.edit.as_ref()?.text.as_str();
+    match &node.spec.0 {
+        UiNode::Input(input) if input.input_kind == "number" => typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).err(),
+        UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).err(),
+        UiNode::Slider(slider) => typed_number(text, slider.display_factor, slider.precision, std::iter::once(slider_live_value(node, slider)).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref()).err(),
+        _ => None,
+    }
+}
+
+fn number_stepper_sign_at(bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32) -> Option<f64> {
+    let [decrement, _, increment] = number_stepper_segments(bounds, inline, border);
+    if decrement.contains(x, y) {
+        Some(-1.0)
+    } else if increment.contains(x, y) {
+        Some(1.0)
+    } else {
+        None
+    }
+}
+
+fn number_stepper_can_step(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -> bool {
+    let value = number_stepper_live_value(node, stepper);
+    if sign < 0.0 {
+        stepper.min.is_none_or(|min| value > min)
+    } else {
+        stepper.max.is_none_or(|max| value < max)
+    }
+}
+
+/// 👆️ The action a press/drag at `(x, y)` over `bounds` commits for a pointer-valued control —
+/// `Toggle` flips its own `presence.selected`, `Slider`/`Ring` read the gesture position off the
+/// same geometry `paint` drew them at (`layout::{slider_value_at, ring_t_at}`), and a
+/// `NumberStepper`'s square side buttons step its value (relative through `on_delta` when that binding
+/// exists, absolute through `on_absolute` otherwise — React's `NumberStepperView` makes exactly that
+/// choice). `None` for the stepper's own value segment, for an unbound trigger, and for every
+/// variant whose press means something else (`Button`/`Select`/`Stack`, handled by the caller).
+fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: FlowInline, border: f32, inline_suffix_width: f32, control_gap: f32) -> Option<FiredAction> {
+    match &node.spec.0 {
+        UiNode::Toggle(toggle) => fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)),
+        UiNode::Slider(slider) => {
+            let unit_width = slider.unit_label().map(|_| inline_suffix_width);
+            let track = slider_control_presentation(bounds, slider.axis_position(slider.value), 0.0, 1.0, unit_width, control_gap, inline).slider.track_cell;
+            track.contains(x, y).then(|| fired_action(&slider.on_change, Trigger::Change, DslValue::float(crate::wgpu::slider::slider_node_pointer_value(slider, track, x, y)))).flatten()
+        }
+        UiNode::Ring(ring) => fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, x, y))),
+        UiNode::NumberStepper(stepper) => {
+            let sign = number_stepper_sign_at(bounds, x, y, inline, border)?;
+            if !number_stepper_can_step(node, stepper, sign) {
+                return None;
+            }
+            // ➕️➖️ Only a node that DECLARES a `Delta` binding takes the relative path — React's
+            // `NumberStepperView` supplies `onDelta` only when `record.bindings` contains one
+            // (`🗣️Interpreter/🟦️.tsx`). Supplying it unconditionally sent every +/− click down a
+            // trigger most programs never bind and swallowed the gesture (ticket
+            // 26/09/02/PUZZLE-3D-END-TO-END wave B12). The node's own stamped bindings are the
+            // authority when it has them; an unaddressed node falls back to the spec's own marker
+            // (an empty action name), which `fired_action` already answers `None` for. The keyboard
+            // half of the same gesture (`focused_value_key_activation`) shares this rule verbatim.
+            number_stepper_fired(node, stepper, sign)
+        }
+        _ => None,
+    }
+}
+
+/// 🎚️ The value one arrow/`Home`/`End`/`Page` key commits on a focused `Slider` — the shared keyboard
+/// law (`ui_contract::slider_key_value`, pinned by `🧫️number-controls`), so React, the retained canvas and
+/// the shell dialog land a key on the same value. The inline pair arrives already mirrored for `rtl`
+/// (`mirrored_inline_key`) and `Shift` walks ten rungs. `None` for every other key, so it never swallows one.
+fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: bool) -> Option<f64> {
+    let key = match key {
+        "ArrowRight" | "ArrowUp" => ui_contract::SliderKey::Increment,
+        "ArrowLeft" | "ArrowDown" => ui_contract::SliderKey::Decrement,
+        "PageUp" => ui_contract::SliderKey::PageUp,
+        "PageDown" => ui_contract::SliderKey::PageDown,
+        "Home" => ui_contract::SliderKey::Home,
+        "End" => ui_contract::SliderKey::End,
+        _ => return None,
+    };
+    Some(ui_contract::slider_key_value(current, slider.min, slider.max, slider.step, slider.precision, slider.display_factor, slider.snaps.iter().copied(), key, shift))
+}
+
+fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
+    slider_key_value_from(slider, slider.value, key, shift)
+}
+
+/// ➕️➖️ One `NumberStepper` increment/decrement of `sign`, taking the relative `Delta` path only for
+/// a node that DECLARES that binding — see the long note at this function's pointer-side caller.
+fn number_stepper_fired(node: &Node, stepper: &UiNumberStepperNode, sign: f64) -> Option<FiredAction> {
+    let binds_delta = node.intent.as_ref().map_or_else(|| !stepper.on_delta.action.is_empty(), |intent| intent.binds(Trigger::Delta));
+    if binds_delta {
+        fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(sign * stepper.step))
+    } else {
+        fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(constrain_stepper_value(number_stepper_live_value(node, stepper) + sign * stepper.step, stepper)))
+    }
+}
+
+/// 🎚️ Whether a press on this variant keeps committing while the pointer drags — React delegates
+/// `Slider`/`Ring` to controls that report every intermediate value, not only the release.
+fn commits_while_dragging(node: &UiNode) -> bool {
+    matches!(node, UiNode::Slider(_) | UiNode::Ring(_))
+}
+
+/// 🎚️ The scrub protocol's argument names (`🛠️tool-machine` `SCRUB_GESTURE_ARG`/`SCRUB_COMMIT_ARG`/`SCRUB_ABORT_ARG`,
+/// pinned by `🛠️tool-machine/🧫️fixtures/🧫️scrub-law`): a continuous control's dispatch carries its value, the press it
+/// belongs to and whether it is the release; a host cancel carries the press and its reason and no value.
+const SCRUB_GESTURE_ARG: &str = "gesture";
+const SCRUB_COMMIT_ARG: &str = "commit";
+const SCRUB_ABORT_ARG: &str = "abort";
+
+/// 🔢️ Process-wide press serial: every press identity is unique for the life of the guest it addresses.
+static SCRUB_PRESS_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// 🎚️ Whether `node` is a continuous control whose value rides presses: a `Slider`, a `Ring`, a `NumberStepper`'s absolute
+/// value, or a number or colour `Input` without a commit policy (React's `SliderView`, `RingView`, `NumberStepperView` and
+/// `InputView` ride their continuous lane exactly then; a typed field's blur is the release).
+fn is_continuous_control(node: &UiNode) -> bool {
+    match node {
+        UiNode::Slider(_) | UiNode::Ring(_) | UiNode::NumberStepper(_) => true,
+        UiNode::Input(input) => matches!(input.input_kind.as_str(), "number" | "color") && !commits_on_blur(node),
+        _ => false,
+    }
+}
+
+/// 🎚️ `fired` as one dispatch of the press `id` is in: its payload becomes `{value, gesture, commit}`. A press opens on
+/// its first dispatch; a release closes it, so a release with no open press is a one-shot press of its own.
+fn pressed(tree: &mut UiTree, window_id: &str, id: NodeId, mut fired: FiredAction, release: bool) -> FiredAction {
+    let value = fired.input.take().unwrap_or(DslValue::Null);
+    let Some(node) = tree.node_mut(id) else { return fired };
+    let gesture = node.state.scrub_gesture.get_or_insert_with(|| format!("{window_id}/{}:{}", id.identity_parts().0, SCRUB_PRESS_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1)).clone();
+    if release {
+        node.state.scrub_gesture = None;
+        node.state.scrub_offered = None;
+    } else {
+        node.state.scrub_offered = Some(value.clone());
+    }
+    fired.input = Some(DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(release))]));
+    fired
+}
+
+/// 🧯️ The host cancel of `id`'s open press (`blur`, `captureLost`): `{gesture, abort}` on the control's own binding, the
+/// press closed; `None` when no press is open. The guest drops the press with zero trace.
+fn cancelled_press(tree: &mut UiTree, id: NodeId, reason: &str) -> Option<FiredAction> {
+    let node = tree.node_mut(id)?;
+    let gesture = node.state.scrub_gesture.take()?;
+    node.state.scrub_offered = None;
+    press_cancel(&node.spec.0, gesture, reason)
+}
+
+/// 🔗️ The binding every dispatch of a continuous control's presses goes through.
+fn press_binding(node: &UiNode) -> Option<&ActionDescriptor> {
+    match node {
+        UiNode::Slider(slider) => Some(&slider.on_change),
+        UiNode::Ring(ring) => Some(&ring.on_change),
+        UiNode::Input(input) => Some(&input.on_change),
+        UiNode::NumberStepper(stepper) => Some(&stepper.on_absolute),
+        _ => None,
+    }
+}
+
+/// 🪃️ The host cancel `{gesture, abort}` of the press `gesture` on `node`'s own binding.
+fn press_cancel(node: &UiNode, gesture: String, reason: &str) -> Option<FiredAction> {
+    fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_ABORT_ARG.to_string(), DslValue::String(reason.to_string()))]))
+}
+
+/// 🏁️ The release `{value, gesture, commit: true}` of the press `gesture` on `node`'s own binding.
+fn press_release(node: &UiNode, gesture: String, value: DslValue) -> Option<FiredAction> {
+    fired_action(press_binding(node)?, Trigger::Change, DslValue::Object(vec![(INTENT_VALUE_FIELD.to_string(), value), (SCRUB_GESTURE_ARG.to_string(), DslValue::String(gesture)), (SCRUB_COMMIT_ARG.to_string(), DslValue::Bool(true))]))
+}
+/// 📐️ One node's absolute painted rect: its own accepted layout plus every ancestor's origin — the
+/// same accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/`paint::paint_node` each
+/// walk independently, resolved once here at dispatch time rather than by a whole-tree pass.
+fn absolute_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
+    tree.absolute_rect(id)
+}
+//#endregion 🔖️Commit
+
+//#region 🔖️Bubble
+/// 🫧️ Walks from `from` up through `parent` links (including `from` itself), calling `handler(id)`
+/// for each ancestor until it returns `true` ("handled, stop bubbling") or the root is reached.
+pub(crate) fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut handler: F) {
+    let mut cursor = Some(from);
+    while let Some(id) = cursor {
+        if handler(id) {
+            return;
+        }
+        cursor = tree.node(id).and_then(|node| node.parent);
+    }
+}
+
+/// 🌳️ Whether `id` is `ancestor` itself or a descendant of it, walking the parent chain.
+fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool {
+    let mut found = false;
+    bubble(tree, id, |current| {
+        if current == ancestor {
+            found = true;
+            true
+        } else {
+            false
+        }
+    });
+    found
+}
+//#endregion 🔖️Bubble
+
+//#region 🔖️Overlay
+// 🪟️ One first-class overlay mechanism serving Select popups, context menus, tooltips, dialogs, and
+// a command palette — not five bespoke implementations. `NodeFlags::OVERLAY` already gives a
+// flagged child hit-test priority over its normal siblings (see 🔖️HitTest above); `EventRouter`
+// layers open/close/anchor/placement/dismissal/focus-trap bookkeeping on top of that one existing
+// primitive. Building the popup CONTENTS (a `Select`'s item list, a context menu's entries, …) is
+// explicitly not this module's job — a caller (future `reconcile`/`paint`/`host` wiring) reconciles
+// that subtree in and hands this module its root `NodeId` plus a `kind`/`anchor`; from there this
+// module owns the subtree's lifecycle.
+
+/// ⚓️ What an overlay is positioned relative to: an existing node (a `Select`'s trigger, a hovered
+/// row) or a raw point (where a context menu was right-clicked, where the pointer was when a
+/// tooltip's hover-delay fired).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum OverlayAnchor {
+    Node(NodeId),
+    Point { x: f32, y: f32 },
+}
+
+/// 🪟️ The anchored-overlay placement vocabulary and its positioner are the CONTRACT's, not this
+/// target's: `ui_contract::🪟️overlay` owns the one port of React's `resolvePopoverPlacement` so this
+/// module and `🖌️render/🖱️dispatch` cannot drift apart again (ticket 26/09/17 packet W2k).
+pub use ui_contract::{
+    resolve_centered_placement, resolve_select_inline_left, AnchoredPlacement, DismissPolicy, OverlayAlign, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, ResolvedOverlayPlacement, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS,
+};
+
+/// 🪟️ One currently-open overlay's lifecycle state.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OpenOverlay {
+    /// 🌳️ The overlay's content subtree root — `EventRouter::open_overlay` flags this
+    /// `NodeFlags::OVERLAY` for hit-test priority and clears it again on close.
+    pub root: NodeId,
+    pub kind: OverlayKind,
+    pub anchor: OverlayAnchor,
+    pub placement: OverlayPlacement,
+    pub dismiss: DismissPolicy,
+    /// 🔒️ `Dialog`/`CommandPalette`: while `true`, Tab-order cycling is bounded to this overlay's
+    /// subtree (see `EventRouter::dispatch`'s `Tab` handling).
+    pub focus_trap: bool,
+}
+
+/// 🥞️ Open overlays in z-order (last = topmost = painted last = hit-tested first, matching
+/// `NodeFlags::OVERLAY`'s own priority rule). Only one `EventRouter` field, but a `Vec` rather than a
+/// single slot because a context menu can itself spawn a submenu, or a Select popup can open above a
+/// Dialog — nesting is a real case this mechanism must support, not just a single global popup.
+#[derive(Default)]
+pub(crate) struct OverlayStack {
+    open: Vec<OpenOverlay>,
+}
+
+impl OverlayStack {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn open(&mut self, overlay: OpenOverlay) {
+        self.open.push(overlay);
+    }
+
+    fn topmost(&self) -> Option<&OpenOverlay> {
+        self.open.last()
+    }
+
+    /// 🥞️ Bottom-to-top: the exact order a paint pass must draw them in.
+    fn as_slice(&self) -> &[OpenOverlay] {
+        &self.open
+    }
+
+    fn close_root(&mut self, root: NodeId) -> Option<OpenOverlay> {
+        let position = self.open.iter().position(|overlay| overlay.root == root)?;
+        Some(self.open.remove(position))
+    }
+
+    fn close_topmost(&mut self) -> Option<OpenOverlay> {
+        self.open.pop()
+    }
+
+    /// 🔒️ The root of the topmost `focus_trap` overlay, if any — `Escape`/outside-press only ever
+    /// close the *topmost* overlay, but a focus trap set by a lower (still-open) trapping overlay
+    /// stays in effect once a higher non-trapping overlay (e.g. a `Tooltip`) is on top of it, so this
+    /// searches from the top down rather than just checking `topmost()`.
+    fn topmost_focus_trap_root(&self) -> Option<NodeId> {
+        self.open.iter().rev().find(|overlay| overlay.focus_trap).map(|overlay| overlay.root)
+    }
+}
+
+/// 📐️ Resolves an overlay's top-left origin from its anchor, `kind`'s `placement` rule, the
+/// overlay's own measured `content_size` (post-layout — paint/flex, not this module, own measuring
+/// it), and the window's `viewport` size. Pure geometry: callers (a future `paint`/`flex` wiring)
+/// still own actually writing the result into the overlay root's layout — `events` only decides
+/// *where*, per the module doc comment's "the content subtree itself is whatever the caller
+/// reconciled in" scoping.
+pub fn resolve_overlay_placement(tree: &UiTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> (f32, f32) {
+    let resolved = resolve_overlay_placement_side(tree, anchor, content_size, viewport, placement, flow);
+    (resolved.x, resolved.y)
+}
+
+/// 📐️ [`resolve_overlay_placement`] plus the side a collision flip settled on — what a paint pass
+/// reads when it also wants React's `transformOrigin` equivalent. `flow` is React's own `rtl`
+/// argument, read from the window's [`ui_contract::UiFlow`] (`Ui::window_flow`).
+pub fn resolve_overlay_placement_side(tree: &UiTree, anchor: OverlayAnchor, content_size: (f32, f32), viewport: (f32, f32), placement: OverlayPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
+    let anchor_rect = match anchor {
+        OverlayAnchor::Node(id) => node_abs_rect(tree, id).unwrap_or(Rect::new(0.0, 0.0, 0.0, 0.0)),
+        OverlayAnchor::Point { x, y } => Rect::new(x, y, 0.0, 0.0),
+    };
+    ui_contract::resolve_overlay_placement(overlay_rect(anchor_rect), content_size, viewport, placement, flow)
+}
+
+/// 📐️ This target's [`Rect`] as the contract's renderer-neutral [`OverlayRect`] — the ONE conversion
+/// site, so `ui_contract`'s positioner stays free of any target's geometry type.
+pub fn overlay_rect(rect: Rect) -> OverlayRect {
+    OverlayRect::new(rect.x, rect.y, rect.w, rect.h)
+}
+
+/// 📍️ React's `resolvePopoverPlacement` over this target's [`Rect`] — a forwarding shim, because the
+/// math itself lives exactly once, in `ui_contract::🪟️overlay`.
+pub fn resolve_anchored_placement(anchor: Rect, content_size: (f32, f32), viewport: (f32, f32), placement: AnchoredPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
+    ui_contract::resolve_anchored_placement(overlay_rect(anchor), content_size, viewport, placement, flow)
+}
+
+//#endregion 🔖️Overlay
+
+//#region 🔖️Tooltip
+// 💡️ React gets hover reveal from the DOM: `ChromeControlHint` arms a `setTimeout` on
+// `onPointerEnter`/`onFocusCapture` and opens a portalled `role="tooltip"` after
+// `CHROME_CONTROL_TOOLTIP_DELAY_MS`. An immediate-mode canvas has no such affordance, so the dwell
+// timer lives here: `update_hover` stamps when the hover chain's leaf last changed, and
+// `advance_clock` — fed one monotonic seconds value per frame by `engine::Ui::advance_clock` — is
+// what actually fires. The same clock debounces `DismissPolicy::hover_out_delay_seconds`, which was
+// previously documented as "not actually debounced yet".
+
+/// 💡️ What a clock step asks the host to do about hover reveal this frame.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TooltipStep {
+    /// 😴️ Nothing changed — no dwell elapsed, nothing to dismiss.
+    Idle,
+    /// 💡️ `node` has been hovered for [`TOOLTIP_DWELL_SECONDS`]: reconcile its tooltip content in
+    /// and `open_overlay` it as an [`OverlayKind::Tooltip`] anchored on `node`.
+    Reveal(NodeId),
+    /// 🚪️ The armed hover-out delay elapsed — the caller closed the tooltip as part of this step.
+    Dismissed,
+}
+
+pub(crate) const CARET_BLINK_SECONDS: f64 = 0.5;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CaretSource {
+    Retained,
+    Scene,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct CaretStep {
+    pub(crate) node: NodeId,
+    pub(crate) source: CaretSource,
+    pub(crate) visible: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct CaretClock {
+    node: NodeId,
+    source: CaretSource,
+    visible: bool,
+    next_at: f64,
+}
+
+pub(crate) struct RouterClockStep {
+    pub(crate) tooltip: TooltipStep,
+    pub(crate) caret: Option<CaretStep>,
+    pub(crate) commands: Vec<UiCommand>,
+    pub(crate) changed: bool,
+    pub(crate) next_deadline: Option<f64>,
+}
+//#endregion 🔖️Tooltip
+
+//#region 🔖️DragDrop
+// 🫳️ Generic drag-and-drop session lifecycle: start-drag (promoted from a `Press` capture once
+// pointer movement clears `DRAG_PROMOTE_THRESHOLD_SQ`), update-position/evaluate-drop-target
+// (`EventRouter::update_drag`, called from `PointerMove`), commit-or-cancel (`PointerUp`). Building
+// the specific CONSUMERS (tree reorder, dock retiling, …) is out of scope — this is wire-format
+// parity plumbing for whatever consumes `UiCommand::DropCommitted`.
+
+/// 🏷️ Drag payload: MIME-style keys, JSON-encoded string values — exactly the shape
+/// `framework/renderer/react/ui-interpreter.tsx`'s `handleDrop` reads off `DataTransfer` (`data:
+/// Record<string, string>`, matched by `application/x-semio-*` key prefix) and the shape
+/// `UiTreeItemNode::drag_data` already carries. Reusing this shape (rather than a bespoke Rust enum)
+/// means a later workstream wiring this into the same program action contracts needs zero translation.
+pub type DragPayload = HashMap<String, String>;
+
+/// 👻️ Minimal drag-ghost shape — the actual visual is `paint`'s job (another region/agent); this is
+/// just enough for a caller to render *something* under the pointer.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DragGhost {
+    pub label: String,
+    pub offset_x: f32,
+    pub offset_y: f32,
+}
+
+/// 🫳️ One active drag, from promotion out of a `Press` capture (`EventRouter::maybe_promote_to_drag`)
+/// through to `PointerUp`'s commit/cancel.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DragSession {
+    pub source: NodeId,
+    pub payload: DragPayload,
+    pub ghost: Option<DragGhost>,
+    pub pointer_x: f32,
+    pub pointer_y: f32,
+    /// 🎯️ The nearest `NodeFlags::DROP_TARGET` ancestor of whatever's under the pointer right now
+    /// that also passes its registered accept predicate (`EventRouter::set_drop_accept`), if any —
+    /// recomputed every `PointerMove` by `EventRouter::update_drag`.
+    pub drop_target: Option<NodeId>,
+}
+
+/// 📏️ Squared pixel distance a `Press` capture on a `DragPayload`-registered node must travel before
+/// `EventRouter::maybe_promote_to_drag` promotes it to a real `DragSession` — a small dead-zone so an
+/// ordinary click on a draggable node doesn't spuriously start (and then immediately cancel) a drag.
+const DRAG_PROMOTE_THRESHOLD_SQ: f32 = 16.0;
+//#endregion 🔖️DragDrop
+
+//#region 🔖️Scroll
+// 🖱️ Wheel events route to the nearest scrollable ancestor of the node under the pointer, walking
+// the bubble chain for `NodeFlags::SCROLLABLE` exactly like `nearest_accepting_drop_target` walks it
+// for `NodeFlags::DROP_TARGET`. Thumb-drag capture (`CaptureKind::ScrollThumb`) is a separate path:
+// `paint` paints the actual thumb node wherever it likes in the tree and registers it once via
+// `EventRouter::register_scroll_thumb`, decoupling thumb geometry from scrollable-content geometry.
+
+/// 🖱️ Walks `from`'s bubble chain (inclusive) for the nearest `NodeFlags::SCROLLABLE` node.
+fn nearest_scrollable_ancestor(tree: &UiTree, from: NodeId) -> Option<NodeId> {
+    let mut found = None;
+    bubble(tree, from, |id| {
+        if tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::SCROLLABLE)) {
+            found = Some(id);
+            true
+        } else {
+            false
+        }
+    });
+    found
+}
+//#endregion 🔖️Scroll
+
+//#region 🔖️EditRouting
+// ✍️ Key routing for a focused editable node's `tree::EditState`. Byte-offset caret/anchor
+// throughout (see `EditState`'s own doc comment for why); `prev_char_boundary`/`next_char_boundary`
+// step one `char` at a time without re-deriving a full `char_indices` pass per keystroke.
+
+fn prev_char_boundary(text: &str, index: usize) -> usize {
+    if index == 0 {
+        return 0;
+    }
+    let mut candidate = index - 1;
+    while candidate > 0 && !text.is_char_boundary(candidate) {
+        candidate -= 1;
+    }
+    candidate
+}
+
+fn next_char_boundary(text: &str, index: usize) -> usize {
+    if index >= text.len() {
+        return text.len();
+    }
+    let mut candidate = index + 1;
+    while candidate < text.len() && !text.is_char_boundary(candidate) {
+        candidate += 1;
+    }
+    candidate
+}
+
+/// ↔ Selection bounds as `(start, end)` regardless of which of `anchor`/`caret` is smaller —
+/// `EditState`'s own doc comment documents the selection as `anchor..caret` in either order.
+fn selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
+    (anchor.min(caret), anchor.max(caret))
+}
+
+/// ✍️ Replaces the current selection (or inserts at the caret if there isn't one) with `text`,
+/// collapsing caret and anchor to just past the inserted text. Shared by `TextInput`, `Paste`, and
+/// `Ime::Commit` routing — insertion semantics are identical for all three.
+fn insert_at_caret(edit: &mut EditState, text: &str) {
+    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+    edit.text.replace_range(start..end, text);
+    let caret = start + text.len();
+    edit.caret = caret;
+    edit.anchor = caret;
+}
+//#endregion 🔖️EditRouting
+
+//#region 🔖️UiCommand
+/// 📤️ What the engine emits for the host to act on, drained once per tick.
+#[derive(Clone, Debug, PartialEq)]
+pub enum UiCommand {
+    /// 🧩️ A semantic control fired — carried as a [`UiIntentCommand`], the renderer-side twin of
+    /// `ui_contract::UiIntent`, never the bare `ActionDescriptor` this variant used to hold. The
+    /// intent adds the addressing (`surface`/`revision`/`node`/`node_key`), the versioned `ActionId`,
+    /// a payload kept apart from the authored args, and the per-surface `seq` — everything the host's
+    /// admission gate (`BoundedActionQueue::admit_intent`) needs to order, de-duplicate and refuse a
+    /// stale gesture. `intent.descriptor()` is the one place it collapses back to an address the
+    /// plugin bridge dispatches.
+    App { window_id: String, intent: UiIntentCommand },
+    /// 🔦️ Focus moved (or cleared) as a result of routing an event.
+    FocusChanged { window_id: String, node: Option<NodeId> },
+    /// 🪟️ An overlay closed — either explicitly (`EventRouter::close_overlay`) or via dismissal
+    /// (outside-press swallow, `Escape`, tooltip hover-out).
+    OverlayClosed { window_id: String, root: NodeId, kind: OverlayKind },
+    /// 🫳️ A `DragSession` released over an accepting drop target.
+    DropCommitted { window_id: String, source: NodeId, target: NodeId, payload: DragPayload },
+    /// 🫳️ A `DragSession` released with no accepting drop target under the pointer.
+    DropCancelled { window_id: String, source: NodeId },
+    /// 📋️ `Ctrl`/`Cmd`+`C` over a text selection — host copies `text` to the OS clipboard.
+    ClipboardCopy { window_id: String, text: String },
+    /// 📋️ `Ctrl`/`Cmd`+`X` over a text selection — `text` is already removed from the `EditState`
+    /// buffer; host copies it to the OS clipboard.
+    ClipboardCut { window_id: String, text: String },
+    /// 📋️ `Ctrl`/`Cmd`+`V`: host must read the OS clipboard and feed the result back as
+    /// `UiEvent::Paste` (the OS clipboard read itself is a `host`-region concern, not `events`').
+    ClipboardPasteRequested { window_id: String },
+    /// 🎬️ A real `PointerDown`/`PointerUp`/`PointerMove`/`Scroll` `event` that hit-tested to a
+    /// `ComponentScene` leaf — the host looks up `node`'s live `UiComponentSceneNode` (same
+    /// `window_id`+`node` the retained tree's `scene_slots` region reads) and routes `event` into
+    /// that `kind`'s own per-`SurfaceKind` input handler, instead of sampling an aggregate
+    /// `InputState` once per render frame the way `framework/renderer/wgpu`'s `RenderEntry` region
+    /// used to. `surface_id`/`kind`/`rect` are carried directly (resolved once here, at dispatch
+    /// time, from the same ancestor-offset accumulation `scene_slots::collect_scene_slots`/
+    /// `hit_test_node` use) so a host doesn't need its own tree walk just to decide whether this
+    /// surface already gets real OS-event-driven input through its own bespoke host (`world-3d`/
+    /// `node-graph`/`tiled-map`/`board-2d`) before paying for the `node` lookup.
+    Scene { window_id: String, node: NodeId, surface_id: String, kind: SurfaceKind, rect: Rect, event: UiEvent },
+}
+
+/// 🧭️ Owns capture + focus + overlay + drag + scroll-thumb state for one window's retained tree and
+/// turns `UiEvent`s into `NodeFlags`/`WidgetState` updates plus a minimal, correct (not speculative)
+/// set of `UiCommand`s. Per-widget-variant semantics beyond generic routing (e.g. actually committing
+/// an edited `Input`'s value via its `on_change` `ActionDescriptor`) are a documented gap for a later
+/// milestone, same as this struct's own precedent (`Button` was the only concretely-wired variant
+/// before M5).
+/// 🎯️ A `set_drop_accept` predicate — see `EventRouter::drop_accept`.
+type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool + Send + Sync>;
+
+struct RetiringDragPayload {
+    entries: std::collections::hash_map::IntoIter<String, String>,
+    entry: Option<(String, String)>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct StepperRepeat {
+    node: NodeId,
+    sign: f64,
+    next_at: f64,
+}
+
+const STEPPER_REPEAT_DELAY_SECONDS: f64 = 0.5;
+const STEPPER_REPEAT_INTERVAL_SECONDS: f64 = 0.1;
+const STEPPER_REPEAT_CLOCK_EPSILON_SECONDS: f64 = 0.000_001;
+const SLIDER_DOUBLE_CLICK_SECONDS: f64 = 0.5;
+
+impl RetiringDragPayload {
+    fn new(payload: DragPayload) -> Self {
+        Self { entries: payload.into_iter(), entry: None }
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some((key, value)) = self.entry.as_mut() {
+            if value.pop().is_some() || key.pop().is_some() {
+                return false;
+            }
+            if value.capacity() > 0 {
+                *value = String::new();
+                return false;
+            }
+            if key.capacity() > 0 {
+                *key = String::new();
+                return false;
+            }
+            self.entry = None;
+            return false;
+        }
+        self.entry = self.entries.next();
+        self.entry.is_none()
+    }
+}
+
+pub(crate) struct EventRouter {
+    window_id: String,
+    capture: CaptureState,
+    focus: FocusState,
+    hovered: Option<NodeId>,
+    /// 🫧️ Every node currently in the hover bubble chain (leaf-to-root from `hovered`), so an
+    /// ancestor container (e.g. a `Stack`-based tree-item row, which `hit_test` never itself returns
+    /// as the match — see 🔖️HitTest's `is_plain_container`) still observes `NodeFlags::HOVERED` for
+    /// `paint`'s hover-reveal (React's `placement` / driver.chrome reveal) to key off of.
+    hover_chain: Vec<NodeId>,
+    /// 👇️ Pointer position at the start of the current `Press` capture, for `maybe_promote_to_drag`'s
+    /// movement-threshold check.
+    press_origin: Option<(f32, f32)>,
+    overlays: OverlayStack,
+    drag: Option<DragSession>,
+    tree_drag_driver: UiDriverDrag,
+    tree_drag_metrics: TreeRowMetrics,
+    control_border: f32,
+    control_gap: f32,
+    tree_drag_handle_press: Option<NodeId>,
+    /// 🫳️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
+    /// `set_drag_payload`.
+    drag_payloads: BTreeMap<NodeId, DragPayload>,
+    /// 🎯️ Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
+    /// `set_drop_accept`. Absent from this map but flagged `DROP_TARGET` still accepts everything.
+    drop_accept: BTreeMap<NodeId, DropAcceptPredicate>,
+    /// 🖱️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
+    /// `register_scroll_thumb`.
+    scroll_thumbs: BTreeMap<NodeId, (NodeId, ScrollAxis)>,
+    retiring_payload: Option<RetiringDragPayload>,
+    /// 🖱️ `(pointer_x, pointer_y, scroll_offset_x, scroll_offset_y)` captured at the start of a
+    /// `ScrollThumb` drag, for `update_scroll_thumb`'s delta-computation baseline.
+    thumb_start: Option<(f32, f32, f32, f32)>,
+    /// ⏱️ Monotonic seconds, advanced once per frame by `advance_clock`. Every hover-reveal deadline
+    /// is an absolute value on this clock, never a countdown, so a dropped frame cannot lose time.
+    clock_seconds: f64,
+    /// 💡️ When the current hover leaf was entered, and whether its dwell already fired — so a
+    /// tooltip opens exactly once per hover, not every frame after the deadline.
+    hover_since: Option<(NodeId, f64)>,
+    hover_revealed: Option<NodeId>,
+    /// 🚪️ Deadline armed by `maybe_dismiss_tooltip_on_hover_out` once the pointer leaves an open
+    /// tooltip's anchor and bounds — see `DismissPolicy::hover_out_delay_seconds`.
+    tooltip_dismiss_at: Option<f64>,
+    /// 🔤️ The open `Select`'s live typeahead query and the `clock_seconds` of its last keystroke.
+    /// React keeps the same buffer behind a 700 ms timer it restarts per key
+    /// (`🧱️elements/🔽️Select/🟦️.tsx:661-666`); this expires it against the same monotonic clock
+    /// every other reveal deadline here uses, so a dropped frame cannot lose time.
+    select_typeahead: Option<(String, f64)>,
+    stepper_repeat: Option<StepperRepeat>,
+    caret: Option<CaretClock>,
+    /// 🔢️ The per-surface monotonic `seq` every fired intent carries — this window's own twin of
+    /// `UiDocumentStore`'s `seq` counter (`📃️UiDocumentStore/🟦️.tsx`'s `buildIntent`). Minted here,
+    /// enforced at the queue (`BoundedActionQueue::admit_intent`).
+    intents: UiIntentSequencer,
+    /// 🧭️ This window's logical flow — the twin of React's `useFlow()`
+    /// (`🔨️modules/🧭️flow-direction-context/🟦️.tsx:48`). `Rtl` mirrors the inline axis of every
+    /// anchored overlay this router places and of every inline arrow key it routes; `Up` is read by
+    /// paint, not here. Set from the window's dock anchor through `Ui::set_window_flow`, exactly as
+    /// React derives it from `flowFromAnchor`.
+    flow: UiFlow,
+    /// ⌨️ Whether the LAST input this router saw was a key rather than a pointer — React's
+    /// `:focus-visible` in one bit. A focus ring paints only while this is set, so a clicked control
+    /// gets focus without the keyboard ring (`🖌️paint`'s focus-ring sites read `focus_visible`).
+    focus_visible: bool,
+}
+
+impl EventRouter {
+    pub(crate) fn new(window_id: impl Into<String>) -> Self {
+        Self {
+            window_id: window_id.into(),
+            capture: CaptureState::default(),
+            focus: FocusState::new(),
+            hovered: None,
+            hover_chain: Vec::new(),
+            press_origin: None,
+            overlays: OverlayStack::new(),
+            drag: None,
+            tree_drag_driver: UiDriverDrag::Handle,
+            tree_drag_metrics: TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()),
+            control_border: crate::wgpu::theme::Theme::default().stroke_hairline,
+            control_gap: crate::wgpu::theme::Theme::default().gap_standard,
+            tree_drag_handle_press: None,
+            drag_payloads: BTreeMap::new(),
+            drop_accept: BTreeMap::new(),
+            scroll_thumbs: BTreeMap::new(),
+            retiring_payload: None,
+            thumb_start: None,
+            clock_seconds: 0.0,
+            hover_since: None,
+            hover_revealed: None,
+            tooltip_dismiss_at: None,
+            select_typeahead: None,
+            stepper_repeat: None,
+            caret: None,
+            intents: UiIntentSequencer::default(),
+            flow: UiFlow::DEFAULT,
+            focus_visible: false,
+        }
+    }
+
+    /// 🎞️ Rebinds presented interaction owners into a separately reconciled candidate tree. Only
+    /// exact document identity, key, and widget-kind matches transfer; candidate registrations stay
+    /// owned by the candidate paint.
+    pub(crate) fn transfer_interaction_from(&mut self, presented: &EventRouter, presented_tree: &UiTree, candidate_tree: &UiTree) {
+        let remap = |source: NodeId| candidate_tree.interaction_successor_from(presented_tree, source);
+        self.capture.target = presented.capture.target.and_then(|(pointer, node, kind)| remap(node).map(|node| (pointer, node, kind)));
+        self.focus.focused = presented.focus.focused.and_then(remap);
+        self.focus.tab_order.clear();
+        self.focus.tab_order.extend(presented.focus.tab_order.iter().filter_map(|node| remap(*node)));
+        self.hovered = presented.hovered.and_then(remap);
+        self.hover_chain.clear();
+        self.hover_chain.extend(presented.hover_chain.iter().filter_map(|node| remap(*node)));
+        self.press_origin = self.capture.target.and(presented.press_origin);
+        self.overlays.open.clear();
+        self.overlays.open.extend(presented.overlays.open.iter().filter_map(|overlay| {
+            let root = remap(overlay.root)?;
+            let anchor = match overlay.anchor {
+                OverlayAnchor::Node(node) => OverlayAnchor::Node(remap(node)?),
+                point => point,
+            };
+            Some(OpenOverlay { root, anchor, ..*overlay })
+        }));
+        self.drag = presented
+            .drag
+            .as_ref()
+            .and_then(|drag| Some(DragSession { source: remap(drag.source)?, payload: drag.payload.clone(), ghost: drag.ghost.clone(), pointer_x: drag.pointer_x, pointer_y: drag.pointer_y, drop_target: drag.drop_target.and_then(remap) }));
+        self.tree_drag_driver = presented.tree_drag_driver;
+        self.tree_drag_metrics = presented.tree_drag_metrics;
+        self.control_border = presented.control_border;
+        self.control_gap = presented.control_gap;
+        self.tree_drag_handle_press = presented.tree_drag_handle_press.and_then(remap);
+        self.thumb_start = presented.thumb_start;
+        self.clock_seconds = presented.clock_seconds;
+        self.hover_since = presented.hover_since.and_then(|(node, at)| remap(node).map(|node| (node, at)));
+        self.hover_revealed = presented.hover_revealed.and_then(remap);
+        self.tooltip_dismiss_at = presented.tooltip_dismiss_at;
+        self.select_typeahead = presented.select_typeahead.clone();
+        self.stepper_repeat = presented.stepper_repeat.and_then(|repeat| remap(repeat.node).map(|node| StepperRepeat { node, ..repeat }));
+        self.caret = presented.caret.and_then(|caret| remap(caret.node).map(|node| CaretClock { node, ..caret }));
+        self.intents = presented.intents.clone();
+        self.flow = presented.flow;
+        self.focus_visible = presented.focus_visible;
+    }
+
+    /// 🧹️ Silently retires one input owner or storage scalar during surface unmount.
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.capture.release_any().is_some()
+            || self.focus.focused.take().is_some()
+            || self.hovered.take().is_some()
+            || self.press_origin.take().is_some()
+            || self.tree_drag_handle_press.take().is_some()
+            || self.thumb_start.take().is_some()
+            || self.hover_since.take().is_some()
+            || self.hover_revealed.take().is_some()
+            || self.tooltip_dismiss_at.take().is_some()
+            || self.stepper_repeat.take().is_some()
+            || self.caret.take().is_some()
+        {
+            return false;
+        }
+        if self.focus.tab_order.pop().is_some() || self.hover_chain.pop().is_some() || self.overlays.open.pop().is_some() {
+            return false;
+        }
+        if self.focus.tab_order.capacity() > 0 {
+            self.focus.tab_order = Vec::new();
+            return false;
+        }
+        if self.hover_chain.capacity() > 0 {
+            self.hover_chain = Vec::new();
+            return false;
+        }
+        if self.overlays.open.capacity() > 0 {
+            self.overlays.open = Vec::new();
+            return false;
+        }
+        if let Some(payload) = self.retiring_payload.as_mut() {
+            if payload.close_step() {
+                self.retiring_payload = None;
+            }
+            return false;
+        }
+        if let Some(drag) = self.drag.as_mut() {
+            if !drag.payload.is_empty() || drag.payload.capacity() > 0 {
+                self.retiring_payload = Some(RetiringDragPayload::new(std::mem::take(&mut drag.payload)));
+                return false;
+            }
+            if let Some(ghost) = drag.ghost.as_mut() {
+                if ghost.label.pop().is_some() {
+                    return false;
+                }
+                if ghost.label.capacity() > 0 {
+                    ghost.label = String::new();
+                    return false;
+                }
+                drag.ghost = None;
+                return false;
+            }
+            self.drag = None;
+            return false;
+        }
+        if let Some((_, payload)) = self.drag_payloads.pop_first() {
+            self.retiring_payload = Some(RetiringDragPayload::new(payload));
+            return false;
+        }
+        if self.drop_accept.pop_first().is_some() || self.scroll_thumbs.pop_first().is_some() {
+            return false;
+        }
+        if let Some((query, _)) = self.select_typeahead.as_mut() {
+            if query.pop().is_some() {
+                return false;
+            }
+            if query.capacity() > 0 {
+                *query = String::new();
+                return false;
+            }
+            self.select_typeahead = None;
+            return false;
+        }
+        if !self.intents.close_step() {
+            return false;
+        }
+        if self.window_id.pop().is_some() {
+            return false;
+        }
+        if self.window_id.capacity() > 0 {
+            self.window_id = String::new();
+            return false;
+        }
+        true
+    }
+
+    fn toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId) -> bool {
+        tree.toggle_disclosure(id).is_some()
+    }
+
+    /// 🖱️ A press anywhere on an expandable row folds it. The chevron paints that state; it is the
+    /// same control, not a separate gate. `toggle_disclosure` already refuses a row with no children.
+    fn pointer_toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId, _x: f32, _y: f32) -> bool {
+        self.toggle_disclosure(tree, id)
+    }
+
+    /// 🧭️ This window's logical flow.
+    pub(crate) fn flow(&self) -> UiFlow {
+        self.flow
+    }
+
+    /// 🧭️ This window's inline direction — the `rtl` argument every mirrored formula takes.
+    pub(crate) fn flow_inline(&self) -> FlowInline {
+        self.flow.inline
+    }
+
+    /// 🧭️ Replaces this window's flow. Answers whether it changed, so the caller can invalidate the
+    /// layout generation the way `Ui::set_viewport` does for metrics.
+    pub(crate) fn set_flow(&mut self, flow: UiFlow) -> bool {
+        if self.flow == flow {
+            return false;
+        }
+        self.flow = flow;
+        self.tree_drag_metrics = self.tree_drag_metrics.with_inline(flow.inline);
+        true
+    }
+
+    /// ⌨️ Whether a focus ring should paint — React's `focus-visible`. True only after a KEY moved or
+    /// activated focus; any pointer press clears it.
+    pub(crate) fn focus_visible(&self) -> bool {
+        self.focus_visible
+    }
+
+    pub(crate) fn set_control_border(&mut self, border: f32) {
+        self.control_border = border.max(0.0);
+    }
+
+    pub(crate) fn set_control_gap(&mut self, gap: f32) {
+        self.control_gap = gap.max(0.0);
+    }
+
+    pub(crate) fn set_tree_drag_policy(&mut self, tree: &mut UiTree, driver: UiDriverDrag, metrics: TreeRowMetrics) -> Vec<UiCommand> {
+        self.tree_drag_metrics = metrics;
+        if self.tree_drag_driver == driver {
+            return Vec::new();
+        }
+        self.tree_drag_driver = driver;
+        self.cancel_tree_drag(tree).into_iter().collect()
+    }
+
+    fn cancel_tree_drag(&mut self, tree: &mut UiTree) -> Option<UiCommand> {
+        let (_, source, kind) = self.capture.target?;
+        if find_tree_item_spec(tree, source).and_then(tree_drag_role).is_none() {
+            return None;
+        }
+        let _ = self.capture.release_any();
+        self.press_origin = None;
+        self.tree_drag_handle_press = None;
+        self.drag_payloads.remove(&source);
+        if let Some(node) = tree.node_mut(source) {
+            node.flags.set(NodeFlags::ACTIVE, false);
+        }
+        tree.mark_dirty(source, NodeFlags::DIRTY_PAINT);
+        if kind != CaptureKind::Drag {
+            self.drag = None;
+            return None;
+        }
+        let drag = self.drag.take()?;
+        Some(UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source })
+    }
+
+    fn tree_drag_press_arms(&self, tree: &UiTree, row: NodeId, x: f32, y: f32) -> bool {
+        let Some(item) = find_tree_item_spec(tree, row) else { return false };
+        if item.presence.state == UiState::Disabled || tree_drag_role(item).is_none() {
+            return false;
+        }
+        if self.tree_drag_driver == UiDriverDrag::Surface {
+            return true;
+        }
+        let Some(row_rect) = node_abs_rect(tree, row) else { return false };
+        let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
+        let relative = tree_drag_handle_rect(row_rect.w, &metrics);
+        Rect::new(row_rect.x + relative.x, row_rect.y + relative.y, relative.w, relative.h).contains(x, y)
+    }
+
+    //#region 🎬️IntentApi
+    /// 🎬️ Turns one fired gesture into an addressed [`UiIntentCommand`] — the wgpu twin of React's
+    /// `dispatchTrigger` → `emitIntent` → `UiDocumentStore::buildIntent` chain.
+    ///
+    /// Three things happen here and nowhere else: the node's stamped address supplies
+    /// `surface`/`revision`/`node`/`node_key`; a gesture whose recorded revision is already more than
+    /// one behind the document it is being resolved against is DROPPED (`intent_is_stale` — React's
+    /// own `is_stale`, so a click on geometry the user never saw cannot misapply); and the surface's
+    /// `seq` is minted. A node the document never published (the chrome's immediate-mode widgets, the
+    /// testkit's `apply_tree`) has no address and no revision to be stale against — it still fires,
+    /// with a default address, which is exactly the unowned-element channel React keeps `onAction` for.
+    fn build_intent(&mut self, tree: &UiTree, node: NodeId, fired: FiredAction) -> Option<UiIntentCommand> {
+        let bindings = tree.node(node).and_then(|node| node.intent.clone());
+        let current_revision = tree.document().map_or(0, |document| document.revision().0);
+        let (address, action) = match bindings {
+            Some(bindings) => {
+                if intent_is_stale(bindings.address.revision, current_revision) {
+                    return None;
+                }
+                let action = match bindings.action_for(fired.trigger) {
+                    Some(action) => action.clone(),
+                    None => descriptor_action_id(&fired.action)?,
+                };
+                (bindings.address, action)
+            }
+            None => (UiIntentAddress::default(), descriptor_action_id(&fired.action)?),
+        };
+        let seq = self.intents.next(&address.surface);
+        Some(UiIntentCommand { address, trigger: fired.trigger, action, args: fired.action.args, input: fired.input, seq })
+    }
+
+    /// 🎬️ [`Self::build_intent`] wrapped as the command the host drains. `None` when the gesture was
+    /// dropped as stale or could not be addressed.
+    fn app_command(&mut self, tree: &UiTree, node: NodeId, fired: FiredAction) -> Option<UiCommand> {
+        Some(UiCommand::App { window_id: self.window_id.clone(), intent: self.build_intent(tree, node, fired)? })
+    }
+
+    /// 🎬️ [`Self::app_command`] for a caller that already owns the command list.
+    fn push_app_command(&mut self, tree: &UiTree, node: NodeId, fired: FiredAction, out: &mut Vec<UiCommand>) {
+        if let Some(command) = self.app_command(tree, node, fired) {
+            out.push(command);
+        }
+    }
+
+    /// 🎬️ A row action's intent: the row's own address with the ACTION's versioned id — its verb on the row's ONE target
+    /// (`mounted_layout::document_row_action_id`) — `build_intent` would answer the row's activation, its primary action, for
+    /// the same trigger.
+    fn row_action_command(&mut self, tree: &UiTree, row: NodeId, index: usize) -> Option<UiCommand> {
+        let action = crate::wgpu::mounted_layout::document_row_action_id(tree, row, index)?.ok()?;
+        let args = tree.authored_tree_item(row)?.actions.as_deref()?.get(index)?.action.args.clone();
+        let current_revision = tree.document().map_or(0, |document| document.revision().0);
+        let address = match tree.node(row)?.intent.as_ref() {
+            Some(bindings) if intent_is_stale(bindings.address.revision, current_revision) => return None,
+            Some(bindings) => bindings.address.clone(),
+            None => UiIntentAddress::default(),
+        };
+        let seq = self.intents.next(&address.surface);
+        Some(UiCommand::App { window_id: self.window_id.clone(), intent: UiIntentCommand { address, trigger: Trigger::Activate, action, args, input: None, seq } })
+    }
+
+    /// 🎬️ The index of the Row-placed action whose trailing slot (`layout::tree_row_action_at`, the slots `paint` draws) holds the
+    /// pointer on a tree or table row — a click there fires that action, never the row's activation or disclosure.
+    fn pointer_row_action(&self, tree: &UiTree, id: NodeId, x: f32, y: f32) -> Option<usize> {
+        let item = tree.authored_tree_item(id)?;
+        let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
+        let band = tree_section_header_band(tree.absolute_rect(id)?, metrics.row_height, self.flow.block.is_reversed());
+        let trailing = if self.tree_drag_driver == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+        crate::wgpu::layout::tree_row_action_at(item, band.w, band.h, trailing, &metrics, x - band.x, y - band.y)
+    }
+    //#endregion 🎬️IntentApi
+
+    fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        match self.capture.target {
+            Some((_, id, _)) => Some(id),
+            None => self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, x, y)).or_else(|| self.hit_test(tree, root, x, y)),
+        }
+    }
+
+    fn hit_test(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        hit_test_node(tree, root, 0.0, 0.0, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
+    }
+
+    fn hit_test_subtree(&self, tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        let rect = tree.absolute_rect(subtree_root)?;
+        let layout = tree.accepted_layout(subtree_root)?;
+        hit_test_node(tree, subtree_root, rect.x - layout.x, rect.y - layout.y, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
+    }
+
+    /// 👆️ Flips `NodeFlags::HOVERED` off every node in the old hover bubble chain that isn't in the
+    /// new one, and on for every new node that wasn't in the old one — see `hover_chain`'s own doc
+    /// comment for why the whole chain (not just the leaf) carries the flag. ticket
+    /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the per-row `hover_action`/
+    /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
+    /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
+    fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
+        let commands = Vec::new();
+        if self.hovered == target {
+            return commands;
+        }
+        let mut new_chain = Vec::new();
+        if let Some(leaf) = target {
+            bubble(tree, leaf, |id| {
+                new_chain.push(id);
+                false
+            });
+        }
+        for &previous in &self.hover_chain {
+            if !new_chain.contains(&previous) {
+                if let Some(node) = tree.node_mut(previous) {
+                    node.flags.set(NodeFlags::HOVERED, false);
+                }
+                tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+            }
+        }
+        for &next in &new_chain {
+            if !self.hover_chain.contains(&next) {
+                if let Some(node) = tree.node_mut(next) {
+                    node.flags.set(NodeFlags::HOVERED, true);
+                }
+                tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
+            }
+        }
+        self.hover_chain = new_chain;
+        self.hovered = target;
+        self.hover_since = target.map(|leaf| (leaf, self.clock_seconds));
+        self.hover_revealed = None;
+        commands
+    }
+
+    fn update_stepper_hover_segment(&mut self, tree: &mut UiTree, target: Option<NodeId>, x: f32, y: f32) {
+        if let Some(previous) = self.hovered {
+            if let Some(node) = tree.node_mut(previous) {
+                if matches!(node.spec.0, UiNode::NumberStepper(_)) {
+                    node.state.stepper_hovered_segment = None;
+                    tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+                }
+            }
+        }
+        let Some(target) = target else { return };
+        let Some(bounds) = absolute_rect(tree, target) else { return };
+        let Some(node) = tree.node_mut(target) else { return };
+        if !matches!(node.spec.0, UiNode::NumberStepper(_)) || node.spec.0.presence().state == UiState::Disabled {
+            return;
+        }
+        node.state.stepper_hovered_segment = Some(number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).map_or(0, |sign| if sign < 0.0 { -1 } else { 1 }));
+        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+    }
+
+    //#region 🔖️TooltipClock
+    fn set_retained_caret_visible(tree: &mut UiTree, node: NodeId, visible: bool) -> bool {
+        let Some(record) = tree.node_mut(node) else { return false };
+        if record.state.caret_visible == visible {
+            return false;
+        }
+        record.state.caret_visible = visible;
+        tree.mark_dirty(node, NodeFlags::DIRTY_PAINT);
+        true
+    }
+
+    fn focused_editable(&self, tree: &UiTree) -> Option<NodeId> {
+        self.focus.focused.filter(|node| tree.node(*node).is_some_and(|node| node.state.edit.is_some()))
+    }
+
+    pub(crate) fn synchronize_retained_caret(&mut self, tree: &mut UiTree, reset: bool) -> bool {
+        let focused = self.focused_editable(tree);
+        if focused.is_none() && self.caret.is_some_and(|caret| caret.source == CaretSource::Scene) {
+            return false;
+        }
+        let same = self.caret.is_some_and(|caret| caret.source == CaretSource::Retained && Some(caret.node) == focused);
+        if same && !reset {
+            return false;
+        }
+        let mut changed = false;
+        if let Some(previous) = self.caret.take() {
+            if previous.source == CaretSource::Retained {
+                changed |= Self::set_retained_caret_visible(tree, previous.node, false);
+            }
+        }
+        let Some(node) = focused else { return changed };
+        Self::set_retained_caret_visible(tree, node, true);
+        self.caret = Some(CaretClock { node, source: CaretSource::Retained, visible: true, next_at: self.clock_seconds + CARET_BLINK_SECONDS });
+        true
+    }
+
+    pub(crate) fn arm_scene_caret(&mut self, tree: &mut UiTree, node: NodeId, seconds: f64) -> Option<CaretStep> {
+        if !seconds.is_finite() || seconds < self.clock_seconds || !tree.node(node).is_some_and(|node| matches!(node.spec.0, UiNode::ComponentScene(_))) {
+            return None;
+        }
+        self.clock_seconds = seconds;
+        if let Some(previous) = self.caret.take() {
+            if previous.source == CaretSource::Retained {
+                Self::set_retained_caret_visible(tree, previous.node, false);
+            }
+        }
+        self.caret = Some(CaretClock { node, source: CaretSource::Scene, visible: true, next_at: seconds + CARET_BLINK_SECONDS });
+        Some(CaretStep { node, source: CaretSource::Scene, visible: true })
+    }
+
+    pub(crate) fn clear_scene_caret(&mut self, node: NodeId) -> Option<CaretStep> {
+        self.caret.filter(|caret| caret.source == CaretSource::Scene && caret.node == node)?;
+        self.caret = None;
+        Some(CaretStep { node, source: CaretSource::Scene, visible: false })
+    }
+
+    fn advance_caret(&mut self, tree: &mut UiTree, seconds: f64) -> (Option<CaretStep>, bool) {
+        let Some(mut caret) = self.caret else { return (None, false) };
+        if seconds < caret.next_at {
+            return (None, false);
+        }
+        caret.visible = !caret.visible;
+        caret.next_at = seconds + CARET_BLINK_SECONDS;
+        self.caret = Some(caret);
+        let state_changed = caret.source != CaretSource::Retained || Self::set_retained_caret_visible(tree, caret.node, caret.visible);
+        (Some(CaretStep { node: caret.node, source: caret.source, visible: caret.visible }), state_changed)
+    }
+
+    /// ⏱️ Feeds one frame's monotonic seconds in and answers what hover reveal owes this frame —
+    /// the immediate-mode stand-in for React's `setTimeout`/`clearTimeout` pair in
+    /// `ChromeControlHint` (`🧱️elements/💡️ChromeControlHint/🟦️.tsx:44-57`). A non-monotonic value is
+    /// ignored rather than rewinding every armed deadline.
+    pub(crate) fn next_clock_deadline(&self) -> Option<f64> {
+        let mut deadline = self.stepper_repeat.map(|repeat| repeat.next_at);
+        if let Some(caret) = self.caret {
+            deadline = Some(deadline.map_or(caret.next_at, |current| current.min(caret.next_at)));
+        }
+        if let Some(dismiss_at) = self.tooltip_dismiss_at {
+            deadline = Some(deadline.map_or(dismiss_at, |current| current.min(dismiss_at)));
+        }
+        if !self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
+            if let Some((_, entered)) = self.hover_since.filter(|(leaf, _)| self.hover_revealed != Some(*leaf)) {
+                let reveal_at = entered + f64::from(TOOLTIP_DWELL_SECONDS);
+                deadline = Some(deadline.map_or(reveal_at, |current| current.min(reveal_at)));
+            }
+        }
+        deadline
+    }
+
+    pub(crate) fn suspend_clock(&mut self, tree: &mut UiTree) -> bool {
+        let repeat = self.stepper_repeat.take().is_some();
+        let hover = self.hover_since.take().is_some();
+        let revealed = self.hover_revealed.take().is_some();
+        let dismiss = self.tooltip_dismiss_at.take().is_some();
+        let caret = self.caret.take();
+        let caret_changed = caret.is_some_and(|caret| caret.source != CaretSource::Retained || Self::set_retained_caret_visible(tree, caret.node, false));
+        repeat | hover | revealed | dismiss | caret_changed
+    }
+
+    pub(crate) fn revealed_tooltip_node(&self) -> Option<NodeId> {
+        self.hover_revealed
+    }
+
+    pub(crate) fn advance_clock(&mut self, tree: &mut UiTree, seconds: f64) -> RouterClockStep {
+        if !seconds.is_finite() || seconds < self.clock_seconds {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret: None, commands: Vec::new(), changed: false, next_deadline: self.next_clock_deadline() };
+        }
+        self.clock_seconds = seconds;
+        let (caret, caret_changed) = self.advance_caret(tree, seconds);
+        let mut changed = caret_changed | self.advance_stepper_repeat(tree, seconds);
+        if let Some(deadline) = self.tooltip_dismiss_at {
+            if seconds >= deadline {
+                self.tooltip_dismiss_at = None;
+                changed = true;
+                if self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
+                    let commands = self.close_topmost_overlay(tree);
+                    return RouterClockStep { tooltip: TooltipStep::Dismissed, caret, commands, changed, next_deadline: self.next_clock_deadline() };
+                }
+            }
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
+        }
+        if self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::Tooltip) {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
+        }
+        let Some((leaf, entered)) = self.hover_since else {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
+        };
+        if self.hover_revealed == Some(leaf) || seconds < entered + TOOLTIP_DWELL_SECONDS {
+            return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
+        }
+        self.hover_revealed = Some(leaf);
+        RouterClockStep { tooltip: TooltipStep::Reveal(leaf), caret, commands: Vec::new(), changed: true, next_deadline: self.next_clock_deadline() }
+    }
+
+    //#endregion 🔖️TooltipClock
+
+    //#region 🔖️OverlayApi
+    /// 🪟️ Opens an overlay: flags `root` `NodeFlags::OVERLAY` (hit-test priority — see 🔖️HitTest) and
+    /// pushes it onto the z-ordered stack with `kind`'s default placement/dismissal policy.
+    /// `Dialog`/`CommandPalette` become focus-trap scopes automatically.
+    pub(crate) fn open_overlay(&mut self, tree: &mut UiTree, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
+        if let Some(node) = tree.node_mut(root) {
+            node.flags.set(NodeFlags::OVERLAY, true);
+        }
+        tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        let focus_trap = matches!(kind, OverlayKind::Dialog | OverlayKind::CommandPalette);
+        self.overlays.open(OpenOverlay { root, kind, anchor, placement: kind.default_placement(), dismiss: kind.dismiss_policy(), focus_trap });
+    }
+
+    pub(crate) fn close_overlay(&mut self, tree: &mut UiTree, root: NodeId) -> Vec<UiCommand> {
+        match self.overlays.close_root(root) {
+            Some(overlay) => self.finish_close(tree, overlay),
+            None => Vec::new(),
+        }
+    }
+
+    pub(crate) fn close_topmost_overlay(&mut self, tree: &mut UiTree) -> Vec<UiCommand> {
+        match self.overlays.close_topmost() {
+            Some(overlay) => self.finish_close(tree, overlay),
+            None => Vec::new(),
+        }
+    }
+
+    #[allow(dead_code, reason = "overlay-stack accessor, not yet called; likely wired by a later events-integration milestone")]
+    pub(crate) fn topmost_overlay(&self) -> Option<&OpenOverlay> {
+        self.overlays.topmost()
+    }
+
+    /// 🥞️ Every open overlay bottom-to-top — what `engine::Ui::open_overlays` publishes so a paint
+    /// pass can place and draw them above the document.
+    pub(crate) fn open_overlays(&self) -> &[OpenOverlay] {
+        self.overlays.as_slice()
+    }
+
+    /// 🔽️ W2 wiring: the consumer-side effect of a `Select` click — flips `tree::WidgetState::open`
+    /// via `open_overlay`/`close_overlay` (root *and* anchor are the `Select` node itself: its own
+    /// synthesized item rows, see `reconcile::children_of`'s `Select` arm, are already its retained
+    /// children, and marking the `Select` node `NodeFlags::OVERLAY` gives the whole popup hit-test
+    /// priority over its own later-painted siblings). All dismissal paths (outside-press, `Escape`,
+    /// an explicit `close_overlay`, or picking an item — see `dispatch`'s `PointerUp` handling) funnel
+    /// through `finish_close`, which clears `open` back to `false` uniformly.
+    pub(crate) fn toggle_select_popup(&mut self, tree: &mut UiTree, select_id: NodeId) -> Vec<UiCommand> {
+        let already_open = tree.node(select_id).is_some_and(|node| node.state.open);
+        if already_open {
+            self.close_overlay(tree, select_id)
+        } else {
+            self.open_overlay(tree, select_id, OverlayKind::SelectPopup, OverlayAnchor::Node(select_id));
+            if let Some(node) = tree.node_mut(select_id) {
+                node.state.open = true;
+            }
+            Vec::new()
+        }
+    }
+
+    /// 🧹️ Clears `NodeFlags::OVERLAY`, and clears focus too if it was inside the closed overlay's
+    /// subtree (dangling focus into a now-hidden subtree would otherwise route key events nowhere
+    /// useful). `SelectPopup`'s `tree::WidgetState::open` is the popup's own show/hide bit
+    /// (`paint::paint_select` reads it) — cleared here too, so every dismissal path (see
+    /// `toggle_select_popup`'s doc comment) stays in sync with the overlay lifecycle uniformly.
+    fn finish_close(&mut self, tree: &mut UiTree, overlay: OpenOverlay) -> Vec<UiCommand> {
+        if let Some(node) = tree.node_mut(overlay.root) {
+            node.flags.set(NodeFlags::OVERLAY, false);
+            if overlay.kind == OverlayKind::SelectPopup {
+                node.state.open = false;
+                node.state.highlighted = None;
+                node.state.scroll_offset = (0.0, 0.0);
+                node.state.select_popup = None;
+            }
+        }
+        if overlay.kind == OverlayKind::Tooltip {
+            self.tooltip_dismiss_at = None;
+        }
+        tree.mark_dirty(overlay.root, NodeFlags::DIRTY_PAINT);
+        let mut out = vec![UiCommand::OverlayClosed { window_id: self.window_id.clone(), root: overlay.root, kind: overlay.kind }];
+        if let Some(focused) = self.focus.focused {
+            if is_descendant(tree, focused, overlay.root) {
+                if overlay.kind == OverlayKind::SelectPopup {
+                    if focused != overlay.root {
+                        if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(overlay.root), true) {
+                            self.push_app_command(tree, blurred, fired, &mut out);
+                        }
+                        out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(overlay.root) });
+                    }
+                } else {
+                    if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                        self.push_app_command(tree, blurred, fired, &mut out);
+                    }
+                    out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+        }
+        out
+    }
+
+    /// 👆️ If the topmost overlay dismisses on outside-press and `(x, y)` lands outside its subtree,
+    /// closes it and returns the resulting commands — the caller must swallow the press (not route it
+    /// any further) when this returns `Some`.
+    fn dismiss_topmost_if_outside_press(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Option<Vec<UiCommand>> {
+        let top = self.overlays.topmost()?;
+        if !top.dismiss.outside_press_swallow {
+            return None;
+        }
+        let overlay_root = top.root;
+        if self.hit_test_subtree(tree, overlay_root, x, y).is_some() {
+            return None;
+        }
+        Some(self.close_topmost_overlay(tree))
+    }
+
+    /// 🖱️ `Tooltip`-only: arms (or disarms) the hover-out countdown as the pointer leaves or re-enters
+    /// the anchor and the overlay's own bounds. `advance_clock` is what actually closes it once
+    /// `DismissPolicy::hover_out_delay_seconds` has elapsed, matching React's `onPointerLeave` →
+    /// `clearTimeout`/close pair rather than the immediate close this used to do.
+    fn maybe_dismiss_tooltip_on_hover_out(&mut self, tree: &mut UiTree, x: f32, y: f32) -> Vec<UiCommand> {
+        let Some(top) = self.overlays.topmost() else { return Vec::new() };
+        if top.kind != OverlayKind::Tooltip {
+            return Vec::new();
+        }
+        let overlay_root = top.root;
+        let anchor = top.anchor;
+        let delay = top.dismiss.hover_out_delay_seconds;
+        let inside_overlay = node_abs_rect(tree, overlay_root).is_some_and(|rect| rect.contains(x, y));
+        let inside_anchor = match anchor {
+            OverlayAnchor::Node(id) => node_abs_rect(tree, id).is_some_and(|rect| rect.contains(x, y)),
+            OverlayAnchor::Point { .. } => false,
+        };
+        if inside_overlay || inside_anchor {
+            self.tooltip_dismiss_at = None;
+            return Vec::new();
+        }
+        match delay {
+            Some(delay) => {
+                self.tooltip_dismiss_at.get_or_insert(self.clock_seconds + f64::from(delay));
+                Vec::new()
+            }
+            None => self.close_topmost_overlay(tree),
+        }
+    }
+    //#endregion 🔖️OverlayApi
+
+    //#region 🔖️DragDropApi
+    pub(crate) fn set_drag_payload(&mut self, node: NodeId, payload: DragPayload) {
+        self.drag_payloads.insert(node, payload);
+    }
+
+    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
+    pub(crate) fn clear_drag_payload(&mut self, node: NodeId) {
+        self.drag_payloads.remove(&node);
+    }
+
+    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
+    pub(crate) fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + Send + Sync + 'static) {
+        self.drop_accept.insert(node, Box::new(predicate));
+    }
+
+    pub(crate) fn drag_session(&self) -> Option<&DragSession> {
+        self.drag.as_ref()
+    }
+
+    /// 🫳️ Promotes a `Press` capture on a `drag_payloads`-registered node to `CaptureKind::Drag` once
+    /// the pointer has moved past `DRAG_PROMOTE_THRESHOLD_SQ` from `press_origin`.
+    fn maybe_promote_to_drag(&mut self, x: f32, y: f32) {
+        let Some((pointer_id, id, CaptureKind::Press)) = self.capture.target else { return };
+        let Some(payload) = self.drag_payloads.get(&id).cloned() else { return };
+        let Some((origin_x, origin_y)) = self.press_origin else { return };
+        if (x - origin_x).powi(2) + (y - origin_y).powi(2) < DRAG_PROMOTE_THRESHOLD_SQ {
+            return;
+        }
+        self.capture.target = Some((pointer_id, id, CaptureKind::Drag));
+        self.drag = Some(DragSession { source: id, payload, ghost: None, pointer_x: x, pointer_y: y, drop_target: None });
+    }
+
+    /// 🫳️ Live-updates the active `DragSession`'s pointer position and re-evaluates the drop target
+    /// under it.
+    fn update_drag(&mut self, tree: &UiTree, root: NodeId, x: f32, y: f32) {
+        if let Some(drag) = self.drag.as_mut() {
+            drag.pointer_x = x;
+            drag.pointer_y = y;
+        }
+        let target = self.hit_test(tree, root, x, y).and_then(|hit| self.nearest_accepting_drop_target(tree, hit));
+        if let Some(drag) = self.drag.as_mut() {
+            drag.drop_target = target;
+        }
+    }
+
+    /// 🎯️ Walks `from`'s bubble chain for the nearest `NodeFlags::DROP_TARGET` node whose
+    /// `drop_accept` predicate (if any) accepts the active `DragSession`'s payload.
+    fn nearest_accepting_drop_target(&self, tree: &UiTree, from: NodeId) -> Option<NodeId> {
+        let mut found = None;
+        bubble(tree, from, |id| {
+            if !tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::DROP_TARGET)) {
+                return false;
+            }
+            let accepts = match self.drop_accept.get(&id) {
+                Some(predicate) => self.drag.as_ref().is_some_and(|drag| predicate(&drag.payload)),
+                None => true,
+            };
+            if accepts {
+                found = Some(id);
+                true
+            } else {
+                false
+            }
+        });
+        found
+    }
+    //#endregion 🔖️DragDropApi
+
+    //#region 🔖️ScrollApi
+    #[allow(dead_code, reason = "scroll-thumb registry accessor, not yet called; likely wired by a later events-integration milestone")]
+    pub(crate) fn register_scroll_thumb(&mut self, thumb: NodeId, scrollable: NodeId, axis: ScrollAxis) {
+        self.scroll_thumbs.insert(thumb, (scrollable, axis));
+    }
+
+    fn route_scroll(&mut self, tree: &mut UiTree, root: NodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) {
+        let Some(hit) = self.hit_test(tree, root, x, y) else { return };
+        let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return };
+        let Some(viewport) = tree.accepted_layout(scrollable) else { return };
+        let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| (width.max(child.x + child.width), height.max(child.y + child.height)));
+        let max_x = (content_width - viewport.width).max(0.0);
+        let max_y = (content_height - viewport.height).max(0.0);
+        if let Some(node) = tree.node_mut(scrollable) {
+            let (offset_x, offset_y) = node.state.scroll_offset;
+            node.state.scroll_offset = ((offset_x + delta_x).clamp(0.0, max_x), (offset_y + delta_y).clamp(0.0, max_y));
+        }
+        tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
+    }
+
+    fn update_scroll_thumb(&mut self, tree: &mut UiTree, scrollable: NodeId, axis: ScrollAxis, x: f32, y: f32) {
+        let Some((origin_x, origin_y, start_x, start_y)) = self.thumb_start else { return };
+        let (delta_x, delta_y) = (x - origin_x, y - origin_y);
+        let Some(node) = tree.node_mut(scrollable) else { return };
+        node.state.scroll_offset = match axis {
+            ScrollAxis::Horizontal => ((start_x + delta_x).max(0.0), start_y),
+            ScrollAxis::Vertical => (start_x, (start_y + delta_y).max(0.0)),
+        };
+        tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
+    }
+    //#endregion 🔖️ScrollApi
+
+    //#region 🔖️EditApi
+    fn apply_stepper_local_delta(&mut self, tree: &mut UiTree, id: NodeId, delta: f64) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let value = constrain_stepper_value(number_stepper_live_value(node, stepper) + delta, stepper);
+        let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
+        let caret = text.len();
+        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    /// 🪁️ After an edit-buffer mutation: the typed draft is kept as typed (never clamped), a stepper — which dispatches every
+    /// admitted keystroke — shows the refusal its draft earns at once, and every other numeric control re-earns its refusal at
+    /// its commit (Enter, blur).
+    fn normalize_stepper_edit(&mut self, tree: &mut UiTree, id: NodeId) {
+        let Some(node) = tree.node_mut(id) else { return };
+        node.state.number_refusal = if matches!(node.spec.0, UiNode::NumberStepper(_)) { edit_refusal(node) } else { None };
+    }
+
+    fn arm_stepper_repeat(&mut self, tree: &UiTree, id: NodeId, x: f32, y: f32) {
+        let Some(node) = tree.node(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let Some(bounds) = absolute_rect(tree, id) else { return };
+        let Some(sign) = number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border) else { return };
+        if number_stepper_can_step(node, stepper, sign) {
+            self.stepper_repeat = Some(StepperRepeat { node: id, sign, next_at: self.clock_seconds + STEPPER_REPEAT_DELAY_SECONDS + STEPPER_REPEAT_INTERVAL_SECONDS });
+        }
+    }
+
+    fn advance_stepper_repeat(&mut self, tree: &mut UiTree, seconds: f64) -> bool {
+        let Some(mut repeat) = self.stepper_repeat else { return false };
+        if seconds + STEPPER_REPEAT_CLOCK_EPSILON_SECONDS < repeat.next_at {
+            return false;
+        }
+        if !tree.node(repeat.node).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) && node.spec.0.presence().state != UiState::Disabled) {
+            self.stepper_repeat = None;
+            return true;
+        }
+        let ticks = ((seconds + STEPPER_REPEAT_CLOCK_EPSILON_SECONDS - repeat.next_at) / STEPPER_REPEAT_INTERVAL_SECONDS).floor().max(0.0) as u32 + 1;
+        let step = tree.node(repeat.node).and_then(|node| match &node.spec.0 {
+            UiNode::NumberStepper(stepper) => Some(stepper.step),
+            _ => None,
+        });
+        if let Some(step) = step {
+            self.apply_stepper_local_delta(tree, repeat.node, repeat.sign * step * f64::from(ticks));
+        }
+        repeat.next_at += STEPPER_REPEAT_INTERVAL_SECONDS * f64::from(ticks);
+        self.stepper_repeat = Some(repeat);
+        true
+    }
+
+    /// 🎬️ The focused editable node's buffer as a dispatchable action, for a node that commits on
+    /// every keystroke (`Trigger::Change` — React's `InputView` with no `commit: "blur"`, and its
+    /// `IconSelector` editor, both of which fire per change). `None` for a blur-committing node,
+    /// whose one dispatch moment is `FocusState::set_focus`.
+    fn changed_buffer_action(&self, tree: &UiTree) -> Option<(NodeId, FiredAction)> {
+        let id = self.focus.focused?;
+        let node = tree.node(id)?;
+        if commits_on_blur(&node.spec.0) || matches!(node.spec.0, UiNode::Slider(_)) {
+            return None;
+        }
+        edit_commit_action(node, &node.state.edit.as_ref()?.text).map(|fired| (id, fired))
+    }
+
+    /// 🎬️ Wraps `changed_buffer_action` for a caller that already owns the command list.
+    fn push_buffer_change(&mut self, tree: &mut UiTree, out: &mut Vec<UiCommand>) {
+        if let Some((id, fired)) = self.changed_buffer_action(tree) {
+            let fired = if tree.node(id).is_some_and(|node| is_continuous_control(&node.spec.0)) { pressed(tree, &self.window_id, id, fired, false) } else { fired };
+            self.push_app_command(tree, id, fired, out);
+        }
+    }
+
+    fn apply_slider_local_value(&mut self, tree: &mut UiTree, id: NodeId, value: f64) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::Slider(slider) = &node.spec.0 else { return };
+        node.state.slider_draft_value = Some(constrain_slider_value(value, slider));
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    fn note_slider_readout_click(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> bool {
+        let Some(bounds) = absolute_rect(tree, id) else { return false };
+        let Some(node) = tree.node(id) else { return false };
+        let UiNode::Slider(slider) = &node.spec.0 else { return false };
+        let value = slider_live_value(node, slider);
+        let unit_width = slider.unit_label().map(|_| tree.accepted_inline_suffix_width(id).unwrap_or(0.0));
+        if !slider_control_presentation(bounds, slider.axis_position(value), 0.0, 1.0, unit_width, self.control_gap, self.flow.inline).slider.value_cell.contains(x, y) {
+            if let Some(node) = tree.node_mut(id) {
+                node.state.slider_readout_click_at = None;
+            }
+            return false;
+        }
+        let double_click = node.state.slider_readout_click_at.is_some_and(|at| self.clock_seconds - at <= SLIDER_DOUBLE_CLICK_SECONDS);
+        let text = double_click.then(|| slider.readout(value));
+        let Some(node) = tree.node_mut(id) else { return false };
+        node.state.slider_readout_click_at = (!double_click).then_some(self.clock_seconds);
+        if let Some(text) = text {
+            let caret = text.len();
+            node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        }
+        true
+    }
+
+    fn finish_slider_readout_edit(&mut self, tree: &mut UiTree, id: NodeId) -> Option<FiredAction> {
+        let node = tree.node(id)?;
+        let UiNode::Slider(slider) = &node.spec.0 else { return None };
+        let live = slider_live_value(node, slider);
+        let typed = typed_number(&node.state.edit.as_ref()?.text, slider.display_factor, slider.precision, std::iter::once(live).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref());
+        let slider = slider.clone();
+        let slider = &slider;
+        let candidate = match typed {
+            Ok(value) if value >= slider.min && value <= slider.max => constrain_slider_value(value, slider),
+            Ok(value) => value,
+            Err(refusal) => {
+                if let Some(node) = tree.node_mut(id) {
+                    node.state.number_refusal = Some(refusal);
+                }
+                tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                return None;
+            }
+        };
+        let action = slider.on_change.clone();
+        let epsilon = if slider.step > 0.0 { slider.step * 0.25 } else { 1e-9 };
+        let changed = Some(candidate).filter(|value| slider.snaps.contains(value) || (*value - live).abs() > epsilon);
+        if let Some(node) = tree.node_mut(id) {
+            node.state.edit = None;
+            node.state.number_refusal = None;
+            if let Some(value) = changed {
+                node.state.slider_draft_value = Some(value);
+            }
+        }
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value))).map(|fired| pressed(tree, &self.window_id, id, fired, true))
+    }
+
+    fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        let Some(id) = self.focus.focused else { return out };
+        // ␣️ React's `searchSpaceConfirmsLine`/`applySearchSpaceAction`: Space on an EMPTY action line
+        // CONFIRMS instead of typing — repeat-last when the program bound one, otherwise the submit
+        // it did bind. A line with neither keeps typing its space, and a non-empty line always does
+        // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10507`/`:10512`).
+        if text == " " {
+            let confirmed =
+                tree.node(id).filter(|node| node.state.edit.as_ref().is_none_or(|edit| edit.text.trim().is_empty())).and_then(|node| search_line_action(node, Trigger::RepeatLast, "").or_else(|| search_line_action(node, Trigger::Submit, "")));
+            if let Some(fired) = confirmed {
+                self.push_app_command(tree, id, fired, &mut out);
+                return out;
+            }
+        }
+        let Some(node) = tree.node_mut(id) else { return out };
+        let Some(edit) = node.state.edit.as_mut() else { return out };
+        insert_at_caret(edit, text);
+        self.normalize_stepper_edit(tree, id);
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        self.push_buffer_change(tree, &mut out);
+        out
+    }
+
+    fn route_ime(&mut self, tree: &mut UiTree, event: &ImeEvent) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        let Some(id) = self.focus.focused else { return out };
+        let Some(node) = tree.node_mut(id) else { return out };
+        let Some(edit) = node.state.edit.as_mut() else { return out };
+        let mutated = match event {
+            ImeEvent::Start => {
+                edit.composition = Some(String::new());
+                false
+            }
+            ImeEvent::Update { text, .. } => {
+                edit.composition = Some(text.clone());
+                false
+            }
+            ImeEvent::Commit { text } => {
+                edit.composition = None;
+                insert_at_caret(edit, text);
+                true
+            }
+            ImeEvent::Cancel => {
+                edit.composition = None;
+                false
+            }
+        };
+        if mutated {
+            self.normalize_stepper_edit(tree, id);
+        }
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        if mutated {
+            self.push_buffer_change(tree, &mut out);
+        }
+        out
+    }
+
+    /// ⌨️ Caret motion (with `Shift` extending the selection), `Home`/`End`, `Backspace`/`Delete`,
+    /// and clipboard shortcuts for the focused node's `EditState`. A no-operation if nothing is focused or
+    /// the focused node has no `EditState` (isn't a `UiNode::Input`, or hasn't been focused since
+    /// `FocusState::set_focus` seeded one).
+    fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
+        let mut out = Vec::new();
+        let Some(id) = self.focus.focused else { return out };
+        // ⏎️ Enter is the other half of a blur-committing node's contract (`Trigger::Commit`, which
+        // `🖼️semantic-ui/🦀️.rs`'s own docstring names "Enter / blur") — the gesture generation3d's
+        // inline rename editor is built on. A change-committing node already dispatched every
+        // keystroke, so Enter adds nothing there and must not double-fire.
+        if matches!(key, "Enter" | "NumpadEnter") {
+            if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()) {
+                let fired = self.finish_slider_readout_edit(tree, id);
+                if tree.node(id).is_some_and(|node| node.state.number_refusal.is_some()) {
+                    return out;
+                }
+                let _ = self.focus.clear_focus(tree);
+                if let Some(fired) = fired {
+                    self.push_app_command(tree, id, fired, &mut out);
+                }
+                out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                return out;
+            }
+            if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_))) {
+                if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                    self.push_app_command(tree, blurred, fired, &mut out);
+                }
+                self.stepper_repeat = None;
+                out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                return out;
+            }
+            // ⏎️ A line that binds `Trigger::Submit` CONFIRMS on Enter and keeps its per-keystroke
+            // `Trigger::Change` — React's window search fires both from one field, so resolving Enter
+            // into the commit slot would have silenced one of them.
+            let submitted = tree.node(id).and_then(|node| {
+                let fallback = editable_value(&node.spec.0).unwrap_or_default();
+                search_line_action(node, Trigger::Submit, node.state.edit.as_ref().map_or(fallback.as_str(), |edit| edit.text.as_str()))
+            });
+            if let Some(fired) = submitted {
+                self.push_app_command(tree, id, fired, &mut out);
+                return out;
+            }
+            let fired = tree.node(id).filter(|node| commits_on_blur(&node.spec.0)).and_then(|node| node.state.edit.as_ref().and_then(|edit| edit_commit_action(node, &edit.text)));
+            if let Some(node) = tree.node_mut(id) {
+                let refusal = edit_refusal(node);
+                node.state.number_refusal = refusal;
+            }
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+            if let Some(fired) = fired {
+                self.push_app_command(tree, id, fired, &mut out);
+            }
+            return out;
+        }
+        let Some(node) = tree.node_mut(id) else { return out };
+        let Some(edit) = node.state.edit.as_mut() else { return out };
+        let has_selection = edit.anchor != edit.caret;
+        let mut mutated = false;
+        match key {
+            "ArrowLeft" => {
+                edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).0 } else { prev_char_boundary(&edit.text, edit.caret) };
+                if !modifiers.shift {
+                    edit.anchor = edit.caret;
+                }
+            }
+            "ArrowRight" => {
+                edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).1 } else { next_char_boundary(&edit.text, edit.caret) };
+                if !modifiers.shift {
+                    edit.anchor = edit.caret;
+                }
+            }
+            "Home" => {
+                edit.caret = 0;
+                if !modifiers.shift {
+                    edit.anchor = 0;
+                }
+            }
+            "End" => {
+                edit.caret = edit.text.len();
+                if !modifiers.shift {
+                    edit.anchor = edit.text.len();
+                }
+            }
+            "Backspace" => {
+                if has_selection {
+                    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+                    edit.text.replace_range(start..end, "");
+                    edit.caret = start;
+                    edit.anchor = start;
+                    mutated = true;
+                } else if edit.caret > 0 {
+                    let start = prev_char_boundary(&edit.text, edit.caret);
+                    edit.text.replace_range(start..edit.caret, "");
+                    edit.caret = start;
+                    edit.anchor = start;
+                    mutated = true;
+                }
+            }
+            "Delete" => {
+                if has_selection {
+                    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+                    edit.text.replace_range(start..end, "");
+                    edit.caret = start;
+                    edit.anchor = start;
+                    mutated = true;
+                } else if edit.caret < edit.text.len() {
+                    let end = next_char_boundary(&edit.text, edit.caret);
+                    edit.text.replace_range(edit.caret..end, "");
+                    mutated = true;
+                }
+            }
+            "PageUp" | "PageDown" => {
+                let UiNode::Input(input) = &node.spec.0 else { return out };
+                let Some(current) = edit.text.trim().parse::<f64>().ok().filter(|value| value.is_finite() && input.input_kind == "number") else { return out };
+                let key = if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown };
+                let current = typed_number(&edit.text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).unwrap_or(current);
+                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(0.0), input.precision, input.display_factor, input.snaps.iter().copied(), key, false);
+                edit.text = number_field_text(input, next);
+                edit.caret = edit.text.len();
+                edit.anchor = edit.caret;
+                mutated = true;
+            }
+            "a" | "A" if modifiers.ctrl || modifiers.meta => {
+                edit.anchor = 0;
+                edit.caret = edit.text.len();
+            }
+            "c" | "C" if modifiers.ctrl || modifiers.meta => {
+                if has_selection {
+                    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+                    out.push(UiCommand::ClipboardCopy { window_id: self.window_id.clone(), text: edit.text[start..end].to_string() });
+                }
+                return out;
+            }
+            "x" | "X" if modifiers.ctrl || modifiers.meta => {
+                if has_selection {
+                    let (start, end) = selection_bounds(edit.anchor, edit.caret);
+                    out.push(UiCommand::ClipboardCut { window_id: self.window_id.clone(), text: edit.text[start..end].to_string() });
+                    edit.text.replace_range(start..end, "");
+                    edit.caret = start;
+                    edit.anchor = start;
+                    mutated = true;
+                } else {
+                    return out;
+                }
+            }
+            "v" | "V" if modifiers.ctrl || modifiers.meta => {
+                out.push(UiCommand::ClipboardPasteRequested { window_id: self.window_id.clone() });
+                return out;
+            }
+            _ => return out,
+        }
+        if mutated {
+            self.normalize_stepper_edit(tree, id);
+        }
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        if mutated {
+            self.push_buffer_change(tree, &mut out);
+        }
+        out
+    }
+    //#endregion 🔖️EditApi
+
+    //#region 🔖️CursorApi
+    #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
+    pub(crate) fn hovered(&self) -> Option<NodeId> {
+        self.hovered
+    }
+
+    /// 🖱️ What this window's retained content currently holds pointer capture on — read by
+    /// `engine::Ui::window_with_pointer_capture` so a host keeps feeding a live drag its moves.
+    pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
+        self.capture.target.map(|(_, node, kind)| (node, kind))
+    }
+
+    pub(crate) fn capture_pointer_id(&self) -> Option<u64> {
+        self.capture.target.map(|(pointer_id, _, _)| pointer_id)
+    }
+
+    /// 🎯️ Read-only: whether this window's retained content currently holds keyboard focus — see
+    /// `engine::Ui::window_has_focus` (its only caller), added for the `w2-input-wiring` host-side
+    /// focus arbitration (content vs. chrome routing, `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`).
+    pub(crate) fn is_focused(&self) -> bool {
+        self.focus.focused.is_some()
+    }
+    //#endregion 🔖️CursorApi
+
+    /// 🧹️ Drops registry entries (`drag_payloads`/`drop_accept`/`scroll_thumbs`) keyed by a `NodeId`
+    /// `reconcile` has since removed from `tree` — generation-tagged `NodeId`s (see `arena`'s own doc
+    /// comment) make stale entries harmless to *use* (they simply never match a live node again), but
+    /// this keeps the maps from growing unboundedly across a long session's worth of churn.
+    fn prune_dead_registrations(&mut self, tree: &UiTree) {
+        self.drag_payloads.retain(|id, _| tree.contains(*id));
+        self.drop_accept.retain(|id, _| tree.contains(*id));
+        self.scroll_thumbs.retain(|thumb, (scrollable, _)| tree.contains(*thumb) && tree.contains(*scrollable));
+        if self.stepper_repeat.is_some_and(|repeat| !tree.contains(repeat.node)) {
+            self.stepper_repeat = None;
+        }
+    }
+
+    /// 🚦️ Resolves the event's target (capture target if captured, else `hit_test`), updates
+    /// interaction flags, and returns any `UiCommand`s the event produced.
+    ///
+    /// 🔽️ A focused `Select` answers navigation/typeahead/commit keys before the generic
+    /// control routing below, exactly as React's `SelectTrigger`/`SelectContent` handlers
+    /// claim them ahead of the browser's own default (`🧱️elements/🔽️Select/🟦️.tsx`).
+    /// `Escape` stays with the overlay stack and `Tab` still moves focus after the popup
+    /// this closes, so neither of those two is ever reported as consumed.
+    pub(crate) fn dispatch_accessibility(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        self.prune_dead_registrations(tree);
+        let mut commands = Vec::new();
+        let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
+        if !enabled {
+            return commands;
+        }
+        if !matches!(event, AccessibilityUiEvent::Blur) && node_is_focusable(tree, target) {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
+                self.push_app_command(tree, blurred, fired, &mut commands);
+            }
+            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
+            self.focus_visible = true;
+        }
+        match event {
+            AccessibilityUiEvent::Focus => {}
+            AccessibilityUiEvent::Blur => {
+                if tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_) | UiNode::Ring(_))) {
+                    if let Some(fired) = cancelled_press(tree, target, "blur") {
+                        self.push_app_command(tree, target, fired, &mut commands);
+                    }
+                }
+                if self.focus.focused == Some(target) {
+                    if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                        self.push_app_command(tree, blurred, fired, &mut commands);
+                    }
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            AccessibilityUiEvent::Activate => {
+                let kind = tree.node(target).map(|node| node.spec.0.clone());
+                match kind {
+                    _ if self.toggle_disclosure(tree, target) => {}
+                    Some(UiNode::Select(_)) => commands.extend(self.toggle_select_popup(tree, target)),
+                    Some(UiNode::Button(button)) => {
+                        if let Some(fired) = bare_action(&button.action, Trigger::Activate) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    Some(UiNode::Stack(stack)) => {
+                        if let Some(fired) = stack.activate.as_ref().and_then(|action| bare_action(action, Trigger::Activate)) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    Some(UiNode::Toggle(toggle)) => {
+                        if let Some(fired) = fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            AccessibilityUiEvent::Value(value) => {
+                let fired = match tree.node(target).map(|node| &node.spec.0) {
+                    Some(UiNode::Input(input)) => {
+                        let commit_now = input.commit.as_deref() != Some("blur");
+                        if let Some(node) = tree.node_mut(target) {
+                            let caret = value.len();
+                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                        }
+                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        commit_now.then(|| tree.node(target).and_then(|node| edit_commit_action(node, value))).flatten()
+                    }
+                    Some(UiNode::IconSelect(_)) => {
+                        if let Some(node) = tree.node_mut(target) {
+                            let caret = value.len();
+                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                        }
+                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        tree.node(target).and_then(|node| edit_commit_action(node, value))
+                    }
+                    Some(UiNode::Select(select)) => fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone())),
+                    Some(UiNode::Toggle(toggle)) => value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value))),
+                    Some(UiNode::Slider(slider)) => {
+                        let action = slider.on_change.clone();
+                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| constrain_slider_value(value, slider));
+                        let live = tree.node(target).and_then(|node| match &node.spec.0 {
+                            UiNode::Slider(slider) => Some(slider_live_value(node, slider)),
+                            _ => None,
+                        });
+                        let changed = bounded.filter(|value| live.is_none_or(|live| (*value - live).abs() > slider.step.max(f64::EPSILON) * 0.25));
+                        if let Some(value) = changed {
+                            self.apply_slider_local_value(tree, target, value);
+                        }
+                        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)))
+                    }
+                    Some(UiNode::NumberStepper(stepper)) => {
+                        let action = stepper.on_absolute.clone();
+                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY)));
+                        let fired = bounded.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)));
+                        if let Some(value) = bounded {
+                            if let Some(node) = tree.node_mut(target) {
+                                let text = ui_contract::format_ui_number(value);
+                                let caret = text.len();
+                                node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                            }
+                            tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        }
+                        fired
+                    }
+                    Some(UiNode::Ring(ring)) => value.parse::<f64>().ok().map(|value| value.clamp(0.0, 1.0)).and_then(|value| fired_action(&ring.on_change, Trigger::Change, DslValue::float(value))),
+                    _ => None,
+                };
+                if let Some(fired) = fired {
+                    self.push_app_command(tree, target, fired, &mut commands);
+                }
+            }
+        }
+        commands
+    }
+
+    pub(crate) fn dispatch_accessibility_select_option(&mut self, tree: &mut UiTree, target: NodeId, value: &str, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let Some(node) = tree.node(target) else { return Vec::new() };
+        let UiNode::Select(select) = &node.spec.0 else { return Vec::new() };
+        if select.presence.state == UiState::Disabled || !node.state.open || !select.items.iter().any(|item| item.value == value) || !matches!(event, AccessibilityUiEvent::Activate) {
+            return Vec::new();
+        }
+        let on_change = select.on_change.clone();
+        let mut commands = Vec::new();
+        if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(value.to_string())) {
+            self.push_app_command(tree, target, fired, &mut commands);
+        }
+        commands.extend(self.close_overlay(tree, target));
+        commands
+    }
+
+    /// ♿️ The accessibility mirror's activation of a row's `index`-th action (`accessibility::row_accessibility_action`), fired
+    /// exactly as a pointer on its trailing icon fires it.
+    pub(crate) fn dispatch_accessibility_row_action(&mut self, tree: &mut UiTree, target: NodeId, index: usize, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
+        if !enabled || !matches!(event, AccessibilityUiEvent::Activate) {
+            return Vec::new();
+        }
+        self.row_action_command(tree, target, index).into_iter().collect()
+    }
+
+    pub(crate) fn dispatch_accessibility_slider_editor(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let mut commands = Vec::new();
+        if !tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some() && node.spec.0.presence().state != UiState::Disabled) {
+            return commands;
+        }
+        match event {
+            AccessibilityUiEvent::Focus => {
+                if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
+                    self.push_app_command(tree, blurred, fired, &mut commands);
+                }
+                commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
+            }
+            AccessibilityUiEvent::Blur => {
+                if self.focus.focused == Some(target) {
+                    let _ = self.focus.clear_focus(tree);
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            AccessibilityUiEvent::Value(value) => {
+                if let Some(node) = tree.node_mut(target) {
+                    let caret = value.len();
+                    node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                }
+                tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+            }
+            AccessibilityUiEvent::Activate => {}
+        }
+        commands
+    }
+
+    pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
+        self.dispatch_pointer(tree, root, 1, event)
+    }
+
+    pub(crate) fn dispatch_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
+        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. }) && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id) {
+            return Vec::new();
+        }
+        self.prune_dead_registrations(tree);
+        let mut commands = Vec::new();
+        match event {
+            UiEvent::PointerCancel => {
+                self.stepper_repeat = None;
+                if let Some((id, _)) = self.capture.release(pointer_id) {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.flags.set(NodeFlags::ACTIVE, false);
+                    }
+                    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                    if let Some(fired) = cancelled_press(tree, id, "captureLost") {
+                        self.push_app_command(tree, id, fired, &mut commands);
+                    }
+                }
+                if let Some(drag) = self.drag.take() {
+                    commands.push(UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source });
+                }
+                self.press_origin = None;
+                self.thumb_start = None;
+                self.tree_drag_handle_press = None;
+                self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
+                commands.extend(self.update_hover(tree, None));
+            }
+            UiEvent::PointerMove { x, y, .. } => {
+                if self.stepper_repeat.is_some_and(|repeat| absolute_rect(tree, repeat.node).is_none_or(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border) != Some(repeat.sign))) {
+                    self.stepper_repeat = None;
+                }
+                self.maybe_promote_to_drag(*x, *y);
+                match self.capture.target {
+                    Some((_, _, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
+                    Some((_, scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
+                    // 🎚️ A captured `Slider`/`Ring` reports EVERY intermediate value, not only the
+                    // release — Radix's own behaviour, which React's `SliderView`/`RingView` delegate to.
+                    Some((_, pressed, CaptureKind::Press)) => {
+                        if tree.node(pressed).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
+                            commands.extend(self.pointer_commit(tree, pressed, *x, *y));
+                        }
+                    }
+                    _ => {}
+                }
+                let target = self.resolve_target(tree, root, *x, *y);
+                if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
+                self.update_stepper_hover_segment(tree, target, *x, *y);
+                commands.extend(self.update_hover(tree, target));
+                commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
+            }
+            UiEvent::PointerDown { x, y, button, .. } => {
+                self.focus_visible = false;
+                self.tree_drag_handle_press = None;
+                if let Some(dismissed) = self.dismiss_topmost_if_outside_press(tree, *x, *y) {
+                    return dismissed;
+                }
+                self.press_origin = Some((*x, *y));
+                let scroll_target = self
+                    .overlays
+                    .topmost()
+                    .filter(|overlay| overlay.kind == OverlayKind::SelectPopup)
+                    .and_then(|overlay| tree.node(overlay.root).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).map(|_| overlay.root));
+                let target = scroll_target.or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y))).or_else(|| self.hit_test(tree, root, *x, *y));
+                self.update_stepper_hover_segment(tree, target, *x, *y);
+                commands.extend(self.update_hover(tree, target));
+                if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                    let disabled_stepper_side = tree.node(id).is_some_and(|node| {
+                        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return false };
+                        absolute_rect(tree, id).and_then(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border)).is_some_and(|sign| !number_stepper_can_step(node, stepper, sign))
+                    });
+                    if disabled_stepper_side {
+                        return commands;
+                    }
+                    if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
+                        let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
+                        self.capture.target = Some((pointer_id, scrollable, CaptureKind::ScrollThumb(axis)));
+                        self.thumb_start = Some((*x, *y, offset.0, offset.1));
+                    } else {
+                        if let Some(node) = tree.node_mut(id) {
+                            node.flags.set(NodeFlags::ACTIVE, true);
+                        }
+                        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                        self.capture.target = Some((pointer_id, id, CaptureKind::Press));
+                        let focusable = node_is_focusable(tree, id);
+                        if focusable {
+                            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), false) {
+                                self.push_app_command(tree, blurred, fired, &mut commands);
+                            }
+                            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(id) });
+                        } else if self.focus.focused.is_some() {
+                            if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                                self.push_app_command(tree, blurred, fired, &mut commands);
+                            }
+                            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                        }
+                        // 🫳️ W2 wiring: a `Tree` row's `draggable`/`drag_data` (re-derived by key —
+                        // see `find_tree_item_spec`) registers this press as a promotable drag
+                        // source, exactly like a widget spec would call `set_drag_payload` itself if
+                        // `UiStackNode` had room for the field (it doesn't — see that fn's own doc).
+                        if let Some(item) = find_tree_item_spec(tree, id) {
+                            let arms = self.tree_drag_press_arms(tree, id, *x, *y);
+                            let payload = arms.then(|| item.drag_data.clone().unwrap_or_default());
+                            if let Some(payload) = payload {
+                                self.set_drag_payload(id, payload);
+                                if self.tree_drag_driver == UiDriverDrag::Handle {
+                                    self.tree_drag_handle_press = Some(id);
+                                }
+                            } else {
+                                self.drag_payloads.remove(&id);
+                            }
+                        }
+                        if tree.node(id).is_some_and(|node| (commits_while_dragging(&node.spec.0) || (*button == PointerButton::Primary && matches!(node.spec.0, UiNode::NumberStepper(_)))) && node.spec.0.presence().state != UiState::Disabled) {
+                            self.arm_stepper_repeat(tree, id, *x, *y);
+                            commands.extend(self.pointer_commit(tree, id, *x, *y));
+                        }
+                    }
+                } else {
+                    if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                        self.push_app_command(tree, blurred, fired, &mut commands);
+                    }
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            UiEvent::PointerUp { x, y, button, .. } => {
+                self.stepper_repeat = None;
+                let captured_scene = self.capture.target.and_then(|(_, id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
+                if let Some((active_id, kind)) = self.capture.release(pointer_id) {
+                    match kind {
+                        CaptureKind::Press => {
+                            let released = tree.node(active_id).and_then(|node| match &node.spec.0 {
+                                UiNode::Slider(slider) if node.state.scrub_gesture.is_some() => fired_action(&slider.on_change, Trigger::Change, DslValue::float(slider_live_value(node, slider))),
+                                UiNode::Ring(ring) if node.state.scrub_gesture.is_some() => absolute_rect(tree, active_id).and_then(|bounds| fired_action(&ring.on_change, Trigger::Change, DslValue::float(ring_t_at(bounds, *x, *y)))),
+                                _ => None,
+                            });
+                            if let Some(fired) = released {
+                                let fired = pressed(tree, &self.window_id, active_id, fired, true);
+                                self.push_app_command(tree, active_id, fired, &mut commands);
+                            }
+                            let suppress_tree_handle_click = self.tree_drag_handle_press.take() == Some(active_id);
+                            if let Some(node) = tree.node_mut(active_id) {
+                                node.flags.set(NodeFlags::ACTIVE, false);
+                            }
+                            tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
+                            let select_scroll_release =
+                                tree.node(active_id).filter(|node| matches!(node.spec.0, UiNode::Select(_))).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).is_some();
+                            if !suppress_tree_handle_click && (select_scroll_release || self.resolve_target(tree, root, *x, *y) == Some(active_id)) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
+                                let slider_readout = *button == PointerButton::Primary && self.note_slider_readout_click(tree, active_id, *x, *y);
+                                // 🔽️🎴️ W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
+                                // a `Button` (this covers `Select`'s own synthesized item rows too —
+                                // see `reconcile::children_of`'s `Select` arm — since they're plain
+                                // `UiNode::Button`s) fires its action, additionally closing an open
+                                // `SelectPopup` if this button *is* one of that popup's rows (picking
+                                // an item closes the popup, per `toggle_select_popup`'s doc comment);
+                                // a `Stack` with `activate` set fires that action (see
+                                // `paint::paint_stack_frame`'s matching visual for the same field).
+                                let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
+                                let row_action = self.pointer_row_action(tree, active_id, *x, *y);
+                                let disclosed = row_action.is_none() && self.pointer_toggle_disclosure(tree, active_id, *x, *y);
+                                let row_also_activates = disclosed && tree.authored_tree_item(active_id).is_some() && tree.node(active_id).is_some_and(|node| matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()));
+                                if slider_readout {
+                                } else if let Some(index) = row_action {
+                                    commands.extend(self.row_action_command(tree, active_id, index));
+                                } else if disclosed && !row_also_activates {
+                                } else if is_select && select_scroll_release {
+                                    let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);
+                                } else if is_select {
+                                    commands.extend(self.toggle_select_popup(tree, active_id));
+                                } else {
+                                    let fired = tree.node(active_id).and_then(|node| match &node.spec.0 {
+                                        UiNode::Button(button) => bare_action(&button.action, Trigger::Activate).map(|fired| (fired, node.parent)),
+                                        UiNode::Stack(stack) => stack.activate.as_ref().and_then(|action| bare_action(action, Trigger::Activate)).map(|fired| (fired, None)),
+                                        _ => None,
+                                    });
+                                    if let Some((fired, parent)) = fired {
+                                        self.push_app_command(tree, active_id, fired, &mut commands);
+                                        if let Some(parent) = parent {
+                                            let picked_from_open_select = self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::SelectPopup && overlay.root == parent);
+                                            if picked_from_open_select {
+                                                commands.extend(self.close_topmost_overlay(tree));
+                                            }
+                                        }
+                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_) | UiNode::Ring(_))) {
+                                        // 🎬️ Every other value-carrying kind — `Toggle` — commits its own gesture here,
+                                        // through the same one authority (see 🔖️Commit); a `Slider` or `Ring` released its
+                                        // press above, wherever the pointer let go.
+                                        commands.extend(self.pointer_commit(tree, active_id, *x, *y));
+                                    }
+                                }
+                            }
+                        }
+                        CaptureKind::Drag => {
+                            self.tree_drag_handle_press = None;
+                            if let Some(node) = tree.node_mut(active_id) {
+                                node.flags.set(NodeFlags::ACTIVE, false);
+                            }
+                            tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
+                            if let Some(drag) = self.drag.take() {
+                                commands.push(match drag.drop_target {
+                                    Some(target) => UiCommand::DropCommitted { window_id: self.window_id.clone(), source: drag.source, target, payload: drag.payload },
+                                    None => UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source },
+                                });
+                            }
+                        }
+                        CaptureKind::ScrollThumb(_) => {
+                            self.thumb_start = None;
+                        }
+                    }
+                }
+                let target = self.resolve_target(tree, root, *x, *y);
+                if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
+                if let Some((captured_id, command)) = captured_scene {
+                    if target != Some(captured_id) {
+                        commands.push(command);
+                    }
+                }
+                self.update_stepper_hover_segment(tree, target, *x, *y);
+                commands.extend(self.update_hover(tree, target));
+            }
+            UiEvent::KeyDown { key, modifiers } => {
+                self.focus_visible = true;
+                let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
+                if key == "Escape" {
+                    // ⎋️ React's `Search` closes its possibles popover first and only aborts the
+                    // engagement when there is none open (`onKeyDown`'s Escape arm, `🖱️ui/🎯️targets/
+                    // ⚛️react/🟦️.tsx:10869`), so an overlay swallows this key exactly as it does there.
+                    let over_overlay = self.overlays.topmost().is_some();
+                    commands.extend(self.close_topmost_overlay(tree));
+                    if !over_overlay {
+                        let numeric_editor_focused = self.focus.focused.is_some_and(|id| tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_)) || matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()));
+                        if numeric_editor_focused {
+                            if let Some((id, fired)) = self.focus.focused.and_then(|id| cancelled_press(tree, id, "blur").map(|fired| (id, fired))) {
+                                self.push_app_command(tree, id, fired, &mut commands);
+                            }
+                            let _ = self.focus.clear_focus(tree);
+                            self.stepper_repeat = None;
+                            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                        } else {
+                            let aborted = self.focus.focused.and_then(|id| tree.node(id).and_then(|node| search_line_action(node, Trigger::Abort, "")).map(|fired| (id, fired)));
+                            if let Some((id, fired)) = aborted {
+                                self.push_app_command(tree, id, fired, &mut commands);
+                            }
+                        }
+                    }
+                } else if select_consumed {
+                } else if key == "Tab" {
+                    let scope = self.overlays.topmost_focus_trap_root().unwrap_or(root);
+                    let committed = if modifiers.shift { self.focus.focus_prev(tree, scope) } else { self.focus.focus_next(tree, scope) };
+                    if let Some((blurred, fired)) = committed {
+                        self.push_app_command(tree, blurred, fired, &mut commands);
+                    }
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+                } else if self.focused_disclosure_activation(tree, key) {
+                } else if let Some((activated, fired)) = self.focused_button_activation(tree, key) {
+                    self.push_app_command(tree, activated, fired, &mut commands);
+                } else if let Some((changed, fired)) = self.focused_value_key_activation(tree, self.mirrored_inline_key(key), *modifiers) {
+                    self.push_app_command(tree, changed, fired, &mut commands);
+                } else {
+                    commands.extend(self.route_edit_key(tree, key, *modifiers));
+                }
+            }
+            UiEvent::KeyUp { .. } => {}
+            UiEvent::TextInput { text } => commands.extend(self.route_text_insert(tree, text)),
+            UiEvent::Paste { text } => commands.extend(self.route_text_insert(tree, text)),
+            UiEvent::Ime(ime_event) => commands.extend(self.route_ime(tree, ime_event)),
+            UiEvent::Scroll { x, y, delta_x, delta_y, .. } => {
+                if self.overlays.topmost().filter(|overlay| overlay.kind == OverlayKind::SelectPopup).is_some_and(|overlay| crate::wgpu::select::scroll_retained_select_at(tree, overlay.root, *x, *y, *delta_y)) {
+                    return commands;
+                }
+                if let Some(id) = self.hit_test(tree, root, *x, *y) {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
+                self.route_scroll(tree, root, *x, *y, *delta_x * self.flow.inline.inline_sign(), *delta_y);
+            }
+        }
+        commands
+    }
+
+    /// 🧭️ One key name as this window's INLINE direction means it. React inverts the horizontal pair
+    /// per control (`🎚️Slider/🟦️.tsx:383-384`, `📑️Tabs/🟦️.tsx:164-165`, `🎛️ToggleGroup/🟦️.tsx:118-119`
+    /// all read `dir === "rtl"`); doing it once here means every value control inherits the rule
+    /// instead of each re-deriving it. Vertical and page keys are direction-invariant, and a caret
+    /// move inside text is NOT routed through here — `route_edit_key` walks byte boundaries, which
+    /// are already logical.
+    fn mirrored_inline_key<'k>(&self, key: &'k str) -> &'k str {
+        if !self.flow.inline.is_rtl() {
+            return key;
+        }
+        match key {
+            "ArrowLeft" => "ArrowRight",
+            "ArrowRight" => "ArrowLeft",
+            other => other,
+        }
+    }
+
+    /// 🎬️ If `id` is a `ComponentScene` leaf, resolves its `SurfaceKind`/absolute rect (the same
+    /// ancestor-offset accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/
+    /// `paint::paint_node` each do independently — not reusing `collect_scene_slots` itself, since
+    /// that walks the WHOLE tree per call and this runs once per real input event) and builds the
+    /// `UiCommand::Scene` the host should route into that surface's per-`SurfaceKind` input handler.
+    fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
+        let node = tree.node(id)?;
+        let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
+        let rect = absolute_rect(tree, id)?;
+        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect, event: event.clone() })
+    }
+
+    /// ⏎️ The action `Enter` or `Space` activates on the focused enabled `Button` — the keyboard half of a click, as a
+    /// native `<button>` answers it ([WAI-ARIA button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/)).
+    fn focused_button_activation(&self, tree: &UiTree, key: &str) -> Option<(NodeId, FiredAction)> {
+        if !matches!(key, "Enter" | "NumpadEnter" | " ") {
+            return None;
+        }
+        let id = self.focus.focused?;
+        match &tree.node(id)?.spec.0 {
+            UiNode::Button(button) if button.presence.state != UiState::Disabled => bare_action(&button.action, Trigger::Activate).map(|fired| (id, fired)),
+            _ => None,
+        }
+    }
+
+    fn focused_disclosure_activation(&mut self, tree: &mut UiTree, key: &str) -> bool {
+        if !matches!(key, "Enter" | "NumpadEnter" | " ") {
+            return false;
+        }
+        self.focus.focused.is_some_and(|id| self.toggle_disclosure(tree, id))
+    }
+
+    //#region 🔖️WidgetKeyboard
+    /// 🔽️ Routes one key at the focused `Select`, returning whether it was consumed. Opens the popup
+    /// (highlighting the selected/last/first-matching row), moves the highlight, commits it, closes
+    /// on `Tab`, or extends the typeahead query — the union of React's `SelectTrigger` and
+    /// `SelectContent` `onKeyDown` handlers, whose decision table lives with the element
+    /// (`select::select_key`). `Tab` closes but reports `false`, so the same keystroke still moves
+    /// focus the way it does in the DOM.
+    ///
+    /// ↹️ `finish_close` drops focus that sat inside the closed overlay's subtree, and a
+    /// `Select` IS its own popup root — so put focus back on the trigger before the `Tab`
+    /// handler runs, or the tab move would restart from the top of the document instead
+    /// of stepping off this control, which is what React's trigger-retained focus does.
+    fn route_select_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers, out: &mut Vec<UiCommand>) -> bool {
+        let Some(id) = self.focus.focused else { return false };
+        let Some(node) = tree.node(id) else { return false };
+        let UiNode::Select(select) = &node.spec.0 else { return false };
+        if select.presence.state == UiState::Disabled {
+            return false;
+        }
+        let open = node.state.open;
+        let highlighted = node.state.highlighted;
+        let labels: Vec<String> = select.items.iter().map(|item| item.label.as_str().to_string()).collect();
+        let values: Vec<String> = select.items.iter().map(|item| item.value.clone()).collect();
+        let selected = values.iter().position(|value| value == &select.value);
+        let on_change = select.on_change.clone();
+        match select::select_key(open, key, modifiers.alt, modifiers.ctrl, modifiers.meta) {
+            select::SelectKey::Ignored => false,
+            select::SelectKey::Open(intent) => {
+                let index = select::select_open_index(intent, labels.iter().map(String::as_str), selected);
+                self.select_typeahead = match intent {
+                    select::SelectOpenIntent::Typeahead(char) => Some((char.to_string(), self.clock_seconds)),
+                    _ => None,
+                };
+                out.extend(self.toggle_select_popup(tree, id));
+                self.set_select_highlight(tree, id, index);
+                true
+            }
+            select::SelectKey::Move(movement) => {
+                let index = select::select_moved_index(highlighted, labels.len(), movement);
+                self.select_typeahead = None;
+                self.set_select_highlight(tree, id, index);
+                true
+            }
+            select::SelectKey::Commit => {
+                let Some(value) = highlighted.and_then(|index| values.get(index)) else { return true };
+                if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(value.clone())) {
+                    self.push_app_command(tree, id, fired, out);
+                }
+                self.select_typeahead = None;
+                out.extend(self.close_overlay(tree, id));
+                true
+            }
+            select::SelectKey::Close => {
+                self.select_typeahead = None;
+                out.extend(self.close_overlay(tree, id));
+                if self.focus.focused.is_none() {
+                    if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), true) {
+                        self.push_app_command(tree, blurred, fired, out);
+                    }
+                }
+                false
+            }
+            select::SelectKey::Typeahead(char) => {
+                let query = self.extend_select_typeahead(char);
+                let index = select::select_typeahead_index(labels.iter().map(String::as_str), &query, highlighted);
+                if index.is_some() {
+                    self.set_select_highlight(tree, id, index);
+                }
+                true
+            }
+        }
+    }
+
+    /// 🔤️ Appends `char` to the live typeahead query, restarting it when the previous keystroke is
+    /// older than `select::SELECT_TYPEAHEAD_RESET_SECONDS`.
+    fn extend_select_typeahead(&mut self, char: char) -> String {
+        let fresh = self.select_typeahead.as_ref().is_some_and(|(_, at)| self.clock_seconds - at < f64::from(select::SELECT_TYPEAHEAD_RESET_SECONDS));
+        let mut query = if fresh { self.select_typeahead.take().map(|(query, _)| query).unwrap_or_default() } else { String::new() };
+        query.push(char);
+        self.select_typeahead = Some((query.clone(), self.clock_seconds));
+        query
+    }
+
+    /// ⌨️ Writes the popup's highlighted row and repaints it — `paint`'s only input for the
+    /// keyboard-active row (`tree::WidgetState::highlighted`).
+    fn set_select_highlight(&mut self, tree: &mut UiTree, id: NodeId, index: Option<usize>) {
+        if let Some(node) = tree.node_mut(id) {
+            node.state.highlighted = index;
+            if let (Some(index), Some(popup)) = (index, node.state.select_popup) {
+                node.state.scroll_offset.1 = select::select_revealed_scroll(popup, index);
+            }
+        }
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    /// ⌨️ The value-committing keyboard gestures the other focusable controls answer, which a plain
+    /// `<button>`'s Enter/Space (see `focused_button_activation`) does not cover: a `Toggle` flips
+    /// (React renders it as a button, so Enter/Space click it), a `Slider` steps
+    /// (`slider_key_value`), and a `NumberStepper`'s `ArrowUp`/`ArrowDown` are its +/− segments —
+    /// the same binding-gated choice `pointer_commit_action` makes for a click on them.
+    fn focused_value_key_activation(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Option<(NodeId, FiredAction)> {
+        let id = self.focus.focused?;
+        let node = tree.node(id)?;
+        if node.spec.0.presence().state == UiState::Disabled {
+            return None;
+        }
+        let (fired, local_delta, local_slider) = match &node.spec.0 {
+            UiNode::Toggle(toggle) if matches!(key, "Enter" | "NumpadEnter" | " ") => (fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)), None, None),
+            UiNode::Slider(slider) if node.state.edit.is_none() => {
+                let value = slider_key_value_from(slider, slider_live_value(node, slider), key, modifiers.shift)?;
+                (fired_action(&slider.on_change, Trigger::Change, DslValue::float(value)), None, Some(value))
+            }
+            UiNode::NumberStepper(stepper) if matches!(key, "PageUp" | "PageDown") => {
+                let live = number_stepper_live_value(node, stepper);
+                let next = ui_contract::ui_number_key_value(live, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown }, false);
+                let binds_delta = node.intent.as_ref().map_or_else(|| !stepper.on_delta.action.is_empty(), |intent| intent.binds(Trigger::Delta));
+                let fired = if binds_delta { fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(next - live)) } else { fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(next)) };
+                ((next != live).then_some(fired).flatten(), Some(next - live).filter(|delta| *delta != 0.0), None)
+            }
+            UiNode::NumberStepper(stepper) => {
+                let sign = match key {
+                    "ArrowUp" => 1.0,
+                    "ArrowDown" => -1.0,
+                    _ => return None,
+                };
+                (number_stepper_fired(node, stepper, sign), Some(sign * stepper.step), None)
+            }
+            _ => (None, None, None),
+        };
+        if let Some(value) = local_slider {
+            self.apply_slider_local_value(tree, id, value);
+        }
+        if let Some(delta) = local_delta {
+            self.apply_stepper_local_delta(tree, id, delta);
+        }
+        let fired = fired?;
+        let continuous = fired.trigger == Trigger::Change && (local_slider.is_some() || local_delta.is_some());
+        Some((id, if continuous { pressed(tree, &self.window_id, id, fired, true) } else { fired }))
+    }
+    //#endregion 🔖️WidgetKeyboard
+
+    /// 👆️ The `UiCommand::App` a press/drag at `(x, y)` over `id` commits, for the pointer-valued
+    /// control kinds — see `pointer_commit_action`. The rect it measures the gesture against is the
+    /// node's own absolute painted rect, the same one `paint` drew the knob/segments at.
+    fn pointer_commit(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> Option<UiCommand> {
+        let bounds = absolute_rect(tree, id)?;
+        let inline_suffix_width = tree.accepted_inline_suffix_width(id).unwrap_or(0.0);
+        let node = tree.node(id)?;
+        let (local_delta, local_slider) = match &node.spec.0 {
+            UiNode::Slider(slider) => {
+                let unit_width = slider.unit_label().map(|_| inline_suffix_width);
+                let track = slider_control_presentation(bounds, slider.axis_position(slider_live_value(node, slider)), 0.0, 1.0, unit_width, self.control_gap, self.flow.inline).slider.track_cell;
+                (None, track.contains(x, y).then(|| crate::wgpu::slider::slider_node_pointer_value(slider, track, x, y)))
+            }
+            UiNode::NumberStepper(stepper) => (number_stepper_sign_at(bounds, x, y, self.flow.inline, self.control_border).filter(|sign| number_stepper_can_step(node, stepper, *sign)).map(|sign| sign * stepper.step), None),
+            _ => (None, None),
+        };
+        let (is_dragged, is_stepper) = (matches!(node.spec.0, UiNode::Slider(_) | UiNode::Ring(_)), matches!(node.spec.0, UiNode::NumberStepper(_)));
+        let fired = pointer_commit_action(node, bounds, x, y, self.flow.inline, self.control_border, inline_suffix_width, self.control_gap).map(|fired| match fired.trigger {
+            Trigger::Change if is_dragged => pressed(tree, &self.window_id, id, fired, false),
+            Trigger::Change if is_stepper => pressed(tree, &self.window_id, id, fired, true),
+            _ => fired,
+        });
+        let command = fired.and_then(|fired| self.app_command(tree, id, fired));
+        if let Some(value) = local_slider {
+            self.apply_slider_local_value(tree, id, value);
+        }
+        if let Some(delta) = local_delta {
+            self.apply_stepper_local_delta(tree, id, delta);
+        }
+        command
+    }
+}
+//#endregion 🔖️UiCommand
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔬️targets-wgpu-events-unit/🦀️.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🎛️retained-control-commit/🦀️.rs"]
+mod control_commit_tests;
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧪️scrub-press/🦀️.rs"]
+mod scrub_press_tests;
+// #endregion events
+
+```
+
+## 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs
+
+SHA256 d0a81c4aa3e0a1e5afdffe748e2c8e39f66a4958dd68122e3fabcf95e008ec30
+
+```rust
+//! 🎛️ LAW: one gesture on a retained form control dispatches that control's OWN guest action, with
+//! the gesture's payload named by its trigger and merged over the node's authored args — and
+//! dispatches nothing at all when the node declares no binding for that trigger.
+//!
+//! The defect: the retained `EventRouter` named committing an edited value through `on_change` as
+//! "a documented gap for a later milestone", and `Toggle`/`Slider`/`NumberStepper`/`Ring`/
+//! `IconSelect` appeared only in `is_focusable`. The shell's separate immediate-mode commit system
+//! (`commit_focused_input` + `stepper_metas`, `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) is keyed by the ids
+//! the CHROME's immediate-mode widget walk mints and never sees a retained document's, so editing a
+//! generation's parameters on wgpu moved a caret and a knob and reached no guest
+//! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+//!
+//! This law drives the REAL router — `EventRouter::dispatch` over a real `UiTree`, through real
+//! hit-testing, real capture and real focus — and reads the `UiCommand::App`s it produced.
+//!
+//! Oracle: `🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json`; its TypeScript twin is
+//! `📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts`.
+
+use super::{EventModifiers, EventRouter, PointerButton, UiCommand, UiEvent};
+use crate::wgpu::arena::NodeId;
+use crate::wgpu::component::layout::ActionDescriptor;
+use crate::wgpu::component::ui::{UiIconSelectNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSliderNode, UiStackNode, UiToggleNode};
+use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
+use crate::wgpu::layout::slider_control_presentation;
+use crate::wgpu::IconName;
+use semio_framework_value::DslValue;
+use serde_json::Value;
+
+fn law() -> Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🎛️retained-control-commit/🔣️.json")).expect("retained control commit fixture")
+}
+
+/// 🎬️ The retained node's own `ActionDescriptor` for one fixture binding. An ABSENT binding becomes
+/// the empty action name `reconcile::record_action_or_inert` writes — the retained carrier for
+/// "this node declares no binding for that trigger", which the router must answer with silence.
+fn descriptor(binding: &Value) -> ActionDescriptor {
+    let Some(binding) = binding.as_object() else {
+        return ActionDescriptor { controller_id: "ctrl".into(), action: String::new(), args: None };
+    };
+    let args = binding.get("args").and_then(Value::as_object).map(|entries| DslValue::Object(entries.iter().map(|(key, value)| (key.clone(), json_to_dsl(value))).collect()));
+    ActionDescriptor { controller_id: "ctrl".into(), action: binding["action"].as_str().expect("binding action").to_string(), args }
+}
+
+fn json_to_dsl(value: &Value) -> DslValue {
+    match value {
+        Value::Null => DslValue::Null,
+        Value::Bool(flag) => DslValue::Bool(*flag),
+        Value::Number(number) => DslValue::float(number.as_f64().expect("fixture number")),
+        Value::String(text) => DslValue::String(text.clone()),
+        Value::Array(items) => DslValue::Array(items.iter().map(json_to_dsl).collect()),
+        Value::Object(entries) => DslValue::Object(entries.iter().map(|(key, entry)| (key.clone(), json_to_dsl(entry))).collect()),
+    }
+}
+
+fn number(value: &Value, key: &str) -> f64 {
+    value[key].as_f64().unwrap_or_else(|| panic!("fixture number {key}"))
+}
+
+fn control_node(case: &Value) -> UiNode {
+    let node = &case["node"];
+    let on_change = descriptor(&case["binding"]);
+    let presence = UiPresence::default();
+    match node["kind"].as_str().expect("fixture node kind") {
+        "input" => UiNode::Input(UiInputNode {
+            id: node["id"].as_str().unwrap_or_default().to_string(),
+            input_kind: node["inputKind"].as_str().unwrap_or("text").to_string(),
+            value: node["value"].as_str().unwrap_or_default().to_string(),
+            placeholder: None,
+            accessibility_label: None,
+            commit: node["commit"].as_str().map(str::to_owned),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            precision: None,
+            snaps: Vec::new(),
+            on_change,
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence,
+            menu: None,
+            ..Default::default()
+        }),
+        "toggle" => {
+            let mut presence = presence;
+            presence.selected = node["on"].as_bool().unwrap_or(false);
+            UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: node["id"].as_str().unwrap_or_default().to_string(), icon_id: IconName::CircleDot, text: None, on_change, presence, menu: None })
+        }
+        "slider" => UiNode::Slider(UiSliderNode {
+            id: node["id"].as_str().unwrap_or_default().to_string(),
+            value: number(node, "value"),
+            min: number(node, "min"),
+            max: number(node, "max"),
+            step: number(node, "step"),
+            unit: None,
+            snaps: Vec::new(),
+            on_change,
+            presence,
+            menu: None,
+            ..Default::default()
+        }),
+        "numberStepper" => UiNode::NumberStepper(UiNumberStepperNode {
+            id: node["id"].as_str().unwrap_or_default().to_string(),
+            value: number(node, "value"),
+            step: number(node, "step"),
+            uniform: node["uniform"].as_bool().unwrap_or(true),
+            min: None,
+            max: None,
+            precision: None,
+            on_absolute: on_change,
+            on_delta: descriptor(&case["deltaBinding"]),
+            presence,
+            menu: None,
+            ..Default::default()
+        }),
+        "ring" => UiNode::Ring(UiRingNode { id: node["id"].as_str().unwrap_or_default().to_string(), orb_id: node["orbId"].as_str().unwrap_or_default().to_string(), t: number(node, "t"), on_change, presence, menu: None }),
+        "iconSelect" => UiNode::IconSelect(UiIconSelectNode {
+            id: node["id"].as_str().unwrap_or_default().to_string(),
+            value: node["value"].as_str().unwrap_or_default().to_string(),
+            uniform: node["uniform"].as_bool().unwrap_or(true),
+            classifier_kind: node["classifierKind"].as_str().unwrap_or("icon").to_string(),
+            on_change,
+            presence,
+            menu: None,
+        }),
+        other => panic!("fixture node kind {other}"),
+    }
+}
+
+fn place(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
+    let id = tree.insert_child(parent, Node::new(NodeKey::Positional(ordinal, ordinal), WidgetSpec(node)));
+    let bucket = tree.node_mut(id).expect("placed node");
+    bucket.layout.x = rect.0;
+    bucket.layout.y = rect.1;
+    bucket.layout.width = rect.2;
+    bucket.layout.height = rect.3;
+    id
+}
+
+fn root_stack() -> UiNode {
+    UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
+}
+
+/// 🎬️ Every `UiCommand::App` one fixture gesture produced, driven through the real router.
+fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
+    let bounds = case["bounds"].as_array().expect("fixture bounds");
+    let rect = (bounds[0].as_f64().expect("x") as f32, bounds[1].as_f64().expect("y") as f32, bounds[2].as_f64().expect("w") as f32, bounds[3].as_f64().expect("h") as f32);
+    let mut tree = UiTree::new();
+    // 🪟️ A container generous enough that a blur press lands inside the window but outside the
+    // control — `hit_test` never answers a plain container, so that press clears focus.
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, rect.0 + rect.2 + 400.0, rect.1 + rect.3 + 400.0));
+    let control = place(&mut tree, Some(root), 1, control_node(case), rect);
+    let mut router = EventRouter::new("main");
+
+    let gesture = &case["gesture"];
+    let at = gesture["at"].as_array().expect("fixture gesture point");
+    let x = rect.0 + rect.2 * at[0].as_f64().expect("gesture x") as f32;
+    let y = rect.1 + rect.3 * at[1].as_f64().expect("gesture y") as f32;
+    let mut commands = Vec::new();
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
+    // 🎚️ A drag keeps the press's capture while the pointer leaves the control, exactly as a browser
+    // does — the release still belongs to the node the gesture started on.
+    if let Some(to) = gesture["to"].as_array() {
+        let to_x = rect.0 + rect.2 * to[0].as_f64().expect("drag x") as f32;
+        let to_y = rect.1 + rect.3 * to[1].as_f64().expect("drag y") as f32;
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: to_x, y: to_y, modifiers: Default::default() }));
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: to_x, y: to_y, button: PointerButton::Primary, modifiers: Default::default() }));
+    } else {
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
+    }
+    match gesture["kind"].as_str().expect("fixture gesture kind") {
+        "press" | "drag" => {}
+        kind => {
+            let text = gesture["text"].as_str().expect("fixture gesture text");
+            commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: text.to_string() }));
+            match kind {
+                "type" => {}
+                "typeThenEnter" => commands.extend(router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() })),
+                "typeThenBlur" => {
+                    let away_x = rect.0 + rect.2 + 200.0;
+                    let away_y = rect.1 + rect.3 + 200.0;
+                    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: away_x, y: away_y, button: PointerButton::Primary, modifiers: Default::default() }));
+                }
+                other => panic!("fixture gesture kind {other}"),
+            }
+        }
+    }
+    let _ = control;
+    commands
+        .into_iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => Some(intent.descriptor()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// 🎚️ The press keys one dispatch carries (`continuousPress`): its gesture and commit flag, split off the value args.
+fn split_press(action: &ActionDescriptor) -> (ActionDescriptor, Option<(String, bool)>) {
+    let entries: Vec<(String, DslValue)> = match action.args.as_ref() {
+        Some(DslValue::Object(entries)) => entries.clone(),
+        _ => Vec::new(),
+    };
+    let gesture = entries.iter().find(|(key, _)| key == "gesture").and_then(|(_, value)| value.as_str().map(str::to_string));
+    let commit = entries.iter().find(|(key, _)| key == "commit").and_then(|(_, value)| value.as_bool());
+    let rest = entries.into_iter().filter(|(key, _)| key != "gesture" && key != "commit").collect();
+    let press = match (gesture, commit) {
+        (Some(gesture), Some(commit)) => Some((gesture, commit)),
+        (None, None) => None,
+        partial => panic!("a press dispatch carries both its gesture and commit flag, got {partial:?}"),
+    };
+    (ActionDescriptor { controller_id: action.controller_id.clone(), action: action.action.clone(), args: Some(DslValue::Object(rest)) }, press)
+}
+
+fn expected_descriptor(expected: &Value) -> ActionDescriptor {
+    let args = expected["args"].as_object().expect("fixture expected args");
+    // 🔤️ Sorted, because `serde_json::Map`'s own iteration order is its (alphabetical) BTree order
+    // while a merged `DslValue::Object` keeps the authored order with the payload appended. The LAW
+    // is the SET of key/value pairs, not the order the two sides happen to carry them in.
+    let mut entries: Vec<(String, DslValue)> = args.iter().map(|(key, value)| (key.clone(), json_to_dsl(value))).collect();
+    entries.sort_by(|left, right| left.0.cmp(&right.0));
+    ActionDescriptor { controller_id: "ctrl".into(), action: expected["action"].as_str().expect("fixture expected action").to_string(), args: Some(DslValue::Object(entries)) }
+}
+
+fn sorted(action: &ActionDescriptor) -> ActionDescriptor {
+    let mut entries: Vec<(String, DslValue)> = match action.args.as_ref() {
+        Some(DslValue::Object(entries)) => entries.clone(),
+        _ => Vec::new(),
+    };
+    entries.sort_by(|left, right| left.0.cmp(&right.0));
+    ActionDescriptor { controller_id: action.controller_id.clone(), action: action.action.clone(), args: Some(DslValue::Object(entries)) }
+}
+
+#[test]
+fn every_retained_control_commits_its_own_guest_action() {
+    let law = law();
+    let cases = law["cases"].as_array().expect("fixture cases");
+    assert!(cases.len() >= 15, "the oracle must cover every value-carrying kind, got {}", cases.len());
+    for case in cases {
+        let name = case["name"].as_str().expect("case name");
+        let actions = dispatched(case);
+        if case["expected"].is_null() {
+            assert!(actions.is_empty(), "{name}: this gesture must dispatch nothing, got {actions:?}");
+            continue;
+        }
+        let expected = expected_descriptor(&case["expected"]);
+        assert!(!actions.is_empty(), "{name}: expected {expected:?}, got no dispatch at all");
+        let presses: Vec<Option<(String, bool)>> = actions
+            .iter()
+            .map(|action| {
+                let (value, press) = split_press(action);
+                assert_eq!(sorted(&value), expected, "{name}");
+                press
+            })
+            .collect();
+        match case["expected"]["press"].as_str() {
+            None => assert!(presses.iter().all(Option::is_none), "{name}: a discrete control carries no press keys, got {presses:?}"),
+            Some(state) => {
+                let presses: Vec<(String, bool)> = presses.into_iter().map(|press| press.unwrap_or_else(|| panic!("{name}: every continuous dispatch is a press"))).collect();
+                assert!(!presses[0].0.is_empty() && presses.iter().all(|press| press.0 == presses[0].0), "{name}: one gesture per press, got {presses:?}");
+                let (last, ticks) = presses.split_last().expect("at least one press dispatch");
+                assert!(ticks.iter().all(|press| !press.1), "{name}: only the release commits, got {presses:?}");
+                assert_eq!(last.1, state == "released", "{name}: the gesture ends {state}");
+            }
+        }
+    }
+}
+
+/// 🎚️ A `Slider`'s and a `Ring`'s value follows the pointer while it is down — every intermediate
+/// value, the way React's own controls report them, not only the release.
+#[test]
+fn a_dragged_slider_reports_every_intermediate_value() {
+    let law = law();
+    let case = law["cases"].as_array().expect("cases").iter().find(|case| case["name"] == "slider-reads-its-own-track").expect("slider case");
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 600.0, 200.0));
+    let control = place(&mut tree, Some(root), 1, control_node(case), (20.0, 0.0, 100.0, 24.0));
+    let mut router = EventRouter::new("main");
+
+    let presentation = slider_control_presentation(crate::wgpu::geometry::Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, crate::wgpu::theme::Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: presentation.track_cell.x, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: presentation.track_cell.x + presentation.track_cell.w * 0.5, y: 12.0, modifiers: Default::default() });
+
+    let value = moved
+        .iter()
+        .find_map(|command| match command {
+            UiCommand::App { intent, .. } => match intent.descriptor().args.as_ref() {
+                Some(DslValue::Object(entries)) => entries.iter().find(|(key, _)| key == "value").map(|(_, value)| value.as_f64().expect("numeric slider value")),
+                _ => None,
+            },
+            _ => None,
+        })
+        .expect("a captured slider must commit on pointer move, not only on release");
+    assert!((value - 5.0).abs() < f64::EPSILON, "half way along a 0..10 track is 5, got {value}");
+    let _ = control;
+}
+
+//#region 🎬️IntentAddressing
+// 🎬️ LAW: a retained control's gesture becomes an ADDRESSED intent, not a bare descriptor — it
+// carries the node it fired on, it is dropped when the revision it was recorded at is already more
+// than one behind the live document, and its per-surface `seq` advances once per gesture. React
+// applies exactly these rules in `UiDocumentStore::buildIntent` + its runtime's `Stale` outcome.
+
+use crate::wgpu::{UiIntentAddress, UiIntentBindings};
+use ui_contract::{ActionId, Trigger};
+
+/// 🔗️ Stamps `node` with the dispatch contract the document reconcile would have stamped, so a law
+/// can drive the router over a hand-placed tree and still exercise the addressed path.
+fn stamp(tree: &mut UiTree, node: NodeId, revision: u64, bindings: &[(Trigger, &str)]) {
+    let key = format!("node-{}", bindings.len());
+    tree.node_mut(node).expect("stamped node").intent = Some(UiIntentBindings {
+        address: UiIntentAddress { surface: "note.play.navigator".into(), revision, node: 3, node_key: key },
+        bindings: bindings.iter().map(|(trigger, name)| (*trigger, ActionId::try_v1("ctrl", name).expect("action id"))).collect(),
+    });
+}
+
+fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> UiNode {
+    UiNode::Input(UiInputNode {
+        id: id.into(),
+        input_kind: "number".into(),
+        value: value.into(),
+        placeholder: None,
+        accessibility_label: None,
+        commit: Some("blur".into()),
+        min,
+        max,
+        step,
+        accept: None,
+        precision: None,
+        snaps: Vec::new(),
+        on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
+        menu: None,
+        ..Default::default()
+    })
+}
+
+/// ⌨️ Types `text` into `control` and commits it with `Enter`, returning every dispatched intent.
+fn type_and_commit(tree: &mut UiTree, router: &mut EventRouter, root: NodeId, text: &str) -> Vec<UiCommand> {
+    let mut commands = Vec::new();
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::TextInput { text: text.to_string() }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() }));
+    commands
+}
+
+fn committed_values(commands: &[UiCommand]) -> Vec<f64> {
+    commands
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => intent.descriptor().args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_f64),
+            _ => None,
+        })
+        .collect()
+}
+
+fn number_field(min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (UiTree, EventRouter, NodeId) {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", min, max, step), (0.0, 0.0, 120.0, 24.0));
+    stamp(&mut tree, control, 5, &[(Trigger::Commit, "setValue")]);
+    (tree, EventRouter::new("main"), root)
+}
+
+#[test]
+fn a_number_inputs_min_max_and_step_constrain_what_it_commits() {
+    for (min, max, typed, why) in [(Some(0.0), Some(10.0), "999", "above `max`"), (Some(2.0), Some(10.0), "-4", "below `min`")] {
+        let (mut tree, mut router, root) = number_field(min, max, None);
+        assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, typed)), Vec::<f64>::new(), "a value {why} is refused, never clamped into range (the UI contract's hard-bound law)");
+        let field = tree.children(root).next().expect("the field");
+        let state = &tree.node(field).expect("field node").state;
+        assert_eq!((state.edit.as_ref().map(|edit| edit.text.as_str()), state.number_refusal.as_deref()), (Some(typed), Some("")), "the refused draft is kept with its (unlabelled) refusal");
+    }
+
+    let (mut tree, mut router, root) = number_field(Some(0.0), Some(10.0), Some(0.5));
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "3.3")), vec![3.5], "`step` snaps to the nearest legal value off `min`");
+
+    let (mut tree, mut router, root) = number_field(None, None, None);
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "3.3")), vec![3.3], "an unconstrained field commits what was typed");
+}
+
+/// 🕰️ Gives `tree` a live document at `revision`, so `build_intent` has a real current revision to
+/// judge a node's stamped one against — the arena alone carries none.
+fn publish_revision(tree: &mut UiTree, revision: u64) {
+    let header = ui_contract::UiDocumentLeaseHeader {
+        generation: 3,
+        surface: ui_contract::SurfaceId::try_from("note.play.navigator").expect("surface id"),
+        revision: ui_contract::UiRevision(revision),
+        root: ui_contract::UiNodeId(0),
+        layout_epoch: 1,
+        node_count: 0,
+    };
+    tree.publish_document(crate::wgpu::tree::UiDocumentTree::new(header).expect("header admits"));
+}
+
+#[test]
+fn an_intent_fired_against_a_revision_the_user_never_saw_is_dropped() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
+    publish_revision(&mut tree, 9);
+    // 🕰️ Recorded at 6 against a live 9 — the user pressed against geometry three revisions of churn
+    // ago, which is exactly the case master.md's rule ("revision < current − 1") refuses.
+    stamp(&mut tree, control, 6, &[(Trigger::Commit, "setValue")]);
+    let mut router = EventRouter::new("main");
+
+    let commands = type_and_commit(&mut tree, &mut router, root, "7");
+    assert!(committed_values(&commands).is_empty(), "a gesture more than one revision away from the live document must never reach the guest: {commands:?}");
+
+    // 🆕️ A fresh tree, because the refused gesture left its own typed buffer behind on the node.
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+    let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
+    publish_revision(&mut tree, 9);
+    stamp(&mut tree, control, 8, &[(Trigger::Commit, "setValue")]);
+    let mut router = EventRouter::new("main");
+    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "7")), vec![7.0], "one revision behind is the in-flight case every live gesture is in and must still fire");
+}
+
+#[test]
+fn each_gesture_on_a_surface_advances_that_surfaces_own_seq() {
+    let (mut tree, mut router, root) = number_field(None, None, None);
+    let first = type_and_commit(&mut tree, &mut router, root, "1");
+    let second = type_and_commit(&mut tree, &mut router, root, "2");
+    let seq = |commands: &[UiCommand]| {
+        commands
+            .iter()
+            .find_map(|command| match command {
+                UiCommand::App { intent, .. } => Some((intent.seq, intent.address.surface.clone(), intent.address.node_key.clone())),
+                _ => None,
+            })
+            .expect("a dispatched intent")
+    };
+    let (first_seq, surface, node_key) = seq(&first);
+    let (second_seq, _, _) = seq(&second);
+    assert_eq!(first_seq, 1);
+    assert_eq!(second_seq, 2, "seq is renderer-monotonic per surface — it is what lets the receiving side order and de-duplicate");
+    assert_eq!(surface, "note.play.navigator", "the intent names the surface it was fired on");
+    assert_eq!(node_key, "node-1", "…and the node key that survives an intervening reconciliation");
+}
+
+#[test]
+fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
+    let stepper = |bindings: &[(Trigger, &str)]| {
+        let mut tree = UiTree::new();
+        let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
+        let node = UiNode::NumberStepper(UiNumberStepperNode {
+            id: "count".into(),
+            value: 4.0,
+            step: 1.0,
+            uniform: true,
+            min: None,
+            max: None,
+            precision: None,
+            on_absolute: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
+            // 🩸️ Both descriptors are NON-empty here, so only the stamped binding list can decide —
+            // which is precisely the case React's `NumberStepperView` gates on `record.bindings`.
+            on_delta: ActionDescriptor { controller_id: "ctrl".into(), action: "bumpValue".into(), args: None },
+            presence: UiPresence::default(),
+            menu: None,
+            ..Default::default()
+        });
+        let control = place(&mut tree, Some(root), 1, node, (0.0, 0.0, 90.0, 24.0));
+        stamp(&mut tree, control, 0, bindings);
+        let mut router = EventRouter::new("main");
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        let released = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        assert!(!released.iter().any(|command| matches!(command, UiCommand::App { .. })));
+        commands
+            .iter()
+            .find_map(|command| match command {
+                UiCommand::App { intent, .. } => Some((intent.trigger, intent.descriptor())),
+                _ => None,
+            })
+            .expect("a press on the increment third always commits something")
+    };
+
+    let (trigger, descriptor) = stepper(&[(Trigger::Change, "setValue")]);
+    assert_eq!(trigger, Trigger::Change, "a node that binds only `change` must not be sent down a trigger it never declared — that swallowed every +/− click on puzzle 3d's Settings panel");
+    assert_eq!(descriptor.action, "setValue");
+    assert_eq!(descriptor.args.and_then(|args| args.get("value").and_then(DslValue::as_f64)), Some(5.0), "the absolute path reports the stepped value, not the delta");
+
+    let (trigger, descriptor) = stepper(&[(Trigger::Change, "setValue"), (Trigger::Delta, "bumpValue")]);
+    assert_eq!(trigger, Trigger::Delta);
+    assert_eq!(descriptor.action, "bumpValue");
+    assert_eq!(descriptor.args.and_then(|args| args.get("delta").and_then(DslValue::as_f64)), Some(1.0));
+}
+//#endregion 🎬️IntentAddressing
+
+```
+
+## 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️scrub-press/🦀️.rs
+
+SHA256 fcef429550dbd77f9679ae23c165d03a42479a20130fbe8036fb945067a8b300
+
+```rust
+//! 🎚️ LAW: every continuous control of the retained wgpu router speaks the scrub protocol React's continuous lane speaks
+//! (`📓️api-scrub-machine.md`, design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the ticks and the
+//! release of one press carry one `gesture`, `commit` is `true` on the release only, the release goes out wherever the
+//! pointer lets go, a lost capture or a cancel sends `{gesture, abort}` with no value, and a keyboard step or a stepper
+//! click is a one-shot press. The argument names are the `🛠️tool-machine` scrub fixture's.
+
+use super::*;
+use crate::wgpu::component::ui::{UiInputNode, UiPresence, UiRingNode, UiStackNode};
+use crate::wgpu::tree::WidgetSpec;
+
+fn binding() -> ActionDescriptor {
+    ActionDescriptor { controller_id: "ctrl".into(), action: "setOpacity".into(), args: Some(DslValue::Object(vec![("id".into(), DslValue::String("layer-1".into()))])) }
+}
+
+fn place(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
+    let id = tree.insert_child(parent, Node::new(NodeKey::Positional(ordinal, ordinal), WidgetSpec(node)));
+    let bucket = tree.node_mut(id).expect("placed node");
+    (bucket.layout.x, bucket.layout.y, bucket.layout.width, bucket.layout.height) = rect;
+    id
+}
+
+fn stack() -> UiNode {
+    UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
+}
+
+fn slider() -> UiNode {
+    UiNode::Slider(UiSliderNode { id: "opacity".into(), value: 0.0, min: 0.0, max: 10.0, step: 1.0, unit: None, snaps: Vec::new(), on_change: binding(), presence: UiPresence::default(), menu: None, ..Default::default() })
+}
+
+fn number_input() -> UiNode {
+    UiNode::Input(UiInputNode {
+        id: "width".into(),
+        input_kind: "number".into(),
+        value: "1".into(),
+        placeholder: None,
+        accessibility_label: None,
+        commit: None,
+        min: None,
+        max: None,
+        step: None,
+        accept: None,
+        precision: None,
+        snaps: Vec::new(),
+        on_change: binding(),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
+        menu: None,
+        ..Default::default()
+    })
+}
+
+fn stepper() -> UiNode {
+    let unbound = ActionDescriptor { controller_id: "ctrl".into(), action: String::new(), args: None };
+    UiNode::NumberStepper(UiNumberStepperNode { id: "count".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: binding(), on_delta: unbound, presence: UiPresence::default(), menu: None, ..Default::default() })
+}
+
+/// 🧾️ Every app dispatch as `(value, gesture, commit, abort)`, the authored args checked on the way.
+fn presses(commands: &[UiCommand]) -> Vec<(Option<f64>, String, Option<bool>, Option<String>)> {
+    commands
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => intent.descriptor().args,
+            _ => None,
+        })
+        .map(|args| {
+            let field = |key: &str| match &args {
+                DslValue::Object(entries) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone()),
+                _ => None,
+            };
+            assert_eq!(field("id").and_then(|id| id.as_str().map(str::to_string)).as_deref(), Some("layer-1"), "the authored args ride every press dispatch");
+            (field("value").and_then(|value| value.as_f64()), field(SCRUB_GESTURE_ARG).and_then(|gesture| gesture.as_str().map(str::to_string)).expect("every press dispatch names its gesture"), field(SCRUB_COMMIT_ARG).and_then(|commit| commit.as_bool()), field(SCRUB_ABORT_ARG).and_then(|reason| reason.as_str().map(str::to_string)))
+        })
+        .collect()
+}
+
+fn down(x: f32, y: f32) -> UiEvent {
+    UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: EventModifiers::default() }
+}
+
+fn up(x: f32, y: f32) -> UiEvent {
+    UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: EventModifiers::default() }
+}
+
+fn track() -> Rect {
+    slider_control_presentation(Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, crate::wgpu::theme::Theme::default().gap_standard, FlowInline::Ltr).slider.track_cell
+}
+
+#[test]
+fn the_argument_names_are_the_tool_machine_scrub_fixtures() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🛠️tool-machine/🧫️fixtures/🧫️scrub-law/🔣️.json")).expect("scrub law");
+    assert_eq!((law["args"]["gesture"].as_str(), law["args"]["commit"].as_str(), law["args"]["abort"].as_str()), (Some(SCRUB_GESTURE_ARG), Some(SCRUB_COMMIT_ARG), Some(SCRUB_ABORT_ARG)));
+}
+
+/// ⚖️ A slider drag is one press: ticks while the pointer moves, then ONE release on the last value — even when the
+/// pointer lets go far off the control — all under one gesture; the next drag is a new gesture.
+#[test]
+fn a_slider_drag_is_one_press_released_wherever_the_pointer_lets_go() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    place(&mut tree, Some(root), 1, slider(), (20.0, 0.0, 100.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let track = track();
+    let mut commands = router.dispatch(&mut tree, root, &down(track.x + track.w * 0.2, 12.0));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: track.x + track.w * 0.5, y: 12.0, modifiers: EventModifiers::default() }));
+    commands.extend(router.dispatch(&mut tree, root, &up(500.0, 150.0)));
+    let presses = presses(&commands);
+    assert_eq!(presses.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(2.0), Some(false), None), (Some(5.0), Some(false), None), (Some(5.0), Some(true), None)]);
+    assert!(presses.iter().all(|press| press.1 == presses[0].1), "one gesture: {presses:?}");
+    let again = presses_of(&mut router, &mut tree, root, track);
+    assert_ne!(again[0].1, presses[0].1, "the next drag is another press");
+}
+
+fn presses_of(router: &mut EventRouter, tree: &mut UiTree, root: NodeId, track: Rect) -> Vec<(Option<f64>, String, Option<bool>, Option<String>)> {
+    let mut commands = router.dispatch(tree, root, &down(track.x + track.w * 0.8, 12.0));
+    commands.extend(router.dispatch(tree, root, &up(track.x + track.w * 0.8, 12.0)));
+    presses(&commands)
+}
+
+/// ⚖️ A lost pointer capture cancels the open press: `{gesture, abort: captureLost}`, no value, no release.
+#[test]
+fn a_lost_capture_cancels_the_slider_press() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    let control = place(&mut tree, Some(root), 1, slider(), (20.0, 0.0, 100.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let track = track();
+    let mut commands = router.dispatch(&mut tree, root, &down(track.x + track.w * 0.3, 12.0));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerCancel));
+    let presses = presses(&commands);
+    assert_eq!(presses.len(), 2);
+    assert_eq!((presses[1].0, presses[1].2, presses[1].3.as_deref()), (None, None, Some("captureLost")));
+    assert_eq!(presses[1].1, presses[0].1, "the cancel names the open press");
+    assert!(tree.node(control).expect("slider").state.scrub_gesture.is_none(), "the press is closed");
+}
+
+/// ⚖️ A keyboard step and a stepper click are one-shot presses: ONE dispatch that is its own release.
+#[test]
+fn keyboard_steps_and_stepper_clicks_are_one_shot_presses() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    let control = place(&mut tree, Some(root), 1, slider(), (20.0, 0.0, 100.0, 24.0));
+    let count = place(&mut tree, Some(root), 2, stepper(), (20.0, 40.0, 90.0, 24.0));
+    let mut router = EventRouter::new("main");
+    router.focus.set_focus(&mut tree, Some(control), true);
+    let stepped = presses(&router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: EventModifiers::default() }));
+    assert_eq!(stepped.iter().map(|press| (press.0, press.2)).collect::<Vec<_>>(), vec![(Some(1.0), Some(true))]);
+    let mut clicked = router.dispatch(&mut tree, root, &down(20.0 + 90.0 * 0.85, 52.0));
+    clicked.extend(router.dispatch(&mut tree, root, &up(20.0 + 90.0 * 0.85, 52.0)));
+    let clicked = presses(&clicked);
+    assert_eq!(clicked.iter().map(|press| (press.0, press.2)).collect::<Vec<_>>(), vec![(Some(3.0), Some(true))]);
+    assert_ne!(clicked[0].1, stepped[0].1);
+    assert!(tree.node(count).expect("stepper").state.scrub_gesture.is_none(), "a one-shot press leaves nothing open");
+}
+
+/// ⚖️ A number field without a commit policy is a press while it is edited: every keystroke a tick of one gesture, its
+/// blur the release of the final number.
+#[test]
+fn a_typed_number_field_is_one_press_released_on_blur() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    place(&mut tree, Some(root), 1, number_input(), (0.0, 0.0, 160.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let mut commands = router.dispatch(&mut tree, root, &down(80.0, 12.0));
+    commands.extend(router.dispatch(&mut tree, root, &up(80.0, 12.0)));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "2".into() }));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "5".into() }));
+    commands.extend(router.dispatch(&mut tree, root, &down(500.0, 150.0)));
+    let presses = presses(&commands);
+    assert_eq!(presses.iter().map(|press| (press.0, press.2)).collect::<Vec<_>>(), vec![(Some(12.0), Some(false)), (Some(125.0), Some(false)), (Some(125.0), Some(true))]);
+    assert!(presses.iter().all(|press| press.1 == presses[0].1), "one gesture: {presses:?}");
+}
+
+/// ⚖️ A typed draft refused at blur (crossing a hard bound) is never dispatched, so the blur releases the press on the value
+/// it last ticked — the value React's lane releases on — and leaves no press open.
+#[test]
+fn a_refused_draft_releases_the_press_on_the_value_last_ticked() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    let UiNode::Input(bounded) = number_input() else { unreachable!() };
+    let field = place(&mut tree, Some(root), 1, UiNode::Input(UiInputNode { max: Some(100.0), ..bounded }), (0.0, 0.0, 160.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let mut commands = router.dispatch(&mut tree, root, &down(80.0, 12.0));
+    commands.extend(router.dispatch(&mut tree, root, &up(80.0, 12.0)));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "2".into() }));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "5".into() }));
+    commands.extend(router.dispatch(&mut tree, root, &down(500.0, 150.0)));
+    let presses = presses(&commands);
+    assert_eq!(presses.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(12.0), Some(false), None), (Some(12.0), Some(true), None)]);
+    assert!(presses.iter().all(|press| press.1 == presses[0].1), "one gesture: {presses:?}");
+    let state = &tree.node(field).expect("field").state;
+    assert_eq!((state.scrub_gesture.as_deref(), state.scrub_offered.as_ref()), (None, None), "the press is closed");
+}
+
+fn ring() -> UiNode {
+    UiNode::Ring(UiRingNode { id: "orbit".into(), orb_id: "sun".into(), t: 0.0, on_change: binding(), presence: UiPresence::default(), menu: None })
+}
+
+/// ⚖️ A ring drag is one press like a slider's: ticks while the pointer moves, ONE release where the pointer lets go —
+/// even off the control — under one gesture; a lost capture cancels it with no value.
+#[test]
+fn a_ring_drag_is_one_press_and_a_lost_capture_cancels_it() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    let orbit = place(&mut tree, Some(root), 1, ring(), (0.0, 0.0, 100.0, 100.0));
+    let mut router = EventRouter::new("main");
+    let mut commands = router.dispatch(&mut tree, root, &down(90.0, 50.0));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 50.0, y: 90.0, modifiers: EventModifiers::default() }));
+    commands.extend(router.dispatch(&mut tree, root, &up(-250.0, 50.0)));
+    let drag = presses(&commands);
+    assert_eq!(drag.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.0), Some(false), None), (Some(0.25), Some(false), None), (Some(0.5), Some(true), None)]);
+    assert!(drag.iter().all(|press| press.1 == drag[0].1), "one gesture: {drag:?}");
+    let mut cancelled = router.dispatch(&mut tree, root, &down(90.0, 50.0));
+    cancelled.extend(router.dispatch(&mut tree, root, &UiEvent::PointerCancel));
+    let cancelled = presses(&cancelled);
+    assert_eq!(cancelled.iter().map(|press| (press.0, press.2, press.3.clone())).collect::<Vec<_>>(), vec![(Some(0.0), Some(false), None), (None, None, Some("captureLost".to_string()))]);
+    assert_eq!(cancelled[1].1, cancelled[0].1, "the cancel names the open press");
+    assert_ne!(cancelled[0].1, drag[0].1, "another drag is another press");
+    assert!(tree.node(orbit).expect("ring").state.scrub_gesture.is_none(), "the press is closed");
+}
+
+/// ⚖️ A colour field without a commit policy is a press like a number field (React's colour `InputView` rides the same lane):
+/// every keystroke a tick of one gesture carrying the typed text, its blur the release.
+#[test]
+fn a_typed_colour_field_is_one_press_released_on_blur() {
+    let mut tree = UiTree::new();
+    let root = place(&mut tree, None, 0, stack(), (0.0, 0.0, 600.0, 200.0));
+    let UiNode::Input(field) = number_input() else { unreachable!() };
+    place(&mut tree, Some(root), 1, UiNode::Input(UiInputNode { id: "tint".into(), input_kind: "color".into(), value: "#12345".into(), ..field }), (0.0, 0.0, 160.0, 24.0));
+    let mut router = EventRouter::new("main");
+    let mut commands = router.dispatch(&mut tree, root, &down(80.0, 12.0));
+    commands.extend(router.dispatch(&mut tree, root, &up(80.0, 12.0)));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "6".into() }));
+    commands.extend(router.dispatch(&mut tree, root, &down(500.0, 150.0)));
+    let texts: Vec<(Option<String>, Option<String>, Option<bool>)> = commands
+        .iter()
+        .filter_map(|command| match command {
+            UiCommand::App { intent, .. } => intent.descriptor().args,
+            _ => None,
+        })
+        .map(|args| {
+            let field = |key: &str| match &args {
+                DslValue::Object(entries) => entries.iter().find(|(name, _)| name == key).map(|(_, value)| value.clone()),
+                _ => None,
+            };
+            (field("value").and_then(|value| value.as_str().map(str::to_string)), field(SCRUB_GESTURE_ARG).and_then(|gesture| gesture.as_str().map(str::to_string)), field(SCRUB_COMMIT_ARG).and_then(|commit| commit.as_bool()))
+        })
+        .collect();
+    assert_eq!(texts.iter().map(|press| (press.0.clone(), press.2)).collect::<Vec<_>>(), vec![(Some("#123456".to_string()), Some(false)), (Some("#123456".to_string()), Some(true))]);
+    assert!(texts.iter().all(|press| press.1.is_some() && press.1 == texts[0].1), "one gesture: {texts:?}");
+}
+
+```
+
+## 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json
+
+SHA256 a83fdd032d815c80fa163db1792f136f8bcd7dbfcde0fa3d40903ca23f7cb9c6
+
+```json
+{
+  "provenance": {
+    "what": "The language-neutral oracle for what ONE gesture on a retained form control dispatches to the guest: an authored control node + the rect it is painted at + a gesture -> the exact action name and the exact argument map, or nothing.",
+    "why": "On the wgpu target the retained event router documented 'committing the edited value via on_change is not implemented', and only Button/Select/Stack were concretely wired. Toggle/Slider/NumberStepper/Ring/IconSelect appeared solely in is_focusable, and Input's typed value reached no guest at all: the shell's own immediate-mode commit system (commit_focused_input + stepper_metas) is keyed by ids the CHROME's immediate-mode widget walk mints, never a retained document's. Editing a generation's parameters was therefore fully cosmetic — a live caret, a live knob, and nothing dispatched. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️audit-wgpu-parity-2026-09-13.md gaps #1 and #6.",
+    "rule": "ONE commit authority per target. The retained router owns what a press or an edit on a value-carrying node means, and every kind commits through the same two rules React's own retained interpreter commits through.",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts"
+    },
+    "reference": "React's retained path — 🗣️Interpreter/🟦️.tsx (dispatchTrigger per view), 📃️UiDocumentStore/🟦️.tsx (emitIntent: no binding for the trigger => no dispatch), 🛠️ShellHelpers/🟦️.tsx (uiInputField + uiIntentPayload)."
+  },
+  "rules": {
+    "namedByTrigger": "A gesture's scalar payload is named by its TRIGGER, never by the control that fired it: 'delta' for Trigger::Delta, 'value' for every other trigger (uiInputField).",
+    "mergedOverArgs": "The named payload is MERGED OVER the node's authored args, never substituted for them — {...args, ...named} (uiIntentPayload). A payload that replaced the args would throw away the very ids (generationId, questionId, windowId) that tell the guest WHAT the value belongs to.",
+    "unboundIsSilent": "A node that declares no binding for the trigger a gesture would fire dispatches NOTHING (emitIntent answers undefined). On the retained wgpu node an unbound trigger is carried as an EMPTY action name, so the same silence is required of it — this is what keeps a NumberStepper with no 'delta' binding falling back to its absolute 'change' instead of swallowing the gesture.",
+    "inputTriggerByCommitPolicy": "An Input whose commit policy is 'blur' commits through Trigger::Commit, on Enter and on blur only. Every other Input commits through Trigger::Change, on every keystroke — React's InputView makes exactly this choice (commitOnBlur ? 'commit' : 'change').",
+    "inputNumberIsNumeric": "An Input of kind 'number' commits a NUMBER, every other kind commits the raw string (InputView: kind === 'number' ? Number(raw) : raw).",
+    "toggleCommitsTheFlip": "A Toggle commits the value it is moving TO, not the one it is leaving — the pressed state after the press.",
+    "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same track cell paint draws, excluding its fixed readout cell, snapped onto step and clamped into min..=max.",
+    "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
+    "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
+    "continuousPress": "A continuous control (Slider, a NumberStepper's absolute value, a number Input without a commit policy) dispatches PRESSES (scrub protocol, 📓️api-scrub-machine.md): every dispatch of one gesture carries the same non-empty 'gesture' and a 'commit' flag that is true on the release only; 'press' names whether the gesture released ('released': the last dispatch commits) or left its press open ('open': a field still being typed). A keyboard step or a stepper click is a one-shot press: one dispatch that is its own release. Every other dispatch carries neither key.",
+    "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
+  },
+  "cases": [
+    {
+      "name": "input-change-per-keystroke",
+      "why": "The generation3d Form field the whole gap was measured on: ui::input(...).try_on_with(Trigger::Change, 'updateGenerationValues', {generationId, questionId}).",
+      "node": { "kind": "input", "id": "generate.form.width.input", "inputKind": "text", "value": "12", "commit": null },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "5" },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "width", "value": "125" } }
+    },
+    {
+      "name": "input-number-commits-a-number",
+      "why": "A numeric field must not hand the guest a string — dsl::DslValue::Number, never String.",
+      "node": { "kind": "input", "id": "generate.form.count.input", "inputKind": "number", "value": "3", "commit": null },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "7" },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "count", "value": 37.0 }, "press": "open" }
+    },
+    {
+      "name": "input-blur-policy-is-silent-while-typing",
+      "why": "generation3d's inline rename editor binds Trigger::Commit ('Enter / blur'); a keystroke must not dispatch a half-typed name.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "A" },
+      "expected": null
+    },
+    {
+      "name": "input-blur-policy-commits-on-enter",
+      "why": "The other half of the same control — Enter is the gesture that ends an inline rename.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "typeThenEnter", "at": [0.5, 0.5], "text": "A" },
+      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+    },
+    {
+      "name": "input-blur-policy-commits-on-blur",
+      "why": "Losing focus is the only OTHER moment a blur-committing field's value is ever dispatched.",
+      "node": { "kind": "input", "id": "generation.rename.input", "inputKind": "text", "value": "Gen", "commit": "blur" },
+      "binding": { "trigger": "commit", "action": "renameGeneration", "args": { "generationId": "g1" } },
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "typeThenBlur", "at": [0.5, 0.5], "text": "A" },
+      "expected": { "action": "renameGeneration", "args": { "generationId": "g1", "value": "GenA" } }
+    },
+    {
+      "name": "input-unbound-is-silent",
+      "why": "emitIntent answers undefined for a node with no binding — the retained node carries that as an empty action name.",
+      "node": { "kind": "input", "id": "orphan.input", "inputKind": "text", "value": "", "commit": null },
+      "binding": null,
+      "bounds": [0.0, 0.0, 160.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "x" },
+      "expected": null
+    },
+    {
+      "name": "toggle-commits-the-flip",
+      "why": "A press reports the state it moves TO — React's onPressedChange(pressed).",
+      "node": { "kind": "toggle", "id": "preview.grid", "on": false },
+      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 32.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": true } }
+    },
+    {
+      "name": "toggle-already-on-commits-false",
+      "why": "The symmetric half — a pressed toggle reports false, so the guest is never told to re-apply what it already has.",
+      "node": { "kind": "toggle", "id": "preview.grid", "on": true },
+      "binding": { "trigger": "change", "action": "setGridVisible", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 32.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": { "action": "setGridVisible", "args": { "windowId": "w1", "value": false } }
+    },
+    {
+      "name": "slider-reads-its-own-track",
+      "why": "A press 55 pixels into the 71.2-pixel track is inside the interval that snaps to 8, excluding the fixed readout and avoiding a half-step precision tie.",
+      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 0.0, "max": 10.0, "step": 1.0 },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
+      "bounds": [20.0, 0.0, 100.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.55, 0.5] },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 }, "press": "released" }
+    },
+    {
+      "name": "slider-clamps-past-its-end",
+      "why": "A drag that leaves the track still reports a legal value, never one outside min..=max — and the pointer keeps its capture while it is off the control, exactly as it does in a browser.",
+      "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 2.0, "max": 6.0, "step": 2.0 },
+      "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
+      "bounds": [20.0, 0.0, 100.0, 24.0],
+      "gesture": { "kind": "drag", "at": [0.6408, 0.5], "to": [1.4, 0.5] },
+      "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 }, "press": "released" }
+    },
+    {
+      "name": "stepper-increment-falls-back-to-absolute",
+      "why": "No 'delta' binding, so the increment third commits the ABSOLUTE next value — React's NumberStepperView supplies onDelta only when that binding exists.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.85, 0.5] },
+      "expected": { "action": "setGridSpacing", "args": { "windowId": "w1", "value": 2.5 }, "press": "released" }
+    },
+    {
+      "name": "stepper-decrement-prefers-the-delta-binding",
+      "why": "With a 'delta' binding the outer thirds report a RELATIVE step, named 'delta' — the one trigger whose payload field is not 'value'.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "deltaBinding": { "trigger": "delta", "action": "bumpGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.15, 0.5] },
+      "expected": { "action": "bumpGridSpacing", "args": { "windowId": "w1", "delta": -0.5 } }
+    },
+    {
+      "name": "stepper-value-segment-commits-nothing",
+      "why": "The middle third is the value readout, not a button — pressing it must not step.",
+      "node": { "kind": "numberStepper", "id": "settings.spacing", "value": 2.0, "step": 0.5, "uniform": true },
+      "binding": { "trigger": "change", "action": "setGridSpacing", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 90.0, 24.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.5] },
+      "expected": null
+    },
+    {
+      "name": "ring-reads-its-own-circle",
+      "why": "Straight below the centre is a quarter turn — the same angle paint puts the knob at. The point stops just short of the bottom edge because a rect owns its top-left edges and not its bottom-right ones.",
+      "node": { "kind": "ring", "id": "sun.orbit", "orbId": "sun", "t": 0.0 },
+      "binding": { "trigger": "change", "action": "setSunOrbit", "args": { "windowId": "w1" } },
+      "bounds": [0.0, 0.0, 100.0, 100.0],
+      "gesture": { "kind": "press", "at": [0.5, 0.99] },
+      "expected": { "action": "setSunOrbit", "args": { "windowId": "w1", "value": 0.25 } }
+    },
+    {
+      "name": "icon-select-edits-its-icon-string",
+      "why": "An IconSelect's value IS its icon string, which React edits as text in the IconSelector's own editor.",
+      "node": { "kind": "iconSelect", "id": "widget.icon", "value": "circle", "uniform": true, "classifierKind": "icon" },
+      "binding": { "trigger": "change", "action": "setWidgetIcon", "args": { "widgetId": "n1" } },
+      "bounds": [0.0, 0.0, 80.0, 24.0],
+      "gesture": { "kind": "type", "at": [0.5, 0.5], "text": "-dot" },
+      "expected": { "action": "setWidgetIcon", "args": { "widgetId": "n1", "value": "circle-dot" } }
+    }
+  ]
+}
+
+```
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts
+
+SHA256 06445ebbb6867df12ae315bee20c762bff294363a1bd8443d9ddfb1dc1ab2bc8
+
+```typescript
+/**
+ * 🎛️ The TypeScript twin of `🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs`. Both read the SAME
+ * neutral fixture (`🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json`): the Rust law drives the live
+ * wgpu `EventRouter` — real hit-testing, real capture, real focus — and asserts the `UiCommand::App`
+ * it produced; this one re-derives every expected dispatch a SECOND, independent time from React's
+ * own two payload rules, so a divergence between the two targets shows up as a fixture failure
+ * rather than as a silent renderer difference.
+ *
+ * The rules re-derived here are React's, at their source:
+ *  - `🛠️ShellHelpers/🟦️.tsx`'s `uiInputField` — a scalar payload is named by its TRIGGER (`delta`
+ *    for `Trigger::Delta`, `value` for every other).
+ *  - `🛠️ShellHelpers/🟦️.tsx`'s `uiIntentPayload` — the named payload is MERGED OVER the node's
+ *    authored args (`{...args, ...named}`), never substituted for them.
+ *  - `📃️UiDocumentStore/🟦️.tsx`'s `emitIntent` — a node with no binding for the trigger dispatches
+ *    nothing at all.
+ *
+ * The defect both sides pin: the wgpu retained router named committing an edited value through
+ * `on_change` as "a documented gap for a later milestone", so typing into a generation's Form field
+ * moved a caret and reached no guest (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️audit-wgpu-parity-2026-09-13.md` gaps #1/#6).
+ */
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+
+const suiteRoot = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(suiteRoot, "../../../../../../../..");
+const uiRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui");
+
+type Binding = { readonly trigger: string; readonly action: string; readonly args?: Record<string, unknown> };
+type FixtureNode = {
+  readonly kind: string;
+  readonly id: string;
+  readonly inputKind?: string;
+  readonly value?: string | number;
+  readonly commit?: string | null;
+  readonly on?: boolean;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly uniform?: boolean;
+  readonly t?: number;
+  readonly orbId?: string;
+  readonly classifierKind?: string;
+};
+type Gesture = { readonly kind: string; readonly at: readonly [number, number]; readonly to?: readonly [number, number]; readonly text?: string };
+type FixtureCase = {
+  readonly name: string;
+  readonly node: FixtureNode;
+  readonly binding: Binding | null;
+  readonly deltaBinding?: Binding | null;
+  readonly bounds: readonly [number, number, number, number];
+  readonly gesture: Gesture;
+  readonly expected: { readonly action: string; readonly args: Record<string, unknown>; readonly press?: "open" | "released" } | null;
+};
+
+const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎛️retained-control-commit/🔣️.json"), "utf8")) as { readonly cases: readonly FixtureCase[] };
+const sliderPresentation = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎚️slider-presentation/🔣️.json"), "utf8")) as { readonly tokens: { readonly readoutWidth: number } };
+
+/** 🏷️ `uiInputField`: a scalar payload is named by its trigger, never by the control that fired it. */
+const inputField = (trigger: string): string => (trigger === "delta" ? "delta" : "value");
+
+/** 🎬️ `uiIntentPayload`: the named scalar merged OVER the node's authored args. `undefined` when the node declares no binding for that trigger (`emitIntent`). */
+const dispatch = (binding: Binding | null | undefined, value: unknown): { action: string; args: Record<string, unknown> } | undefined => {
+  if (!binding) return undefined;
+  return { action: binding.action, args: { ...(binding.args ?? {}), [inputField(binding.trigger)]: value } };
+};
+
+/** ✍️ The buffer an editable control holds after the gesture's text is typed at the caret, which focus seeds at the END of the declarative value. */
+const typedBuffer = (node: FixtureNode, gesture: Gesture): string => `${node.value ?? ""}${gesture.text ?? ""}`;
+
+/** ⏎️ React's `InputView`: `commit === "blur"` commits through `Trigger::Commit` (Enter / blur), everything else through `Trigger::Change` (every keystroke). */
+const inputCommitsOnBlur = (node: FixtureNode): boolean => node.kind === "input" && node.commit === "blur";
+
+/** 🎚️ The slider value a press at `x` reports from the painted track cell, excluding the fixed readout. */
+const sliderValueAt = (bounds: readonly [number, number, number, number], x: number, min: number, max: number, step: number): number => {
+  const span = max - min;
+  if (!(span > 0)) return min;
+  const trackWidth = Math.max(0, bounds[2] - sliderPresentation.tokens.readoutWidth);
+  const ratio = trackWidth > 0 ? Math.min(1, Math.max(0, (x - bounds[0]) / trackWidth)) : 0;
+  const raw = min + ratio * span;
+  const snapped = step > 0 ? min + Math.round((raw - min) / step) * step : raw;
+  return Math.min(max, Math.max(min, snapped));
+};
+
+/** 💍️ The ring `t` a press reports: the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1). */
+const ringTAt = (bounds: readonly [number, number, number, number], x: number, y: number): number => {
+  const turns = Math.atan2(y - (bounds[1] + bounds[3] * 0.5), x - (bounds[0] + bounds[2] * 0.5)) / (Math.PI * 2);
+  return turns - Math.floor(turns);
+};
+
+/** ➖️➕️ Which of a stepper's three equal segments a point lands in: -1 decrement, 1 increment, 0 the value readout. */
+const stepperSegmentSign = (bounds: readonly [number, number, number, number], x: number): number => {
+  const segment = bounds[2] / 3;
+  if (x < bounds[0] + segment) return -1;
+  if (x >= bounds[0] + segment * 2) return 1;
+  return 0;
+};
+
+const expectedDispatch = (testCase: FixtureCase): { action: string; args: Record<string, unknown> } | undefined => {
+  const { node, bounds, gesture } = testCase;
+  // 🎚️ A drag ends where `to` says; every other gesture acts at `at`.
+  const point = gesture.to ?? gesture.at;
+  const x = bounds[0] + bounds[2] * point[0];
+  const y = bounds[1] + bounds[3] * point[1];
+  switch (node.kind) {
+    case "input": {
+      const buffer = typedBuffer(node, gesture);
+      const value = node.inputKind === "number" ? Number(buffer) : buffer;
+      if (inputCommitsOnBlur(node)) return gesture.kind === "type" ? undefined : dispatch(testCase.binding, value);
+      return dispatch(testCase.binding, value);
+    }
+    case "iconSelect":
+      return dispatch(testCase.binding, typedBuffer(node, gesture));
+    case "toggle":
+      return dispatch(testCase.binding, !node.on);
+    case "slider":
+      return dispatch(testCase.binding, sliderValueAt(bounds, x, node.min ?? 0, node.max ?? 0, node.step ?? 0));
+    case "ring":
+      return dispatch(testCase.binding, ringTAt(bounds, x, y));
+    case "numberStepper": {
+      const sign = stepperSegmentSign(bounds, x);
+      if (sign === 0) return undefined;
+      const step = node.step ?? 0;
+      return dispatch(testCase.deltaBinding, sign * step) ?? dispatch(testCase.binding, (node.value as number) + sign * step);
+    }
+    default:
+      throw new Error(`fixture node kind ${node.kind}`);
+  }
+};
+
+/** 🎚️ React's continuous lanes (`SliderView`, `NumberStepperView` without a `delta` binding, a number `InputView` without a commit policy) dispatch presses: a pointer press or drag on a slider or a stepper side releases, a field still being typed leaves its press open; every other dispatch is no press. */
+const expectedPress = (testCase: FixtureCase): "open" | "released" | undefined => {
+  const { node } = testCase;
+  if (node.kind === "slider") return "released";
+  if (node.kind === "numberStepper") return testCase.deltaBinding ? undefined : "released";
+  if (node.kind === "input" && node.inputKind === "number" && !inputCommitsOnBlur(node)) return testCase.gesture.kind === "type" ? "open" : "released";
+  return undefined;
+};
+
+describe("retained control commit", () => {
+  it("covers every value-carrying component kind", () => {
+    const kinds = new Set(law.cases.map((testCase) => testCase.node.kind));
+    expect([...kinds].sort()).toEqual(["iconSelect", "input", "numberStepper", "ring", "slider", "toggle"]);
+  });
+
+  for (const testCase of law.cases) {
+    it(`${testCase.name} dispatches what React's own payload rules dispatch`, () => {
+      const derived = expectedDispatch(testCase);
+      if (testCase.expected === null) {
+        expect(derived).toBeUndefined();
+        return;
+      }
+      expect(derived).toBeDefined();
+      expect(testCase.expected.press).toBe(expectedPress(testCase));
+      expect(derived!.action).toBe(testCase.expected.action);
+      // 🔢️ Numbers compare by value, not by float identity — the fixture carries the decimal the
+      // guest receives, and both targets round the same gesture to it.
+      expect(Object.keys(derived!.args).sort()).toEqual(Object.keys(testCase.expected.args).sort());
+      for (const [key, value] of Object.entries(testCase.expected.args)) {
+        if (typeof value === "number") expect(derived!.args[key] as number).toBeCloseTo(value, 9);
+        else expect(derived!.args[key]).toEqual(value);
+      }
+    });
+  }
+});
+
+```
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🧪️continuous-presses/🟦️.tsx
+
+SHA256 3caed1a5739132a4d6235a56ae3762e28e8ecf6ff8c790bc57f6c72d52ecb75d
+
+```typescript
+/** 🎚️ The Interpreter's continuous controls speak the scrub protocol (design §13.1 of ticket
+ * 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every move of one press carries the same `gesture` with `commit: false`, the
+ * release carries `commit: true`, a host cancel `{gesture, abort}` carries no value, and two presses never share an
+ * identity. A colour picker's moves arrive as `input` events and its commit as the native `change` event. */
+type TestSource = { readonly url: string };
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
+  const { UiDocumentStore, UiNodeView } = dependencies;
+  type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").AccessibilitySpec;
+  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").Component;
+  type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").StyleSpec;
+  type UiIntent = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiIntent;
+  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+
+  const { describe, expect, it } = vitest;
+  const STYLE: StyleSpec = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
+  const ACCESSIBILITY: AccessibilitySpec = { label: "Field", description: null, live: "off", shortcut: null, hidden: false };
+
+  /** 🧱️ One input node whose `change` trigger is bound to `setValue`. */
+  function field(kind: "color" | "number", value: string): UiNodeRecord {
+    return bound({ type: "input", kind, value, placeholder: null, commit: null, min: null, max: null, step: null, accept: null, precision: null, snaps: [] } as unknown as Component);
+  }
+
+  function bound(component: Component): UiNodeRecord {
+    return { id: 0, key: "field", component, layout: { kind: "leaf", width: "hug", height: "hug" }, style: STYLE, activity: "idle", disabled: false, transition: null, accessibility: ACCESSIBILITY, bindings: [{ trigger: "change", action: "setValue", args: null, capability: null }], menu: null, children: [] } as unknown as UiNodeRecord;
+  }
+
+  async function mount(record: UiNodeRecord) {
+    const { render, cleanup } = await import("@semio-tech/ui-react/test");
+    const store = new UiDocumentStore("s");
+    store.loadSnapshot({ surface: "s", revision: 0, root: 0, nodes: [record], layoutEpoch: 0n });
+    const intents: UiIntent[] = [];
+    const { container } = render(<UiNodeView store={store} id={0} context={{ store, onAction: () => {}, onIntent: (intent) => void intents.push(intent) }} />);
+    const input = container.querySelector("input") as HTMLInputElement;
+    const payloads = () => intents.map((intent) => intent.input as Record<string, unknown>);
+    return { container, input, payloads, cleanup };
+  }
+
+  /** ⌨️ A browser's `input` event after the value moved: React's value tracker sees the new value, so `onChange` fires. */
+  function move(input: HTMLInputElement, value: string): void {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  describe("continuous presses", () => {
+    it("a colour picker's moves are ONE press, released by its native change; a later blur adds nothing", async () => {
+      const { act, fireEvent } = await import("@semio-tech/ui-react/test");
+      const { input, payloads, cleanup } = await mount(field("color", "#336699"));
+      await act(async () => {
+        move(input, "#112233");
+        move(input, "#445566");
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      const press = payloads();
+      expect(press.map(({ value, commit }) => [value, commit])).toEqual([["#112233", false], ["#445566", false], ["#445566", true]]);
+      expect(new Set(press.map(({ gesture }) => gesture)).size).toBe(1);
+      act(() => {
+        fireEvent.blur(input);
+      });
+      expect(payloads().length, "a value-less release of a closed press sends nothing").toBe(3);
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "#778899");
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      const second = payloads().slice(3);
+      expect(second.map(({ value, commit }) => [value, commit]), "a picker that reports only its commit is a one-move press").toEqual([["#778899", false], ["#778899", true]]);
+      expect(second[1]!.gesture).toBe(second[0]!.gesture);
+      expect(second[0]!.gesture, "two presses never share an identity").not.toBe(press[0]!.gesture);
+      cleanup();
+    });
+
+    it("a number field's keystrokes are ONE press released by its blur; unmounting an open press cancels it", async () => {
+      const { act, fireEvent } = await import("@semio-tech/ui-react/test");
+      const { input, payloads, cleanup } = await mount(field("number", "1"));
+      act(() => {
+        move(input, "12");
+        move(input, "125");
+        fireEvent.blur(input);
+      });
+      const press = payloads();
+      expect(press.map(({ value, commit }) => [value, commit])).toEqual([[12, false], [125, false], [125, true]]);
+      expect(new Set(press.map(({ gesture }) => gesture)).size).toBe(1);
+      act(() => {
+        move(input, "7");
+      });
+      cleanup();
+      const cancel = payloads().at(-1)!;
+      expect(cancel.abort, "an open press dies with its control").toBe("retired");
+      expect(cancel.value).toBeUndefined();
+      expect(cancel.gesture).toBe(payloads().at(-2)!.gesture);
+    });
+
+    it("a dragged ring orb is ONE press released by the pointer, and a cancelled pointer drops it", async () => {
+      const { act, fireEvent } = await import("@semio-tech/ui-react/test");
+      const { container, payloads, cleanup } = await mount(bound({ type: "ring", orbId: "orb-1", t: 0.25 } as unknown as Component));
+      const orb = () => container.querySelector('[data-slot="orb"]') as Element;
+      await act(async () => {
+        fireEvent.pointerDown(orb(), { clientX: 10, clientY: 0 });
+      });
+      await act(async () => {
+        fireEvent.pointerMove(window as never, { clientX: 0, clientY: 10 });
+        fireEvent.pointerUp(window as never, { clientX: -10, clientY: 0 });
+      });
+      const press = payloads();
+      expect(press.length).toBeGreaterThanOrEqual(2);
+      expect(press.at(-1)!.commit, "the pointer's release ends the press").toBe(true);
+      expect(press.slice(0, -1).every(({ commit }) => commit === false)).toBe(true);
+      expect(new Set(press.map(({ gesture }) => gesture)).size).toBe(1);
+      await act(async () => {
+        fireEvent.pointerDown(orb(), { clientX: 10, clientY: 0 });
+      });
+      await act(async () => {
+        fireEvent.pointerMove(window as never, { clientX: 0, clientY: -10 });
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+        fireEvent.pointerCancel(window as never);
+      });
+      const cancelled = payloads().slice(press.length);
+      expect(cancelled.at(-1)!.abort, "a cancelled pointer leaves zero trace").toBe("captureLost");
+      expect(cancelled.some(({ commit }) => commit === true)).toBe(false);
+      expect(cancelled.at(-1)!.gesture).not.toBe(press[0]!.gesture);
+      cleanup();
+    });
+  });
+}
+
+```
+
+## Current React RingView authority
+
+Full sourceSHA 998cfcbc9aae6160aa4b93d1721621b96b8cfc8132b82a3a26aaf94b0c2ed543
+
+```typescript
+function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "ring" }>;
+  const lane = useContinuousTriggerLane(context, record);
+  useEffect(() => {
+    const release = () => queueMicrotask(() => {
+      if (lane.open()) lane.commit();
+    });
+    const cancel = () => lane.abort("captureLost");
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [lane]);
+  return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => lane.offer(toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+}
+
+```
+
+## Root-authorized explicit continuous contract correction
+
+Exact permanent portable route produced actual3pass/2fail/30assertions1.398s before correction: strict AJV refuses only missing Ring expected.press; actual TypeScript independent reference returns undefined rather than released; actual React RingView with real owned lane passes all3 lifecycle rows. Registered attempt1 was only schema-authoring refusal; registered attempt2 remained Nx graph-only at correction time. No registered runtimeRED claim.
+
+The shared fixture received exactly two textual edits: Ring expected.press="released" and the continuousPress rule explicitly names Ring. Action/value/args/all15 nodes/gestures/bounds remain byte-identical. Exact two-edit inverse restores captured full original SHA a83fdd032d815c80fa163db1792f136f8bcd7dbfcde0fa3d40903ca23f7cb9c6. Its newSHA b7319ec93b4c0789af6797ccd506f8ebc9e0106a4c401317092562080068b561. TS reference received exactly classifier inclusion and its matching documentation inclusion; inverse restores 06445ebbb6867df12ae315bee20c762bff294363a1bd8443d9ddfb1dc1ab2bc8, newSHA 8108ee59bdefaa089773c13d6bda113bfd1144b1c648b43e13461bc9d0cbcc32. No Rust/event producer or native law was changed. Actual continuous Ring existed already; this corrects contradictory reference metadata, not production behavior.
+
+
+## Current portable execution evidence and scope
+
+Registered baseline rerun2 did reach genuine3pass/2fail/30assertions before the correction,39.3s Nx after separate graph/bootstrap wait. The first registered attempt remained schema-authoring refusal only. Exact permanent direct corrected replay genuinelyGREEN5/34/1.54s. Registered corrected replay+owned command types are currently pending. Current target is @semio-tech/ui-rs:test-control-commit; permanent script command test control-commit; authored launch900.05815. Existing native targets/test features/selectors/budgets unchanged, complete full engine767 still required with sole Native queue.
+
+The portable runtime replays the actual RingView source callbacks isolated by the installed TypeScript parser/transpiler and actual React element creation; its hook/window test ports connect to the real owned createContinuousGestureLane implementation. It is not a DOM rendering or native dispatch proof. Independent AJV admission verifies the shared language-neutral fixture and exact lifecycle vectors; the actual separate TS reference classifier agrees for all15 controls. Allthree lifecycle traces cover release/cancel/idle release and listener cleanup, without suppressing gesture keys.
+
+No authored Cargo manifest or Rust producer/body edits occur in this correction. The UI native package has no package.json; the actual canonical 📋project+📜script route is registered, not a fabricated manifest. Own TS inclusion covers the expanded harness. Strict semantic registrations include both existing retained-control facet and new ring-press schema/fixture/test owner. Generated launch was not edited.
+
+### Independently byte-preserved native inputs
+
+| Path | SHA256 unchanged from captured real RED |
+|---|---|
+| 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs | a7f7c0efafb7607b000af2f438c7dda8e53f642a7e7e411feed38847566d9c72 |
+| 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎛️retained-control-commit/🦀️.rs | d0a81c4aa3e0a1e5afdffe748e2c8e39f66a4958dd68122e3fabcf95e008ec30 |
+| 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️scrub-press/🦀️.rs | fcef429550dbd77f9679ae23c165d03a42479a20130fbe8036fb945067a8b300 |
+
+### Exact eleven authored input paths at this handoff
+
+| Path | Current SHA256 |
+|---|---|
+| 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️retained-control-commit/🔣️.json | 140a0c661e4d7d3d8218d616e7aa7fcd7cb01f17a27fa226c1bfd845801d2c50 |
+| 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️ring-press/🔣️.json | e6e422fa51995bd53ecb4f7b12a85f5dd05a1f2fed4eae962f7431466263b507 |
+| 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎚️ring-press/🔣️.json | af8f5d2e93bdebdd32d313dbf9bd376f63b633baa3caf55f458d5f900b36ef35 |
+| 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/🟦️.ts | 87fd9fdb0070abb8f0671a3f9d694f006873345704098bf00226a349c91a85ff |
+| 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts | edf89f34a77583e2d27a5f625132d1f1dfa469314cdd2276b17b79eab9ec4d14 |
+| 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json | 5e63ce8977948a0bf67a53ec7cffe1449b32457404dc2b6197127ff384961fc4 |
+| 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/tsconfig.json | cef046cf0fd7d8a2a7fd959b5eeab864048995a8ec9649e48dffb04d3b73ef29 |
+| 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️retained-control-commit/🔣️.json | b7319ec93b4c0789af6797ccd506f8ebc9e0106a4c401317092562080068b561 |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/🟦️.ts | 8108ee59bdefaa089773c13d6bda113bfd1144b1c648b43e13461bc9d0cbcc32 |
+| 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json | 870af8ccc3d179da0cfca185ebd0de0fca285e9c078f7e852a6841b913557353 |
+| .vscode/🧩️launch.seed.jsonc | f0777af05bd7100a807448188eaa25076d4e43aa1f53585e8f6ca69e934d8251 |
+
+
+## Registered replay progress
+
+Current serial registered run-many reports test-control-commit target successful after both actual owned generators; check-command-types remains running. The permanent direct5/34 result is separately retained; no hidden Nx assertion-count inference is made. Native launched unchanged complete full engine767 target separately after Root release; real router runtime outcome still pending.
+
+
+## Final bounded SOURCE READY
+
+Actual current registered run-many terminal exit0: test-control-commit and check-command-types both GREEN with their normal two generator prerequisites, cache skipped, serial parallel1. Nx task run3m38s, critical2m10s; separate bootstrap/graph wait is not counted as fixture/runtime time. Exact portable direct evidence remains5tests/34assertions/1.54s. Registered stdout hides individual test counts, so only genuine target success is claimed for Nx. Owned strict TS program includes the new ring-press harness alongside original command/feature-ownership tests. No compiler/Cargo/rustc was invoked by this execution.
+
+Log: 🗑️generated/goal-ui-neutrality/ring-contract-registered-green-types.log. Original native full engine767 replay is solely Native-owned and pending; the existing React full DOM lifecycle target remains separate from this isolated actual-callback replay. No whole architecture/deletion claim.

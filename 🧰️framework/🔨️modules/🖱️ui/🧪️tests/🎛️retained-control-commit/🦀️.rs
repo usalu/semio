@@ -23,7 +23,7 @@ use crate::wgpu::component::ui::{UiIconSelectNode, UiInputNode, UiNode, UiNumber
 use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
 use crate::wgpu::layout::slider_control_presentation;
 use crate::wgpu::IconName;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 use serde_json::Value;
 
 fn law() -> Value {
@@ -80,6 +80,7 @@ fn control_node(case: &Value) -> UiNode {
             on_repeat_last: None,
             presence,
             menu: None,
+            ..Default::default()
         }),
         "toggle" => {
             let mut presence = presence;
@@ -97,6 +98,7 @@ fn control_node(case: &Value) -> UiNode {
             on_change,
             presence,
             menu: None,
+            ..Default::default()
         }),
         "numberStepper" => UiNode::NumberStepper(UiNumberStepperNode {
             id: node["id"].as_str().unwrap_or_default().to_string(),
@@ -110,6 +112,7 @@ fn control_node(case: &Value) -> UiNode {
             on_delta: descriptor(&case["deltaBinding"]),
             presence,
             menu: None,
+            ..Default::default()
         }),
         "ring" => UiNode::Ring(UiRingNode { id: node["id"].as_str().unwrap_or_default().to_string(), orb_id: node["orbId"].as_str().unwrap_or_default().to_string(), t: number(node, "t"), on_change, presence, menu: None }),
         "iconSelect" => UiNode::IconSelect(UiIconSelectNode {
@@ -332,6 +335,7 @@ fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step:
         on_repeat_last: None,
         presence: UiPresence::default(),
         menu: None,
+        ..Default::default()
     })
 }
 
@@ -365,11 +369,13 @@ fn number_field(min: Option<f64>, max: Option<f64>, step: Option<f64>) -> (UiTre
 
 #[test]
 fn a_number_inputs_min_max_and_step_constrain_what_it_commits() {
-    let (mut tree, mut router, root) = number_field(Some(0.0), Some(10.0), None);
-    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "999")), vec![10.0], "a value above `max` is clamped, exactly as React's own `<input type=\"number\" max>` refuses it");
-
-    let (mut tree, mut router, root) = number_field(Some(2.0), Some(10.0), None);
-    assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "-4")), vec![2.0], "…and below `min`");
+    for (min, max, typed, why) in [(Some(0.0), Some(10.0), "999", "above `max`"), (Some(2.0), Some(10.0), "-4", "below `min`")] {
+        let (mut tree, mut router, root) = number_field(min, max, None);
+        assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, typed)), Vec::<f64>::new(), "a value {why} is refused, never clamped into range (the UI contract's hard-bound law)");
+        let field = tree.children(root).next().expect("the field");
+        let state = &tree.node(field).expect("field node").state;
+        assert_eq!((state.edit.as_ref().map(|edit| edit.text.as_str()), state.number_refusal.as_deref()), (Some(typed), Some("")), "the refused draft is kept with its (unlabelled) refusal");
+    }
 
     let (mut tree, mut router, root) = number_field(Some(0.0), Some(10.0), Some(0.5));
     assert_eq!(committed_values(&type_and_commit(&mut tree, &mut router, root, "3.3")), vec![3.5], "`step` snaps to the nearest legal value off `min`");
@@ -457,6 +463,7 @@ fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
             on_delta: ActionDescriptor { controller_id: "ctrl".into(), action: "bumpValue".into(), args: None },
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         });
         let control = place(&mut tree, Some(root), 1, node, (0.0, 0.0, 90.0, 24.0));
         stamp(&mut tree, control, 0, bindings);

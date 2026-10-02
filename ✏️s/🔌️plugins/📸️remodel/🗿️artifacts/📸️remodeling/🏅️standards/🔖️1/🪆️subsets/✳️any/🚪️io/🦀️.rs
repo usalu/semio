@@ -16,8 +16,11 @@
 //! (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, #2553): serializer dispatch is IO, not
 //! engine behaviour.
 
+#[path="🔣️json/🦀️.rs"]
+pub(crate) mod remodeling_json;
+
 use crate::{
-    default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, RemodelingDurableArtifact,
+    default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, Float32Buffer, ByteBuffer, RemodelingDurableArtifact,
     RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
 use semio_framework::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
@@ -155,7 +158,7 @@ pub fn scene_mesh_semio(scene: &RemodelingSnapshot) -> Result<SemioMeshSnapshot,
     Ok(mesh_data_to_semio_mesh(&mesh))
 }
 
-fn packed_colors_to_unit(colors: &PackedU8) -> Vec<f32> {
+fn packed_colors_to_unit(colors: &ByteBuffer) -> Vec<f32> {
     colors.to_u8_vec().iter().map(|component| f32::from(*component) / 255.0).collect()
 }
 
@@ -195,28 +198,28 @@ pub fn scene_mesh_or_cloud_semio(scene: &RemodelingSnapshot) -> Result<SemioMesh
     }
 }
 
-fn push_f32_chunks(chunks: &mut Vec<String>, field: u8, values: &[f32]) {
+fn push_f32_chunks(chunks: &mut Vec<ByteBuffer>, field: u8, values: &[f32]) {
     for window in values.chunks(REMODELING_MESH_CHUNK_VALUE_BYTES / 4) {
         let mut framed = Vec::with_capacity(1 + window.len() * 4);
         framed.push(field);
         framed.extend(window.iter().flat_map(|value| value.to_le_bytes()));
-        chunks.push(base64_codec::base64_standard_encode(framed));
+        chunks.push(ByteBuffer(framed));
     }
 }
 
-fn push_u32_chunks(chunks: &mut Vec<String>, field: u8, values: &[u32]) {
+fn push_u32_chunks(chunks: &mut Vec<ByteBuffer>, field: u8, values: &[u32]) {
     for window in values.chunks(REMODELING_MESH_CHUNK_VALUE_BYTES / 4) {
         let mut framed = Vec::with_capacity(1 + window.len() * 4);
         framed.push(field);
         framed.extend(window.iter().flat_map(|value| value.to_le_bytes()));
-        chunks.push(base64_codec::base64_standard_encode(framed));
+        chunks.push(ByteBuffer(framed));
     }
 }
 
 /// 🧱️ Frames a `MeshData` into the exact durable-chunk shape `apply_mesh_chunk` replays: one leading
 /// field tag per chunk (0 positions, 1 normals, 2 colors, 3 indices, 4 uvs — emitted in strictly
 /// non-decreasing tag order, which that replayer requires) and at most 4092 payload bytes each.
-fn mesh_durable_chunks(mesh: &MeshData) -> Vec<String> {
+fn mesh_durable_chunks(mesh: &MeshData) -> Vec<ByteBuffer> {
     let mut chunks = Vec::new();
     push_f32_chunks(&mut chunks, 0, &mesh.positions);
     push_f32_chunks(&mut chunks, 1, &mesh.normals);
@@ -226,8 +229,10 @@ fn mesh_durable_chunks(mesh: &MeshData) -> Vec<String> {
     chunks
 }
 
-fn mesh_content_id(chunks: &[String]) -> String {
-    format!("{}-{:016x}", store::content_id("remodeling-mesh-io", chunks.join("\u{1f}").as_bytes()), chunks.len())
+fn mesh_content_id(chunks: &[ByteBuffer]) -> String {
+    let mut digest = crate::RemodelingContentDigest::default();
+    for chunk in chunks { digest.record(&chunk.0); }
+    digest.content_id(crate::RemodelingContentKind::Mesh)
 }
 
 /// 🧱️ Admits an imported mesh into the scene as REAL durable content: content-addressed chunks in
@@ -271,8 +276,8 @@ pub fn scene_from_semio_cloud(semio: &SemioMeshSnapshot) -> Result<RemodelingSna
         return Err("the decoded point set carries no positions".to_string());
     }
     let mut scene = default_remodeling_scene();
-    let colors = (!mesh.colors.is_empty()).then(|| PackedU8::from_u8_slice(&mesh.colors.iter().map(|component| (component.clamp(0.0, 1.0) * 255.0).round() as u8).collect::<Vec<u8>>()));
-    scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&mesh.positions), colors });
+    let colors = (!mesh.colors.is_empty()).then(|| ByteBuffer::from_u8_slice(&mesh.colors.iter().map(|component| (component.clamp(0.0, 1.0) * 255.0).round() as u8).collect::<Vec<u8>>()));
+    scene.results.sparse = Some(SparseCloud { points: Float32Buffer::from_f32_slice(&mesh.positions), colors });
     if !mesh.indices.is_empty() {
         seed_remodeling_mesh(&mut scene, &mesh)?;
     }

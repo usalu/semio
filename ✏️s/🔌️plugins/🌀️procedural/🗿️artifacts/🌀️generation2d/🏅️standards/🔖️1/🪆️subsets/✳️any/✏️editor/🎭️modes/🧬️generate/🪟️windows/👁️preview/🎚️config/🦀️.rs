@@ -50,7 +50,7 @@ impl protocol::OpText for Generation2dGeneratePreviewWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         for (keyword, spec_fn) in &<Self as dsl::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -58,7 +58,7 @@ impl protocol::OpText for Generation2dGeneratePreviewWindowConfigMutation {
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let spec = <Self as dsl::DslVariants>::variants().iter().find(|(key, _)| key == &keyword).map(|(_, spec)| spec()).expect("Generation2d generate-preview mutation variant");
+        let spec = <Self as dsl::DslVariants>::variants().iter().find(|(key, _)| key == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("Generation2d generate-preview mutation variant");
         dsl::print(&record, &spec, dsl::JoinMode::Inline)
     }
 }

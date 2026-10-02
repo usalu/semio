@@ -357,7 +357,7 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.pdf".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Pdf", "Pdf"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Pdf", "Pdf"),
         source_format: STDIO_PDF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

@@ -34,8 +34,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateCa
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" erstellen", self.camera.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" erstellen", self.camera.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.camera.id.clone()]

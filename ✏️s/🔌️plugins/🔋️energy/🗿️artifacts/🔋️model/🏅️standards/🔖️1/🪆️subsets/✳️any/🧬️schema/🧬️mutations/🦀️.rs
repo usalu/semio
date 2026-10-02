@@ -294,9 +294,19 @@ pub use super::replace_shading_surface_vertices::{replace_shading_surface_vertic
 pub use super::replace_surface_vertices::{replace_surface_vertices, ReplaceSurfaceVertices};
 pub use super::replace_time_series_schedule_values::{replace_time_series_schedule_values, ReplaceTimeSeriesScheduleValues};
 pub use super::unbind_weather_file::{unbind_weather_file, UnbindWeatherFile};
-pub use super::update_ground_temperature::{update_ground_temperature, UpdateGroundTemperature};
-pub use super::update_run_period::{update_run_period, UpdateRunPeriod};
-pub use super::update_site::{update_site, UpdateSite};
+pub use super::change_site_latitude::{change_site_latitude, ChangeSiteLatitude};
+pub use super::change_site_longitude::{change_site_longitude, ChangeSiteLongitude};
+pub use super::change_site_elevation::{change_site_elevation, ChangeSiteElevation};
+pub use super::change_site_time_zone::{change_site_time_zone, ChangeSiteTimeZone};
+pub use super::change_site_north_axis::{change_site_north_axis, ChangeSiteNorthAxis};
+pub use super::change_ground_temperature_building_surface::{change_ground_temperature_building_surface, ChangeGroundTemperatureBuildingSurface};
+pub use super::change_ground_temperature_shallow::{change_ground_temperature_shallow, ChangeGroundTemperatureShallow};
+pub use super::change_ground_temperature_deep::{change_ground_temperature_deep, ChangeGroundTemperatureDeep};
+pub use super::change_run_period_start_month::{change_run_period_start_month, ChangeRunPeriodStartMonth};
+pub use super::change_run_period_start_day::{change_run_period_start_day, ChangeRunPeriodStartDay};
+pub use super::change_run_period_end_month::{change_run_period_end_month, ChangeRunPeriodEndMonth};
+pub use super::change_run_period_end_day::{change_run_period_end_day, ChangeRunPeriodEndDay};
+pub use super::change_run_period_year::{change_run_period_year, ChangeRunPeriodYear};
 pub use super::replace_fenestration_vertices::{replace_fenestration_vertices, ReplaceFenestrationVertices};
 pub use super::change_glazing_material_thickness::{change_glazing_material_thickness, ChangeGlazingMaterialThickness};
 pub use super::change_glazing_material_conductivity::{change_glazing_material_conductivity, ChangeGlazingMaterialConductivity};
@@ -318,9 +328,19 @@ pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
 pub enum EnergyModelMutation {
     RenameModel(RenameModel),
     ChangeModelVersion(ChangeModelVersion),
-    UpdateSite(UpdateSite),
-    UpdateGroundTemperature(UpdateGroundTemperature),
-    UpdateRunPeriod(UpdateRunPeriod),
+    ChangeSiteLatitude(ChangeSiteLatitude),
+    ChangeSiteLongitude(ChangeSiteLongitude),
+    ChangeSiteElevation(ChangeSiteElevation),
+    ChangeSiteTimeZone(ChangeSiteTimeZone),
+    ChangeSiteNorthAxis(ChangeSiteNorthAxis),
+    ChangeGroundTemperatureBuildingSurface(ChangeGroundTemperatureBuildingSurface),
+    ChangeGroundTemperatureShallow(ChangeGroundTemperatureShallow),
+    ChangeGroundTemperatureDeep(ChangeGroundTemperatureDeep),
+    ChangeRunPeriodStartMonth(ChangeRunPeriodStartMonth),
+    ChangeRunPeriodStartDay(ChangeRunPeriodStartDay),
+    ChangeRunPeriodEndMonth(ChangeRunPeriodEndMonth),
+    ChangeRunPeriodEndDay(ChangeRunPeriodEndDay),
+    ChangeRunPeriodYear(ChangeRunPeriodYear),
     ReplaceAirflowNetwork(ReplaceAirflowNetwork),
     AddOutputVariable(AddOutputVariable),
     RemoveOutputVariable(RemoveOutputVariable),
@@ -610,9 +630,19 @@ pub enum EnergyModelMutation {
 pub const KINDS: &[&str] = &[
     "rename-model",
     "change-model-version",
-    "update-site",
-    "update-ground-temperature",
-    "update-run-period",
+    "change-site-latitude",
+    "change-site-longitude",
+    "change-site-elevation",
+    "change-site-time-zone",
+    "change-site-north-axis",
+    "change-ground-temperature-building-surface",
+    "change-ground-temperature-shallow",
+    "change-ground-temperature-deep",
+    "change-run-period-start-month",
+    "change-run-period-start-day",
+    "change-run-period-end-month",
+    "change-run-period-end-day",
+    "change-run-period-year",
     "replace-airflow-network",
     "add-output-variable",
     "remove-output-variable",
@@ -902,9 +932,19 @@ pub const KINDS: &[&str] = &[
 pub const DIRECTORIES: &[(&str, &str)] = &[
     ("rename-model", "🏷️rename-model"),
     ("change-model-version", "🔢️change-model-version"),
-    ("update-site", "🌍️update-site"),
-    ("update-ground-temperature", "🌡️update-ground-temperature"),
-    ("update-run-period", "📅️update-run-period"),
+    ("change-site-latitude", "🌍️change-site-latitude"),
+    ("change-site-longitude", "🌏️change-site-longitude"),
+    ("change-site-elevation", "⛰️change-site-elevation"),
+    ("change-site-time-zone", "🕰️change-site-time-zone"),
+    ("change-site-north-axis", "🔝️change-site-north-axis"),
+    ("change-ground-temperature-building-surface", "🌡️change-ground-temperature"),
+    ("change-ground-temperature-shallow", "🌱️change-ground-temperature"),
+    ("change-ground-temperature-deep", "⛏️change-ground-temperature"),
+    ("change-run-period-start-month", "🛫️change-run-period-start"),
+    ("change-run-period-start-day", "▶️change-run-period-start"),
+    ("change-run-period-end-month", "🛬️change-run-period-end"),
+    ("change-run-period-end-day", "⏹️change-run-period-end"),
+    ("change-run-period-year", "📅️change-run-period-year"),
     ("replace-airflow-network", "🫧️replace-airflow-network"),
     ("add-output-variable", "📊️add-output-variable"),
     ("remove-output-variable", "📉️remove-output-variable"),
@@ -1006,16 +1046,16 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("change-infiltration-schedule", "⏳️change-infiltration"),
     ("change-infiltration-flow-per-exterior-area", "🌫️change-infiltration-flow"),
     ("change-infiltration-constant-term-coefficient", "🅰️change-infiltration"),
-    ("change-infiltration-temperature-term-coefficient", "🅱️change-infiltration-temperature-term-coefficient"),
+    ("change-infiltration-temperature-term-coefficient", "🅱️change-infiltration-temperature-term"),
     ("change-infiltration-velocity-term-coefficient", "🆎️change-infiltration"),
-    ("change-infiltration-velocity-squared-term-coefficient", "🆑️change-infiltration-velocity-squared-term-coefficient"),
+    ("change-infiltration-velocity-squared-term-coefficient", "🆑️change-infiltration-velocity-squared-term"),
     ("create-mechanical-ventilation", "🌪️create-mechanical"),
     ("delete-mechanical-ventilation", "🚫️delete-mechanical"),
     ("change-mechanical-ventilation-zone", "🧭️change-mechanical"),
     ("change-mechanical-ventilation-schedule", "📆️change-mechanical"),
     ("change-mechanical-ventilation-design-flow", "🚿️change-mechanical"),
-    ("change-mechanical-ventilation-fan-total-efficiency", "💠️change-mechanical-ventilation-fan-total-efficiency"),
-    ("change-mechanical-ventilation-fan-delta-pressure", "🎈️change-mechanical-ventilation-fan-delta-pressure"),
+    ("change-mechanical-ventilation-fan-total-efficiency", "💠️change-mechanical-ventilation-fan-total"),
+    ("change-mechanical-ventilation-fan-delta-pressure", "🎈️change-mechanical-ventilation-fan-delta"),
     ("change-infiltration-method", "🔬️change-infiltration-method"),
     ("change-infiltration-design-flow-ach", "🔄️change-infiltration-design"),
     ("change-infiltration-effective-leakage-area", "🕳️change-infiltration"),
@@ -1031,7 +1071,7 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("create-humidistat", "🌂️create-humidistat"),
     ("delete-humidistat", "🏜️delete-humidistat"),
     ("change-humidistat-zone", "🏙️change-humidistat-zone"),
-    ("change-humidistat-humidifying-setpoint-schedule", "☔️change-humidistat-humidifying-setpoint-schedule"),
+    ("change-humidistat-humidifying-setpoint-schedule", "☔️change-humidistat-humidifying-setpoint"),
     ("change-humidistat-dehumidifying-setpoint-schedule", "🏝️change-humidistat"),
     ("change-humidistat-humidifying-throttle-range", "🌧️change-humidistat"),
     ("change-humidistat-dehumidifying-throttle-range", "🧻️change-humidistat"),
@@ -1042,8 +1082,8 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("change-ideal-loads-system-min-cooling-supply-air-temp", "🔵️change-ideal-loads-system"),
     ("change-ideal-loads-system-max-heating-capacity", "⛽️change-ideal-loads-system"),
     ("change-ideal-loads-system-max-cooling-capacity", "🟧️change-ideal-loads-system"),
-    ("change-ideal-loads-system-outdoor-air-per-person", "🧍️change-ideal-loads-system-outdoor-air-per-person"),
-    ("change-ideal-loads-system-outdoor-air-per-area", "🔳️change-ideal-loads-system-outdoor-air-per-area"),
+    ("change-ideal-loads-system-outdoor-air-per-person", "🧍️change-ideal-loads-system-outdoor-air-per"),
+    ("change-ideal-loads-system-outdoor-air-per-area", "🔳️change-ideal-loads-system-outdoor-air-per"),
     ("create-zone-equipment", "🛠️create-zone-equipment"),
     ("delete-zone-equipment", "🗑️delete-zone-equipment"),
     ("change-zone-equipment-zone", "🏬️change-zone-equipment-zone"),
@@ -1208,12 +1248,8 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
         let outcome = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    // 🌉️ `MutationMessage` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`) is a
-    // framework-owned type that has not itself gained `ToValue`/`FromValue` — its two call sites
-    // here go through the PRE-EXISTING `protocol::to_dsl_value` serde bridge (framework-internal,
-    // exempt) and land in `pack::json::Value` via `pack::json::from_dsl_value`.
-    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value))?;
-    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value))?;
+    let messages_json = pack::json::from_dsl_value(&forward.messages().to_value());
+    let inverse_messages_json = pack::json::from_dsl_value(&inverse_messages.to_value());
     let report = pack::json::object([
         ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
         ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
@@ -1236,9 +1272,19 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
     vec![
         rename_model("Probe".to_string()),
         change_model_version("2".to_string()),
-        update_site(52.4, 9.7, 55.0, 1.0, 0.0),
-        update_ground_temperature(vec![10.0; 12], vec![9.0; 12], 8.0),
-        update_run_period(1, 1, 1, 31, 2026),
+        change_site_latitude(52.4),
+        change_site_longitude(9.7),
+        change_site_elevation(55.0),
+        change_site_time_zone(1.0),
+        change_site_north_axis(15.0),
+        change_ground_temperature_building_surface(7, 21.5),
+        change_ground_temperature_shallow(7, 21.5),
+        change_ground_temperature_deep(8.0),
+        change_run_period_start_month(2),
+        change_run_period_start_day(3),
+        change_run_period_end_month(11),
+        change_run_period_end_day(30),
+        change_run_period_year(2027),
         replace_airflow_network(true, vec![1], vec![1], 0, vec![7]),
         add_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string(), crate::model::OutputReportFrequency::Hourly),
         remove_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string()),

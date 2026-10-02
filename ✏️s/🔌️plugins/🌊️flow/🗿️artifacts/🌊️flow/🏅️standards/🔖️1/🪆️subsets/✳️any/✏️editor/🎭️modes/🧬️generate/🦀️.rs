@@ -2,7 +2,13 @@
 //! three windows (generation list, input form, evaluated preview).
 
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
-use semio_framework_plugin::{create_default_layout, create_named_layout, ActionKind, CommandDefinition, LocalizedLabel, ModeDefinition, NamedLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_plugin::create_named_layout;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::NamedLayout;
 
 pub const FLOW_PLAY_MODE_GENERATE: &str = "generate";
 pub const FLOW_PLAY_LAYOUT_GENERATE: &str = "flow-generate";

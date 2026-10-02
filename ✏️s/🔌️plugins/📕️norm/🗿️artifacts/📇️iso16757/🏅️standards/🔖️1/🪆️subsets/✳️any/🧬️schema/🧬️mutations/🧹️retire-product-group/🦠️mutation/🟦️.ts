@@ -1,4 +1,3 @@
-/** mutation payload — mirrors `RetireProductGroup`. */
-export interface RetireProductGroup {
-  id: string;
-}
+/** 🧹️ `retire-product-group` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseRetireProductGroup, type RetireProductGroup } from "../🧬️schema/🟦️.ts";

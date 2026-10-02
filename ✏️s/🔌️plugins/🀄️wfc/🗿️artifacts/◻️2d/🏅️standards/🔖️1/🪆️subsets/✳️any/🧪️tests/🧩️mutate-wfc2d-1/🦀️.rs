@@ -16,7 +16,7 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_artifact_wfc_2d::standards::v1::subsets::any::schema::mutations::wfc2d_mutation_report_json;
-    use semio_s_plugin_stdio_test_oracle::law::vector::{self, Leaves};
+    use semio_repo_test_host::law::vector::{self, Leaves};
 
     fn report(leaves: &Leaves) -> Result<String, String> {
         wfc2d_mutation_report_json(&leaves.before, &leaves.mutation, &leaves.after)

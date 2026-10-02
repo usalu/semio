@@ -19,7 +19,7 @@
 //   bun 📜️script.ts bcf-project --input <a.bcf>
 //   bun 📜️script.ts bcf-compare --input <expected.bcf> --input <actual.bcf>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch shape is mirrored from
 

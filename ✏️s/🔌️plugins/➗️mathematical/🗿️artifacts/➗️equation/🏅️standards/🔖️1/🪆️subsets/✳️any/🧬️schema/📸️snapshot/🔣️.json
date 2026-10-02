@@ -4,11 +4,177 @@
   "title": "EquationSnapshot",
   "type": "object",
   "additionalProperties": false,
-  "required": ["notation", "results", "computed", "equation"],
+  "required": [
+    "notation",
+    "results",
+    "computed",
+    "equation"
+  ],
   "properties": {
-    "notation": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "results": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "computed": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json", "x-semio-state": "artifact" },
-    "equation": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json", "x-semio-state": "artifact" }
+    "notation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "results": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "computed": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "equation": {
+      "$ref": "#/$defs/expression",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "expression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expr",
+        "nextLabel"
+      ],
+      "properties": {
+        "expr": {
+          "$ref": "#/$defs/node"
+        },
+        "nextLabel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "kind"
+      ],
+      "properties": {
+        "label": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "kind": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "lexeme"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "integer"
+                },
+                "lexeme": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "numer",
+                "denom"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "rational"
+                },
+                "numer": {
+                  "type": "string"
+                },
+                "denom": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "name"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "symbol"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "terms"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "add"
+                },
+                "terms": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/node"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "factors"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "mul"
+                },
+                "factors": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/node"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "base",
+                "exponent"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "pow"
+                },
+                "base": {
+                  "$ref": "#/$defs/node"
+                },
+                "exponent": {
+                  "$ref": "#/$defs/node"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

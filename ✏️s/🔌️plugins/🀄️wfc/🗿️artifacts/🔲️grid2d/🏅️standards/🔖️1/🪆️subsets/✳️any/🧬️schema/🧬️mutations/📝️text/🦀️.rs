@@ -97,7 +97,7 @@ pub fn operation_to_dsl(operation: &Grid2dMutation) -> Grid2dOperationDsl {
         Grid2dMutation::CreateTile(CreateTile { tile }) => Grid2dOperationDsl::CreateTile { tile: tile_to_dsl(tile) },
         Grid2dMutation::DeleteTile(DeleteTile { id }) => Grid2dOperationDsl::DeleteTile { id: id.clone() },
         Grid2dMutation::ChangeTileWeight(ChangeTileWeight { id, weight }) => Grid2dOperationDsl::ChangeTileWeight { id: id.clone(), weight: *weight },
-        Grid2dMutation::ChangeTileMedia(ChangeTileMedia { id, media }) => Grid2dOperationDsl::ChangeTileMedia { id: id.clone(), media: dsl::to_dsl_value(media).unwrap_or(dsl::DslValue::Null) },
+        Grid2dMutation::ChangeTileMedia(ChangeTileMedia { id, media }) => Grid2dOperationDsl::ChangeTileMedia { id: id.clone(), media: semio_framework_value::ToValue::to_value(media) },
         Grid2dMutation::CreateRule(CreateRule { rule }) => Grid2dOperationDsl::CreateRule { rule: rule_to_dsl(rule) },
         Grid2dMutation::DeleteRule(DeleteRule { id }) => Grid2dOperationDsl::DeleteRule { id: id.clone() },
         Grid2dMutation::PinCell(PinCell { x, y, tile_id }) => Grid2dOperationDsl::PinCell { x: *x, y: *y, tile_id: tile_id.clone() },
@@ -119,7 +119,7 @@ pub fn operation_from_dsl(operation: Grid2dOperationDsl) -> Result<Grid2dMutatio
         Grid2dOperationDsl::ChangeTileMedia { id, media } => {
             let media: WfcTileMedia2d = match media {
                 dsl::DslValue::Null => WfcTileMedia2d::default(),
-                other => dsl::from_dsl_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+                other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
             };
             Grid2dMutation::ChangeTileMedia(ChangeTileMedia { id, media })
         }
@@ -141,7 +141,7 @@ impl protocol::OpText for Grid2dOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -151,7 +151,7 @@ impl protocol::OpText for Grid2dOperationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

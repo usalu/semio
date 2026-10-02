@@ -21,4 +21,7 @@ await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-semio
 "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
 "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
 "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+"🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🔺️geometry/🟦️.ts",
+"🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📃️media/🟦️.ts",
+"🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🔗️relationships/🟦️.ts",
 ]});

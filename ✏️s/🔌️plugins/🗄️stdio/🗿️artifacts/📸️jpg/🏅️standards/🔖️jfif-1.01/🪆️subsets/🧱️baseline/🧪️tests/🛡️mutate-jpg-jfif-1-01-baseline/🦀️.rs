@@ -13,7 +13,7 @@
 //! case, `../🔁️round-trip-jpg-jfif-1-01-baseline`.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::{apply, project, read_axes, Axes};
+use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::baseline::{apply, project, read_axes, Axes};
 
 //#region 🔖️Kinds
 
@@ -59,11 +59,11 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_jpg::io::decode_jpg;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, jpg_baseline_conformance_codes, JpgBaselineMutation};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read

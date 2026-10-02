@@ -8,9 +8,7 @@
     "nativeTargets",
     "arguments",
     "artifactArguments",
-    "artifactProgress",
     "artifactCapture",
-    "generatedWrites",
     "artifactTestRunner"
   ],
   "additionalProperties": false,
@@ -159,27 +157,6 @@
         }
       }
     },
-    "artifactProgress": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "label",
-        "intervalMs",
-        "pattern"
-      ],
-      "properties": {
-        "label": {
-          "type": "string"
-        },
-        "intervalMs": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "pattern": {
-          "type": "string"
-        }
-      }
-    },
     "artifactCapture": {
       "type": "object",
       "additionalProperties": false,
@@ -205,35 +182,6 @@
         "delayMs": {
           "type": "integer",
           "minimum": 1
-        }
-      }
-    },
-    "generatedWrites": {
-      "type": "array",
-      "minItems": 2,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "initial",
-          "next",
-          "rewritten"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "initial": {
-            "type": "string"
-          },
-          "next": {
-            "type": "string"
-          },
-          "rewritten": {
-            "type": "boolean"
-          }
         }
       }
     },

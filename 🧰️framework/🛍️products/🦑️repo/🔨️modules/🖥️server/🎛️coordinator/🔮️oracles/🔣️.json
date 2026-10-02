@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎛️ Contribution of the repo coordinator owner. Every entry is resolved from the repository's own node_modules or from the Node standard library, imported only from 🧪️tests/**/🟦️.ts, and never reachable from any implementation. Ids are owner-scoped, so this survey never reuses another owner's node:crypto entry.",
   "oracles": [

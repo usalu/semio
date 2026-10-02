@@ -83,7 +83,12 @@
           "invalid-owner-pattern",
           "unknown-owner-role",
           "duplicate-owner-rule",
-          "empty-owner-pattern"
+          "empty-owner-pattern",
+          "empty-source-selector",
+          "empty-target-selector",
+          "duplicate-source-role",
+          "duplicate-target-role",
+          "unknown-rule-field"
         ]
       }
     }
@@ -132,7 +137,6 @@
             "properties": {
               "fromRoles": {
                 "type": "array",
-                "minItems": 1,
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
@@ -141,7 +145,6 @@
               },
               "toRoles": {
                 "type": "array",
-                "minItems": 1,
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
@@ -173,7 +176,72 @@
                   "minLength": 1
                 }
               }
-            }
+            },
+            "allOf": [
+              {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "fromRoles": {
+                        "type": "array",
+                        "minItems": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "fromOwnerPaths"
+                    ],
+                    "properties": {
+                      "fromOwnerPaths": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "toRoles": {
+                        "type": "array",
+                        "minItems": 1
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "toOwnerSegments"
+                    ],
+                    "properties": {
+                      "toOwnerSegments": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "^[^/\\\\]+$",
+                          "not": {
+                            "enum": [
+                              ".",
+                              ".."
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
           }
         },
         "ownerRoles": {

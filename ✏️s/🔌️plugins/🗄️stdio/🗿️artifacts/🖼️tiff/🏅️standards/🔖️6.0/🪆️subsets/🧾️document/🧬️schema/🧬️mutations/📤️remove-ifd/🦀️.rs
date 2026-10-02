@@ -37,8 +37,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for RemoveIfdMutation {
             None => Vec::new(),
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove IFD", "IFD entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove IFD", "IFD entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-ifd".into()]
@@ -54,8 +54,8 @@ pub fn contribute(base: &TiffSnapshot, index: usize) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct/🦠️mutation/🔣️.json")).expect("committed remove-ifd payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-ifd payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

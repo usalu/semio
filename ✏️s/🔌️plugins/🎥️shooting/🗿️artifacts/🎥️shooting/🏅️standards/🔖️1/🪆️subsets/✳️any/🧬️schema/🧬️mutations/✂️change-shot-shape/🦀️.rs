@@ -23,8 +23,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeShotShape {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change shot \"{}\" shape", self.id), &format!("Form von Aufnahme \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change shot \"{}\" shape", self.id), &format!("Form von Aufnahme \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

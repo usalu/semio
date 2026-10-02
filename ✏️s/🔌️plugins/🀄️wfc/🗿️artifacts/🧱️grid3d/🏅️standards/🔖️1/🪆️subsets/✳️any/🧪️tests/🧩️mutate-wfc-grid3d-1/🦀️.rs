@@ -15,7 +15,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::vector::{self, Leaves};
+    use semio_repo_test_host::law::vector::{self, Leaves};
     use semio_s_artifact_wfc_grid3d::standards::v1::subsets::any::schema::mutations::{grid3d_mutation_report_json};
 
     fn report(leaves: &Leaves) -> Result<String, String> {

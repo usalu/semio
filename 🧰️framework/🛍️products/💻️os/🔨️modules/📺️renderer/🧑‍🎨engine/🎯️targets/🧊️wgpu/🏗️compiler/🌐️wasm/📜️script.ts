@@ -1,10 +1,11 @@
+import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { stageArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { runTool } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
-import { buildBudgetMs } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+
 import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 export type TrunkRendererBuild = { readonly rustPackageRoot: string; readonly workspace: string; readonly profile: string; readonly toolWorkspace?: string; readonly stateRoot?: string; readonly signal?: AbortSignal };
@@ -45,7 +46,7 @@ export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<v
       files.set(relative(dist, path).replaceAll("\\", "/"), path);
     }
     for (const name of [`${manifest.package.name}.js`, `${manifest.package.name}_bg.wasm`]) if (!files.has(name)) throw new Error(`Trunk omitted its renderer artifact: ${name}`);
-    await stageArtifacts(output, `wgpu-renderer:${profile}`, files, { signal, leaseDirectory: repoCacheDirectory(workspace, "agents", "resource-leases") });
+    await stageRepositoryArtifacts(output, `wgpu-renderer:${profile}`, files, { signal, leaseDirectory: repoCacheDirectory(workspace, "agents", "resource-leases") });
     console.log(`[nx-trunk] Published ${files.size} renderer files: ${output}`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

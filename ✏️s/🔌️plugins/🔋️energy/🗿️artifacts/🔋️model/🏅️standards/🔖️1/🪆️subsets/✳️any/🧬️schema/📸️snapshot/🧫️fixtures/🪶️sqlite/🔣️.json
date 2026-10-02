@@ -1,0 +1,754 @@
+{
+  "dialect": "s.energy.model@1/*",
+  "schema": "energy.custom\u0000🌍",
+  "artifactPreview": "ephemeral preview",
+  "linkSlotDeltaKinds": ["detached", "attached"],
+  "capabilityExports": [
+    "ENERGY_MODEL_SQLITE_SCHEMA",
+    "energyModelToSqliteDatabase",
+    "energyModelFromSqliteDatabase"
+  ],
+  "literalIdentities": [
+    {
+      "childId": "local alias",
+      "target": {
+        "artifactId": "",
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    },
+    {
+      "childId": "🌡️\u0000!@/",
+      "target": {
+        "artifactId": "target!@/",
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  ],
+  "entityIds": [
+    0,
+    4294967295,
+    4294967295
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000042",
+    "0000000000000001",
+    "7fefffffffffffff"
+  ],
+  "controls": {
+    "largeTextBytes": 100000,
+    "cancelAfter": 65536,
+    "wideRows": 2048,
+    "rowCheckpoint": 256
+  },
+  "modelCollections": [
+    "zones",
+    "spaces",
+    "surfaces",
+    "fenestrations",
+    "materials",
+    "glazing_materials",
+    "gas_materials",
+    "constructions",
+    "people",
+    "lighting",
+    "equipment",
+    "thermostats",
+    "humidistats",
+    "setpoint_managers",
+    "ideal_loads",
+    "zone_equipment",
+    "air_loops",
+    "plant_loops",
+    "outdoor_air_systems",
+    "infiltrations",
+    "mechanical_ventilations",
+    "shading_surfaces",
+    "space_lists",
+    "thermal_enclosures",
+    "adjacency_pairs",
+    "electrical_load_centers",
+    "pv_systems",
+    "battery_storage",
+    "shw_systems",
+    "solar_thermal_systems",
+    "refrigeration_systems",
+    "water_systems",
+    "faults",
+    "output_variables",
+    "sizing_objects",
+    "daylight_zones",
+    "room_air_models"
+  ],
+  "scheduleCollections": [
+    "constants",
+    "daily",
+    "weekly",
+    "annual",
+    "time_series"
+  ],
+  "completeModel": {
+    "name": "literal full model🌍",
+    "version": "custom\u0000version",
+    "site": {
+      "latitude_deg": 1.5,
+      "longitude_deg": -2.5,
+      "elevation_m": 3.5,
+      "time_zone_hours": -4.5,
+      "north_axis_deg": 5.5
+    },
+    "zones": [
+      {
+        "id": 4294967295,
+        "name": "zone",
+        "volume_m3": 6.5,
+        "multiplier": 4294967295,
+        "conditioned": true,
+        "part_of_total_floor_area": false
+      }
+    ],
+    "spaces": [
+      {
+        "id": 0,
+        "name": "space",
+        "zone_id": 1,
+        "floor_area_m2": 7.5
+      }
+    ],
+    "surfaces": [
+      {
+        "id": 1,
+        "name": "surface",
+        "zone_id": 2,
+        "class": "Ground",
+        "vertices_m": [
+          [
+            1.5,
+            2.5,
+            3.5
+          ],
+          [
+            -4.5,
+            -5.5,
+            -6.5
+          ]
+        ],
+        "construction_id": 3,
+        "outside_boundary_condition": {
+          "Interzone": 4
+        },
+        "sun_exposed": false,
+        "wind_exposed": true,
+        "multiplier": 0
+      }
+    ],
+    "fenestrations": [
+      {
+        "id": 5,
+        "name": "window",
+        "surface_id": 6,
+        "u_value_w_m2k": 8.5,
+        "shgc": 9.5,
+        "vlt": 10.5,
+        "area_m2": 11.5,
+        "height_m": 12.5,
+        "sill_height_m": 13.5,
+        "frame_conductance_w_k": 14.5,
+        "divider_conductance_w_k": 15.5,
+        "overhang_depth_m": 16.5,
+        "overhang_offset_m": 17.5,
+        "fin_depth_m": 18.5,
+        "fin_offset_m": 19.5,
+        "glazing_construction_id": 0,
+        "vertices_m": [
+          [
+            7.5,
+            8.5,
+            9.5
+          ]
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": 7,
+        "name": "wall",
+        "roughness": "VerySmooth",
+        "thickness_m": 20.5,
+        "conductivity_w_m_k": 21.5,
+        "density_kg_m3": 22.5,
+        "specific_heat_j_kg_k": 23.5,
+        "thermal_absorptance": 24.5,
+        "solar_absorptance": 25.5,
+        "visible_absorptance": 26.5
+      }
+    ],
+    "glazing_materials": [
+      {
+        "id": 8,
+        "name": "glass",
+        "thickness_m": 27.5,
+        "conductivity_w_m_k": 28.5,
+        "solar_transmittance": 29.5,
+        "solar_reflectance_front": 30.5,
+        "solar_reflectance_back": 31.5,
+        "visible_transmittance": 32.5,
+        "visible_reflectance_front": 33.5,
+        "visible_reflectance_back": 34.5,
+        "infrared_transmittance": 35.5,
+        "infrared_emissivity_front": 36.5,
+        "infrared_emissivity_back": 37.5
+      }
+    ],
+    "gas_materials": [
+      {
+        "id": 9,
+        "name": "gap",
+        "thickness_m": 38.5,
+        "gas": "Xenon"
+      }
+    ],
+    "constructions": [
+      {
+        "id": 10,
+        "name": "ordered layers",
+        "layer_material_ids": [
+          4294967295,
+          0,
+          4294967295
+        ]
+      }
+    ],
+    "people": [
+      {
+        "id": 11,
+        "zone_id": 12,
+        "schedule_id": 13,
+        "activity_schedule_id": 14,
+        "people_per_area": 39.5,
+        "sensible_fraction": 40.5,
+        "latent_fraction": 41.5,
+        "radiant_fraction": 42.5
+      }
+    ],
+    "lighting": [
+      {
+        "id": 15,
+        "zone_id": 16,
+        "schedule_id": 17,
+        "watts_per_area": 43.5,
+        "radiant_fraction": 44.5,
+        "visible_fraction": 45.5,
+        "return_air_fraction": 46.5
+      }
+    ],
+    "equipment": [
+      {
+        "id": 18,
+        "zone_id": 19,
+        "schedule_id": 20,
+        "watts_per_area": 47.5,
+        "radiant_fraction": 48.5,
+        "latent_fraction": 49.5
+      }
+    ],
+    "thermostats": [
+      {
+        "id": 21,
+        "zone_id": 22,
+        "heating_setpoint_schedule_id": 23,
+        "cooling_setpoint_schedule_id": 24,
+        "heating_throttle_range_k": 50.5,
+        "cooling_throttle_range_k": 51.5
+      }
+    ],
+    "humidistats": [
+      {
+        "id": 25,
+        "zone_id": 26,
+        "humidifying_setpoint_schedule_id": 27,
+        "dehumidifying_setpoint_schedule_id": 28,
+        "humidifying_throttle_range": 52.5,
+        "dehumidifying_throttle_range": 53.5
+      }
+    ],
+    "setpoint_managers": [
+      {
+        "id": 29,
+        "name": "reset",
+        "kind": {
+          "OutdoorAirReset": {
+            "low_outdoor_c": 54.5,
+            "high_outdoor_c": 55.5,
+            "low_setpoint_c": 56.5,
+            "high_setpoint_c": 57.5
+          }
+        },
+        "schedule_id": 0
+      }
+    ],
+    "ideal_loads": [
+      {
+        "id": 30,
+        "zone_id": 31,
+        "max_heating_supply_air_temp_c": 58.5,
+        "min_cooling_supply_air_temp_c": 59.5,
+        "max_heating_capacity_w": 0.0,
+        "max_cooling_capacity_w": null,
+        "outdoor_air_per_person_m3_s": 111.5,
+        "outdoor_air_per_area_m3_s_m2": 112.5
+      }
+    ],
+    "zone_equipment": [
+      {
+        "id": 32,
+        "zone_id": 33,
+        "equipment_type": "WaterToAirHp",
+        "priority": 255,
+        "heating_capacity_w": 60.5,
+        "cooling_capacity_w": 61.5
+      }
+    ],
+    "air_loops": [
+      {
+        "id": 34,
+        "name": "air",
+        "supply_node_id": 4294967295,
+        "return_node_id": 0,
+        "design_supply_air_flow_m3_s": 62.5,
+        "terminal_zone_ids": [
+          0,
+          4294967295,
+          0
+        ]
+      }
+    ],
+    "plant_loops": [
+      {
+        "id": 35,
+        "name": "plant",
+        "loop_type": "Condenser",
+        "supply_temperature_c": 63.5,
+        "return_temperature_c": 64.5,
+        "design_flow_kg_s": 65.5,
+        "equipment_ids": [
+          4294967295,
+          0,
+          4294967295
+        ]
+      }
+    ],
+    "outdoor_air_systems": [
+      {
+        "id": 36,
+        "air_loop_id": 37,
+        "min_oa_flow_m3_s": 66.5,
+        "economizer_enabled": true
+      }
+    ],
+    "infiltrations": [
+      {
+        "id": 38,
+        "zone_id": 39,
+        "schedule_id": 40,
+        "method": "WindAndStack",
+        "design_flow_ach": 67.5,
+        "flow_per_exterior_area_m3_s_m2": 68.5,
+        "effective_leakage_area_m2": 69.5,
+        "discharge_coefficient": 70.5,
+        "stack_height_m": 71.5,
+        "constant_term_coefficient": 72.5,
+        "temperature_term_coefficient": 73.5,
+        "velocity_term_coefficient": 74.5,
+        "velocity_squared_term_coefficient": 75.5
+      }
+    ],
+    "mechanical_ventilations": [
+      {
+        "id": 41,
+        "zone_id": 42,
+        "schedule_id": 43,
+        "design_flow_m3_s": 76.5,
+        "fan_total_efficiency": 77.5,
+        "fan_delta_pressure_pa": 78.5
+      }
+    ],
+    "shading_surfaces": [
+      {
+        "id": 44,
+        "name": "shade",
+        "vertices_m": [
+          [
+            10.5,
+            11.5,
+            12.5
+          ]
+        ],
+        "transmittance_schedule_id": 0
+      }
+    ],
+    "space_lists": [
+      {
+        "id": 45,
+        "name": "spaces",
+        "space_ids": [
+          0,
+          4294967295,
+          0
+        ]
+      }
+    ],
+    "thermal_enclosures": [
+      {
+        "id": 46,
+        "name": "enclosure",
+        "zone_ids": [
+          4294967295,
+          0,
+          4294967295
+        ]
+      }
+    ],
+    "adjacency_pairs": [
+      {
+        "surface_a_id": 4294967295,
+        "surface_b_id": 0
+      }
+    ],
+    "airflow_network": {
+      "zone_node_ids": [
+        [
+          4294967295,
+          0
+        ],
+        [
+          0,
+          4294967295
+        ]
+      ],
+      "outdoor_node_id": 4294967295,
+      "link_ids": [
+        0,
+        4294967295,
+        0
+      ]
+    },
+    "electrical_load_centers": [
+      {
+        "id": 47,
+        "name": "power",
+        "generator_ids": [
+          0,
+          4294967295,
+          0
+        ],
+        "pv_ids": [
+          4294967295,
+          0
+        ],
+        "battery_ids": [
+          0,
+          4294967295
+        ]
+      }
+    ],
+    "pv_systems": [
+      {
+        "id": 48,
+        "dc_capacity_w": 79.5,
+        "area_m2": 80.5,
+        "tilt_deg": 81.5,
+        "azimuth_deg": 82.5,
+        "module_efficiency": 83.5,
+        "inverter_efficiency": 84.5
+      }
+    ],
+    "battery_storage": [
+      {
+        "id": 49,
+        "capacity_kwh": 85.5,
+        "max_charge_w": 86.5,
+        "max_discharge_w": 87.5,
+        "round_trip_efficiency": 88.5
+      }
+    ],
+    "shw_systems": [
+      {
+        "id": 50,
+        "heater_capacity_w": 89.5,
+        "storage_volume_m3": 90.5,
+        "setpoint_c": 91.5,
+        "schedule_id": 51
+      }
+    ],
+    "solar_thermal_systems": [
+      {
+        "id": 52,
+        "collector_area_m2": 92.5,
+        "efficiency": 93.5,
+        "storage_volume_m3": 94.5,
+        "tilt_deg": 95.5,
+        "azimuth_deg": 96.5
+      }
+    ],
+    "refrigeration_systems": [
+      {
+        "id": 53,
+        "case_count": 4294967295,
+        "design_load_w": 97.5,
+        "defrost_schedule_id": 54
+      }
+    ],
+    "water_systems": [
+      {
+        "id": 55,
+        "fixture_count": 4294967295,
+        "peak_flow_l_s": 98.5,
+        "schedule_id": 56
+      }
+    ],
+    "faults": [
+      {
+        "id": 57,
+        "target_equipment_id": 58,
+        "fault_type": "BoilerEfficiencyDegradation",
+        "severity": 99.5,
+        "start_schedule_id": 59
+      }
+    ],
+    "output_variables": [
+      {
+        "name": "literal variable",
+        "key": "*\u0000",
+        "reporting_frequency": "RunPeriod"
+      }
+    ],
+    "sizing_objects": [
+      {
+        "id": 60,
+        "zone_id": 61,
+        "sizing_type": "OutdoorAir",
+        "design_day_type": "Heating"
+      }
+    ],
+    "daylight_zones": [
+      {
+        "id": 62,
+        "zone_id": 63,
+        "illuminance_target_lux": 100.5,
+        "glare_limit": 101.5,
+        "window_transmittance": 102.5
+      }
+    ],
+    "room_air_models": [
+      {
+        "zone_id": 64,
+        "model": "UnderFloorAirDistribution"
+      }
+    ],
+    "ground_temperature": {
+      "building_surface_c": [
+        1.5,
+        2.5,
+        3.5,
+        4.5,
+        5.5,
+        6.5,
+        7.5,
+        8.5,
+        9.5,
+        10.5,
+        11.5,
+        12.5
+      ],
+      "shallow_c": [
+        13.5,
+        14.5,
+        15.5,
+        16.5,
+        17.5,
+        18.5,
+        19.5,
+        20.5,
+        21.5,
+        22.5,
+        23.5,
+        24.5
+      ],
+      "deep_c": 103.5
+    },
+    "run_period": {
+      "start_month": 0,
+      "start_day": 255,
+      "end_month": 255,
+      "end_day": 0,
+      "year": 65535
+    },
+    "schedules": {
+      "constants": [
+        {
+          "id": 0,
+          "value": 104.5
+        },
+        {
+          "id": 0,
+          "value": 105.5
+        }
+      ],
+      "daily": [
+        {
+          "id": 4294967295,
+          "hourly_values": [
+            1.5,
+            2.5,
+            3.5,
+            4.5,
+            5.5,
+            6.5,
+            7.5,
+            8.5,
+            9.5,
+            10.5,
+            11.5,
+            12.5,
+            13.5,
+            14.5,
+            15.5,
+            16.5,
+            17.5,
+            18.5,
+            19.5,
+            20.5,
+            21.5,
+            22.5,
+            23.5,
+            24.5
+          ],
+          "interpolation": "Discrete",
+          "limits": {
+            "min": 106.5,
+            "max": 107.5
+          }
+        }
+      ],
+      "weekly": [
+        {
+          "id": 0,
+          "daily_schedule_ids": [
+            0,
+            4294967295,
+            0,
+            4294967295,
+            0,
+            4294967295,
+            0
+          ]
+        }
+      ],
+      "annual": [
+        {
+          "id": 4294967295,
+          "rules": [
+            {
+              "start_month": 0,
+              "start_day": 255,
+              "end_month": 255,
+              "end_day": 0,
+              "daily_schedule_id": 0
+            }
+          ],
+          "default_daily_schedule_id": 4294967295,
+          "holiday_daily_schedule_id": 0,
+          "holiday_dates": [
+            [
+              0,
+              0,
+              255
+            ],
+            [
+              65535,
+              255,
+              0
+            ]
+          ]
+        }
+      ],
+      "time_series": [
+        {
+          "id": 0,
+          "values": [
+            108.5,
+            109.5,
+            110.5
+          ],
+          "timestep_seconds": 4294967295
+        }
+      ]
+    }
+  },
+  "malformedRows": [
+    {
+      "table": "energy_zone",
+      "column": 1,
+      "storage": "integer",
+      "value": "2"
+    },
+    {
+      "table": "energy_zone",
+      "column": 2,
+      "storage": "integer",
+      "value": "4"
+    },
+    {
+      "table": "energy_zone",
+      "column": 3,
+      "storage": "integer",
+      "value": "-1"
+    },
+    {
+      "table": "energy_zone",
+      "column": 3,
+      "storage": "integer",
+      "value": "4294967296"
+    },
+    {
+      "table": "energy_zone",
+      "column": 7,
+      "storage": "integer",
+      "value": "2"
+    },
+    {
+      "table": "energy_zone",
+      "column": 5,
+      "storage": "real",
+      "value": "99"
+    },
+    {
+      "table": "energy_daily_hour",
+      "column": 1,
+      "storage": "integer",
+      "value": "999"
+    },
+    {
+      "table": "energy_document",
+      "column": 14,
+      "storage": "integer",
+      "value": "65536"
+    },
+    {
+      "table": "energy_zone_equipment",
+      "column": 6,
+      "storage": "integer",
+      "value": "256"
+    }
+  ],
+  "populatedBinary64Fields": 173
+}

@@ -3,7 +3,16 @@
 use crate::editor::note::modes::edit::windows::navigator::options;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::{NoteCamera, NoteSnapshot};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_NAVIGATOR: &str = "note-navigator";

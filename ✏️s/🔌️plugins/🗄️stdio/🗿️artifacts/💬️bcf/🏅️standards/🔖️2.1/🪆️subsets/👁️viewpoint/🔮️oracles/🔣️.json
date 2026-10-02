@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. buildingSMART BCF-XML 2.1 defines a per-topic Viewpoint (`viewpoint.bcfv`) as a normatively distinct file from the topic Markup (`markup.bcf`) inside each topic folder of the BCF-ZIP container -- the camera and visibility/coloring component state, not the topic/comment text. `insert-viewpoint`/`remove-viewpoint`/`set-viewpoint-camera`/`set-viewpoint-components` are owned here rather than by `🖊️markup`. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `BcfMutation` enum, its diff dispatch and the real zip/xml codec they compile into remain in `🖊️markup` (one shared, always-co-resident implementation across every BCF file within the container -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `jszip-bcf-2-1-mutate-reader` (declared by `../../🖊️markup/🔮️oracles/🔣️.json`, merged into the shared registry) already reads viewpoint.bcfv back.",
   "oracles": [],
@@ -269,5 +269,6 @@
         "set-viewpoint-components"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

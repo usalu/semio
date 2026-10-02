@@ -151,7 +151,7 @@ fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
 /// could pick Remote and never see where to type the hub document).
 #[test]
 fn every_sync_card_verb_republishes_the_sync_panel() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let initial = shell.publish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID).expect("sync panel publication").expect("the sync panel owns a retained document");
     shell.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
     for (action, args) in [("selectRemote", None), ("setSyncDraft", Some(serde_json::json!({ "value": "127.0.0.1:7800/space-1/doc-a" })))] {
@@ -191,7 +191,7 @@ fn a_short_link_is_spoken_and_a_terminal_link_ends_until_the_next_open() {
     assert_eq!(shell_sync_link_terminal("link-expired"), Some(DocumentLinkStatus::LinkExpired));
     assert_eq!(shell_sync_link_terminal("access-revoked"), Some(DocumentLinkStatus::AccessRevoked));
     assert_eq!(shell_sync_link_terminal("artifactBootstrap"), None);
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let quiet = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
     assert!(!quiet.contains("framework.sync.link."), "a linked document speaks no link line");
     for (status, locale) in [(DocumentLinkStatus::Reconnecting, "en"), (DocumentLinkStatus::LinkExpired, "de"), (DocumentLinkStatus::AccessRevoked, "en")] {
@@ -233,7 +233,7 @@ fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
 /// (React's `#s-presence-peers` is a labelled status).
 #[test]
 fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let pill = shell_sync_pill_text(shell.sync_pill(), false);
     shell.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
     let detached = shell.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();

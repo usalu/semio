@@ -5,7 +5,7 @@ const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏢️nakagin-c
 
 /// 🧾️ The case's own `Examples` rows — the `IfcValue` leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    crate::law::feature_rows(include_str!("../../../🧪️tests/🏗️mutate-ifc-4/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🏗️mutate-ifc-4/🥒️.feature"))
 }
 fn row(kind: &str) -> Json {
     feature_rows().into_iter().find(|(id, _)| id == kind).unwrap_or_else(|| panic!("no {kind} row")).1

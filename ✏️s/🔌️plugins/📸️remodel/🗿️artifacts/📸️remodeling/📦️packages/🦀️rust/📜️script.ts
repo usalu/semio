@@ -17,6 +17,11 @@ class CompositionScript extends BundleScript {
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
+      const schema=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
+      runCmd("bun",[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--skipLibCheck",resolve(schema,"🟦️.ts"),resolve(schema,"📸️snapshot/🟦️.ts"),resolve(schema,"📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"),resolve(schema,"🧬️mutations/🟦️.ts"),resolve(schema,"🔺️diff/🟦️.ts"),resolve(schema,"../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts")],{cwd:this.repoRoot});
+      return;
+    }
     if (segments[0] === "video-container-providers") {
       if (segments.length !== 1) throw Error("video-container-providers accepts no additional arguments");
       const { proveVideoContainerProviderOracleV1 } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔌️container-providers/🟦️.ts");
@@ -43,4 +48,4 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

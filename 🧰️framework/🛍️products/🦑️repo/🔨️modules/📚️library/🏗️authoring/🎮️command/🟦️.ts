@@ -1,7 +1,7 @@
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import { loadCatalogTaxonomy as loadTaxonomy, subsetIdForDirectoryName } from "../../🔍️discovery/🟦️.ts";
-import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
 import { newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
 

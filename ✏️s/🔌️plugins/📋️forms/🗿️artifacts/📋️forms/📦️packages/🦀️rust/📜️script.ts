@@ -25,5 +25,4 @@ if (segments[0] === "forms-document-contract") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-forms-forms", { commands: { verify: OwnedVerifyScript } });
-
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-forms-forms", { snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript } });

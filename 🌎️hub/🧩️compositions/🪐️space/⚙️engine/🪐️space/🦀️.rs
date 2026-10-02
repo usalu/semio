@@ -42,7 +42,7 @@ use semio_framework_plugin::{
     INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 🪪️ Canonical surface id (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1: every
@@ -366,7 +366,7 @@ fn space_bounded_reduce(
         return Ok(crate::engine::space::engine::resolve_future(delete_selection::delete_selected(config, &selected())));
     }
     match command {
-        SpaceCommand::NodeGraphEdit(payload) => return Ok(crate::engine::space::engine::resolve_future(node_graph_edit::edit_with_selection(payload, &doc, &selected()))),
+        SpaceCommand::NodeGraphEdit(payload) => return crate::engine::space::engine::resolve_future(node_graph_edit::edit(payload, &doc)),
         SpaceCommand::ReorganizeWorkflow(_) => return Ok(crate::engine::space::engine::resolve_future(reorganize_workflow::reorganize_selected(&doc, &selected()))),
         SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: selected() }])),
         SpaceCommand::DuplicateAppInstance(_) => return Ok(crate::engine::space::engine::resolve_future(duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
@@ -900,7 +900,7 @@ impl ArtifactApp for SpaceApp {
     /// 🪪️ `s.space.space`'s config+presence schema descriptor (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
     /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::engine::space::config::schema::app_schema_descriptor().await)
     }
 
@@ -971,7 +971,7 @@ impl ArtifactApp for SpaceApp {
             "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
             "nodeGraphViewport" => {
                 let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                let viewport = <semio_framework_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
                 Ok(SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
             }
             "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
@@ -1013,7 +1013,7 @@ impl ArtifactApp for SpaceApp {
     ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::edit(payload, doc).await,
             SpaceCommand::ReorganizeWorkflow(payload) => reorganize_workflow::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::CopyAppInstance(payload) => copy_app_instance::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::DuplicateAppInstance(payload) => duplicate_app_instance::apply(payload, doc, cfg, interaction).await,
@@ -1319,7 +1319,7 @@ pub async fn create_space_app() -> App {
         // (`parse_demo_space_document`'s own doc: "the fixture holds only the `WorkflowSnapshot`
         // payload"), which already derives `ToValue` — read it straight off `.vcs.initial_snapshot`.
         let snapshot = parse_demo_space_document().await.vcs.initial_snapshot;
-        let document_value = dsl::to_dsl_value(&snapshot).expect("serialize demo studio document");
+        let document_value = semio_framework_value::ToValue::to_value(&snapshot);
         let json = pack::json_to_string_pretty(&pack::json_from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.

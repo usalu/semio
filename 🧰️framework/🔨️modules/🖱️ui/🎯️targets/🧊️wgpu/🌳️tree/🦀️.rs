@@ -273,7 +273,14 @@ pub struct WidgetState {
     /// the `gesture` every tick and the release of that press carry — the scrub protocol, `📓️api-scrub-machine.md` of
     /// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING. `None` while no press is open.
     pub scrub_gesture: Option<String>,
+    /// 🎚️ The value the open press last ticked: a blur releases the press on it when the field's draft is refused, as
+    /// React's lane releases on the value last offered. `None` while no press is open.
+    pub scrub_offered: Option<semio_framework_value::DslValue>,
     pub slider_readout_click_at: Option<f64>,
+    /// 🚧️ The refusal a numeric control's kept draft earned (unreadable, or crossing a hard bound): the producer-localized
+    /// text naming the bound, empty for an unlabelled one. While set the draft stays in `edit`, nothing is dispatched, and
+    /// the control paints the draft in the error colour and the refusal where it has room; the next edit clears it.
+    pub number_refusal: Option<String>,
     pub stepper_hovered_segment: Option<i8>,
     /// 🖱️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
     pub scroll_offset: (f32, f32),

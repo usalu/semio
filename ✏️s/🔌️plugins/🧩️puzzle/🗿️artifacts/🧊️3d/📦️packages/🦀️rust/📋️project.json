@@ -67,15 +67,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "puzzle-3d-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -87,14 +79,23 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "puzzle-3d-graph-wire"
-          ]
-        }
+      "outputs": []
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
       }
     }
   }

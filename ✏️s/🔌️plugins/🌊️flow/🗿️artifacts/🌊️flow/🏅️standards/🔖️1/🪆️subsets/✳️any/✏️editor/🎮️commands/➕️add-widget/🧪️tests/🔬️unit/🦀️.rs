@@ -122,10 +122,10 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let parent_before = app.snapshot().expect("snapshot");
     let child_id = parent_before.content.child_id.clone();
     let content_before = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
-    let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
+    let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
     assert!(result.mutations.is_empty(), "admission must retain the child publication");
     let first = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("first child publication");
-    let repeated = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(50.0), y: Some(51.0) })).await;
+    let repeated = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(50.0), y: Some(51.0), label: None, action: None, format: None })).await;
     assert!(repeated.mutations.is_empty(), "repeated admission must retain the child publication");
     let second = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("repeated child publication");
     let parent_after = app.snapshot().expect("snapshot");

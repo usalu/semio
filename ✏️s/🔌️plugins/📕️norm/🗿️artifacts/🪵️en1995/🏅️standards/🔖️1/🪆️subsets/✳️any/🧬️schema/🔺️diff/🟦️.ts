@@ -1,12 +1,17 @@
-/** 🧬️ EN 1995 sparse diff TypeScript mirror. */
-import type { En1995Artifact } from "../🟦️";
-import type { AnnexChoice, TimberConnection, TimberMember } from "../📸️snapshot/🟦️";
+/** 🔺️ `En1995Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormJson, normWireArray, normWireJson, normWireMap, normWireObject, normWireOptional, type NormWireReader, normWireString } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
-export interface En1995MemberList { values: TimberMember[]; }
-export interface En1995ConnectionList { values: TimberConnection[]; }
 export interface En1995Diff {
-  artifact?: En1995Artifact;
-  annex?: AnnexChoice;
-  members?: En1995MemberList;
-  connections?: En1995ConnectionList;
+  /** @state artifact */
+  artifact?: { [key: string]: NormJson };
+  /** @state artifact */
+  annex?: string;
+  /** @state artifact */
+  members?: { values?: { [key: string]: NormJson }[]; };
+  /** @state artifact */
+  connections?: { values?: { [key: string]: NormJson }[]; };
 }
+
+export const parseEn1995Diff: NormWireReader<En1995Diff> = normWireObject<En1995Diff>({ artifact: normWireOptional(normWireMap(normWireJson)), annex: normWireOptional(normWireString), members: normWireOptional(normWireObject<{ values?: { [key: string]: NormJson }[]; }>({ values: normWireOptional(normWireArray(normWireMap(normWireJson))) }, false)), connections: normWireOptional(normWireObject<{ values?: { [key: string]: NormJson }[]; }>({ values: normWireOptional(normWireArray(normWireMap(normWireJson))) }, false)) });

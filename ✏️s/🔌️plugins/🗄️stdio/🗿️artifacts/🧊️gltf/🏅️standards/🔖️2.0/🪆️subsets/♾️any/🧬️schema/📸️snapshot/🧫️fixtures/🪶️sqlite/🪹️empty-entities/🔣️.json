@@ -1,0 +1,6 @@
+{
+  "schema": "owned empty GLTF entities",
+  "document": {"asset": {"version": "2.0"}, "images": [{}, {}], "textures": [{}]},
+  "buffers": [],
+  "sourceForm": "json"
+}

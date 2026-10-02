@@ -29,10 +29,10 @@ impl MutationKind<CadSnapshot, CadMutation> for DragSelection {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = cad_selection_items(self.targets.len());
         let (offset_en, offset_de) = cad_selection_vector(self.offset);
-        protocol::LocalizedLabel::native(&format!("Drag {items_en} by {offset_en}"), &format!("{items_de} um {offset_de} ziehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {items_en} by {offset_en}"), &format!("{items_de} um {offset_de} ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

@@ -22,7 +22,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunAzimuth 
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change sun azimuth to {}", self.new_azimuth), &format!("Sonnenazimut auf {} ändern", self.new_azimuth))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sun azimuth to {}", self.new_azimuth), &format!("Sonnenazimut auf {} ändern", self.new_azimuth))
     }
 }

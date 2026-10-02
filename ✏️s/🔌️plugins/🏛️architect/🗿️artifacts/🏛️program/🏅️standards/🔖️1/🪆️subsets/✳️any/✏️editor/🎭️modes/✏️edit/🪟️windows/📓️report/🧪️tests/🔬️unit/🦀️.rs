@@ -3,7 +3,7 @@ use crate::editor::architect::catalog::report_record_from;
 use crate::registers::ReportKind;
 use crate::sample_plugin;
 use crate::standards::v1::subsets::any::schema::inferences::build_report;
-use semio_framework_plugin::{locale_from_str, ViewModel};
+use semio_framework_plugin::ViewModel;
 
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_report_definition_declares_the_text_editor_surface_and_body_key() {
@@ -20,10 +20,10 @@ async fn architect_window_ownership_report_selected_authored_record_renders_loca
     let selected_report_id = record.header.id.clone();
     program.reports.push(record);
     let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
-    let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
+    let de = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
     let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Art:"));
     assert!(json.contains("Erstellt:"));
@@ -32,9 +32,9 @@ async fn architect_window_ownership_report_selected_authored_record_renders_loca
 
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_report_empty_selection_renders_a_localized_prompt() {
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Generate a report in this window"));
-    let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
+    let de = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
     let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Erstellen Sie in diesem Fenster einen Bericht"));
 }
@@ -42,7 +42,7 @@ async fn architect_window_ownership_report_empty_selection_renders_a_localized_p
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_report_deleted_selection_renders_a_localized_missing_state() {
     let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(crate::EntityId("missing-report".into())) };
-    let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
+    let de = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
     let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &cfg, &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("ist nicht verfügbar"));
 }

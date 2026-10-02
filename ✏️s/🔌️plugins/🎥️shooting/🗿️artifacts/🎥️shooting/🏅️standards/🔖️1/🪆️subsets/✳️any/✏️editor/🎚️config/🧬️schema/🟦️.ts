@@ -13,8 +13,6 @@ export interface ShootingConfig {
   /** @state config */
   fitRevision: number;
   /** @state config */
-  cameraDraftLabel: string;
-  /** @state config */
   camera: ShootingCamera;
 }
 

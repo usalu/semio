@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ AVI 1.0/🎛️hdrl's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). No standalone Rust crate reads AND writes AVI credibly (`avirus` 0.2.5 never parses a typed header and its 'write' path copies the whole hdrl section byte-for-byte; `rff-format-avi` 0.1.0's own doc comment says its muxer is 'still scaffolded'; `oxideav-avi` 0.0.9 has real depth but zero independent adoption — created 2026-04-19, 0 GitHub stars/forks, would pull in an equally unvalidated `oxideav-core`). AVI IS a RIFF container, so the reference here composes `riff` 2.0 — a mature, independent, heavily used (11.9M downloads) generic RIFF/LIST/chunk reader/writer, MIT, unrelated to this repository — with a hand-written AVI 1.0 hdrl/strl/movi/idx1 codec against the format's own public byte layout. Same composition shape ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf's oracle already established for zip+quick-xml, for the identical reason: no standalone crate exists for the specific format, so two independent, credible, more-generic layers are composed instead of adopting a weaker/unlicensed substitute. Full investigation and evidence: .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/📓️w7-avi-1-0-mutate-report.md. Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/frabert/riff",
       "rationale": "🫥️ RECLASSIFIED, on the same ground as `gltf`, `png`, `jpg`, `bmp` and `tiff`. The `riff` crate does real work — it parses and composes genuine RIFF chunks — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`, 1069 lines whose header states outright that \"every type, parser and writer below is a fresh, independent implementation\", and whose `apply_kind` returns `mutation kind {other} has no oracle implementation` for anything it does not cover.\n\nBoth halves then read the same specification, so a misreading of it yields two agreeing wrong answers. `riff` discharges \"the result is a well-formed AVI\", NOT \"the mutation computed the right answer\" — only the second is what a mutation oracle is for. A required SUPPLEMENT, never a substitute.\n\nThe 22 third-party-generated fixtures registered alongside are unaffected and stay: real AVI bytes composed by `riff`, byte-reproducible, and exactly what a qualifying reader gets pointed at on the day one exists.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "riff",
@@ -1059,5 +1059,6 @@
       "family": "structural",
       "notes": "Attempted stream_index does not exist — missing-target on the streams collection."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -34,8 +34,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetTrimBox {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} setzen", self.page_index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/VT trim box on page {}", self.page_index), &format!("PDF/VT-TrimBox auf Seite {} setzen", self.page_index))
     }
 
     fn target(&self) -> Vec<String> {

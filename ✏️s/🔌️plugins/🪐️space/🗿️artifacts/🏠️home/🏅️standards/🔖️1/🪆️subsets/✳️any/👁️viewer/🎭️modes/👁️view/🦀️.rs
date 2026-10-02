@@ -4,7 +4,12 @@
 //! carry at least one real window.
 
 use crate::viewer::home::modes::view::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const S_HOME_VIEW_MODE: &str = "view";
 

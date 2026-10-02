@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutputIntents {
         vec![PdfMutation::SetOutputIntents(SetOutputIntents { intents: base.output_intents.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set {} output intents", self.intents.len()), &format!("{} Ausgabebedingungen setzen", self.intents.len()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set {} output intents", self.intents.len()), &format!("{} Ausgabebedingungen setzen", self.intents.len()))
     }
 
     fn target(&self) -> Vec<String> {

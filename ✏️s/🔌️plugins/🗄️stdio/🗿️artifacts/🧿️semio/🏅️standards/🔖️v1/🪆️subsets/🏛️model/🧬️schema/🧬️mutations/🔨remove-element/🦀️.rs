@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RemoveEl
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
         agg_inverse(&SemioModelMutation::RemoveElement(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove element", "Element entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

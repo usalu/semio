@@ -1,6 +1,11 @@
 //! 📚️ EN 1999 play app panel — alloy/temper catalogue (Table 3.2) and examples.
 
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use crate::document::ClauseId;
@@ -50,7 +55,7 @@ pub fn alloy_table_3_2() -> CatalogueTable {
 //#endregion 📚️AlloyCatalogue
 
 //#region 🔖️Render
-pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_plugin::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let tables = reference_tables();
     let windows = TreeWindows::unhosted();
     crate::app_surface::render_catalogue(&examples, &tables, locale, controller_id, &windows)

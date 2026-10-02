@@ -1,0 +1,8 @@
+{
+  "mutation": "patchWorkingNodes",
+  "targets": [
+    "a"
+  ],
+  "field": "name",
+  "value": "Core"
+}

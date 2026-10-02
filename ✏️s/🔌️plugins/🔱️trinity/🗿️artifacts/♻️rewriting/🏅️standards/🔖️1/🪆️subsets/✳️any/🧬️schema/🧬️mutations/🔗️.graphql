@@ -14,6 +14,9 @@ input PatchWorkingNodesInput { targets: [String!]!, field: String!, value: Strin
 input DragRuleNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
 input RuleLayoutPlacementInput { key: String!, x: Float!, y: Float! }
 input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]!, cleared: [String!]! }
+input DeleteWorkingNodesInput { targets: [String!]! }
+input ConnectWorkingPortsInput { source: String!, target: String!, kind: String! }
+input DisconnectWorkingEdgesInput { targets: [String!]! }
 
 input RewriteRuleMutationInput {
   editBeforeFixture: EditBeforeFixtureInput
@@ -27,4 +30,7 @@ input RewriteRuleMutationInput {
   patchWorkingNodes: PatchWorkingNodesInput
   dragRuleNodes: DragRuleNodesInput
   setRuleLayoutPoints: SetRuleLayoutPointsInput
+  deleteWorkingNodes: DeleteWorkingNodesInput
+  connectWorkingPorts: ConnectWorkingPortsInput
+  disconnectWorkingEdges: DisconnectWorkingEdgesInput
 }

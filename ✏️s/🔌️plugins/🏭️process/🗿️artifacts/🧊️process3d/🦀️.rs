@@ -171,6 +171,7 @@ impl MeasureRecipe {
 macro_rules! tagged_variant_field {
     ($($name:ty),+) => {$(
         impl dsl::DslField for $name {
+            fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{Ok(dsl::Shape::Statements(<$name as dsl::DslVariants>::variants_controlled(control)?))}
             fn shape() -> dsl::Shape {
                 dsl::Shape::Statements(<$name as dsl::DslVariants>::variants())
             }
@@ -1037,7 +1038,7 @@ pub fn empty_process3d_snapshot() -> Process3dSnapshot {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.process".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D Process", "3D-Prozess"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Process", "3D-Prozess"),
         source_format: PROCESS_3D_SCHEMA.into(),
         component_kind: "process3d".into(),
         dimension: "3d".into(),

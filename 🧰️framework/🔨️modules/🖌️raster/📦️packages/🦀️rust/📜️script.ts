@@ -1,20 +1,23 @@
 #!/usr/bin/env bun
+import { resolve } from "node:path";
+import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📜️ `@semio-tech/framework-raster` — the one semio offscreen-rasterization crate: cargo test and clippy gates. */
-import { runCargoLint, runCargoTestBudgeted, resolveTestLevel } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-framework-raster"], this.repoRoot, rest);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-raster"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 
 /** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework-raster --all-targets -- -D warnings`. */
 class LintScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargoLint(["semio-framework-raster"], this.repoRoot, segments);
+  async run(segments: string[]): Promise<void> {
+    await runCargoLintV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-raster"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));
   }
 }
 

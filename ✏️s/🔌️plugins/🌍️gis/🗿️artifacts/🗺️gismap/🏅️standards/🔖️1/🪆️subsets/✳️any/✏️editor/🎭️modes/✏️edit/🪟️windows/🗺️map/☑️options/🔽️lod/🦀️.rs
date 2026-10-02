@@ -9,7 +9,10 @@ use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::GisMapSnapshot;
-use semio_framework_plugin::{ActionArgOption, LocalizedLabel, MeasureSelectItem, WindowMeasure};
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeasureSelectItem;
+use semio_framework_plugin::WindowMeasure;
 use semio_framework_surface::tiled_map::{gis_map_lod_scale_json, GIS_MAP_LOD_MODE_AUTOMATIC};
 use serde_json::Value;
 

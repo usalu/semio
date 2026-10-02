@@ -1,3 +1,5 @@
+import { foldPathEmojiIdentity, pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 export { declaredComponentDeploymentDirectoryV1 } from "../📇️catalog/🚚️deployment/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
@@ -6,7 +8,7 @@ export { declaredComponentDeploymentDirectoryV1 } from "../📇️catalog/🚚�
 
 //#region 🔌️Adapters
 import { cargoWorkspaceDeclaresMemberV1, cargoRepositoryPackages } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
-import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
+import { ephemeralBox, ephemeralMap } from "../../../../../🔨️modules/🎠️kernel/🫧️transient/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";
@@ -653,84 +655,11 @@ export interface PathEmojiPolicy {
   readonly reservedSubtreeDirectoryNames: readonly string[];
 }
 
-/** 📂️One Git-visible path presented to the language-neutral path-emoji statutes. */
-export interface PathEmojiEntry {
-  readonly path: string;
-  readonly nodeKind: "directory" | "file";
-  readonly reserved?: boolean;
-}
-
-export type PathEmojiFindingKind = "missing" | "generic" | "presentation" | "spacing" | "duplicate" | "multiple" | "reserved-emoji";
-
-/** ⚠️One deterministic path-emoji statute finding. */
-export interface PathEmojiFinding {
-  readonly kind: PathEmojiFindingKind;
-  readonly path: string;
-  readonly sibling?: string;
-  readonly emoji?: string;
-}
-
-const PATH_EMOJI_SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
-
-/** 😀️Splits the complete leading emoji sequence from a path segment. */
-export function leadingEmojiIdentity(value: string): Readonly<{ emoji: string; rest: string; first: string }> {
-  let emoji = "", first = "";
-  for (const { segment } of PATH_EMOJI_SEGMENTER.segment(value.normalize("NFC"))) {
-    if (!/[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u20E3]/u.test(segment)) break;
-    if (!first) first = segment;
-    emoji += segment;
-  }
-  return { emoji, rest: value.slice(emoji.length), first };
-}
-
-/** 🪞️Folds presentation selectors for logical path-identity comparisons. */
-export function foldPathEmojiIdentity(value: string): string {
-  return value.normalize("NFC").replaceAll("\uFE0E", "").replaceAll("\uFE0F", "");
-}
-
-/** 📖️Identifies reserved documentation names independently of their optional format extension. */
-export function reservedDocumentationBasename(name: string): string | null {
-  const identity = leadingEmojiIdentity(name);
-  return /^(?:README(?:\.[^/]+)?|LICENSE(?:\.[^/]+)?|AGENTS\.md)$/u.test(identity.rest) ? identity.rest : null;
-}
-
 const RGI_EMOJI_SEQUENCE = new RegExp("^(?:\\p{RGI_Emoji})$", "v");
 
 /** 🔠️Recognizes one RGI emoji or one explicitly presented pictograph. */
 function canonicalTaxonomyEmoji(value: unknown): value is string {
   return typeof value === "string" && value === value.normalize("NFC") && (RGI_EMOJI_SEQUENCE.test(value) || /^\p{Extended_Pictographic}\uFE0F$/u.test(value));
-}
-
-/** ⚖️Evaluates path emoji rules in one namespace shared by file and directory siblings. */
-export function pathEmojiStatuteFindings(entries: readonly PathEmojiEntry[], genericEmojiIdentities: readonly string[]): PathEmojiFinding[] {
-  const generic = new Set(genericEmojiIdentities.map(foldPathEmojiIdentity));
-  const seen = new Map<string, PathEmojiEntry>();
-  const findings: PathEmojiFinding[] = [];
-  const sorted = [...entries].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
-  for (const entry of sorted) {
-    const name = entry.path.split("/").at(-1) ?? "";
-    const identity = leadingEmojiIdentity(name);
-    if (entry.nodeKind === "file" && reservedDocumentationBasename(name)) {
-      if (identity.emoji) findings.push({ kind: "reserved-emoji", path: entry.path, emoji: identity.emoji });
-      continue;
-    }
-    if (entry.reserved) continue;
-    if (!identity.emoji) {
-      findings.push({ kind: "missing", path: entry.path });
-      continue;
-    }
-    if (identity.emoji !== identity.first || /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u20E3]/u.test(identity.rest)) findings.push({ kind: "multiple", path: entry.path, emoji: identity.emoji });
-    if (generic.has(foldPathEmojiIdentity(identity.first))) findings.push({ kind: "generic", path: entry.path, emoji: identity.first });
-    const firstCodePoint = [...identity.first][0] ?? "";
-    if (firstCodePoint && !/\p{Emoji_Presentation}/u.test(firstCodePoint) && !identity.first.includes("\uFE0F")) findings.push({ kind: "presentation", path: entry.path, emoji: identity.first });
-    if (/^\s/u.test(identity.rest)) findings.push({ kind: "spacing", path: entry.path, emoji: identity.emoji });
-    const parent = entry.path.includes("/") ? entry.path.slice(0, entry.path.lastIndexOf("/")) : "";
-    const key = `${parent}\0${foldPathEmojiIdentity(identity.first)}`;
-    const previous = seen.get(key);
-    if (previous) findings.push({ kind: "duplicate", path: entry.path, sibling: previous.path, emoji: foldPathEmojiIdentity(identity.first) });
-    else seen.set(key, entry);
-  }
-  return findings;
 }
 
 /** 🦀️ One valid way of writing the entry file's `#[path]` strings — see `Taxonomy.rustEntryPathRules`. */
@@ -3957,6 +3886,12 @@ const OPAQUE_PATH_EXCLUSIONS: readonly (readonly [string, string])[] = [
 export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): string[] {
   const problems: string[] = [];
   const pathMatcher = createTaxonomyPathMatcher();
+  const emojiVerdicts = new Map<string, boolean>();
+  const canonicalEmoji = (value: unknown): value is string => {
+    if (typeof value !== "string") return false;
+    if (!emojiVerdicts.has(value)) emojiVerdicts.set(value, canonicalTaxonomyEmoji(value));
+    return emojiVerdicts.get(value)!;
+  };
   const document = taxonomy as unknown as Record<string, unknown>;
   const removedKeys = [
     "semanticManifestFilename", "subsetsManifestFilename", "packagingFileNames", "packagingFileSuffixes", "packagingDirNames",
@@ -4054,7 +3989,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const canonical = new Map<string, string>();
     const extensionOwners = new Map<string, string>();
     for (const [id, spec] of Object.entries(taxonomy.fileKinds)) {
-      if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`fileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
+      if (!canonicalEmoji(spec.emoji)) problems.push(`fileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
       if (!Array.isArray(spec.extensionChains) || spec.extensionChains.length === 0) problems.push(`fileKinds[${JSON.stringify(id)}].extensionChains must be non-empty.`);
       for (const extension of spec.extensionChains ?? []) {
         if (!/^\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(extension)) problems.push(`fileKinds[${JSON.stringify(id)}] has invalid extension chain ${JSON.stringify(extension)}.`);
@@ -4089,7 +4024,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   else for (const [id, spec] of Object.entries(taxonomy.scopedFileKinds)) {
     pathPattern(spec.pathPattern, `scopedFileKinds[${JSON.stringify(id)}].pathPattern`);
     if (spec.parentDirectoryKindId !== undefined && !taxonomy.semanticDirectoryKinds[spec.parentDirectoryKindId]) problems.push(`scopedFileKinds[${JSON.stringify(id)}].parentDirectoryKindId must reference a semantic directory kind.`);
-    if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
+    if (!canonicalEmoji(spec.emoji)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
     if (!Array.isArray(spec.extensionChains) || spec.extensionChains.length === 0) problems.push(`scopedFileKinds[${JSON.stringify(id)}].extensionChains must be non-empty.`);
     for (const extension of spec.extensionChains ?? []) extensionChain(extension, `scopedFileKinds[${JSON.stringify(id)}].extensionChains`);
     if (!["source", "schema", "specification", "configuration", "documentation", "test", "asset", "generated", "marker", "evidence"].includes(spec.role)) problems.push(`scopedFileKinds[${JSON.stringify(id)}].role is invalid.`);
@@ -4098,14 +4033,17 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (!(spec.expires === null || /^\d{4}-\d{2}-\d{2}$/u.test(spec.expires))) problems.push(`scopedFileKinds[${JSON.stringify(id)}].expires must be null or YYYY-MM-DD.`);
   }
 
-  if (record(taxonomy.semanticDirectoryKinds, "semanticDirectoryKinds")) for (const [id, spec] of Object.entries(taxonomy.semanticDirectoryKinds)) {
-    if (!canonicalTaxonomyEmoji(spec.emoji)) problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
-    if (typeof spec.slugPattern !== "string") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern must be a string.`);
-    else pattern(spec.slugPattern, `semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern`);
-    if (typeof spec.allowEmojiOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].allowEmojiOnly must be boolean.`);
-    if (spec.inferWithoutEmoji !== undefined && typeof spec.inferWithoutEmoji !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].inferWithoutEmoji must be boolean when present.`);
-    if (spec.projectionOnly !== undefined && typeof spec.projectionOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].projectionOnly must be boolean when present.`);
-    ids(spec.parentKindIds ?? [], { ...taxonomy.semanticDirectoryKinds, ...taxonomy.semanticDirectoryMemberKinds, ...taxonomy.semanticProjectedMemberKinds, ...taxonomy.fixedDirectoryContracts }, `semanticDirectoryKinds[${JSON.stringify(id)}].parentKindIds`);
+  if (record(taxonomy.semanticDirectoryKinds, "semanticDirectoryKinds")) {
+    const parentKinds = { ...taxonomy.semanticDirectoryKinds, ...taxonomy.semanticDirectoryMemberKinds, ...taxonomy.semanticProjectedMemberKinds, ...taxonomy.fixedDirectoryContracts };
+    for (const [id, spec] of Object.entries(taxonomy.semanticDirectoryKinds)) {
+      if (!canonicalEmoji(spec.emoji)) problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].emoji must be one canonical NFC emoji sequence.`);
+      if (typeof spec.slugPattern !== "string") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern must be a string.`);
+      else pattern(spec.slugPattern, `semanticDirectoryKinds[${JSON.stringify(id)}].slugPattern`);
+      if (typeof spec.allowEmojiOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].allowEmojiOnly must be boolean.`);
+      if (spec.inferWithoutEmoji !== undefined && typeof spec.inferWithoutEmoji !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].inferWithoutEmoji must be boolean when present.`);
+      if (spec.projectionOnly !== undefined && typeof spec.projectionOnly !== "boolean") problems.push(`semanticDirectoryKinds[${JSON.stringify(id)}].projectionOnly must be boolean when present.`);
+      ids(spec.parentKindIds ?? [], parentKinds, `semanticDirectoryKinds[${JSON.stringify(id)}].parentKindIds`);
+    }
   }
   const taxonomyCliArtifactDirectoryKinds: Readonly<Record<string, Readonly<{ name: string; emoji: string; slugPattern: string; parentKindIds?: readonly string[] }>>> = {
     "taxonomy-transaction": { name: "🧾️taxonomy-transaction", emoji: "🧾️", slugPattern: "^taxonomy-transaction$" },
@@ -4173,7 +4111,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       ids(spec.ownerKindIds, allDirectoryKinds, `semanticDirectoryMemberKinds[${JSON.stringify(id)}].ownerKindIds`);
       if (!Array.isArray(spec.memberNames) || spec.memberNames.length === 0) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}].memberNames must be non-empty.`);
       for (const name of spec.memberNames ?? []) {
-        if (typeof name !== "string" || name !== name.normalize("NFC") || /[\\/]/u.test(name) || !canonicalTaxonomyEmoji(leadingEmojiIdentity(name).first)) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}] has invalid exact member ${JSON.stringify(name)}.`);
+        if (typeof name !== "string" || name !== name.normalize("NFC") || /[\\/]/u.test(name) || !canonicalEmoji(leadingEmojiIdentity(name).first)) problems.push(`semanticDirectoryMemberKinds[${JSON.stringify(id)}] has invalid exact member ${JSON.stringify(name)}.`);
         for (const owner of spec.ownerKindIds ?? []) {
           const key = `${owner}\0${name}`;
           if (ownerMembers.has(key)) problems.push(`semanticDirectoryMemberKinds collide for owner ${JSON.stringify(owner)} and member ${JSON.stringify(name)}.`);
@@ -5040,7 +4978,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (!Array.isArray(roles) || !roles.length || roles.some((role) => typeof role !== "string" || !role) || new Set(roles).size !== roles.length) problems.push("cargoDependencyDirections requires distinct declared semantic roles.");
     else for (const [name, rule] of Object.entries(taxonomy.cargoDependencyDirections.rules)) {
       if (!name || !record(rule, `cargoDependencyDirections.rules.${name}`)) continue;
-      for (const selected of [rule.fromRoles, rule.toRoles]) if (!Array.isArray(selected) || !selected.length || selected.some((role) => !roles.includes(role))) problems.push(`cargoDependencyDirections.rules.${name} references an unknown semantic role.`);
+      for (const selected of [rule.fromRoles, rule.toRoles]) if (!Array.isArray(selected) || new Set(selected).size !== selected.length || selected.some((role) => !roles.includes(role))) problems.push(`cargoDependencyDirections.rules.${name} references an unknown semantic role.`);
+      if (Object.keys(rule).some(key => !["fromRoles", "toRoles", "fromOwnerPaths", "toOwnerSegments"].includes(key))) problems.push("Cargo direction rules must use only declared selector fields.");
+      if ((!rule.fromRoles?.length && !rule.fromOwnerPaths?.length) || (!rule.toRoles?.length && !rule.toOwnerSegments?.length)) problems.push("Cargo direction rules require nonempty source and target selectors.");
+      if (rule.toOwnerSegments !== undefined && (!Array.isArray(rule.toOwnerSegments) || !rule.toOwnerSegments.length || new Set(rule.toOwnerSegments).size !== rule.toOwnerSegments.length || rule.toOwnerSegments.some((segment: unknown) => typeof segment !== "string" || !segment || /[/\\\\]/u.test(segment) || segment === "." || segment === ".."))) problems.push("Cargo direction rules require distinct exact target owner segments.");
       if (rule.fromOwnerPaths !== undefined) {
         if (!Array.isArray(rule.fromOwnerPaths) || !rule.fromOwnerPaths.length || new Set(rule.fromOwnerPaths).size !== rule.fromOwnerPaths.length) problems.push(`cargoDependencyDirections.rules.${name} requires distinct source owner patterns.`);
         else for (const path of rule.fromOwnerPaths) {
@@ -5127,7 +5068,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if (!owner || owner.startsWith("/") || owner !== owner.normalize("NFC") || /[\\*?{}\0]/u.test(owner) || owner.split("/").some((segment) => !segment || segment === "." || segment === "..")) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one exact repository-relative collection owner.`);
       const identity = leadingEmojiIdentity(name);
       const statuteProblems = pathEmojiStatuteFindings([{ path: name, nodeKind: "file" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities);
-      if (!canonicalTaxonomyEmoji(identity.first) || identity.rest !== "manifest.json" || statuteProblems.some((problem) => problem.kind !== "duplicate") || fileKindIdForSourcePath(name, taxonomy) !== taxonomy.semanticManifestFileKindId) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one canonical semantic emoji followed by "manifest.json" in the semantic manifest file kind.`);
+      if (!canonicalEmoji(identity.first) || identity.rest !== "manifest.json" || statuteProblems.some((problem) => problem.kind !== "duplicate") || fileKindIdForSourcePath(name, taxonomy) !== taxonomy.semanticManifestFileKindId) problems.push(`semanticManifestFilenameOverrides[${JSON.stringify(owner)}] must name one canonical semantic emoji followed by "manifest.json" in the semantic manifest file kind.`);
     }
   }
   if (taxonomy.subsetDirectoryOverrides !== undefined && record(taxonomy.subsetDirectoryOverrides, "subsetDirectoryOverrides")) {
@@ -5142,7 +5083,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         const expectedRest = id === anyId ? "any" : id;
         const identity = leadingEmojiIdentity(name);
         const statuteProblems = pathEmojiStatuteFindings([{ path: name, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities);
-        if (!canonicalTaxonomyEmoji(identity.first) || identity.rest !== expectedRest || statuteProblems.some((problem) => problem.kind !== "duplicate")) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}][${JSON.stringify(id)}] must name one canonical semantic emoji followed by ${JSON.stringify(expectedRest)}.`);
+        if (!canonicalEmoji(identity.first) || identity.rest !== expectedRest || statuteProblems.some((problem) => problem.kind !== "duplicate")) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}][${JSON.stringify(id)}] must name one canonical semantic emoji followed by ${JSON.stringify(expectedRest)}.`);
         if (physicalNames.has(foldPathEmojiIdentity(name))) problems.push(`subsetDirectoryOverrides[${JSON.stringify(owner)}] has duplicate physical directory ${JSON.stringify(name)}.`);
         physicalNames.add(foldPathEmojiIdentity(name));
       }
@@ -6216,12 +6157,39 @@ export interface RustModuleFact {
   readonly cfgTest: boolean;
 }
 
+/** 🪺️ Refuses module authority whose authored metadata can change its structure. */
+export type RustModuleMetadataProblem = Readonly<{ code: "unsupported-attribute"; attributes: readonly string[] } | { code: "ambiguous-path"; paths: readonly (string | null)[] }>;
+
+/** 🏘️ Retains the exact half-open UTF16 body of a physical root or inline module. */
+export interface RustModuleScopeFact {
+  readonly kind: "root" | "inline";
+  readonly modulePath: readonly string[];
+  readonly bodyStartOffset: number;
+  readonly bodyEndOffset: number;
+  readonly crateCapabilities?: readonly "associated_type_defaults"[];
+  readonly unresolved?: RustModuleMetadataProblem;
+}
+
+/** 🧾️ Owns structural observations independently of admitted module membership. */
+export interface RustModuleGraphFacts {
+  readonly modules: readonly RustModuleGraphFact[];
+  readonly uses: readonly RustModuleUseFact[];
+  readonly includes: readonly RustModuleIncludeFact[];
+  readonly scopes: readonly RustModuleScopeFact[];
+}
+
+/** 🛂️ Requires a unique proven physical root and every enclosing inline module body. */
+export type RustModuleScopeProof = Readonly<{ state: "resolved"; scopes: readonly RustModuleScopeFact[] } | { state: "unresolved"; modulePath: readonly string[]; problem: RustModuleMetadataProblem | Readonly<{ code: "scope-not-unique"; count: number }> }>;
+
 export interface RustModuleGraphFact {
   readonly name: string;
   readonly modulePath: readonly string[];
   readonly visibility: RustStructuralVisibility;
   readonly inline: boolean;
   readonly pathTarget: string | null;
+  readonly declarationOffset: number;
+  readonly macroUse?: true;
+  readonly unresolved?: RustModuleMetadataProblem;
   readonly conditional?: true;
 }
 
@@ -6335,7 +6303,7 @@ export interface RustTestFacts {
 
 type RustTokenKind = "identifier" | "string" | "number" | "punctuation";
 
-interface RustToken {
+export interface RustToken {
   readonly kind: RustTokenKind;
   readonly text: string;
   readonly start: number;
@@ -6493,7 +6461,11 @@ export function rustTokens(source: string): RustToken[] {
     }
     if (/[0-9]/u.test(character)) {
       index += 1;
-      while (index < source.length && /[\p{L}\p{N}_.]/u.test(source[index]!)) index += 1;
+      while (index < source.length && /[\p{L}\p{N}_]/u.test(source[index]!)) index += 1;
+      if (source[index] === "." && source[index + 1] !== "." && !/[\p{L}_]/u.test(source[index + 1] ?? "")) {
+        index += 1;
+        while (index < source.length && /[\p{L}\p{N}_]/u.test(source[index]!)) index += 1;
+      }
       tokens.push({ kind: "number", text: source.slice(start, index), start, end: index });
       continue;
     }
@@ -6524,62 +6496,268 @@ export function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number
   return pairs;
 }
 
-export type RustCompileReference = Readonly<{ kind: "include" | "include_str" | "include_bytes" | "path"; path: string; line: number; base?: "manifest" | "generated"; modulePath?: readonly string[]; directory?: true }>;
+/** 🔑️ Normalizes identifier symbols while preserving raw keyword token spelling. */
+export function rustIdentifierSymbol(token: RustToken | undefined): string | null {
+  return token?.kind === "identifier" ? token.text.replace(/^r#/u, "") : null;
+}
+
+export type RustCompileScope = Readonly<{ kind: "module"; modulePath: readonly string[] } | { kind: "local-block"; startOffset: number; endOffset: number; compilerAttributes?: readonly ("test" | "doc")[] }>;
+export type RustCompileExpansion = Readonly<{ kind: "local-macro"; macro: string; definitionLine: number; invocationLine: number; definitionOffset: number; templateOffset: number; invocationOffset: number; scope: RustCompileScope }>;
+export type RustCompileReference = Readonly<{ kind: "include" | "include_str" | "include_bytes" | "path"; path: string; line: number; base?: "manifest" | "generated"; modulePath?: readonly string[]; inlineBase?: string; directory?: true; expansion?: RustCompileExpansion }>;
 
 /** 🧷️ Discovers authored compile inputs in all configurations and macro templates; unsupported expressions fail closed. */
 export function inspectRustCompileReferences(source: string): readonly RustCompileReference[] {
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), references: RustCompileReference[] = [];
   type Input = Readonly<{ path: string; base?: "manifest" | "generated"; directory?: true }>;
   const literal = (start: number, end: number, bindings: ReadonlyMap<string, Input> = new Map()): Input | null => {
-    if (end === start + 2 && tokens[start]?.text === "$" && tokens[start + 1]?.kind === "identifier") return bindings.get(tokens[start + 1]!.text) ?? null;
+    if (end === start + 2 && tokens[start]?.text === "$" && tokens[start + 1]?.kind === "identifier") return bindings.get(rustIdentifierSymbol(tokens[start + 1])!) ?? null;
     if (end === start + 1 && tokens[start]?.kind === "string") { const path = rustStringValue(tokens[start]); return path === null ? null : { path }; }
     if (tokens[start + 1]?.text !== "!" || pairs.get(start + 2) !== end - 1) return null;
-    if (tokens[start]?.text === "env" && end === start + 5) {
+    if (rustIdentifierSymbol(tokens[start]) === "env" && end === start + 5) {
       const name = rustStringValue(tokens[start + 3]);
       return name === "CARGO_MANIFEST_DIR" ? { path: "", base: "manifest" } : name === "OUT_DIR" ? { path: "", base: "generated" } : null;
     }
-    if (tokens[start]?.text !== "concat") return null;
+    if (rustIdentifierSymbol(tokens[start]) !== "concat") return null;
     const parts = rustTokenSegments(tokens, pairs, start + 3, end - 1, ",").map(([a, b]) => literal(a, b, bindings));
     if (!parts.length || parts.some((part, index) => part === null || index > 0 && part.base)) return null;
     const values = parts as Input[];
     return { path: values.map((part) => part.path).join(""), ...(values[0]!.base ? { base: values[0]!.base } : {}) };
   };
-  const templates: { name: string; start: number; end: number; bindings: ReadonlyMap<string, Input>[]; supported: boolean }[] = [];
+  const lineAt = (offset: number): number => source.slice(0, offset).split("\n").length;
+  const reserved = new Set(["_", "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where", "while", "abstract", "become", "box", "do", "final", "gen", "macro", "override", "priv", "try", "typeof", "unsized", "virtual", "yield"]);
+  const identifier = (index: number): boolean => tokens[index]?.kind === "identifier" && !reserved.has(tokens[index]!.text);
+  const pattern = (index: number): boolean => identifier(index) || tokens[index]?.text === "_";
+  const pathHead = (index: number): boolean => identifier(index) || ["self", "Self", "super", "crate"].includes(tokens[index]?.text ?? "");
+  const segments = (start: number, end: number, trailing: boolean): readonly (readonly [number, number])[] | null => {
+    const values: (readonly [number, number])[] = [];
+    let first = start;
+    for (let cursor = start; cursor < end; cursor++) {
+      const close = pairs.get(cursor);
+      if (close !== undefined && close > cursor) { cursor = close; continue; }
+      if (tokens[cursor]?.text !== ",") continue;
+      if (cursor === first) return null;
+      values.push([first, cursor]); first = cursor + 1;
+    }
+    if (first < end) values.push([first, end]);
+    else if (first > start && !trailing) return null;
+    return values;
+  };
+  const closureBody = (start: number, end: number): number | null => {
+    let cursor = tokens[start]?.text === "move" ? start + 1 : start;
+    if (tokens[cursor]?.text === "||") return cursor + 1;
+    if (tokens[cursor]?.text !== "|") return null;
+    const first = ++cursor;
+    while (cursor < end && tokens[cursor]?.text !== "|") {
+      const close = pairs.get(cursor);
+      if (close !== undefined && close > cursor) cursor = close;
+      cursor++;
+    }
+    if (cursor === end) return null;
+    const parameters = segments(first, cursor, true);
+    if (!parameters) return null;
+    for (const [a, b] of parameters) {
+      if (!pattern(a)) return null;
+      let at = a + 1;
+      if (at === b) continue;
+      if (tokens[at++]?.text !== ":") return null;
+      if (tokens[at]?.text === "&") { at++; if (tokens[at]?.text === "mut") at++; }
+      if (tokens[at]?.text === "[" && pairs.get(at) === b - 1 && b === at + 3 && pathHead(at + 1)) continue;
+      if (!pathHead(at++)) return null;
+      while (at < b && tokens[at]?.text === "::" && identifier(at + 1)) at += 2;
+      if (at !== b) return null;
+    }
+    return cursor + 1;
+  };
+  const argumentsAt = (start: number, end: number): readonly (readonly [number, number])[] | null => {
+    const args: (readonly [number, number])[] = [];
+    let cursor = start;
+    while (cursor < end) {
+      const first = cursor, closure = ["|", "||", "move"].includes(tokens[first]?.text ?? "");
+      if (closure) {
+        const body = closureBody(first, end);
+        if (body === null || body === end || tokens[body]?.text === "->") return null;
+        cursor = body;
+      }
+      while (cursor < end && tokens[cursor]?.text !== ",") {
+        const close = pairs.get(cursor);
+        if (close !== undefined && close > cursor) cursor = close;
+        cursor++;
+      }
+      if (cursor === first) return null;
+      args.push([first, cursor]);
+      if (cursor < end && ++cursor === end) return null;
+    }
+    return args;
+  };
+  const priorities: Readonly<Record<string, number>> = { "||": 1, "&&": 2, "==": 3, "!=": 3, "<": 4, "<=": 4, ">": 4, ">=": 4, "|": 5, "^": 6, "&": 7, "<<": 8, ">>": 8, "+": 9, "-": 9, "*": 10, "/": 10, "%": 10 };
+  const expression = (start: number, end: number, minimum = 0): number | null => {
+    let cursor = start;
+    let compared = false;
+    const token = tokens[cursor];
+    if (!token || cursor === end) return null;
+    if (["|", "||", "move"].includes(token.text)) {
+      const body = closureBody(cursor, end);
+      return body === null || tokens[body]?.text === "->" ? null : expression(body, end);
+    }
+    if (["&", "&&", "!", "-", "*"].includes(token.text)) {
+      const value = expression(cursor + (["&", "&&"].includes(token.text) && tokens[cursor + 1]?.text === "mut" ? 2 : 1), end, 11);
+      if (value === null) return null;
+      cursor = value;
+    } else if (token.text === "{") {
+      const close = pairs.get(cursor);
+      if (close === undefined || close >= end) return null;
+      cursor++;
+      while (cursor < close) {
+        if (tokens[cursor]?.text === "let") {
+          const equal = rustFindTopLevel(tokens, pairs, cursor + 1, close, new Set(["="]));
+          if (equal < 0) return null;
+          const first = cursor + (tokens[cursor + 1]?.text === "mut" ? 2 : 1);
+          if (equal !== first + 1 || !pattern(first)) {
+            if (tokens[first]?.text !== "(" || pairs.get(first) !== equal - 1) return null;
+            const patterns = segments(first + 1, equal - 1, true);
+            if (!patterns?.length || patterns.some(([a, b]) => b !== a + 1 || !pattern(a))) return null;
+          }
+          const value = expression(equal + 1, close);
+          if (value === null || tokens[value]?.text !== ";") return null;
+          cursor = value + 1;
+        } else {
+          const value = expression(cursor, close);
+          if (value === null) return null;
+          if (value === close) { cursor = value; break; }
+          if (tokens[value]?.text !== ";") return null;
+          cursor = value + 1;
+        }
+      }
+      cursor = close + 1;
+    } else if (token.text === "(" || token.text === "[") {
+      const close = pairs.get(cursor), values = close === undefined ? null : segments(cursor + 1, close, true);
+      if (close === undefined || close >= end || values === null || values.some(([a, b]) => expression(a, b) !== b)) return null;
+      cursor = close + 1;
+    } else if (["identifier", "number", "string"].includes(token.kind)) {
+      const path = pathHead(cursor);
+      if (token.kind === "identifier" && !path && !["true", "false"].includes(token.text)) return null;
+      cursor++;
+      while (path && tokens[cursor]?.text === "::" && identifier(cursor + 1)) cursor += 2;
+      if (path && tokens[cursor]?.text === "!" && pairs.has(cursor + 1)) cursor = pairs.get(cursor + 1)! + 1;
+      else if (path && tokens[cursor]?.text === "{") {
+        const close = pairs.get(cursor), fields = close === undefined ? null : segments(cursor + 1, close, true);
+        if (close === undefined || close >= end || fields === null || fields.some(([a, b]) => !identifier(a) || b !== a + 1 && (tokens[a + 1]?.text !== ":" || expression(a + 2, b) !== b))) return null;
+        cursor = close + 1;
+      }
+    } else return null;
+    while (cursor < end) {
+      if (tokens[cursor]?.text === "(" || tokens[cursor]?.text === "[") {
+        const close = pairs.get(cursor), values = close === undefined ? null : segments(cursor + 1, close, true);
+        if (close === undefined || close >= end || values === null || values.some(([a, b]) => expression(a, b) !== b) || tokens[cursor]?.text === "[" && values.length !== 1) return null;
+        cursor = close + 1; continue;
+      }
+      if (tokens[cursor]?.text === "." && (identifier(cursor + 1) || tokens[cursor + 1]?.kind === "number" && /^\d+(?:\.\d+)*$/u.test(tokens[cursor + 1]!.text))) { cursor += 2; continue; }
+      const operator = tokens[cursor]?.text ?? "", priority = Object.hasOwn(priorities, operator) ? priorities[operator]! : 0;
+      if (!priority || priority < minimum) break;
+      if (priority === 3 || priority === 4) { if (compared) return null; compared = true; }
+      else if (priority < 3) compared = false;
+      const value = expression(cursor + 1, end, priority + 1);
+      if (value === null) return null;
+      cursor = value;
+    }
+    return cursor;
+  };
+  const fragment = (start: number, end: number, kind: string): boolean => {
+    if (kind === "ident") return end === start + 1 && tokens[start]?.kind === "identifier" && tokens[start]?.text !== "_";
+    if (kind === "literal") return end === start + 1 && (["string", "number"].includes(tokens[start]?.kind ?? "") || ["true", "false"].includes(tokens[start]?.text ?? ""));
+    if (kind === "tt") return end === start + 1 || pairs.get(start) === end - 1;
+    return expression(start, end) === end;
+  };
+  const templates: { name: string; start: number; end: number; definition: number; parameters: readonly (readonly [number, number])[]; required: ReadonlySet<string>; scopeEnd: number; scope?: RustCompileScope; hasInputs: boolean; bindings: { values: ReadonlyMap<string, Input>; invocation: number }[]; supported: boolean }[] = [];
   for (let index = 0; index < tokens.length; index++) {
-    if (tokens[index]?.text !== "macro_rules" || tokens[index + 1]?.text !== "!") continue;
-    const name = tokens[index + 2]?.text, body = index + 3, close = pairs.get(body), matcher = body + 1, matcherClose = pairs.get(matcher);
+    const attributes = rustAttributes(tokens, pairs, index, tokens.length), definition = attributes.next;
+    if (tokens[definition]?.text !== "macro_rules" || tokens[definition + 1]?.text !== "!") continue;
+    const name = rustIdentifierSymbol(tokens[definition + 2]), body = definition + 3, close = pairs.get(body), matcher = body + 1, matcherClose = pairs.get(matcher);
     if (!name || close === undefined) continue;
     const transcriber = (matcherClose ?? body) + 2, transcriberClose = pairs.get(transcriber);
-    const parameters = matcherClose === undefined ? [] : rustTokenSegments(tokens, pairs, matcher + 1, matcherClose, ",");
-    const simple = matcherClose !== undefined && tokens[matcherClose + 1]?.text === "=>" && transcriberClose !== undefined && (transcriberClose + 1 === close || transcriberClose + 2 === close && tokens[transcriberClose + 1]?.text === ";") && parameters.every(([a, b]) => b === a + 4 && tokens[a]?.text === "$" && tokens[a + 1]?.kind === "identifier" && tokens[a + 2]?.text === ":" && ["literal", "expr", "tt"].includes(tokens[a + 3]?.text ?? ""));
-    const template = { name, start: body, end: close, bindings: [] as ReadonlyMap<string, Input>[], supported: simple };
-    const scopeEnd = [...pairs].filter(([a, b]) => a < index && b > close && tokens[a]?.text === "{").sort((left, right) => right[0] - left[0])[0]?.[1] ?? tokens.length;
-    if (simple) for (let invocation = close + 1; invocation < scopeEnd; invocation++) {
-      if (tokens[invocation]?.text !== name || tokens[invocation + 1]?.text !== "!") continue;
-      if (tokens[invocation - 1]?.text === "::" || tokens[invocation - 1]?.text === "macro_rules") { template.supported = false; continue; }
+    const segmentsForParameters = matcherClose === undefined ? null : segments(matcher + 1, matcherClose, false), parameters = segmentsForParameters ?? [];
+    const required = new Set<string>();
+    let hasInputs = false;
+    for (let at = transcriber + 1; at < (transcriberClose ?? close); at++) if (["include", "include_str", "include_bytes"].includes(rustIdentifierSymbol(tokens[at]) ?? "") && tokens[at + 1]?.text === "!") {
+      hasInputs = true;
+      const end = pairs.get(at + 2);
+      if (end !== undefined) for (let parameter = at + 3; parameter < end; parameter++) if (tokens[parameter]?.text === "$" && tokens[parameter + 1]?.kind === "identifier") required.add(rustIdentifierSymbol(tokens[parameter + 1])!);
+    }
+    const simple = segmentsForParameters !== null && matcherClose !== undefined && tokens[matcherClose + 1]?.text === "=>" && transcriberClose !== undefined && (transcriberClose + 1 === close || transcriberClose + 2 === close && tokens[transcriberClose + 1]?.text === ";") && parameters.every(([a, b]) => b === a + 4 && tokens[a]?.text === "$" && tokens[a + 1]?.kind === "identifier" && tokens[a + 2]?.text === ":" && ["literal", "expr", "tt", "ident"].includes(tokens[a + 3]?.text ?? "")) && new Set(parameters.map(([a]) => rustIdentifierSymbol(tokens[a + 1]))).size === parameters.length && !rustMetadataAttributes(tokens, pairs, attributes).items.some((item) => !["allow", "warn", "deny", "forbid", "expect", "doc", "rustfmt::skip"].includes(item.name)) && !tokens.slice(transcriber + 1, transcriberClose).some((token, at, body) => token.text === "macro_rules" || rustIdentifierSymbol(token) === name && body[at + 1]?.text === "!");
+    const scopeEnd = hasInputs ? [...pairs].filter(([a, b]) => a < definition && b > close && tokens[a]?.text === "{").sort((left, right) => right[0] - left[0])[0]?.[1] ?? tokens.length : close;
+    templates.push({ name, start: body, end: close, definition, parameters, required, scopeEnd, hasInputs, bindings: [], supported: simple });
+    index = definition;
+  }
+  for (const template of templates) {
+    if (!template.hasInputs) continue;
+    if (templates.filter((candidate) => candidate.name === template.name).length > 1) template.supported = false;
+    if (template.supported) for (let invocation = 0; invocation < template.scopeEnd; invocation++) {
+      const { name, parameters } = template;
+      if (invocation > template.end) {
+        const attributes = rustAttributes(tokens, pairs, invocation, template.scopeEnd);
+        if (rustMetadataAttributes(tokens, pairs, attributes).items.some((item) => !["allow", "warn", "deny", "forbid", "expect", "doc", "path", "rustfmt::skip"].includes(item.name))) template.supported = false;
+      }
+      if (invocation > template.end && tokens[invocation]?.text === "mod" && tokens[invocation + 1]?.kind === "identifier" && tokens[rustFindTopLevel(tokens, pairs, invocation + 2, template.scopeEnd, new Set([";", "{"]))]?.text === ";" || invocation > template.end && rustIdentifierSymbol(tokens[invocation]) === "include" && tokens[invocation + 1]?.text === "!") template.supported = false;
+      if (rustIdentifierSymbol(tokens[invocation]) !== name || tokens[invocation + 1]?.text !== "!") continue;
+      if (tokens[invocation - 1]?.text === "macro_rules") continue;
+      if (invocation < template.end || tokens[invocation - 1]?.text === "::" || templates.some((owner) => invocation > owner.start && invocation < owner.end) || [...pairs].some(([a, b]) => a < invocation && b > invocation && tokens[a - 1]?.text === "!")) { template.supported = false; continue; }
       const invocationClose = pairs.get(invocation + 2);
       if (invocationClose === undefined) { template.supported = false; continue; }
-      const args = rustTokenSegments(tokens, pairs, invocation + 3, invocationClose, ",");
-      if (args.length !== parameters.length) { template.supported = false; continue; }
+      const args = argumentsAt(invocation + 3, invocationClose);
+      if (!args || args.length !== parameters.length) { template.supported = false; continue; }
       const bound = new Map<string, Input>();
       for (let at = 0; at < parameters.length; at++) {
-        const [a] = parameters[at]!, [x, y] = args[at]!, value = literal(x, y);
-        if (!value || tokens[a + 3]?.text === "literal" && (y !== x + 1 || tokens[x]?.kind !== "string")) { template.supported = false; continue; }
-        bound.set(tokens[a + 1]!.text, value);
+        const [a] = parameters[at]!, [x, y] = args[at]!, parameter = rustIdentifierSymbol(tokens[a + 1])!;
+        if (!fragment(x, y, tokens[a + 3]!.text)) { template.supported = false; continue; }
+        if (template.required.has(parameter)) {
+          const value = literal(x, y);
+          if (!value) template.supported = false;
+          else bound.set(parameter, value);
+        }
       }
-      if (bound.size === parameters.length) template.bindings.push(bound);
+      if (bound.size === template.required.size) template.bindings.push({ values: bound, invocation });
     }
-    templates.push(template);
   }
-  for (const template of templates) if (templates.filter((candidate) => candidate.name === template.name).length > 1) template.supported = false;
-  const add = (kind: RustCompileReference["kind"], input: Input | null, offset: number, modulePath: readonly string[] = []): void => {
-    const line = source.slice(0, offset).split("\n").length;
+  const add = (kind: RustCompileReference["kind"], input: Input | null, offset: number, modulePath: readonly string[] = [], inlineBase?: string, expansion?: RustCompileExpansion): void => {
+    const line = lineAt(offset);
     if (!input || !input.path && !input.directory || input.base && !input.path.startsWith("/") || input.base === "generated" && input.path.split(/[\\/]/u).includes("..")) throw new Error(`Unsupported Rust compile expression at line ${line}: ${kind}`);
-    references.push({ kind, ...input, line, ...(modulePath.length ? { modulePath } : {}) });
+    references.push({ kind, ...input, line, ...(modulePath.length ? { modulePath } : {}), ...(kind === "path" && inlineBase !== undefined ? { inlineBase } : {}), ...(expansion ? { expansion } : {}) });
   };
-  const visit = (start: number, end: number, modulePath: readonly string[]): void => {
+  const visit = (start: number, end: number, modulePath: readonly string[], inlineBase?: string, scope: RustCompileScope | null = { kind: "module", modulePath }): void => {
     for (let index = start; index < end; index++) {
-      const attributes = rustAttributes(tokens, pairs, index, end), visibility = rustVisibility(tokens, pairs, attributes.next), token = tokens[visibility.next];
+      const inner = tokens[index]?.text === "#" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.text === "[", innerClose = inner ? pairs.get(index + 2) : undefined;
+      if (inner && (innerClose === undefined || innerClose >= end)) throw new Error(`Unsupported Rust compile attribute delimiter at line ${lineAt(tokens[index]!.start)}`);
+      const attributes = inner ? { ranges: [[index + 3, innerClose!]] as readonly (readonly [number, number])[], next: innerClose! + 1 } : rustAttributes(tokens, pairs, index, end), visibility = rustVisibility(tokens, pairs, attributes.next), token = tokens[visibility.next];
+      for (const [a, b] of attributes.ranges) {
+        const docs = rustMetadataAttributes(tokens, pairs, { ranges: [[a, b]], next: attributes.next }).items.filter((item) => item.name === "doc");
+        for (let at = a; at < b; at++) if (["include", "include_str", "include_bytes"].includes(rustIdentifierSymbol(tokens[at]) ?? "") && tokens[at + 1]?.text === "!") {
+          if (!docs.some((doc) => at >= doc.start && at < doc.end) || [...pairs].some(([open, close]) => open < at && close > at && tokens[open - 1]?.text === "!" && rustIdentifierSymbol(tokens[open - 2]) !== null && !["concat", "include", "include_str", "include_bytes", "env"].includes(rustIdentifierSymbol(tokens[open - 2])!))) throw new Error(`Unsupported Rust compile attribute expression at line ${lineAt(tokens[at]!.start)}`);
+        }
+        visit(a, b, modulePath, inlineBase, null);
+      }
+      if (inner) { index = innerClose!; continue; }
+      if (token?.text === "macro_rules") {
+        const template = templates.find((candidate) => candidate.definition === visibility.next);
+        if (template && scope) template.scope = scope;
+        else if (template) template.supported = false;
+      }
+      if (token?.text === "fn" && tokens[visibility.next + 1]?.kind === "identifier" && tokens[visibility.next + 2]?.text === "(") {
+        const parameterClose = pairs.get(visibility.next + 2), boundary = parameterClose === undefined ? -1 : rustFindTopLevel(tokens, pairs, parameterClose + 1, end, new Set([";", "{"]));
+        let depth = 0;
+        const signature = parameterClose !== undefined && boundary >= 0 && tokens.slice(parameterClose + 1, boundary).every((token) => {
+          if (token.text === "<") depth++;
+          if (token.text === ">") depth--;
+          return depth >= 0 && (token.kind === "identifier" || ["->", "::", "<", ">", ",", "&", "'", "[", "]"].includes(token.text));
+        }) && depth === 0;
+        const close = boundary < 0 ? undefined : pairs.get(boundary);
+        if (close !== undefined) {
+          const inertAttributes = attributes.ranges.every(([start, end]) => tokens[start]?.text === "test" && end === start + 1 || tokens[start]?.text === "doc" && end === start + 3 && tokens[start + 1]?.text === "=" && tokens[start + 2]?.kind === "string");
+          const compilerAttributes = attributes.ranges.map(([start]) => tokens[start]!.text as "test" | "doc");
+          const plain = scope?.kind === "module" && signature && inertAttributes && !["async", "unsafe", "const", "extern"].includes(tokens[visibility.next - 1]?.text ?? "") && tokens[visibility.next - 2]?.text !== "extern";
+          visit(boundary + 1, close, modulePath, inlineBase, plain ? { kind: "local-block", startOffset: tokens[boundary]!.start, endOffset: tokens[close]!.end, ...(compilerAttributes.length ? { compilerAttributes } : {}) } : null);
+          index = close; continue;
+        }
+      }
       if (token?.text === "mod" && tokens[visibility.next + 1]?.kind === "identifier") {
         const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
         if (boundary >= 0) {
@@ -6588,11 +6766,15 @@ export function inspectRustCompileReferences(source: string): readonly RustCompi
             const close = pairs.get(boundary);
             if (close === undefined) throw new Error("Unsupported Rust compile module body");
             if (attributes.ranges.some(([start, end]) => tokens[start]?.text === "cfg_attr" && rustPathAttributes(tokens, pairs, { ranges: [[start, end]], next: attributes.next }).length)) throw new Error("Unsupported Rust compile conditional inline module mount");
-            for (const path of paths) add("path", path.path === null ? null : { path: path.path, directory: true }, path.offset, modulePath);
-            visit(boundary + 1, close, [...modulePath, tokens[visibility.next + 1]!.text]);
+            for (const path of paths) add("path", path.path === null ? null : { path: path.path, directory: true }, path.offset, modulePath, inlineBase);
+            if (paths.length > 1) throw new Error("Unsupported Rust compile ambiguous inline module mount");
+            const mount = paths[0]?.path, name = rustIdentifierSymbol(tokens[visibility.next + 1])!;
+            if (mount !== undefined && mount !== null && (posix.isAbsolute(mount) || /^[A-Za-z]:/u.test(mount) || mount.includes("\\"))) throw new Error("Unsupported Rust compile nonportable inline module mount");
+            const childBase = inlineBase !== undefined ? `${inlineBase}/${mount ?? name}` : modulePath.length === 0 && mount !== undefined && mount !== null ? mount || "." : undefined;
+            visit(boundary + 1, close, [...modulePath, name], childBase);
             index = close;
           } else {
-            for (const path of paths) add("path", path.path === null ? null : { path: path.path }, path.offset, modulePath);
+            for (const path of paths) add("path", path.path === null ? null : { path: path.path }, path.offset, modulePath, inlineBase);
             index = boundary;
           }
           continue;
@@ -6600,17 +6782,20 @@ export function inspectRustCompileReferences(source: string): readonly RustCompi
       }
       if (attributes.next > index) { index = attributes.next - 1; continue; }
       const current = tokens[index]!;
-      if (["include", "include_str", "include_bytes"].includes(current.text) && tokens[index + 1]?.text === "!") {
+      const compileMacro = rustIdentifierSymbol(current);
+      if (["include", "include_str", "include_bytes"].includes(compileMacro ?? "") && tokens[index + 1]?.text === "!") {
         const close = pairs.get(index + 2);
         if (close === undefined) throw new Error("Unsupported Rust compile delimiter");
         const end = tokens[close - 1]?.text === "," ? close - 1 : close, input = literal(index + 3, end), template = templates.find((template) => index > template.start && index < template.end);
-        const inputs = input ? [input] : template?.supported && template.bindings.length ? template.bindings.map((bindings) => literal(index + 3, end, bindings)) : [null];
-        for (const value of inputs) add(current.text as RustCompileReference["kind"], value, current.start, modulePath);
+        if (compileMacro !== "include" && template?.supported && template.scope && template.bindings.length) for (const binding of template.bindings) {
+          const definitionOffset = tokens[template.definition]!.start, invocationOffset = tokens[binding.invocation]!.start;
+          add(compileMacro as RustCompileReference["kind"], literal(index + 3, end, binding.values), current.start, modulePath, undefined, { kind: "local-macro", macro: template.name, definitionLine: lineAt(definitionOffset), invocationLine: lineAt(invocationOffset), definitionOffset, templateOffset: current.start, invocationOffset, scope: template.scope });
+        } else add(compileMacro as RustCompileReference["kind"], input, current.start, modulePath);
         index = close;
         continue;
       }
       const close = pairs.get(index);
-      if (close !== undefined && close > index) { visit(index + 1, close, modulePath); index = close; }
+      if (close !== undefined && close > index) { visit(index + 1, close, modulePath, inlineBase, null); index = close; }
     }
   };
   visit(0, tokens.length, []);
@@ -8199,6 +8384,7 @@ function rustMetadataAttributeHead(tokens: readonly RustToken[], pairs: Readonly
     if (tokens[index]?.text !== "::") break;
     index += 1;
   }
+  if (parts.length > 0 && tokens[index]?.text === "=" && index + 1 < end) return { name: parts.join("::"), arguments: null };
   if (parts.length === 0 || tokens[index]?.text !== "(") return null;
   const close = pairs.get(index);
   if (close === undefined || close !== end - 1) return null;
@@ -8363,6 +8549,7 @@ export function inspectRustMutationMetadataFacts(source: string): RustMutationMe
 
 /** 📦️ Cargo entry-point facts shared by module consumers and physical path authority. */
 export interface RustCargoManifestFacts {
+  readonly kind: "package" | "workspace" | "invalid";
   readonly crateName: string | null;
   readonly libPath: string | null;
   readonly dependencies: readonly string[];
@@ -8392,13 +8579,14 @@ export function inspectRustCargoManifest(source: string, strict = false): RustCa
   if (strict) {
     try {
       const parsed = cargoProviderTomlParser.parse(source) as { package?: { name?: unknown }; lib?: { name?: unknown; path?: unknown }; dependencies?: Record<string, unknown> } & Record<string, unknown>;
+      if (parsed.package === undefined && parsed.workspace !== null && typeof parsed.workspace === "object" && !Array.isArray(parsed.workspace) && parsed.lib === undefined && RUST_CARGO_TARGET_TABLES.every((table) => parsed[table] === undefined)) return { kind: "workspace", crateName: null, libPath: null, dependencies: [], targetPaths: [], valid: true };
       const packageName = typeof parsed.package?.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.package.name) ? parsed.package.name : null;
       const libName = parsed.lib?.name === undefined ? null : typeof parsed.lib.name === "string" && /^[A-Za-z0-9_-]+$/u.test(parsed.lib.name) ? parsed.lib.name : undefined;
       const libPath = parsed.lib?.path === undefined ? null : typeof parsed.lib.path === "string" ? parsed.lib.path : undefined;
       const valid = packageName !== null && libName !== undefined && libPath !== undefined && (libPath === null || !posix.isAbsolute(libPath) && !/^[A-Za-z]:/u.test(libPath) && !libPath.includes("\\"));
       const targetPaths = RUST_CARGO_TARGET_TABLES.flatMap((table) => (Array.isArray(parsed[table]) ? (parsed[table] as { path?: unknown }[]) : [])).map((row) => row.path).filter(acceptableTargetPath);
-      return { crateName: libName ?? packageName, libPath: libPath ?? null, dependencies: Object.keys(parsed.dependencies ?? {}).map((name) => name.replaceAll("-", "_")).sort(), targetPaths, valid };
-    } catch { return { crateName: null, libPath: null, dependencies: [], targetPaths: [], valid: false }; }
+      return { kind: valid ? "package" : "invalid", crateName: libName ?? packageName, libPath: libPath ?? null, dependencies: Object.keys(parsed.dependencies ?? {}).map((name) => name.replaceAll("-", "_")).sort(), targetPaths, valid };
+    } catch { return { kind: "invalid", crateName: null, libPath: null, dependencies: [], targetPaths: [], valid: false }; }
   }
   let valid = true;
   const section = (name: string): string | null => {
@@ -8420,10 +8608,13 @@ export function inspectRustCargoManifest(source: string, strict = false): RustCa
   if (!packageName || libPath !== null && (posix.isAbsolute(libPath) || /^[A-Za-z]:/u.test(libPath))) valid = false;
   const dependencies = [...(dependencySection ?? "").matchAll(/^\s*([A-Za-z0-9_-]+)\s*=/gmu)].map((match) => match[1]!.replaceAll("-", "_")).sort();
   const targetPaths = RUST_CARGO_TARGET_TABLES.flatMap((table) => rustCargoArrayTableBodies(source, table)).map((body) => /^\s*path\s*=\s*"([^"\\]+)"\s*$/mu.exec(body)?.[1]).filter(acceptableTargetPath);
-  return { crateName, libPath, dependencies, targetPaths, valid };
+  return { kind: valid ? "package" : "invalid", crateName, libPath, dependencies, targetPaths, valid };
 }
 
 /** 🧬️ One proven lexical module context and its Cargo ownership, if declared. */
+export type RustModuleMount = Readonly<{ kind: "root" } | { kind: "module"; from: string; modulePath: readonly string[]; sourceScope: readonly string[]; declarationOffset: number; inline: boolean; visibility: RustStructuralVisibility; macroUse?: true } | { kind: "include"; from: string; modulePath: readonly string[]; sourceScope: readonly string[]; line: number; path: string }>;
+
+/** 📍️ Retains each actual source origin without collapsing alternate mounts. */
 export interface RustModuleContext {
   readonly crateRoot: string;
   readonly manifestPath: string | null;
@@ -8431,102 +8622,166 @@ export interface RustModuleContext {
   readonly sourceScope: readonly string[];
   readonly moduleBase: string;
   readonly sourceChain: readonly string[];
+  readonly mount: RustModuleMount;
 }
 
 /** 🕸️ Mounted Rust sources and dependency names, with explicit manifest provenance. */
 export interface RustModuleGraph {
+  readonly participations: readonly RustModuleParticipation[];
   readonly targets: ReadonlyMap<string, string>;
+  readonly ambiguousTargets: ReadonlySet<string>;
+  readonly unresolvedTargets: ReadonlySet<string>;
   readonly contexts: ReadonlyMap<string, readonly RustModuleContext[]>;
   readonly namedCrates: ReadonlyMap<string, readonly string[]>;
   readonly dependencies: ReadonlyMap<string, readonly string[]>;
   readonly invalidManifests: ReadonlySet<string>;
 }
 
+/** 🚦️ A retained authored origin is distinct from permission to resolve its module namespace. */
+export type RustModuleParticipationReason = "invalid-manifest" | "unavailable-manifest" | "nonportable-target" | "unavailable-source" | "unresolved-scope" | "unresolved-target" | "conflicting-target" | "cyclic-target";
+
+/** 📸️ Raw foreign targets and malformed manifests never become invented source locators. */
+export type RustModuleParticipation = Readonly<{ target: Readonly<{ kind: "manifest"; path: string }>; state: "denied"; reason: "invalid-manifest" | "unavailable-manifest" } | { target: Readonly<{ kind: "source"; path: string } | { kind: "unresolved"; rawPath: string }>; context: RustModuleContext } & ({ state: "admitted" } | { state: "denied"; reason: RustModuleParticipationReason })>;
+
 /** 🦀️ Builds only file-membership-proven module edges; conventional roots never confer manifest authority. */
 export function inspectRustModuleGraph(files: readonly string[], readSource: (path: string) => string | undefined, options: Readonly<{ conventionalRoots?: boolean; strictManifests?: boolean; checkCancellation?: () => void; compileReferences?: ReadonlyMap<string, readonly RustCompileReference[]> }> = {}): RustModuleGraph {
   const compare = (left: string, right: string): number => Buffer.from(left).compare(Buffer.from(right));
-  const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs"))), factsBySource = new Map<string, ReturnType<typeof inspectRustModuleGraphFacts>>();
-  const targets = new Map<string, string>(), contexts = new Map<string, RustModuleContext[]>(), namedCrates = new Map<string, string[]>(), dependencies = new Map<string, readonly string[]>(), invalidManifests = new Set<string>();
+  const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs"))), sources = new Map<string, string | undefined>(), factsBySource = new Map<string, RustModuleGraphFacts>();
+  const targets = new Map<string, string>(), ambiguousTargets = new Set<string>(), unresolvedTargets = new Set<string>(), contexts = new Map<string, RustModuleContext[]>(), namedCrates = new Map<string, string[]>(), dependencies = new Map<string, readonly string[]>(), invalidManifests = new Set<string>();
+  const origins: { target: Readonly<{ kind: "source"; path: string } | { kind: "unresolved"; rawPath: string }>; context: RustModuleContext; reason?: RustModuleParticipationReason }[] = [], manifestReasons = new Map<string, "invalid-manifest" | "unavailable-manifest">(), deniedKeys = new Map<string, RustModuleParticipationReason>();
+  const precedence: readonly RustModuleParticipationReason[] = ["invalid-manifest", "unavailable-manifest", "nonportable-target", "unresolved-scope", "conflicting-target", "cyclic-target", "unresolved-target", "unavailable-source"];
+  const read = (path: string): string | undefined => { if (!sources.has(path)) sources.set(path, readSource(path)); return sources.get(path); };
+  const sourceFacts = (path: string): RustModuleGraphFacts => {
+    if (!factsBySource.has(path)) { const source = read(path); factsBySource.set(path, source === undefined ? { modules: [], uses: [], includes: [], scopes: [] } : inspectRustModuleGraphFacts(source)); }
+    return factsBySource.get(path)!;
+  };
+  const deny = (crateRoot: string, modulePath: readonly string[], reason: RustModuleParticipationReason): void => {
+    const key = crateRoot + "\0" + modulePath.join("::"), prior = deniedKeys.get(key);
+    unresolvedTargets.add(key);
+    if (!prior || precedence.indexOf(reason) < precedence.indexOf(prior)) deniedKeys.set(key, reason);
+  };
   const manifestRoots = files.filter((path) => path === "Cargo.toml" || path.endsWith("/Cargo.toml")).sort(compare).flatMap((manifest) => {
     options.checkCancellation?.();
-    const facts = inspectRustCargoManifest(readSource(manifest) ?? "", options.strictManifests === true);
-    if (!facts.valid) invalidManifests.add(manifest);
-    if (options.strictManifests && !facts.valid) return [];
+    const source = read(manifest), facts = inspectRustCargoManifest(source ?? "", options.strictManifests === true);
+    if (!facts.valid) { invalidManifests.add(manifest); manifestReasons.set(manifest, source === undefined ? "unavailable-manifest" : "invalid-manifest"); }
+    if (facts.kind === "workspace" || !facts.valid && facts.crateName === null && facts.libPath === null) return [];
     const entry = posix.normalize(posix.join(posix.dirname(manifest), facts.libPath ?? "src/lib.rs"));
-    const library = sourceFiles.has(entry) ? [{ path: entry, manifestPath: manifest, crateName: facts.crateName, dependencies: facts.dependencies }] : [];
-    const targets = facts.targetPaths.map((target) => posix.normalize(posix.join(posix.dirname(manifest), target))).filter((path) => path !== entry && sourceFiles.has(path)).map((path) => ({ path, manifestPath: manifest, crateName: null, dependencies: facts.dependencies }));
-    return [...library, ...targets];
+    if (entry.startsWith("../") || posix.isAbsolute(entry) || /^[A-Za-z]:/u.test(entry)) return [];
+    return [{ path: entry, manifestPath: manifest, crateName: facts.crateName, dependencies: facts.dependencies }, ...facts.targetPaths.map((target) => posix.normalize(posix.join(posix.dirname(manifest), target))).filter((path) => path !== entry && !path.startsWith("../")).map((path) => ({ path, manifestPath: manifest, crateName: null, dependencies: facts.dependencies }))];
   });
-  const conventionalRoots = options.conventionalRoots ? [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path)).map((path) => ({ path, manifestPath: null, crateName: null, dependencies: [] as string[] })) : [];
-  const addContext = (path: string, context: RustModuleContext): boolean => {
-    const existing = contexts.get(path) ?? [];
-    if (existing.some((value) => value.crateRoot === context.crateRoot && value.manifestPath === context.manifestPath && value.modulePath.join("::") === context.modulePath.join("::") && value.sourceScope.join("::") === context.sourceScope.join("::") && value.moduleBase === context.moduleBase)) return false;
-    contexts.set(path, [...existing, context]);
-    return true;
-  };
+  const manifestOwns = (manifest: string, path: string): boolean => posix.dirname(manifest) === "." || path.startsWith(posix.dirname(manifest) + "/");
+  const conventionalRoots = options.conventionalRoots ? [...sourceFiles].filter((path) => /(?:^|\/)(?:lib|main)\.rs$/u.test(path) && !manifestRoots.some((root) => root.path === path) && ![...invalidManifests].some((manifest) => manifestOwns(manifest, path))).map((path) => ({ path, manifestPath: null, crateName: null, dependencies: [] as string[] })) : [];
   for (const root of [...manifestRoots, ...conventionalRoots].sort((left, right) => compare(left.path, right.path))) {
-    const crateRoot = root.path;
+    const crateRoot = root.path, pending: { sourcePath: string; context: RustModuleContext }[] = [], seen = new Set<string>();
     if (root.crateName) namedCrates.set(root.crateName.replaceAll("-", "_"), [...(namedCrates.get(root.crateName.replaceAll("-", "_")) ?? []), crateRoot]);
     dependencies.set(crateRoot, root.dependencies);
-    const pending: { readonly sourcePath: string; readonly context: RustModuleContext }[] = [{ sourcePath: crateRoot, context: { crateRoot, manifestPath: root.manifestPath, modulePath: [], sourceScope: [], moduleBase: posix.dirname(crateRoot), sourceChain: [crateRoot] } }];
-    addContext(crateRoot, pending[0]!.context);
+    const observe = (path: string, context: RustModuleContext, reason?: RustModuleParticipationReason): void => {
+      const identity = path + "\0" + JSON.stringify(context);
+      if (seen.has(identity)) return;
+      seen.add(identity);
+      const localReason = reason ?? (!sourceFiles.has(path) || read(path) === undefined ? "unavailable-source" : rustModuleScopeProof(sourceFacts(path), context.sourceScope).state === "unresolved" || path !== crateRoot && sourceFacts(path).scopes.some((scope) => scope.crateCapabilities?.length) ? "unresolved-scope" : undefined);
+      origins.push({ target: { kind: "source", path }, context, ...(localReason ? { reason: localReason } : {}) });
+      if (localReason) deny(crateRoot, context.modulePath, localReason);
+      else contexts.set(path, [...(contexts.get(path) ?? []), context]);
+      if (sourceFiles.has(path) && read(path) !== undefined && reason !== "cyclic-target") pending.push({ sourcePath: path, context });
+    };
+    observe(crateRoot, { crateRoot, manifestPath: root.manifestPath, modulePath: [], sourceScope: [], moduleBase: posix.dirname(crateRoot), sourceChain: [crateRoot], mount: { kind: "root" } });
     for (let index = 0; index < pending.length; index++) {
       options.checkCancellation?.();
       const { sourcePath, context } = pending[index]!;
-      if (!factsBySource.has(sourcePath)) factsBySource.set(sourcePath, inspectRustModuleGraphFacts(readSource(sourcePath) ?? ""));
-      for (const module of factsBySource.get(sourcePath)!.modules.filter((fact) => fact.modulePath.length === context.sourceScope.length + 1 && fact.modulePath.slice(0, -1).join("::") === context.sourceScope.join("::"))) {
-        if (options.strictManifests && module.pathTarget !== null && (posix.isAbsolute(module.pathTarget) || /^[A-Za-z]:/u.test(module.pathTarget) || module.pathTarget.includes("\\"))) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
-        const base = module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase;
-        const candidates = module.inline ? [sourcePath] : module.pathTarget === null ? [posix.join(base, `${module.name}.rs`), posix.join(base, module.name, "mod.rs")] : [posix.normalize(posix.join(base, module.pathTarget))];
-        const matching = candidates.filter((candidate) => !candidate.startsWith("..") && sourceFiles.has(candidate)), target = matching.length === 1 ? matching[0] : undefined;
-        if (!target) continue;
-        if (!module.inline && context.sourceChain.includes(target)) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
-        const moduleBase = module.inline ? posix.normalize(posix.join(base, module.pathTarget ?? module.name)) : module.pathTarget === null && posix.basename(target) === `${module.name}.rs` ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
-        const child: RustModuleContext = { crateRoot, manifestPath: root.manifestPath, modulePath: [...context.modulePath, module.name], sourceScope: module.inline ? module.modulePath : [], moduleBase, sourceChain: module.inline ? context.sourceChain : [...context.sourceChain, target] };
-        const key = `${crateRoot}\0${child.modulePath.join("::")}`, prior = targets.get(key);
-        if (prior && prior !== target) continue;
-        targets.set(key, target);
-        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
+      for (const module of sourceFacts(sourcePath).modules.filter((fact) => fact.modulePath.length === context.sourceScope.length + 1 && fact.modulePath.slice(0, -1).join("::") === context.sourceScope.join("::"))) {
+        const modulePath = [...context.modulePath, module.name], key = crateRoot + "\0" + modulePath.join("::");
+        const mount: RustModuleMount = { kind: "module", from: sourcePath, modulePath: context.modulePath, sourceScope: context.sourceScope, declarationOffset: module.declarationOffset, inline: module.inline, visibility: module.visibility, ...(module.macroUse ? { macroUse: true } : {}) };
+        if (module.unresolved) deny(crateRoot, modulePath, "unresolved-target");
+        const paths = module.unresolved?.code === "ambiguous-path" ? module.unresolved.paths : [module.pathTarget];
+        const candidates = new Set<string>();
+        for (const path of paths) {
+          if (path !== null && (posix.isAbsolute(path) || /^[A-Za-z]:/u.test(path) || path.includes("\\") || path.includes("\0"))) {
+            origins.push({ target: { kind: "unresolved", rawPath: path }, context: { ...context, modulePath, mount }, reason: "nonportable-target" });
+            deny(crateRoot, modulePath, "nonportable-target");
+            if (root.manifestPath && options.strictManifests) { invalidManifests.add(root.manifestPath); manifestReasons.set(root.manifestPath, "invalid-manifest"); }
+            continue;
+          }
+          const base = path !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase;
+          for (const target of module.inline ? [sourcePath] : path === null ? [posix.join(base, module.name + ".rs"), posix.join(base, module.name, "mod.rs")] : [posix.normalize(posix.join(base, path))]) {
+            if (target.startsWith("../") || target === "..") { origins.push({ target: { kind: "unresolved", rawPath: path ?? target }, context: { ...context, modulePath, mount }, reason: "nonportable-target" }); deny(crateRoot, modulePath, "nonportable-target"); }
+            else candidates.add(target);
+          }
+        }
+        const matching = [...candidates].filter((target) => sourceFiles.has(target)), selected = matching.length ? matching : [...candidates];
+        if (matching.length !== 1) { deny(crateRoot, modulePath, matching.length > 1 ? "conflicting-target" : "unavailable-source"); if (matching.length > 1) ambiguousTargets.add(key); }
+        for (const target of selected) {
+          const base = module.pathTarget !== null && context.sourceScope.length === 0 ? posix.dirname(sourcePath) : context.moduleBase;
+          const moduleBase = module.inline ? posix.normalize(posix.join(base, module.pathTarget ?? module.name)) : module.pathTarget === null && posix.basename(target) === module.name + ".rs" ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
+          const child: RustModuleContext = { crateRoot, manifestPath: root.manifestPath, modulePath, sourceScope: module.inline ? module.modulePath : [], moduleBase, sourceChain: module.inline ? context.sourceChain : [...context.sourceChain, target], mount };
+          const cycle = !module.inline && context.sourceChain.includes(target);
+          if (cycle && root.manifestPath && options.strictManifests) { invalidManifests.add(root.manifestPath); manifestReasons.set(root.manifestPath, "invalid-manifest"); }
+          observe(target, child, cycle ? "cyclic-target" : undefined);
+          const prior = targets.get(key);
+          if (prior && prior !== target) { ambiguousTargets.add(key); deny(crateRoot, modulePath, "conflicting-target"); }
+          if (matching.length === 1 && !unresolvedTargets.has(key)) targets.set(key, target);
+        }
       }
       for (const reference of options.compileReferences?.get(sourcePath) ?? []) {
         if (reference.kind !== "include" || reference.base === "generated" || (reference.modulePath ?? []).join("::") !== context.sourceScope.join("::")) continue;
-        if (reference.base === "manifest" && !context.manifestPath) continue;
-        const base = reference.base === "manifest" ? posix.dirname(context.manifestPath!) : posix.dirname(sourcePath);
-        const target = posix.normalize(posix.join(base, reference.base ? reference.path.slice(1) : reference.path));
-        if (target.startsWith("..") || !sourceFiles.has(target) || context.sourceChain.includes(target)) continue;
-        const child: RustModuleContext = { ...context, sourceScope: [], moduleBase: posix.dirname(target), sourceChain: [...context.sourceChain, target] };
-        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
+        const mount: RustModuleMount = { kind: "include", from: sourcePath, modulePath: context.modulePath, sourceScope: context.sourceScope, line: reference.line, path: reference.path };
+        if (reference.base === "manifest" && !context.manifestPath) { deny(crateRoot, context.modulePath, "unresolved-target"); continue; }
+        const rawPath = reference.base ? reference.path.slice(1) : reference.path, base = reference.base === "manifest" ? posix.dirname(context.manifestPath!) : posix.dirname(sourcePath), target = posix.normalize(posix.join(base, rawPath));
+        if (posix.isAbsolute(rawPath) || /^[A-Za-z]:/u.test(rawPath) || rawPath.includes("\\") || target.startsWith("../")) { origins.push({ target: { kind: "unresolved", rawPath }, context: { ...context, mount }, reason: "nonportable-target" }); deny(crateRoot, context.modulePath, "nonportable-target"); continue; }
+        const child: RustModuleContext = { ...context, sourceScope: [], moduleBase: posix.dirname(target), sourceChain: [...context.sourceChain, target], mount };
+        observe(target, child, context.sourceChain.includes(target) ? "cyclic-target" : undefined);
       }
     }
   }
   for (const [name, roots] of namedCrates) namedCrates.set(name, roots.sort(compare));
-  if (options.strictManifests) for (const [path, rows] of contexts) contexts.set(path, rows.filter((row) => row.manifestPath !== null && !invalidManifests.has(row.manifestPath)));
-  return { targets, contexts, namedCrates, dependencies, invalidManifests };
+  if (options.strictManifests) for (const root of manifestRoots) if (invalidManifests.has(root.manifestPath)) deny(root.path, [], manifestReasons.get(root.manifestPath) ?? "invalid-manifest");
+  const denial = (crateRoot: string, modulePath: readonly string[]): RustModuleParticipationReason | undefined => {
+    const reasons: RustModuleParticipationReason[] = [];
+    for (let length = 0; length <= modulePath.length; length++) { const reason = deniedKeys.get(crateRoot + "\0" + modulePath.slice(0, length).join("::")); if (reason) reasons.push(reason); }
+    return reasons.sort((a, b) => precedence.indexOf(a) - precedence.indexOf(b))[0];
+  };
+  for (const key of targets.keys()) { options.checkCancellation?.(); const [crateRoot, path] = key.split("\0"); if (denial(crateRoot!, path ? path.split("::") : [])) targets.delete(key); }
+  for (const [path, rows] of contexts) { options.checkCancellation?.(); contexts.set(path, rows.filter((row) => !denial(row.crateRoot, row.modulePath))); }
+  const participations: RustModuleParticipation[] = origins.map(({ target, context, reason }) => {
+    const refused = target.kind === "unresolved" ? reason : denial(context.crateRoot, context.modulePath) ?? reason;
+    return refused ? { target, context, state: "denied", reason: refused } : { target, context, state: "admitted" };
+  });
+  for (const [path, reason] of manifestReasons) participations.push({ target: { kind: "manifest", path }, state: "denied", reason });
+  return { targets, ambiguousTargets, unresolvedTargets, contexts, namedCrates, dependencies, invalidManifests, participations: participations.sort((a, b) => compare(JSON.stringify(a), JSON.stringify(b))) };
 }
 
 /** 🕸️ Extracts mounted modules, use items and `include!` expansions with lexical Rust scope, excluding decoys. */
-export function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly RustModuleGraphFact[]; readonly uses: readonly RustModuleUseFact[]; readonly includes: readonly RustModuleIncludeFact[] } {
+export function inspectRustModuleGraphFacts(source: string): RustModuleGraphFacts {
   const tokens = rustTokens(source);
   const pairs = rustTokenPairs(tokens);
   const modules: RustModuleGraphFact[] = [];
   const uses: RustModuleUseFact[] = [];
   const includes: RustModuleIncludeFact[] = [];
+  const scopes: RustModuleScopeFact[] = [];
   const skipItem = (start: number, end: number): number => {
     const boundary = rustFindTopLevel(tokens, pairs, start, end, new Set([";", "{"]));
     if (boundary < 0) return end;
     if (tokens[boundary]!.text === ";") return boundary + 1;
     return (pairs.get(boundary) ?? end - 1) + 1;
   };
-  const parseScope = (start: number, end: number, modulePath: readonly string[], inheritedConditional = false): void => {
-    let index = start, scopeConditional = inheritedConditional;
+  const parseScope = (start: number, end: number, modulePath: readonly string[], inheritedConditional = false, inheritedProblem?: RustModuleMetadataProblem): void => {
+    let index = start, scopeConditional = inheritedConditional, problem = inheritedProblem;
+    const crateCapabilities: "associated_type_defaults"[] = [];
     while (index + 2 < end && tokens[index]?.text === "#" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.text === "[") {
       const close = pairs.get(index + 2);
       if (close === undefined || close >= end) return;
-      scopeConditional ||= rustMetadataAttributes(tokens, pairs, { ranges: [[index + 3, close]], next: close + 1 }).conditional;
+      const metadata = rustMetadataAttributes(tokens, pairs, { ranges: [[index + 3, close]], next: close + 1 });
+      scopeConditional ||= metadata.conditional;
+      const featureTokens = tokens.slice(index + 3, close).map((token) => token.text);
+      const feature = modulePath.length === 0 && (featureTokens.join(" ") === "feature ( associated_type_defaults )" || featureTokens.join(" ") === "feature ( associated_type_defaults , )");
+      if (feature && !crateCapabilities.includes("associated_type_defaults")) crateCapabilities.push("associated_type_defaults");
+      const unsupported = metadata.items.filter((item) => !["allow", "warn", "deny", "forbid", "expect", "doc", "rustfmt::skip"].includes(item.name) && !(feature && item.name === "feature")).map((item) => item.name);
+      if (unsupported.length) problem = { code: "unsupported-attribute", attributes: [...(problem?.code === "unsupported-attribute" ? problem.attributes : []), ...unsupported] };
       index = close + 1;
     }
+    scopes.push({ kind: modulePath.length ? "inline" : "root", modulePath, bodyStartOffset: modulePath.length ? tokens[start - 1]!.start : 0, bodyEndOffset: modulePath.length ? tokens[end]!.end : source.length, ...(crateCapabilities.length ? { crateCapabilities } : {}), ...(problem ? { unresolved: problem } : {}) });
     for (; index < end;) {
-      const attributes = rustAttributes(tokens, pairs, index, end), conditional = scopeConditional || rustMetadataAttributes(tokens, pairs, attributes).conditional;
+      const attributes = rustAttributes(tokens, pairs, index, end), metadata = rustMetadataAttributes(tokens, pairs, attributes), conditional = scopeConditional || metadata.conditional;
       const visibility = rustVisibility(tokens, pairs, attributes.next);
       const keyword = tokens[visibility.next]?.text;
       if (keyword === "use") {
@@ -8548,20 +8803,36 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
       const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
       if (!name || name.kind !== "identifier" || boundary < 0) return;
       const inline = tokens[boundary]!.text === "{";
-      const childPath = [...modulePath, name.text];
-      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, pairs, attributes), ...(conditional ? { conditional: true as const } : {}) });
+      const symbol = rustIdentifierSymbol(name)!, childPath = [...modulePath, symbol];
+      const paths = rustPathAttributes(tokens, pairs, attributes), unsupported = metadata.items.filter((item) => !["allow", "warn", "deny", "forbid", "expect", "doc", "path", "macro_use", "rustfmt::skip"].includes(item.name)).map((item) => item.name);
+      const unresolved = unsupported.length ? { code: "unsupported-attribute" as const, attributes: unsupported } : paths.length > 1 ? { code: "ambiguous-path" as const, paths: paths.map((path) => path.path) } : undefined;
+      modules.push({ name: symbol, modulePath: childPath, visibility: visibility.value, inline, pathTarget: paths.length === 1 ? paths[0]!.path : null, declarationOffset: tokens[visibility.next]!.start, ...(metadata.items.some((item) => item.name === "macro_use") ? { macroUse: true as const } : {}), ...(conditional ? { conditional: true as const } : {}), ...(unresolved ? { unresolved } : {}) });
       if (!inline) {
         index = boundary + 1;
         continue;
       }
       const close = pairs.get(boundary);
       if (close === undefined) return;
-      parseScope(boundary + 1, close, childPath, conditional);
+      parseScope(boundary + 1, close, childPath, conditional, unresolved);
       index = close + 1;
     }
   };
   parseScope(0, tokens.length, []);
-  return { modules, uses, includes };
+  return { modules, uses, includes, scopes };
+}
+
+/** 🗝️ Selects one complete lexical body chain without inferring absent scope authority. */
+export function rustModuleScopeProof(facts: RustModuleGraphFacts, sourceScope: readonly string[]): RustModuleScopeProof {
+  const scopes: RustModuleScopeFact[] = [];
+  for (let depth = 0; depth <= sourceScope.length; depth++) {
+    const modulePath = sourceScope.slice(0, depth), parent = scopes.at(-1);
+    const matches = facts.scopes.filter((scope) => scope.kind === (depth ? "inline" : "root") && scope.modulePath.join("\0") === modulePath.join("\0") && Number.isInteger(scope.bodyStartOffset) && Number.isInteger(scope.bodyEndOffset) && scope.bodyStartOffset >= 0 && scope.bodyEndOffset >= scope.bodyStartOffset && (!parent || scope.bodyStartOffset > parent.bodyStartOffset && scope.bodyEndOffset <= parent.bodyEndOffset));
+    if (matches.length !== 1) return { state: "unresolved", modulePath, problem: { code: "scope-not-unique", count: matches.length } };
+    const scope = matches[0]!;
+    if (scope.unresolved) return { state: "unresolved", modulePath, problem: scope.unresolved };
+    scopes.push(scope);
+  }
+  return { state: "resolved", scopes };
 }
 
 /** 🪪️ Lists top-level public Rust type declarations without comment or string decoys. */
@@ -11465,7 +11736,7 @@ function ecmaRouteTerminal(statement: EcmaRouteStatement, scope: EcmaRouteScope,
     return true;
   }
   const name = ecmaRouteIdentifier(expression.callee!), binding = name ? scope.resolve(name) : undefined;
-  if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
+  if (binding?.kind !== "import-value" || !["runScriptMain", "runRepoScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
   if (!expression.arguments!.every((argument) => ecmaRouteRouter(argument, scope, validation) || ["data", "finite"].includes(ecmaRouteValue(argument, scope)))) return false;
   validation.terminals++;
   return true;

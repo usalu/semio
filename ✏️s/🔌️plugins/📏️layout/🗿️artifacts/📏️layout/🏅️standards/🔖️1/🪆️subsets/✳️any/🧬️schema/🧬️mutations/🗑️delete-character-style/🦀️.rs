@@ -19,7 +19,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteCharacterStyle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "character-style", kind: "delete-character-style", record: "DeletedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_delete_character_style(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_delete_character_style(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Delete character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" löschen", self.id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete character style \"{}\"", self.id), &format!("Zeichenformat \"{}\" löschen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

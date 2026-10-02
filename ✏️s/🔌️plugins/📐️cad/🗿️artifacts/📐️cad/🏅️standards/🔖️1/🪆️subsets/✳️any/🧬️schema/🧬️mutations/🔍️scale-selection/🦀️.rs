@@ -29,10 +29,10 @@ impl MutationKind<CadSnapshot, CadMutation> for ScaleSelection {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = cad_selection_items(self.targets.len());
         let (factors_en, factors_de) = cad_selection_vector(self.factors);
-        protocol::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {items_en} by {factors_en}"), &format!("{items_de} um {factors_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

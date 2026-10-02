@@ -824,7 +824,7 @@ fn remote_payload(value:serde_json::Value)->Result<semio_framework_os_kernel::Ds
     semio_framework_os_kernel::os_pack::json::from_json_str(&value.to_string()).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
 fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_os_kernel::DslValue)->Result<T,InferenceRouteErrorV1> {
-    semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
+    semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
     serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
 }
 
@@ -1925,7 +1925,7 @@ mod inference_jobs;
 pub(crate) mod dsl_json {
     use serde::{Deserialize,Serialize};
     pub fn serialize<S:serde::Serializer>(value:&semio_framework_os_kernel::DslValue,serializer:S)->Result<S::Ok,S::Error> {
-        semio_framework_schema::CompiledDocumentHttpPortV1::validate_payload(value,super::INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|serde::ser::Error::custom(format!("opaque payload rejected: {code:?}")))?;
+        semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(value,super::INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|serde::ser::Error::custom(format!("opaque payload rejected: {code:?}")))?;
         let json:serde_json::Value=serde_json::from_str(&semio_framework_os_kernel::os_pack::json::to_json_string(value)).map_err(serde::ser::Error::custom)?;json.serialize(serializer)
     }
     pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<semio_framework_os_kernel::DslValue,D::Error> {

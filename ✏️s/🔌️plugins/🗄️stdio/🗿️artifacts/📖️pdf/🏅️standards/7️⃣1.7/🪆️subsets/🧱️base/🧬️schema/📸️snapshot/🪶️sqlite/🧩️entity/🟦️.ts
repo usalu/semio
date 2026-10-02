@@ -12,10 +12,10 @@ export class PdfProjection {
   private count = 0;
   private constructor(private readonly inner: ArtifactSqliteProjection, readonly options: ArtifactSqliteOptions, private readonly numbers: PdfNumberColumns) {}
   static async create(sql: string, options: ArtifactSqliteOptions = {}, numbers: PdfNumberColumns = noNumbers): Promise<PdfProjection> {
-    if ((options.maxRows ?? 1_000_000) < 1) throw new Error("PDF SQLite metadata row limit");
+    if ((options.maxRows ?? 1_000_000) < 1) throw new Error("PDF SQLite domain row limit");
     return new PdfProjection(await ArtifactSqliteProjection.create(sql, options), options, numbers);
   }
-  checkRowsAdditional(count: number): void { this.inner.checkRowsAdditional(count + 1); }
+  checkRowsAdditional(count: number): void { this.inner.checkRowsAdditional(count); }
   async bytes(value: readonly number[]): Promise<Uint8Array> {
     this.inner.checkValueBytesAdditional(value.length);
     if (value.length > 65_536 || this.options.signal?.aborted) await artifactSqliteCheckpoint(this.options, "projectSnapshot", this.count, 0);
@@ -49,7 +49,7 @@ export class PdfReader {
   static async create(database: SqliteDatabase, sql: string, options: ArtifactSqliteOptions = {}, numbers: PdfNumberColumns = noNumbers): Promise<PdfReader> {
     await artifactSqliteCheckpoint(options, "reconstructSnapshot", 0, 0);
     const total = database.tables.reduce((count, table) => count + table.rows.length, 0);
-    if (total + 1 > (options.maxRows ?? 1_000_000)) throw new Error("PDF SQLite metadata row limit");
+    if (total > (options.maxRows ?? 1_000_000)) throw new Error("PDF SQLite domain row limit");
     await artifactSqliteTables(database, sql, options);
     return new PdfReader(database, options, numbers, total);
   }

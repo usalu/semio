@@ -6,7 +6,7 @@ use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::RewritingSnapshot;
 use semio_framework_graph::manifest::PropertyValue;
-use semio_framework_plugin::Label;
+use semio_framework_ui_locale::Label;
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 
 trait ParameterKindLabel {

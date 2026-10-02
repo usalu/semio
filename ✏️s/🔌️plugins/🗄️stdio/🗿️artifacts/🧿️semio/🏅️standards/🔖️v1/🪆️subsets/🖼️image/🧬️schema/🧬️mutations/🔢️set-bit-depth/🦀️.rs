@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetBitDe
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
         agg_inverse(&SemioImageMutation::SetBitDepth(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set bit depth", "Bittiefe setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set bit depth", "Bittiefe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

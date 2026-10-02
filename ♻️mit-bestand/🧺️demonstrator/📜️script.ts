@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <test> [args…]`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 class TestScript extends BundleScript {

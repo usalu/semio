@@ -10,7 +10,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 /** 🪪️ Curation owns catalog content references and rejects editor settings in documents. */
 export function testCurationDocumentContractOracle(): void {
@@ -20,7 +20,7 @@ export function testCurationDocumentContractOracle(): void {
     artifact: { schema: artifactSchema, parse: artifact.parseCurationArtifact },
     snapshot: { schema: snapshotSchema, parse: snapshot.parseCurationSnapshot },
     diff: { schema: diffSchema, parse: diff.parseCurationDiff },
-    validDocuments: [vectors.document, ...vectors.geometryDocuments].map((input) => ({ input, output: input })),
+    validDocuments: [vectors.document, ...vectors.validChildren.map((catalog) => ({ ...vectors.document, catalog })), ...vectors.geometryDocuments].map((input) => ({ input, output: input })),
     invalidDocuments: [...vectors.invalidChildren.map((catalog) => ({ ...vectors.document, catalog })), { ...vectors.document, filters: {} }, { ...vectors.document, curated: [{ objectId: "beam", count: -1 }] }],
     validDiffs: vectors.validDiffs.map((input) => ({ input, output: input })), invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))], committed: { snapshots: 6, diffs: 3 },

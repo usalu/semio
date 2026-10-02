@@ -675,7 +675,7 @@ pub fn empty_trinity_graph_fixture() -> JackSnapshot {
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "graph.trinity".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
         source_format: "trinity.graph".into(),
         component_kind: "trinity".into(),
         dimension: "graph".into(),

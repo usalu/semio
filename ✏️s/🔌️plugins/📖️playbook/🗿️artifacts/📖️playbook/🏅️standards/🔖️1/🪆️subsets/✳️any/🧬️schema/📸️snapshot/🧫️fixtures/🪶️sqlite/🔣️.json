@@ -1,0 +1,12 @@
+{
+  "snapshot": {
+    "schema": "owned playbook 日本\u0000",
+    "id": "",
+    "version": "unrestricted version β",
+    "title": "",
+    "document": {"childId": "narrative child 日本", "target": {"artifactId": "separate narrative target", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "document"}}},
+    "flow": {"childId": "flow child β", "target": {"artifactId": "separate flow target", "dialect": {"artifactKind": "arbitrary owned kind", "standard": "", "subset": "owned subset"}}}
+  },
+  "editedTitle": "independent narrative title 日本",
+  "editedTarget": "independent target β"
+}

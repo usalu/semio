@@ -5,6 +5,7 @@
 
 use crate::editor::lowpoly::unit_tests::context::{act, app, committed_edits, dispatch, LowpolyApp};
 use crate::editor::lowpoly::LowpolyCommand;
+use semio_framework_plugin::PluginApp;
 
 fn pixels(a: &LowpolyApp) -> Vec<u8> {
     a.snapshot().expect("projection").objects[0].paint_layers[0].materialized_pixels()

@@ -34,7 +34,7 @@ use super::*;
         };
         let mutation = Puzzle5dWindowTransientMutation::Snapshot { transient };
         assert!(puzzle5d_window_transient_preflight(&mutation).expect("large Puzzle 5D transient admission").is_admissible());
-        let mut retirement = store::retirement::owned_retirement(mutation);
+        let mut retirement = semio_framework_value::retirement::owned_retirement(mutation);
         for _ in 0..32_768 {
             match retirement.close_step(1, 1).expect("bounded retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -52,7 +52,7 @@ use super::*;
     }
 
     fn retire_returned_puzzle5d_transient(transient: Puzzle5dWindowTransient) {
-        let mut retirement = store::retirement::owned_retirement(Puzzle5dWindowTransientMutation::Snapshot { transient });
+        let mut retirement = semio_framework_value::retirement::owned_retirement(Puzzle5dWindowTransientMutation::Snapshot { transient });
         for _ in 0..4_096 {
             match retirement.close_step(1, 1).expect("returned Puzzle 5D owner retirement") {
                 store::SnapshotRetirementStep::Complete => {

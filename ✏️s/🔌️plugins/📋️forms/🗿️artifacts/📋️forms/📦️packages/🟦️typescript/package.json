@@ -6,6 +6,9 @@
   "description": "@semio-tech/forms-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
+  "main":"./dist/🟦️.js",
+  "types":"./dist/🟦️.d.ts",
+  "exports":{".":{"types":"./dist/🟦️.d.ts","import":"./dist/🟦️.js"}},
   "scripts": {
     "test": "bun nx run @semio-tech/forms-js:test"
   },

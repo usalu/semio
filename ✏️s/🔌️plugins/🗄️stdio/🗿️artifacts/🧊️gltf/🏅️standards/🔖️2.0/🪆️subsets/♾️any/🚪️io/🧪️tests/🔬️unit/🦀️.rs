@@ -367,18 +367,16 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output for
-    /// the demo (genuinely non-trivial) snapshot — same preamble-stripped body reconstruction
-    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_snapshot` uses, so this is a
-    /// direct proof this artifact will pass that harness once graduated, not merely an analogue.
+    /// ✅️ The authored snapshot grammar recognizes the actual canonical envelope and body.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
         let text = store::ArtifactDsl::print_dsl(&crate::engine::demo_gltf_snapshot());
-        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
-        let reconstructed = format!("{}\n{body}", envelope.envelope_id());
-        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        let (_, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
+        for input in [text.as_str(), body] {
+            assert!(recognizer.recognize(input).expect("recognize"), "grammar did not recognize current owned snapshot:\n{input}");
+        }
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes the canonical generic

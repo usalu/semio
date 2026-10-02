@@ -35,10 +35,10 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Rota
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = generation3d_label_number(self.angle.to_degrees());
         let (items_en, items_de) = generation3d_label_items(self.targets.len(), "shape(s)", "Form(en)");
-        protocol::LocalizedLabel::native(&format!("Rotate {items_en} by {en}°"), &format!("{items_de} um {de}° drehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {en}°"), &format!("{items_de} um {de}° drehen"))
     }
 
     fn target(&self) -> Vec<String> {

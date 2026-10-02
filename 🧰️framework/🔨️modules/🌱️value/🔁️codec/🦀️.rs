@@ -15,11 +15,33 @@
 //! the hand-written base cases every derived impl bottoms out on.
 
 use super::{DslValue, Number};
+use super::native_decoding::NativeDecodeControl;
+use super::native_encoding::NativeEncodeControl;
+#[path="🛬️controlled/🦀️.rs"]
+mod controlled;
+pub use controlled::DecodedValue;
+#[path="🛫️controlled/🦀️.rs"]
+mod encoding;
+
+/// 🔑️ A hash-builder owner admits its own default state before controlled collection construction.
+pub trait ControlledValueHasher: std::hash::BuildHasher + Default {
+    fn from_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError> where Self:Sized;
+}
+impl ControlledValueHasher for std::collections::hash_map::RandomState {
+    fn from_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;Ok(Self::new())}
+}
 
 //#region 🔖️Traits
 /// 🔁️ Converts `self` into a [`DslValue`] tree. First-party analog of `serde::Serialize`.
 pub trait ToValue {
     fn to_value(&self) -> DslValue;
+
+    /// 🛫️ Constructs owned native output through an explicit cumulative allocation control.
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{control.checkpoint().map_err(ValueError::new)?;Err(ValueError::new("value owner has no controlled native encoding implementation"))}
+
+    /// 🔑️ Formats one owned map key without an uncontrolled `ToString` allocation.
+    fn to_object_key_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{control.checkpoint().map_err(ValueError::new)?;Err(ValueError::new("value key owner has no controlled native encoding implementation"))}
+
 
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         self.to_value().value_at_path(path)
@@ -41,6 +63,30 @@ pub trait ToValue {
 /// `serde::de::DeserializeOwned`.
 pub trait FromValue: Sized {
     fn from_value(value: DslValue) -> Result<Self, ValueError>;
+
+    /// 🛬️ Constructs from borrowed native state under one cumulative ownership control.
+    fn from_value_controlled(_value: &DslValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint().map_err(ValueError::new)?;
+        Err(ValueError::new("value owner has no controlled native construction implementation"))
+    }
+
+    /// 🔑️ Constructs a typed object key without an uncontrolled `FromStr` allocation.
+    fn from_object_key_controlled(_key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
+        control.checkpoint().map_err(ValueError::new)?;Err(ValueError::new("value key owner has no controlled construction implementation"))
+    }
+
+    /// 🌱️ Admits a missing field's default without invoking an uncontrolled allocator.
+    fn default_value_controlled(control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint().map_err(ValueError::new)?;
+        Err(ValueError::new("value owner has no controlled default construction implementation"))
+    }
+
+    /// 🛡️ Holds a completed child until its parent can publish a complete value.
+    fn guard_decoded(self) -> DecodedValue<Self> { DecodedValue::new(self, Self::retire_decoded) }
+
+    /// ♻️ Retires a completed child when a later construction step fails.
+    fn retire_decoded(self) { drop(self); }
+
 
     fn edit_value_at_path(&mut self, path: &[&str], edit: ValueEdit) -> Result<(), ValueError> {
         if !path.is_empty() {
@@ -106,6 +152,7 @@ impl std::fmt::Display for ValueError {
 }
 
 impl std::error::Error for ValueError {}
+impl From<String> for ValueError { fn from(message:String)->Self{Self(message)} }
 
 impl ValueError {
     pub fn new(message: impl Into<String>) -> Self {
@@ -160,11 +207,20 @@ macro_rules! impl_uint_codec {
     ($($ty:ty),+ $(,)?) => {
         $(
             impl ToValue for $ty {
+                fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::scalar(control)?;Ok(DslValue::Number(Number::UInt(*self as u64)))}
+                fn to_object_key_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{encoding::key(*self,control)}
                 fn to_value(&self) -> DslValue {
                     DslValue::Number(Number::UInt(*self as u64))
                 }
             }
             impl FromValue for $ty {
+                fn from_object_key_controlled(key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;key.parse().map_err(|_|ValueError::new("invalid numeric object key"))}
+
+                fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
+                    controlled::scalar(control)?;match value{DslValue::Number(number)=>number.as_u64().and_then(|n| <$ty>::try_from(n).ok()).ok_or_else(|| ValueError::new("expected exact unsigned integer")),_=>Err(ValueError::new("expected number"))}
+                }
+                fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;Ok(0 as $ty)}
+
                 fn from_value(value: DslValue) -> Result<Self, ValueError> {
                     match value {
                         DslValue::Number(number) => number.as_u64().and_then(|n| <$ty>::try_from(n).ok())
@@ -184,11 +240,20 @@ macro_rules! impl_int_codec {
     ($($ty:ty),+ $(,)?) => {
         $(
             impl ToValue for $ty {
+                fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::scalar(control)?;Ok(DslValue::Number(Number::Int(*self as i64)))}
+                fn to_object_key_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{encoding::key(*self,control)}
                 fn to_value(&self) -> DslValue {
                     DslValue::Number(Number::Int(*self as i64))
                 }
             }
             impl FromValue for $ty {
+                fn from_object_key_controlled(key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;key.parse().map_err(|_|ValueError::new("invalid numeric object key"))}
+
+                fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
+                    controlled::scalar(control)?;match value{DslValue::Number(number)=>number.as_i64().and_then(|n| <$ty>::try_from(n).ok()).ok_or_else(|| ValueError::new("expected exact signed integer")),_=>Err(ValueError::new("expected number"))}
+                }
+                fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;Ok(0 as $ty)}
+
                 fn from_value(value: DslValue) -> Result<Self, ValueError> {
                     match value {
                         DslValue::Number(number) => number.as_i64().and_then(|n| <$ty>::try_from(n).ok())
@@ -208,11 +273,20 @@ macro_rules! impl_float_codec {
     ($($ty:ty),+ $(,)?) => {
         $(
             impl ToValue for $ty {
+                fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::scalar(control)?;Ok(DslValue::Number(Number::Float(*self as f64)))}
+                fn to_object_key_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{encoding::key(*self,control)}
                 fn to_value(&self) -> DslValue {
                     DslValue::Number(Number::Float(*self as f64))
                 }
             }
             impl FromValue for $ty {
+                fn from_object_key_controlled(key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;key.parse().map_err(|_|ValueError::new("invalid numeric object key"))}
+
+                fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
+                    controlled::scalar(control)?;match value{DslValue::Number(number)=>Ok(number.as_f64() as $ty),_=>Err(ValueError::new("expected number"))}
+                }
+                fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;Ok(0 as $ty)}
+
                 fn from_value(value: DslValue) -> Result<Self, ValueError> {
                     match value {
                         DslValue::Number(n) => Ok(n.as_f64() as $ty),
@@ -225,8 +299,17 @@ macro_rules! impl_float_codec {
 }
 impl_float_codec!(f64);
 
+fn float32_from_number(number:Number)->f32{
+    let value=number.as_f64();let bits=value.to_bits();let payload=bits&0x000f_ffff_ffff_ffff;
+    if bits&0x7ff0_0000_0000_0000==0x7ff0_0000_0000_0000&&payload!=0{f32::from_bits(((bits>>32) as u32&0x8000_0000)|0x7f80_0000|((payload>>29) as u32).max(1))}else{value as f32}
+}
+
 impl ToValue for f32 {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::float32(*self,c)}
+fn to_object_key_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{encoding::key(*self,c)}
     fn to_value(&self) -> DslValue {
+        let bits=self.to_bits();let payload=bits&0x007f_ffff;
+        if bits&0x7f80_0000==0x7f80_0000&&payload!=0{return DslValue::Number(Number::Float(f64::from_bits((u64::from(bits&0x8000_0000)<<32)|0x7ff0_0000_0000_0000|(u64::from(payload)<<29))))}
         let shortest = format!("{self:e}");
         let precision = shortest.split('e').next().unwrap().bytes().filter(u8::is_ascii_digit).count().saturating_sub(1);
         DslValue::Number(Number::Float(format!("{self:.precision$e}").parse().expect("f32 decimal text is a valid f64")))
@@ -234,20 +317,30 @@ impl ToValue for f32 {
 }
 
 impl FromValue for f32 {
+fn from_value_controlled(value:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;match value{DslValue::Number(n)=>Ok(float32_from_number(*n)),_=>Err(ValueError::new("expected number"))}}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(0.0)}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::Number(number) => Ok(number.as_f64() as f32),
+            DslValue::Number(number) => Ok(float32_from_number(number)),
             other => Err(ValueError::new(format!("expected a number, found {other:?}"))),
         }
     }
 }
 
 impl ToValue for bool {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::scalar(c)?;Ok(DslValue::Bool(*self))}
+fn to_object_key_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{encoding::key(*self,c)}
     fn to_value(&self) -> DslValue {
         DslValue::Bool(*self)
     }
 }
 impl FromValue for bool {
+fn from_object_key_controlled(key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;key.parse().map_err(|_|ValueError::new("invalid boolean object key"))}
+
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;match v{DslValue::Bool(v)=>Ok(*v),_=>Err(ValueError::new("expected bool"))}}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(false)}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Bool(b) => Ok(b),
@@ -257,11 +350,18 @@ impl FromValue for bool {
 }
 
 impl ToValue for String {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.copy_text(self).map(DslValue::String).map_err(ValueError::new)}
+fn to_object_key_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{c.copy_text(self).map_err(ValueError::new)}
     fn to_value(&self) -> DslValue {
         DslValue::String(self.clone())
     }
 }
 impl FromValue for String {
+fn from_object_key_controlled(key:&str,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;control.copy_text(key).map_err(ValueError::new)}
+
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;match v{DslValue::String(v)=>c.copy_text(v).map_err(ValueError::new),_=>Err(ValueError::new("expected string"))}}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(String::new())}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(s) => Ok(s),
@@ -274,11 +374,15 @@ impl FromValue for String {
 /// config value, never a content-addressed hash input, so exact non-Unicode byte round-tripping
 /// is not required the way `serde`'s own `Path`/`PathBuf` impl demands it).
 impl ToValue for std::path::PathBuf {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::path(self,c)}
     fn to_value(&self) -> DslValue {
         DslValue::String(self.to_string_lossy().into_owned())
     }
 }
 impl FromValue for std::path::PathBuf {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{String::from_value_controlled(v,c).map(Self::from)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self::new())}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(s) => Ok(std::path::PathBuf::from(s)),
@@ -289,17 +393,23 @@ impl FromValue for std::path::PathBuf {
 
 /// 🌉️ No `FromValue` counterpart — decoding always needs owned data, `String`'s impl covers it.
 impl ToValue for &str {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.copy_text(self).map(DslValue::String).map_err(ValueError::new)}
+fn to_object_key_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{c.copy_text(self).map_err(ValueError::new)}
     fn to_value(&self) -> DslValue {
         DslValue::String(self.to_string())
     }
 }
 
 impl ToValue for () {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::scalar(c)?;Ok(DslValue::Null)}
     fn to_value(&self) -> DslValue {
         DslValue::Null
     }
 }
 impl FromValue for () {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;match v{DslValue::Null=>Ok(()),_=>Err(ValueError::new("expected null"))}}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Null => Ok(()),
@@ -311,6 +421,7 @@ impl FromValue for () {
 
 //#region 🔖️Containers
 impl<T: ToValue> ToValue for Option<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.scoped_depth(64,|c|match self{Some(value)=>value.to_value_controlled(c),None=>().to_value_controlled(c)})}
     fn to_value(&self) -> DslValue {
         match self {
             Some(value) => value.to_value(),
@@ -340,6 +451,10 @@ impl<T: ToValue> ToValue for Option<T> {
     }
 }
 impl<T: FromValue> FromValue for Option<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{match v{DslValue::Null=>{controlled::scalar(c)?;Ok(None)},v=>T::from_value_controlled(v,c).map(Some)}}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(None)}
+fn retire_decoded(self){if let Some(v)=self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Null => Ok(None),
@@ -372,6 +487,7 @@ impl<T: FromValue> FromValue for Option<T> {
 }
 
 impl<T: ToValue> ToValue for [T] {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
@@ -396,6 +512,7 @@ impl<T: ToValue> ToValue for [T] {
     }
 }
 impl<T: ToValue> ToValue for Vec<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         self.as_slice().to_value()
     }
@@ -414,6 +531,10 @@ impl<T: ToValue> ToValue for Vec<T> {
     }
 }
 impl<T: FromValue> FromValue for Vec<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::sequence(v,c)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Vec::new())}
+fn retire_decoded(self){for v in self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) => items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect(),
@@ -462,6 +583,7 @@ impl<T: FromValue> FromValue for Vec<T> {
 /// 📐️ Same plain-JSON-array wire shape as `Vec<T>` — a `VecDeque` field (e.g. `semio-framework-
 /// actor`'s per-lane mailbox rings) round-trips identically to its `Vec` twin, just ring-backed in memory.
 impl<T: ToValue> ToValue for std::collections::VecDeque<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
@@ -486,6 +608,10 @@ impl<T: ToValue> ToValue for std::collections::VecDeque<T> {
     }
 }
 impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let values=Vec::<T>::from_value_controlled(v,c)?.guard_decoded();c.charge(values.get().len().checked_mul(size_of::<T>()).ok_or_else(||ValueError::new("deque size overflow"))?).map_err(ValueError::new)?;Ok(values.take().into())}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self::new())}
+fn retire_decoded(self){for v in self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) => items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect(),
@@ -533,6 +659,7 @@ impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
 /// carried by `N`, not the wire, so decode rejects any array whose length doesn't match `N`
 /// (matches what a fixed-size `[T; N]` field means: this many, no more, no fewer).
 impl<T: ToValue, const N: usize> ToValue for [T; N] {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         self.as_slice().to_value()
     }
@@ -551,6 +678,9 @@ impl<T: ToValue, const N: usize> ToValue for [T; N] {
     }
 }
 impl<T: FromValue, const N: usize> FromValue for [T; N] {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let DslValue::Array(items)=v else{return Err(ValueError::new("expected array"))};if items.len()!=N{return Err(ValueError::new("fixed array length mismatch"))}let values=Vec::<T>::from_value_controlled(v,c)?;Ok(values.try_into().ok().expect("length checked"))}
+fn retire_decoded(self){for v in self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) => {
@@ -588,6 +718,7 @@ impl<T: FromValue, const N: usize> FromValue for [T; N] {
 }
 
 impl<T: ToValue> ToValue for Box<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.scoped_depth(64,|c|(**self).to_value_controlled(c))}
     fn to_value(&self) -> DslValue {
         (**self).to_value()
     }
@@ -606,6 +737,9 @@ impl<T: ToValue> ToValue for Box<T> {
     }
 }
 impl<T: FromValue> FromValue for Box<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{c.charge(size_of::<T>()).map_err(ValueError::new)?;T::from_value_controlled(v,c).map(Box::new)}
+fn retire_decoded(self){T::retire_decoded(*self)}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         T::from_value(value).map(Box::new)
     }
@@ -626,9 +760,36 @@ impl<T: FromValue> FromValue for Box<T> {
     }
 }
 
+/// 🧺️ An unordered set uses an array wire shape, collapsing duplicates without an iteration contract.
+impl<T: ToValue + Eq + std::hash::Hash, S: std::hash::BuildHasher> ToValue for std::collections::HashSet<T,S> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
+    fn to_value(&self)->DslValue{DslValue::Array(self.iter().map(ToValue::to_value).collect())}
+    fn value_shape_at_path(&self,path:&[&str])->Result<ValueShape,ValueError>{
+        if path.is_empty(){Ok(ValueShape::Array{len:self.len()})}else{Err(ValueError::new("unordered set members have no stable wire index"))}
+    }
+    fn value_at_path(&self,path:&[&str])->Result<DslValue,ValueError>{
+        if path.is_empty(){Ok(self.to_value())}else{Err(ValueError::new("unordered set members have no stable wire index"))}
+    }
+}
+impl<T: FromValue + Eq + std::hash::Hash, S: ControlledValueHasher> FromValue for std::collections::HashSet<T,S> {
+    fn from_value(value:DslValue)->Result<Self,ValueError>{
+        let DslValue::Array(items)=value else{return Err(ValueError::new(format!("expected an array, found {value:?}")))};
+        let mut output=Self::with_hasher(S::default()).guard_decoded();
+        for(index,value)in items.into_iter().enumerate(){
+            let child=T::from_value(value).map_err(|error|error.under(index))?.guard_decoded();
+            if !output.get().contains(child.get()){output.get_mut().insert(child.take());}
+        }
+        Ok(output.take())
+    }
+    fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::hash_set(value,control)}
+    fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{Ok(Self::with_hasher(S::from_value_controlled(control)?))}
+    fn retire_decoded(self){for value in self{T::retire_decoded(value)}}
+}
+
 /// 🌳️ A `BTreeSet<T>` encodes exactly like a `Vec<T>` (a plain JSON array), in the set's own sorted
 /// iteration order — matches `serde`'s own `BTreeSet` representation.
 impl<T: ToValue + Ord> ToValue for std::collections::BTreeSet<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
@@ -653,6 +814,10 @@ impl<T: ToValue + Ord> ToValue for std::collections::BTreeSet<T> {
     }
 }
 impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::set(v,c)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self::new())}
+fn retire_decoded(self){for v in self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) => items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect(),
@@ -712,6 +877,7 @@ impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
 }
 
 impl<T: ToValue> ToValue for std::collections::BTreeMap<String, T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::map(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         DslValue::object(self.iter().map(|(key, value)| (key.clone(), value.to_value())))
     }
@@ -736,6 +902,10 @@ impl<T: ToValue> ToValue for std::collections::BTreeMap<String, T> {
     }
 }
 impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::map(v,c)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self::new())}
+fn retire_decoded(self){for (_,v) in self{T::retire_decoded(v)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Object(entries) => entries.into_iter().map(|(key, value)| T::from_value(value).map(|value| (key.clone(), value)).map_err(|error| error.under(key))).collect(),
@@ -779,6 +949,7 @@ impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
 }
 
 impl ToValue for DslValue {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::intrinsic(self,c)}
     fn to_value(&self) -> DslValue {
         self.clone()
     }
@@ -834,6 +1005,10 @@ impl ToValue for DslValue {
     }
 }
 impl FromValue for DslValue {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::intrinsic(v,c)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self::Null)}
+fn retire_decoded(self){controlled::retire_intrinsic(self)}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         Ok(value)
     }
@@ -911,11 +1086,15 @@ impl FromValue for DslValue {
 /// ToValue`/`FromValue` bound) so a generic struct with a `PhantomData<SomeUnrelatedType>` marker
 /// field never forces that unrelated type to implement these traits too.
 impl<T: ?Sized> ToValue for std::marker::PhantomData<T> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{().to_value_controlled(c)}
     fn to_value(&self) -> DslValue {
         DslValue::Null
     }
 }
 impl<T: ?Sized> FromValue for std::marker::PhantomData<T> {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{<()>::from_value_controlled(v,c)?;Ok(Self)}
+fn default_value_controlled(c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(c)?;Ok(Self)}
+
     fn from_value(_value: DslValue) -> Result<Self, ValueError> {
         Ok(std::marker::PhantomData)
     }
@@ -923,6 +1102,7 @@ impl<T: ?Sized> FromValue for std::marker::PhantomData<T> {
 
 /// 🔗️ A 2-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
 impl<A: ToValue, B: ToValue> ToValue for (A, B) {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.scoped_depth(64,|c|c.scoped_stage(|c|{c.begin_stage(2).map_err(ValueError::new)?;let mut output=Vec::<DslValue>::guard_decoded(c.allocate_vec(2).map_err(ValueError::new)?);output.get_mut().push(self.0.to_value_controlled(c)?);c.step().map_err(ValueError::new)?;output.get_mut().push(self.1.to_value_controlled(c)?);c.step().map_err(ValueError::new)?;Ok(DslValue::Array(output.take()))}))}
     fn to_value(&self) -> DslValue {
         DslValue::Array(vec![self.0.to_value(), self.1.to_value()])
     }
@@ -959,6 +1139,9 @@ impl<A: ToValue, B: ToValue> ToValue for (A, B) {
     }
 }
 impl<A: FromValue, B: FromValue> FromValue for (A, B) {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let DslValue::Array(items)=v else{return Err(ValueError::new("expected tuple array"))};if items.len()!=2{return Err(ValueError::new("tuple length mismatch"))}let v0=A::from_value_controlled(&items[0],c).map_err(|e|e.under(0))?.guard_decoded();let v1=B::from_value_controlled(&items[1],c).map_err(|e|e.under(1))?.guard_decoded();Ok((v0.take(),v1.take()))}
+fn retire_decoded(self){A::retire_decoded(self.0);B::retire_decoded(self.1);}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) if items.len() == 2 => {
@@ -997,6 +1180,7 @@ impl<A: FromValue, B: FromValue> FromValue for (A, B) {
 
 /// 🔗️ A 3-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
 impl<A: ToValue, B: ToValue, C: ToValue> ToValue for (A, B, C) {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{c.scoped_depth(64,|c|c.scoped_stage(|c|{c.begin_stage(3).map_err(ValueError::new)?;let mut output=Vec::<DslValue>::guard_decoded(c.allocate_vec(3).map_err(ValueError::new)?);output.get_mut().push(self.0.to_value_controlled(c)?);c.step().map_err(ValueError::new)?;output.get_mut().push(self.1.to_value_controlled(c)?);c.step().map_err(ValueError::new)?;output.get_mut().push(self.2.to_value_controlled(c)?);c.step().map_err(ValueError::new)?;Ok(DslValue::Array(output.take()))}))}
     fn to_value(&self) -> DslValue {
         DslValue::Array(vec![self.0.to_value(), self.1.to_value(), self.2.to_value()])
     }
@@ -1036,6 +1220,9 @@ impl<A: ToValue, B: ToValue, C: ToValue> ToValue for (A, B, C) {
     }
 }
 impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
+fn from_value_controlled(v:&DslValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let DslValue::Array(items)=v else{return Err(ValueError::new("expected tuple array"))};if items.len()!=3{return Err(ValueError::new("tuple length mismatch"))}let v0=A::from_value_controlled(&items[0],c).map_err(|e|e.under(0))?.guard_decoded();let v1=B::from_value_controlled(&items[1],c).map_err(|e|e.under(1))?.guard_decoded();let v2=C::from_value_controlled(&items[2],c).map_err(|e|e.under(2))?.guard_decoded();Ok((v0.take(),v1.take(),v2.take()))}
+fn retire_decoded(self){A::retire_decoded(self.0);B::retire_decoded(self.1);C::retire_decoded(self.2);}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Array(items) if items.len() == 3 => {
@@ -1078,7 +1265,8 @@ impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
 /// `serde_json`'s own behavior for non-`String` map keys (JSON objects only have string keys), so
 /// `HashMap<u64, _>` etc. round-trip on the same wire shape a pre-conversion `serde_json::Value`
 /// would have produced. Iteration order is unspecified, same as `serde_json` gives for a `HashMap`.
-impl<K: ToString, V: ToValue> ToValue for std::collections::HashMap<K, V> {
+impl<K: ToString + ToValue, V: ToValue> ToValue for std::collections::HashMap<K, V> {
+fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::map(self.iter(),c)}
     fn to_value(&self) -> DslValue {
         DslValue::object(self.iter().map(|(key, value)| (key.to_string(), value.to_value())))
     }
@@ -1121,10 +1309,14 @@ impl<K: ToString, V: ToValue> ToValue for std::collections::HashMap<K, V> {
         value.value_key_at_path(rest, index).map_err(|error| error.under(segment))
     }
 }
-impl<K: std::str::FromStr + std::hash::Hash + Eq, V: FromValue> FromValue for std::collections::HashMap<K, V>
+impl<K: std::str::FromStr + std::hash::Hash + Eq + FromValue, V: FromValue> FromValue for std::collections::HashMap<K, V>
 where
     K::Err: std::fmt::Display,
 {
+    fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::hash_map(value,control)}
+    fn default_value_controlled(control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::scalar(control)?;Ok(Self::new())}
+    fn retire_decoded(self){for(key,value)in self{K::retire_decoded(key);V::retire_decoded(value)}}
+
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::Object(entries) => entries
@@ -1173,6 +1365,7 @@ where
         Ok(())
     }
 }
+
 //#endregion 🔖️Containers
 
 //#region 🔖️ObjectHelpers
@@ -1193,3 +1386,11 @@ impl DslValue {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🛬️controlled/🦀️.rs"]
+mod controlled_tests;
+
+#[cfg(test)]
+#[path="🧪️tests/🛫️controlled/🦀️.rs"]
+mod controlled_encoding_tests;

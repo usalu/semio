@@ -59,7 +59,7 @@ fn world_instances_json(document: &SemioDocumentSnapshot) -> String {
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &SemioDocumentSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let mesh_data_value = dsl::to_dsl_value(&mesh_from_kind(SEMIO_DOCUMENT_VIEW_FALLBACK_MESH_KIND)).unwrap_or(dsl::DslValue::Null);
+    let mesh_data_value = semio_framework_value::ToValue::to_value(&mesh_from_kind(SEMIO_DOCUMENT_VIEW_FALLBACK_MESH_KIND));
     let meshes_json = pack::json_to_string(&pack::JsonValue::Array(vec![pack::json!({ "id": SEMIO_DOCUMENT_VIEW_FALLBACK_MESH_KIND, "data": pack::json_from_dsl_value(&mesh_data_value) })]));
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_DOCUMENT_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_DOCUMENT_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_DOCUMENT_VIEW_DEFAULT_CAMERA_FOV),

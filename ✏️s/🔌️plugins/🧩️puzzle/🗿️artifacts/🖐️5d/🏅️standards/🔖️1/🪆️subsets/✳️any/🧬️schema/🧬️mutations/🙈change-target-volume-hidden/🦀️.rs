@@ -30,8 +30,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeTarget
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change target volume hidden \"{}\"", self.id), &format!("Ausblendung von Zielvolumen \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change target volume hidden \"{}\"", self.id), &format!("Ausblendung von Zielvolumen \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

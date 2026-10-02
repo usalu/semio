@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/schema-registry-rs",
+  "private": true,
+  "scripts": {
+    "test": "nx run @semio-tech/schema-registry-rs:test",
+    "test-quick": "nx run @semio-tech/schema-registry-rs:test-quick",
+    "test-long": "nx run @semio-tech/schema-registry-rs:test-long",
+    "test-exhaustive": "nx run @semio-tech/schema-registry-rs:test-exhaustive",
+    "test-neutrality": "nx run @semio-tech/schema-registry-rs:test-neutrality"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

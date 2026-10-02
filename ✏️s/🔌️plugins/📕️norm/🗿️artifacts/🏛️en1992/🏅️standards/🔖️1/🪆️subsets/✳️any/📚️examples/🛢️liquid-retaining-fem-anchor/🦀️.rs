@@ -1,6 +1,7 @@
 //! 📚️ Example `liquid-retaining-fem-anchor`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "liquid-retaining-fem-anchor";
 pub fn label() -> LocalizedLabel {

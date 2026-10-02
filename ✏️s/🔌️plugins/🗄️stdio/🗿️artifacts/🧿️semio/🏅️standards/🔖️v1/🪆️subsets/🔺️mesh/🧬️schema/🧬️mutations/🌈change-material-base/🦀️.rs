@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMate
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change material \"{}\" base color", self.id), &format!("Basisfarbe von Material \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change material \"{}\" base color", self.id), &format!("Basisfarbe von Material \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

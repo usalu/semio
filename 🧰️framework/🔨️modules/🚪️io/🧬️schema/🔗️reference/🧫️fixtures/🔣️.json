@@ -1,0 +1,28 @@
+{
+  "references": [
+    {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "",
+        "standard": "",
+        "subset": ""
+      }
+    },
+    {
+      "artifactId": "!@/世界\u0000",
+      "dialect": {
+        "artifactKind": "kind!@/\u0000",
+        "standard": "standard/@!",
+        "subset": "subset/@!世界"
+      }
+    },
+    {
+      "artifactId": "a!b",
+      "dialect": {
+        "artifactKind": "s.sample.kind",
+        "standard": "",
+        "subset": "*"
+      }
+    }
+  ]
+}

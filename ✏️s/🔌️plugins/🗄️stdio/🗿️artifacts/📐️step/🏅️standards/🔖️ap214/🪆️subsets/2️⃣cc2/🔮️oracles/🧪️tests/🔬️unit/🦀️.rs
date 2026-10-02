@@ -49,7 +49,7 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
 /// 📇️ One spec per declared kind — the case's own `Examples` rows, read from its feature file so the unit law and
 /// the scenario run the same leaf wire payloads.
 fn exercised_specs() -> Vec<Json> {
-    crate::law::feature_rows(include_str!("../../../🧪️tests/🔬️2-mutate-step-ap214-cc2/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
+    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🔬️2-mutate-step-ap214-cc2/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]

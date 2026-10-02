@@ -17,7 +17,7 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use super::EXAMPLE_ASSET;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_note_note::standards::v1::subsets::any::io::snapshot::text::{parse_note_dsl, print_note_dsl};
     use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::encode_note_snapshot_json;
 

@@ -70,7 +70,7 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                             assert_eq!(json["layout"]["b"], serde_json::json!({ "x": 5.0, "y": 7.0 }));
                             assert!(authored_line.is_some());
                         }
-                        assert_eq!(store.envelope().edits.last().unwrap().line, authored_line);
+                        assert_eq!(store.envelope().vcs.edits.last().unwrap().line, authored_line);
                     }
                 }
                 let closed_progress = publication.progress();

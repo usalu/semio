@@ -2,14 +2,14 @@
   "mutation": "changePermanents",
   "newPermanents": [
     {
-      "gk": 95000.0,
       "id": "G-sup",
-      "kind": "g_sup"
+      "kind": "g_sup",
+      "gk": 95000.0
     },
     {
-      "gk": 20000.0,
       "id": "G-inf",
-      "kind": "g_inf"
+      "kind": "g_inf",
+      "gk": 20000.0
     }
   ]
 }

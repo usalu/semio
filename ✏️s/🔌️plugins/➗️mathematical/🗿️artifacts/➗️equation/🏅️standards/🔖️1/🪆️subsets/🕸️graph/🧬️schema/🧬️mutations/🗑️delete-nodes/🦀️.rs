@@ -1,5 +1,5 @@
 //! 🗑️ `delete-nodes` — plural/bulk delete, the real multi-select gesture behind the node-graph
-//! canvas's `deleteSelection` edit op (`✏️editor/🎮️commands/🧮️set-algorithm/component.rs`) —
+//! canvas's `delete` row of the shared node-graph vocabulary (`✏️editor/🎮️commands/🕸️node-graph-edit`) —
 //! a separate mutation per taxonomy's "Bulk/plural mutations" rule, never a bare `Vec` bolted onto
 //! the singular `delete-node`.
 
@@ -23,8 +23,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for DeleteNodes 
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete {} nodes", self.ids.len()), &format!("{} Knoten löschen", self.ids.len()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete {} nodes", self.ids.len()), &format!("{} Knoten löschen", self.ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

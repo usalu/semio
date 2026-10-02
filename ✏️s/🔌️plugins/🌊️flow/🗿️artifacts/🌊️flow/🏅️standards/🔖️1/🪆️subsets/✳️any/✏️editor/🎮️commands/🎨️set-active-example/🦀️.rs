@@ -22,12 +22,12 @@ pub fn set_active_example_edit(payload: &SetActiveExample, composed: &FlowSnapsh
     let target = if payload.example_id.is_empty() {
         FlowSnapshot::default()
     } else if payload.example_id == demo::ID {
-        <FlowSnapshot as store::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))?
+        demo::snapshot_from_text(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))?
     } else {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.example-unknown"), format!("setActiveExample has no example \"{}\"", payload.example_id)));
     };
     let scene = crate::flow_working_scene(&target);
-    Ok(crate::editor::flow::flow_scene_publication(composed, &scene.widgets, &scene.synapses, &scene.layout))
+    Ok(crate::editor::flow::flow_scene_replacement(composed, &scene.widgets, &scene.synapses, &scene.layout))
 }
 
 /// 🎨️ Loads the published `demo` document, or restores the default snapshot when the id is empty.

@@ -346,8 +346,8 @@ fn labels_reserved_reasons_and_templates_match_the_fixture() {
         assert_eq!(label.text(Locale::En), text(&row["en"]));
         assert_eq!(label.text(Locale::De), text(&row["de"]));
         let localized = label.localized();
-        assert_eq!(localized.resolve(ui::wgpu::Terminology::Native, Locale::De), text(&row["de"]));
-        assert_eq!(localized.resolve(ui::wgpu::Terminology::Reuse, Locale::En), text(&row["en"]));
+        assert_eq!(localized.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De), text(&row["de"]));
+        assert_eq!(localized.resolve(semio_framework_ui_locale::Terminology::Reuse, Locale::En), text(&row["en"]));
     }
     for state in ToolRunState::ALL {
         assert_eq!(state.label().key(), format!("state{}{}", state.as_str()[..1].to_uppercase(), &state.as_str()[1..]));

@@ -42,6 +42,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true, features = ["component-app-assembly"] }

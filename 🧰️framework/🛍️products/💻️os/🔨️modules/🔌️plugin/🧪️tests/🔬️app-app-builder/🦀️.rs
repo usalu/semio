@@ -1,6 +1,6 @@
 mod app_builder_tests {
     use super::*;
-    use ui_wgpu::wgpu::LocalizedLabel;
+    use semio_framework_ui_locale::LocalizedLabel;
     use ui_wgpu::wgpu::create_default_layout;
 
     /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
@@ -513,7 +513,7 @@ mod app_builder_tests {
         };
         let definition = built("entity-ids-app", "graph", "node").await.expect("a declared granularity builds");
         let rename = declared_actions(&definition).find(|action| action.id == "rename").expect("declared");
-        let schema = rename.args[0].json_schema(semio_framework::Terminology::Native, semio_framework::Locale::En);
+        let schema = rename.args[0].json_schema(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
         let items = schema.get("items").expect("an entity-id argument is a list");
         assert_eq!(
             (schema.get("type").and_then(DslValue::as_str), items.get("type").and_then(DslValue::as_str), items.get("x-semio-format").and_then(DslValue::as_str), items.get("x-semio-entity-kind").and_then(DslValue::as_str)),
@@ -529,7 +529,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn declaring_introduction_injects_start_introduction_action() {
         use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let definition = minimal_app("intro-app")
             .await
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
@@ -559,7 +559,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_duplicate_introduction_step_ids() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("dupe-step-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -574,7 +574,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, window_element_id};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("bad-window-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] })
@@ -586,7 +586,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, panel_tab_element_id, panel_tab_first_draggable_element_id};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("bad-panel-tab-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))] })
@@ -607,7 +607,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("bad-element-app").await;
         let __chain =
             __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).await;
@@ -623,7 +623,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
         use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let definition = minimal_app("good-escape-hatch-app")
             .await
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
@@ -636,7 +636,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("bad-interaction-utility-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -651,7 +651,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let __base = minimal_app("bad-interaction-window-app").await;
         let __chain = __base
             .introduction(IntroductionDefinition {
@@ -666,7 +666,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
         use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition, window_element_id};
-        use ui_wgpu::wgpu::LocalizedLabel;
+        use semio_framework_ui_locale::LocalizedLabel;
         let definition = minimal_app("good-intro-app")
             .await
             .mutation("addLayer", LocalizedLabel::data("Add Layer"))

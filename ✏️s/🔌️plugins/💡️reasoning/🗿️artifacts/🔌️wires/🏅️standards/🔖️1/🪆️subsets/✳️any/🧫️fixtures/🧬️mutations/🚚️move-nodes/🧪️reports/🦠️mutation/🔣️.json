@@ -1,0 +1,9 @@
+{
+  "mutation": "moveNodes",
+  "nodeIds": [
+    "node-alpha",
+    "node-beta"
+  ],
+  "dx": 0.0,
+  "dy": 0.0
+}

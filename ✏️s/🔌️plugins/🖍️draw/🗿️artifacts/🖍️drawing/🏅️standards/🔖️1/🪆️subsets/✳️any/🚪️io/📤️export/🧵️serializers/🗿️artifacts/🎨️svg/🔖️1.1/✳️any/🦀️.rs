@@ -134,8 +134,8 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4]) -> Re
             common.presentation.font_size = Some(text.size.to_string());
             common.presentation.font_family = Some("ui-sans-serif, system-ui, sans-serif".into());
             common.extra_attrs.push(attr("xml:space", "preserve"));
-            let lines = semio_s_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_,line)| !line.is_empty()).map(|(index,line)| SvgElement::Tspan {
-                common: CommonAttrs::default(), x: Some(0.0), y: Some(text.size + index as f64 * text.size * semio_s_2d::text::DRAWING_TEXT_LINE_HEIGHT), children: vec![SvgElement::TextNode(line.into())]
+            let lines = semio_framework_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_,line)| !line.is_empty()).map(|(index,line)| SvgElement::Tspan {
+                common: CommonAttrs::default(), x: Some(0.0), y: Some(text.size + index as f64 * text.size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT), children: vec![SvgElement::TextNode(line.into())]
             }).collect();
             SvgElement::Text { common,x:None,y:None,children:lines }
         } else if let Some(image) = &node.image {

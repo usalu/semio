@@ -8,7 +8,11 @@
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
-use semio_framework_plugin::{ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind};
+use semio_framework_plugin::ActionFactory;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

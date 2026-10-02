@@ -12,5 +12,7 @@
   "unrelatedDocAggregate": "/// Documentation for a prior item.\npub struct Before;\n#[derive(Clone, Debug)]\npub enum ProbeMutation { Existing(existing::Mutation) }\n",
   "nestedAggregateDecoy": "pub fn decoy() { pub enum NestedMutation {} }\npub enum Plain {}\n",
   "nestedAggregateScopes": "pub struct Probe;\npub fn function() { pub enum FunctionMutation {} }\nimpl Probe { fn method() { enum ImplMutation {} } }\npub mod nested { pub enum ModuleMutation {} }\nmacro_rules! mutation { () => { pub enum MacroMutation {} }; }\npub enum Plain {}\n",
-  "unmatchedAggregate": "pub enum ProbeMutation { Existing(existing::Mutation)\n"
+  "unmatchedAggregate": "pub enum ProbeMutation { Existing(existing::Mutation)\n",
+  "unprovenScopeAggregate": "#![cfg_attr(any(), rewrite)]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+  "unprovenMountAggregate": "#[cfg_attr(any(), rewrite)]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n"
 }

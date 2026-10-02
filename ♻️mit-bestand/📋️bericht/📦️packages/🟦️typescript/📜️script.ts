@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { ActorNetworkScript, actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../../🔨️modules/👥️actor-network/📜️script.ts";
 const packageRoot = import.meta.dir, ownerRoot = join(packageRoot, "../..");
 const reportCatalog = JSON.parse(readFileSync(join(ownerRoot, "🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string; texPath: string; actorNetwork: boolean }[] };

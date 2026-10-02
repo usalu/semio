@@ -9,6 +9,24 @@
     "family:os-plugin"
   ],
   "targets": {
+    "cooperative-host-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cooperative-host-check",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": []
+    },
+    "cooperative-host-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cooperative-host-check --native",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": []
+    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -117,6 +135,23 @@
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
+      "outputs": []
+    },
+    "test-fixture-channel-interfaces": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-fixture-channel-interfaces",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🏗️fixture-channel-interfaces/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️fixture-channel-interfaces/**/*"
+      ],
       "outputs": []
     }
   }

@@ -10,7 +10,18 @@
 
 use crate::editor::bitmap::modes::edit::windows::input::config::BitmapInputWindowConfig;
 use crate::BitmapSnapshot;
-use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, ArgSchema, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArgSchema;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants

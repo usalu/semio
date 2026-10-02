@@ -67,7 +67,7 @@ fn theme_editor_control_ids(shell: &ShellState) -> Vec<String> {
 
 /// 🎨️ A shell with one theme-editor section open.
 fn shell_with_open_theme_section(section: &str) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let parts: Vec<_> = section.split('.').collect();
     let root = parts.iter().take(4).copied().collect::<Vec<_>>().join(".");
     shell.set_canonical_tree_open(&root, true);
@@ -105,7 +105,7 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
     let fixture = theme_publication_fixture();
     let surface = fixture["surfaceId"].as_str().expect("surface id");
     assert!(!fixture["requiresGuestRefresh"].as_bool().expect("guest refresh contract"));
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.chrome_build.preferences.theme_id = "semio".into();
     shell.chrome_build.preferences.custom_themes.remove("custom.retained-publication");
     shell.clear_theme_draft();
@@ -142,7 +142,7 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
 
 #[test]
 fn invalid_theme_field_and_import_inputs_keep_the_exact_retained_revision() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let surface = FRAMEWORK_SETTINGS_THEME_TAB_ID;
     let initial = shell.publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme retained document");
     let before = initial.header().expect("initial Theme header");
@@ -181,7 +181,7 @@ fn the_embedded_theme_document_carries_every_section_react_enumerates() {
 /// independent value oracle with the same id, label, paint token and metric.
 #[test]
 fn canonical_theme_fixture_matches_the_json_oracle() {
-    let text = include_str!("../../🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let document = ThemeDocument::parse(text).expect("canonical theme fixture");
     let oracle: Value = serde_json::from_str(text).expect("serde_json oracle");
     assert_eq!(document.id, oracle["id"].as_str().expect("id"));
@@ -195,7 +195,7 @@ fn canonical_theme_fixture_matches_the_json_oracle() {
 
 #[test]
 fn canonical_theme_parser_rejects_shapes_reacts_parser_rejects() {
-    let text = include_str!("../../🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
+    let text = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🎨️canonical-theme-document/🔣️.json");
     let mut value: Value = serde_json::from_str(text).expect("canonical fixture");
     value.as_object_mut().expect("theme object").remove("canvasFonts");
     assert_eq!(ThemeDocument::parse(&value.to_string()), None);
@@ -293,7 +293,7 @@ fn the_metrics_section_is_two_levels_and_names_both_coordinates() {
     let open_ids = theme_editor_control_ids(&open);
     let key = document.metrics[&section].keys().next().expect("🎨️ a metric section has entries");
     assert!(open_ids.contains(&format!("framework.settings.theme.metrics.{section}.{key}")), "🎨️ the open section shows its rows");
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": section, "key": key, "value": "42" }));
     assert_eq!(shell.theme_document().metrics[&section][key], ThemeNumber::Scalar(42.0), "🎨️ React's `setThemeMetric(section, key, value)`");
 }
@@ -360,7 +360,7 @@ fn editing_the_document_re_tokenises_the_painted_theme() {
 fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
     while !ui_contract::close_ui_value_page_one() {}
     let baseline = ui_contract::ui_value_headroom();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for (suffix, _) in SHELL_THEME_EDITOR_SECTIONS {
         shell.set_canonical_tree_open(&format!("framework.settings.theme.{suffix}"), true);
     }
@@ -386,7 +386,7 @@ fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
 /// ⚖️ React disables Reset only for the clean Semio baseline.
 #[test]
 fn reset_disabled_state_matches_reacts_baseline_predicate() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.chrome_build.preferences.theme_id = "semio".into();
     let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui()).expect("clean theme document");
     let reset = records.iter().find(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")).expect("reset control");
@@ -401,7 +401,7 @@ fn reset_disabled_state_matches_reacts_baseline_predicate() {
 /// React's own three option values.
 #[test]
 fn the_general_leaf_offers_reacts_merge_policy_selector() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut selects = Vec::new();
     fn walk(node: &UiNode, out: &mut Vec<(String, Vec<String>)>) {
         fn walk_item(item: &UiTreeItemNode, out: &mut Vec<(String, Vec<String>)>) {
@@ -431,7 +431,7 @@ fn the_general_leaf_offers_reacts_merge_policy_selector() {
 /// document re-parses — the `.theme.dsl` text React's `serializeUiTheme`/`parseUiTheme` round-trip.
 #[test]
 fn the_theme_leaf_offers_reacts_export_import_and_save_controls() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let ids = theme_editor_control_ids(&shell);
     for id in ["framework.settings.theme.select", "framework.settings.theme.saveLabel", "framework.settings.theme.save", "framework.settings.theme.reset", "framework.settings.theme.export", "framework.settings.theme.import"] {
         assert!(ids.contains(&id.to_string()), "🎨️ {id} is one of React's theme-leaf controls");
@@ -453,7 +453,7 @@ fn an_editor_commit_keeps_the_rows_authored_coordinates() {
     assert_eq!(json["key"], "primary", "🔀️ the node's authored coordinate survives");
     assert_eq!(json["value"], "#00ff00", "🔀️ …beside the committed value");
 
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.apply_theme_editor_commit("setThemeColor", &serde_json::json!({ "key": "primary", "value": "#00ff00" }));
     assert_eq!(shell.theme_document().colors["primary"], "#00ff00", "🎨️ React's `setThemeColor`");
     shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({ "key": "compact", "value": "5px" }));
@@ -479,7 +479,7 @@ fn an_editor_commit_keeps_the_rows_authored_coordinates() {
 /// are the painted text; a control with a chord also publishes its `aria-keyshortcuts`.
 #[test]
 fn chrome_controls_publish_accessible_names_and_shortcuts() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     with_chrome_control_names(|names| {
         names.clear();
     });
@@ -513,7 +513,7 @@ fn fullscreen_and_utility_painters_publish_reacts_pressed_buttons_on_their_actua
         ui_wgpu::wgpu::utility_toggle("grid", "circle".into(), semantics["utility"]["toggle"]["label"].as_str().expect("toggle label"), semantics["utility"]["toggle"]["pressed"].as_bool().expect("toggle pressed"), action),
         ui_wgpu::wgpu::utility_collection("views", "circle".into(), semantics["utility"]["collection"]["label"].as_str().expect("collection label"), vec![]),
     ];
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut chrome = ShellChromeBuildState::default();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -588,6 +588,7 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
             on_delta: action,
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         })),
         presence: UiPresence::default(),
         menu: None,
@@ -669,7 +670,7 @@ fn pointer_activation_resolves_every_nested_leaf_from_root_to_target_independent
 
 #[test]
 fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(1.0, 2.0, 3.0, 4.0), event: None, control_id: Some("ui.search.toggle".to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
     shell.publish_retained_hit_registry(&mut input);
@@ -691,7 +692,7 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
 }
 
 fn settings_toggle_shell() -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
     shell
 }
@@ -766,7 +767,7 @@ fn a_delayed_chrome_mirror_address_cannot_activate_after_the_chrome_changes() {
 fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessibility_selected_tail() {
     let fixture = accessibility_fixture();
     let contract = &fixture["settingsTabStrip"];
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     let tabs = contract["tabs"].as_array().expect("Settings tabs").iter().enumerate().map(|(order, tab)| DockTabNode::leaf(tab["id"].as_str().unwrap(), tab["label"].as_str().unwrap(), "settings", order as i32)).collect::<Vec<_>>();
     shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, tabs));
@@ -842,7 +843,7 @@ fn mobile_panel_buttons_publish_their_painted_names_and_pressed_state_once() {
 /// beside any bound control's own text — and appending it twice is not a thing that can happen.
 #[test]
 fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let badged = shell.chrome_control_label("playground.navbar.roles.editor", "Editor");
     assert!(badged.starts_with("Editor "), "⌨️ the badge follows the label, as React's `ms-auto` span does");
     assert_eq!(shell.chrome_control_label("playground.navbar.roles.editor", &badged), badged, "⌨️ idempotent: a builder that already badged its own label is left alone");
@@ -853,7 +854,7 @@ fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
 /// framework-universal history aliases stay in the shell tail.
 #[test]
 fn the_flagged_keybinding_rows_match_reacts_registry() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let fullscreen = shell.build_os_commands().into_iter().find(|command| command.id == "os.toggleFullscreen").expect("fullscreen OS command");
     assert!(fullscreen.keybindings.iter().any(|binding| binding.chord == "control+meta+f" && binding.platform == Some(semio_framework::manifest::Platform::MacOs)));
     assert_eq!(fullscreen.keybindings.iter().filter(|binding| binding.chord == "f11").count(), 2);
@@ -951,7 +952,7 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
 
 #[test]
 fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
     with_chrome_control_names(|names| names.clear());
@@ -999,7 +1000,7 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
 
 #[test]
 fn passive_chrome_regions_are_not_announced_as_buttons() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     with_chrome_control_names(|names| names.clear());
     let fixture = accessibility_fixture();
     let cases = fixture["passiveChrome"].as_array().unwrap();
@@ -1089,7 +1090,7 @@ fn theme_geometry_fixture() -> Value {
 #[test]
 fn theme_geometry_editor_commits_only_resolved_compact_lengths_and_reference_metrics() {
     let fixture = theme_geometry_fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().expect("valid geometry cases") {
         shell.clear_theme_draft();
         shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":"dom", "key":"rootRemPx", "value":case["rootRemPx"].to_string()}));
@@ -1151,7 +1152,7 @@ fn theme_geometry_compact_authoring_has_localized_label_and_description() {
 fn theme_geometry_metric_authoring_exposes_shared_localized_guidance() {
     let contract: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json")).expect("geometry contract");
     let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("geometry bindings");
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.set_canonical_tree_open("framework.settings.theme.metrics", true);
     for section in ["chrome", "dom", "typography"] { shell.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true); }
     for (locale, is_de) in [("en", false), ("de", true)] {

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
         base.embedded_files.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetEmbeddedFile(super::set_embedded_file::SetEmbeddedFile { file: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove embedded-file {}", self.id), &format!("Eingebettete Datei {} entfernen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove embedded-file {}", self.id), &format!("Eingebettete Datei {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

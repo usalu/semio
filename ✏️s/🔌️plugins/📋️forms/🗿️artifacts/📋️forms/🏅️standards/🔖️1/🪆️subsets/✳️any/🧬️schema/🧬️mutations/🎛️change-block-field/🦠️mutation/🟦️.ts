@@ -1,6 +1,8 @@
 /** 🎛️ `change-block-field` payload — mirrors Rust `ChangeBlockField` + `BlockField` (`../🦀️.rs`): the absolute set of ONE
  * field of one question, on the wire `{mutation: "changeBlockField", blockId, field, value}` (`value: null` clears an
  * optional field). Schema: `../🧬️schema/🔣️.json`; design §17.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING. */
+import{parseCondition}from"../../../📝️definition/🟦️.ts";
+import{parseFormsValue,formsValueEqual,formsValueNumber}from"../../../🌱️value/🟦️.ts";
 import type { DslValue, FormExpr, FormQuestion, FormQuestionOption, FormVectorField } from "../../🟦️.ts";
 
 export const BLOCK_TEXT_FIELDS = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "fixtureSlug"] as const;
@@ -13,8 +15,8 @@ export type BlockField =
   | { field: (typeof BLOCK_TEXT_FIELDS)[number]; value: string | null }
   | { field: "required"; value: boolean | null }
   | { field: (typeof BLOCK_NUMBER_FIELDS)[number]; value: number | null }
-  | { field: "default"; value: DslValue }
-  | { field: "params"; value: { [key: string]: DslValue } | null }
+  | { field: "default"; value: DslValue | null }
+  | { field: "params"; value: Extract<DslValue,{kind:"object"}> | null }
   | { field: "condition"; value: FormExpr | null }
   | { field: "options"; value: FormQuestionOption[] | null }
   | { field: "fields"; value: FormVectorField[] | null };
@@ -33,33 +35,7 @@ const fail = (at: string, message: string): never => {
 };
 
 /** 🧮️ Reads one condition expression exactly as `📝️definition/🔣️.json#/$defs/Expression` admits it. */
-export function parseFormExpr(value: unknown, at = "$"): FormExpr {
-  if (!isObject(value)) return fail(at, "an expression is an object");
-  const keys = Object.keys(value).sort().join(",");
-  const exact = (expected: string) => (keys === expected ? undefined : fail(at, `a ${String(value.kind)} expression carries exactly ${expected}`));
-  switch (value.kind) {
-    case "const":
-      exact("kind,value");
-      return { kind: "const", value: value.value as DslValue };
-    case "var":
-      exact("kind,name");
-      return typeof value.name === "string" ? { kind: "var", name: value.name } : fail(`${at}.name`, "is a string");
-    case "eq":
-      exact("kind,left,right");
-      return { kind: "eq", left: parseFormExpr(value.left, `${at}.left`), right: parseFormExpr(value.right, `${at}.right`) };
-    case "truthy":
-      exact("expr,kind");
-      return { kind: "truthy", expr: parseFormExpr(value.expr, `${at}.expr`) };
-    case "and":
-    case "or": {
-      exact("items,kind");
-      const items = Array.isArray(value.items) ? value.items : fail(`${at}.items`, "is an array");
-      return { kind: value.kind, items: items.map((item, index) => parseFormExpr(item, `${at}.items[${index}]`)) };
-    }
-    default:
-      return fail(`${at}.kind`, "is const, var, eq, truthy, and or or");
-  }
-}
+export function parseFormExpr(value:unknown,at="$"):FormExpr{return parseCondition(value);}
 
 /** 📥️ Reads a `change-block-field` wire payload exactly as the leaf schema admits it. */
 export function parseChangeBlockField(value: unknown, at = "$"): ChangeBlockField {
@@ -94,9 +70,9 @@ export function parseChangeBlockField(value: unknown, at = "$"): ChangeBlockFiel
     case "step":
       return { blockId, field, value: nullable((item) => (number(item) > 0 ? (item as number) : fail(where, "is greater than zero"))) };
     case "default":
-      return { blockId, field, value: fieldValue as DslValue };
+      return { blockId, field, value: nullable(parseFormsValue) };
     case "params":
-      return { blockId, field, value: nullable((item) => (isObject(item) ? (item as { [key: string]: DslValue }) : fail(where, "is an object"))) };
+      return { blockId, field, value: nullable((item) => (()=>{const value=parseFormsValue(item);return value.kind==="object"?value:fail(where,"is an intrinsic object");})()) };
     case "condition":
       return { blockId, field, value: nullable((item) => parseFormExpr(item, where)) };
     case "options":
@@ -132,7 +108,10 @@ export function applyBlockField(question: FormQuestion, change: BlockField): For
   return next as unknown as FormQuestion;
 }
 
-const sameValue = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
+function sameField(left:BlockField,right:BlockField):boolean{
+ if(left.field!==right.field)return false;if(left.value===null||right.value===null)return left.value===right.value;
+ switch(left.field){case"default":case"params":return formsValueEqual(left.value,right.value as DslValue);case"condition":{const pending:[FormExpr,FormExpr][]=[[left.value,right.value as FormExpr]];while(pending.length){const[a,b]=pending.pop()!;if(a.kind!==b.kind)return false;switch(a.kind){case"const":if(b.kind!=="const"||!formsValueEqual(a.value,b.value))return false;break;case"var":if(b.kind!=="var"||a.name!==b.name)return false;break;case"eq":if(b.kind!=="eq")return false;pending.push([a.left,b.left],[a.right,b.right]);break;case"truthy":if(b.kind!=="truthy")return false;pending.push([a.expr,b.expr]);break;case"and":case"or":if(b.kind!==a.kind||a.items.length!==b.items.length)return false;for(let i=0;i<a.items.length;i++)pending.push([a.items[i]!,b.items[i]!]);break;}}return true;}case"options":{const other=right.value as FormQuestionOption[];return left.value.length===other.length&&left.value.every((item,i)=>item.value===other[i]!.value&&item.label===other[i]!.label);}case"fields":{const other=right.value as FormVectorField[];return left.value.length===other.length&&left.value.every((item,i)=>item.key===other[i]!.key&&item.label===other[i]!.label&&item.value===other[i]!.value);}default:return left.value===right.value;}
+}
 
 /** 🛡️ The Fatal refusal of `next` (the question with `change` set), mirroring the Rust diff's invariants. */
 export function blockFieldRefusal(next: FormQuestion, change: BlockField): BlockFieldDiagnostic["code"] | undefined {
@@ -146,7 +125,7 @@ export function blockFieldRefusal(next: FormQuestion, change: BlockField): Block
     case "default": {
       const value = change.value;
       if (value === null) return undefined;
-      const fits = ["number", "slider"].includes(next.kind) ? typeof value === "number" && Number.isFinite(value) : next.kind === "boolean" ? typeof value === "boolean" : ["text", "longText", "date", "color", "single"].includes(next.kind) ? typeof value === "string" : next.kind === "multi" ? Array.isArray(value) && value.every((item) => typeof item === "string") : true;
+      const fits = ["number", "slider"].includes(next.kind) ? formsValueNumber(value)!==undefined && Number.isFinite(formsValueNumber(value)) : next.kind === "boolean" ? value.kind === "boolean" : ["text", "longText", "date", "color", "single"].includes(next.kind) ? value.kind === "text" : next.kind === "multi" ? value.kind === "array" && value.items.every((item) => item.kind === "text") : true;
       return fits ? undefined : "mutation.invariant";
     }
     case "options":
@@ -165,7 +144,7 @@ export function diagnoseChangeBlockField(questions: readonly FormQuestion[], cha
   if (question === undefined) return { code: "mutation.target-missing", path: [change.blockId] };
   const { blockId: _, ...field } = change;
   const next = applyBlockField(question, field as BlockField);
-  if (sameValue(next, question)) return { code: "mutation.no-op" };
+  if (sameField(readBlockField(question,change.field),field as BlockField)) return { code: "mutation.no-op" };
   const refused = blockFieldRefusal(next, field as BlockField);
   return refused === undefined ? undefined : { code: refused, path: [change.blockId] };
 }

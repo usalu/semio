@@ -25,8 +25,8 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for CreateEdge {
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create edge \"{}\"", self.edge.id), &format!("Kante \"{}\" erstellen", self.edge.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create edge \"{}\"", self.edge.id), &format!("Kante \"{}\" erstellen", self.edge.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge.id.clone()]

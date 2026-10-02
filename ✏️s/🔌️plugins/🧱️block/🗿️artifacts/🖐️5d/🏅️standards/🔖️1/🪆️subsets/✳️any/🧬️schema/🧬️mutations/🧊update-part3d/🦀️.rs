@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart3d {
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update part 3D pose", "3D-Lage des Bauteils aktualisieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update part 3D pose", "3D-Lage des Bauteils aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

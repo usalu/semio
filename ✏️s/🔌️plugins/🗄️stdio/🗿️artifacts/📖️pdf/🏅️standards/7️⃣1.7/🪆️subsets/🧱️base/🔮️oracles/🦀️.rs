@@ -46,7 +46,7 @@ pub const UNOBSERVABLE: &[&str] = &["insert-object"];
 #[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
-    use crate::document::{self, oracle_delete_page, oracle_replace_metadata};
+    use semio_s_plugin_stdio_document_test_oracle::{self, oracle_delete_page, oracle_replace_metadata};
     use lopdf::content::{Content, Operation};
     use lopdf::{Dictionary, Document, Object, ObjectId, Stream, StringFormat};
     use semio_repo_test_host::Json;
@@ -711,7 +711,7 @@ mod oracles {
     /// module's existing functions" rule is what makes all three an addition here rather than a
     /// change there.
     pub fn project_pdf_1_7(bytes: &[u8]) -> Result<Json, String> {
-        let base = document::project_pdf(bytes)?;
+        let base = semio_s_plugin_stdio_document_test_oracle::project_pdf(bytes)?;
         let reader = Document::load_mem(bytes).map_err(|error| format!("independent reader could not parse the document: {error}"))?;
         let boxes: Vec<(Json, i64)> = reader
             .get_pages()

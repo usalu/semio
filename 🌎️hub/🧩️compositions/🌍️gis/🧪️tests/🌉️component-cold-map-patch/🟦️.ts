@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
@@ -146,7 +146,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
             const descriptor = readFileSync(join(stage, "descriptor.semio"));
             const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
             if (createHash("sha256").update(stagedComponent).digest("hex") !== componentSha256) throw new Error("leased GIS component differs from staged component");
-            const receipts = await runExactCargoLaws({
+            const receipts = await runRepositoryExactCargoLaws({
               cwd: this.repoRoot,
               groups: [
                 {

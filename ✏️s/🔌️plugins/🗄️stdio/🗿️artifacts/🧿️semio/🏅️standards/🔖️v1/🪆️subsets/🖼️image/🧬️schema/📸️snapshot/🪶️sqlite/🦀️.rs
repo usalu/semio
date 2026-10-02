@@ -8,6 +8,9 @@ fn identity(row:&SqliteRow,columns:usize)->Result<(),String>{if row.rowid<=0||ro
 fn colorspace(value:SemioColorspace)->&'static str{match value{SemioColorspace::Rgb=>"rgb",SemioColorspace::Rgba=>"rgba",SemioColorspace::Grayscale=>"grayscale",SemioColorspace::GrayscaleAlpha=>"grayscale_alpha",SemioColorspace::Indexed=>"indexed"}}
 fn pixels(width:u32,height:u32)->Result<usize,String>{usize::try_from(width).map_err(|error|error.to_string())?.checked_mul(usize::try_from(height).map_err(|error|error.to_string())?).and_then(|count|count.checked_mul(4)).ok_or_else(||"Semio image pixel size overflow".into())}
 impl ArtifactSqliteSnapshot for SemioImageSnapshot{
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
+
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

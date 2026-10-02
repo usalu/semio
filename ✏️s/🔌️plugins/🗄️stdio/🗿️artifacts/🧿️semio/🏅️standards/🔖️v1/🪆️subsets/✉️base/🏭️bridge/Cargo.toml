@@ -17,6 +17,7 @@ path = "🦀️.rs"
 # artifact's source compiles on its own: the bridge links the artifact crate itself, and nothing wider
 # — never `semio-s-plugin-stdio`, whose other artifacts would block this inventory for no reason.
 [dependencies]
+semio-framework-value = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

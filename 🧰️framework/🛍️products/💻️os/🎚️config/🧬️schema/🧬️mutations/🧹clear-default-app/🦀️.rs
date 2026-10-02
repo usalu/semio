@@ -44,8 +44,8 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
             .unwrap_or_default()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Clear default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" entfernen", role_name_de(self.role), self.dialect.to_coordinate()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Clear default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" entfernen", role_name_de(self.role), self.dialect.to_coordinate()))
     }
 
     fn target(&self) -> Vec<String> {

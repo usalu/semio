@@ -1,0 +1,13 @@
+# Source Admission Callback Snapshot Review
+
+Read-only current source, no tests/jobs. Actual production collector callers are IO inventoryTaxonomySources310–311 and normalization inventoryTaxonomyWithSourceParentPruning4611, both canonical two arguments (loaded taxonomy, prepared options). No options facade callback adapter is present.
+
+IO prepare62–63 spreads options once and copies/freezes structuralDirectoryNames before its first progress callback85. Prepared object95 is frozen; indexRows86 copies/freezes each row and nested entry, repositoryFences87 copies/freezes its array, structural names refer to detached frozen array. Paths/scopes are primitive strings. Progress function reference deliberately remains callable. Parent normalization4601–4602 likewise snapshots options and structural names before prepare invokes any callback; workers validation afterward reads the copied primitive. Thus callback mutation of original request fields/array cannot change subsequent validation/IO selection. Original nested entry alias is detached, not merely outer-frozen.
+
+Remaining mutable authority boundary: LoadedTaxonomy passed to exported collector251 is not snapshotted there. Opaque prefixes and generator root fields are copied before callbacks, but later untracked/structural/walk helpers still receive the taxonomy object. If an external caller retains that same loaded object and its progress callback mutates taxonomy fields, it can alter later helper decisions. Current two production callers create taxonomy locally and do not expose it to callback, so no such actual production path was demonstrated. The public helper contract should explicitly own detached taxonomy facts or document/validate a prepared immutable receipt rather than implying all inputs immutable. Do not conflate options callback fix with global deep-freeze of every loaded taxonomy session.
+
+Exact tenth IO row was not located by the initial guessed fixture namespace; no row-level pass/content assertion is made. Source correctness review above is independent of reported tests. Actual frozen-array/entry obligations should remain in closed test corpus alongside callback-request mutation, with valid immutable production paths positive.
+
+## Rust ownership integration observation
+
+Current source executor imports family facet8 and captures canonical contract through the same physical walk117. Linked canonical input refuses112. At144–147 missing/uncaptured contract becomes invalid-ownership-contract, and inspectRustFamilyOwnership is called once using current sources, graph, inventory and cancellation. No second filesystem traversal was introduced. This establishes integration shape, not behavioral/native proof; occurrence scope/provider hostile review remains separate.

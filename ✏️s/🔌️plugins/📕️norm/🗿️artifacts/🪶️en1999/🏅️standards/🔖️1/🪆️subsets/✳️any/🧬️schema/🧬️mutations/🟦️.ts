@@ -1,143 +1,63 @@
-/** 🧬️ En1999 document mutations — discriminated union mirroring `En1999Mutation` / `KINDS`. */
-
-import type {
-  AluminiumConnection,
-  AluminiumMaterial,
-  AluminiumMember,
-  AluminiumSection,
-  AluminiumShell,
-  AnnexChoice,
-  ColdFormedSheet,
-  FatigueDetail,
-  FireScenario,
-} from "../📸️snapshot/🟦️.ts";
-
-export interface ChangeAnnex {
-  newAnnex: AnnexChoice;
-}
-
-export interface ChangeMaterials {
-  materials: AluminiumMaterial[];
-}
-
-export interface ChangeSections {
-  sections: AluminiumSection[];
-}
-
-export interface ChangeMembers {
-  members: AluminiumMember[];
-}
-
-export interface ChangeConnections {
-  connections: AluminiumConnection[];
-}
-
-export interface ChangeFireScenarios {
-  fireScenarios: FireScenario[];
-}
-
-export interface ChangeFatigueDetails {
-  fatigueDetails: FatigueDetail[];
-}
-
-export interface ChangeColdFormed {
-  coldFormed: ColdFormedSheet[];
-}
-
-export interface ChangeShells {
-  shells: AluminiumShell[];
-}
-
-export interface AddMember {
-  index: number;
-  member: AluminiumMember;
-}
-
-export interface RemoveMember {
-  id: string;
-}
-
-export interface ChangeMemberNEd {
-  memberId: string;
-  actionId: string;
-  newNK: number;
-}
-
-export interface ChangeMemberMYEd {
-  memberId: string;
-  actionId: string;
-  newMYK: number;
-}
-
-export interface ChangeMemberBucklingLength {
-  memberId: string;
-  axis: string;
-  newLength: number;
-}
-
-export interface ChangeMaterialDesignation {
-  materialId: string;
-  newDesignation: string;
-}
-
-export interface ChangePlateThickness {
-  sectionId: string;
-  elementId: string;
-  newThickness: number;
-}
-
-export interface ChangeWeldThroat {
-  connectionId: string;
-  newThroat: number;
-}
-
-export interface ChangeBoltCount {
-  connectionId: string;
-  newRows: number;
-  newBoltsPerRow: number;
-}
-
-/** 🏷️ Semantic mutation kind strings — must match Rust `KINDS`. */
-export const EN1999_MUTATION_KINDS = [
-  "change-annex",
-  "change-materials",
-  "change-sections",
-  "change-members",
-  "change-connections",
-  "change-fire-scenarios",
-  "change-fatigue-details",
-  "change-cold-formed",
-  "change-shells",
-  "add-member",
-  "remove-member",
-  "change-member-n-ed",
-  "change-member-my-ed",
-  "change-member-buckling-length",
-  "change-material-designation",
-  "change-plate-thickness",
-  "change-weld-throat",
-  "change-bolt-count",
-] as const;
-
-export type En1999MutationKind = (typeof EN1999_MUTATION_KINDS)[number];
+/** 🧺️ `En1999Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormWireReader, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { type ChangeMaterialDesignation, parseChangeMaterialDesignation } from "./⚗️change-material-designation/🧬️schema/🟦️.ts";
+import { type ChangeColdFormed, parseChangeColdFormed } from "./❄️change-cold-formed/🧬️schema/🟦️.ts";
+import { type AddMember, parseAddMember } from "./➕add-member/🧬️schema/🟦️.ts";
+import { parseRemoveMember, type RemoveMember } from "./➖remove-member/🧬️schema/🟦️.ts";
+import { type ChangeMemberMYEd, parseChangeMemberMYEd } from "./⤴️change-member-my-ed/🧬️schema/🟦️.ts";
+import { type ChangeAnnex, parseChangeAnnex } from "./🌍️change-annex/🧬️schema/🟦️.ts";
+import { type ChangeMemberNEd, parseChangeMemberNEd } from "./🏋️change-member-n-ed/🧬️schema/🟦️.ts";
+import { type ChangeMembers, parseChangeMembers } from "./🏗️change-members/🧬️schema/🟦️.ts";
+import { type ChangeMemberBucklingLength, parseChangeMemberBucklingLength } from "./📏️change-member-buckling-length/🧬️schema/🟦️.ts";
+import { type ChangeSections, parseChangeSections } from "./📐️change-sections/🧬️schema/🟦️.ts";
+import { type ChangeFatigueDetails, parseChangeFatigueDetails } from "./🔄️change-fatigue-details/🧬️schema/🟦️.ts";
+import { type ChangeConnections, parseChangeConnections } from "./🔗change-connections/🧬️schema/🟦️.ts";
+import { type ChangeFireScenarios, parseChangeFireScenarios } from "./🔥️change-fire-scenarios/🧬️schema/🟦️.ts";
+import { type ChangeWeldThroat, parseChangeWeldThroat } from "./🔥️change-weld-throat/🧬️schema/🟦️.ts";
+import { type ChangeBoltCount, parseChangeBoltCount } from "./🔩change-bolt-count/🧬️schema/🟦️.ts";
+import { type ChangeMaterials, parseChangeMaterials } from "./🧱change-materials/🧬️schema/🟦️.ts";
+import { type ChangePlateThickness, parseChangePlateThickness } from "./🧱change-plate-thickness/🧬️schema/🟦️.ts";
+import { type ChangeShells, parseChangeShells } from "./🫙change-shells/🧬️schema/🟦️.ts";
 
 export type En1999Mutation =
-    ({ mutation: "changeAnnex" } & ChangeAnnex)
-  | ({ mutation: "changeMaterials" } & ChangeMaterials)
-  | ({ mutation: "changeSections" } & ChangeSections)
-  | ({ mutation: "changeMembers" } & ChangeMembers)
-  | ({ mutation: "changeConnections" } & ChangeConnections)
-  | ({ mutation: "changeFireScenarios" } & ChangeFireScenarios)
-  | ({ mutation: "changeFatigueDetails" } & ChangeFatigueDetails)
-  | ({ mutation: "changeColdFormed" } & ChangeColdFormed)
-  | ({ mutation: "changeShells" } & ChangeShells)
-  | ({ mutation: "addMember" } & AddMember)
-  | ({ mutation: "removeMember" } & RemoveMember)
-  | ({ mutation: "changeMemberNEd" } & ChangeMemberNEd)
-  | ({ mutation: "changeMemberMYEd" } & ChangeMemberMYEd)
-  | ({ mutation: "changeMemberBucklingLength" } & ChangeMemberBucklingLength)
-  | ({ mutation: "changeMaterialDesignation" } & ChangeMaterialDesignation)
-  | ({ mutation: "changePlateThickness" } & ChangePlateThickness)
-  | ({ mutation: "changeWeldThroat" } & ChangeWeldThroat)
-  | ({ mutation: "changeBoltCount" } & ChangeBoltCount)
-;
+  | ChangeAnnex
+  | ChangeMaterials
+  | ChangeSections
+  | ChangeMembers
+  | ChangeConnections
+  | ChangeFireScenarios
+  | ChangeFatigueDetails
+  | ChangeColdFormed
+  | ChangeShells
+  | AddMember
+  | RemoveMember
+  | ChangeMemberNEd
+  | ChangeMemberMYEd
+  | ChangeMemberBucklingLength
+  | ChangeMaterialDesignation
+  | ChangePlateThickness
+  | ChangeWeldThroat
+  | ChangeBoltCount;
+
+export const parseEn1999Mutation: NormWireReader<En1999Mutation> = normWireTagged<En1999Mutation, "mutation">("mutation", {
+  changeAnnex: parseChangeAnnex,
+  changeMaterials: parseChangeMaterials,
+  changeSections: parseChangeSections,
+  changeMembers: parseChangeMembers,
+  changeConnections: parseChangeConnections,
+  changeFireScenarios: parseChangeFireScenarios,
+  changeFatigueDetails: parseChangeFatigueDetails,
+  changeColdFormed: parseChangeColdFormed,
+  changeShells: parseChangeShells,
+  addMember: parseAddMember,
+  removeMember: parseRemoveMember,
+  changeMemberNEd: parseChangeMemberNEd,
+  changeMemberMYEd: parseChangeMemberMYEd,
+  changeMemberBucklingLength: parseChangeMemberBucklingLength,
+  changeMaterialDesignation: parseChangeMaterialDesignation,
+  changePlateThickness: parseChangePlateThickness,
+  changeWeldThroat: parseChangeWeldThroat,
+  changeBoltCount: parseChangeBoltCount,
+});

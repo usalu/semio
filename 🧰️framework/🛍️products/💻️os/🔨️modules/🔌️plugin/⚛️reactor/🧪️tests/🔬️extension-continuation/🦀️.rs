@@ -151,7 +151,7 @@ async fn a_packed_host_fault_round_trips_through_outcome_to_result() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/extension-result-fault-pack.json")).expect("fault-pack fixture");
     let fault_json = serde_json::to_string(&fixture["fault"]).expect("fault object");
     let fault_value = dsl::json::from_json_str::<dsl::DslValue>(&fault_json).expect("fixture fault is a DSL value");
-    let fault: semio_framework::Fault = dsl::from_dsl_value(fault_value).expect("fixture fault is a Fault");
+    let fault: semio_framework::Fault = semio_framework_value::FromValue::from_value(fault_value).expect("fixture fault is a Fault");
     let packed = crate::host::encode_fault_pack(&fault);
     assert!(serde_json::from_slice::<serde_json::Value>(&packed).is_err(), "the ABI fault arm must not be a JSON string: {packed:?}");
     let decoded = crate::host::outcome_to_result(semio_framework::kernel::RequestOutcome::Err(packed)).expect_err("the err arm decodes a fault");

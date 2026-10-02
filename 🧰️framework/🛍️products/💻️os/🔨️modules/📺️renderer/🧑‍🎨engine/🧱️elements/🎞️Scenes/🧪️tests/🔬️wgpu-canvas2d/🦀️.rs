@@ -557,10 +557,24 @@ fn the_armed_gumball_paints_and_any_other_utility_does_not() {
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let painted = |node: &UiComponentSceneNode| {
         let mut draw = ui_wgpu::wgpu::DrawList::default();
-        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &mut draw);
+        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &ui_wgpu::wgpu::Theme::light(), &mut draw);
         draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len()).sum::<usize>()
     };
     assert!(painted(&gumball_scene("canvas2d-gumball-paint", true)) > 0, "the armed gumball paints its handles");
     assert_eq!(painted(&canvas_scene("canvas2d-gumball-select", json!([{ "role": "meta", "utility": "select" }]).to_string())), 0);
+}
+
+#[test]
+fn gumball_pivot_and_boundary_read_the_explicit_appearance_roles() {
+    let node = gumball_scene("canvas2d-gumball-theme", true);
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    for theme in [ui_wgpu::wgpu::Theme::light(), ui_wgpu::wgpu::Theme::dark()] {
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        crate::canvas2d_gumball::paint(&node, bounds, (0.0, 0.0, 1.0), &theme, &mut draw);
+        let colors = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter().map(|vertex| vertex.color)).collect::<Vec<_>>();
+        for role in [theme.text, theme.text_muted] {
+            assert!(colors.contains(&[role.r, role.g, role.b, role.a]), "the explicit appearance role must reach the actual pivot paint");
+        }
+    }
 }
 //#endregion 🧭️Gumball

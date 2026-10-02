@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import { randomUUID } from "node:crypto";
-import { acquireQueuedResourceLease } from "../../⚡️caching/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { join, relative, isAbsolute } from "node:path";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { runtimeInputAdmissionV1 } from "../../🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { discoverCargoWorkspaces, publishCargoWorkspaceMembership, cargoWorkspaceForManifest, cargoRepositoryPackages, prepareCargoOwners } from "./🟦️.ts";
@@ -45,31 +45,31 @@ class RuntimeInputScript extends Script {
   }
 }
 class RuntimeContractScript extends Script {
- async run(args:string[]):Promise<void>{if(args.length)throw new Error("runtime-contract-check accepts no overrides");await runOwnedCommand("bun",["test",join(import.meta.dir,"../../🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts")],this.root,"runtime-input-contract",15_000);}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("runtime-contract-check accepts no overrides");await runRepositoryCommand("bun",["test",join(import.meta.dir,"../../🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts")],this.root,"runtime-input-contract",15_000);}
 }
 
 class NativeInputScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length !== 2 || args[0] !== "--manifest") throw new Error("native-input-check --manifest <current-owner>");
-    await runOwnedCommand("cargo", ["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(this.root, args[1]!)], this.root, "native-input-admission", 30_000);
+    await runRepositoryCommand("cargo", ["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(this.root, args[1]!)], this.root, "native-input-admission", 30_000);
   }
 }
 
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runOwnedCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
+    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */
 class QueuedContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("queued-contract-check accepts no overrides");
-    await runOwnedCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")], this.root, "cargo-queued-preparation-contract", 45_000, { env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract") });
+    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")], this.root, "cargo-queued-preparation-contract", 45_000, { env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract") });
   }
 }
 class BunContractScript extends Script {
-  async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runOwnedCommand("bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",15_000); }
+  async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runRepositoryCommand("bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",15_000); }
 }
 class CapabilityContractScript extends Script {
   async run(args: string[]): Promise<void> {

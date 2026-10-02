@@ -4,7 +4,12 @@ use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, Catalogue
 use crate::artifact_schema::{psi_for_category, NaDe, NaEn};
 use crate::document::{ClauseId, NationalAnnex};
 use crate::ImportanceClass;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 pub const BODY_CATALOGUE: &str = "norm.en1990.play.catalogue";
 
@@ -107,7 +112,7 @@ fn importance_gamma_i() -> CatalogueTable {
 
 pub fn render(
     examples: Vec<semio_framework_plugin::ExampleSource>,
-    locale: semio_framework_plugin::Locale,
+    locale: semio_framework_ui_locale::Locale,
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-ground-temperature",
+  "semanticKind": "change-ground-temperature-building-surface",
+  "displayName": "Change Ground Temperature Building Surface",
+  "emoji": "🌡️",
+  "aggregateVariant": "ChangeGroundTemperatureBuildingSurface",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-ground-temperature-building-surface",
+  "binaryTag": 292,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,6 +1,7 @@
 //! 🥽️ Indexed mesh widgets with explicit polygon data and B-Rep preview conversion.
 use super::*;
-use neural_engine::{Atom, FieldSpec, Schema, ValueType};
+use neural_engine::{Atom, FieldSpec, Schema};
+use semio_framework_value::ValueType;
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3 as MeshVector, VertexId, WeldMode, MirrorAxis, MeshModelingJob, MeshModelingStep, MeshModelingProgress};
 use std::collections::{HashMap, HashSet};
 

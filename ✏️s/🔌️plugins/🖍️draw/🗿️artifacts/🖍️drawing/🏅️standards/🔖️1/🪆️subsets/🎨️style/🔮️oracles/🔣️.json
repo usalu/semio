@@ -1,8 +1,42 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "s.draw.drawing@1/🎨️style -- Paint appearance -- stroke, fill, blend mode, opacity. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../../✳️any/🔮️oracles/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🔮️oracles contribution repo-wide, so none of that needs restating here). The `mutate-drawing-1` cross-language differential test still exhaustively claims the original `drawing-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
   "oracles": [
+    {
+      "id": "immer-drawing-group-isolation-edit",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "immer",
+      "version": "10.2.0",
+      "source": {
+        "repository": "https://github.com/immerjs/immer",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "immer",
+        "implementation": "structural-sharing producer",
+        "version": "10.2.0"
+      },
+      "capabilities": [
+        "drawing-group-isolation-edit"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "notes": "An independent Immer producer sets only the group's isolation flag and verifies the complete document and the inverse back to the authored default.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "An independent Immer producer sets only the group's isolation flag and verifies the complete document and the inverse back to the authored default."
+    },
     {
       "id": "json-patch-drawing-text-edit",
       "kind": "third-party-library",
@@ -31,7 +65,11 @@
         "linux-x64",
         "win32-x64"
       ],
-      "notes": "The unit twin applies independent replace operations to content and size, compares the complete nested document, and restores the original fields. This verifies text facet editing, not font metrics or rasterization."
+      "notes": "The unit twin applies independent replace operations to content and size, compares the complete nested document, and restores the original fields. This verifies text facet editing, not font metrics or rasterization.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "The unit twin applies independent replace operations to content and size, compares the complete nested document, and restores the original fields. This verifies text facet editing, not font metrics or rasterization."
     },
     {
       "id": "json-patch-drawing-fill-rule-edit",
@@ -61,7 +99,11 @@
         "linux-x64",
         "win32-x64"
       ],
-      "notes": "Independent JSON Patch replaces only attributes.fillRule and verifies the complete document and inverse."
+      "notes": "Independent JSON Patch replaces only attributes.fillRule and verifies the complete document and inverse.",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "rationale": "Independent JSON Patch replaces only attributes.fillRule and verifies the complete document and inverse."
     }
   ],
   "noOracleDecisions": [],
@@ -77,7 +119,8 @@
         "set-layer-blend-mode",
         "set-layer-opacity",
         "update-text",
-        "set-layer-fill-rule"
+        "set-layer-fill-rule",
+        "set-group-isolation"
       ],
       "vectors": [
         {
@@ -143,6 +186,17 @@
             {
               "id": "evenodd-to-nonzero",
               "directoryName": "🌀️evenodd"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-group-isolation",
+          "sourceMutationDirectoryName": "🧩️set-group-isolation",
+          "mutationDirectoryName": "🧩️set-group-isolation",
+          "scenarios": [
+            {
+              "id": "isolates-a-group",
+              "directoryName": "🧩️pass"
             }
           ]
         }
@@ -360,6 +414,40 @@
             ]
           },
           "notes": "The shared fixture checks the complete document and inverse against fast-json-patch. Native projection and picking tests cover compound-path winding."
+        },
+        {
+          "id": "set-group-isolation",
+          "capability": "drawing-1-style-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-group-isolation",
+            "bridgeVersion": 1,
+            "variant": "SetGroupIsolation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-group-isolation-edit",
+              "qualifyingKind": "third-party-library",
+              "oracle": "immer-drawing-group-isolation-edit"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-isolation-preserved"
+            ],
+            "enclosing": [
+              "unrelated-layer-fields-preserved"
+            ]
+          },
+          "notes": "Isolation is a group-only flag whose authored default (false) is omitted on the wire; the Immer twin checks the complete document and the inverse."
         }
       ]
     }

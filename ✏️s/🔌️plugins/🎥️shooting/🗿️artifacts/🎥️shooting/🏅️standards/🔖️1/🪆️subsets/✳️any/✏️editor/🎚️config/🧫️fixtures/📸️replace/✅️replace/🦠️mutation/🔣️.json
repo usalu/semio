@@ -4,10 +4,11 @@
       "defaultShotFormat": "png",
       "defaultShotShape": "rectangle",
       "defaultAssetFormat": "glb",
-      "selectedShotIds": [],
-      "centerModel": true,
-      "fitRevision": 0,
-      "cameraDraftLabel": "Übersicht",
+      "selectedShotIds": [
+        "shot-a"
+      ],
+      "centerModel": false,
+      "fitRevision": 2,
       "camera": {
         "position": [
           420.0,

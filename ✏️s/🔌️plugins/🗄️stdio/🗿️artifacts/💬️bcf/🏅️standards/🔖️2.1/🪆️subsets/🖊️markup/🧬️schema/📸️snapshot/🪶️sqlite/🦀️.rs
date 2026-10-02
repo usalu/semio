@@ -16,7 +16,13 @@ fn boolean(row:&SqliteRow,column:usize)->Result<bool,String>{match row.integer(c
 fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,String>{Ok(BcfPoint3{x:row.real(column)?,y:row.real(column+1)?,z:row.real(column+2)?})}
 
 impl ArtifactSqliteSnapshot for BcfSnapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),Self::__dsl_from_record_controlled,control)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or("Native semantic row count overflow");let mut rows=add(add(1,self.topics.len())?,self.parts.len())?;control.check_rows(rows)?;for(index,topic)in self.topics.iter().enumerate(){for size in[topic.labels.len(),topic.comments.len(),topic.viewpoints.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,viewpoint)in topic.viewpoints.iter().enumerate(){if viewpoint.camera.is_some(){rows=add(rows,2)?}rows=add(rows,usize::from(viewpoint.snapshot.is_some()))?;if let Some(components)=&viewpoint.components{for size in[1,components.selection.len(),components.visibility.exceptions.len(),components.coloring.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,color)in components.coloring.iter().enumerate(){rows=add(rows,color.components.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,components.coloring.len())?}}}control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,topic.viewpoints.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.topics.len())?}}
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ }
+
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
   let mut bound = NativeEncodingBound::new(control)?;
   let scalar = 2 * std::mem::size_of::<dsl::FieldValue>() + 64;

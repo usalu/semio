@@ -11,7 +11,7 @@ fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
         transient: NoteCompositeWindowTransient { engagement_input: "retire-owned-note-input".repeat(512), ink_tool: None },
     };
     assert!(note_composite_window_transient_preflight(&mutation).expect("large Note transient admission").is_admissible());
-    let mut retirement = store::retirement::owned_retirement(mutation);
+    let mut retirement = semio_framework_value::retirement::owned_retirement(mutation);
     for _ in 0..32_768 {
         match retirement.close_step(1, 1).expect("bounded retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -29,7 +29,7 @@ fn transient_string_retirement_reaches_terminal_empty_with_tiny_grants() {
 }
 
 fn retire_returned_note_transient(transient: NoteCompositeWindowTransient) {
-    let mut retirement = store::retirement::owned_retirement(NoteCompositeWindowTransientMutation::Snapshot { transient });
+    let mut retirement = semio_framework_value::retirement::owned_retirement(NoteCompositeWindowTransientMutation::Snapshot { transient });
     for _ in 0..4_096 {
         match retirement.close_step(1, 1).expect("returned Note owner retirement") {
             store::SnapshotRetirementStep::Complete => {

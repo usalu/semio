@@ -1,7 +1,3 @@
-/** mutation payload — mirrors `ChangePartNumberInput`. */
-import type { CatalogueValue } from "../../🟦️.ts";
-
-export interface ChangePartNumberInput {
-  key: string;
-  newValue: CatalogueValue;
-}
+/** 🎛️ `change-part-number-input` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseChangePartNumberInput, type ChangePartNumberInput } from "../🧬️schema/🟦️.ts";

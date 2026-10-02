@@ -35,11 +35,12 @@
 
 import type { UiComponentSceneNode } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { resolveMeshAsset } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
-import block2dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio?raw";
-import block2dRightDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest/🖼️assets/➡️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
-import block3dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio?raw";
+import { MESH_DELIVERY_CATALOG } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
+import block2dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
+import block2dRightDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
+import block3dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
 import block3dNakaginDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio?raw";
-import block5dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio?raw";
+import block5dLeftDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio?raw";
 import block5dNakaginDsl from "../../../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🗣️.dsl.semio?raw";
 import hexagonalCutLeftGlbUrl from "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb?url";
 import capsuleJGlbUrl from "../../../../../🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb?url";
@@ -392,7 +393,7 @@ export function resolveBlockStoryMeshUrl(meshUrl: string | undefined): string | 
   if (meshUrl === undefined || meshUrl === "") return null;
   if (!meshUrl.startsWith("/mesh/")) return meshUrl;
   try {
-    return BLOCK_STORY_MESH_SOURCES[resolveMeshAsset(meshUrl).source] ?? null;
+    return BLOCK_STORY_MESH_SOURCES[resolveMeshAsset(meshUrl, MESH_DELIVERY_CATALOG).source] ?? null;
   } catch {
     return null;
   }

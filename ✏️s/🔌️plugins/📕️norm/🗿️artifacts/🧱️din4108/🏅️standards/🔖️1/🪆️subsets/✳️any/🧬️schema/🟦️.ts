@@ -1,79 +1,19 @@
-/** 🧬️ Din4108 snapshot schema — complete envelope subject. */
-
-export interface Din4108LayerSegment {
-  id: string;
-  materialId: string;
-  fraction: number;
-  lambda: number;
-  mu: number;
-  density: number;
-}
-
-export interface Din4108LayerDocument {
-  id: string;
-  materialId: string;
-  thicknessM: number;
-  lambda: number;
-  mu: number;
-  density: number;
-  segments: Din4108LayerSegment[];
-}
-
-export interface Din4108ZoneWindow {
-  id: string;
-  orientation: string;
-  areaM2: number;
-  gValue: number;
-  shadingFc: number;
-}
-
-export interface Din4108ThermalZone {
-  id: string;
-  floorAreaM2: number;
-  heaviness: string;
-  nightVentilation: string;
-  windows: Din4108ZoneWindow[];
-}
-
-export interface Din4108EnvelopeElement {
-  id: string;
-  kind: string;
-  zoneId: string;
-  orientationDeg: number;
-  inclinationDeg: number;
-  adjacent: string;
-  areaM2: number;
-  layers: Din4108LayerDocument[];
-}
-
-export interface Din4108ThermalBridge {
-  id: string;
-  psi: number;
-  lengthM: number;
-  bb2Type: string;
-}
+/** 🧬️ `Din4108Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireArray, normWireBoolean, normWireNumber, normWireObject, type NormWireReader, normWireRequired, normWireString } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
 export interface Din4108Artifact {
-  /** @state artifact */
   climateZone: string;
-  /** @state artifact */
   usage: string;
-  /** @state artifact */
   tIntC: number;
-  /** @state artifact */
   rhInt: number;
-  /** @state artifact */
   hasMechanicalVentilation: boolean;
-  /** @state artifact */
   airtightnessN50: number;
-  /** @state artifact */
   bb2DetailsConform: boolean;
-  /** @state artifact */
-  zones: Din4108ThermalZone[];
-  /** @state artifact */
-  elements: Din4108EnvelopeElement[];
-  /** @state artifact */
-  thermalBridges: Din4108ThermalBridge[];
+  zones: { id: string; floorAreaM2: number; heaviness: string; nightVentilation: string; windows: { id: string; orientation: string; areaM2: number; gValue: number; shadingFc: number; }[]; }[];
+  elements: { id: string; kind: string; zoneId: string; orientationDeg: number; inclinationDeg: number; adjacent: string; areaM2: number; layers: { id: string; materialId: string; thicknessM: number; lambda: number; mu: number; density: number; segments: { id: string; materialId: string; fraction: number; lambda: number; mu: number; density: number; }[]; }[]; }[];
+  thermalBridges: { id: string; psi: number; lengthM: number; bb2Type: string; }[];
 }
 
-export type Din4108Snapshot = Din4108Artifact;
+export const parseDin4108Artifact: NormWireReader<Din4108Artifact> = normWireObject<Din4108Artifact>({ climateZone: normWireRequired(normWireString), usage: normWireRequired(normWireString), tIntC: normWireRequired(normWireNumber), rhInt: normWireRequired(normWireNumber), hasMechanicalVentilation: normWireRequired(normWireBoolean), airtightnessN50: normWireRequired(normWireNumber), bb2DetailsConform: normWireRequired(normWireBoolean), zones: normWireRequired(normWireArray(normWireObject<{ id: string; floorAreaM2: number; heaviness: string; nightVentilation: string; windows: { id: string; orientation: string; areaM2: number; gValue: number; shadingFc: number; }[]; }>({ id: normWireRequired(normWireString), floorAreaM2: normWireRequired(normWireNumber), heaviness: normWireRequired(normWireString), nightVentilation: normWireRequired(normWireString), windows: normWireRequired(normWireArray(normWireObject<{ id: string; orientation: string; areaM2: number; gValue: number; shadingFc: number; }>({ id: normWireRequired(normWireString), orientation: normWireRequired(normWireString), areaM2: normWireRequired(normWireNumber), gValue: normWireRequired(normWireNumber), shadingFc: normWireRequired(normWireNumber) }, false))) }, false))), elements: normWireRequired(normWireArray(normWireObject<{ id: string; kind: string; zoneId: string; orientationDeg: number; inclinationDeg: number; adjacent: string; areaM2: number; layers: { id: string; materialId: string; thicknessM: number; lambda: number; mu: number; density: number; segments: { id: string; materialId: string; fraction: number; lambda: number; mu: number; density: number; }[]; }[]; }>({ id: normWireRequired(normWireString), kind: normWireRequired(normWireString), zoneId: normWireRequired(normWireString), orientationDeg: normWireRequired(normWireNumber), inclinationDeg: normWireRequired(normWireNumber), adjacent: normWireRequired(normWireString), areaM2: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireObject<{ id: string; materialId: string; thicknessM: number; lambda: number; mu: number; density: number; segments: { id: string; materialId: string; fraction: number; lambda: number; mu: number; density: number; }[]; }>({ id: normWireRequired(normWireString), materialId: normWireRequired(normWireString), thicknessM: normWireRequired(normWireNumber), lambda: normWireRequired(normWireNumber), mu: normWireRequired(normWireNumber), density: normWireRequired(normWireNumber), segments: normWireRequired(normWireArray(normWireObject<{ id: string; materialId: string; fraction: number; lambda: number; mu: number; density: number; }>({ id: normWireRequired(normWireString), materialId: normWireRequired(normWireString), fraction: normWireRequired(normWireNumber), lambda: normWireRequired(normWireNumber), mu: normWireRequired(normWireNumber), density: normWireRequired(normWireNumber) }, false))) }, false))) }, false))), thermalBridges: normWireRequired(normWireArray(normWireObject<{ id: string; psi: number; lengthM: number; bb2Type: string; }>({ id: normWireRequired(normWireString), psi: normWireRequired(normWireNumber), lengthM: normWireRequired(normWireNumber), bb2Type: normWireRequired(normWireString) }, false))) }, false);

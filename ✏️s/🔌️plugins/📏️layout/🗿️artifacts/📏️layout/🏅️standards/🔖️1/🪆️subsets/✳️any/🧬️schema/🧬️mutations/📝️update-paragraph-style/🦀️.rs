@@ -30,8 +30,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateParagraphStyle {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_paragraph_style(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update paragraph style \"{}\"", self.name), &format!("Absatzformat \"{}\" aktualisieren", self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

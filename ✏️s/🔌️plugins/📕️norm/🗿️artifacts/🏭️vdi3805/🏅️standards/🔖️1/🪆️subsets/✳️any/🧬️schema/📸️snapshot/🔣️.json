@@ -11,7 +11,8 @@
     "strictMode",
     "index",
     "geometry",
-    "curves"
+    "curves",
+    "limits"
   ],
   "properties": {
     "catalog": {
@@ -21,7 +22,11 @@
     "editionProfile": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "legacy",
+          "current"
+        ]
       },
       "x-semio-state": "artifact"
     },
@@ -131,7 +136,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -236,7 +242,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "extensions": {
           "$ref": "#/$defs/ExtensionBag",
@@ -326,7 +333,8 @@
             },
             "dn": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 65535
             },
             "kvsM3S": {
               "type": "number"
@@ -401,11 +409,13 @@
             },
             "dnSuction": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 65535
             },
             "dnDischarge": {
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 65535
             },
             "nominalFlowM3S": {
               "type": "number"
@@ -623,7 +633,9 @@
           }
         },
         "sheet": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
         "records": {
           "type": "array",
@@ -706,7 +718,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 65535
         },
         "month": {
           "type": "integer",
@@ -719,7 +732,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         }
       },
       "x-semio-formats": [
@@ -742,7 +756,9 @@
           "type": "string"
         },
         "sheet": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
         "tags": {
           "type": "array",
@@ -754,7 +770,9 @@
           "type": [
             "integer",
             "null"
-          ]
+          ],
+          "minimum": 0,
+          "maximum": 65535
         }
       },
       "x-semio-formats": [
@@ -1278,7 +1296,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -1322,7 +1341,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -1407,7 +1427,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 65535
         },
         "records": {
           "type": "array",
@@ -1601,7 +1622,6 @@
       ]
     },
     "VdiQuantityKind": {
-      "title": "VdiQuantityKind",
       "type": "string",
       "enum": [
         "dimensionless",
@@ -1623,89 +1643,6 @@
         "airPermeability",
         "ventilationRate",
         "acceleration"
-      ],
-      "x-semio-ui": {
-        "options": {
-          "dimensionless": {
-            "en": "Dimensionless",
-            "de": "Dimensionslos"
-          },
-          "length": {
-            "en": "Length",
-            "de": "Länge"
-          },
-          "area": {
-            "en": "Area",
-            "de": "Fläche"
-          },
-          "volume": {
-            "en": "Volume",
-            "de": "Volumen"
-          },
-          "mass": {
-            "en": "Mass",
-            "de": "Masse"
-          },
-          "time": {
-            "en": "Time",
-            "de": "Zeit"
-          },
-          "temperature": {
-            "en": "Temperature",
-            "de": "Temperatur"
-          },
-          "force": {
-            "en": "Force",
-            "de": "Kraft"
-          },
-          "pressure": {
-            "en": "Pressure",
-            "de": "Druck"
-          },
-          "stress": {
-            "en": "Stress",
-            "de": "Spannung"
-          },
-          "moment": {
-            "en": "Moment",
-            "de": "Moment"
-          },
-          "energy": {
-            "en": "Energy",
-            "de": "Energie"
-          },
-          "power": {
-            "en": "Power",
-            "de": "Leistung"
-          },
-          "thermalConductivity": {
-            "en": "Thermal conductivity",
-            "de": "Wärmeleitfähigkeit"
-          },
-          "thermalResistance": {
-            "en": "Thermal resistance",
-            "de": "Wärmedurchlasswiderstand"
-          },
-          "heatTransferCoefficient": {
-            "en": "Heat transfer coefficient",
-            "de": "Wärmeübergangskoeffizient"
-          },
-          "airPermeability": {
-            "en": "Air permeability",
-            "de": "Luftdurchlässigkeit"
-          },
-          "ventilationRate": {
-            "en": "Ventilation rate",
-            "de": "Luftwechselrate"
-          },
-          "acceleration": {
-            "en": "Acceleration",
-            "de": "Beschleunigung"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
       ]
     }
   }

@@ -242,11 +242,11 @@ async fn change_generation_value_diff_absorb_law() {
 
 #[test]
 fn dispatch_registers_semantic_descriptors() {
-    register_generation2d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_generation2d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in Generation2dMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(Generation2dMutation::kinds().len(), 14);
+    assert_eq!(Generation2dMutation::kinds().len(), KINDS.len());
 }
 
 //#region 🔖️FixtureOpsTests

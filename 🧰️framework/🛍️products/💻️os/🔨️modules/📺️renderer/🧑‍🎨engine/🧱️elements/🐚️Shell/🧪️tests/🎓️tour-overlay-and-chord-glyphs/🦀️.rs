@@ -416,7 +416,7 @@ fn every_chord_glyph_the_formatter_emits_rasterises() {
 #[test]
 fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scrim() {
     let theme = Theme::light();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -545,7 +545,7 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
     assert!(bare.is_empty(), "🫧 every non-veil glass region opens a content layer, these do not: {bare:#?}");
 
     let theme = Theme::light();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.context_menu = Some(ContextMenuState { x: 100.0, y: 100.0, items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }], ..Default::default() });
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();

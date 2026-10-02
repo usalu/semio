@@ -1,7 +1,9 @@
 //! ✏️ SpaceIndexEditor — the `edit` mode: the app's only mode, a single full-pane artifact table.
 
 use crate::editor::space_index::modes::edit::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const SPACE_INDEX_MODE_EDIT: &str = "edit";
 

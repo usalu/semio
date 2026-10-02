@@ -11,8 +11,8 @@
 //! the generated host's `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_deflate};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_deflate_test_oracle::standards::v_rfc1950::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_deflate};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const MUTATE_INPUT: &str = "shared://🗜️readme-level9.zz";
@@ -71,8 +71,8 @@ mod subject {
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
     use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::mutations::apply_deflate_mutation;
     use semio_s_artifact_stdio_deflate::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, DeflateMutation, DeflateSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::project_deflate;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_deflate_test_oracle::standards::v_rfc1950::subsets::any::project_deflate;
+    use semio_repo_test_host::law::wire_operation;
 
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
     /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting

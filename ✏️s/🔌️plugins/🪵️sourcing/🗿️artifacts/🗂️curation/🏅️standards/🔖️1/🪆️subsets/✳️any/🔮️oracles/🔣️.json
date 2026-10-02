@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `sourcing.curation` is a semio-NATIVE curation document — a composed `s.stdio.semio@v1/kit` catalogue child, a bulk-populated stock table and an ordered id-keyed curation. Nothing third-party reads `.curation.dsl.semio` and no inventory library is authoritative over the closed three-kind vocabulary, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, grammar and specification vectors.",
   "oracles": [

@@ -6,7 +6,7 @@
     use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
     fn labels() -> &'static Puzzle3dLabels {
-        puzzle3d_labels(&ViewModel { terminology: semio_framework_plugin::Terminology::Native, ..Default::default() }).expect("admitted host axis")
+        puzzle3d_labels(&ViewModel { terminology: semio_framework_ui_locale::Terminology::Native, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).expect("admitted host axis")
     }
 
     fn drain() {
@@ -35,7 +35,7 @@
     }
 
     fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-        ViewModel { tree_windows: requests, ..Default::default() }
+        ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
 
     fn scene(ids: &[String]) -> (Puzzle3dScene, Puzzle3dInteractionSnapshot) {
@@ -56,7 +56,7 @@
             })
             .collect();
         let scene = Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: String::new() };
-        let interaction = Puzzle3dInteractionSnapshot { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), selected: ids.to_vec(), hovered: Vec::new() };
+        let interaction = Puzzle3dInteractionSnapshot { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), selected: ids.to_vec(), hovered: Vec::new(), referenced: Vec::new() };
         (scene, interaction)
     }
 

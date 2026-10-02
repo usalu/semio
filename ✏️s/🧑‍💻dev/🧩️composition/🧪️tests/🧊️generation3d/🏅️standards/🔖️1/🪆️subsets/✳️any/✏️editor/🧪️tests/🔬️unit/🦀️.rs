@@ -124,7 +124,7 @@ pub(crate) mod context {
             ViewWindowInstance { id: left.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
             ViewWindowInstance { id: right.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..Default::default() };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         (view.for_window_instance(left).expect("left Generation3d preview window"), view.for_window_instance(right).expect("right Generation3d preview window"))
     }
     
@@ -184,7 +184,7 @@ pub(crate) mod context {
             ViewWindowInstance { id: flow.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN.into() },
             ViewWindowInstance { id: preview.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..Default::default() };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         (view.for_window_instance(flow).expect("flow window instance"), view.for_window_instance(preview).expect("preview window instance"))
     }
     
@@ -331,7 +331,7 @@ pub(crate) mod context {
             ViewWindowInstance { id: form.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::form::GENERATION_3D_PLAY_WINDOW_GENERATE_FORM.into() },
             ViewWindowInstance { id: preview.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..Default::default() };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         (view.for_window_instance(generations).expect("generations window instance"), view.for_window_instance(preview).expect("generate preview window instance"))
     }
 }
@@ -454,7 +454,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
                 semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
                 semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
             ],
-            ..Default::default()
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let mut rendered = Vec::new();
         for window_id in ["preview-a", "preview-b"] {
@@ -643,7 +643,8 @@ fn declared_select_options(action: &semio_framework_plugin::ActionDefinition, ar
 /// two user-facing verbs carry the fixture's keyboard chord, so neither is mouse-only.
 #[test]
 fn the_editor_declares_every_io_action_and_chord_the_fixture_names() {
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let definition = create_generation3d_app();
     for row in fixture_rows(&document_io_fixture(), "editorActions") {
@@ -802,7 +803,8 @@ fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
 #[test]
 fn the_export_action_offers_every_declared_format_in_both_languages() {
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::document_io;
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let definition = create_generation3d_app();
     let action = declared_editor_action(&definition, "exportDocument");
@@ -985,7 +987,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
 async fn generation3d_labels_translate_catalogue_and_inspector_in_german() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     let catalogue = context::render_with_view(&mut app, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE, &view_state).await;
     assert!(catalogue.contains("\"Elemente\""));
     let inspector = context::render_with_view(&mut app, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION, &view_state).await;
@@ -1012,7 +1014,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget() {
     let widgets: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
     assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -1034,11 +1036,11 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
     let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
         menu.iter().flat_map(|item| std::iter::once(item.id.clone()).chain(item.children.iter().flatten().map(|child| child.id.clone()))).collect()
     };
-    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
     assert!(!unselected.iter().any(|id| id == "translateSelection"), "an empty selection must not offer a transform: {unselected:?}");
     assert!(!unselected.iter().any(|id| id == "removeWidget"), "an empty selection must not offer a removal target: {unselected:?}");
     context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
-    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
     for id in ["translateSelection", "rotateSelection", "scaleSelection", "removeWidget", "removeGeneration"] {
         assert!(selected.iter().any(|candidate| candidate == id), "a live graph selection must offer {id}: {selected:?}");
     }
@@ -1080,7 +1082,7 @@ async fn context_menu_groups_are_taxonomy_categories() {
         if !selection.is_empty() {
             context::select_graph(&mut app, "node", &selection).await;
         }
-        for item in app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await {
+        for item in app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await {
             let Some(category) = item.id.strip_prefix("menu.group.") else { continue };
             assert!(item.label.is_none(), "a taxonomy group row carries no label of its own: {item:?}");
             categories.push(category.to_string());
@@ -1114,7 +1116,7 @@ async fn window_measure_labels_are_localized() {
             semio_framework_plugin::ViewWindowInstance { id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into() },
             semio_framework_plugin::ViewWindowInstance { id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), window_kind_id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
         ],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
     };
     let labelled = |measures: &std::collections::HashMap<String, Vec<semio_framework_plugin::WindowMeasure>>| -> Vec<(String, String)> {
         fn walk(measure: &semio_framework_plugin::WindowMeasure, out: &mut Vec<(String, String)>) {
@@ -1145,8 +1147,8 @@ async fn window_measure_labels_are_localized() {
         }
         out
     };
-    let english = labelled(&app.window_measures(&view_for(semio_framework_plugin::Locale::En)).await);
-    let german = labelled(&app.window_measures(&view_for(semio_framework_plugin::Locale::De)).await);
+    let english = labelled(&app.window_measures(&view_for(semio_framework_ui_locale::Locale::En)).await);
+    let german = labelled(&app.window_measures(&view_for(semio_framework_ui_locale::Locale::De)).await);
     assert!(!english.is_empty(), "both preview and flow windows publish measures");
     assert_eq!(english.len(), german.len(), "the two locales must paint the same measure tree");
     let untranslated: Vec<&str> = english
@@ -1170,7 +1172,7 @@ async fn sun_measures_are_exposed_on_preview_windows() {
             semio_framework_plugin::ViewWindowInstance { id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), window_kind_id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
             semio_framework_plugin::ViewWindowInstance { id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into(), window_kind_id: generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
         ],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let measures = app.window_measures(&view).await;
     assert!(measures.contains_key(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW));
@@ -1756,7 +1758,7 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
     let config = Generation3dConfig::default();
-    let view_state = semio_framework_plugin::ViewModel::default();
+    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
         let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
@@ -2532,7 +2534,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     assert_eq!(windows.len(), 5, "generation3d declares five window kinds");
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = windows.iter().map(|(id, ..)| (id.clone(), std::collections::BTreeSet::new())).collect();
     let config = Generation3dConfig::default();
-    let view_state = semio_framework_plugin::ViewModel::default();
+    let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
         let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         crate::publication_authority::seed_law_generations(&mut snapshot.generation);
@@ -2548,7 +2550,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     let mut app = app().await;
     let view = semio_framework_plugin::ViewModel {
         window_instances: windows.iter().map(|(id, ..)| semio_framework_plugin::ViewWindowInstance { id: id.clone(), window_kind_id: id.clone() }).collect(),
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     for (kind_id, entries) in app.window_measures(&view).await {
         if let Some(bucket) = emitted.get_mut(&kind_id) {
@@ -2670,7 +2672,8 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
 /// `importDocumentRequest` still announces the picker it opens.
 #[test]
 fn staged_argument_actions_declare_no_trailing_ellipsis() {
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let surfaces = [("editor", create_generation3d_app()), ("viewer", semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer())];
     let mut checked = 0usize;
     for (surface, definition) in surfaces {
@@ -2717,20 +2720,29 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
         let group = &fixture["groups"][match operation { "moveVertices" => 1, "loopCut" => 6, _ => 0 }];
         let ids = group["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().replace("box@", "extrude@")).collect::<Vec<_>>();
         let payload = edit_mesh_selection::EditMeshSelection { cuts: 1, operation: operation.into(), amount: 0.05, dx: 0.01, dy: 0.0, dz: 0.0 };
-        let outcome = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
-            let id = edit_mesh_selection::insert_operation(host, &payload, &ids)?;
+        let (id, rows) = edit_mesh_selection::edit_rows(&payload, &snapshot.host_snapshot, &ids).unwrap();
+        let field = match operation { "moveVertices" => "vertices", "loopCut" => "edges", _ => "faces" };
+        let inputs: Vec<&semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput> = rows.iter().filter_map(|row| match row { semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(input) => Some(input), _ => None }).collect();
+        assert!(inputs.iter().all(|input| input.id == id) && inputs[0].channel == field, "{operation}: the user's inputs are absolute leaves on the inserted operator: {inputs:?}");
+        assert!(rows.iter().rev().take(inputs.len()).all(|row| matches!(row, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(_))), "{operation}: the splice precedes the inputs");
+        let mut landed = snapshot.clone();
+        for row in rows {
+            semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::apply_generation3d_mutation(&mut landed, &row).unwrap();
+            row.retire_cold();
+        }
+        let outcome = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&landed.host_snapshot, |host| {
             let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id: widget_id, params, preview: true, .. } if widget_id == &id => Some(dsl::json::to_json_string(params)), _ => None });
             let feeds_analysis = host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh");
             let evaluation = host.evaluate().map_err(|error| error.to_string())?;
-            Ok::<_, String>((id, params, feeds_analysis, evaluation))
+            Ok::<_, String>((params, feeds_analysis, evaluation))
         });
+        landed.retire_cold();
         snapshot.retire_cold();
-        let (id, params, feeds_analysis, evaluation) = outcome.unwrap();
+        let (params, feeds_analysis, evaluation) = outcome.unwrap();
         let params: Value = serde_json::from_str(&params.unwrap()).unwrap();
-        let field = match operation { "moveVertices" => "vertices", "loopCut" => "edges", _ => "faces" };
         let indices: Value = serde_json::from_str(params[field]["value"].as_str().unwrap()).unwrap();
         assert_eq!(indices, group["components"]);
-        if operation == "loopCut" { assert_eq!(params["cuts"]["value"], 1); }
+        if operation == "loopCut" { assert_eq!(params["cuts"]["value"].as_f64(), Some(1.0)); }
         assert!(feeds_analysis);
         let evaluation: Value = serde_json::from_str(&evaluation).unwrap();
         assert_eq!(evaluation[&id]["out"]["meshOut"]["$schema"], "mesh", "{operation}: {evaluation}");

@@ -49,7 +49,6 @@ fn a_translate_is_one_transaction_with_its_parametric_leaf() {
     let transaction = emit.transaction.as_ref().expect("a committed gesture carries its TransactionRef");
     assert!(transaction.id.starts_with("tx-"), "{transaction:?}");
     assert_eq!(transaction.tool, "s.cad.cad@1/*#editor#translateSelection");
-    assert_eq!(emit.coalesce_key, None, "a committed transaction is never an amend");
     assert_eq!(emit.artifact_mutations, vec![CadMutation::DragSelection(DragSelection { pane: CadPaneId::Shape, targets: ids(&["object-a", "object-b"]), offset: [1.5, -2.0, 0.5] })], "one leaf, targets deduplicated in first-seen order");
     let after = apply(&base, &emit.artifact_mutations);
     assert_eq!(origin(&after, CadPaneId::Shape, "object-b"), [5.5, -2.0, 0.5]);

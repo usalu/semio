@@ -1,5 +1,8 @@
 /** 🧬️ Puzzle2d snapshot schema — artifact-lane fields only. */
 
+export{PUZZLE2D_SQLITE_SCHEMA,puzzle2dSnapshotToSqliteDatabase,puzzle2dSnapshotFromSqliteDatabase}from"./🪶️sqlite/🟦️.ts";
+export type{Puzzle2dSqliteSnapshot,Puzzle2dSqliteHandle,Puzzle2dSqliteNode,Puzzle2dSqliteEdge,Puzzle2dSqliteRegion,Puzzle2dSqliteTemplate,Puzzle2dSqliteNodeKind,Puzzle2dSqliteCatalogs,Puzzle2dSqliteMeta}from"./🪶️sqlite/🟦️.ts";
+
 export interface Puzzle2dSnapshot {
   /** @state artifact */
   schema: string;
@@ -191,4 +194,3 @@ export interface Puzzle2dMeta {
   kindCompatibility: Puzzle2dKindCompatibility[];
   kindCatalogs?: Puzzle2dKindCatalogs;
 }
-

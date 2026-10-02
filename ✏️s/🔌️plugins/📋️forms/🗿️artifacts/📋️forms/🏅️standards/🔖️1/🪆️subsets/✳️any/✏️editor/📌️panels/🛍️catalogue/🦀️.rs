@@ -12,10 +12,17 @@
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
 use dsl::os_pack::json::{object, Value};
-use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";

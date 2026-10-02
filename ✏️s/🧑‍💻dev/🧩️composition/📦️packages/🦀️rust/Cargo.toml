@@ -70,3 +70,6 @@ path = "../../🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs"
 [[test]]
 name = "generation3d-app-laws"
 path = "../../🧪️tests/🧊️generation3d/🦀️.rs"
+
+[dependencies]
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

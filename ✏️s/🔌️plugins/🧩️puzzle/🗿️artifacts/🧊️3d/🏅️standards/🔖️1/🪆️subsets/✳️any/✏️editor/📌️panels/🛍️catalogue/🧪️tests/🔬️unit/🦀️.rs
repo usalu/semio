@@ -20,7 +20,7 @@ fn drain() {
 }
 
 fn labels() -> &'static Puzzle3dLabels {
-    puzzle3d_labels(&ViewModel::default()).expect("admitted host axis")
+    puzzle3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis")
 }
 
 fn scene(fixture: crate::editor::puzzle3d::Puzzle3dFixture) -> Puzzle3dScene {
@@ -37,7 +37,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🛍️ The catalogue with its object-kind section opened wide — what a reader scrolled to the top of

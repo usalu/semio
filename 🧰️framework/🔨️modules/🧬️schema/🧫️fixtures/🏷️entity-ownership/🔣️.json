@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contract": "entity-catalog-owner-v1",
+  "generalOutputs": [
+    "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🟦️.ts",
+    "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs"
+  ],
+  "catalogLength": 58,
+  "emojiLength": 56,
+  "firstWins": [
+    {
+      "emoji": "🌱️",
+      "id": "technology-mono"
+    },
+    {
+      "emoji": "📝️",
+      "id": "draft"
+    }
+  ]
+}

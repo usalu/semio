@@ -43,10 +43,10 @@ impl MutationKind<CadSnapshot, CadMutation> for RotateSelection {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (items_en, items_de) = cad_selection_items(self.targets.len());
         let (degrees_en, degrees_de) = cad_selection_number(self.angle.to_degrees());
-        protocol::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {items_en} by {degrees_en}°"), &format!("{items_de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

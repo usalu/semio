@@ -3,7 +3,10 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🛠️tool-machine/**/*", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛠️tool-machine/**/*",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -39,6 +42,17 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
+      }
+    },
+    "test-node-graph-row-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-node-graph-row-ownership"
       }
     }
   }

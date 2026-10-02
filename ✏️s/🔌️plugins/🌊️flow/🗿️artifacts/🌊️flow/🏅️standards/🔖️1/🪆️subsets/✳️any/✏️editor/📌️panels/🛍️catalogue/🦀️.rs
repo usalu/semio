@@ -7,11 +7,18 @@ use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_e
 use crate::editor::flow::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_ui_contract::Label;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use serde_json::Value;
 
 /// 🏷️ Converts catalogue/section titles into the panel builder's `Label`.

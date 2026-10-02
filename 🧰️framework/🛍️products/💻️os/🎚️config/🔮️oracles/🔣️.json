@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This owner's contribution. 🎚️config carries six typed mutation vocabularies, all mounted by the plugin host from direct semantic leaves: opening preferences (set-default-app, clear-default-app), merge policy (change-merge-policy), identity (sign-in, sign-out), the local document catalog (admit-local-document, retire-local-document), the local folder bindings (attach-local-folder, detach-local-folder), and UI preferences (the nine set-* kinds of UiPreferencesConfigMutation). Each vocabulary is claimed by exactly one exhaustive case under 🔌️plugin/🖥️host/🧪️tests, and every kind in every vocabulary carries a committed (before, mutation, after, diff, outcome) specification vector beside its own leaf.",
   "oracles": [],

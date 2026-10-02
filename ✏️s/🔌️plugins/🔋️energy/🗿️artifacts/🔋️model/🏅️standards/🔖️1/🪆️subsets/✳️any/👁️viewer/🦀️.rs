@@ -9,11 +9,37 @@ use crate::viewer::model::modes::view::windows::{model as model_window, simulati
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Emit, Fault, FaultCode, FaultOrigin,
-    HistoryView, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolExecutionContract,
-    ToolFactoryKey, ToolJobFactoryError, UiAssemblyResult, ViewEmit, Viewer, ViewerApp,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::HistoryView;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_plugin::ViewerApp;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🏷️ActionIds
@@ -76,7 +102,7 @@ impl protocol::OpBinary for EnergyModelViewCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -95,7 +121,7 @@ impl protocol::OpBinary for EnergyModelViewCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -126,11 +152,8 @@ fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_frame
     let mutation = model_window::config::EnergyModelViewerWindowConfigMutation::SetCamera(model_window::config::SetCamera { camera: pose });
     Ok(Emit {
         window_config_mutations: vec![model_window::config::addressed(view, mutation)?],
-        description: Some("Set camera".into()),
         // 🐢️ Nothing to repaint: the pane that sent the pose already holds it.
         ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
-        // 🧲️ One coalesce key per window instance, so a burst of debounced orbit ticks collapses.
-        coalesce_key: Some(format!("energy.model.3d.viewer.camera:{}", view.window_id.as_deref().unwrap_or_default())),
         ..Default::default()
     })
 }
@@ -333,7 +356,7 @@ impl ArtifactViewer for EnergyModelViewer {
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Err(Fault::new(
             FaultOrigin::App,

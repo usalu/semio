@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveSlab {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove composite slab", "Verbunddecke entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove composite slab", "Verbunddecke entfernen")
     }
 }
 //#endregion 🔖️Payload

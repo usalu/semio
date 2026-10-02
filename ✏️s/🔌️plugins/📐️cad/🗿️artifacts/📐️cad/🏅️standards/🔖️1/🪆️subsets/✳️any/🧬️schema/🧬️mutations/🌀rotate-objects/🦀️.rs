@@ -27,10 +27,10 @@ impl MutationKind<CadSnapshot, CadMutation> for RotateObjects {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.placements.len() {
-            1 => protocol::LocalizedLabel::native("Rotate 1 object", "1 Objekt drehen"),
-            count => protocol::LocalizedLabel::native(&format!("Rotate {count} objects"), &format!("{count} Objekte drehen")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Rotate 1 object", "1 Objekt drehen"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {count} objects"), &format!("{count} Objekte drehen")),
         }
     }
     fn target(&self) -> Vec<String> {

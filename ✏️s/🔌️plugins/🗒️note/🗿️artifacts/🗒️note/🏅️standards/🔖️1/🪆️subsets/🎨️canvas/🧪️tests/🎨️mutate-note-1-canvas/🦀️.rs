@@ -6,7 +6,7 @@
 //! Recorded no-oracle decision superseded: this case carries `@oracle-note-python-independent`, so
 //! the runner DOES dispatch the oracle role — `🐍️.py` beside this file — and this file registers
 //! SUBJECT handlers only, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module.
 //!
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector
 //! under each of this subset's `🧫️fixtures/🧬️mutations/<slug>/<fixture>/` leaves. Those files are read
@@ -41,7 +41,7 @@ const VECTORS: &str = "shared://🧬️mutations";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, decode_note_mutation_json, decode_note_snapshot_json, encode_note_snapshot_json, inverse_note_mutation_steps, NoteMutation};
     use semio_s_artifact_note_note::NoteSnapshot;
 

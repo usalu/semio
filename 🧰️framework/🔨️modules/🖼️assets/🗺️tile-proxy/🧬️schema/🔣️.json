@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:assets:tile-proxy:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "route",
+    "upstream",
+    "cache",
+    "userAgent"
+  ],
+  "properties": {
+    "kind": {
+      "const": "tile-proxy"
+    },
+    "route": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 1024,
+      "pattern": "^(?!.*(?:^|/)\\.{1,2}(?:/|$))/[^?#%\\\\\\s]+$"
+    },
+    "upstream": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 4096,
+      "pattern": "^https?://[^\\s]+$"
+    },
+    "cache": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?![\\\\/])(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:?#%\\x00-\\x1f]+$"
+    },
+    "userAgent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[\\x20-\\x7e]+$"
+    }
+  },
+  "definitions": {
+    "TileProxyTransportLimitsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tileBytes",
+        "templateBytes",
+        "requestMs",
+        "templateTtlMs"
+      ],
+      "properties": {
+        "tileBytes": {
+          "type": "integer",
+          "const": 2097152
+        },
+        "templateBytes": {
+          "type": "integer",
+          "const": 262144
+        },
+        "requestMs": {
+          "type": "integer",
+          "const": 30000
+        },
+        "templateTtlMs": {
+          "type": "integer",
+          "const": 604800000
+        }
+      },
+      "default": {
+        "tileBytes": 2097152,
+        "templateBytes": 262144,
+        "requestMs": 30000,
+        "templateTtlMs": 604800000
+      }
+    },
+    "TileProxyCasesV1": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "value": {},
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

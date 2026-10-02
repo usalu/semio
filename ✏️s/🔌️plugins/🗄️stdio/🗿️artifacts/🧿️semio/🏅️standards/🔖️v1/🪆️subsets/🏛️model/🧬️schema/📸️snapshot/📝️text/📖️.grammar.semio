@@ -51,7 +51,7 @@ quat = "[" number "," number "," number "," number "]"
 # `SemioPoint3`/`SemioQuaternion`/f64 pset numbers print via plain Rust `{v}` Display (`0`, `3`,
 # `0.24`, ...) — the shared lexer's `INT`/`FLOAT` scanners already capture a leading `-` when
 # digit-adjacent (P2-M1's trailing-dot-float work), matching `enc_f64`/`dec_f64` lexeme-for-lexeme.
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `id`/`name`/`key`/`brep_id`/

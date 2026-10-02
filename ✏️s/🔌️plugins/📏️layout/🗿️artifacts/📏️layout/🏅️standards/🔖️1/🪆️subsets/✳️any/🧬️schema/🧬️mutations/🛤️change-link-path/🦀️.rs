@@ -25,8 +25,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_link_path(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change link \"{}\" path", self.id), &format!("Pfad von Verknüpfung \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change link \"{}\" path", self.id), &format!("Pfad von Verknüpfung \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

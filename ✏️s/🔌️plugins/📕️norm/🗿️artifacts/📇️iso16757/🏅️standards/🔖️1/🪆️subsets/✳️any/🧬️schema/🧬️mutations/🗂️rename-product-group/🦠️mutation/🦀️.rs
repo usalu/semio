@@ -22,8 +22,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RenameProduc
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename product group \"{}\" to \"{}\"", self.id, self.new_name), &format!("Produktgruppe \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename product group \"{}\" to \"{}\"", self.id, self.new_name), &format!("Produktgruppe \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

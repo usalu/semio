@@ -72,7 +72,6 @@ function fixedNumbers<T extends number>(value: unknown, size: T, at: string): nu
 /** 🪪️ Parses one exact model or drawing identity, including CAD's identity and subtype laws. */
 export function parseCadChild(value: unknown, subset: "model" | "drawing", at = "$"): ArtifactChild {
   const child = parseArtifactChild(value);
-  if (child.childId !== child.target.artifactId) throw new Error(`${at}: childId must equal target.artifactId`);
   const dialect = child.target.dialect;
   if (dialect.artifactKind !== "s.stdio.semio" || dialect.standard !== "v1" || dialect.subset !== subset) throw new Error(`${at}: expected s.stdio.semio@v1/${subset}`);
   return child;

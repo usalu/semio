@@ -10,7 +10,7 @@
 //! [`BoundedActionQueue::admit_intent`] possible; a descriptor never could.
 
 use crate::wgpu::ActionDescriptor;
-use dsl::{DslValue, Number};
+use semio_framework_value::{DslValue, Number};
 
 pub const ACTION_QUEUE_ITEM_CAPACITY: usize = 256;
 pub const ACTION_BATCH_ITEM_CAPACITY: usize = 16;
@@ -212,7 +212,7 @@ struct TextSpan {
     len: u16,
 }
 
-/// 🔢️ Carries `dsl::Number` variant-for-variant rather than a widened `f64`, so an integer queued
+/// 🔢️ Carries `semio_framework_value::Number` variant-for-variant rather than a widened `f64`, so an integer queued
 /// through the ring rehydrates as the same integer `copy_value` flattened — `{"value": 7}` came back
 /// as `7.0` while this held `f64`.
 #[derive(Clone, Copy, Debug)]

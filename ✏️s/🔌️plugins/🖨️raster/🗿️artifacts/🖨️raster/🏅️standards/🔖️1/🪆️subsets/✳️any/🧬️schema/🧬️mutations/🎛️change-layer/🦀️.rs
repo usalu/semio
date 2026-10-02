@@ -34,6 +34,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerAdjus
         if validate(self,base).is_err() { return Vec::new(); }
         vec![RasterMutation::ChangeLayerAdjustmentParameter(Self {layer_id:self.layer_id.clone(),parameter:self.parameter.clone(),expected:self.value,value:self.expected})]
     }
-    fn label(&self) -> protocol::LocalizedLabel {protocol::LocalizedLabel::native("Change adjustment parameter","Korrekturparameter ändern")}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change adjustment parameter","Korrekturparameter ändern")}
     fn target(&self) -> Vec<String> {vec![self.layer_id.clone()]}
 }

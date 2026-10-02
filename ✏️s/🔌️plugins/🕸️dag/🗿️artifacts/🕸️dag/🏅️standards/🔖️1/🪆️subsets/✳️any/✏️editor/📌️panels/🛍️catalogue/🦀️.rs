@@ -2,7 +2,16 @@
 
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{dag_action, ui_value_map, ui_value_text};
-use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_CATALOGUE: &str = "dag.play.catalogue";
@@ -27,7 +36,7 @@ pub fn render(labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framew
         .window_section(
             windows,
             "dag-play-catalogue.node-kinds",
-            Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "catalogue heading admission failed"))?),
+            Some(semio_framework_ui_contract::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "catalogue heading admission failed"))?),
             true,
             &kinds,
             |(kind, label)| {

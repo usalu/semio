@@ -431,7 +431,7 @@ impl ArtifactApp for ToyRunApp {
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
-        _engines: &EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> ArtifactMutationOutcome<TestMutation, TestConfigMutation, NoDraftMutation> {
         Ok(Emit { artifact_mutations: vec![command.clone()], ..Default::default() })
     }
@@ -453,7 +453,7 @@ impl ArtifactApp for ToyRunApp {
             let run = doc
                 .tool_run()
                 .map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.try_into().ok()).map_or(0, u32::from_le_bytes)));
-            return built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}{run}", doc.snapshot.count)));
+            return built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}{run}", doc.snapshot.count)));
         }
         let provisional = |unit: i32| doc.tool_run().is_some_and(|run| run.provisional_entities.contains(&(unit as u64)));
         let instances: Vec<Value> = (1..=doc.snapshot.count).map(|unit| serde_json::json!({ "id": format!("unit-{unit}"), "meshId": "unit", "provisional": provisional(unit) })).collect();
@@ -640,7 +640,7 @@ async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool
 }
 
 async fn render_text(app: &mut ToyApp, body_key: &str) -> String {
-    let tree = app.render(body_key, None, &ViewModel::default()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+    let tree = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
     artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
 }
 
@@ -1036,7 +1036,7 @@ fn window_view(window_id: &str, cursor: Option<ToolRunTraceCursor>) -> ViewModel
         window_id: Some(window_id.to_string()),
         window_instances: vec![ViewWindowInstance { id: world.clone(), window_kind_id: world }, ViewWindowInstance { id: other.clone(), window_kind_id: other }],
         tool_run_trace_cursor_by_window_id: cursor.map(|cursor| (window_id.to_string(), cursor)).into_iter().collect(),
-        ..ViewModel::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 
@@ -1718,7 +1718,7 @@ async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
     start(&mut app, text(&fixture["port"]["toolId"])).await;
     pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.state() == Some(ToolRunState::Running) && app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
     while app.take_typed_operation_effect().is_some() {}
-    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::default()).await.expect("render the panel");
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render the panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
     if let Some(path) = std::env::var_os("SEMIO_TOOL_RUN_PANEL_OUT") {
         std::fs::write(path, format!("{}\n", serde_json::to_string_pretty(&panel).expect("pretty panel"))).expect("write the panel fixture");
@@ -1757,7 +1757,7 @@ async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_positio
         writer.upsert(key, ToolRunVerdict::parse(text(&upsert[1])).expect("verdict"), 1, ToolRunTraceSubject::Entity { entity: key });
         app.tool_runs.apply_tick(writer.finish().expect("an upsert tick")).expect("the upsert tick applies");
     }
-    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::default()).await.expect("render the panel");
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render the panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
     assert_unique_sibling_keys(&panel);
     let scope = semio_framework_tool_run::tool_run_panel_group_id(identity.id.run);
@@ -1775,7 +1775,7 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
     let fixture = fixture();
     let expected = &fixture["readyGroup"];
     let mut app = toy_app(1).await;
-    let view = ViewModel { active_tool_id: Some(text(&expected["toolId"]).to_string()), ..ViewModel::default() };
+    let view = ViewModel { active_tool_id: Some(text(&expected["toolId"]).to_string()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &view).await.expect("render the idle panel");
     let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
     assert_unique_sibling_keys(&panel);

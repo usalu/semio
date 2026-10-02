@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEncryption {
         vec![PdfMutation::SetEncryption(SetEncryption { encryption: base.encryption.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set encryption", "Verschlüsselung setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set encryption", "Verschlüsselung setzen")
     }
 
     fn target(&self) -> Vec<String> {

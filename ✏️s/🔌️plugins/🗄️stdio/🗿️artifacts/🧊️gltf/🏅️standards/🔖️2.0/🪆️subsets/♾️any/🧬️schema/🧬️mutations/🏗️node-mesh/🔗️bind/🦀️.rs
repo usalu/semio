@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeMeshM
         vec![super::GltfMutation::BindNodeMesh(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Bind Node Mesh", "Knotennetz binden")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Bind Node Mesh", "Knotennetz binden")
     }
 
     fn target(&self) -> Vec<String> {

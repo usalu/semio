@@ -26,8 +26,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_create_link(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create link \"{}\"", self.link.path), &format!("Verknüpfung \"{}\" erstellen", self.link.path))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create link \"{}\"", self.link.path), &format!("Verknüpfung \"{}\" erstellen", self.link.path))
     }
     fn target(&self) -> Vec<String> {
         vec![self.link.id.clone()]

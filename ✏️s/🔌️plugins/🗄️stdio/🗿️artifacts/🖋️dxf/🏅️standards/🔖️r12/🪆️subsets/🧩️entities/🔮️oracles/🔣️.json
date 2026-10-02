@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. AutoCAD DXF Reference (Release 12, Autodesk, 1992) defines a DXF file's body as a fixed sequence of normative sections -- HEADER, TABLES, BLOCKS, ENTITIES, EOF. This subset owns the ENTITIES section's own record kinds. The leaf struct definitions physically moved into this subset's own `🧬️schema/🧬️mutations`; the `DxfMutation` enum, its diff dispatch and the real text codec they compile into remain in `📰️header` (one shared, always-co-resident implementation across every DXF section -- the same family-module reuse this repo already uses for svg tiny/basic). This subset owns no new third-party oracle: `dxf-crate-r12-mutate-reader` (declared by `../../📰️header/🔮️oracles/🔣️.json`, merged into the shared registry) already reads this section's records back.",
   "oracles": [],
@@ -305,5 +305,6 @@
         "set-entity"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

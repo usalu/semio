@@ -1,0 +1,61 @@
+# Canonical Stdio Oracle Execution
+
+## Observed Sources And Execution Hold
+
+This is a continuation of the broad active architecture goal. Root authorized an isolated language-neutral ownership contract and registered Bun/Nx RED proof while Native exclusively runs catalog replay two and full Draw. No Rust, Cargo, or contribution production source has moved. Repo MCP ticket/goals tools remain unavailable as already verified by Root. The existing ticket remains the work owner.
+
+The last actual whole census is the durable exact residual ledger: 24,192 files, 61,542 references, 79 strict violations and eight problems. Its Stdio cohort is 72 physical mounts from one lower plugin oracle assembly, including the Note sibling artifact. This report does not replace that census or imply whole architecture completion.
+
+The current bounded inventory independently confirms the 72 mounts, 14 lower oracle Rust files and the reported 126 Stdio Rust textual callers. The complete canonical library retirement also requires 131 callers outside Stdio, for 257 total Rust callers across 29 plugin artifact contexts. There are 145 involved contribution manifests and 397 current source/config textual references across S, Hub and Framework. These are source inventory counts, not native case execution counts.
+
+The preserved generated research observation is `🗑️generated/stdio-oracle-composition-inventory.json`. The retained research input is `🔬️stdio-oracle-inventory/📜️script.ts`; it reads authored sources, hashes content and emits an inventory, and never changes production ownership.
+
+## Ownership And Contribution Direction
+
+The complete assembly belongs at `🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles`, package `semio-hub-stdio-test-oracle`, library `semio_hub_stdio_test_oracle`. All artifact-specific implementations remain physically at their artifact/standard/subset owners. All eight shared law/family modules and their five nested test/helper files move alongside the higher assembly; no lower plugin alias, forwarding package or absent-artifact fallback remains.
+
+Discovery remains domain-neutral and ancestor-scoped through the existing `packagesForOwner` interface. Higher Hub ancestry cannot supply dependencies to S artifact cases. Every involved artifact-owned contribution explicitly supplies the canonical higher Rust oracle package with feature `oracles`; existing other native/Python packages and subject features retain their exact records. All currently declared oracle/profile/no-oracle records and fixture/mutation declarations remain semantically identical apart from canonical host ownership paths. The lower Stdio ancestor stops supplying the concrete Rust oracle package. Python packages retain their current applicable owner scope, including non-Rust baseline records; moving Rust ownership does not narrow Python host ancestry.
+
+Root's actual contribution path is `🔮️oracles/🔣️.json`. The Rust assembly root doc currently cites the nonexistent `🔣️oracle.json`; that stale claim must be corrected with the canonical source move.
+
+## Public API Findings
+
+Current shared family APIs use owned Json, strings, bytes, collections and repository-owned model structs. Inspection found real external-type API exposure in two mounted standard-level helpers: IFC2X3 `part21` and STEP AP214 `part21` publicly return or accept ruststep `Exchange`, `Parameter`, `EntityInstance` and `Record` values. No current external oracle caller directly imports either typed helper module; their consumers are internal subset modules. Make these helper modules crate-visible during the coordinated source cut, keeping their original implementation and all owned subset entry points. This removes unnecessary external public types without a compatibility wrapper or a second reference codec.
+
+The RED contract must verify actual ownership paths, full mount/module preservation, canonical Cargo package/lib identity, unchanged optional third-party dependency versions/features, every caller rebind, explicit physical contributions and the visibility of standard-level typed helpers. Independent Ajv validates the same language-neutral contract, and existing `@iarna/toml` independently validates actual Cargo contents. Actual original generated native host routes remain queued through the sole Native executor.
+
+## Registered Proof Plan
+
+Create the isolated Hub oracle ownership schema, exact fixture and Bun test assets first. Register `@semio-tech/hub-stdio-test-oracle:test-composition` through its own `📜️script.ts` and project, plus one authored launch seed entry in existing `9_gates` ordering at 900.05791. Run that actual-source route before production changes and retain its terminal RED reason. Validate pure contribution-selection fixtures through the unchanged domain-neutral dependency selector. After Root's coordinated start, move the higher assembly/support files, update all 257 callers and involved metadata paths, explicitly rebind artifact-owned contribution packages, retire the lower Rust package/assembly, and rerun the same proof. Native compilation/runtime and fresh whole census remain separate required receipts.
+
+## Retained Artifact Deletion Closure Correction
+
+Root required evidence for an unrelated retained artifact's original oracle route with another artifact absent. Reading the actual current host materializer resolves this concern without a native job: `🧪️test/🖥️host/🏗️materialization/🟦️.ts` obtains all ancestor-contributed oracle packages and writes them as unconditional generated-host dependencies at lines 65–121. Only the subject package is optional. The current lower oracle's lib root mounts all 72 artifact sources without a Cargo feature boundary. Therefore changing only that package's physical location to Hub preserves the same cross-artifact compilation closure in every generated host that links it.
+
+The exact original PNG creation/round-trip adapter at `📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs` uses only the raster owned API and has three original scenarios. Its current generated Rust oracle host nevertheless requires every PDF/STEP/IFC/Note source because its ancestor contributes the monolithic oracle package. A retained PNG oracle host with the PDF artifact physically absent is the first concrete deletion vector; current monolithic assembly cannot discharge it. The lower production plugin's own Cargo package has no oracle dependency, so its artifact-free native unit route is a separate vector and cannot stand in for the retained PNG route.
+
+The initial proposed single-package rebinding must therefore be refined before implementation. Keep a full higher Hub assembly as the complete composition/testing owner, but generated artifact hosts must receive only their actual artifact-owned provider and shared domain-family testing support. Generic law-only consumers must receive a neutral law/testing owner, not the full format assembly. Preserve the existing domain-neutral ancestor package selector; no format dispatch, conditional missing-artifact support, feature-off deletion proof or original-case reduction belongs in the host materializer.
+
+Actual current cross-format source coupling also exists: IFC2X3 base calls STEP AP214's reference `part21::decode_string_literal`. Per-artifact provider separation must move that exact owned string grammar helper into an appropriate shared Part-21 testing owner rather than make IFC's provider depend on STEP artifact existence. Standard-specific STEP/IFC implementations, ruststep parsing, mutation vocabularies, projections and all original native laws remain at their retained owner. Public helper visibility needs revisiting against this refined provider/reexport graph; a private-module edit alone is insufficient.
+
+The currently registered RED contract preserves the exact pre-cut cohort and establishes actual lower ownership, missing higher package, unchanged callers/contributions and public API debts. Its prospective one-package expectations are explicitly provisional and must be replaced by the provider-isolation contract before any production GREEN claim. Production Rust/Cargo/contribution hold is still in effect.
+
+## Actual Registered RED Receipt
+
+`bun nx run @semio-tech/hub-stdio-test-oracle:test-composition --skip-nx-cache` reached terminal exit one after waiting for the shared Nx graph. The registered route executed nine portable laws: two passed, seven failed, 20 assertion calls, 5.69 seconds of Bun tests and 8.6 seconds of task execution. The two passing laws are independent Ajv/owned-schema agreement over the same five closed-contract cases and the five language-neutral generic contribution-selection cases.
+
+The actual-source failures identify retained lower oracle sources, missing higher Cargo/source ownership, unrebound original library callers, missing explicit artifact-root package contributions, unchanged concrete ancestor packages, and external public reference types. The scope-aware public signature/field/reexport audit identifies 64 exposed ruststep parameter/return signatures in IFC/STEP helpers. Its earlier draft falsely counted LAS `RawDoc` fields; those belong to a proven `pub(super)` type with no outward public signature, and the corrected audit follows that type visibility rather than blanket-exempting private modules. A small draft parse error was corrected before this registered source RED; it is not counted as architecture evidence.
+
+Terminal registered output is `🗑️generated/stdio-oracle-composition-red.log`; the direct router replay is `🗑️generated/stdio-oracle-composition-direct-red.log`. Both show two passes/seven actual-source failures. No native execution, production Rust edit, lower package deletion, or new whole-census GREEN follows from this RED receipt.
+
+## Actual Retained-Artifact Deletion RED
+
+The registered `@semio-tech/hub-stdio-test-oracle:test-composition` replay completed with two passing contract/selection laws and eight failing actual-source laws, 25 assertions across ten tests, Bun 9.78 seconds and Nx task 11.2 seconds. Its new original PNG vector selected the real ancestor-contributed Cargo host and found twelve compile mounts into the removed PDF artifact. This is actual source/package/contribution RED, not a physical deletion/native runtime receipt. The IFC vector initially followed PNG inside the same test and was masked by that first failure; vectors are now independently registered so both original routes produce evidence.
+
+The provisional single higher Cargo package is rejected: the real host materializer links selected ancestor packages, whose unconditional artifact mounts would keep sibling deletion coupled. The refined contract retains a full higher assembly, selected artifact-owned providers, artifact-free lower shared families, neutral Repo-host law and a lower shared Part21 grammar owner. No production Rust/Cargo/contribution source moved during the sole Native queue's active epoch.
+
+## Complete Version-2 Independent RED And Coordinated Start
+
+The owned registered permanent test router reached genuine stable RED: five passing laws, 56 failing intended actual-source ownership laws, 152 assertions across 61 tests in 10.07 seconds. Separate original PNG and IFC routes independently proved twelve PDF mounts and eight STEP mounts respectively. The owned closed contract and deletion schemas agree with independent Ajv; generic contribution selection, original semantic-body baseline and the lower plugin original target declaration law pass. Earlier draft walker failures from an absent dependency table and an invalid package-name-only ownership ban were corrected before this receipt. The Stdio contract carrier is already physically owned at `📇️registry/🧬️contract`; its package name is not a physical artifact dependency.
+
+Root explicitly authorized the full production source split after this genuine bounded independent-vector terminal, with the Native catalog now terminal. Production changes start from the version-2 exact lower-family/provider/neutral-law contract. Only the sole Native agent may compile or execute native scenarios; this RED is source/package/contribution evidence and does not claim physical deletion runtime success.

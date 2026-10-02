@@ -2,10 +2,10 @@
   "InsertSelfWeightElements": {
     "index": 1,
     "item": {
-      "assumedGk": 1100.0,
       "id": "screed",
       "material": "cement_screed",
-      "thickness": 0.05
+      "thickness": 0.05,
+      "assumedGk": 1100.0
     }
   }
 }

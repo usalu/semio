@@ -17,18 +17,15 @@ pub const ZOOM_SCALE: f64 = 0.68;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`. Unlike cad,
-/// puzzle2d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
-/// and brush chrome before the first `refreshUi` tick; every later frame comes from
-/// `ArtifactApp::window_measures`.
-pub fn definition(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowKindDefinition {
+/// 🧱️ Preserve localized manifest labels; caller-resolved options come from `ArtifactApp::window_measures`.
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_overview),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, host, labels)) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::area_brush::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN)],

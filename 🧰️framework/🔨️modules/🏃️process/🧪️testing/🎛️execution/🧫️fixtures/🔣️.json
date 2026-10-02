@@ -1,0 +1,50 @@
+{
+  "schema": "semio.framework.process.test-command/v1",
+  "cases": [
+    {
+      "id": "success",
+      "program": "process.stdout.write(\"owned\\n\")",
+      "budgetMs": 1500,
+      "abortMs": null,
+      "throwOnFailure": true,
+      "expected": "success",
+      "exitCode": 0
+    },
+    {
+      "id": "exit-refusal",
+      "program": "process.exit(7)",
+      "budgetMs": 1500,
+      "abortMs": null,
+      "throwOnFailure": true,
+      "expected": "exited with status 7",
+      "exitCode": 7
+    },
+    {
+      "id": "timeout",
+      "program": "setInterval(()=>{},1000)",
+      "budgetMs": 100,
+      "abortMs": null,
+      "throwOnFailure": true,
+      "expected": "exceeded its 100ms budget",
+      "exitCode": null
+    },
+    {
+      "id": "cancellation",
+      "program": "setInterval(()=>{},1000)",
+      "budgetMs": 1500,
+      "abortMs": 100,
+      "throwOnFailure": true,
+      "expected": "cancelled",
+      "exitCode": null
+    },
+    {
+      "id": "exit-propagates",
+      "program": "process.exit(7)",
+      "budgetMs": 1500,
+      "abortMs": null,
+      "throwOnFailure": false,
+      "expected": "",
+      "exitCode": 7
+    }
+  ]
+}

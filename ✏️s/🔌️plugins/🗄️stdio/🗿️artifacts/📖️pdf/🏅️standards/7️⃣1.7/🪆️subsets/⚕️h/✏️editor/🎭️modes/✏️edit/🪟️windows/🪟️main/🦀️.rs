@@ -2,7 +2,9 @@
 
 use crate::editor::page;
 use crate::PdfSnapshot;
-use semio_framework_plugin::{Locale, TreeWindows, WindowKindDefinition};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_ui_contract::BuiltNode;
 
 pub const WINDOW_KIND_ID: &str = page::WINDOW_KIND_ID;

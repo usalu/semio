@@ -26,10 +26,10 @@ impl MutationKind<CadSnapshot, CadMutation> for ScaleObjects {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.placements.len() {
-            1 => protocol::LocalizedLabel::native("Scale 1 object", "1 Objekt skalieren"),
-            count => protocol::LocalizedLabel::native(&format!("Scale {count} objects"), &format!("{count} Objekte skalieren")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Scale 1 object", "1 Objekt skalieren"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {count} objects"), &format!("{count} Objekte skalieren")),
         }
     }
     fn target(&self) -> Vec<String> {

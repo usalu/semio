@@ -14,7 +14,7 @@
 //! time under ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_image, project_image, RasterSpec};
+use semio_s_plugin_stdio_raster_test_oracle::{oracle_create_image, project_image, RasterSpec};
 
 //#region 🔖️Input
 const FORMAT: &str = "bmp";
@@ -39,7 +39,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{spec, FORMAT};
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_image, project_image};
+    use semio_s_plugin_stdio_raster_test_oracle::{oracle_create_image, project_image};
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {

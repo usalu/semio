@@ -30,7 +30,7 @@ pub const WFC_GRID2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID2D_DOCU
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.wfcgrid2d".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Grid", "2D-Gitter"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Grid", "2D-Gitter"),
         source_format: WFC_GRID2D_DOCUMENT_SCHEMA.into(),
         component_kind: "wfcgrid2d".into(),
         dimension: "2d".into(),

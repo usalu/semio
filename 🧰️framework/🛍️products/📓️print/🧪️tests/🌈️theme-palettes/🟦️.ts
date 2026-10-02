@@ -7,7 +7,7 @@
 import { rgb } from "d3-color";
 import { interpolateHcl, interpolateLab, piecewise } from "d3-interpolate";
 import { scaleOrdinal } from "d3-scale";
-import { type AdapterContext, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type ProbeProjection, compileVizProbe, probeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors

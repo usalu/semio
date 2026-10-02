@@ -76,6 +76,8 @@ pub(crate) mod context {
         App { definition: create_sequence_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("sequence", SequencePlayApp, sequence_manifest_for_tests, "../..");
+
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     /// 🪪️ MOUNTED: a registered app refuses every typed command whose `ActionMeta.instance_id` is not
     /// its bound live runtime instance (`interactive-job.live-instance`), and a freshly constructed
@@ -118,7 +120,7 @@ pub(crate) mod context {
                 window_id: Some(window.id.clone()),
                 active_window_kind_id: Some(window.window_kind_id.clone()),
                 window_instances: vec![window],
-                ..Default::default()
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             }),
             ..meta("local")
         }
@@ -154,7 +156,7 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut SequenceApp, body_key: &str) -> String {
-        render_in(app, body_key, &ViewModel::default()).await
+        render_in(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
     }
 
     /// 🪟️ [`render`] through one addressed window view — a window-transient surface (the script
@@ -186,7 +188,9 @@ pub(crate) mod context {
 
 use super::*;
 use crate::editor::sequence::unit_tests::context::{live_host_snapshot, new_app, new_app_with_registry_wired};
-use semio_framework_plugin::{Locale, PluginApp, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::PluginApp;
+use semio_framework_ui_locale::Terminology;
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {

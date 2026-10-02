@@ -24,8 +24,8 @@ impl MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> for Se
     fn inverse(&self, base: &GisTerrainWindowConfig) -> Vec<GisTerrainWindowConfigMutation> {
         vec![Self { camera_json: base.camera_json.clone() }.into()]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set camera", "Kamera setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["cameraJson".into()]

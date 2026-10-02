@@ -15,7 +15,9 @@ use crate::editor::puzzle2d::{fixture_nodes, puzzle2d_occupied_handles, puzzle2d
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, connect_handles, drag_selection, rotate_selection, scale_selection, Puzzle2dMutation};
 use crate::Puzzle2dSnapshot;
 use machine::Command;
-use semio_framework_plugin::{LocalizedLabel, UtilityCategory, UtilityDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -332,8 +334,8 @@ pub struct Puzzle2dSelectToolState {
     pub entries: Vec<Puzzle2dSelectToolEntry>,
 }
 
-store::artifact_retire_struct!(Puzzle2dSelectToolEntry { key, mutation });
-store::artifact_retire_struct!(Puzzle2dSelectToolState { states, verb, authoring_seed, base_revision, connect, transaction, entries });
+semio_framework_value::artifact_retire_struct!(Puzzle2dSelectToolEntry { key, mutation });
+semio_framework_value::artifact_retire_struct!(Puzzle2dSelectToolState { states, verb, authoring_seed, base_revision, connect, transaction, entries });
 
 /// 🛠️ One window's select tool for one dispatch: started at rest, or resumed from the gesture its window
 /// transient persisted, driven by one event or one host abort, and persisted back while its transaction is open.

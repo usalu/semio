@@ -4,21 +4,24 @@
   "sourceRoot": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
   "namedInputs": {
     "generatorSources": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-      "{projectRoot}/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts"
     ],
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
@@ -31,7 +34,13 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts"
     ]
   },
   "targets": {
@@ -117,6 +126,16 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts lint"
+      }
+    },
+    "test-manifest-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-manifest-contract"
       }
     }
   }

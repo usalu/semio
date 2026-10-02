@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::{empty_document, Puzzle5dInteractionSnapshot};
 use semio_framework_plugin::{ViewModel, ViewWindowInstance};
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&ViewModel::default()).expect("an admitted host label axis")
+    puzzle5d_labels(&ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("an admitted host label axis")
 }
 
 fn drain() {
@@ -66,10 +66,10 @@ fn the_settings_panel_authors_every_stepper_and_its_verb() {
 /// the host mounts none — an empty `windowId` would be refused as an unknown window instance.
 #[test]
 fn the_panel_addresses_the_focused_pane_and_none_without_one() {
-    assert_eq!(panel_window_id(&ViewModel::default()), None);
-    let focused = ViewModel { focused_window_id: Some("pane-2".into()), ..Default::default() };
+    assert_eq!(panel_window_id(&ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)), None);
+    let focused = ViewModel { focused_window_id: Some("pane-2".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert_eq!(panel_window_id(&focused), Some("pane-2"));
-    let roster = ViewModel { window_instances: vec![ViewWindowInstance { id: "pane-9".into(), window_kind_id: "puzzle5d-board".into() }], ..Default::default() };
+    let roster = ViewModel { window_instances: vec![ViewWindowInstance { id: "pane-9".into(), window_kind_id: "puzzle5d-board".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert_eq!(panel_window_id(&roster), Some("pane-9"));
 }
 

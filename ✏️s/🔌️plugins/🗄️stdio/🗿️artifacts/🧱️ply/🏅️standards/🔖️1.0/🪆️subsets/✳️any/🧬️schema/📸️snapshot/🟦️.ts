@@ -20,7 +20,7 @@ export type PlyValue =
   | { kind: 'double'; value: Binary64 }
   | { kind: 'list'; value: PlyValue[] };
 
-/** 📏 One element instance's data — one `PlyValue` per declared property, same order. */
+/** 📏 One independent ordered element occurrence value vector. */
 export interface PlyRow {
   values: PlyValue[];
 }
@@ -112,15 +112,23 @@ export function parsePlyProperty(value: unknown, at = "$"): PlyProperty {
 }
 
 /** 🔣️ Parse typed primitive values and explicitly tagged list members. */
-export function parsePlyValue(value: unknown, at = "$"): PlyValue {
-  const row = stdioPly10AnySnapshotGuardObject(value, at);
-  if (row["kind"] === "list") return { kind: "list", value: stdioPly10AnySnapshotGuardArray(row["value"], `${at}.value`).map((item, index) => parsePlyValue(item, `${at}.value[${index}]`)) };
-  const kind = parsePlyScalarType(row["kind"], `${at}.kind`);
-  if (kind === "float") return { kind, value: parseBinary32(row["value"]) };
-  if (kind === "double") return { kind, value: parseBinary64(row["value"]) };
-  const bounds = { char: [-128,127], uChar: [0,255], short: [-32768,32767], uShort: [0,65535], int: [-2147483648,2147483647], uInt: [0,4294967295] } as const;
-  const range = bounds[kind];
-  return { kind, value: stdioPly10AnySnapshotGuardInteger(row["value"], `${at}.value`, {minimum:range[0],maximum:range[1]}) };
+export function parsePlyValue(value:unknown,at="$"):PlyValue{
+ const roots:PlyValue[]=[];const active=new Set<object>();
+ const pending:{source:unknown;target:PlyValue[];exit?:object}[]=[{source:value,target:roots}];
+ while(pending.length){const frame=pending.pop()!;if(frame.exit){active.delete(frame.exit);continue;}
+  const row=stdioPly10AnySnapshotGuardObject(frame.source,at);
+  if(row["kind"]==="list"){
+   if(active.has(row))return stdioPly10AnySnapshotGuardReject(at,"recursive list ownership cycles");active.add(row);
+   const values=stdioPly10AnySnapshotGuardArray(row["value"],`${at}.value`),owned:PlyValue[]=[];frame.target.push({kind:"list",value:owned});pending.push({source:null,target:owned,exit:row});
+   for(let index=values.length-1;index>=0;index--)pending.push({source:values[index],target:owned});
+  }else{
+   const kind=parsePlyScalarType(row["kind"],`${at}.kind`);
+   if(kind==="float")frame.target.push({kind,value:parseBinary32(row["value"])});
+   else if(kind==="double")frame.target.push({kind,value:parseBinary64(row["value"])});
+   else{const bounds={char:[-128,127],uChar:[0,255],short:[-32768,32767],uShort:[0,65535],int:[-2147483648,2147483647],uInt:[0,4294967295]}as const;const range=bounds[kind];frame.target.push({kind,value:stdioPly10AnySnapshotGuardInteger(row["value"],`${at}.value`,{minimum:range[0],maximum:range[1]})});}
+  }
+ }
+ return roots[0]!;
 }
 
 

@@ -4,7 +4,7 @@ use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_C
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_store::{self, ArtifactCodec};
-use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, Version};
+use semio_framework::{DslValue, PackageDescriptor, Version};
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
 use std::collections::{BTreeMap, BTreeSet};
@@ -1127,6 +1127,7 @@ pub struct VerifiedTrustedCatalog {
     progress: Arc<TrustedCatalogLoadProgressCellV1>,
     packages: Box<[VerifiedTrustedPackage]>,
     codecs: Box<[VerifiedNativeArtifactCodec]>,
+    artifact_kind_count: usize,
     open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
     generation_id: String,
 }
@@ -1194,6 +1195,11 @@ impl VerifiedTrustedCatalog {
     /// 🧪️ Returns the exact number of activated artifact identities.
     pub fn codec_count(&self) -> usize {
         self.codecs.len()
+    }
+
+    /// 🧮️ Returns the distinct artifact kinds across all activated schema-qualified identities.
+    pub fn artifact_kind_count(&self) -> usize {
+        self.artifact_kind_count
     }
 
     /// 🪪 Returns the number of exact catalog-backed open choices in this immutable generation.
@@ -1831,7 +1837,15 @@ impl TrustedCatalogLoader {
         if generation_id != profile.generation_id {
             return Err(catalog("trusted profile generation differs from the completely verified package, codec, and target closure"));
         }
-        let catalog = VerifiedTrustedCatalog { residency, guests: guests.into_boxed_slice(), progress, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
+        let artifact_kind_count = {
+            let mut kinds = BTreeSet::new();
+            for codec in &codecs {
+                context.checkpoint()?;
+                kinds.insert(codec.identity.artifact_kind.as_str());
+            }
+            kinds.len()
+        };
+        let catalog = VerifiedTrustedCatalog { residency, guests: guests.into_boxed_slice(), progress, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), artifact_kind_count, open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
         Ok((catalog, registration_codecs))
     }
@@ -2366,9 +2380,9 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                 return Err(catalog("trusted dependency identity is duplicated or self-referential"));
             }
         }
-        let mut codec_kinds = BTreeSet::new();
+        let mut codec_identities = BTreeSet::new();
         for codec in &package.native_codecs {
-            if !valid_identity(&codec.artifact_kind) || !valid_identity(&codec.artifact_schema) || decode_digest(&codec.pack_schema_hash, "pack schema hash")? == [0; 32] || !codec_kinds.insert(codec.artifact_kind.as_str()) {
+            if !valid_identity(&codec.artifact_kind) || !valid_identity(&codec.artifact_schema) || decode_digest(&codec.pack_schema_hash, "pack schema hash")? == [0; 32] || !codec_identities.insert((codec.artifact_kind.as_str(), codec.artifact_schema.as_str())) {
                 return Err(catalog("trusted native codec identity is empty, zero, or duplicated"));
             }
         }
@@ -2660,8 +2674,8 @@ fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, Authorit
     if canonical != bytes {
         return Err(catalog("package descriptor is not its exact canonical schema projection"));
     }
-    let descriptor: PackageDescriptor = from_dsl_value(value).map_err(catalog_error)?;
-    let projection = to_dsl_value(&descriptor).map_err(catalog_error)?;
+    let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(value).map_err(catalog_error)?;
+    let projection = semio_framework_value::ToValue::to_value(&descriptor);
     if os_store::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
     Ok(descriptor)
 }
@@ -2763,8 +2777,8 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
         quotas: semio_framework::kernel::QuotaSchema::default(), contributions: semio_framework::ContributionSet::default(), assets: Vec::new(),
         hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: component_sha256.clone(), descriptor_sha256: String::new() },
     };
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(catalog_error)?)));
-    let bytes = os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).map_err(catalog_error)?);
+    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
+    let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     decode_package_descriptor(&bytes)?;
     std::fs::write(root.join("stdio-component.wasm"), component).map_err(catalog_error)?;
     std::fs::write(root.join("stdio-descriptor.semio"), &bytes).map_err(catalog_error)?;

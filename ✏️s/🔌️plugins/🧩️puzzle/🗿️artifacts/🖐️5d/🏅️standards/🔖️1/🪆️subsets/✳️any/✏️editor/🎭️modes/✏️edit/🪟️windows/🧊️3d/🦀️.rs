@@ -43,14 +43,14 @@ pub const PUZZLE5D_FIT_PADDING: f64 = 1.25;
 /// 🔁️ The `brush` utility id it binds resolves to the definition declared once under the 2D window
 /// (`🪟️windows/◻️2d/🪛️utilities/🖌️brush`) — both windows expose the identical utility, so it is never
 /// duplicated here.
-pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_3d),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "puzzle5d-3d".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![
             utilities::transform::UTILITY_ID.into(),
@@ -102,7 +102,8 @@ pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
 
 /// 🕹️ `selected`/`hovered` per instance are painted from the live `vortex` domain the ONE 5d
 /// interaction snapshot reads — the same domain the board pane writes, so a part picked on the board
-/// lights up here. A part a tool run holds provisionally carries `provisional: true`.
+/// lights up here. A part a tool run holds provisionally carries `provisional: true`; a part the open time-travel
+/// draft references carries `highlighted: true`.
 pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dInteractionSnapshot, tool_run: Option<&ToolRunView>) -> String {
     let selected = interaction.selected_part_ids();
     let instances: Vec<Value> = document
@@ -119,6 +120,7 @@ pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dI
                 "label": part.part_3d.label.clone().unwrap_or_else(|| part.part_kind.clone()),
                 "selected": selected.iter().any(|id| id == &part.id),
                 "hovered": interaction.hovered.iter().any(|id| id == &part.id),
+                "highlighted": interaction.referenced.iter().any(|id| id == &part.id),
                 "disabled": part.part_2d.locked.unwrap_or(false),
                 "provisional": tool_run.is_some_and(|run| run.provisional_entities.contains(&puzzle5d_placement_entity(&part.id))),
             })

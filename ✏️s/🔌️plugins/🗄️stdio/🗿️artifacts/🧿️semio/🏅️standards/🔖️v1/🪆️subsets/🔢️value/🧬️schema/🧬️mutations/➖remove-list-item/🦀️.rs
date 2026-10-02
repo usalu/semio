@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for RemoveLi
     fn inverse(&self, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
         agg_inverse(&SemioValueMutation::RemoveListItem(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove list item", "Listenelement entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove list item", "Listenelement entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

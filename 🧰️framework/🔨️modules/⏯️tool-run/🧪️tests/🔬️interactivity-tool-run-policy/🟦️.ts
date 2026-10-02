@@ -1,5 +1,4 @@
 import {
-  interactivityToolRunAmendFailures,
   interactivityToolRunDeclarationFailures,
   interactivityToolRunLegacyTraceFailures,
   interactivityToolRunLocalLifecycleFailures,
@@ -22,7 +21,7 @@ const FRAMEWORK = "🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs";
 
 /** 🧫️ A contract-conforming miniature repo: a run-declaring tool and utility, a discovered run tool, an undeclared legacy command, framework constants and a trace host. */
 const CLEAN: Readonly<Record<string, string>> = {
-  [TOOL]: `//! 🧹️ Sweep tool. Prose such as Emit::amend( or FILL_TRIED_RING never counts.
+  [TOOL]: `//! 🧹️ Sweep tool. Prose such as FILL_TRIED_RING never counts.
 use semio_framework_plugin::{LocalizedLabel, ToolDefinition, ToolRunDefinition, WindowMeasure};
 
 pub const TOOL_ID: &str = "sweep";
@@ -47,19 +46,7 @@ pub fn start(ctx: &mut SweepCtx<'_>) {
 }
 `,
   [EDITOR]: `//! 🧹️ Sweep editor.
-pub fn coalesce(action: &str) -> Option<String> {
-    let coalesce_key = match action {
-        "translateSelection" => Some("gumball-translate".to_string()),
-        "sweepStep" => None,
-        _ => None,
-    };
-    coalesce_key
-}
-
-pub fn publish(tool_id: &str, ops: Vec<SweepMutation>) -> Emit {
-    if tool_id == "sweepStep" {
-        return Emit { artifact_mutations: Vec::new(), config_mutations: vec![SweepConfigMutation::Count], coalesce_key: Some("sweep-count".into()), ..Default::default() };
-    }
+pub fn publish(ops: Vec<SweepMutation>) -> Emit {
     Emit::mutations(ops)
 }
 
@@ -89,7 +76,7 @@ pub fn definition(label: LocalizedLabel, run: ToolRunDefinition) -> ToolDefiniti
   [LEGACY]: `//! 🐢️ An undeclared, unlisted command keeps its own verbs until its lane migrates.
 pub fn legacy_build(ops: Vec<LegacyMutation>) -> Emit {
     let _ = "cancelLegacyBuild";
-    Emit::amend(ops, "legacy")
+    Emit::mutations(ops)
 }
 `,
   [HOST]: `/** 🌐️ World host; fillBuildPreview in prose never counts. */
@@ -106,25 +93,17 @@ pub fn is_tool_run_action_id(action: &str) -> bool {
 };
 
 const ROWS: readonly InteractivityToolRunRequirement[] = [
-  { toolId: "sweep", root: ROOT, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🧹️sweep", "✏️editor/🎮️commands/🧹️sweep-step"], actions: ["sweepStep"], verbs: ["cancelSweep", "sweep_tick"], measures: ["cancel_measure"], lane: "W9-Z", inventory: "§0" },
-  { toolId: "gather", root: ROOT, scope: ["✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🧲️gather"], actions: [], verbs: [], measures: [], lane: "W9-Z", inventory: "§0" },
+  { toolId: "sweep", root: ROOT, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🧹️sweep", "✏️editor/🎮️commands/🧹️sweep-step"], verbs: ["cancelSweep", "sweep_tick"], measures: ["cancel_measure"], lane: "W9-Z", inventory: "§0" },
+  { toolId: "gather", root: ROOT, scope: ["✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🧲️gather"], verbs: [], measures: [], lane: "W9-Z", inventory: "§0" },
 ];
 
-type Predicate = "amend" | "lifecycle" | "legacy" | "declaration" | "reserved";
+type Predicate = "lifecycle" | "legacy" | "declaration" | "reserved";
 
 type Case = { readonly name: string; readonly predicate: Predicate; readonly expect: "report" | "silent"; readonly file?: string; readonly edits: readonly (readonly [path: string, from: string, to: string])[]; readonly rows?: (rows: readonly InteractivityToolRunRequirement[]) => readonly InteractivityToolRunRequirement[] };
 
 const DROP_SWEEP_RUN = [TOOL, "ToolDefinition { run: Some(run), ..", "ToolDefinition { .."] as const;
 
 const CASES: readonly Case[] = [
-  { name: "scope-amend", predicate: "amend", expect: "report", file: COMMAND, edits: [[COMMAND, "Emit::mutations(ctx.take_ops())", 'Emit::amend(ctx.take_ops(), "sweep")']] },
-  { name: "coalesce-arm", predicate: "amend", expect: "report", file: EDITOR, edits: [[EDITOR, '"sweepStep" => None,', '"sweepStep" => Some("sweep".to_string()),']] },
-  { name: "guarded-coalesced-artifact-emission", predicate: "amend", expect: "report", file: EDITOR, edits: [[EDITOR, "artifact_mutations: Vec::new(),", "artifact_mutations: ops.clone(),"]] },
-  { name: "scope-coalesced-emit-literal", predicate: "amend", expect: "report", file: COMMAND, edits: [[COMMAND, "Emit::mutations(ctx.take_ops())", 'Emit { artifact_mutations: ctx.take_ops(), coalesce_key: Some("sweep".into()), ..Default::default() }']] },
-  { name: "discovered-run-tool-amend", predicate: "amend", expect: "report", file: OTHER, edits: [[OTHER, "\n}\n", '\n}\n\npub fn spin(ops: Vec<SpinMutation>) -> Emit { Emit::amend(ops, "spin") }\n']] },
-  { name: "undeclared-algorithmic-tool-amend", predicate: "amend", expect: "report", file: COMMAND, edits: [DROP_SWEEP_RUN, [COMMAND, "Emit::mutations(ctx.take_ops())", 'Emit::amend(ctx.take_ops(), "sweep")']] },
-  { name: "commented-amend-is-silent", predicate: "amend", expect: "silent", edits: [[COMMAND, "Emit::mutations(ctx.take_ops())", 'Emit::mutations(ctx.take_ops()) // Emit::amend(ops, "sweep")']] },
-  { name: "config-coalescing-is-silent", predicate: "amend", expect: "silent", edits: [[EDITOR, "config_mutations: vec![SweepConfigMutation::Count],", "config_mutations: vec![SweepConfigMutation::Count, SweepConfigMutation::Camera],"]] },
   { name: "row-verb", predicate: "lifecycle", expect: "report", file: EDITOR, edits: [[EDITOR, "#[cfg(test)]", 'pub fn cancel_sweep() -> &\'static str { "cancelSweep" }\n\n#[cfg(test)]']] },
   { name: "row-measure", predicate: "lifecycle", expect: "report", file: TOOL, edits: [[TOOL, "pub fn count_measure", "pub fn cancel_measure() -> Option<WindowMeasure> { None }\n\npub fn count_measure"]] },
   { name: "generic-cancel-action", predicate: "lifecycle", expect: "report", file: TOOL, edits: [[TOOL, 'sweep_action("setSweepCount", None)', 'sweep_action("abortSweep", None)']] },
@@ -155,8 +134,6 @@ const CASES: readonly Case[] = [
 /** 🧪️ Runs one tool-run predicate. */
 function run(predicate: Predicate, sources: readonly InteractivityToolRunSource[], rows: readonly InteractivityToolRunRequirement[]): readonly InteractivityToolRunFinding[] {
   switch (predicate) {
-    case "amend":
-      return interactivityToolRunAmendFailures(sources, rows);
     case "lifecycle":
       return interactivityToolRunLocalLifecycleFailures(sources, rows);
     case "legacy":
@@ -168,9 +145,9 @@ function run(predicate: Predicate, sources: readonly InteractivityToolRunSource[
   }
 }
 
-/** 🧪️ Mutation self-test of the five tool-run policy predicates: the clean miniature repo passes all of them, every planted violation is reported by its predicate at the planted file, and every tolerated variant stays silent. Returns the executed case count. */
+/** 🧪️ Mutation self-test of the four tool-run policy predicates: the clean miniature repo passes all of them, every planted violation is reported by its predicate at the planted file, and every tolerated variant stays silent. Returns the executed case count. */
 export function interactivityToolRunPolicySelfTests(): number {
-  const predicates: readonly Predicate[] = ["amend", "lifecycle", "legacy", "declaration", "reserved"];
+  const predicates: readonly Predicate[] = ["lifecycle", "legacy", "declaration", "reserved"];
   const clean = Object.entries(CLEAN).map(([path, text]) => ({ path, text }));
   for (const predicate of predicates) {
     const findings = run(predicate, clean, ROWS);

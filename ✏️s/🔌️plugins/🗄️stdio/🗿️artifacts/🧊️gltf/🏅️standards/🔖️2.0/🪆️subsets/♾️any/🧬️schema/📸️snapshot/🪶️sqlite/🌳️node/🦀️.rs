@@ -15,13 +15,9 @@ pub(super) fn project(write:&mut Write<'_,'_>,nodes:&[GltfNode])->Result<(),Stri
  }Ok(())
 }
 pub(super) fn reconstruct(read:&mut Read<'_,'_,'_>)->Result<Vec<GltfNode>,String>{
- let rows=read.rows("gltf_node",1,1,2)?;let mut nodes=Vec::with_capacity(rows.len());for row in rows{let owner=row.rowid;let name=read.optional_text(row,3)?;let mesh=read.optional_index(row,4)?;let camera=read.optional_index(row,6)?;let skin=read.optional_index(row,8)?;let extensions=read.json(row,10)?;let extras=read.json(row,11)?;
-  let rows=read.rows("gltf_node_child",1,owner,2)?;let mut children=Vec::with_capacity(rows.len());for row in rows{children.push(read.index(row,3)?);}
-  let matrix=reconstruct_fixed(read,"gltf_node_matrix","gltf_node_matrix_component",owner)?;
-  let translation=reconstruct_fixed(read,"gltf_node_translation","gltf_node_translation_component",owner)?;
-  let rotation=reconstruct_fixed(read,"gltf_node_rotation","gltf_node_rotation_component",owner)?;
-  let scale=reconstruct_fixed(read,"gltf_node_scale","gltf_node_scale_component",owner)?;
-  let rows=read.rows("gltf_node_weight",1,owner,2)?;let mut weights=Vec::with_capacity(rows.len());for row in rows{read.scalar()?;weights.push(FloatRow::new(row,VALUE)?.real(3)?);}
-  nodes.push(GltfNode{children,mesh,camera,skin,matrix,translation,rotation,scale,weights,name,extensions,extras});
- }Ok(nodes)
+ let rows=read.rows("gltf_node",1,1,2)?;let mut nodes=owned(Vec::with_capacity(rows.len()));for row in rows{let key=row.rowid;let mut node=owned(GltfNode::default());let value=node.as_mut();value.name=read.optional_text(row,3)?;value.mesh=read.optional_index(row,4)?;value.camera=read.optional_index(row,6)?;value.skin=read.optional_index(row,8)?;value.extensions=read.json(row,10)?;value.extras=read.json(row,11)?;
+  let rows=read.rows("gltf_node_child",1,key,2)?;value.children.reserve(rows.len());for row in rows{value.children.push(read.index(row,3)?);}
+  value.matrix=reconstruct_fixed(read,"gltf_node_matrix","gltf_node_matrix_component",key)?;value.translation=reconstruct_fixed(read,"gltf_node_translation","gltf_node_translation_component",key)?;value.rotation=reconstruct_fixed(read,"gltf_node_rotation","gltf_node_rotation_component",key)?;value.scale=reconstruct_fixed(read,"gltf_node_scale","gltf_node_scale_component",key)?;
+  let rows=read.rows("gltf_node_weight",1,key,2)?;value.weights.reserve(rows.len());for row in rows{read.scalar()?;value.weights.push(FloatRow::new(row,VALUE)?.real(3)?);}nodes.as_mut().push(node.take());
+ }Ok(nodes.take())
 }

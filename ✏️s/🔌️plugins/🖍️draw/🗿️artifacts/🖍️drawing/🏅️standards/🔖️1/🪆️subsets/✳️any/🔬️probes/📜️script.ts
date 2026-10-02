@@ -30,7 +30,7 @@
 //   bun 📜️script.ts fixtures      --out <dir>
 //
 // @see 📖️reader/🦀️.rs — the reader itself
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📜️script.ts
 //      — the spawn/offline/agent-scoped-target pattern this file mirrors
 

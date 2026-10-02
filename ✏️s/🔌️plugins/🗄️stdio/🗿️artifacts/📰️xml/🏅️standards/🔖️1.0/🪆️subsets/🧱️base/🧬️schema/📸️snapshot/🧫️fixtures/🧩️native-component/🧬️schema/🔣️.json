@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "prefix",
+    "suffix",
+    "initialRows",
+    "cases",
+    "control"
+  ],
+  "properties": {
+    "prefix": {
+      "$ref": "#/$defs/octetArray"
+    },
+    "suffix": {
+      "$ref": "#/$defs/octetArray"
+    },
+    "initialRows": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "nodeText",
+          "text",
+          "binary",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nodeText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "binary": {
+            "$ref": "#/$defs/octetArray"
+          },
+          "rows": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "repeats",
+        "utf8Bytes",
+        "cancelAfter",
+        "refusedMaxRows",
+        "deepNodes",
+        "smallStackBytes"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repeats": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "utf8Bytes": {
+          "type": "integer",
+          "minimum": 65537
+        },
+        "cancelAfter": {
+          "type": "integer",
+          "minimum": 256
+        },
+        "refusedMaxRows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deepNodes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "smallStackBytes": {
+          "type": "integer",
+          "minimum": 65536
+        }
+      }
+    }
+  },
+  "$defs": {
+    "octetArray": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  }
+}

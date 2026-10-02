@@ -7,6 +7,7 @@
 //! throughout — no bare tuples (f6-final-summary.md §4.3), rotation reuses the shared
 //! `engine::geometry::SemioQuaternion{x,y,z,w}` instead of a local 4-field redefinition.
 
+use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
@@ -180,7 +181,7 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
@@ -266,7 +267,7 @@ fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point3(p: &SemioPoint3) -> String {
-    format!("[{},{},{}]", p.x, p.y, p.z)
+    format!("[{},{},{}]", native::NativeF64(p.x), native::NativeF64(p.y), native::NativeF64(p.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
@@ -276,7 +277,7 @@ fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_quat(q: &SemioQuaternion) -> String {
-    format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
+    format!("[{},{},{},{}]", native::NativeF64(q.x), native::NativeF64(q.y), native::NativeF64(q.z), native::NativeF64(q.w))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
@@ -287,10 +288,10 @@ fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_value(v: &AnimValue) -> String {
     match v {
-        AnimValue::Scalar { value } => format!("S:{value}"),
+        AnimValue::Scalar { value } => format!("S:{}",native::NativeF64(*value)),
         AnimValue::Vec3 { value } => format!("V:{}", enc_point3(value)),
         AnimValue::Quat { value } => format!("Q:{}", enc_quat(value)),
-        AnimValue::Weights { values } => format!("W:{}", enc_list(values, |v: &f64| v.to_string())),
+        AnimValue::Weights { values } => format!("W:{}", enc_list(values, |v: &f64| native::NativeF64(*v).to_string())),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -306,7 +307,7 @@ fn dec_value(s: &str) -> Result<AnimValue, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_keyframe(k: &AnimKeyframe) -> String {
-    format!("[{},{}]", k.t, enc_value(&k.value))
+    format!("[{},{}]", native::NativeF64(k.t), enc_value(&k.value))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
@@ -715,3 +716,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

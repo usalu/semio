@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `Generation3dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
   "oracles": [
@@ -332,6 +332,14 @@
         "delete-generation",
         "rename-generation",
         "change-generation-value"
+      ],
+      "deferredKinds": [
+        "change-slider-value",
+        "drag-transforms",
+        "rotate-transforms",
+        "scale-transforms",
+        "move-nodes",
+        "change-widget-input"
       ]
     }
   ],
@@ -634,11 +642,5 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    }
-  ]
+  "oracleHostPackages": []
 }

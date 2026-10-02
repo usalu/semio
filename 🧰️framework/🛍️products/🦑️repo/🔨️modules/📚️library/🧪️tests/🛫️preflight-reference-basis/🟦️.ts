@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -12,7 +13,7 @@ import * as discovery from "../../🔍️discovery/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
-const source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+const source = normalizationSourceDeclarations(path), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), "utf8"));
 const compilers = [
   { name: "Bun", compile: (value: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(value) },

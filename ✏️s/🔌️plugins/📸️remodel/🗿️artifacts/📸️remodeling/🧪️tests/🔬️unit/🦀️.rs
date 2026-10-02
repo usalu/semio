@@ -36,9 +36,9 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
     scene.params.mesh.texture_size = 4096;
-    scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
+    scene.results.sparse = Some(SparseCloud { points: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(ByteBuffer::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
     scene.results.dense =
-        Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
+        Some(DenseCloud { positions: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(ByteBuffer::from_u8_slice(&[0, 0, 255])), confidence: Some(Float32Buffer::from_f32_slice(&[0.9])), classification: Some(ByteBuffer::from_u8_slice(&[2])) });
     scene.results.mesh = RemodelingMesh {
         mesh: mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
         source: MeshSource::Reconstructed,
@@ -118,31 +118,31 @@ async fn populated_scene_roundtrips_through_json() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn packed_f32_roundtrips_exactly() {
+async fn float32_buffer_roundtrips_exactly() {
     let values = vec![1.5_f32, -2.25, 3.0, f32::MIN_POSITIVE, -0.0];
-    let packed = PackedF32::from_f32_slice(&values);
+    let packed = Float32Buffer::from_f32_slice(&values);
     let value = serde_json::to_value(&packed).expect("serialize");
-    assert!(value.is_string(), "PackedF32 must serialize as a base64 string, got {value:?}");
-    let parsed: PackedF32 = serde_json::from_value(value).expect("deserialize");
+    assert_eq!(value, serde_json::json!({"kind":"inline","values":values}));
+    let parsed: Float32Buffer = serde_json::from_value(value).expect("deserialize");
     assert_eq!(parsed, packed);
     assert_eq!(parsed.to_f32_vec(), values);
 
-    let empty = PackedF32::default();
+    let empty = Float32Buffer::default();
     assert!(empty.is_empty());
     assert_eq!(empty.to_f32_vec(), Vec::<f32>::new());
 }
 
 #[semio_framework_async_macros::async_test]
-async fn packed_u8_roundtrips_exactly() {
+async fn byte_buffer_roundtrips_exactly() {
     let values = vec![0_u8, 128, 255, 64];
-    let packed = PackedU8::from_u8_slice(&values);
+    let packed = ByteBuffer::from_u8_slice(&values);
     let value = serde_json::to_value(&packed).expect("serialize");
-    assert!(value.is_string(), "PackedU8 must serialize as a base64 string, got {value:?}");
-    let parsed: PackedU8 = serde_json::from_value(value).expect("deserialize");
+    assert_eq!(value, serde_json::json!(values));
+    let parsed: ByteBuffer = serde_json::from_value(value).expect("deserialize");
     assert_eq!(parsed, packed);
     assert_eq!(parsed.to_u8_vec(), values);
 
-    let empty = PackedU8::default();
+    let empty = ByteBuffer::default();
     assert!(empty.is_empty());
     assert_eq!(empty.to_u8_vec(), Vec::<u8>::new());
 }

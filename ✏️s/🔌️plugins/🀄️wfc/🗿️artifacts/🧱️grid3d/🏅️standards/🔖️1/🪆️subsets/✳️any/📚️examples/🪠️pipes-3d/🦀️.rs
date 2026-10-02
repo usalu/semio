@@ -8,7 +8,8 @@
 //! in mid-air — the one example that exercises `Boundary::Wrap`.
 
 use crate::schema::snapshot::{Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dSnapshot, Grid3dTile, Grid3dTileMedia, WFC_GRID3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "pipes-3d";
 pub const ICON: &str = "layers";

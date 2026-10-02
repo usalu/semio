@@ -52,13 +52,13 @@ remove-app-extension-op = "remove-app-extension" "index" "=" INT
 # `GifSnapshot` (89a)'s own derived record shape — non-block scalar fields FIRST (declaration
 # order), block/`Vec`-of-struct fields LAST (declaration order among those): `gct` an optional
 # Global Color Table block, `frames`/`comments`/`app-extensions` the three flattened lists.
-snapshot-fields = "schema" "=" IDENT "width" "=" INT "height" "=" INT "background-color-index" "=" INT "pixel-aspect-ratio" "=" INT loop-count-clause? gct-clause? "frames" "=" "[" frame-fields* "]" "comments" "=" "[" IDENT* "]" "app-extensions" "=" "[" app-extension-fields* "]"
+snapshot-fields = "schema" "=" IDENT "width" "=" INT "height" "=" INT "background-color-index" "=" INT "pixel-aspect-ratio" "=" INT loop-count-clause? gct-clause? "frames" "=" "[" frame-item* "]" "comments" "=" "[" IDENT* "]" "app-extensions" "=" "[" app-extension-item* "]"
 
 loop-count-clause = "loop-count" "=" INT
 gct-clause = "gct" "{" color-table-fields "}"
 lct-clause = "lct" "{" color-table-fields "}"
 color-table-fields = "sorted" "=" BOOL "colors" "=" "[" rgb-item* "]"
-rgb-item = "r" "=" INT "g" "=" INT "b" "=" INT
+rgb-item = "{" "r" "=" INT "g" "=" INT "b" "=" INT "}"
 
 transparent-index-clause = "transparent-index" "=" INT
 disposal-word = "unspecified" | "do-not-dispose" | "restore-to-background" | "restore-to-previous"
@@ -79,3 +79,6 @@ frame-fields = "left" "=" INT "top" "=" INT "width" "=" INT "height" "=" INT "in
 app-extension-fields = "identifier" "=" byte8-list "auth-code" "=" byte3-list "data" "=" TEXT
 byte8-list = INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT
 byte3-list = INT "," INT "," INT
+
+frame-item = "{" frame-fields "}"
+app-extension-item = "{" app-extension-fields "}"

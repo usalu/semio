@@ -76,9 +76,9 @@ fn the_committed_example_roster_matches_the_bundled_sources() {
 
 #[test]
 fn example_labels_are_localized_en_and_de() {
-    assert_eq!(two_room_corridor::label(), semio_framework_plugin::LocalizedLabel::native("Two Rooms And A Corridor", "Zwei Räume und ein Korridor"));
-    assert_eq!(wall_roof_facade_strip::label(), semio_framework_plugin::LocalizedLabel::native("Wall And Roof Facade Strip", "Wand-Dach-Fassadenstreifen"));
-    assert_eq!(tower_stack::label(), semio_framework_plugin::LocalizedLabel::native("Tower With A Cantilever", "Turm mit Auskragung"));
+    assert_eq!(two_room_corridor::label(), semio_framework_ui_locale::LocalizedLabel::native("Two Rooms And A Corridor", "Zwei Räume und ein Korridor"));
+    assert_eq!(wall_roof_facade_strip::label(), semio_framework_ui_locale::LocalizedLabel::native("Wall And Roof Facade Strip", "Wand-Dach-Fassadenstreifen"));
+    assert_eq!(tower_stack::label(), semio_framework_ui_locale::LocalizedLabel::native("Tower With A Cantilever", "Turm mit Auskragung"));
 }
 
 /// 💡️ The routed inference is metadata only: the host is told the solve answers on a cold-job route,

@@ -104,7 +104,7 @@ where
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: NOTE_DIALECT.artifact_kind.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Note", "Notiz"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Note", "Notiz"),
         source_format: "note.document".into(),
         component_kind: "note".into(),
         dimension: "2d".into(),

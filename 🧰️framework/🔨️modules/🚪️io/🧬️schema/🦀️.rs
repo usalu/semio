@@ -20,6 +20,9 @@
 //! store;`/`as dsl;` aliases) — no cycle, unlike the `workflow` module's full-framework-surface
 //! need documented in the os-kernel glue's own comment beside the (still double-mounted) `os_io`.
 
+#[path = "🔗️reference/🦀️.rs"]
+mod reference;
+
 use dsl::Diagnostic;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -179,6 +182,17 @@ impl ArtifactRef {
     // `DslField`/`DslVariants` trait impls that are language-barred from awaiting. See R9.
     pub fn to_uri(&self) -> String {
         format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
+    }
+
+    /// 🚦️ Parses identity handles with bounded borrowed scanning and admitted ownership of their four strings.
+    pub fn parse_uri_controlled(text:&str,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.scoped_stage(|control|{
+            control.begin_stage(text.len())?;let mut bang=None;let mut at=None;let mut slash=None;let mut position=0;
+            for chunk in text.as_bytes().chunks(256){for(byte_offset,byte)in chunk.iter().enumerate(){let offset=position+byte_offset;if bang.is_none(){if *byte==b'!'{bang=Some(offset);}}else if at.is_none(){if *byte==b'@'{at=Some(offset);}}else if *byte==b'/'{slash=Some(offset);}}position+=chunk.len();control.advance(chunk.len())?;}
+            let bang=bang.ok_or("artifact reference requires '!'")?;let at=at.ok_or("artifact dialect requires '@'")?;let slash=slash.ok_or("artifact dialect requires '/'")?;
+            if bang==0||at==bang+1||slash==at+1||slash+1==text.len(){return Err("artifact reference has an empty identity component".into());}
+            Ok(Self{artifact_id:control.copy_text(&text[..bang])?,dialect:ArtifactDialect{artifact_kind:control.copy_text(&text[bang+1..at])?,standard:control.copy_text(&text[at+1..slash])?,subset:control.copy_text(&text[slash+1..])?}})
+        })
     }
 
     /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!`.

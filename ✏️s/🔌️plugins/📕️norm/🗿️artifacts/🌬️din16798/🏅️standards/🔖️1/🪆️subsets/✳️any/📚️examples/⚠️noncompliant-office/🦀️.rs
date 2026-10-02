@@ -1,6 +1,7 @@
 //! 📚️ Example `noncompliant-office`.
 use crate::Din16798Snapshot;
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "noncompliant-office";
 pub fn label() -> LocalizedLabel {

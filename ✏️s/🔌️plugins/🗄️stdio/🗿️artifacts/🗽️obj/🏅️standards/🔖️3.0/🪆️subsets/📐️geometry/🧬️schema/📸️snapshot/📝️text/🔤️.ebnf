@@ -1,25 +1,26 @@
-(* Wavefront OBJ 3.0 (stdio.obj snapshot) — the real, commonly-implemented statement
-   grammar; statements may appear in any order. *)
-document = { statement } ;
-statement = comment | vertex | texcoord | normal | face | object stmt | group stmt
-          | usemtl stmt | mtllib stmt | smoothing stmt | unknown stmt ;
-
-comment = "#", { any char }, newline ;
-vertex = "v", float, float, float, [ float ] ;             (* x y z [w] *)
-texcoord = "vt", float, [ float ], [ float ] ;              (* u [v] [w] *)
-normal = "vn", float, float, float ;                        (* x y z *)
-face = "f", face vertex, face vertex, face vertex, { face vertex } ;
-face vertex = index, [ "/", [ index ], "/", index | "/", index ] ;
-object stmt = "o", [ name ] ;
-group stmt = "g", { name } ;                                (* 0+ simultaneous names *)
-usemtl stmt = "usemtl", [ name ] ;
-mtllib stmt = "mtllib", name, { name } ;                    (* 1+ library names *)
-smoothing stmt = "s", ( "off" | digit, { digit } ) ;
-unknown stmt = { any char } ;                                (* any other real line,
-                                                                  retained verbatim *)
-
-float = [ "-" ], digit, { digit }, [ ".", digit, { digit } ],
-        [ ( "e" | "E" ), [ "-" | "+" ], digit, { digit } ] ;
-index = [ "-" ], digit, { digit } ;
-name = non blank char, { non blank char } ;
+document = "semio", "stdio.obj.dsl", "v1", snapshot ;
+snapshot = "schema", "=", text, [ "mtllib", "=", text ],
+ "vertices", "=", "[", { vertex }, "]", "texcoords", "=", "[", { texcoord }, "]",
+ "normals", "=", "[", { normal }, "]", "faces", "=", "[", { face }, "]",
+ "groups", "=", "[", { membership }, "]", "objects", "=", "[", { membership }, "]",
+ "usemtl", "=", "[", { material }, "]", "smoothing-groups", "=", "[", { smoothing }, "]",
+ "unknown-statements", "=", "[", { unknown }, "]" ;
+vertex = "{", "x", "=", number, "y", "=", number, "z", "=", number, [ "w", "=", number ], "}" ;
+texcoord = "{", "u", "=", number, "v", "=", number, [ "w", "=", number ], "}" ;
+normal = "{", "x", "=", number, "y", "=", number, "z", "=", number, "}" ;
+face = "{", "vertices", "=", "[", { corner }, "]", "}" ;
+corner = "{", "vertex", "=", unsigned32, [ "texcoord", "=", unsigned32 ], [ "normal", "=", unsigned32 ], "}" ;
+membership = "{", "name", "=", text, "faces", "=", "[", { unsigned64 }, "]", "}" ;
+material = "{", "face-index-from", "=", unsigned64, "material", "=", text, "}" ;
+smoothing = "{", "face-index-from", "=", unsigned64, [ "group", "=", unsigned32 ], "}" ;
+unknown = "{", "line-index", "=", unsigned64, "raw", "=", text, "}" ;
+number = finite | "inf" | "-inf" | "NaN" | "nan64_", hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex, hex ;
+finite = [ "-" ], digit, { digit }, [ ".", digit, { digit } ], [ ("e" | "E"), [ "+" | "-" ], digit, { digit } ] ;
+unsigned32 = digit, { digit } ;
+unsigned64 = digit, { digit } ;
+text = identifier | quoted ;
+identifier = letter, { letter | digit | "_" | "." | "-" } ;
+quoted = '"', { escaped | character }, '"' ;
+escaped = "\\", character ;
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+hex = digit | "a" | "b" | "c" | "d" | "e" | "f" ;

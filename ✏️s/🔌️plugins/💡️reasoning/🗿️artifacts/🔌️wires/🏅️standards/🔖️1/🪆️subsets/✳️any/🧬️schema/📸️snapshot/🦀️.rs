@@ -28,6 +28,13 @@ pub struct WiresSnapshot {
     #[state(artifact)]
     pub meta: DslValue,
 }
+#[path="📦️pack/🦀️.rs"]
+pub(crate) mod owned_pack;
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge

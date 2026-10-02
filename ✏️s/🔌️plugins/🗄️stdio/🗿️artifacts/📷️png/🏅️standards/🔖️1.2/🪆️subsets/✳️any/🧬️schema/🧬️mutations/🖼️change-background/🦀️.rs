@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeBackgroundMutati
         }
         vec![PngMutation::ChangeBackground(ChangeBackgroundMutation { bkgd: base.bkgd.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change background", "Hintergrund ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change background", "Hintergrund ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-background".into()]
@@ -47,8 +47,8 @@ pub fn contribute(base: &PngSnapshot, bkgd: &Option<PngBackground>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🖼️change-background/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-background payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🖼️change-background/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-background payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

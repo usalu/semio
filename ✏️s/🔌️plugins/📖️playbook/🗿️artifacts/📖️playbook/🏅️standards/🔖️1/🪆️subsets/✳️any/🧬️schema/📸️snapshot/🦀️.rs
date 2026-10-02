@@ -78,8 +78,8 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookSnapshot {
             ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
             ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
             ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
-            ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
-            ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
+            ("document".to_string(), semio_framework_value::ToValue::to_value(&self.document)),
+            ("flow".to_string(), semio_framework_value::ToValue::to_value(&self.flow)),
         ])
     }
 }
@@ -93,8 +93,8 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookSnapshot {
             id: ::semio_framework_os_kernel::FromValue::from_value(field("id")?)?,
             version: ::semio_framework_os_kernel::FromValue::from_value(field("version")?)?,
             title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
-            document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
-            flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+            document: semio_framework_value::FromValue::from_value(field("document")?)?,
+            flow: semio_framework_value::FromValue::from_value(field("flow")?)?,
         })
     }
 }
@@ -161,6 +161,7 @@ impl store::ArtifactDsl for PlaybookSnapshot {
 }
 
 impl store::ArtifactPack for PlaybookSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&PlaybookPackRecord::__dsl_spec(), &PlaybookPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
@@ -172,7 +173,7 @@ impl store::ArtifactPack for PlaybookSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &PlaybookPackRecord::__dsl_spec(), options)?;
-        PlaybookPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
+        PlaybookPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
         Some(PlaybookPackRecord::__dsl_spec())
@@ -197,3 +198,10 @@ pub fn print_playbook_dsl(snapshot: &PlaybookSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️ExternalBridges
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

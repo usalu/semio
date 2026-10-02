@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `stdio.semio.value` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it — so the reference registered below is a second IMPLEMENTATION in another language rather than a third-party package.",
   "oracles": [
@@ -618,5 +618,6 @@
       "family": "structural",
       "notes": "Applied set-value (payload {\"path\": [{\"kind\": \"key\", \"key\": \"revision\"}], \"value\": {\"kind\": \"int\", \"lexeme\": \"999\"}, \"mutation\": \"setValue\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

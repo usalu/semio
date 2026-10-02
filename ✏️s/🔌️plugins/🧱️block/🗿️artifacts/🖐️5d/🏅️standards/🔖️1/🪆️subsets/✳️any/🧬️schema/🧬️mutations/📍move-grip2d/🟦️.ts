@@ -1,7 +1,8 @@
+import type {Binary64} from '../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts';
 /** 📍 `MoveGrip2d` mutation payload — mirrors `🦀️.rs`. */
 
 export interface MoveGrip2d {
   id: string;
-  newAngle: number;
-  newRadius2d: number;
+  newAngle: Binary64;
+  newRadius2d: Binary64;
 }

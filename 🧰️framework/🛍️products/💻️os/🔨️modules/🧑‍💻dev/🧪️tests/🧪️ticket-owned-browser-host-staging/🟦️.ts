@@ -1,3 +1,4 @@
+import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import * as Vitest from "vitest";
 import * as Fs from "node:fs";
@@ -1052,7 +1053,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     });
 
     it.runIf(Boolean(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH))("checks actual compiled distribution bytes and preserves the entire old primary distribution", async () => {
-      const { pathEmojiStatuteFindings, loadTaxonomy } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+      const { loadTaxonomy } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
       const compiled = resolve(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH!), artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
       expect(relative(artifacts, compiled)).toMatch(/^distribution-compiled-[A-Za-z0-9]+$/u);
       const manifest = parseDistributionManifest(JSON.parse(readFileSync(join(compiled, DISTRIBUTION_LAYOUT.manifest), "utf8")), DISTRIBUTION_LAYOUT);

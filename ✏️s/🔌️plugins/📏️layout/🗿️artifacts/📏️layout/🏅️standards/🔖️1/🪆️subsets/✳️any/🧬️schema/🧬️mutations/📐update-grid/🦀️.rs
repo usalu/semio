@@ -24,8 +24,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateGrid {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_grid(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update baseline grid", "Grundlinienraster aktualisieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Update baseline grid", "Grundlinienraster aktualisieren")
     }
 }
 

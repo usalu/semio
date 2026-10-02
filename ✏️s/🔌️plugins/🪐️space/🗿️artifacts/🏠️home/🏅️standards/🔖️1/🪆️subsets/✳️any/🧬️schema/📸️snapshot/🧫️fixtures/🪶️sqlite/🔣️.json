@@ -1,0 +1,50 @@
+{
+  "dialect": {
+    "artifactKind": "s.space.home",
+    "standard": "1",
+    "subset": "*"
+  },
+  "cases": [
+    {
+      "schema": "",
+      "catalogGeneration": "0"
+    },
+    {
+      "schema": "Home 世界\u0000 intermediary",
+      "catalogGeneration": "9007199254740993"
+    },
+    {
+      "schema": "owned Home state",
+      "catalogGeneration": "18446744073709551615"
+    }
+  ],
+  "schemaScanSeeds": ["世界", "🏠🧱"],
+  "schemaScanRepeat": 65536,
+  "invalidGenerations": [
+    "-1",
+    "18446744073709551616"
+  ],
+  "renumberSql": [
+    "UPDATE home_document SET id=-17"
+  ],
+  "editedSchema": "SQL edited 🏠 field",
+  "editedGenerationHigh": 2147483648,
+  "editedGenerationLow": 17,
+  "invalidDialects": [
+    {
+      "artifactKind": "s.space.studio",
+      "standard": "1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.space.home",
+      "standard": "2",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.space.home",
+      "standard": "1",
+      "subset": "unknown"
+    }
+  ]
+}

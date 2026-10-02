@@ -49,8 +49,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberM
         vec![super::JsonMutation::RemoveMember(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-member".to_string()]

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The config state lane of `s.energy.model`'s viewer (👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config): its mutation vocabulary `EnergyModelViewerWindowConfigMutation` over `EnergyModelViewerWindowConfig`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🎚️mutate-energy-model-1-any-viewer-view-model-config` and backed by one committed vector per declared outcome class.",
   "oracles": [],

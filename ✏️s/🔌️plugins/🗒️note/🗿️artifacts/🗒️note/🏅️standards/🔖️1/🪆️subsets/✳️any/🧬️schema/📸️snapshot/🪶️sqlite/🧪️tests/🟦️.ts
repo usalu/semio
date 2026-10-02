@@ -79,3 +79,11 @@ test("Note iteratively reconstructs the neutral deep containment fixture", async
   for (let i = 0; i < plan.depth; i++) { if (node.kind !== "group") throw new Error("expected group"); expect(node.children.length).toBe(1); node = node.children[0]!; }
   expect(node.id).toBe(plan.leafId);
 });
+
+
+test("Note direct domain rows use their exact allowance without file metadata",async()=>{
+  const {default:Ajv}=await import("ajv/dist/2020");const plan=await Bun.file(new URL("../🧫️fixtures/🚦️control.json",import.meta.url)).json();const schema=await Bun.file(new URL("../🧫️fixtures/🚦️control.schema.json",import.meta.url)).json();expect(new Ajv({strict:true}).validate(schema,plan)).toBe(true);
+  const snapshot=await fixture();snapshot.blocks=[];snapshot.assets={};snapshot.linkedArtifact=null;snapshot.title="x".repeat(plan.longTextBytes);
+  const database=await noteSnapshotToSqliteDatabase(snapshot,{maxRows:plan.directRows});expect(database.tables.reduce((count,table)=>count+table.rows.length,0)).toBe(plan.directRows);expect(await noteSnapshotFromSqliteDatabase(database,{maxRows:plan.directRows})).toEqual(snapshot);
+  const sql=Database.deserialize(await exportSqliteDatabase(database,{maxRows:plan.directRows}));try{expect(sql.query("SELECT COUNT(*) AS count,LENGTH(title) AS length FROM note_document").get()).toEqual({count:plan.directRows,length:plan.longTextBytes});}finally{sql.close();}
+});

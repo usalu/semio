@@ -2,8 +2,6 @@
   "IntroduceGeometryObject": {
     "geometryObject": {
       "id": "geom.pr600",
-      "parameterBindings": {},
-      "ports": [],
       "shape": {
         "node": "primitive",
         "kind": "box",
@@ -13,9 +11,11 @@
           "width": 0.6
         }
       },
+      "symbolic": null,
       "spaces": [],
       "surfaces": [],
-      "symbolic": null
+      "ports": [],
+      "parameterBindings": {}
     }
   }
 }

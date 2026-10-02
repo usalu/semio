@@ -26,7 +26,7 @@
 //   bun 📜️script.ts svg-project --input <a.svg>
 //   bun 📜️script.ts svg-compare --input <expected.svg> --input <actual.svg>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts — the sibling
 //      probe suite this file's CLI/dispatch/compare shape is mirrored from (both hand the
 //      structural equality itself to this file, never to a computed prediction)
@@ -186,5 +186,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 }
 
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
+// 🚰️ `exitCode`, never `process.exit()`: the orchestrator reads stdout through a pipe that bun is still draining, and an
+// explicit exit cuts the report at 64 KiB, so any larger report parses as nothing.
+if (import.meta.main) process.exitCode = await main(process.argv.slice(2));
 //#endregion 🚀️Entry

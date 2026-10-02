@@ -6,8 +6,9 @@
 //! `<lane> publication is retiring a rejected authority`, so the host saw
 //! `typed-operation failed: …` on every turn of the drain and `invokeExtension` never completed.
 
+use semio_framework_2d::compute::EngineHandles;
 use super::{
-    ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, EngineHandles, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner,
+    ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner,
     WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry,
 };
 use crate::app::{
@@ -36,16 +37,16 @@ fn grant(fixture: &serde_json::Value) -> store::ArtifactStoreOneItemGrant {
 }
 
 //#region ♻️RetirementFixtureLeaves
-impl store::retirement::RetireOwned for PublicationPresence {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::leaf(self.revision)
+impl semio_framework_value::retirement::RetireOwned for PublicationPresence {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::leaf(self.revision)
     }
 }
 
-impl store::retirement::RetireOwned for PublicationPresenceMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for PublicationPresenceMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self::ChangePublicationPresence(value) = self;
-        store::retirement::leaf(value.revision)
+        semio_framework_value::retirement::leaf(value.revision)
     }
 }
 
@@ -62,8 +63,8 @@ fn presence_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPrep
     Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
         presence_footprint,
         presence_transfer,
-        Arc::new(store::retirement::OwnedValueRetirementFactory::<PublicationPresence>::default()),
-        Arc::new(store::retirement::OwnedValueRetirementFactory::<PublicationPresenceMutation>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationPresence>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationPresenceMutation>::default()),
     ))
 }
 
@@ -80,8 +81,8 @@ fn transient_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPre
     Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
         transient_footprint,
         transient_transfer,
-        Arc::new(store::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default()),
-        Arc::new(store::retirement::OwnedValueRetirementFactory::<PublicationTransientMutation>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default()),
+        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransientMutation>::default()),
     ))
 }
 
@@ -307,7 +308,7 @@ impl ArtifactApp for RetirementApp {
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-        built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
+        built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}", doc.snapshot.count)))
     }
 }
 //#endregion ♻️RetirementFixtureApp
@@ -377,7 +378,7 @@ fn retire_accepted(pending: &mut PendingArtifactStorePublication<RetirementApp>,
 }
 
 fn retirement_view() -> ViewModel {
-    ViewModel { window_id: Some("publication-retirement-window-left".into()), window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }], ..Default::default() }
+    ViewModel { window_id: Some("publication-retirement-window-left".into()), window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn document_mutation(value: i32) -> TestMutation {

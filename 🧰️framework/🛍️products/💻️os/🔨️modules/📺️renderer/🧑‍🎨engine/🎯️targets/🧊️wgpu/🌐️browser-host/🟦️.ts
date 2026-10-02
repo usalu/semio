@@ -216,6 +216,10 @@ function wireInput(root: HTMLElement, canvas: HTMLCanvasElement, transport: Brow
         }
         observed("paste", startedAt);
     }, options);
+    root.ownerDocument.addEventListener("visibilitychange", () => {
+        if (root.ownerDocument.visibilityState === "hidden")
+            transport.setHostPageHidden();
+    }, options);
     return () => {
         cleanupKeyboard();
         abort.abort();

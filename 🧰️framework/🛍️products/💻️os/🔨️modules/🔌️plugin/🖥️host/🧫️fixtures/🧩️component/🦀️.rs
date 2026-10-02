@@ -2,7 +2,8 @@
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::declarations::{ArtifactDeclaration as DeclaredArtifact,StandardDeclaration,MediaDeclaration,SubsetDeclaration,SchemaDeclaration,IoDeclaration,NativeCodecs,LanguagePair,SurfaceDeclaration};
-use semio_framework_schema::{ArtifactSchemaDescriptor,FacetLeaves};
+use semio_framework_schema_registry::ArtifactSchemaDescriptor;
+use semio_framework_schema_registry::FacetLeaves;
 const KIND:&str="fixture.neutral-host-fixture.counter";
 const DIALECT:Dialect=Dialect{artifact_kind:KIND,standard:StandardId("1"),subset:SubsetId::ANY};
 #[derive(Default)]
@@ -19,7 +20,7 @@ impl<const VIEWER:bool> ArtifactApp for CounterApp<VIEWER> {
     type Transient=NoTransient;type TransientMutation=NoTransientMutation;
     type Command=crate::Mutation;
     async fn initial_snapshot()->Self::Snapshot {crate::Snapshot::default()}
-    async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_os_kernel::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}
+    async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d::compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}
     async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree{root})}
 }
 semio_framework_dispatch_macros::dyn_enum_close! {

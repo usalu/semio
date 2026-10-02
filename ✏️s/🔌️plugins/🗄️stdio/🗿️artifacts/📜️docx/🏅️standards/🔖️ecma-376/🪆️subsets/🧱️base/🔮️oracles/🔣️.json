@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ DOCX ECMA-376/✳️any's own contribution to the repository test platform -- its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). A DOCX is a ZIP of XML parts, and both `zip` 6 and `quick-xml` 0.42 are already linked and are genuinely independent of this repository's own codec: `zip` unzips/rezips the OPC container, `quick-xml` parses/edits/re-serializes the OOXML parts (word/document.xml, word/styles.xml, [Content_Types].xml, every *.rels). Registered as ONE oracle entry naming the composition -- neither library alone reads a DOCX; the pair together is the real independent implementation, and this subset's own oracle module (../🦀️oracle.rs) is the composition code, not a third dependency.",
   "oracles": [
@@ -21,11 +21,11 @@
           "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
-        "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+        "plan": "The same reach the `zip` oracle records in 🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
       },
       "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "packages": [
         {
           "package": "quick-xml",
@@ -443,7 +443,10 @@
         {
           "id": "replace-xml-node",
           "capability": "docx-ecma-376-mutate",
-          "outcomes": ["applied", "rejected"],
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
           "productionDispatch": {
             "operation": "replace-xml-node",
             "bridgeVersion": 1,
@@ -2436,5 +2439,6 @@
       "family": "structural",
       "notes": "The package relationship to docProps/core.xml dropped, so the part is no longer written."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

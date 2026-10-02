@@ -160,8 +160,8 @@
         },
         "outbound": {
           "type": "array",
-          "minItems": 10,
-          "maxItems": 10,
+          "minItems": 11,
+          "maxItems": 11,
           "items": {
             "$ref": "#/definitions/shape"
           }
@@ -182,8 +182,8 @@
           "items": {
             "type": "string"
           },
-          "minItems": 5,
-          "maxItems": 5
+          "minItems": 6,
+          "maxItems": 6
         },
         "hostFramePayloadKinds": {
           "const": [

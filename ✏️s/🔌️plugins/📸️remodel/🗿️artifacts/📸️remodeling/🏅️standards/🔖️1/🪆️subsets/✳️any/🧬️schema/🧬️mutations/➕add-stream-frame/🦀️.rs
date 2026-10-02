@@ -36,8 +36,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AddStrea
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Add frame {} to stream \"{}\"", self.frame.index, self.id), &format!("Einzelbild {} zu Datenstrom \"{}\" hinzufügen", self.frame.index, self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add frame {} to stream \"{}\"", self.frame.index, self.id), &format!("Einzelbild {} zu Datenstrom \"{}\" hinzufügen", self.frame.index, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

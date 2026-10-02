@@ -2,5 +2,8 @@
   "largeTextBytes": 65537,
   "workItems": 600,
   "smallBudgetBytes": 4096,
-  "cancelAfterWork": 256
+  "cancelAfterWork": 256,
+  "controlledNative": {"text":"世界 🖊️", "repeat":10000, "cancelAfter":65536},
+  "intermediateXRecord": {"groupCode":32767,"binaryLength":256,"text":"literal intermediate 世界 🖊️"},
+  "rootAdmissionMaximumRows":21
 }

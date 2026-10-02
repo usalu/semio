@@ -12,7 +12,7 @@ async fn set_filter_min_availability_clamps_to_zero() {
     // for an unreasonably high min-availability; assert the clamp directly through a second command
     // that reports back the applied absolute value.
     dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(SetFilterMinAvailability { delta: Some(0.0), value: None })).await;
-    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, pool::SOURCING_CURATION_BODY_POOL, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, pool::SOURCING_CURATION_BODY_POOL, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let semio_framework_plugin::Component::Surface(props) = &rendered.root.children.iter().find(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_))).expect("pool table surface").component else { unreachable!() };
     let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
     // A clamped-to-zero min-availability keeps every stock row (all availabilities are >= 0).

@@ -20,8 +20,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetArithmetic 
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::SetArithmetic(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set arithmetic", "Arithmetische Kodierung setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set arithmetic", "Arithmetische Kodierung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

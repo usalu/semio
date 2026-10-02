@@ -433,10 +433,10 @@ pub struct SliderControlPresentation {
     pub unit_cell: Option<Rect>,
 }
 
-/// 🏷️ React's declarative-control unit sibling: declared value plus one separating space and the
-/// authored unit. An empty unit has the same no-wrapper meaning as React's falsy `control.unit`.
-pub fn slider_unit_label(value: f64, unit: Option<&str>) -> Option<String> {
-    unit.filter(|unit| !unit.is_empty()).map(|unit| format!("{} {unit}", ui_contract::format_ui_number(value)))
+/// 🏷️ React's declarative-control unit sibling: the declared value's display text plus one separating space and the
+/// shown unit. An empty unit has the same no-wrapper meaning as React's falsy `control.unit`.
+pub fn slider_unit_label(text: &str, unit: Option<&str>) -> Option<String> {
+    unit.filter(|unit| !unit.is_empty()).map(|unit| format!("{text} {unit}"))
 }
 
 /// 🧩️ Splits the conceptual Slider composite into its growing Slider and shrink-to-content unit
@@ -479,16 +479,6 @@ pub fn number_stepper_segments(bounds: Rect, inline: ui_contract::FlowInline, bo
     [Rect::new(x(0.0, side), bounds.y + border, side, bounds.h), Rect::new(x(side, middle), bounds.y + border, middle, bounds.h), Rect::new(x(side + middle, side), bounds.y + border, side, bounds.h)]
 }
 
-/// 🎚️ The value a `Slider` press/drag at `x` reports on its resolved track cell, snapped onto `step` and clamped into
-/// `min..=max` — Radix's own `Slider` semantics, which React's `SliderView` delegates to.
-pub fn slider_value_at(bounds: Rect, x: f32, min: f64, max: f64, step: f64, snaps: &[f64]) -> f64 {
-    let span = max - min;
-    if !span.is_finite() || span <= 0.0 {
-        return min;
-    }
-    let ratio = if bounds.w > 0.0 { f64::from((x - bounds.x) / bounds.w).clamp(0.0, 1.0) } else { 0.0 };
-    crate::wgpu::slider::slider_pointer_value(min + ratio * span, min, max, step, snaps)
-}
 
 /// 💍️ The normalised `t` a `Ring` press/drag at `(x, y)` reports, on the same circle `paint`'s ring
 /// arm draws its knob at (`angle = TAU * t`, centre of `bounds`, radius `min(w, h) * 0.4`).

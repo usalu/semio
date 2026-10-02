@@ -7,7 +7,18 @@ use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWin
 use crate::editor::bitmap::transient::BitmapTransient;
 use crate::schema::snapshot::{decode_base64, BitmapColor};
 use crate::BitmapSnapshot;
-use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants

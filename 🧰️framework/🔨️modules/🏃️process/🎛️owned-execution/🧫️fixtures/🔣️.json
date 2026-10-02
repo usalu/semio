@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "name": "complete UTF-8 progress lines",
+      "mode": "lines",
+      "expectedLines": [
+        "first 🧪",
+        "last"
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "pre-cancel refuses child creation",
+      "mode": "pre-abort",
+      "expectedLines": [],
+      "expectedError": "cancelled"
+    },
+    {
+      "name": "live cancellation stops child",
+      "mode": "abort",
+      "expectedLines": [
+        "ready"
+      ],
+      "expectedError": "cancelled"
+    },
+    {
+      "name": "nonzero status remains an error",
+      "mode": "failure",
+      "expectedLines": [],
+      "expectedError": "failed (7)"
+    }
+  ],
+  "progress": {
+    "label": "artifact-rust:fixture:build",
+    "intervalMs": 1,
+    "pattern": "^\\[artifact-rust:fixture:build\\] running elapsedMs=[0-9]+$"
+  }
+}

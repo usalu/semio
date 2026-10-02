@@ -7,13 +7,22 @@
 use crate::viewer::block3d::modes::view;
 use crate::viewer::block3d::modes::view::windows::world;
 use crate::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect`/`InteractionView` are
 // only reachable through `app`, not yet in the crate-root re-export list (`ArtifactViewer`/`Viewer`/
 // `ViewEmit` are — closed by W0-F).
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{ArtifactViewer, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

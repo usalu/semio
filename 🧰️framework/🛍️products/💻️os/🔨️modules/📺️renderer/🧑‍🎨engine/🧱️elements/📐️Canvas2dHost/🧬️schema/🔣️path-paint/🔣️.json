@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://framework/os/renderer/canvas2d-host/path-paint",
+  "title": "Canvas2d path paint corpus",
+  "description": "🧫️ Language-agnostic cases for the Canvas2d `segments` scene node (`🎨️paint` `drawSceneNode`): one path layer (segments, optional local transform, solid fill, stroke, fill rule), the host camera and viewport — out comes the paint every probe pixel shows in screen-logical pixels: `stroke` (painted over the fill), `fill` or `none`. Every probe keeps at least `margin` pixels from every fill and stroke boundary, so any faithful rasterization agrees. React `drawSceneNode` and the wgpu twin `canvas2d_paint` both replay every case.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["margin", "cases"],
+  "properties": {
+    "margin": { "type": "number", "exclusiveMinimum": 0, "description": "Minimum screen distance of every probe from every paint boundary." },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "story", "viewport", "camera", "layer", "probes"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "story": { "type": "string", "minLength": 1 },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "camera": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "zoom"],
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "layer": { "$ref": "#/definitions/Layer" },
+        "probes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Probe" } }
+      }
+    },
+    "Layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "segments"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "segments": { "type": "array", "items": { "$ref": "#/definitions/Segment" } },
+        "transform": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "number" }, "description": "Local affine `[a, b, c, d, e, f]` in canvas `transform` order." },
+        "fill": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["color"],
+          "properties": { "color": { "$ref": "#/definitions/Color" } }
+        },
+        "stroke": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["color", "width"],
+          "properties": {
+            "color": { "$ref": "#/definitions/Color" },
+            "width": { "type": "number", "exclusiveMinimum": 0, "description": "Line width in layer units." },
+            "dash": { "type": "array", "minItems": 1, "items": { "type": "number", "exclusiveMinimum": 0 }, "description": "Dash pattern in layer units." },
+            "cap": { "enum": ["butt", "round", "square"] },
+            "join": { "enum": ["miter", "round", "bevel"] }
+          }
+        },
+        "fillRule": { "enum": ["evenodd", "nonzero"] }
+      }
+    },
+    "Segment": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "to"], "properties": { "kind": { "const": "move" }, "to": { "$ref": "#/definitions/Vec2" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "to"], "properties": { "kind": { "const": "line" }, "to": { "$ref": "#/definitions/Vec2" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "ctrl", "to"], "properties": { "kind": { "const": "quad" }, "ctrl": { "$ref": "#/definitions/Vec2" }, "to": { "$ref": "#/definitions/Vec2" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "ctrl1", "ctrl2", "to"], "properties": { "kind": { "const": "cubic" }, "ctrl1": { "$ref": "#/definitions/Vec2" }, "ctrl2": { "$ref": "#/definitions/Vec2" }, "to": { "$ref": "#/definitions/Vec2" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rx", "ry", "rotation", "largeArc", "sweep", "to"],
+          "properties": {
+            "kind": { "const": "arc" },
+            "rx": { "type": "number" },
+            "ry": { "type": "number" },
+            "rotation": { "type": "number", "description": "Ellipse x-axis rotation in degrees (SVG)." },
+            "largeArc": { "type": "boolean" },
+            "sweep": { "type": "boolean" },
+            "to": { "$ref": "#/definitions/Vec2" }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "close" } } }
+      ]
+    },
+    "Probe": {
+      "description": "A screen-logical pixel `at` (relative to the canvas's top-left corner) and the paint it shows.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "paint", "reason"],
+      "properties": {
+        "at": { "$ref": "#/definitions/Vec2" },
+        "paint": { "enum": ["stroke", "fill", "none"] },
+        "reason": { "enum": ["inside", "hole", "outside", "on-stroke", "dash-gap", "no-paint"], "description": "Why the probe shows its paint; `dash-gap` probes sit on the stroke centreline between two dashes." }
+      }
+    },
+    "Vec2": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+    "Color": { "type": "array", "minItems": 3, "maxItems": 4, "items": { "type": "number", "minimum": 0, "maximum": 1 } }
+  }
+}

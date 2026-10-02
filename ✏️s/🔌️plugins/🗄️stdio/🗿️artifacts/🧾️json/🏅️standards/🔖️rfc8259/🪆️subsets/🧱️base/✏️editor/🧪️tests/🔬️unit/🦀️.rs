@@ -4,7 +4,7 @@ use crate::schema::snapshot::JsonValue;
 /// 🧬️ Registers the document schema json's declaration contributes (`.schema(json_artifact_schema_descriptor())`) — the
 /// registered contract every snapshot edit validates against; a fixture editor runs without the plugin assembly that publishes it.
 fn register_document_schema() {
-    semio_framework_schema::register_artifact_schema_descriptors(vec![crate::schema::json_artifact_schema_descriptor()]).expect("the json document schema registers");
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::schema::json_artifact_schema_descriptor()]).expect("the json document schema registers");
 }
 
 #[test]
@@ -86,7 +86,7 @@ async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
         let command = JsonAnyEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision, value: source.into() };
         let emit = json_any_emit(&command, &snapshot, None).expect("valid JSON value");
         let next = protocol::MutationDiff::apply(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
-        let native = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("native parser").value;
+        let native = crate::schema::snapshot::parse_json_text(source).expect("JSON file parser");
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
         assert_eq!(next.value, native);
         assert_eq!(serde_json::Value::from(&next.value), expected);
@@ -186,7 +186,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio-edited\"")]).await.expect("set-node settles");
     let printed = <JsonSnapshot as store::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
-    assert!(printed.contains("\"semio-edited\"") && !printed.contains("\"semio\","), "{printed}");
+    let restored=<JsonSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[name_index].value,JsonValue::String{value:"semio-edited".into()});
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
@@ -197,7 +197,9 @@ async fn source_edit_reaches_the_document_through_the_retained_event_route() {
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     dispatch_settled(&mut app, "set-node", &[("nodeId", main::JSON_ROOT_NODE_ID), ("revision", &revision), ("value", source)]).await.expect("source edit settles");
     let after = app.snapshot().expect("json snapshot");
-    assert_eq!(after, <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("expected source"));
+    assert_eq!(after, JsonSnapshot { schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(), value:crate::schema::snapshot::parse_json_text(source).expect("expected source") });
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", JsonAnyEditor, || semio_framework_plugin::App { definition: create_json_editor(), examples: Vec::new() }, "../..");

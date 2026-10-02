@@ -21,8 +21,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::SetSharedString(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set shared string", "Gemeinsame Zeichenfolge setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set shared string", "Gemeinsame Zeichenfolge setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

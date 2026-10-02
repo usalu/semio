@@ -75,7 +75,7 @@ fn neutral_document_boundary_fixture_round_trips_all_doctype_positions() {
         let source = case["source"].as_str().expect("source");
         let doc = xml_document_from_text(source).unwrap_or_else(|error| panic!("{}: {error}", case["id"]));
         let doctype = doc.doctype.as_ref().expect("doctype");
-        assert_eq!(doctype.prolog_position, case["doctypePosition"].as_u64().expect("doctype position") as usize, "{}", case["id"]);
+        assert_eq!(doctype.prolog_position, case["doctypePosition"].as_u64().expect("doctype position"), "{}", case["id"]);
         assert_eq!(doc.prolog.iter().map(boundary_kind).collect::<Vec<_>>(), case["prologKinds"].as_array().expect("prolog kinds").iter().map(|value| value.as_str().expect("kind")).collect::<Vec<_>>(), "{}", case["id"]);
         assert_eq!(doc.epilog.iter().map(boundary_kind).collect::<Vec<_>>(), case["epilogKinds"].as_array().expect("epilog kinds").iter().map(|value| value.as_str().expect("kind")).collect::<Vec<_>>(), "{}", case["id"]);
         let exported = xml_document_to_text_checked(&doc).expect("valid authored document");

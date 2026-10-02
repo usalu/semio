@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. buildingSMART BCF-XML 2.1 stores each topic's screen-capture image as its own `snapshot.png` file inside the topic folder, sibling to but distinct from `markup.bcf` and `viewpoint.bcfv`. `set-viewpoint-snapshot` is that file's own mutation, owned here rather than by `🖊️markup`, for the same family-module reuse rationale as `../../👁️viewpoint/🔮️oracles/🔣️.json`.",
   "oracles": [],
@@ -61,5 +61,6 @@
         "set-viewpoint-snapshot"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

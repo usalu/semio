@@ -20,8 +20,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetData {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetData(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set data", "Daten setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set data", "Daten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

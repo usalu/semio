@@ -68,7 +68,7 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -78,7 +78,7 @@ fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_document_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let document = oversized_flow_document(OVERSIZED);
-    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::default());
+    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let tree = render(&document, labels, &TreeWindows::unhosted()).expect("the document tree builds");
     let widgets = window_law_node(&tree, WIDGETS_SECTION);
     let (total, offset) = window_law_extent(widgets);
@@ -91,7 +91,7 @@ async fn an_oversized_document_stamps_the_full_total_and_materialises_at_most_it
 #[semio_framework_async_macros::async_test]
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let document = oversized_flow_document(OVERSIZED);
-    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::default());
+    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let view = window_law_view(vec![window_law_request(WIDGETS_SECTION, Some(false), 0, 32)]);
     let tree = render(&document, labels, &TreeWindows::for_body(&view, FLOW_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let widgets = window_law_node(&tree, WIDGETS_SECTION);
@@ -102,7 +102,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_target_id() {
     let document = oversized_flow_document(OVERSIZED);
-    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::default());
+    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let view = window_law_view(vec![window_law_request(WIDGETS_SECTION, Some(true), 90, 7)]);
     let tree = render(&document, labels, &TreeWindows::for_body(&view, FLOW_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let widgets = window_law_node(&tree, WIDGETS_SECTION);
@@ -114,7 +114,7 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_
 #[semio_framework_async_macros::async_test]
 async fn pick_rows_carry_a_granularity_and_the_tree_root_carries_the_one_interaction_select() {
     let document = oversized_flow_document(4);
-    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::default());
+    let labels = crate::editor::flow::terminology::flow_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let tree = render(&document, labels, &TreeWindows::unhosted()).expect("the document tree builds");
     assert_eq!(tree.bindings.len(), 1, "exactly one tree-level binding");
     assert_eq!(tree.bindings.iter().next().expect("the tree binding").action.name.as_str(), INTERACTION_SELECT_ACTION_ID);

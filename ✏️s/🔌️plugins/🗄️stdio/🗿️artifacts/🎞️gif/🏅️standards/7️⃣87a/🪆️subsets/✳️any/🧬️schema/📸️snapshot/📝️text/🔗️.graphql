@@ -1,3 +1,2 @@
-# stdio.gif snapshot text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+"""Serialized owned GIF snapshot text with the declared semantic record grammar."""
+scalar GifSnapshotText

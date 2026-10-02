@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://stdio/dwg/snapshot/text/empty-record/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "record",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "dwg.snapshot.text.empty-record.v1"
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fieldCount",
+        "fieldKey"
+      ],
+      "properties": {
+        "name": {
+          "const": "DwgPlaceholder"
+        },
+        "fieldCount": {
+          "const": 0
+        },
+        "fieldKey": {
+          "const": "placeholder"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

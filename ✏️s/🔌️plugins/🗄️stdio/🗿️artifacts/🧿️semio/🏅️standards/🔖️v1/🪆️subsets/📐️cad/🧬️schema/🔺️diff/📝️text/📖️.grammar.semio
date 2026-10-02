@@ -72,7 +72,7 @@ point2-items = point2 {"," point2}*
 i32 = INT
 bool = "0" | "1"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO — see the sibling `📸️snapshot/📝️text/📖️.grammar.semio`'s own `hex` doc

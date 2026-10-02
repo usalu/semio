@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.pdf.cos-owned-output/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "maximumBytes",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.pdf.cos-owned-output/v1"
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wire"
+        ],
+        "properties": {
+          "wire": {
+            "$ref": "#/$defs/Cos"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Cos": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "negative",
+            "coefficient",
+            "scale"
+          ],
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "negative": {
+              "type": "boolean"
+            },
+            "coefficient": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "name"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Cos"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dict"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Entry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "num",
+            "gen"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "num": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "gen": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dict",
+            "data",
+            "filters"
+          ],
+          "properties": {
+            "kind": {
+              "const": "stream"
+            },
+            "dict": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Entry"
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            "filters": {
+              "type": "array",
+              "maxItems": 0
+            }
+          }
+        }
+      ]
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/Cos"
+        }
+      }
+    }
+  }
+}

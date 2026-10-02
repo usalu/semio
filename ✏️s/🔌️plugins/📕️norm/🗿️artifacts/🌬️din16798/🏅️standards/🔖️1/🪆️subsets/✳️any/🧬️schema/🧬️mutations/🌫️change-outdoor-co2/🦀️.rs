@@ -12,7 +12,7 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeOutdoo
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-co2", kind: "change-outdoor-co2", record: "ChangeOutdoorCo2" };
     fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<<Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change outdoor CO₂ concentration", "CO₂-Konzentration der Außenluft ändern")
     }
 }

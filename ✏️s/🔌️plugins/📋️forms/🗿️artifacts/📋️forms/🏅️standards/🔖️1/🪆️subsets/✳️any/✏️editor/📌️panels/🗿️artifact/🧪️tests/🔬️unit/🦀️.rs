@@ -91,11 +91,11 @@ fn step_path(step_id: &str) -> String {
 const MEASURED_VIEWPORT_ROWS: u32 = 8;
 
 fn viewing(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..Default::default() }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn build(spec: &FormsSnapshot, view: &ViewModel) -> BuiltNode {
-    render(spec, forms_play_labels(&ViewModel::default()), &TreeWindows::for_body(view, FORMS_PLAY_BODY_ARTIFACT)).expect("forms document tree assembly")
+    render(spec, forms_play_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, FORMS_PLAY_BODY_ARTIFACT)).expect("forms document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {

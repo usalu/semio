@@ -16,7 +16,10 @@
 //! plain-text producer still renders as the diff summary rather than a blank dialog.
 
 use crate::agent_bridge::{agent_label, ApprovalDecision, PendingAgentApproval};
-use ui_wgpu::wgpu::{Locale, Rect, Rgba, Theme};
+use semio_framework_ui_locale::Locale;
+use ui_wgpu::wgpu::Rect;
+use ui_wgpu::wgpu::Rgba;
+use ui_wgpu::wgpu::Theme;
 
 //#region 🔖️ParseSummary
 /// ⚠️ How dangerous the requested capability is, as the producer declared it.

@@ -159,6 +159,48 @@ fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> BitmapSnapshot {
     }
 }
 
+/// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
+pub(crate) fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<BitmapSnapshot,String>{
+    let maximum_rows=control.limits().max_rows;
+    store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record,native|{
+        let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
+        let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||dsl::__rt::field_error("bitmap native entity count overflow"))?;
+        if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(dsl::__rt::field_error("bitmap native entity count exceeds caller limit"));}
+        native.scoped_stage(|native|{
+            native.begin_stage(entities).map_err(dsl::__rt::field_error)?;
+            let mut palette=native.allocate_vec::<BitmapColor>(parsed.palette.len()).map_err(dsl::__rt::field_error)?;
+            let mut pinned=native.allocate_vec::<BitmapPinnedPixel>(parsed.pinned.len()).map_err(dsl::__rt::field_error)?;
+            for color in parsed.palette{palette.push(BitmapColor{r:color.r,g:color.g,b:color.b,a:color.a});native.step().map_err(dsl::__rt::field_error)?;}
+            for pin in parsed.pinned{pinned.push(BitmapPinnedPixel{x:pin.x,y:pin.y,color:pin.color});native.step().map_err(dsl::__rt::field_error)?;}
+            native.checkpoint().map_err(dsl::__rt::field_error)?;
+            Ok(BitmapSnapshot{schema:parsed.schema,seed:parsed.seed,input:BitmapInput{width:parsed.input_width,height:parsed.input_height,palette,pixels:parsed.input_pixels},output:BitmapOutputSpec{width:parsed.output_width,height:parsed.output_height,periodic:parsed.output_periodic},model:BitmapOverlappingModel{pattern_size:parsed.pattern_size,symmetry:parsed.symmetry,periodic_input:parsed.periodic_input,ground:parsed.ground},pinned})
+        })
+    },control)
+}
+
+/// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
+pub(crate) fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
+    let rows=4usize.checked_add(document.input.palette.len()).and_then(|n|n.checked_add(document.pinned.len())).ok_or("bitmap native entity count overflow")?;
+    control.check_rows(rows)?;
+    store::encode_sqlite_snapshot_record_native(encoding,<BitmapSnapshot as store::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|native|{
+        let schema=native.copy_text(&document.schema).map_err(dsl::__rt::field_error)?;
+        let input_pixels=native.copy_text(&document.input.pixels).map_err(dsl::__rt::field_error)?;
+        let palette=native.scoped_stage(|native|->Result<Vec<BitmapColorDsl>,String>{
+            native.begin_stage(document.input.palette.len())?;
+            let mut values=native.allocate_vec::<BitmapColorDsl>(document.input.palette.len())?;
+            for color in &document.input.palette{values.push(BitmapColorDsl{r:color.r,g:color.g,b:color.b,a:color.a});native.step()?;}
+            native.checkpoint()?;Ok(values)
+        }).map_err(dsl::__rt::field_error)?;
+        let pinned=native.scoped_stage(|native|->Result<Vec<BitmapPinnedPixelDsl>,String>{
+            native.begin_stage(document.pinned.len())?;
+            let mut values=native.allocate_vec::<BitmapPinnedPixelDsl>(document.pinned.len())?;
+            for pin in &document.pinned{values.push(BitmapPinnedPixelDsl{x:pin.x,y:pin.y,color:pin.color});native.step()?;}
+            native.checkpoint()?;Ok(values)
+        }).map_err(dsl::__rt::field_error)?;
+        BitmapSnapshotDsl{schema,seed:document.seed,input_width:document.input.width,input_height:document.input.height,input_pixels,output_width:document.output.width,output_height:document.output.height,output_periodic:document.output.periodic,pattern_size:document.model.pattern_size,symmetry:document.model.symmetry,periodic_input:document.model.periodic_input,ground:document.model.ground,palette,pinned}.__dsl_to_record_controlled(native)
+    },control)
+}
+
 impl store::ArtifactDsl for BitmapSnapshot {
     const EXTENSION: &'static str = "wfcbitmap";
     fn envelope_id() -> &'static str {

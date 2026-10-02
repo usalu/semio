@@ -1,6 +1,7 @@
 use super::*;
 use crate::catalog::{audit_source, compile, description_findings, CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog, CatalogAuditFinding, CatalogSource, DescriptionFinding};
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 /// 📇️ The catalog source an agent actually meets: the repo's generated plugin registry and every
 /// committed `🔣️.json` descriptor, discovered exactly as `semio-os-mcp stdio --folder .` does.

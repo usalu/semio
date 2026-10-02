@@ -39,11 +39,11 @@ CREATE TABLE wfc_grid2d_image (
 );
 CREATE TABLE wfc_grid2d_rule (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL,
- tile_a_id INTEGER NOT NULL REFERENCES wfc_grid2d_tile(id), tile_b_id INTEGER NOT NULL REFERENCES wfc_grid2d_tile(id), direction TEXT NOT NULL CHECK(direction IN ('LEFT','RIGHT','TOP','BOTTOM')), allowed INTEGER NOT NULL CHECK(allowed IN (0,1))
+ tile_a_id TEXT NOT NULL, tile_b_id TEXT NOT NULL, direction TEXT NOT NULL CHECK(direction IN ('LEFT','RIGHT','TOP','BOTTOM')), allowed INTEGER NOT NULL CHECK(allowed IN (0,1))
 );
 CREATE TABLE wfc_grid2d_pin (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0),
- x INTEGER NOT NULL CHECK(x BETWEEN 0 AND 4294967295), y INTEGER NOT NULL CHECK(y BETWEEN 0 AND 4294967295), tile_id INTEGER NOT NULL REFERENCES wfc_grid2d_tile(id)
+ x INTEGER NOT NULL CHECK(x BETWEEN 0 AND 4294967295), y INTEGER NOT NULL CHECK(y BETWEEN 0 AND 4294967295), tile_id TEXT NOT NULL
 );
 CREATE TABLE wfc_grid2d_mask (
  id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid2d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0),

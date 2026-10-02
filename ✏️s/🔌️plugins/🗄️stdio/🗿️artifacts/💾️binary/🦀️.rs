@@ -104,7 +104,7 @@ pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.binary".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Binary", "Binärdatei"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Binary", "Binärdatei"),
         source_format: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

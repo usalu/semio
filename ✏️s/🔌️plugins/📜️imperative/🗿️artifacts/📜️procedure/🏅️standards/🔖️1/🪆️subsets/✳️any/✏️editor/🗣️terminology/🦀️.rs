@@ -5,7 +5,7 @@
 //! `ImperativeConfig` carries no terminology axis.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale
     /// combination compile-checked.
     pub struct ImperativeLabels {

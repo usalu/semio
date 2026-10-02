@@ -30,8 +30,8 @@ pub mod diagnostic;
 #[path = "../../../⚠️diagnostic/📍️span/🦀️.rs"]
 pub mod span;
 
-#[path = "../../../🌱️value/🦀️.rs"]
-pub mod value;
+pub use semio_framework_value as value;
+pub use semio_framework_value::dsl_value;
 
 #[path = "../../🆔️ids/🦀️.rs"]
 pub mod ids;
@@ -98,3 +98,6 @@ pub use crate::source::*;
 pub use crate::span::*;
 pub use crate::value::*;
 pub use crate::wire::*;
+
+#[path = "../../🧬️retirement/🦀️.rs"]
+mod retirement_integration;

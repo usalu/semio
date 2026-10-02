@@ -1,8 +1,5 @@
 use super::*;
 
-#[cfg(feature = "full-artifact-catalog")]
-const NATIVE_CODEC_FACTORY_COUNT: usize = 29;
-
 #[test]
 fn selected_contribution_identities_are_unique_and_schema_owned() {
     let contributions = selected_contributions();
@@ -13,12 +10,21 @@ fn selected_contribution_identities_are_unique_and_schema_owned() {
 #[cfg(feature = "full-artifact-catalog")]
 #[test]
 fn full_catalog_preserves_definition_codec_and_ledger_counts() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️full-roster.json")).unwrap();
     assert_eq!(artifact_assemblies().expect("artifact assemblies").len(), 36);
-    assert_eq!(native_codec_factory_receipts().expect("native codec receipts").len(), NATIVE_CODEC_FACTORY_COUNT);
+    let receipts = native_codec_factory_receipts().expect("native codec receipts");
+    let expected: BTreeSet<_> = fixture["identities"].as_array().unwrap().iter().map(|identity| (identity[0].as_str().unwrap(), identity[1].as_str().unwrap(), identity[2].as_str().unwrap())).collect();
+    let actual: BTreeSet<_> = receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str(), receipt.factory_id.as_str())).collect();
+    assert_eq!(expected.len(), 30);
+    assert_eq!(receipts.len(), expected.len());
+    assert_eq!(actual, expected);
+    assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), 30);
+    assert_eq!(receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect::<BTreeSet<_>>().len(), fixture["artifactKinds"].as_u64().unwrap() as usize);
+    assert_eq!(fixture["artifactKinds"].as_u64().unwrap(), 29);
     let ledger = capability_ledger().expect("capability ledger");
-    assert_eq!(ledger.declared, CapabilityCounts { codecs: 35, mutations: 3, inferences: 67 });
-    assert_eq!(ledger.registered, CapabilityCounts { codecs: 29, mutations: 3, inferences: 67 });
-    assert_eq!(ledger.implemented, CapabilityCounts { codecs: 29, mutations: 0, inferences: 0 });
+    assert_eq!(ledger.declared, CapabilityCounts { codecs: 36, mutations: 3, inferences: 67 });
+    assert_eq!(ledger.registered, CapabilityCounts { codecs: 30, mutations: 3, inferences: 67 });
+    assert_eq!(ledger.implemented, CapabilityCounts { codecs: 30, mutations: 0, inferences: 0 });
     assert_eq!(ledger.verified, CapabilityCounts::default());
 }
 

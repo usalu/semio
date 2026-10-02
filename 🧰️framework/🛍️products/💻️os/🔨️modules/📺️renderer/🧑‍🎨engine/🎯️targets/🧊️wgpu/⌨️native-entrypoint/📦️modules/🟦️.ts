@@ -1,7 +1,7 @@
 import { open } from "node:fs/promises";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
-import { stageArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { fileDigest } from "../../../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
 export type NativeModuleSource = { readonly pluginId: string; readonly wasm: string; readonly descriptor: string };
@@ -41,6 +41,6 @@ export async function publishNativeRuntime(packageRoot: string, variant: string,
     const manifest = join(temporary, "🔣️runtime.json");
     writeFileSync(manifest, content);
     files.set("🔣️runtime.json", manifest);
-    await stageArtifacts(output, `native-runtime:${variant}:${profile}`, files, { signal });
+    await stageRepositoryArtifacts(output, `native-runtime:${variant}:${profile}`, files, { signal });
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

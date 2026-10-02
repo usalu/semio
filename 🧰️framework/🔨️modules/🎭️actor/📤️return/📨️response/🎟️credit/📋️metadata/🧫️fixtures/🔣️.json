@@ -39,6 +39,8 @@
         "slot",
         "startedAtMs",
         "actorId",
+        "kind",
+        "firstTurn",
         "output"
       ]
     },
@@ -142,7 +144,7 @@
       "owners": 1
     },
     "pending": {
-      "bytes": 608,
+      "bytes": 640,
       "slots": 4,
       "owners": 4
     },

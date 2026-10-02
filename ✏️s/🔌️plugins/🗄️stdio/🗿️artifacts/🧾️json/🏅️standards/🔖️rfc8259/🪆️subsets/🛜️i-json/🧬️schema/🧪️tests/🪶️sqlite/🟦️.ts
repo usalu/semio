@@ -1,0 +1,21 @@
+/** 🛡️ Neutral I-JSON guards retain arbitrary syntax while admitting exact named meaning. */
+import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import fixture from "../../../../🧱️base/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import type {JsonSnapshot,JsonValue} from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import {jsonSnapshotToSqliteDatabase,jsonSnapshotFromSqliteDatabase} from "../../../../🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
+import {validateIJsonSnapshotSqliteDialect} from "../../🪶️sqlite/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
+const dialect={artifactKind:"s.stdio.json",standard:"rfc8259",subset:"i-json"};
+function value(input:unknown):JsonValue{if(input===null)return{kind:"null"};if(typeof input==="boolean")return{kind:"bool",value:input};if(typeof input==="string")return{kind:"string",value:input};if(typeof input==="number")return{kind:"number",lexeme:String(input)};if(Array.isArray(input))return{kind:"array",items:input.map(value)};return{kind:"object",members:Object.entries(input as Record<string,unknown>).map(([key,input])=>({key,value:value(input)}))};}
+test("I-JSON neutral typed numeric meaning preserves raw SQL and admits exact numeric limits",async()=>{
+ for(const item of fixture.iJsonTypedNumberCases){const snapshot:JsonSnapshot={schema:"owned",value:{kind:"object",members:[{key:"number",value:{kind:"number",lexeme:item.lexeme}}]}};const database=await jsonSnapshotToSqliteDatabase(snapshot);const diagnostics=await validateIJsonSnapshotSqliteDialect(snapshot,dialect,database);expect(diagnostics.some(d=>d.severity==="error")).toBe(item.hard);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("SELECT number_lexeme FROM json_value WHERE kind='number'").get()).toEqual({number_lexeme:item.lexeme});expect(await jsonSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).toEqual(snapshot);}finally{db.close();}}
+});
+test("I-JSON independent duplicate-key edit, neutral findings and exact identity",async()=>{
+ const snapshot:JsonSnapshot={schema:"owned",value:value({a:1,b:2})};const database=await jsonSnapshotToSqliteDatabase(snapshot);const db=Database.deserialize(await exportSqliteDatabase(database));try{db.query("UPDATE json_object_member SET key='a' WHERE key='b'").run();const restored=await jsonSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())));expect((await validateIJsonSnapshotSqliteDialect(restored,dialect,await jsonSnapshotToSqliteDatabase(restored))).map(d=>d.code)).toEqual(["stdio.json.i-json.duplicate-member-name"]);}finally{db.close();}
+ for(const item of fixture.iJsonCases.filter(item=>!item.text.includes('"a":1,"a":2'))){const snapshot={schema:"owned",value:value(JSON.parse(item.text))};expect((await validateIJsonSnapshotSqliteDialect(snapshot,dialect,await jsonSnapshotToSqliteDatabase(snapshot))).some(d=>d.severity==="error")).toBe(item.hard);}
+ for(const invalid of [{...dialect,artifactKind:"s.stdio.xml"},{...dialect,standard:"1"},{...dialect,subset:"*"}])await expect(validateIJsonSnapshotSqliteDialect(snapshot,invalid,database)).rejects.toThrow("subset");await expect(validateIJsonSnapshotSqliteDialect({...snapshot,schema:"other"},dialect,database)).rejects.toThrow("identity");
+});
+test("I-JSON borrowed controlled traversal cancels and bounds actual nodes",async()=>{
+ const snapshot:JsonSnapshot={schema:"owned",value:{kind:"array",items:Array.from({length:600},()=>({kind:"number",lexeme:"1"}))}};const database=await jsonSnapshotToSqliteDatabase(snapshot);const before=new AbortController();before.abort();await expect(validateIJsonSnapshotSqliteDialect(snapshot,dialect,database,{signal:before.signal})).rejects.toMatchObject({name:"AbortError"});const during=new AbortController();let visited=0;await expect(validateIJsonSnapshotSqliteDialect(snapshot,dialect,database,{signal:during.signal,onProgress:progress=>{if(progress.completed>=256){visited=progress.completed;during.abort();}}})).rejects.toMatchObject({name:"AbortError"});expect(visited).toBe(256);await expect(validateIJsonSnapshotSqliteDialect(snapshot,dialect,database,{maxRows:10})).rejects.toThrow("row limit");
+});

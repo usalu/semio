@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteNodeMut
         vec![super::GltfMutation::DeleteNode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Delete Node", "Knoten löschen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Delete Node", "Knoten löschen")
     }
 
     fn target(&self) -> Vec<String> {

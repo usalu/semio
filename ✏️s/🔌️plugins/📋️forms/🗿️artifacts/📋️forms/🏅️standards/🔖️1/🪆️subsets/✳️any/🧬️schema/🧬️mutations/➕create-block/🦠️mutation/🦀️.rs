@@ -27,8 +27,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for CreateBlock {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_create_block(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create block \"{}\"", self.block.label), &format!("Block \"{}\" erstellen", self.block.label))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create block \"{}\"", self.block.label), &format!("Block \"{}\" erstellen", self.block.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]

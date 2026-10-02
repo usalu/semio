@@ -23,8 +23,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveXmlNode {
         agg_inverse(&DocxMutation::RemoveXmlNode(self.clone()), base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove XML node", "XML-Knoten entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove XML node", "XML-Knoten entfernen")
     }
 
     fn target(&self) -> Vec<String> {

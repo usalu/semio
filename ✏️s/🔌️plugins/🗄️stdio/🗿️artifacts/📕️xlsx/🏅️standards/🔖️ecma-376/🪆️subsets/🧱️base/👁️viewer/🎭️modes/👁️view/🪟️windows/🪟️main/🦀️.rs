@@ -5,7 +5,12 @@
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
 use crate::XlsxSnapshot;
 use semio_framework_plugin::app::{editable_table_window_row_at, TableWindowKit, WindowKit, WindowedEditableTableCell};
-use semio_framework_plugin::{BuiltNode, UiLabel, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::UiLabel;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

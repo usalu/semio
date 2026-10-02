@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ Reference registrations for the repo providers module. Nothing here is linked into production: the git entry names the machine's own git binary, invoked from the TypeScript oracle host, and the transcript reader is a second in-repo implementation that lives only in the case's 🟦️.ts adapter. No oracleHostPackages are declared, so no external distribution enters 🔒️dependencies.json through this manifest.",
   "oracles": [

@@ -1,0 +1,69 @@
+{
+  "name": "@semio-tech/value-rs",
+  "projectType": "library",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+      "sharedGlobals"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-controlled-construction": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-controlled-construction",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-controlled-encoding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-controlled-encoding",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-portable": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^production"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test portable"
+      }
+    },
+    "test-type-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-type-ownership"
+      }
+    }
+  }
+}

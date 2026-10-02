@@ -28,7 +28,9 @@
         },
         "step": 1,
         "precision": 0
-      }
+      },
+      "format": "uint64",
+      "maximum": 18446744073709551615
     }
   }
 }

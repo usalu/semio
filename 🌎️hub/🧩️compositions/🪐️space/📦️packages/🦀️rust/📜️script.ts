@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🪐️ `@semio-tech/space-plugin` router: `bun ./📜️script.ts test`. */
 import { join } from "node:path";
 import assert from "node:assert/strict";
@@ -6,7 +7,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests, runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -31,7 +32,7 @@ function compileRetainedCommandLimits(repoRoot: string, scopeRoot: string, expor
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-hub-space"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, rest);
   }
 }
 
@@ -101,7 +102,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-projection-persistence-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...homeExactCargoEnvironment(),
         groups: [{
@@ -207,7 +208,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-event-page-owner-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...homeExactCargoEnvironment(),
         groups: [{
@@ -410,7 +411,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         ...homeExactCargoEnvironment(),
         groups: [
@@ -540,7 +541,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({
+      const receipts = await runRepositoryExactCargoLaws({
         cwd: this.root,
         env: { ...process.env, RUST_MIN_STACK: "268435456" },
         groups: [{

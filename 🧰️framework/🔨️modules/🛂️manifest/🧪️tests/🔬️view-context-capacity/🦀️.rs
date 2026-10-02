@@ -90,7 +90,7 @@ async fn contributions_are_not_a_view_context_field() {
     assert!(schema["properties"].get("contributionsJson").is_none(), "contributionsJson must not be a view-context property");
     assert!(schema["additionalProperties"].as_bool() == Some(false), "the schema must refuse any re-added long field");
     assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 2, "panel state and a single embedded surface input are bounded independently");
-    let view = crate::ViewModel { panel_json: Some("p".into()), locale: crate::Locale::En, terminology: crate::Terminology::Native, ..Default::default() };
+    let view = crate::ViewModel { panel_json: Some("p".into()), locale: crate::Locale::En, terminology: crate::Terminology::Native, ..crate::ViewModel::new(crate::Locale::En, crate::Terminology::Native) };
     let encoded = serde_json::to_string(&view).unwrap();
     assert!(!encoded.contains("contributionsJson"), "the guest projection must not emit contributionsJson: {encoded}");
     assert!(encoded.contains("panelJson"), "the guest projection still carries the one long field: {encoded}");

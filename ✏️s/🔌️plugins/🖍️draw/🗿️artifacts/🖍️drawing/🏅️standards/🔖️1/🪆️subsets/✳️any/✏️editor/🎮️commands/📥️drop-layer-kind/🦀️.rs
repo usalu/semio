@@ -19,5 +19,5 @@ pub fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, DrawingSnapshot>, 
     let document = doc.snapshot;
     let layer = super::add_layer::build_layer(document, &payload.kind, doc.operation_optional())?;
     let (parent_id, index) = super::move_layer::resolve_reorder_target(document, &payload.target_row_id, &payload.drop_position)?;
-    Ok(Emit::commit(vec![crate::mutations::create_layer(parent_id, Some(index), layer)], "Add layer"))
+    Ok(Emit::mutations(vec![crate::mutations::create_layer(parent_id, Some(index), layer)]))
 }

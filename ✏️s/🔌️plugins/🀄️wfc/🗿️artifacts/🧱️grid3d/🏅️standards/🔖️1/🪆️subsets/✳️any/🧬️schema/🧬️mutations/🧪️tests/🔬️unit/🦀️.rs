@@ -174,6 +174,16 @@ mod roster {
     }
 
     #[test]
+    fn media_payload_documents_are_independently_compiled_without_external_refs() {
+        use std::io::Write;
+        use std::process::{Command,Stdio};
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
+        let input=serde_json::json!({"schemas":[serde_json::from_str::<serde_json::Value>(include_str!("../../🧱️create-tile/🧬️schema/🔣️.json")).unwrap(),serde_json::from_str::<serde_json::Value>(include_str!("../../🖼️change-tile-media/🧬️schema/🔣️.json")).unwrap()],"media":fixture["payloadMedia"]});
+        let script="import Ajv from 'ajv';const x=JSON.parse(await Bun.stdin.text());const a=new Ajv({strict:true}).addKeyword('x-semio-ui');const c=x.schemas.map(s=>a.compile(s));for(const media of x.media){if(!c[0]({tile:{id:'',weight:1,media}})||!c[1]({tileId:'',media}))throw Error('neutral media refused')}const media={kind:'mesh',mesh:{positions:[0],indices:[4294967296]}};if(c[0]({tile:{id:'',weight:1,media}})||c[1]({tileId:'',media}))throw Error('u32 overflow admitted');console.log('independent media schemas accepted')";
+        let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&serde_json::to_vec(&input).unwrap()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap().trim(),"independent media schemas accepted");
+    }
+
+    #[test]
     fn the_oracle_catalog_carries_a_vector_for_every_kind() {
         let catalog = value(ORACLE_CATALOG);
         let catalogs = catalog.get("mutationCatalogs").and_then(dsl::DslValue::as_array).expect("the manifest declares mutationCatalogs");

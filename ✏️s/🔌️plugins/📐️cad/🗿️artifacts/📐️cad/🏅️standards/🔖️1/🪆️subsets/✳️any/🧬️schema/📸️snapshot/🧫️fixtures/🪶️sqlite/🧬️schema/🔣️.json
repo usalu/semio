@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/snapshot/sqlite-laws.json",
+  "title": "CAD Semantic SQLite Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "binary64Words",
+    "tableRows",
+    "malformedSql",
+    "control"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/snapshot.json"
+    },
+    "binary64Words": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "tableRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cad_document",
+        "cad_model_child",
+        "cad_drawing_child",
+        "cad_reference_group",
+        "cad_reference",
+        "cad_node"
+      ],
+      "properties": {
+        "cad_document": {
+          "const": 1
+        },
+        "cad_model_child": {
+          "const": 4
+        },
+        "cad_drawing_child": {
+          "const": 3
+        },
+        "cad_reference_group": {
+          "const": 3
+        },
+        "cad_reference": {
+          "const": 4
+        },
+        "cad_node": {
+          "const": 3
+        }
+      }
+    },
+    "malformedSql": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectionLength",
+        "largeCharacters",
+        "maxOwnedBytes",
+        "tinyFileBytes",
+        "cancelAt"
+      ],
+      "properties": {
+        "collectionLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "largeCharacters": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxOwnedBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tinyFileBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cancelAt": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

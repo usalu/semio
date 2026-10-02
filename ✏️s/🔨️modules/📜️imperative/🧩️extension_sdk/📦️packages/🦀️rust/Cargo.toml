@@ -18,6 +18,7 @@ crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 # 🎒️ `os_pack::json::to_json_string`/`from_json_str` + `DslValue`/`ToValue`/`FromValue` — this file's
 # own `semio_framework_os_kernel::DslValue::object(...)` call (TopicContribution region) already

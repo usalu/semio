@@ -14,12 +14,50 @@ use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMuta
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_graph::manifest::PropertyValue;
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, PanelGroup, SelectionMethod,
-    SelectionMode, SelectionSpec, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{EditorApp, NoConfig, NoConfigMutation};
 use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Node};
@@ -29,7 +67,7 @@ use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Node};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
@@ -129,8 +167,8 @@ pub(crate) fn rewriting_window_action(action: &str, args: Option<pack::JsonValue
 }
 
 /// 🏷️ Admits resolved Rewriting text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Rewriting UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "Rewriting UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -357,7 +395,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &w
 /// 🎯️ `TrinityRewritingPlayApp::Command` — the SOLE dispatch surface for rewriting's own behavior. Kept
 /// hand-rolled (see `jack::TrinityJackCommand`'s doc comment for the rationale). `NodeGraphEdit` keeps
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
-/// `{"operation":"setHostSnapshot"|"deleteSelection", ...}` payload `apply_rewriting_node_graph_edit_operations`
+/// node-graph record rows (`connect`/`disconnect`/`move`/`setSlider`/`insertPort`/`delete`) `commands::node_graph_edit`
 /// already parses, carried as an opaque string field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityRewritingCommand {
@@ -399,7 +437,7 @@ impl protocol::OpText for TrinityRewritingCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -409,7 +447,7 @@ impl protocol::OpText for TrinityRewritingCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -422,7 +460,7 @@ impl protocol::OpBinary for TrinityRewritingCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -440,7 +478,7 @@ impl protocol::OpBinary for TrinityRewritingCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -564,11 +602,11 @@ fn rewriting_document_reduce(
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityRewritingPlayApp>>>,
-    _operation: &semio_framework_plugin::AppOperationContext,
+    operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     use crate::editor::rewriting::commands;
     Ok(match command {
-        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit(state, interaction.selection.get("graph").map_or(&[][..], |selection| selection.ids.as_slice()), surface_id, operations_json),
+        TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => commands::node_graph_edit(state, surface_id, operations_json, &operation.authoring_seed)?,
         TrinityRewritingCommand::SetLhsJson { value } => commands::set_lhs_json(state, value),
         TrinityRewritingCommand::SetRhsJson { value } => commands::set_rhs_json(state, value),
         TrinityRewritingCommand::SetParameter { name, value } => commands::set_parameter(state, name, value),
@@ -878,7 +916,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     ) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         Ok(match command {
-            TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, &interaction.selection("graph").ids, surface_id, operations_json),
+            TrinityRewritingCommand::NodeGraphEdit { surface_id, operations_json } => crate::editor::rewriting::commands::node_graph_edit(state, surface_id, operations_json, "")?,
             TrinityRewritingCommand::SetLhsJson { value } => crate::editor::rewriting::commands::set_lhs_json(state, value),
             TrinityRewritingCommand::SetRhsJson { value } => crate::editor::rewriting::commands::set_rhs_json(state, value),
             TrinityRewritingCommand::SetParameter { name, value } => crate::editor::rewriting::commands::set_parameter(state, name, value),
@@ -921,7 +959,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         // 🕹️ Selection is framework-owned now (domain "graph") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
@@ -934,7 +972,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             .group("history", |m| m.action("resetRule"))
             .group("mode", |m| m.action("setLodMode").action("setActiveExample"))
             .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, &nodes, &edges, NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()

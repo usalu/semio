@@ -1,0 +1,19 @@
+# Landed Cache Policy Source Review
+
+Read-only actual root predicate/scanner and lower compute ownership test/fixture/schema inspection; no jobs.
+
+Root predicate24399 normalizes Windows separators, rejects absolute/drive paths, empty/dot/parent segments and admits exact owner or slash-delimited descendants. This closes inspected sibling-prefix/raw traversal defects. Allowed directories are canonical compute and retained OS plugin. Scanner24462 calls that predicate and no longer skips the representation debt list. Separate rep-escape function/list remains unchanged and outside this correction.
+
+The actual ownership test uses TypeScript to extract/transpile real declaration/function bytes. Predicate execution in Node is compared against independent node:path.posix.relative containment. The materialized-root scanner law extracts actual policyAllRustFiles plus predicate/scanner, supplies actual source-access safe reader/skip constants and Node fs/path primitives, writes actual Rust files under ticket output, then scans that real tree. These injected dependencies are exact implementation imports, not fabricated file-return callbacks or synthetic successful policy outputs. Windows/raw parent rows are deliberately predicate-only; ordinary physical rows are materialized. This is honest bounded proof of path policy/literal constructor behavior, not Rust semantic resolution or compilation.
+
+All11 current authored rows retain canonical/native-law/plugin positives and removed/sibling/foreign/raw-parent/recreated-debt negatives. Concrete schema limitation: cases has11..11, enumerated ids and loose path/allowed fields, rather than exact id→path→expected tuples. Test unique-id size11 ensures every id exists but does not bind its intended path. Replacing the foreign-owner row path/allowed with another canonical path/true could satisfy schema, distinct-id assertion and predicate oracle while erasing that hostile ownership witness. Pin exact rows or enforce per-id exact path/allowed mapping with independent schema mutation negative. Current fixture is correct; this is coverage retention gap in the claimed closed corpus, not a current production false grant.
+
+Literal EngineCache::new regex remains explicitly textual; unrelated comments/aliases/provider paths are outside semantic completeness. Parent's7/82 GREEN is an execution receipt, not rerun by this auditor. Capture2 is pending independent source epoch authority; no descriptor/generated freshness inferred.
+
+## Final Exact-Roster Source Receipt
+
+Independently parsed current fixture and schema: case const has exactly11 rows and equals every current authored fixture tuple. Test line17 now replaces foreign-owner with canonical path/true and requires AJV refusal. Thus the previously reported path/expected substitution gap is closed by authored contract rather than a looser oracle expectation. Original six-law identity and original source ownership assertions remain in the inspected test.
+
+Reread root predicate/scanner unchanged: normalized full directory boundaries, no deleted OS-engine route, raw invalid segments refused, and constructor scanner has no representation debt-list bypass. This guarantees this policy's exact authored11 path cases and actual literal EngineCache::new scan under canonical compute/retained plugin boundaries. It does not establish generic provider resolution, constructor aliases, comment/string exclusion or all architecture directions. Independent captured Rust family-origin proof and whole-census79/8 residual report remain separate. No new concrete targeted defect found.
+
+Parent reports actual combined existing ownership/types targets GREEN4.8s after retained RED6/1/81. Auditor only read source/JSON; no runtime rerun. Final recapture must incorporate this authored schema/test frontier; earlier copying epoch is not silently treated as current. Actual generated outputs remain awaiting Native receipt.

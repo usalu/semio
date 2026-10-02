@@ -56,8 +56,8 @@ async fn definition_localizes_audio_actions_without_global_revision_forms() {
     let definition = definition();
     let route = |id: &str| definition.actions.iter().find(|action| action.id == id).expect("declared WAV action");
     let append = route(semio_s_artifact_stdio_contract::ADD_TABLE_ROW_ACTION_ID);
-    assert_eq!(append.label.resolve(semio_framework_plugin::Terminology::Native, Locale::En), "Append frame");
-    assert_eq!(append.label.resolve(semio_framework_plugin::Terminology::Native, Locale::De), "Frame anhängen");
+    assert_eq!(append.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::En), "Append frame");
+    assert_eq!(append.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De), "Frame anhängen");
     assert!(definition.actions.iter().all(|action| action.keys.is_none()));
     assert!(definition.actions.iter().all(|action| !action.in_palette));
 }
@@ -96,7 +96,7 @@ async fn wide_audio_uses_complete_windowed_coordinates_and_revision_bound_contro
             TreeWindowRequest { body_key: BODY_KEY.into(), node_key: SAMPLE_TABLE_ID.into(), open: Some(true), offset: channels * 2 - 1, rows: 1 },
             TreeWindowRequest { body_key: BODY_KEY.into(), node_key: CHANNEL_TABLE_ID.into(), open: Some(true), offset: channels - 1, rows: 1 },
         ],
-        ..Default::default()
+        ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     let root = render_revisioned(&document, revision, Locale::En, &windows).expect("wide audio surface assembles");

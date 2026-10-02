@@ -33,19 +33,8 @@ pub use icon_name_gen::IconName;
 mod icon_name_value;
 
 //#region 🔖️UiAxes
-// 🌐️ The axes and the label carriers now live in `semio-framework-os-kernel`
-// (`🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/`) because `MutationKind::label` returns a
-// `LocalizedLabel` and that trait is the kernel's — this crate already depends on the kernel under
-// the `wgpu` feature, the reverse would be a cycle. Ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END.
-pub use dsl::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️targets-wgpu-locale-terminology-value-locale-terminology-value-round-trip/🦀️.rs"]
-mod locale_terminology_value_round_trip_tests;
-
-#[cfg(test)]
-#[path = "../../🧪️tests/🔬️targets-wgpu-label-localized-label-value-round-trip/🦀️.rs"]
-mod localized_label_value_round_trip_tests;
 //#endregion 🔖️UiAxes
 
 // #region component
@@ -261,7 +250,7 @@ pub use component::utilities::{utility_button, utility_collection, utility_separ
 pub use geometry::Rect;
 #[cfg(feature = "wgpu")]
 pub use presence_bar::{
-    build_presence_bar, build_presence_bar_localized, presence_bar_chip_accessible_text, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceActivity, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole,
+    build_presence_bar, presence_bar_chip_accessible_text, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceActivity, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole,
     PRESENCE_BAR_DEFAULT_MAX,
 };
 pub use theme::{shell_floor_paints, GlassStyle, Level, Rgba, SurfaceFill, SurfaceScope, Theme};

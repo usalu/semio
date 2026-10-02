@@ -1,5 +1,7 @@
-import { type FeatureStep, type SchemaDiagnostic, type SchemaFixtureReport, discoverSchemaFixtures, parseFeature, readSchemaCatalog, runSchemaFixture, schemaContractDiagnostics } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type FeatureStep } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type SchemaDiagnostic, type SchemaFixtureReport, discoverSchemaFixtures, readSchemaCatalog, runSchemaFixture, schemaContractDiagnostics } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { type InputSchemaAudit, mutationInputAudit, mutationInputInstance } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { parseSchemaInvariants } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import { type Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
@@ -790,6 +792,7 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
   const checker = mutationPayloadChecker(documents);
   const kindPath = (segments: readonly string[]): string => segments.map(schemaKind).join("/");
   const leafByKind = new Map(tree.leaves.map((leaf) => [`${leaf.root}|${kindPath(leaf.directory.slice(leaf.root.length + 1).split("/"))}`, leaf]));
+  const leafBySegments = new Map(tree.leaves.map((leaf) => [`${leaf.root}|${leaf.directory.slice(leaf.root.length + 1)}`, leaf]));
   const leafByDirectory = new Map(tree.leaves.map((leaf) => [leaf.directory, leaf]));
   const nearest = <T,>(items: readonly T[], path: (item: T) => string, target: string): T[] => {
     const scored = items.map((item) => [sharedSegments(path(item), target), item] as const);
@@ -848,8 +851,10 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
       else if (id === undefined || id.startsWith("urn:semio:")) refuse(`the leaf of ${aggregate.name}::${variant} (${leaves[0]!.schemaPath}) declares no unique $id`);
       else {
         const tag = aggregate.layout.tag;
-        const properties = documents.get(id)?.properties;
-        if (tag !== null && aggregate.layout.content === null && !(isRecord(properties) && isRecord(properties[tag]) && properties[tag].const === wireName)) refuse(`the leaf of ${aggregate.name}::${variant} does not declare the tag ${JSON.stringify(tag)} as const ${JSON.stringify(wireName)}`);
+        const leafSchema = documents.get(id);
+        const pinsTag = (node: unknown): boolean => { const properties=isRecord(node)?node.properties:undefined;const property=isRecord(properties)&&tag!==null?properties[tag]:undefined;return isRecord(property)&&property.const===wireName; };
+        const variants = isRecord(leafSchema) ? (Array.isArray(leafSchema.oneOf) ? leafSchema.oneOf : Array.isArray(leafSchema.anyOf) ? leafSchema.anyOf : []) : [];
+        if (tag !== null && aggregate.layout.content === null && !(pinsTag(leafSchema) || (variants.length > 0 && variants.every(pinsTag)))) refuse(`the leaf of ${aggregate.name}::${variant} does not declare the tag ${JSON.stringify(tag)} as const ${JSON.stringify(wireName)}`);
         const wrapper = tree.wrappers.get(leaves[0]!.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant) && candidate.payloadVariant !== null);
         expected.push(mutationAggregateBranch(aggregate.layout, wireName, id, wrapper?.name ?? null));
       }
@@ -878,7 +883,16 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
     })();
     const named = segments.slice(anchor + 1).filter((segment) => segment !== "🧬️mutations");
     const windows = named.flatMap((_, start) => named.map((__, end) => named.slice(start, named.length - end)).filter((window) => window.length > 0));
-    let leaf = leafByDirectory.get(owner) ?? windows.map((window) => leafByKind.get(`${owner}/🧬️schema/🧬️mutations|${kindPath(window)}`)).find((found) => found !== undefined);
+    const shortened = (window: readonly string[]): MutationLeafRecord | undefined => {
+      const root = `${owner}/🧬️schema/🧬️mutations`;
+      const matches = tree.leaves.filter((candidate) => candidate.root === root && candidate.directory.slice(root.length + 1).startsWith(`${window.join("/")}-`));
+      return matches.length === 1 ? matches[0] : undefined;
+    };
+    let leaf =
+      leafByDirectory.get(owner) ??
+      windows.map((window) => leafBySegments.get(`${owner}/🧬️schema/🧬️mutations|${window.join("/")}`)).find((found) => found !== undefined) ??
+      windows.map(shortened).find((found) => found !== undefined) ??
+      windows.map((window) => leafByKind.get(`${owner}/🧬️schema/🧬️mutations|${kindPath(window)}`)).find((found) => found !== undefined);
     if (leaf === undefined)
       for (const aggregate of nearest(tree.aggregates, (candidate) => candidate.path, fixture))
         for (const [variant, rename] of aggregate.variants)
@@ -1112,8 +1126,10 @@ function rustFirstLiteral(tokens: readonly RustToken[]): string | null {
 //#region 🏷️MutationLabels
 /** 🩺️ The classes of a `schema-mutation-label` finding: an app overriding the leaf label (`labelOverride`), a leaf label that is
  * locale-invariant data (`labelLocaleInvariant`), a locale argument that is the empty literal (`labelLocaleEmpty`), an operation's
- * text line used as a label (`labelOpText`), and a label body the gate cannot read as one of the admitted shapes (`labelUnresolved`). */
-export type MutationLabelFindingClass = "labelOverride" | "labelLocaleInvariant" | "labelLocaleEmpty" | "labelOpText" | "labelUnresolved";
+ * text line used as a label (`labelOpText`), a label body the gate cannot read as one of the admitted shapes (`labelUnresolved`), and a
+ * history-row label written by hand on an emission — `Emit::commit(mutations, label)` or an `Emit { description: … }` literal
+ * (`labelHandwritten`, design §20.4). */
+export type MutationLabelFindingClass = "labelOverride" | "labelLocaleInvariant" | "labelLocaleEmpty" | "labelOpText" | "labelUnresolved" | "labelHandwritten";
 
 /** 🏷️ How one label body names its operation: `LocalizedLabel::native(en, de)` (`native`), a forward to another label (`forward`), or a finding. */
 export type MutationLabelVerdict = "native" | "forward" | MutationLabelFindingClass;
@@ -1173,19 +1189,71 @@ export function rustMutationLabelSites(path: string, source: string): MutationLa
     const close = rustGroupEnd(tokens, index + 4);
     if (tokens.slice(index + 5, close).some((token) => token.kind === "ident" && token.text === "print_op")) sites.push({ path, trait: "data", implementor: "", verdict: "labelOpText", texts: [] });
   }
+  return [...sites, ...rustEmitLabelSites(path, tokens)];
+}
+
+/** ✍️ Every hand-written history-row label of an emission among `tokens`, in source order (design §20.4): an `Emit::commit(…, label)`
+ * call (implementor `commit`) and an `Emit { … description: <anything but None> … }` struct literal (implementor `description`, the
+ * shorthand `description` included), the `Emit` path optionally qualified and turbofished; a destructuring pattern (`… } =`, `… } =>`)
+ * is no literal. Each is `labelHandwritten`, with the label's first string literal as its text. */
+export function rustEmitLabelSites(path: string, tokens: readonly RustToken[]): MutationLabelSite[] {
+  const sites: MutationLabelSite[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index]!.kind !== "ident" || tokens[index]!.text !== "Emit") continue;
+    let start = index;
+    while (tokens[start - 1]?.text === ":" && tokens[start - 2]?.text === ":" && tokens[start - 3]?.kind === "ident") start -= 3;
+    const before = tokens[start - 1];
+    if (before !== undefined && (["struct", "enum", "impl", "for", "trait", "type", "use", "as"].includes(before.text) || (before.text === ">" && tokens[start - 2]?.text === "-"))) continue;
+    let after = index + 1;
+    if (tokens[after]?.text === ":" && tokens[after + 1]?.text === ":" && tokens[after + 2]?.text === "<") {
+      let depth = 0;
+      for (after += 2; after < tokens.length; after += 1) {
+        if (tokens[after]!.text === "<") depth += 1;
+        else if (tokens[after]!.text === ">" && tokens[after - 1]?.text !== "-" && --depth === 0) break;
+      }
+      after += 1;
+    }
+    if (tokens[after]?.text === ":" && tokens[after + 1]?.text === ":" && tokens[after + 2]?.text === "commit" && tokens[after + 3]?.text === "(") {
+      sites.push({ path, trait: "Emit", implementor: "commit", verdict: "labelHandwritten", texts: [[rustFirstLiteral(rustCallArguments(tokens, after + 3)[1] ?? []), null]] });
+    } else if (tokens[after]?.text === "{" && tokens[rustGroupEnd(tokens, after) + 1]?.text !== "=") {
+      const close = rustGroupEnd(tokens, after);
+      let depth = 0;
+      for (let cursor = after + 1; cursor < close; cursor += 1) {
+        const token = tokens[cursor]!;
+        if (token.kind === "punct" && "([{".includes(token.text)) depth += 1;
+        else if (token.kind === "punct" && ")]}".includes(token.text)) depth -= 1;
+        if (depth !== 0 || token.text !== "description" || !["{", ","].includes(tokens[cursor - 1]?.text ?? "")) continue;
+        if (cursor + 1 === close || tokens[cursor + 1]?.text === ",") {
+          sites.push({ path, trait: "Emit", implementor: "description", verdict: "labelHandwritten", texts: [[null, null]] });
+          continue;
+        }
+        if (tokens[cursor + 1]?.text !== ":" || tokens[cursor + 2]?.text === ":") continue;
+        const value: RustToken[] = [];
+        let nested = 0;
+        for (let part = cursor + 2; part < close; part += 1) {
+          const piece = tokens[part]!;
+          if (piece.kind === "punct" && "([{".includes(piece.text)) nested += 1;
+          else if (piece.kind === "punct" && ")]}".includes(piece.text)) nested -= 1;
+          if (nested === 0 && piece.text === ",") break;
+          value.push(piece);
+        }
+        if (!(value.length === 1 && value[0]!.text === "None")) sites.push({ path, trait: "Emit", implementor: "description", verdict: "labelHandwritten", texts: [[rustFirstLiteral(value), null]] });
+      }
+    }
+  }
   return sites;
 }
 
 /**
  * 🏷️ Reads every label site of every Rust source under `under` (design §16.2): a history row is labelled by its leaf in every shell
- * locale, so each leaf label is `LocalizedLabel::native(en, de)` or a forward to one, no app overrides the leaf label, and no
- * operation's text line is ever a label. Every other verdict is one `schema-mutation-label` diagnostic.
+ * locale, so each leaf label is `LocalizedLabel::native(en, de)` or a forward to one, no app overrides the leaf label, no operation's
+ * text line is ever a label, and no emission labels its row by hand (§20.4). Every other verdict is one `schema-mutation-label` diagnostic.
  */
 export function mutationLabelReport(repoRoot: string, under = ""): MutationLabelReport {
   const diagnostics: SchemaDiagnostic[] = [];
   const census = new Map<string, MutationLabelCensusRow>();
   const sites: MutationLabelSite[] = [];
-  const relevant = (source: string): boolean => !source.includes("quote!") && (source.includes("fn label") || source.includes("fn mutation_label") || (source.includes("LocalizedLabel::data") && source.includes("print_op")));
+  const relevant = (source: string): boolean => !source.includes("quote!") && (source.includes("fn label") || source.includes("fn mutation_label") || (source.includes("LocalizedLabel::data") && source.includes("print_op")) || (source.includes("Emit") && (source.includes("commit") || source.includes("description"))));
   for (const { path, source } of rustSources(repoRoot, under, relevant)) {
     if (path.split("/").includes("🧪️tests")) continue;
     for (const site of rustMutationLabelSites(path, source)) {
@@ -1193,13 +1261,14 @@ export function mutationLabelReport(repoRoot: string, under = ""): MutationLabel
       const owner = mutationPayloadOwner(path);
       const row = census.get(owner) ?? { owner, labels: 0, native: 0, forward: 0, findings: 0, refused: {} };
       census.set(owner, row);
-      if (site.trait !== "data" && !MUTATION_LABEL_APP_TRAITS.has(site.trait)) row.labels += 1;
+      if (MUTATION_LABEL_TRAITS.has(site.trait)) row.labels += 1;
       if (site.verdict === "native") row.native += 1;
       else if (site.verdict === "forward") row.forward += 1;
       else {
         row.findings += 1;
         row.refused[site.verdict] = (row.refused[site.verdict] ?? 0) + 1;
-        diagnostics.push({ code: "schema-mutation-label", scope: null, export: null, format: null, path, detail: `${site.verdict}: ${site.trait} for ${site.implementor || "a LocalizedLabel::data call"}${site.texts.length > 0 ? ` ${JSON.stringify(site.texts)}` : ""}` });
+        const subject = site.trait === "Emit" ? (site.implementor === "commit" ? "Emit::commit(mutations, label)" : "Emit { description: … }") : `${site.trait} for ${site.implementor || "a LocalizedLabel::data call"}`;
+        diagnostics.push({ code: "schema-mutation-label", scope: null, export: null, format: null, path, detail: `${site.verdict}: ${subject}${site.texts.length > 0 ? ` ${JSON.stringify(site.texts)}` : ""}` });
       }
     }
   }
@@ -1208,7 +1277,8 @@ export function mutationLabelReport(repoRoot: string, under = ""): MutationLabel
 
 /**
  * 🏷️ `test schema mutation-labels` — the `schema-mutation-label` gate: every applied leaf of every plugin labels itself in every shell
- * locale, no app overrides that label, no history row falls back to an operation's text line. `--census` prints the per-plugin table
+ * locale, no app overrides that label, no emission labels its row by hand, no history row falls back to an operation's text line.
+ * `--census` prints the per-plugin table
  * and always exits 0; without it any finding fails.
  *
  *   bun 📜️script.ts schema mutation-labels [--census] [--under <path>] [--json]
@@ -1266,6 +1336,77 @@ export function mutationHandwrittenReason(path: string, name: string, snapshot: 
   return "aggregateHandwritten";
 }
 
+/** 🧭️ The tree a leaf's referenced documents are published from — the TypeScript twin of the derive's `mutation_schema_search_root`:
+ * the leaf's plugin (the directory under `🔌️plugins`), else its framework module (the nearest directory under `🔨️modules`), else the
+ * module owning its `🧬️schema/🧬️mutations` root. */
+export function mutationSchemaSearchRoot(repoRoot: string, schemaPath: string): string {
+  const segments = schemaPath.split("/");
+  const under = (parent: string): number => segments.findLastIndex((_, index) => index > 0 && segments[index - 1] === parent && index < segments.length - 1);
+  const plugin = segments.findIndex((_, index) => index > 0 && segments[index - 1] === "🔌️plugins");
+  if (plugin >= 0) return segments.slice(0, plugin + 1).join("/");
+  const module = under("🔨️modules");
+  if (module >= 0) return segments.slice(0, module + 1).join("/");
+  for (let end = segments.length - 1; end > 0; end -= 1) if (segments[end] === "🧬️schema" && existsSync(join(repoRoot, ...segments.slice(0, end + 1), "🧬️mutations"))) return segments.slice(0, end).join("/");
+  return segments.slice(0, -1).join("/");
+}
+
+/** 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (fixtures, tests and build output skipped) — the twin
+ * of the derive's `mutation_schema_document_index`. */
+export function mutationSchemaDocumentIndex(repoRoot: string, root: string): Map<string, string> {
+  const index = new Map<string, string>();
+  const walk = (directory: string, schema: boolean): void => {
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(join(repoRoot, directory), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const path = `${directory}/${entry.name}`;
+      if (entry.isDirectory() && !entry.name.startsWith(".") && !["🧪️tests", "target", "node_modules", "dist", "🗑️generated", "📦️packages"].includes(entry.name)) walk(path, schema || entry.name === "🧬️schema");
+      else if (schema && entry.isFile() && entry.name.endsWith(".json")) {
+        const id = readJsonObject(repoRoot, path)?.$id;
+        if (typeof id === "string" && !index.has(id)) index.set(id, path);
+      }
+    }
+  };
+  walk(root, root.split("/").includes("🧬️schema"));
+  return index;
+}
+
+/** 🔗️ Every absolute document id the `$ref`s of `document` name, fragments stripped. */
+export function mutationSchemaReferences(document: unknown): string[] {
+  const found: string[] = [];
+  const walk = (node: unknown): void => {
+    if (Array.isArray(node)) for (const item of node) walk(item);
+    else if (isRecord(node))
+      for (const [key, value] of Object.entries(node)) {
+        if (key === "$ref" && typeof value === "string" && !value.startsWith("#")) found.push(value.split("#")[0]!);
+        else walk(value);
+      }
+  };
+  walk(document);
+  return found.filter((id) => id.length > 0);
+}
+
+/** 🔗️ The `$id`s a leaf payload schema references (transitively) that neither its own search tree (what `#[derive(MutationLeaf)]`
+ * embeds and the runtime publishes) nor a framework scope (`frameworkIndex`) holds — the inputs the history editor cannot resolve. */
+export function mutationLeafUnpublishedReferences(repoRoot: string, schemaPath: string, rootIndex: ReadonlyMap<string, string>, frameworkIndex: ReadonlyMap<string, string>): string[] {
+  const own = readJsonObject(repoRoot, schemaPath);
+  const pending = mutationSchemaReferences(own);
+  const seen = new Set<string>(typeof own?.$id === "string" ? [own.$id] : []);
+  const unresolved: string[] = [];
+  while (pending.length > 0) {
+    const id = pending.pop()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const path = rootIndex.get(id) ?? frameworkIndex.get(id);
+    if (path === undefined) unresolved.push(id);
+    else pending.push(...mutationSchemaReferences(readJsonObject(repoRoot, path)));
+  }
+  return unresolved.sort();
+}
+
 /**
  * ✏️ Enumerates every mutation aggregate under `under` (design §16.3) and decides, from source alone, which history mutations the
  * generic editor can edit: each leaf of a `#[derive(Mutations)]` aggregate is `editable` unless its descriptor composes a plan
@@ -1289,6 +1430,8 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
     diagnostics.push({ code: "schema-mutation-editability", scope: null, export: null, format: null, path, detail: `${kind}: ${detail}` });
   };
   const leaves: MutationLeafEditability[] = [];
+  const rootIndexes = new Map<string, Map<string, string>>();
+  let frameworkIndex: Map<string, string> | undefined;
   for (const aggregate of tree.aggregates) {
     if (!aggregate.path.startsWith(under)) continue;
     const root = aggregate.path.slice(0, aggregate.path.lastIndexOf("/"));
@@ -1308,6 +1451,12 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
       const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant));
       const inert = wrapper === undefined ? [] : [...wrapper.variants.keys()].filter((phase) => phase !== wrapper.payloadVariant);
       leaves.push({ owner, aggregate: aggregate.name, path: leaf.directory, kind: leaf.kind, variant, verdict: composite ? "foreign" : "editable", inert });
+      const searchRoot = mutationSchemaSearchRoot(repoRoot, leaf.schemaPath);
+      const rootIndex = rootIndexes.get(searchRoot) ?? mutationSchemaDocumentIndex(repoRoot, searchRoot);
+      rootIndexes.set(searchRoot, rootIndex);
+      frameworkIndex ??= new Map(["🧰️framework", "🌎️hub"].flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]));
+      const unpublished = mutationLeafUnpublishedReferences(repoRoot, leaf.schemaPath, rootIndex, frameworkIndex);
+      if (unpublished.length > 0) refuse(row, "leafReferenceUnpublished", leaf.schemaPath, `${leaf.kind}'s payload schema references ${unpublished.join(", ")}, which neither its own tree (published beside the leaf) nor a framework scope holds, so the history editor cannot resolve it`);
       row.leaves += 1;
       row.inert += inert.length;
       if (composite) row.foreign += 1;

@@ -2,7 +2,10 @@
 //! The `paint` mode (sibling `🎨️paint/`) adds the UV window via its own named layout.
 
 use crate::editor::lowpoly::modes::edit::windows::model;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const LOWPOLY_PLAY_MODE_EDIT: &str = "edit";
 

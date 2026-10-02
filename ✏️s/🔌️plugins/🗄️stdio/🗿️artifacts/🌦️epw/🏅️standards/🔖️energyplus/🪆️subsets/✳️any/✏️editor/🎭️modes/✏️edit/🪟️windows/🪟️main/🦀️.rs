@@ -8,7 +8,12 @@
 use crate::editor::epw::epw_row_revision;
 use crate::EpwSnapshot;
 use semio_framework_plugin::app::{EditableTableCell, TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiMapBuilder, UiText, UiValue, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

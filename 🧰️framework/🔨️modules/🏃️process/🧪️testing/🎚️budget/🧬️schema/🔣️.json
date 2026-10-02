@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "levels"
+    "levels",
+    "cases"
   ],
   "properties": {
     "schema": {
@@ -35,6 +36,84 @@
         "exhaustive": {
           "type": "integer",
           "minimum": 1
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segments",
+          "environment",
+          "minimum",
+          "expected"
+        ],
+        "properties": {
+          "segments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "minimum": {
+            "enum": [
+              "fundamental",
+              "quick",
+              "long",
+              "exhaustive"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "level",
+              "rest",
+              "budgetMs",
+              "rank",
+              "coverage"
+            ],
+            "properties": {
+              "level": {
+                "enum": [
+                  "fundamental",
+                  "quick",
+                  "long",
+                  "exhaustive"
+                ]
+              },
+              "rest": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "budgetMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "coverage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
         }
       }
     }

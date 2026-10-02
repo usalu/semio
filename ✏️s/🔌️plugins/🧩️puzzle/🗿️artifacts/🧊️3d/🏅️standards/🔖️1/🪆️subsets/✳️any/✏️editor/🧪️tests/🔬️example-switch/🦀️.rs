@@ -66,7 +66,7 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     assert!(emit.artifact_mutations.len() > 1, "the completed emit still carries one mutation per deleted/created item; observed {}", emit.artifact_mutations.len());
     assert_eq!(emit.artifact_mutations.len(), items, "chunking must not drop or fuse mutation kinds (items plus domain and catalogs)");
     assert_eq!(emit.coalesce_key, None, "an example load is ONE intent edit, never coalesced into a neighbouring edit");
-    assert_eq!(emit.description.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION));
+    assert_eq!(emit.description, None, "an example load's history row is labelled by its leaves, never by a hand-written description");
     assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
     assert_eq!(emit.ui_scope, puzzle3d_scope(Puzzle3dScopeClass::Chrome));
     assert!(progress_steps < items, "a whole-fixture switch must not take one ingress per document item; observed {progress_steps} steps for {items} items");
@@ -173,7 +173,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
-    assert_eq!(emit.description.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION));
+    assert_eq!(emit.description, None, "an example load's history row is labelled by its leaves, never by a hand-written description");
     assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
     assert_eq!(emit.coalesce_key, None, "an example load is ONE intent edit, never coalesced into a neighbouring edit");
 }

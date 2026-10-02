@@ -22,7 +22,8 @@
     "rejectedSegments",
     "internalDependencies",
     "launch",
-    "prohibitedChanges"
+    "prohibitedChanges",
+    "moduleImports"
   ],
   "properties": {
     "schemaVersion": {
@@ -210,15 +211,11 @@
       }
     },
     "imports": {
-      "const": [
-        "BundleScript",
-        "ScriptRouter",
-        "buildBudgetMs",
-        "resolveTestLevel",
-        "runBundleScriptMain",
-        "runCargoTestBudgeted",
-        "runTestBudgeted"
-      ]
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "nativeCases": {
       "const": [
@@ -494,6 +491,33 @@
         "hardcoded budget override",
         "unsupported wasm32-wasip2 command"
       ]
+    },
+    "moduleImports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "names"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          }
+        }
+      }
     }
   }
 }

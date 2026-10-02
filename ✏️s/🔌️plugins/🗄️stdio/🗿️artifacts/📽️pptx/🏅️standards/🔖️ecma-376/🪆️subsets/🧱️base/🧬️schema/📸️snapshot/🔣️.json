@@ -167,7 +167,7 @@
           "type": "string"
         },
         "document": {
-          "$ref": "#/$defs/XmlDocument"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlDocument"
         }
       }
     },
@@ -343,9 +343,9 @@
       ],
       "properties": {
         "prologPosition": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Number of prolog nodes preceding this declaration."
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
         },
         "name": {
           "type": "string"
@@ -637,16 +637,24 @@
       ],
       "properties": {
         "x": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "y": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cx": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cy": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         }
       }
     }

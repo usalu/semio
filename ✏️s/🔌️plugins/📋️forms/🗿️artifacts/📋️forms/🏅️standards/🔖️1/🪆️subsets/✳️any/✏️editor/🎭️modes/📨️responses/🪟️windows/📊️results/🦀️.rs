@@ -3,7 +3,21 @@ use crate::editor::forms::{forms_action, ui_admit, ui_label, ui_value_map, ui_va
 use crate::editor::forms::terminology::FormsLabels;
 use crate::schema::response::{FormsAnswer, FormsResponse};
 use crate::FormsSnapshot;
-use semio_framework_plugin::{row_action, row_target, tree_item_with_action, tree_window_item, ui_node_list, BuiltNode, LocalizedLabel, PanelTreeBuilder, RowActionPlacement, SurfaceKind, TreeWindows, UiAssemblyResult, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::row_target;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract as ui;
 use ui::{Buildable, HasBase};
 

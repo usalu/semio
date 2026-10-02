@@ -1,0 +1,55 @@
+{
+  "prefix": [
+    112,
+    114,
+    101
+  ],
+  "suffix": [
+    116,
+    97,
+    105,
+    108
+  ],
+  "initialRows": 7,
+  "cases": [
+    {
+      "id": "empty",
+      "nodeText": null,
+      "text": "[[0],[0],[0],[],[]]",
+      "binary": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": 1
+    },
+    {
+      "id": "unicode-text",
+      "nodeText": "é",
+      "text": "[[1,T[c3a9]],[0],[0],[],[]]",
+      "binary": [
+        1,
+        1,
+        2,
+        195,
+        169,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": 3
+    }
+  ],
+  "control": {
+    "unit": "世界",
+    "repeats": 20000,
+    "utf8Bytes": 120000,
+    "cancelAfter": 65536,
+    "refusedMaxRows": 9,
+    "deepNodes": 8192,
+    "smallStackBytes": 262144
+  }
+}

@@ -1,0 +1,1 @@
+{"cases":[{"id":"empty","hex":"","repeat":1},{"id":"one","hex":"7a","repeat":1},{"id":"literal","hex":"68656c6c6f2c20776f726c6421","repeat":1},{"id":"overlapping","hex":"61616162","repeat":20000},{"id":"binary","hex":"00ff807f010203","repeat":5000}],"random":{"seed":7,"length":70000},"cancelAt":256,"deniedBytes":1,"maximumBytes":2000000}

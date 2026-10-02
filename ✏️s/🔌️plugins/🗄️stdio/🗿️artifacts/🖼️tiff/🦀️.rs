@@ -70,7 +70,7 @@ pub const TIFF_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tif
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.tiff".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Tiff", "Tiff"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Tiff", "Tiff"),
         source_format: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

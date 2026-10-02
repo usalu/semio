@@ -238,7 +238,9 @@ async fn the_store_folds_a_stroke_like_the_leaf() {
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![stroke.clone()], description: None, transaction: None }).await.expect("the stroke applies");
     let before = base(false);
     let expected = apply_raster_mutation(&before, &stroke).expect("the leaf applies");
-    assert_eq!(&*store.snapshot().expect("the store projects"), &expected);
+    let projected = store.snapshot().expect("the store projects");
+    assert_eq!(projected, expected);
+    retire(projected);
     retire(expected);
     retire(before);
     store::os_store::test_support::close_plain_test_store(&mut store);

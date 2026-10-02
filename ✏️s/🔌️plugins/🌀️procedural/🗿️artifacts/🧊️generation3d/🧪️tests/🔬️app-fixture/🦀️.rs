@@ -32,5 +32,5 @@ pub(crate) async fn dispatch(app: &mut Generation3dApp, command: Generation3dCom
     settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication")
 }
 pub(crate) async fn render_body(app: &mut Generation3dApp, body: &str) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body, None, &ViewModel::default()).await.expect("render")).expect("render json")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
 }

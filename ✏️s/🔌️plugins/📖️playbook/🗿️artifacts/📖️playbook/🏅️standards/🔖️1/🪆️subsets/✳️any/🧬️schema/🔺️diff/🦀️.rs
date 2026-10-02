@@ -55,8 +55,8 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookDiff {
             ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
             ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
             ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
-            ("document".to_string(), self.document.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |document| ::semio_framework_os_kernel::to_dsl_value(document).expect("ArtifactChild serializes"))),
-            ("flow".to_string(), self.flow.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |flow| ::semio_framework_os_kernel::to_dsl_value(flow).expect("ArtifactChild serializes"))),
+            ("document".to_string(), self.document.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |document| semio_framework_value::ToValue::to_value(document))),
+            ("flow".to_string(), self.flow.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |flow| semio_framework_value::ToValue::to_value(flow))),
         ])
     }
 }
@@ -67,13 +67,13 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookDiff {
         let child = |key: &str| -> Result<Option<PlaybookDocumentChild>, ::semio_framework_os_kernel::ValueError> {
             match get(key) {
                 None | Some(::semio_framework_os_kernel::DslValue::Null) => Ok(None),
-                Some(value) => ::semio_framework_os_kernel::from_dsl_value(value).map(Some).map_err(::semio_framework_os_kernel::ValueError::new),
+                Some(value) => semio_framework_value::FromValue::from_value(value).map(Some),
             }
         };
         let flow_child = |key: &str| -> Result<Option<PlaybookFlowChild>, ::semio_framework_os_kernel::ValueError> {
             match get(key) {
                 None | Some(::semio_framework_os_kernel::DslValue::Null) => Ok(None),
-                Some(value) => ::semio_framework_os_kernel::from_dsl_value(value).map(Some).map_err(::semio_framework_os_kernel::ValueError::new),
+                Some(value) => semio_framework_value::FromValue::from_value(value).map(Some),
             }
         };
         Ok(Self {

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/note/snapshot/sqlite/control.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "longTextBytes",
+    "cancelAt",
+    "nativeValueBudget",
+    "directRows"
+  ],
+  "properties": {
+    "longTextBytes": {
+      "type": "integer",
+      "const": 131072
+    },
+    "cancelAt": {
+      "type": "integer",
+      "const": 65536
+    },
+    "nativeValueBudget": {
+      "type": "integer",
+      "const": 128
+    },
+    "directRows": {
+      "type": "integer",
+      "const": 1
+    }
+  }
+}

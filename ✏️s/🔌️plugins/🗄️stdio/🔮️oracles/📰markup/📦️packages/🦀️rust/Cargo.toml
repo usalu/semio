@@ -1,0 +1,22 @@
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-markup-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_plugin_stdio_markup_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:quick-xml"]
+
+[dependencies]
+"quick-xml" = { version = "0.42", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

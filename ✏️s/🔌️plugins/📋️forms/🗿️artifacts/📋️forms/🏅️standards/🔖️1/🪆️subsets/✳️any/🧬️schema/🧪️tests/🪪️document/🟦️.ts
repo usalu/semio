@@ -1,3 +1,4 @@
+import{parseFormsJsonArtifact,parseFormsJsonDiff,formsArtifactJson}from"../../🌱️value/🔣️json/🟦️.ts";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyFormsDiff } from "../../🔺️diff/🟦️.ts";
 import assert from "node:assert/strict";
@@ -27,17 +28,17 @@ export async function testFormsDesignImport(): Promise<void> {
   const validate = ajv.compile(artifactSchema);
   const unique = ajv.compile({ type: "array", items: { type: "string", minLength: 1 }, uniqueItems: true });
   assert.equal(validate(contactTemplate), true, JSON.stringify(validate.errors));
-  assert.deepEqual(artifact.parseFormsArtifact(contactTemplate), contactTemplate);
+  assert.deepEqual(formsArtifactJson(parseFormsJsonArtifact(contactTemplate)), contactTemplate);
   for (const item of importVectors.cases) {
     let parsed: unknown;
     try { parsed = JSON.parse(item.source); } catch { assert.equal(item.valid, false); continue; }
     let actual: artifact.FormsArtifact | undefined;
-    try { actual = artifact.parseFormsArtifact(parsed); } catch {}
+    try { actual = parseFormsJsonArtifact(parsed); } catch {}
     assert.equal(actual !== undefined, item.valid, item.name);
     const row = parsed as artifact.FormsArtifact;
     const valid = validate(parsed) && unique(row.definition.steps.map(step => step.id)) && unique(row.definition.steps.flatMap(step => step.blocks.map(question => question.id)));
     assert.equal(valid, item.valid, `${item.name}: independent oracle`);
-    if (actual) assert.deepEqual(JSON.parse(JSON.stringify(actual)), parsed, item.name);
+    if (actual) assert.deepEqual(formsArtifactJson(actual), parsed, item.name);
   }
 }
 
@@ -47,22 +48,21 @@ export function testFormsDocumentContractOracle(): void {
   assertDocumentContractOracle({
     name: "Forms",
     dependencies: [ioSchema, childSchema, semioChildSchema, definitionSchema, responseSchema],
-    childIdentityFields: ["structure", "results"],
-    artifact: { schema: artifactSchema, parse: artifact.parseFormsArtifact },
-    snapshot: { schema: snapshotSchema, parse: snapshot.parseFormsSnapshot },
-    diff: { schema: diffSchema, parse: diff.parseFormsDiff },
-    validDocuments: [{ input: vectors.document, output: vectors.document }, { input: base, output: base }, { input: { ...base, title: null }, output: base }],
+    artifact: { schema: artifactSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
+    snapshot: { schema: snapshotSchema, parse: parseFormsJsonArtifact, nativeJson:value=>formsArtifactJson(value as artifact.FormsArtifact) },
+    diff: { schema: diffSchema, parse: parseFormsJsonDiff, nativeJson:value=>formsArtifactJson(value as diff.FormsDiff) },
+    validDocuments: [{ input: vectors.document, output: vectors.document }, { input: base, output: base }, { input: { ...base, title: null }, output: base }, ...vectors.validIndependentChildDocuments.map(value=>({input:value,output:value}))],
     invalidDocuments: [...vectors.invalidIdentityDocuments, ...Object.entries(vectors.invalidDocumentFields).map(([key, value]) => ({ ...vectors.document, [key]: value })), ...vectors.invalidChildren.map((child) => ({ ...vectors.document, structure: child }))],
     invalidDiffs: vectors.invalidDiffs,
-    validDiffs: vectors.patchCases.map((item) => ({ input: item.diff, output: item.diff })),
+    validDiffs: [...vectors.patchCases.map((item) => ({ input: item.diff, output: item.diff })),...vectors.validIndependentChildDiffs.map(value=>({input:value,output:value}))],
     mutationRoots: [fileURLToPath(new URL("../../../🧫️fixtures/🧬️mutations", import.meta.url))],
     committed: { snapshots: 30, diffs: 9 },
   });
   for (const item of vectors.patchCases) {
-    const base = artifact.parseFormsArtifact(item.before);
-    assert.deepEqual(applyFormsDiff(base, item.diff), item.after, item.name);
+    const base = parseFormsJsonArtifact(item.before);
+    assert.deepEqual(formsArtifactJson(applyFormsDiff(base, parseFormsJsonDiff(item.diff))), item.after, item.name);
     assert.deepEqual(applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.after, item.name);
-    for (const field of ["structure", "results"] as const) if (!Object.hasOwn(item.diff, field)) assert.equal(applyFormsDiff(base, item.diff)[field], base[field]);
+    for (const field of ["structure", "results"] as const) if (!Object.hasOwn(item.diff, field)) assert.equal(applyFormsDiff(base, parseFormsJsonDiff(item.diff))[field], base[field]);
   }
 }
 

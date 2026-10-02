@@ -1,6 +1,7 @@
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
-import { resolveTestLevel, runCmd, runProbe, runTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runProbe, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { ensureOracleTool, oracleEnvironment, oracleManifest, oracleToolDirectory } from "../🛠️toolchain/🟦️.ts";
 
@@ -20,7 +21,7 @@ export function runOraclePython(repoRoot: string, packageRoot: string, args: str
   const env = oracleEnvironment(repoRoot);
   env.PYTHONPATH = [join(repoRoot, PYTHON_OWNER), env.PYTHONPATH ?? ""].filter(Boolean).join(delimiter);
   env.PYTHONDONTWRITEBYTECODE = "1";
-  return runTestBudgeted("uv", ["run", "--locked", "--no-sync", "--project", packageRoot, "python", "-c", inline, ...args], { cwd: packageRoot, env, budgetMs });
+  return runRepositoryTestCommand("uv", ["run", "--locked", "--no-sync", "--project", packageRoot, "python", "-c", inline, ...args], { cwd: packageRoot, env, budgetMs });
 }
 
 export class DepsScript extends BundleScript {

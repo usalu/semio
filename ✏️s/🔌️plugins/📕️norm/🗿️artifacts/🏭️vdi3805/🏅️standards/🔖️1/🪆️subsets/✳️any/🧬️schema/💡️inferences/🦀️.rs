@@ -51,10 +51,10 @@ impl ArtifactInferrer for standards::v1::subsets::any::schema::Vdi3805Builder {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `vdi3805_artifact_schema_descriptor`'s registration.
-pub fn vdi3805_artifact_inference_descriptor() -> ::framework_schema::ArtifactInferenceDescriptor {
-    ::framework_schema::ArtifactInferenceDescriptor {
+pub fn vdi3805_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
-        inference: ::framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }

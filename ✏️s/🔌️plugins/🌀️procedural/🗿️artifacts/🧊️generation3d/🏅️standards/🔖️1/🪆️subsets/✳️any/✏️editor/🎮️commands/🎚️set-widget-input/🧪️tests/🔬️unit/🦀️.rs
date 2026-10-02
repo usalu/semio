@@ -21,21 +21,28 @@ fn widget_input_language_neutral_cases() {
     }
 }
 
+/// ⚖️ LAW (design §19): a committed operator field is ONE absolute `change-widget-input` leaf of the port's literal type;
+/// an unchanged value is no edit, a text source's text is a text input, a connected or unknown input is refused before
+/// any document mutation.
 #[test]
-fn widget_input_edits_real_operator_params_and_rejects_connected_ports() {
+fn widget_input_is_one_typed_leaf_and_rejects_connected_ports() {
+    use semio_framework_os_flow::FlowHost;
     let _serial = crate::test_serial::lock();
     input_metadata();
     let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width"}"#, 0.0, 0.0).unwrap();
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"brep.mesh.box"}"#, 200.0, 0.0).unwrap();
+    let note = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 200.0).unwrap();
     let mut payload = SetWidgetInput { widget_id: shape.clone(), channel: "width".into(), value: "2.5".into(), component: None };
-    apply_to_host(&mut host, &payload).unwrap();
-    let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, params, .. } if id == &shape => Some(params.to_value()), _ => None }).unwrap();
-    assert_eq!(params.get("width").and_then(|value| value.get("value")).and_then(dsl::DslValue::as_f64), Some(2.5));
+    assert_eq!(input_leaf(&host.host_snapshot, &payload).unwrap(), Some(change_widget_input(&shape, "width", WidgetInputValue::Number(2.5))));
+    host.set_neuron_params(&shape, r#"{"width":{"$schema":"number","value":2.5}}"#).unwrap();
+    assert_eq!(input_leaf(&host.host_snapshot, &payload).unwrap(), None, "an unchanged field is no edit");
+    let text = SetWidgetInput { widget_id: note.clone(), channel: "text".into(), value: "hello".into(), component: None };
+    assert_eq!(input_leaf(&host.host_snapshot, &text).unwrap(), Some(change_widget_input(&note, "text", WidgetInputValue::Text("hello".into()))));
     host.connect_ports(&source, "number", &shape, "width").unwrap();
     payload.value = "3.5".into();
-    assert!(apply_to_host(&mut host, &payload).unwrap_err().contains("connected"));
+    assert!(input_leaf(&host.host_snapshot, &payload).unwrap_err().contains("connected"));
     payload.channel = "missing".into();
-    assert!(apply_to_host(&mut host, &payload).is_err());
+    assert!(input_leaf(&host.host_snapshot, &payload).is_err());
     host.retire_cold();
 }

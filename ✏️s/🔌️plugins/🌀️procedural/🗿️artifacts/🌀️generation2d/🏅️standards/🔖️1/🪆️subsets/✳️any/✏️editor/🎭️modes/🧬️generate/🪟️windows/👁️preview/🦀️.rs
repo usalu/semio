@@ -3,7 +3,13 @@
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::generation_preview_layers;
-use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::built_text_node;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -39,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_text: Option<&str>, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_text.filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
-        return built_text_node(semio_framework_plugin::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
+        return built_text_node(semio_framework_ui_locale::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
     }
     let layers = generation_preview_layers(eval_json);
     let _ = GENERATION2D_PLAY_APP_ID;

@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces-a/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces-a/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces-a/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces-a/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🏢️organizational/♻️replace/♻️replaces-a/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("replace-organizational-requirement/replaces-organizational-requirement-a: before snapshot decodes")

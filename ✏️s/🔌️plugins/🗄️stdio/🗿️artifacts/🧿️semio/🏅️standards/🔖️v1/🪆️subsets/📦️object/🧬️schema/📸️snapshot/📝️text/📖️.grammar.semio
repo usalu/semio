@@ -6,8 +6,8 @@ start document
 # UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM object wave (W2c, first COMPOSITE subset). Real grammar for
 # `SemioObjectSnapshot::print_dsl`/`parse_dsl` (📸️snapshot/🦀️.rs's
 # `print_object_snapshot_body`/`parse_object_snapshot_body`). `brep`/`mesh`/`properties` are CHILD
-# HANDLES — exactly `[<hex child_id>,<hex target-uri>]` or the empty `[]` — never the child's own
-# embedded content (composition rule: a child handle is two strings, that is all the parent
+# HANDLES — exactly `[<hex child_id>,<four literal hex reference fields>]` or the empty `[]` — never the child's own
+# embedded content (composition rule: a child handle retains its identity and four reference strings, that is all the parent
 # stores).
 artifact-mark = "stdio.semio.object"
 document = artifact-mark schema-line transform-line brep-line mesh-line properties-line
@@ -18,8 +18,12 @@ brep-line = "brep" "=" child
 mesh-line = "mesh" "=" child
 properties-line = "properties" "=" child
 
-child = "[" "]" | "[" hex "," hex "]"
-number = INT | FLOAT
+child = "[" "]" | "[" hex "," reference "]"
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare, deliberately NOT defined as a production here) is the framework's built-in `hex`
 # MACRO — every `schema`/child-handle string routes through it.
+
+reference = "[" hex "," hex "," hex "," hex "]"
+
+# 🔢️ Numeric identifiers are inf or nan64_ followed by exactly sixteen hexadecimal IEEE754 bits of NaN class.

@@ -1,3 +1,5 @@
+import { resolveTestLevel, atTestLevel } from "../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin size owner. */
 
@@ -5,7 +7,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -129,7 +131,7 @@ type EngineWasmSizeRow = PluginWasmSizeBreakdown & { readonly engineId: string; 
 const ENGINE_SIZE_REPORT_PATH = join(pluginOutRoot, "📈️engine-size-report.json");
 
 /** 📏️ Every wasm-bindgen engine's `*_bg.wasm` currently built under `node_modules/@semio-tech/*`
- * (flow-core, node-graph, editor, tiled-map, paint, terrain, board-2d — see `runWasmPackWebBuild`'s
+ * (flow-core, node-graph, editor, tiled-map, paint, terrain, board-2d — see `buildWasmWebV1`'s
  * `profile` option). These packages are workspace-symlinked (bun links `node_modules/@semio-tech/<pkg>`
  * to the crate dir), so each entry's realpath is resolved before scanning its `pkg/` dir. Reuses
  * `analyzePluginWasmModule` verbatim — it's generic wasm section accounting, not plugin-specific. */

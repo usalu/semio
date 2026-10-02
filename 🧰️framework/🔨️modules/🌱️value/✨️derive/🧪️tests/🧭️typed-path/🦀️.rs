@@ -1,6 +1,6 @@
 //! 🧭️ Language-neutral typed-path fixtures exercised through generated Rust implementations.
 
-use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -296,4 +296,10 @@ mod decoding_trait_collision {
         let mut choice=Choice::Value(1);let replacement=Choice::Value(2);
         FromValue::edit_value_at_path(&mut choice,&[],ValueEdit::Set(replacement.to_value())).unwrap();assert_eq!(choice,replacement);
     }
+}
+
+#[test]
+fn controlled_empty_enum_corpus_refuses_every_uninhabited_wire(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🔁️codec/🧫️fixtures/🛫️controlled/🔣️.json")).unwrap();
+ for row in fixture["emptyEnums"].as_array().unwrap(){assert_eq!(row["inhabited"],false);for input in row["inputs"].as_array().unwrap(){let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(10000,&mut callback);let value=DslValue::from(input);match row["id"].as_str().unwrap(){"external-empty"=>assert!(EmptyExternal::from_value_controlled(&value,&mut control).is_err()),"tagged-empty"=>assert!(EmptyTagged::from_value_controlled(&value,&mut control).is_err()),_=>panic!("unknown empty enum identity")};}}
 }

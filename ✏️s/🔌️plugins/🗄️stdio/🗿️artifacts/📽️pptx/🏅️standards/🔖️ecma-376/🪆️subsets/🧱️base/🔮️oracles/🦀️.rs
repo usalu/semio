@@ -585,7 +585,7 @@ mod oracles {
         number_field(value, key).max(0.0) as usize
     }
     fn i64_field(value: &Json, key: &str) -> i64 {
-        number_field(value, key) as i64
+        value.str(key).parse::<i64>().expect("signed64 transform scalar")
     }
 
     fn json_to_transform(value: &Json) -> Transform {
@@ -595,7 +595,7 @@ mod oracles {
         }
     }
     fn transform_to_json(t: Transform) -> Json {
-        Json::Object(vec![("x".into(), Json::Number(t.x as f64)), ("y".into(), Json::Number(t.y as f64)), ("cx".into(), Json::Number(t.cx as f64)), ("cy".into(), Json::Number(t.cy as f64))])
+        Json::Object(vec![("x".into(), Json::String(t.x.to_string())), ("y".into(), Json::String(t.y.to_string())), ("cx".into(), Json::String(t.cx.to_string())), ("cy".into(), Json::String(t.cy.to_string()))])
     }
 
     /// 🔎️ A wire `textFrame` (`[{runs: [{text, …}]}]`) as the text this oracle models: runs concatenated per paragraph,

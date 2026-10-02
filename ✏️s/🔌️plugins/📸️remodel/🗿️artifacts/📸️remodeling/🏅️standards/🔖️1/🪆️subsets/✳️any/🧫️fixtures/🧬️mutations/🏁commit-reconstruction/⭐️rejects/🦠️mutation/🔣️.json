@@ -1,7 +1,11 @@
 {
   "mutation": "commitReconstruction",
   "sparse": {
-    "points": "remodeling-content:remodeling-asset-orbit-sparse-unpublished|2",
+    "points": {
+      "kind": "content",
+      "contentId": "remodeling-asset-orbit-sparse-unpublished",
+      "chunkCount": "2"
+    },
     "colors": null
   },
   "trajectory": null,

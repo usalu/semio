@@ -1,5 +1,8 @@
 //! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
 
+#[path="🔣️json/🦀️.rs"]
+pub(crate) mod program_json;
+
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.txt"]
 }

@@ -1,18 +1,199 @@
 {
- "schema":"s.wfc.wfc2d","seed":"18446744073709551615",
- "tiles":[
-  {"id":"","label":"","weightBits":"8000000000000000","media":{"kind":"Empty"}},
-  {"id":"bitmap","weightBits":"fff0000000000000","media":{"kind":"Bitmap","width":4294967295,"height":0,"palette":[{"r":4294967295,"g":2,"b":3,"a":0}],"pixels":"AAE="}},
-  {"id":"vector 🧬","weightBits":"7ff8000000004321","media":{"kind":"Vector","paths":[{"strokeWidthBits":"0000000000000001","fill":{"r":1,"g":2,"b":3,"a":4},"stroke":{"r":5,"g":6,"b":7,"a":4294967295},"segments":[
-   {"kind":"Move","toBits":["8000000000000000","7ff0000000000001"]},
-   {"kind":"Line","toBits":["3ff0000000000000","fff0000000000000"]},
-   {"kind":"Quad","ctrlBits":["0000000000000001","7ff0000000000000"],"toBits":["7ff8000000004321","0000000000000000"]},
-   {"kind":"Cubic","ctrl1Bits":["3ff0000000000000","4000000000000000"],"ctrl2Bits":["4008000000000000","4010000000000000"],"toBits":["4014000000000000","4018000000000000"]},
-   {"kind":"Close"}
-  ]},{"strokeWidthBits":"8000000000000000","segments":[]}]}},
-  {"id":"image","label":"世界","weightBits":"3ff0000000000000","media":{"kind":"Image","childId":"owned-image","target":{"artifactId":"picture","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"image"}}}}
- ],
- "slots":[{"id":"box","xBits":"8000000000000000","yBits":"7ff0000000000001","widthBits":"7ff8000000004321","heightBits":"0000000000000001","pinnedTileId":""},{"id":"other","xBits":"3ff0000000000000","yBits":"4000000000000000","widthBits":"7ff0000000000000","heightBits":"fff0000000000000"}],
- "edges":[{"id":"edge","fromSlotId":"box","toSlotId":"other","relation":"above 世界"}],
- "rules":[{"id":"global","tileAId":"","tileBId":"bitmap","allowed":false},{"id":"blank","tileAId":"bitmap","tileBId":"vector 🧬","relation":"","allowed":true},{"id":"named","tileAId":"vector 🧬","tileBId":"image","relation":"above 世界","allowed":true}]
+  "schema": "s.wfc.wfc2d",
+  "seed": "18446744073709551615",
+  "tiles": [
+    {
+      "id": "",
+      "label": "",
+      "weightBits": "8000000000000000",
+      "media": {
+        "kind": "Empty"
+      }
+    },
+    {
+      "id": "bitmap",
+      "weightBits": "fff0000000000000",
+      "media": {
+        "kind": "Bitmap",
+        "width": 4294967295,
+        "height": 0,
+        "palette": [
+          {
+            "r": 4294967295,
+            "g": 2,
+            "b": 3,
+            "a": 0
+          }
+        ],
+        "pixels": "AAE="
+      }
+    },
+    {
+      "id": "vector 🧬",
+      "weightBits": "7ff8000000004321",
+      "media": {
+        "kind": "Vector",
+        "paths": [
+          {
+            "strokeWidthBits": "0000000000000001",
+            "fill": {
+              "r": 1,
+              "g": 2,
+              "b": 3,
+              "a": 4
+            },
+            "stroke": {
+              "r": 5,
+              "g": 6,
+              "b": 7,
+              "a": 4294967295
+            },
+            "segments": [
+              {
+                "kind": "Move",
+                "toBits": [
+                  "8000000000000000",
+                  "7ff0000000000001"
+                ]
+              },
+              {
+                "kind": "Line",
+                "toBits": [
+                  "3ff0000000000000",
+                  "fff0000000000000"
+                ]
+              },
+              {
+                "kind": "Quad",
+                "ctrlBits": [
+                  "0000000000000001",
+                  "7ff0000000000000"
+                ],
+                "toBits": [
+                  "7ff8000000004321",
+                  "0000000000000000"
+                ]
+              },
+              {
+                "kind": "Cubic",
+                "ctrl1Bits": [
+                  "3ff0000000000000",
+                  "4000000000000000"
+                ],
+                "ctrl2Bits": [
+                  "4008000000000000",
+                  "4010000000000000"
+                ],
+                "toBits": [
+                  "4014000000000000",
+                  "4018000000000000"
+                ]
+              },
+              {
+                "kind": "Close"
+              }
+            ]
+          },
+          {
+            "strokeWidthBits": "8000000000000000",
+            "segments": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "image",
+      "label": "世界",
+      "weightBits": "3ff0000000000000",
+      "media": {
+        "kind": "Image",
+        "childId": "owned-image",
+        "target": {
+          "artifactId": "picture",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "image"
+          }
+        }
+      }
+    }
+  ],
+  "slots": [
+    {
+      "id": "box",
+      "xBits": "8000000000000000",
+      "yBits": "7ff0000000000001",
+      "widthBits": "7ff8000000004321",
+      "heightBits": "0000000000000001",
+      "pinnedTileId": ""
+    },
+    {
+      "id": "other",
+      "xBits": "3ff0000000000000",
+      "yBits": "4000000000000000",
+      "widthBits": "7ff0000000000000",
+      "heightBits": "fff0000000000000"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge",
+      "fromSlotId": "box",
+      "toSlotId": "other",
+      "relation": "above 世界"
+    }
+  ],
+  "rules": [
+    {
+      "id": "global",
+      "tileAId": "",
+      "tileBId": "bitmap",
+      "allowed": false
+    },
+    {
+      "id": "blank",
+      "tileAId": "bitmap",
+      "tileBId": "vector 🧬",
+      "relation": "",
+      "allowed": true
+    },
+    {
+      "id": "named",
+      "tileAId": "vector 🧬",
+      "tileBId": "image",
+      "relation": "above 世界",
+      "allowed": true
+    }
+  ],
+  "controlledAdmission": {
+    "items": 1024,
+    "cancelAfter": 256,
+    "textBytes": 100000,
+    "smallValueBudget": 128
+  },
+  "literalIdentityStates": [
+    {
+      "tileId": "same",
+      "slotId": "same slot",
+      "ruleId": "repeated",
+      "edgeId": "repeated edge",
+      "tileAId": "missing 🧬\u0000!@/",
+      "tileBId": "",
+      "pinTileId": "unresolved",
+      "fromSlotId": "absent",
+      "toSlotId": "unknown!@/"
+    },
+    {
+      "tileId": "",
+      "slotId": "",
+      "ruleId": "",
+      "edgeId": "",
+      "tileAId": "unresolved!@/",
+      "tileBId": "absent",
+      "pinTileId": "",
+      "fromSlotId": "",
+      "toSlotId": "missing 世界"
+    }
+  ]
 }

@@ -3,20 +3,20 @@ use semio_framework_plugin::WindowTransientOwner;
 
 /// ♻️ Walks a `RetirementCursor` tree under the smallest positive grant there is (one byte per
 /// turn), pushing each `Child` cursor the owner hands back — the exact shape
-/// `store::retirement::RetirementStep` declares, so a nested owner is retired explicitly instead of
+/// `semio_framework_value::retirement::RetirementStep` declares, so a nested owner is retired explicitly instead of
 /// being dropped recursively.
-fn retire(cursor: Box<dyn store::retirement::RetirementCursor>, maximum_turns: usize) {
+fn retire(cursor: Box<dyn semio_framework_value::retirement::RetirementCursor>, maximum_turns: usize) {
     let mut stack = vec![cursor];
     for _ in 0..maximum_turns {
         let Some(top) = stack.last_mut() else { return };
         match top.close_step(1) {
-            store::retirement::RetirementStep::Child(child) => stack.push(child),
-            store::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= 1),
-            store::retirement::RetirementStep::Complete => {
+            semio_framework_value::retirement::RetirementStep::Child(child) => stack.push(child),
+            semio_framework_value::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= 1),
+            semio_framework_value::retirement::RetirementStep::Complete => {
                 assert!(top.terminal_is_empty());
                 stack.pop();
             }
-            store::retirement::RetirementStep::BudgetExhausted => panic!("positive tiny retirement grant was reported exhausted"),
+            semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("positive tiny retirement grant was reported exhausted"),
         }
     }
     panic!("Generation3d preview retirement exceeded its bounded turns");
@@ -28,7 +28,7 @@ fn preview_eval_retained_capacity_is_admitted_and_retired_with_tiny_grants() {
     let mutation = Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text: Some(eval_text) };
     let footprint = preflight(&mutation).expect("large logical preview fits the Store envelope");
     assert!(footprint.is_admissible() && footprint.retained_bytes >= 65_536);
-    retire(store::retirement::RetireOwned::retirement(mutation), 70_000);
+    retire(semio_framework_value::retirement::RetireOwned::retirement(mutation), 70_000);
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn preview_eval_oversized_reserved_capacity_rejects_returns_and_retires_the_exac
     assert_eq!(eval_text, "e");
     assert_eq!(eval_text.as_ptr(), pointer);
     assert_eq!(eval_text.capacity(), capacity);
-    retire(store::retirement::RetireOwned::retirement(Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text: Some(eval_text) }), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 16);
+    retire(semio_framework_value::retirement::RetireOwned::retirement(Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text: Some(eval_text) }), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 16);
 }
 
 #[test]

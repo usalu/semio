@@ -35,8 +35,8 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
         base.documents.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![admit_local_document(prior.clone())]).unwrap_or_default()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Stop keeping \"{}\" on this device", self.document_id), &format!("\"{}\" nicht mehr auf diesem Gerät behalten", self.document_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Stop keeping \"{}\" on this device", self.document_id), &format!("\"{}\" nicht mehr auf diesem Gerät behalten", self.document_id))
     }
 
     fn target(&self) -> Vec<String> {

@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change air loop {} return node to {:?}", self.id.0, self.new_return_node_id), &format!("Rückluftknoten von Luftkreislauf {} auf {:?} ändern", self.id.0, self.new_return_node_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change air loop {} return node to {:?}", self.id.0, self.new_return_node_id), &format!("Rückluftknoten von Luftkreislauf {} auf {:?} ändern", self.id.0, self.new_return_node_id))
     }
 
     fn target(&self) -> Vec<String> {

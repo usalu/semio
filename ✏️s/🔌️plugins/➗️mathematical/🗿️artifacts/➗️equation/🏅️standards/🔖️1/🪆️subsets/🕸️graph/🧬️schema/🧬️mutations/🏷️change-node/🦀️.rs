@@ -22,8 +22,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ChangeNodeLa
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Relabel node \"{}\" to \"{}\"", self.id, self.new_label), &format!("Beschriftung von Knoten \"{}\" in \"{}\" ändern", self.id, self.new_label))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Relabel node \"{}\" to \"{}\"", self.id, self.new_label), &format!("Beschriftung von Knoten \"{}\" in \"{}\" ändern", self.id, self.new_label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -22,8 +22,8 @@
 //! about what it moved is asserted on top of that.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::cc2::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_step_ap214_cc2};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::cc2::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_step_ap214_cc2};
+use semio_repo_test_host::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🏷️ How this class names itself in a failure message.
@@ -140,9 +140,9 @@ mod subject {
     use semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation;
     use semio_s_artifact_stdio_step::StepSnapshot;
     use semio_s_artifact_stdio_step::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::cc2::project_step_ap214_cc2;
-    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
+    use semio_repo_test_host::law::wire_operation;
+    use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::cc2::project_step_ap214_cc2;
+    use semio_repo_test_host::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<StepCc2Mutation, String> {

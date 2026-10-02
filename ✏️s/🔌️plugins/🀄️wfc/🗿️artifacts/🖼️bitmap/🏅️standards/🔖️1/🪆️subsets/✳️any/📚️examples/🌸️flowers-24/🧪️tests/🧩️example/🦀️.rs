@@ -41,5 +41,5 @@ fn the_model_declares_the_ground_colour_and_a_narrow_symmetry_group() {
     assert!(!snapshot.model.periodic_input);
     assert_eq!(snapshot.pinned.len(), 1, "the example exercises the pin lane too");
     assert_eq!(snapshot.seed, SEED);
-    assert_eq!(label(), semio_framework_plugin::LocalizedLabel::native("Flowers 24", "Blumen 24"));
+    assert_eq!(label(), semio_framework_ui_locale::LocalizedLabel::native("Flowers 24", "Blumen 24"));
 }

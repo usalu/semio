@@ -451,7 +451,7 @@ pub fn cluster_io_layout(cluster_id: &str, name: &str, tree: &Tree, synapses: &[
 }
 
 fn neural_value_to_dsl_value(value: &NeuralValue) -> crate::os_dsl::DslValue {
-    crate::os_dsl::to_dsl_value(value).unwrap_or(crate::os_dsl::DslValue::Null)
+    semio_framework_value::ToValue::to_value(value)
 }
 
 /// 🔤️ The port type a node-graph surface publishes for a channel: the DECLARED value schemas,
@@ -951,7 +951,7 @@ pub fn dag_preview_content_from_dict(dict: &Dictionary) -> DagPreviewContent {
     if dict.is_empty() {
         return DagPreviewContent::Empty;
     }
-    crate::os_dsl::to_dsl_value(dict).ok().map_or(DagPreviewContent::Empty, |json| DagPreviewContent::Tree { json })
+    DagPreviewContent::Tree { json: semio_framework_value::ToValue::to_value(dict) }
 }
 
 pub fn preview_content_summary(content: &DagPreviewContent) -> String {

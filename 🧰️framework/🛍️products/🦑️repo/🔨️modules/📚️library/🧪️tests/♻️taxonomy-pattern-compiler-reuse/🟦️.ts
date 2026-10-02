@@ -1,21 +1,24 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
-import { basename, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { basename, isAbsolute, join, parse as nativePathParts, posix, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import picomatch from "picomatch";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import { taxonomyPathPatternMatches } from "../../🔍️discovery/🟦️.ts";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
+import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Matcher = Readonly<{ matches(path: string, pattern: string): boolean }>;
 type Row = Readonly<{ id: string; path: string; pattern: string; expected: boolean }>;
-type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string } } }>;
+type Vector = Readonly<{ schemaVersion: number; contractId: string; factory: string; rounds: number; uniqueNormalizedPatterns: number; cases: Row[]; invalidPatterns: string[]; oracle: { library: string; options: Record<string, string | boolean> }; integration: { loadedField: string; normalizerOwners: Record<string, number>; loadOwners: string[]; fixedContractCallCount: number; changedInput: { pointer: string; suffix: string }; freshProbe: { path: string; pattern: string }; sessionContract: { equalBytes: Counts; changedBytes: Counts; invalid: Counts; lossy: Counts; syntax: Counts; callerMutationSuffix: string; restoredSuffix: string } } }>;
+type Counts = Readonly<{ reads: number; parses: number; validations: number }>;
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🔍️discovery/🟦️.ts");
 const bytes = readFileSync(join(import.meta.dir, "../../🧫️fixtures/♻️taxonomy-pattern-compiler-reuse/🔣️.json"), "utf8"), vector: Vector = JSON.parse(bytes);
 const source = ts.createSourceFile(sourcePath, readFileSync(sourcePath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizer = ts.createSourceFile(normalizerPath, readFileSync(normalizerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizer = ts.createSourceFile(normalizerPath, normalizationSourceDeclarations(normalizerPath), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+const serializationPath = join(library, "🧾️serialization/🔣️json/🟦️.ts"), serialization = ts.createSourceFile(serializationPath, readFileSync(serializationPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const compilers = [{ id: "bun", compile: (code: string): string => new Bun.Transpiler({ loader: "ts" }).transformSync(code) }, { id: "typescript", compile: (code: string): string => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText }];
 const pathForOracle = (path: string): string => path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
 
@@ -154,7 +157,7 @@ test("every normalizer pattern query has a required invocation-owned matcher and
     owners[name] = (owners[name] ?? 0) + 1;
   }
   expect(owners).toEqual(vector.integration.normalizerOwners);
-  expect(calls.filter((node) => node.expression.getText(normalizer) === "createTaxonomyPathMatcher").map(owner).sort()).toEqual(["parseTaxonomy", "renderCatalogGlob"]);
+  expect(calls.filter((node) => node.expression.getText(normalizer) === "createTaxonomyPathMatcher").map(owner).sort()).toEqual(["loadTaxonomy", "parseTaxonomy", "renderCatalogGlob"]);
   expect(calls.filter((node) => node.expression.getText(normalizer) === "loadTaxonomy").map(owner)).toEqual(vector.integration.loadOwners);
   const fixed = declaration(normalizer, "matchingFixedContracts"), parameter = fixed.parameters.find((entry) => entry.name.getText(normalizer) === "taxonomy");
   expect(parameter?.type?.getText(normalizer)).toBe("LoadedTaxonomy");
@@ -167,8 +170,9 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   const parser = declaration(normalizer, "parseTaxonomy"), factoryCall = nodes(parser, ts.isCallExpression).find((node) => node.expression.getText(normalizer) === "createTaxonomyPathMatcher")!;
   const validatorCall = nodes(parser, ts.isCallExpression).find((node) => node.expression.getText(normalizer) === "validateTaxonomy")!;
   expect(factoryCall.pos).toBeGreaterThan(validatorCall.end);
-  expect(nodes(parser, ts.isShorthandPropertyAssignment).some((node) => node.name.text === "pathMatcher")).toBe(true);
+  expect(nodes(parser, ts.isShorthandPropertyAssignment).some((node) => node.name.text === "pathMatcher")).toBe(false);
   const loader = declaration(normalizer, "loadTaxonomy"), loaderCalls = nodes(loader, ts.isCallExpression).map((node) => node.expression.getText(normalizer));
+  expect(nodes(loader, ts.isPropertyAssignment).some((node) => node.name.getText(normalizer) === "pathMatcher" && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(normalizer) === "createTaxonomyPathMatcher")).toBe(true);
   for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
   expect(loader.getText(normalizer)).toContain('if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path)');
   const validator = declaration(source, "validateTaxonomy"), validationCalls = nodes(validator, ts.isCallExpression);
@@ -177,17 +181,21 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   expect(validationCalls.filter((node) => node.expression.getText(source) === "pathMatcher.matches")).toHaveLength(2);
 });
 
-test("actual load and parse declarations reread and revalidate independent matcher sessions", () => {
+for (const compiler of compilers) test("actual load caches content facts while capturing fresh isolated schema and matcher sessions: " + compiler.id, () => {
   const repoRoot = resolve(library, "../../../../.."), schemaPath = join(library, "🔣️taxonomy.json");
-  const names = ["loadTaxonomy", "assertLexicalInputOutsideOpaque", "assertNoFollowAncestors", "lstatOrNull", "parseTaxonomy", "record", "canonicalJson", "canonicalValue", "canonicalArrayKey", "requiredString", "stringArray", "requireExactKeys", "normalizeRelative", "sourceRelative", "fixedExpiry", "splitLeadingEmoji", "graphemes", "isEmojiGrapheme", "emojiFold"];
-  const functions = names.map((name) => declaration(normalizer, name).getText(normalizer).replace(/^export\s+/u, ""));
-  const constants = ["LEXICAL_OPAQUE_ROOTS", "TAXONOMY_RELATIVE_PATH", "SEGMENTER"].map((name) => {
+  const names = ["loadTaxonomy", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain", "assertLexicalInputOutsideOpaque", "assertNoFollowAncestors", "lstatOrNull", "parseTaxonomy", "requireRecord", "canonicalJson", "canonicalValue", "canonicalArrayKey", "requireLiteral", "requireString", "requireStringArray", "requireExactKeys", "normalizeRelative", "sourceRelative", "fixedExpiry", "splitLeadingEmoji", "graphemes", "isEmojiGrapheme", "emojiFold"];
+  const functions = names.map((name) => {
+    const provider = ["canonicalJson", "canonicalValue", "canonicalArrayKey"].includes(name) ? serialization : normalizer;
+    return declaration(provider, name).getText(provider).replace(/^export\s+/u, "");
+  });
+  const constants = ["LEXICAL_OPAQUE_ROOTS", "TAXONOMY_RELATIVE_PATH", "SEGMENTER", "TAXONOMY_OPAQUE_PATH_EXCLUSIONS", "PARSED_TAXONOMIES", "PARSED_TAXONOMY_CAPACITY"].map((name) => {
     const rows = normalizer.statements.filter((node): node is ts.VariableStatement => ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => entry.name.getText(normalizer) === name));
     expect(rows).toHaveLength(1);
-    return rows[0]!.getText(normalizer);
+    return rows[0]!.getText(normalizer).replace(/^export\s+/u, "");
   });
+  const ancestry = normalizer.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "UnsafeDirectoryAncestorError");
+  expect(ancestry).toHaveLength(1);
   type Loaded = { pathMatcher: Matcher; schema: { fixedFilenameContracts: Record<string, { reason: string }> }; discoverySchema: discovery.Taxonomy; input: discovery.SemanticOwnedInputFileSnapshot };
-  for (const compiler of compilers) {
     const actual = compiled(compiler, true);
     let reads = 0, parses = 0, validations = 0, variant: "original" | "changed" | "invalid" | "lossy" | "syntax" = "original";
     const captured: discovery.SemanticOwnedInputFileSnapshot[] = [];
@@ -196,50 +204,63 @@ test("actual load and parse declarations reread and revalidate independent match
       const input = discovery.semanticOwnedInputFileSnapshot(root, path);
       if (!input) return null;
       captured.push(input);
-      const document = JSON.parse(Buffer.from(input.bytes).toString("utf8"));
-      if (variant === "changed") document.fixedFilenameContracts["cargo-manifest"].reason += vector.integration.changedInput.suffix;
-      if (variant === "invalid") document.windowEmptyFacetFileKindId = "not-registered";
-      const bytes = variant === "lossy" ? Buffer.from([0xff]) : variant === "syntax" ? Buffer.from("{") : variant === "original" ? input.bytes : Buffer.from(JSON.stringify(document));
+      let bytes = input.bytes;
+      if (variant === "changed" || variant === "invalid") {
+        const document = JSON.parse(Buffer.from(input.bytes).toString("utf8"));
+        if (variant === "changed") document.fixedFilenameContracts["cargo-manifest"].reason += vector.integration.changedInput.suffix;
+        else document.windowEmptyFacetFileKindId = "not-registered";
+        bytes = Buffer.from(JSON.stringify(document));
+      } else if (variant === "lossy") bytes = Buffer.from([0xff]);
+      else if (variant === "syntax") bytes = Buffer.from("{");
       return { ...input, bytes, size: bytes.byteLength, contentHash: createHash("sha256").update(bytes).digest("hex") };
     };
-    const environment = { ...discovery, basename, isAbsolute, join, posix, relative, resolve, sep, lstatSync, Buffer, createTaxonomyPathMatcher: actual.create, semanticOwnedInputFileSnapshot: snapshot, validateTaxonomy: (document: discovery.Taxonomy): string[] => { validations++; return discovery.validateTaxonomy(document); }, JSON: { stringify: JSON.stringify, parse: (text: string): unknown => { parses++; return JSON.parse(text); } } };
-    const javascript = compiler.compile([...constants, ...functions].join("\n"));
+    const environment = { ...discovery, basename, isAbsolute, join, parse: nativePathParts, posix, relative, resolve, sep, lstatSync, Buffer, createTaxonomyPathMatcher: actual.create, semanticOwnedInputFileSnapshot: snapshot, validateTaxonomy: (document: discovery.Taxonomy): string[] => { validations++; return discovery.validateTaxonomy(document); }, JSON: { stringify: JSON.stringify, parse: (text: string): unknown => { parses++; return JSON.parse(text); } } };
+    const javascript = compiler.compile([...constants, ancestry[0]!.getText(normalizer).replace(/^export\s+/u, ""), ...functions].join("\n"));
     const load = new Function(...Object.keys(environment), `${javascript}\nreturn loadTaxonomy;`)(...Object.values(environment)) as (options: { repoRoot: string; taxonomyPath: string }) => Loaded;
     const options = { repoRoot, taxonomyPath: schemaPath }, left = load(options), firstCount = actual.expressions.length, right = load(options);
     expect(firstCount).toBeGreaterThan(0);
     const document = left.discoverySchema;
     const patterns = [...Object.values(document.fixedFilenameContracts).map((row) => row.pathPattern), ...Object.values(document.fixedDirectoryContracts).map((row) => row.pathPattern), ...Object.values(document.fileKindResolutionRules).map((row) => "pathPattern" in row ? row.pathPattern : undefined), ...Object.values(document.scopedFileKinds).map((row) => row.pathPattern), ...Object.values(document.generatorContracts).flatMap((row) => row.inputPatterns)].filter((pattern): pattern is string => typeof pattern === "string");
     expect(firstCount).toBe(new Set(patterns.map((pattern) => pattern.normalize("NFC"))).size);
-    expect(actual.expressions).toHaveLength(firstCount * 2);
+    expect(actual.expressions).toHaveLength(firstCount);
     expect(left.pathMatcher).not.toBe(right.pathMatcher);
     expect(left.discoverySchema).not.toBe(right.discoverySchema);
     expect(left.input).not.toBe(right.input);
     expect(left.discoverySchema).toEqual(right.discoverySchema);
-    expect([reads, parses, validations]).toEqual([2, 2, 2]);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.equalBytes);
+    const originalReason = left.schema.fixedFilenameContracts["cargo-manifest"]!.reason;
+    left.schema.fixedFilenameContracts["cargo-manifest"]!.reason += vector.integration.sessionContract.callerMutationSuffix;
+    expect(right.schema.fixedFilenameContracts["cargo-manifest"]!.reason).toBe(originalReason);
     const probe = vector.integration.freshProbe;
-    for (const session of [left, right]) for (let repeat = 0; repeat < 3; repeat++) expect(session.pathMatcher.matches(probe.path, probe.pattern)).toBe(picomatch(probe.pattern, vector.oracle.options)(probe.path));
-    expect(actual.expressions).toHaveLength(firstCount * 2 + 2);
+    const probeOracle = picomatch(probe.pattern, vector.oracle.options);
+    for (const session of [left, right]) for (let repeat = 0; repeat < 3; repeat++) expect(session.pathMatcher.matches(probe.path, probe.pattern)).toBe(probeOracle(probe.path));
+    expect(actual.expressions).toHaveLength(firstCount + 2);
     variant = "changed";
     const changed = load(options);
-    expect(changed.schema.fixedFilenameContracts["cargo-manifest"]!.reason).toBe(left.schema.fixedFilenameContracts["cargo-manifest"]!.reason + vector.integration.changedInput.suffix);
+    expect(changed.schema.fixedFilenameContracts["cargo-manifest"]!.reason).toBe(originalReason + vector.integration.changedInput.suffix);
     expect(changed.input.contentHash).not.toBe(left.input.contentHash);
     expect(changed.pathMatcher).not.toBe(left.pathMatcher);
-    expect(actual.expressions).toHaveLength(firstCount * 3 + 2);
-    expect([reads, parses, validations]).toEqual([3, 3, 3]);
+    expect(actual.expressions).toHaveLength(firstCount * 2 + 2);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.changedBytes);
     variant = "invalid";
     expect(() => load(options)).toThrow("discovery contract validation failed");
-    expect([reads, parses, validations]).toEqual([4, 4, 4]);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.invalid);
     variant = "lossy";
     expect(() => load(options)).toThrow("lossy UTF-8");
-    expect([reads, parses, validations]).toEqual([5, 4, 4]);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.lossy);
     variant = "syntax";
     expect(() => load(options)).toThrow(SyntaxError);
-    expect([reads, parses, validations]).toEqual([6, 5, 4]);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.syntax);
     expect(() => load({ ...options, taxonomyPath: "compose/never-read.json" })).toThrow("inside an opaque path");
-    expect([reads, parses, validations]).toEqual([6, 5, 4]);
-    expect(captured).toHaveLength(6);
+    expect({ reads, parses, validations }).toEqual(vector.integration.sessionContract.syntax);
+    variant = "original";
+    const restored = load(options);
+    expect(restored.schema.fixedFilenameContracts["cargo-manifest"]!.reason).toBe(originalReason + vector.integration.sessionContract.restoredSuffix);
+    expect(restored.pathMatcher).not.toBe(left.pathMatcher);
+    expect(restored.input).not.toBe(left.input);
+    expect({ reads, parses, validations }).toEqual({ ...vector.integration.sessionContract.syntax, reads: 7 });
+    expect(captured).toHaveLength(7);
     expect(new Set(captured.map((input) => input.contentHash)).size).toBe(1);
-  }
 });
 
 test("the owned factory interface and actual declarations satisfy strict TypeScript", () => {
@@ -256,17 +277,18 @@ test("the owned factory interface and actual declarations satisfy strict TypeScr
   expect(ts.getPreEmitDiagnostics(program).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
 });
 
-test("changed runtime matcher declarations and call sites are strictly typed", () => {
-  const program = ts.createProgram([sourcePath, normalizerPath], { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, allowImportingTsExtensions: true, skipLibCheck: true, noEmit: true, types: ["node"] });
-  for (const path of [sourcePath, normalizerPath]) {
-    const file = program.getSourceFile(path)!;
-    const diagnostics = [...program.getSyntacticDiagnostics(file), ...program.getSemanticDiagnostics(file)];
-    const declarations = file.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === vector.factory || ts.isInterfaceDeclaration(node) && node.name.text === "TaxonomyPathMatcher");
-    const calls = nodes(file, ts.isCallExpression).filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.expression.getText(file)) || ["createTaxonomyPathMatcher", "matchingFixedContracts"].includes(node.expression.getText(file)));
-    const spans = [...declarations, ...calls];
-    const selected = diagnostics.filter((diagnostic) => diagnostic.start !== undefined && spans.some((node) => diagnostic.start! >= node.pos && diagnostic.start! < node.end));
-    expect(selected.map((diagnostic) => `${relative(library, path)}:${file.getLineAndCharacterOfPosition(diagnostic.start ?? 0).line + 1} TS${diagnostic.code} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`)).toEqual([]);
-  }
+const matcherTypeOwners = [...normalizationSourceFiles(normalizerPath).keys()].slice(1).concat(sourcePath, normalizerPath);
+let matcherTypeProgram: ts.Program | undefined;
+
+for (const path of matcherTypeOwners) test("changed runtime matcher declarations and call sites are strictly typed: " + relative(library, path), () => {
+  const program = matcherTypeProgram ??= ts.createProgram(matcherTypeOwners, { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, allowImportingTsExtensions: true, skipLibCheck: true, noEmit: true, types: ["node"] });
+  const file = program.getSourceFile(path)!;
+  const diagnostics = [...program.getSyntacticDiagnostics(file), ...program.getSemanticDiagnostics(file)];
+  const declarations = file.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === vector.factory || ts.isInterfaceDeclaration(node) && node.name.text === "TaxonomyPathMatcher");
+  const calls = nodes(file, ts.isCallExpression).filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.expression.getText(file)) || ["createTaxonomyPathMatcher", "matchingFixedContracts"].includes(node.expression.getText(file)));
+  const spans = [...declarations, ...calls];
+  const selected = diagnostics.filter((diagnostic) => diagnostic.start !== undefined && spans.some((node) => diagnostic.start! >= node.pos && diagnostic.start! < node.end));
+  expect(selected.map((diagnostic) => `${relative(library, path)}:${file.getLineAndCharacterOfPosition(diagnostic.start ?? 0).line + 1} TS${diagnostic.code} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`)).toEqual([]);
 });
 
 test("registers pattern compiler reuse through its closed canonical route", async () => {
@@ -291,7 +313,7 @@ test("registers pattern compiler reuse through its closed canonical route", asyn
   for (const compiler of compilers) {
     const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
     class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-    const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", compiler.compile(code))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Pattern reuse fell through to generic routing"); });
+    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", compiler.compile(code))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Pattern reuse fell through to generic routing"); });
     await router.run([registration.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, registration.source)], options: { cwd: repoRoot } }]);
   }

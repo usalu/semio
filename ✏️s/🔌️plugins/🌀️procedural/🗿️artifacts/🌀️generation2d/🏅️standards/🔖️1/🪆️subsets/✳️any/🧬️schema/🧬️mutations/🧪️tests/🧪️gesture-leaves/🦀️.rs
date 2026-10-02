@@ -20,7 +20,7 @@ fn base() -> Generation2dSnapshot {
 }
 
 fn outcome_codes(mutation: &Generation2dMutation, base: &Generation2dSnapshot) -> Vec<(protocol::Severity, String)> {
-    let (delta, messages) = protocol::Mutation::diff(mutation, base).into_parts();
+    let (delta, messages) = Mutation::diff(mutation, base).into_parts();
     delta.retire_cold();
     messages.into_iter().map(|message| (message.level, message.code.0)).collect()
 }
@@ -144,7 +144,11 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids[edited_at].clone();
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
-        let preview = store.state_before(&target, &drafts).expect("the preview base folds").as_ref().clone();
+        let preview_base = store.state_before(&target, &drafts).expect("the preview base folds");
+        let preview = preview_base.as_ref().clone();
+        if let Ok(state) = std::sync::Arc::try_unwrap(preview_base) {
+            state.retire_cold();
+        }
         let before = fresh_fold(&base, &log[..edited_at]);
         assert_eq!(preview, before, "the preview base is the state right before the edited leaf");
         let mut edited_log = log.clone();

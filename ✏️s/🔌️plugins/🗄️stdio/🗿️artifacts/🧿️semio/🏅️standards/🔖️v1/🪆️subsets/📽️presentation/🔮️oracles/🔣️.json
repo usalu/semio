@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is an independent Python implementation of the semio-native carrier and the fifteen verbs, written from this subset's own committed grammar and protocol documents.",
   "oracles": [
@@ -1056,5 +1056,6 @@
       "family": "structural",
       "notes": "Applied set-text-box-blocks (payload {\"slide_index\": 0, \"shape_index\": 0, \"blocks\": [{\"kind\": \"paragraph\", \"style_id\": null, \"runs\": [{\"text\": \"F1 mutated block\", \"style\": {\"bold\": false, \"italic\": false, \"underline\": false, \"size\": null, \"font\": null, \"color\": null, \"link\": null}}]}], \"mutation\": \"setTextBoxBlocks\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""🧬️ W3-T2-TEXT (session 2): writes the four relative trinity rewriting leaves the node-graph and rail gestures yield
+"""🧬️ W3-T2-TEXT (session 2): writes the five relative trinity rewriting leaves the node-graph and rail gestures yield
 (design §13.2/§13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) — `drag-working-nodes`, `patch-working-nodes`,
-`drag-rule-nodes` and its exact one-row undo `set-rule-layout-points` — with every per-leaf surface (Rust payload, diff,
+`delete-working-nodes`, `drag-rule-nodes` and its exact one-row undo `set-rule-layout-points` — with every per-leaf surface (Rust payload, diff,
 inverse, text/binary identity, descriptor, payload schema with full `x-semio-ui`, TS/GraphQL/protobuf mirrors). Registries
 (aggregate, codecs, grammars, oracle catalog, harness KINDS, crate mounts) are patched separately with anchored edits.
 Run from the repo root: `python3 <ticket>/🧪️w3-t2-text-trinity-leaves.py`. Idempotent (overwrites the leaf files)."""
@@ -81,12 +81,24 @@ LEAVES = [
                 }},
                 "x-semio-ui": {"role": "value", "label": {"en": "Points", "de": "Punkte"}, "description": {"en": "Rule nodes placed at an explicit position.", "de": "Regelknoten an einer expliziten Position."}, "group": "layout", "order": 10},
             },
-            "cleared": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": True, "x-semio-ui": {"widget": "reference", "role": "target", "label": {"en": "Cleared Rule Nodes", "de": "Zurückgesetzte Regelknoten"}, "description": {"en": "Rule nodes returned to their default slot.", "de": "Regelknoten, die an ihren Standardplatz zurückkehren."}, "ref": {"kind": "ruleNode", "domain": "graph", "granularity": "node", "many": True}, "group": "layout", "order": 20}},
+            "cleared": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": True, "x-semio-ui": {"widget": "reference", "role": "target", "label": {"en": "Cleared Rule Nodes", "de": "Zurückgesetzte Regelknoten"}, "description": {"en": "Rule nodes returned to their default slot.", "de": "Regelknoten, die an ihren Standardplatz zurückkehren."}, "ref": {"kind": "ruleNode", "domain": "graph", "granularity": "node"}, "group": "layout", "order": 20}},
         },
         "invariants": [{"id": "keys-unique", "description": {"en": "Every rule node is named at most once across points and cleared keys.", "de": "Jeder Regelknoten wird über Punkte und zurückgesetzte Schlüssel höchstens einmal genannt."}}],
         "ts": "export interface RuleLayoutPlacement {\n  key: string;\n  x: number;\n  y: number;\n}\n\nexport interface SetRuleLayoutPoints {\n  points: RuleLayoutPlacement[];\n  cleared: string[];\n}\n",
         "graphql": "input RuleLayoutPlacementInput { key: String!, x: Float!, y: Float! }\ninput SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]!, cleared: [String!]! }",
         "proto": "message RuleLayoutPlacement { string key = 1; double x = 2; double y = 3; }\nmessage SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated string cleared = 2; }",
+    },
+    {
+        "dir": "✂️delete-working", "emoji": "✂️", "kind": "delete-working-nodes", "variant": "DeleteWorkingNodes", "tag": 11, "display": "Delete Working Nodes",
+        "outcomes": ["applied", "rejected"],
+        "description": "Nodes of the working (before) graph removed together with every edge that has an endpoint on one of them (a `node@port` endpoint names its node before the `@`); a removed root node clears `rootNodeId` to `null`. Nodes the graph lacks are skipped (`mutation.partial`); none present is `mutation.target-missing`.",
+        "required": ["targets"],
+        "properties": {
+            "targets": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": True, "x-semio-ui": TARGETS_UI("Nodes", "Knoten", "Working-graph nodes to delete with every edge touching them; ones the graph lacks are skipped.", "Zu löschende Knoten des Arbeitsgraphen samt jeder Kante, die sie berührt; im Graphen fehlende werden übersprungen.", "node")},
+        },
+        "ts": "export interface DeleteWorkingNodes {\n  targets: string[];\n}\n",
+        "graphql": "input DeleteWorkingNodesInput { targets: [String!]! }",
+        "proto": "message DeleteWorkingNodes { repeated string targets = 1; }",
     },
 ]
 
@@ -319,6 +331,57 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for SetRuleL
 }
 //#endregion 🔖️Mutation
 ''',
+"delete-working-nodes": r'''//! ✂️ Relative rewriting mutation — `DeleteWorkingNodes`: a set of working-graph nodes removed together with every edge that
+//! touches one of them. The selection is the payload, so editing the delete in history removes those nodes from whatever graph
+//! it replays on instead of writing a whole graph back. The node-graph delete gesture yields it (design §13.3 of ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); its exact undo is the base graph's `edit-before-fixture`.
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
+
+//#region 🔖️Mutation
+/// ✂️ `delete-working-nodes` payload.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "delete-working-nodes")]
+pub struct DeleteWorkingNodes {
+    pub targets: Vec<String>,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn delete_working_nodes(targets: Vec<String>) -> RewriteRuleMutation {
+    RewriteRuleMutation::DeleteWorkingNodes(DeleteWorkingNodes { targets })
+}
+
+impl DeleteWorkingNodes {
+    /// 🛂️ Whether the payload is well-formed: at least one target, none twice.
+    pub fn holds_invariants(&self) -> bool {
+        !self.targets.is_empty() && !self.targets.iter().enumerate().any(|(at, id)| self.targets[..at].contains(id))
+    }
+}
+
+impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for DeleteWorkingNodes {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "working-nodes", kind: "delete-working-nodes", record: "DeletedWorkingNodes" };
+
+    fn diff(&self, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        match self.targets.len() {
+            1 => protocol::LocalizedLabel::native("Delete 1 node", "1 Knoten löschen"),
+            count => protocol::LocalizedLabel::native(&format!("Delete {count} nodes"), &format!("{count} Knoten löschen")),
+        }
+    }
+    fn target(&self) -> Vec<String> {
+        self.targets.clone()
+    }
+}
+//#endregion 🔖️Mutation
+''',
 }
 
 DIFF = {
@@ -334,8 +397,8 @@ pub fn diff(payload: &super::DragWorkingNodes, base: &RewritingSnapshot) -> prot
     }
     let moved = super::super::edit_working_graph_nodes(&base.before_fixture_json, &payload.targets, |node| {
         for (axis, offset) in [("x", payload.dx), ("y", payload.dy)] {
-            let at = node.get(axis).and_then(serde_json::Value::as_f64).unwrap_or(0.0);
-            node.insert(axis.to_string(), serde_json::Value::from(at + offset));
+            let at = node.get(axis).and_then(pack::JsonValue::as_f64).unwrap_or(0.0);
+            node.insert(axis, pack::JsonValue::from(at + offset));
         }
         true
     });
@@ -366,9 +429,9 @@ pub fn diff(payload: &super::PatchWorkingNodes, base: &RewritingSnapshot) -> pro
     }
     let value = payload.value.trim().to_string();
     let patched = super::super::edit_working_graph_nodes(&base.before_fixture_json, &payload.targets, |node| {
-        let next = serde_json::Value::String(value.clone());
+        let next = pack::JsonValue::String(value.clone());
         let changed = node.get(&payload.field) != Some(&next);
-        node.insert(payload.field.clone(), next);
+        node.insert(payload.field.as_str(), next);
         changed
     });
     let Some((json, missing, changed)) = patched else {
@@ -447,6 +510,28 @@ pub fn diff(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -> p
 }
 //#endregion 🔖️Diff
 ''',
+"delete-working-nodes": r'''//! 🔺️ Sparse diff builder for `DeleteWorkingNodes` — every addressed node of the working graph removed with every edge that
+//! touches it (and the root it was), the graph written back as compact JSON with sorted keys (`before_fixture_json`).
+use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
+use crate::RewritingSnapshot;
+
+//#region 🔖️Diff
+pub fn diff(payload: &super::DeleteWorkingNodes, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {
+    if !payload.holds_invariants() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "a delete names at least one node, never one twice", payload.targets.clone());
+    }
+    let Some((json, missing)) = super::super::remove_working_graph_nodes(&base.before_fixture_json, &payload.targets) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "the working graph does not decode, so it has none of the targets", payload.targets.clone());
+    };
+    if missing.len() == payload.targets.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a node of the working graph", payload.targets.len()), payload.targets.clone());
+    }
+    let partial: Vec<protocol::MutationMessage> =
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in the working graph): {}", missing.len(), payload.targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+    protocol::MutationOutcome::new(RewritingDiff { before_fixture_json: Some(json), ..Default::default() }).absorb_messages(partial)
+}
+//#endregion 🔖️Diff
+''',
 }
 
 INVERSE = {
@@ -508,6 +593,20 @@ pub fn inverse(payload: &super::SetRuleLayoutPoints, base: &RewritingSnapshot) -
 }
 //#endregion 🔖️Inverse
 ''',
+"delete-working-nodes": r'''//! ↩️ Inverse for `DeleteWorkingNodes` — ONE `edit-before-fixture` putting the BASE working graph back, every removed node and
+//! edge with it; nothing when the delete removes nothing.
+use crate::standards::v1::subsets::any::schema::mutations::{edit_before_fixture, RewriteRuleMutation};
+use crate::RewritingSnapshot;
+
+//#region 🔖️Inverse
+pub fn inverse(payload: &super::DeleteWorkingNodes, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
+    match super::diff::diff(payload, base).diff().before_fixture_json.is_some() {
+        true => vec![edit_before_fixture(base.before_fixture_json.clone())],
+        false => Vec::new(),
+    }
+}
+//#endregion 🔖️Inverse
+''',
 }
 
 TS_DIFF = {
@@ -515,6 +614,7 @@ TS_DIFF = {
 "patch-working-nodes": ("export function diff(payload: PatchWorkingNodes, base: readonly { id: string; name: string; kind: string }[]): { id: string; name: string; kind: string }[] {\n  return base.map((node) => (payload.targets.includes(node.id) ? { ...node, [payload.field]: payload.value.trim() } : node));\n}\n", "PatchWorkingNodes", "mirror of the field patch of the working graph"),
 "drag-rule-nodes": ("export function diff(payload: DragRuleNodes, basePositions: Readonly<Record<string, { x: number; y: number }>>): { ruleLayout: Record<string, { x: number; y: number }> } {\n  const ruleLayout: Record<string, { x: number; y: number }> = {};\n  for (const id of payload.targets) {\n    const base = basePositions[id];\n    if (base !== undefined) ruleLayout[id] = { x: base.x + payload.dx, y: base.y + payload.dy };\n  }\n  return { ruleLayout };\n}\n", "DragRuleNodes", "mirror of the per-key layout-point upserts"),
 "set-rule-layout-points": ("export function diff(payload: SetRuleLayoutPoints, base: Readonly<Record<string, { x: number; y: number }>>): { ruleLayout: Record<string, { x: number; y: number } | null> } {\n  const ruleLayout: Record<string, { x: number; y: number } | null> = {};\n  for (const point of payload.points) if (base[point.key]?.x !== point.x || base[point.key]?.y !== point.y) ruleLayout[point.key] = { x: point.x, y: point.y };\n  for (const key of payload.cleared) if (base[key] !== undefined) ruleLayout[key] = null;\n  return { ruleLayout };\n}\n", "SetRuleLayoutPoints", "mirror of the per-key set/clear delta"),
+"delete-working-nodes": ("export function diff(payload: DeleteWorkingNodes, base: { readonly nodes: readonly { id: string }[]; readonly edges: readonly { source: string; target: string }[] }): { nodes: { id: string }[]; edges: { source: string; target: string }[] } {\n  const node = (key: string): string => {\n    const at = key.indexOf(\"@\");\n    return at > 0 && at < key.length - 1 ? key.slice(0, at) : key;\n  };\n  const gone = new Set(payload.targets.filter((id) => base.nodes.some((held) => held.id === id)));\n  return { nodes: base.nodes.filter((held) => !gone.has(held.id)), edges: base.edges.filter((edge) => !gone.has(node(edge.source)) && !gone.has(node(edge.target))) };\n}\n", "DeleteWorkingNodes", "mirror of the node and incident-edge removal of the working graph"),
 }
 
 TS_INVERSE = {
@@ -522,6 +622,7 @@ TS_INVERSE = {
 "patch-working-nodes": ("export function inverse(_payload: PatchWorkingNodes, baseBeforeFixtureJson: string): EditBeforeFixture[] {\n  return [{ newBeforeFixtureJson: baseBeforeFixtureJson }];\n}\n", "PatchWorkingNodes", "import type { EditBeforeFixture } from \"../../🖼️edit-before-fixture/🟦️.ts\";\n"),
 "drag-rule-nodes": ("export function inverse(payload: DragRuleNodes, baseLayout: Readonly<Record<string, { x: number; y: number }>>): SetRuleLayoutPoints[] {\n  return [{ points: payload.targets.filter((key) => baseLayout[key] !== undefined).map((key) => ({ key, ...baseLayout[key]! })), cleared: payload.targets.filter((key) => baseLayout[key] === undefined) }];\n}\n", "DragRuleNodes", "import type { SetRuleLayoutPoints } from \"../../📍️set-rule-layout/🟦️.ts\";\n"),
 "set-rule-layout-points": ("export function inverse(payload: SetRuleLayoutPoints, baseLayout: Readonly<Record<string, { x: number; y: number }>>): SetRuleLayoutPoints[] {\n  const keys = [...payload.points.map((point) => point.key), ...payload.cleared];\n  return [{ points: keys.filter((key) => baseLayout[key] !== undefined).map((key) => ({ key, ...baseLayout[key]! })), cleared: keys.filter((key) => baseLayout[key] === undefined) }];\n}\n", "SetRuleLayoutPoints", ""),
+"delete-working-nodes": ("export function inverse(_payload: DeleteWorkingNodes, baseBeforeFixtureJson: string): EditBeforeFixture[] {\n  return [{ newBeforeFixtureJson: baseBeforeFixtureJson }];\n}\n", "DeleteWorkingNodes", "import type { EditBeforeFixture } from \"../../🖼️edit-before-fixture/🟦️.ts\";\n"),
 }
 
 

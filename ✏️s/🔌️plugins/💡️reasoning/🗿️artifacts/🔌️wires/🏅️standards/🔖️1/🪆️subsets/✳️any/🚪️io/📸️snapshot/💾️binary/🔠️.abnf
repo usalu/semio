@@ -1,3 +1,9 @@
-; abnf stdio.json snapshot
-document = payload
-payload = *OCTET
+; reasoning.wires snapshot physical Pack framing
+document = header *segment terminator footer
+header = magic 24OCTET
+magic = %x89.53.50.4B.0D.0A.1A.0A
+segment = tag varint *OCTET 4OCTET
+tag = %x01-08 %x00 / %x7F.00 / %x01-08 %x03 / %x7F.03
+terminator = %x00.00 varint *OCTET 4OCTET
+footer = 84OCTET
+varint = *9%x80-FF %x00-7F

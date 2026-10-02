@@ -7131,6 +7131,14 @@
       "slugPattern": "^value$",
       "allowEmojiOnly": false
     },
+    "compute-engine": {
+      "emoji": "🧮️",
+      "slugPattern": "^compute$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
     "whole": {
       "emoji": "📦️",
       "slugPattern": "^whole$",
@@ -8008,7 +8016,7 @@
         "repo-normalization-mutation"
       ]
     },
-    "repo-process": {
+    "process": {
       "emoji": "🏃️",
       "slugPattern": "^process$",
       "allowEmojiOnly": false,
@@ -8021,7 +8029,7 @@
       "slugPattern": "^owned-execution$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "repo-process"
+        "process"
       ]
     },
     "repo-process-environment": {
@@ -8029,7 +8037,7 @@
       "slugPattern": "^environment$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "repo-process"
+        "process"
       ]
     },
     "repo-process-environment-test-output": {
@@ -8078,6 +8086,316 @@
       "allowEmojiOnly": false,
       "parentKindIds": [
         "repo-library-catalog"
+      ]
+    },
+    "process-routing": {
+      "emoji": "🧭️",
+      "slugPattern": "^routing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "process"
+      ]
+    },
+    "process-routing-entrypoint": {
+      "emoji": "🚪️",
+      "slugPattern": "^entrypoint$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "process-routing"
+      ]
+    },
+    "framework-test": {
+      "emoji": "🧪️",
+      "slugPattern": "^test$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "framework-test-adapter": {
+      "emoji": "🔌️",
+      "slugPattern": "^adapter$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "framework-test"
+      ]
+    },
+    "framework-test-gherkin": {
+      "emoji": "🥒️",
+      "slugPattern": "^gherkin$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "framework-test"
+      ]
+    },
+    "process-testing": {
+      "emoji": "🧪️",
+      "slugPattern": "^testing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "process"
+      ]
+    },
+    "process-test-budget": {
+      "emoji": "🎚️",
+      "slugPattern": "^budget$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "process-testing"
+      ]
+    },
+    "byte-base64-contract": {
+      "emoji": "🧬️",
+      "slugPattern": "^base64$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ]
+    },
+    "schema-vendor-annotation-vocabulary": {
+      "emoji": "🧬️",
+      "slugPattern": "^vendor-annotation-vocabulary$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures"
+      ]
+    },
+    "framework-adapter-ownership-vectors": {
+      "emoji": "🔌️",
+      "slugPattern": "^adapter-ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "schema"
+      ]
+    },
+    "framework-identity": {
+      "emoji": "🪪️",
+      "slugPattern": "^identity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "identity-grapheme": {
+      "emoji": "🧩️",
+      "slugPattern": "^grapheme$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "framework-identity"
+      ]
+    },
+    "styling-workspace-source": {
+      "emoji": "📇️",
+      "slugPattern": "^source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "styling"
+      ]
+    },
+    "assets-tile-proxy": {
+      "emoji": "🗺️",
+      "slugPattern": "^tile-proxy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "assets"
+      ]
+    },
+    "asset-resolver-dispatch": {
+      "emoji": "🧭️",
+      "slugPattern": "^dispatch$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-assets"
+      ]
+    },
+    "playground-asset-provider-composition": {
+      "emoji": "🧩️",
+      "slugPattern": "^composition$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "assets"
+      ]
+    },
+    "identity-path": {
+      "emoji": "🛣️",
+      "slugPattern": "^path$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "framework-identity"
+      ]
+    },
+    "raster-svg-video-export": {
+      "emoji": "🖋️",
+      "slugPattern": "^svg-export$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "raster-video"
+      ]
+    },
+    "raster-svg-video-browser": {
+      "emoji": "🌐️",
+      "slugPattern": "^browser$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "raster-svg-video-export"
+      ]
+    },
+    "framework-raster": {
+      "emoji": "🖌️",
+      "slugPattern": "^raster$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "raster-video": {
+      "emoji": "🎥️",
+      "slugPattern": "^video$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "framework-raster"
+      ]
+    },
+    "entity-ownership": {
+      "emoji": "🏷️",
+      "slugPattern": "^entity-ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "schema"
+      ]
+    },
+    "repo-library-ui": {
+      "emoji": "🖱️",
+      "slugPattern": "^ui$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-server-library"
+      ],
+      "memberNames": [
+        "🖱️ui"
+      ],
+      "source": "registry"
+    },
+    "repository-locale-law-ownership": {
+      "emoji": "🧱️",
+      "slugPattern": "^locale-law-ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests",
+        "fixtures",
+        "schema"
+      ],
+      "memberNames": [
+        "🧱️locale-law-ownership"
+      ],
+      "source": "registry"
+    },
+    "repository-fixture-law-ownership": {
+      "emoji": "🧱️",
+      "slugPattern": "^fixture-law-ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests",
+        "fixtures",
+        "schema"
+      ],
+      "memberNames": [
+        "🧱️fixture-law-ownership"
+      ],
+      "source": "registry"
+    },
+    "directory-lease-fixture-test": {
+      "emoji": "🔏️",
+      "slugPattern": "^document-execution-target-lease-v1$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🔏️document-execution-target-lease-v1"
+      ],
+      "source": "registry"
+    },
+    "mcp-approval-fixture-test": {
+      "emoji": "✅️",
+      "slugPattern": "^approval-request$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "✅️approval-request"
+      ],
+      "source": "registry"
+    },
+    "flow-slider-labels-fixture-test": {
+      "emoji": "🏷️",
+      "slugPattern": "^slider-labels$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "tests"
+      ],
+      "memberNames": [
+        "🏷️slider-labels"
+      ],
+      "source": "registry"
+    },
+    "ui-locale": {
+      "emoji": "🌐️",
+      "slugPattern": "^locale$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "members-of-modules"
+      ]
+    },
+    "dependency-policy-bootstrap": {
+      "emoji": "🚀️",
+      "slugPattern": "^bootstrap$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-dependency-direction"
+      ]
+    },
+    "dependency-policy-construction": {
+      "emoji": "🏗️",
+      "slugPattern": "^construction$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-dependency-direction"
+      ]
+    },
+    "repo-dependency-direction": {
+      "emoji": "🧭️",
+      "slugPattern": "^direction$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-test-dependencies"
+      ]
+    },
+    "rust-symbol-binding": {
+      "emoji": "🔗️",
+      "slugPattern": "^binding$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-rust-source-direction"
+      ]
+    },
+    "repo-rust-source-direction": {
+      "emoji": "🦀️",
+      "slugPattern": "^source$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-dependency-direction"
+      ]
+    },
+    "rust-family-ownership": {
+      "emoji": "📍️",
+      "slugPattern": "^ownership$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-rust-source-direction"
       ]
     }
   },
@@ -10626,11 +10944,6 @@
         "➕️insert-point",
         "➖️remove-point",
         "🕹️move-point",
-        "🕹️move-node-rewrites-the-coordinate-cells",
-        "🏷️change-node-label-rewrites-the-quoted-cell",
-        "➕️create-node-adds-a-row",
-        "🗑️delete-nodes-removes-two-rows",
-        "❌️delete-node-removes-a-row",
         "🏠️rect-roof-slab",
         "🧵️degenerate-hairline-height",
         "🔭️scale-one-hole-1e3",
@@ -10651,34 +10964,21 @@
         "⬜️rect-unit-square",
         "🍩️region-one-hole",
         "🧵️degenerate-hairline-thickness",
-        "🏁️commit-reconstruction",
         "🌲️concrete-forest-reference",
         "📷️update-camera",
         "🚚️update-layer-transform-moves-a-node",
-        "🗑️delete-layer-removes-a-node",
-        "➕️create-layer-adds-a-node",
-        "📋️duplicate-layer-inserts-a-copy",
         "🔀️reorder-layer-swaps-two-nodes",
         "🏷️rename-layer",
         "🙈️set-layer-visible-hides-a-node",
         "🖌️replace-layer-stroke-changes-outline",
-        "🎨️replace-layer-fill-recolors-a-node",
-        "🌫️set-layer-opacity-fades-a-node",
-        "🧱️add-element",
-        "🚮️remove-element",
         "📥️insert-row",
-        "📤️remove-row",
         "💬️insert-comment",
         "🗑️remove-comment",
         "🌐️pattern-sphere",
         "📥️insert-triangle",
         "🗑️remove-triangle",
-        "🧭️set-triangle-normal",
-        "📐️set-triangle-vertices",
         "🏛️hexagonal-cut-concrete-forest-left",
         "🗑️remove-row",
-        "🔲️set-cell",
-        "📸️set-snapshot",
         "🔚️set-line-ending",
         "↩️set-trailing-newline",
         "🎙️bauen-mit-bestand-ausschnitt",
@@ -10828,7 +11128,6 @@
         "🎟️details-arena-headroom",
         "📊️table-arena-headroom",
         "📇️native-text-codecs",
-        "🗃️set-snapshot-applied",
         "🧾️readme-afters",
         "📇️projection-wire-v1",
         "🎞️video-render-program",
@@ -13853,7 +14152,9 @@
       "memberNames": [
         "🪣️fill",
         "🏗️reconstruction",
-        "🗂️reorganize"
+        "🗂️reorganize",
+        "✋️drag",
+        "🧭️transform"
       ],
       "source": "registry"
     },
@@ -15158,6 +15459,264 @@
       ],
       "memberNames": [
         "🧱️cargo-dependency-direction"
+      ],
+      "source": "registry"
+    },
+    "native-owner-command-policy": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "📋️owner-command-policy"
+      ],
+      "source": "registry"
+    },
+    "ui-native-command": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧭️native-command"
+      ],
+      "source": "registry"
+    },
+    "rust-source-direction": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧱️rust-source-direction"
+      ],
+      "source": "registry"
+    },
+    "dependency-policy-bootstrap": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🚀️bootstrap"
+      ],
+      "source": "registry"
+    },
+    "rust-symbol-binding": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🔗️binding"
+      ],
+      "source": "registry"
+    },
+    "nx-project-inference": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "📥️inference"
+      ],
+      "source": "registry"
+    },
+    "rust-source-participation": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🔗️participation"
+      ],
+      "source": "registry"
+    },
+    "rust-source-roots": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🪵️root"
+      ],
+      "source": "registry"
+    },
+    "transient-store": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🫧️transient"
+      ],
+      "source": "registry"
+    },
+    "unknown-value-shapes": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧩️shape"
+      ],
+      "source": "registry"
+    },
+    "controlled-dwg-metadata": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🎛️metadata"
+      ],
+      "source": "registry"
+    },
+    "pdf-recursive-retirement": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "♻️retirement"
+      ],
+      "source": "registry"
+    },
+    "rust-fixture-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧫️fixture-ownership"
+      ],
+      "source": "registry"
+    },
+    "cooperative-host-pump": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🤝️cooperative-pump"
+      ],
+      "source": "registry"
+    },
+    "pool-use-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🔐️pool-use-ownership",
+        "🔐️pool-use"
+      ],
+      "source": "registry"
+    },
+    "shared-neutral-fixture-contracts": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema"
+      ],
+      "memberNames": [
+        "🛂️mutation-source-authority",
+        "🎛️inline-tree-controls",
+        "🖼️scene-raster-ownership",
+        "✏️editing"
+      ],
+      "source": "registry"
+    },
+    "neutral-compute-contracts": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "📍️ownership",
+        "🧬️cache-contract",
+        "🧬️key-contract",
+        "📍️binding-origin"
+      ],
+      "source": "registry"
+    },
+    "deferred-wake-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🔔️deferred-wake-ownership",
+        "🔔️deferred-wake"
+      ],
+      "source": "registry"
+    },
+    "schema-neutrality-contract": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧱️neutrality"
+      ],
+      "source": "registry"
+    },
+    "schema-domain-members": {
+      "ownerKindIds": [
+        "members-of-modules"
+      ],
+      "memberNames": [
+        "📶️state"
+      ],
+      "source": "registry"
+    },
+    "ui-feature-ownership": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🧊️feature-ownership"
+      ],
+      "source": "registry"
+    },
+    "ui-ring-press": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🎚️ring-press"
+      ],
+      "source": "registry"
+    },
+    "ui-retained-control-commit": {
+      "ownerKindIds": [
+        "fixtures",
+        "schema",
+        "tests"
+      ],
+      "memberNames": [
+        "🎛️retained-control-commit"
       ],
       "source": "registry"
     }
@@ -25614,7 +26173,7 @@
       "validator": "command-router",
       "grammarId": "typescript",
       "authority": "Semio AGENTS command-router contract",
-      "verification": "ScriptRouter and runBundleScriptMain structural validation"
+      "verification": "ScriptRouter and runScriptMain structural validation"
     },
     "rust-library-entry": {
       "contractKind": "configurable",
@@ -25695,7 +26254,7 @@
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
       ],
       "outputRoots": [
@@ -25991,6 +26550,11 @@
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*.ts",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts",
         "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
@@ -26002,10 +26566,8 @@
         "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
         "🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
         "🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        "🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts",
+        "🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -26188,6 +26750,33 @@
       ],
       "reason": "The print target renders one tracked LaTeX stylesheet from the styling token source"
     },
+    "repo-entity-kinds": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+      "target": "@semio-tech/repo-client:generate-entity-kinds",
+      "previewTarget": "@semio-tech/repo-client:preview-generated",
+      "checkTarget": "@semio-tech/repo-client:check-entity-kinds",
+      "inputPatterns": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/📽️projection/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📋️project.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
+          "inclusion": "ignored"
+        }
+      ],
+      "reason": "Repo CLI owns the Go projection of the neutral framework entity catalog and its byte freshness check"
+    },
     "report-actor-network": {
       "ownership": "owned",
       "ownerPath": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
@@ -26198,7 +26787,7 @@
         "bun.lock",
         "♻️mit-bestand/📋️bericht/📎️anhang/📇️akteursnetz-erweiterung-kandidaten.md",
         "♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
       ],
       "outputRoots": [
@@ -26251,6 +26840,8 @@
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📋️plan/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
@@ -26258,9 +26849,7 @@
         "🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+        "🧰️framework/🔨️modules/🧬️schema/🟦️.ts"
       ],
       "outputRoots": [
         {
@@ -26270,13 +26859,9 @@
         {
           "path": "🧰️framework/🔨️modules/🧬️schema/🤖️generated/🏷️entity-kinds/🦀️.rs",
           "inclusion": "ignored"
-        },
-        {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go",
-          "inclusion": "ignored"
         }
       ],
-      "reason": "The entity catalog target and check own exact TypeScript, Go, and Rust projections"
+      "reason": "The neutral schema catalog owns exact TypeScript and Rust projections; products contribute their own native projections"
     },
     "shell-typegen": {
       "ownership": "owned",
@@ -26357,6 +26942,11 @@
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+        "🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🏃️execution/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
@@ -26365,13 +26955,11 @@
         "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
-        "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+        "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts"
       ],
       "outputRoots": [
         {
-          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🤖️generated/🦀️.rs",
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🤖️generated/🦀️.rs",
           "inclusion": "ignored"
         },
         {
@@ -26466,10 +27054,12 @@
             "🧰️framework/🔨️modules/⏳️async/🥇️latest-wins/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️.ts",
             "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
+            "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🧩️extensions/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/🫧️transient/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts",
@@ -26498,8 +27088,10 @@
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🟦️.ts",
@@ -26529,6 +27121,7 @@
             "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
+            "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts",
             "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🌐️fetch-timeout/🟦️.ts",
             "🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
@@ -26541,8 +27134,8 @@
             "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
             "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
             "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
-            "🧰️framework/🔨️modules/🧬️schema/🌐️document-http/🟦️.ts",
             "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+            "🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts",
             "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
             "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
             "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
@@ -26551,6 +27144,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
@@ -26694,7 +27288,6 @@
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
         "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
-        "🧰️framework/🔨️modules/🧬️schema/🌐️document-http/🟦️.ts",
         "🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟦️.ts",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
@@ -26707,6 +27300,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎓️first-run/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
@@ -27856,7 +28450,7 @@
     "fileKindId": "json"
   },
   "testSchemaLocation": {
-    "directoryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema",
+    "directoryPath": "🧰️framework/🔨️modules/🧪️test/🧬️schema",
     "fileKindId": "json"
   },
   "forbiddenExampleSlugs": [
@@ -28923,6 +29517,16 @@
         ],
         "fromOwnerPaths": [
           "^✏️s/🔌️plugins/[^/]+/(?!🗿️artifacts/|🧩️extensions/)"
+        ]
+      },
+      "cargo-framework-no-products": {
+        "fromRoles": [],
+        "toRoles": [],
+        "fromOwnerPaths": [
+          "^🧰️framework/(?:🔨️modules|📦️packages)(?:/|$)"
+        ],
+        "toOwnerSegments": [
+          "🛍️products"
         ]
       }
     },

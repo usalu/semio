@@ -5,13 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "snapshot"
   ],
   "properties": {
     "mutation": {
       "const": "setSnapshot",
-      "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+      "description": "Aggregate discriminator checked when this payload is embedded in TsvMutation."
     },
     "snapshot": {
       "$ref": "#/$defs/TsvSnapshot"

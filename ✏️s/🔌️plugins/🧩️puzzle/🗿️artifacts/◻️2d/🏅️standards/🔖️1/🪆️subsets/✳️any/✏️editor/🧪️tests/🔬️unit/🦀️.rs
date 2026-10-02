@@ -48,6 +48,8 @@ pub(crate) mod context {
     fn puzzle2d_manifest_for_tests() -> App {
         App { definition: create_puzzle2d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
     
     /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
@@ -65,7 +67,7 @@ pub(crate) mod context {
         if !window_instances.iter().any(|window| window.id == id) {
             window_instances.push(ViewWindowInstance { id: id.into(), window_kind_id: kind.into() });
         }
-        ViewModel { window_instances, ..Default::default() }.for_window_instance(id).expect("puzzle2d test window roster")
+        ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }.for_window_instance(id).expect("puzzle2d test window roster")
     }
     
     fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
@@ -253,7 +255,7 @@ pub(crate) mod context {
     /// window's own partition (`window_config_store.capture(Some(view_state))`), so a render with no
     /// window reads the empty default and never the window the law just published into.
     pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
-        let view = body_window_kind(body_key).map_or_else(ViewModel::default, |kind| window_view(kind, kind));
+        let view = body_window_kind(body_key).map_or_else(|| ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), |kind| window_view(kind, kind));
         render_body_with_view(app, body_key, &view)
     }
     
@@ -858,7 +860,7 @@ async fn settings_steppers_address_the_focused_pane_or_no_pane() {
     let body = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &focused);
     assert!(body.contains("setFillCount"), "the settings body must carry the fill-count stepper: {}", &body[..body.len().min(300)]);
     assert!(body.contains(&format!("\"windowId\":\"{}\"", detail::WINDOW_KIND_ID)), "a stepper must address the focused pane: {}", &body[..body.len().min(600)]);
-    let unhosted = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &semio_framework_plugin::ViewModel::default());
+    let unhosted = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     close_app(&mut app);
     assert!(unhosted.contains("setFillCount") && !unhosted.contains("windowId"), "with no live pane the steppers must carry no windowId: {}", &unhosted[..unhosted.len().min(600)]);
 }
@@ -1481,9 +1483,9 @@ fn the_add_node_kind_select_enumerates_live_example_kinds() {
 #[test]
 fn every_window_kind_declares_the_surface_kind_it_renders() {
     for definition in [
-        overview::definition(&scene(default_empty_fixture(), Puzzle2dPlayRuntime::default(), "select"), &crate::editor::puzzle2d::engine::board_host::puzzle_board_host(), crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())),
-        detail::definition(&scene(default_empty_fixture(), Puzzle2dPlayRuntime::default(), "select"), &crate::editor::puzzle2d::engine::board_host::puzzle_board_host(), crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())),
-        selection::definition(&scene(default_empty_fixture(), Puzzle2dPlayRuntime::default(), "select"), &crate::editor::puzzle2d::engine::board_host::puzzle_board_host(), crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())),
+        overview::definition(),
+        detail::definition(),
+        selection::definition(),
     ] {
         assert_eq!(definition.surface_kind, semio_framework_plugin::SurfaceKind::Board2d, "window kind {} renders a Board2d surface", definition.id);
     }

@@ -34,9 +34,7 @@
       }
     },
     "from": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0,
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Unsigned64Transport",
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",

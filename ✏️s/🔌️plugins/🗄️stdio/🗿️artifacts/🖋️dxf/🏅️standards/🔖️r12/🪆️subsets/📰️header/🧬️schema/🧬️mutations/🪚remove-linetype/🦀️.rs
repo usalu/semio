@@ -20,8 +20,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLinetype {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::RemoveLinetype(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove linetype", "Linientyp entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove linetype", "Linientyp entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

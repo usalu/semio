@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
         vec![super::GltfMutation::ChangeAssetDescriptiveMetadata(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Asset Descriptive Metadata", "Beschreibende Asset-Metadaten ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Asset Descriptive Metadata", "Beschreibende Asset-Metadaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

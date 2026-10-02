@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ResizeGrip3d {
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Größe von Griff \"{}\" (3D) ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize grip \"{}\" (3D)", self.id), &format!("Größe von Griff \"{}\" (3D) ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

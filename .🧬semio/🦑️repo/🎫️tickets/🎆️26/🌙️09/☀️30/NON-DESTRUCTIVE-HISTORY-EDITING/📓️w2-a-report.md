@@ -623,3 +623,250 @@ Alternatives section are **not started**.
 - `P/🧪️tests/{🧪️time-travel,🔬️plugin-runtime-plugin-builder-contract}/🦀️.rs`.
 - `💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx`: one line plus a dependency.
 - The puzzle 2d window and select-tool tests (the earlier `Box` change).
+
+## Session 2 — 2026-10-01
+
+Successor S2-W2A (coordinator `⚪552b484a…`). Nothing committed, no ticket or goal touched, no describe/activate/serve run.
+Status: **source complete for (a)–(c) and G3/G4/i18n; targeted laws green except the items in 8.3**. This section is
+updated at every milestone (last update at the bottom).
+
+Aliases as above (`P`, `K`, `M`, `R`), plus `FWT` = `🧰️framework/🔨️modules/⏪️time-travel`.
+
+### 8.1 Repair (rule 21)
+
+- Nothing was half-written. HEAD `4e36b2b5012` (11:16) already held every file of the predecessor; the 07:39–07:44
+  `Edit.verb` scripts (`🧪️w2-a-edit-verb-*.py`) had all applied (Rust + TS + schema + fixtures + `.spr`/`.ops`/db
+  cursor + store stamping + projection label rule). Report §7.8 is stale: (3) host events and (4) the alternatives
+  section were landed by the predecessor at 22:43 (see `📓️resume-core.md` §4.6).
+- Peer fallout repaired in my crate so the test target compiles again:
+  - `P/🧪️tests/{🛰️declaration-channels,🛰️declaration-channels-unit,🌐️standard-one-any-set-value-unit,🔒️standard-one-strict-set-value-unit,🌐️standard-two-any-set-value-unit}/🦀️.rs`:
+    `#[path]`/`include_str!` re-pointed from `1️⃣standard-1`/`2️⃣standard-2` to the dirs REPO-PATH-BUDGET renamed at
+    12:16 (`1standard`, `2standard`; 8 references).
+  - `P/🧪️tests/🧪️time-travel/🦀️.rs` (S2-W1G's streamed-transaction law, line 476): E0502 borrow fixed by hoisting the
+    mutation id (semantics unchanged).
+
+### 8.2 Changes
+
+**(a) Locale-neutral edit verb — verified, no new code needed.** `Edit.verb` / `MutationEnvelope.verb` (trailing flags
+bit 1) / `HistoryEdit.verb` (`.spr` field 6, REC_EDIT presence bit 7, `.ops` header) / store `set_authoring_verb` stamped
+at every runtime publish / `backfilled_edit_label` + `authored_row_label` (verb registry label → description → leaf label).
+Added one proof: the `.spr` identity sample now carries a verb (`OS/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs`, edit-1
+`verb: Some("typeText")`), so every `.spr` encode/decode identity law round-trips it.
+
+**i18n of every `timeTravel.*` code (coordinator-approved strings, byte for byte), framework vocabulary `FWT`:**
+- `FWT/🦀️.rs` + TS twin `FWT/🟦️.ts`: code constants `TIME_TRAVEL_{BUSY,UNKNOWN_MUTATION,NOT_EDITABLE,UNKNOWN_INPUT,
+  INVALID_INPUT,NO_SELECTION,NAME_REQUIRED,NAME_INVALID,SCHEMA_UNAVAILABLE,REPLAY_FAULTED,COMMIT_FAILED}_CODE`; 12 new
+  `TimeTravelLabel`s (`refusalBusy … refusalSchemaUnavailable`, `replayFaulted`, `commitFailed`, `outcomeIntroduced`);
+  `TIME_TRAVEL_CODE_LABELS` (17 codes → label: the 4 session refusals, frozen, cancelled, 9 host refusals, 2 driver
+  faults); `TimeTravelLabel::for_code` / TS `timeTravelCodeLabel` **replace** `for_fault` / `timeTravelFaultLabel`.
+  `reportBlocking` already read "Errors must be fixed or withdrawn before finalizing" (S2-W2B, §16.1).
+- Schema `FWT/🧬️schema/🔣️.json`: label enum 23 → 35, `labels` 35, new required `codeLabels` (17). Fixture
+  `FWT/🧫️fixtures/🧫️lifecycle-law/🔣️.json` + generator `T/🧪️w1-b-generate-lifecycle-law.py` (`LABELS`, `CODE_LABELS`);
+  regenerating to scratch reproduces the fixture byte for byte.
+- Plugin: the local code constants are gone (`P/⏪️time-travel/🦀️.rs` imports them from `FWT`); the band's fault row
+  reads `TimeTravelLabel::for_code` (driver faults no longer show raw codes).
+- wgpu fallout (one token, S2-W2C's file): `…/🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🦀️.rs` `for_fault` → `for_code`.
+
+**G4 — `HistoryMutationEntry.introduced` (kernel wire change, see 8.5):** `K/🦀️.rs` field + doc, TS twin `K/🟦️.ts`,
+schema `K/🧬️schema/🔣️history-patch/🔣️.json`, fixture `K/🧫️fixtures/🧫️history-patch/🔣️.json` (valid
+`reviewing-session-marks-an-introduced-warning`, invalid `introduced-not-a-boolean`). Runtime: `history_mutation_entry`
+sets it when the session's replay outcome carries a `(level, code)` the durable pre-edit outcome of the same mutation
+lacks (`history_outcome_introduced`); the row description adds "New since this edit" / "Neu durch diese Bearbeitung".
+Session-scoped by definition (no session → false); the warning itself persists (durable outcomes recomputed on load).
+Fallout: wgpu test literal `…/🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs` gets `introduced: false`.
+
+**G3 — selection editing:**
+- `time_travel_selection_value(input, selection)` (pure, `P/⏪️time-travel/🦀️.rs` 🔖️Pointer): domain absent →
+  `unknown-input`; no / empty / other-granularity selection → `no-selection`; `many` clips to `maxItems`; id type
+  integer stages integers, unspellable ids skipped (all skipped → `no-selection`, before it drafted `[]`).
+  `draft_time_travel_selection` delegates to it.
+- Entity labels on chips: new hook `ArtifactApp::entity_label(snapshot, kinds, id) -> Option<LocalizedLabel>` (+
+  `ArtifactEditor::entity_label`, forwarded by `EditorApp`) in `P/🦀️.rs`; `VcsArtifactApp::resolve_time_travel_reference_labels`
+  fills `TimeTravelEditorPanel.reference_labels` from the previewed document (member-store sessions keep ids); chips
+  and their remove labels read them.
+- Overflow: ids beyond 8 chips are named by one nested row `{input}.more.row` ("N more: a, b" / "N weitere: a, b").
+- The board highlight is S2-W2D's (`InteractionView::draft_references`), not duplicated here.
+- Toy fixture: `set-slot-children` `children` is now a reference input (`role: target`, `ref {kind: s.test.child,
+  domain: test.slot, granularity: child}`), toy `SetLabel` emits Warning `mutation.no-op` when the label is unchanged.
+
+**(c) Acceptance laws added (`P/🧪️tests/🧪️time-travel/🦀️.rs`, region `🧭️AcceptanceLaws`; fixture scenario
+`several-drafts-accumulated-from-a-review-finalize-once` in `P/🧫️fixtures/🧫️time-travel/🔣️.json`, also run by the TS
+reducer oracle):**
+- `selection_values_follow_the_reference_domain_granularity_count_and_id_type`
+- `editing_targets_through_the_selection_resolves_a_blocked_review` (Next problem opens the first blocking mutation from
+  the band's own binding; use selection refuses then drafts; German entity-label chips; overflow row; chip remove binding
+  drafts the rest; accept → ready)
+- `a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload` (introduced while reviewing; after finalize, text
+  reload and pack reload the Warning row persists, en + de words)
+- `several_drafts_from_a_review_finalize_as_one_overwrite_supersede` (exactly one unscoped `Supersede` naming both,
+  head = fresh fold)
+- `a_new_alternative_is_one_branch_then_one_scoped_supersede`
+- Already covered by existing laws: preview (downstream not applied), accept → Report replay, Fatal blocks, withdraw,
+  exit zero trace, frozen verbs, progress frames, cancel + rerun, alternatives section + switch. Error-level blocking is
+  the replication `blocks_finalize` law + reducer fixture (the toy has no Error-level outcome).
+
+### 8.3 Verification (gated, foreground, one cargo at a time; `cargo test` with `CARGO_INCREMENTAL=0`, `target-nde-s2-w2a`)
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-plugin --lib --tests` (11:54, before my edits) | Finished |
+| `cargo test -p semio-framework-time-travel` | **13 passed** |
+| `bun test ./FWT/🧪️tests/🧪️conformance/🟦️.ts` | **19 pass** (new code-label law) |
+| `cargo test -p semio-framework-replication --lib` | **316 passed, 0 failed** (envelope verb flags, backbone batch fixture) |
+| kernel vitest (`K`, config `🧪️tests/🎚️config/🟦️.ts`, no budget) | **77 passed** (6 files, incl. the new history-patch cases) |
+| replication vitest | 20 passed, 1 failed — `trailing-flags-invalid`: the PER-VIEWER peer made trailing flag bit 2 (`line`) legal in the TS decoder; the fixture's flag-4 refusal must move to flag 8 (theirs) |
+| `cargo test -p semio-framework-os-kernel --lib -- os_spr::history canonical_edit` | 76 passed, 1 failed — `fold_falls_back_to_positional…` (`alternative` None vs `alt-1`): PER-VIEWER's per-viewer head, not the verb; `.spr` identity with a verb + 25 canonical-edit (digest vectors with verb) pass |
+| `cargo test -p semio-framework --lib -- history_patch history_edit` | blocked at 12:56 by a peer's `DslValue::Bytes` E0004 in `M/🧪️tests/🧪️mutation-inputs/🦀️.rs` (rerun pending) |
+| TS oracles (scratch runner): time-travel / supersede-ledger / alternatives / label-reload | **9 / 7 / 4 / 5 cases** |
+| `tsc` scratch config `🗑️generated/s2-w2a/tsconfig.s2.json` (FWT, K, plugin oracles, R, worker) | 3 errors, all PER-VIEWER's in-flight `line` field (worker + backbone-parity); none in my files |
+| `cargo test -p semio-framework-plugin --lib -- time_travel supersede history_label_reload history_alternatives ui_history_panel rendering_the_history_body activated_tool_factory` (14:03) | **41 passed, 3 failed**: all 5 new laws pass; failures: `history_labels_survive…` (manifest verbs unclassified for interactive jobs), `the_open_draft_references_its_reference_inputs_per_domain` (S2-W2D's new law), bijection law (`hostEvent`) — being fixed |
+
+### 8.4 Regions owned by others inside my files
+
+- `P/⏪️time-travel/🦀️.rs` `time_travel_input_row`: the `Slider`/`Dial`/`Stepper`/`Number`/`Vector` arms (facets snaps,
+  unit, displayUnit/displayFactor/scale) → S2-W1E. I changed only the signature (`references` map) and the `Reference` arm.
+- `ArtifactApp::mutation_label` default + the per-app overrides + label gate → S2-AGNOSTIC (G7); untouched.
+- `tool_transaction_shape_fault` + retained initializer (§15) → S2-W1G; the streamed law in my test file is theirs.
+- `InteractionView::draft_references` + its law → S2-W2D.
+
+### 8.5 For S2-W2B / S2-W2C (wire and vocabulary)
+
+- `HistoryMutationEntry.introduced: bool` (JSON `introduced`, default false) — Rust, TS twin, schema, fixture.
+- `TimeTravelLabel::for_code` / `timeTravelCodeLabel` + `TIME_TRAVEL_CODE_LABELS`: one lookup for every `timeTravel.*`
+  code (17); `for_fault`/`timeTravelFaultLabel` are deleted. Label keys: `refusalBusy`, `refusalUnknownMutation`,
+  `refusalNotEditable`, `refusalUnknownInput`, `refusalInvalidInput`, `refusalNoSelection`, `refusalNameRequired`,
+  `refusalNameInvalid`, `refusalSchemaUnavailable`, `replayFaulted`, `commitFailed`, `outcomeIntroduced`.
+
+### 8.6 Coordinator actions
+
+- Descriptor regeneration (`describe`) stays owed (history-edit verbs, finalize dialog, `hostEvent`); no new verb this session.
+- Activation needed for live proof of G3/G4 (no new wire beyond `introduced`).
+
+#### Update 16:55–17:30 (after the 13:30–16:30 usage cut)
+
+- `P/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` bijection law: `hostEvent` joins the directly-routed set with
+  a source guard on its boxed `dispatch_host_event_action` arm; the history-edit guard now tolerates the
+  `freeze_tool_machines()` call a peer put into that arm (reads the arm body, not a byte-exact snippet).
+- `P/⏪️time-travel/🦀️.rs` `settle_time_travel_owners`: the draft editor closes whenever the session leaves `Editing`
+  (accept, discard, exit, replay). Before, a review kept rendering the last editor (its Accept/Discard refused as
+  illegal) and `targetLabel` named a mutation no longer edited; S2-W2D's law
+  `the_open_draft_references_its_reference_inputs_per_domain` ("an exited session references nothing") needs it.
+- `P/🧪️tests/🧪️history-label-reload/🦀️.rs`: the never-run law failed twice on runtime rules it was written against
+  (manifest verbs must be classified; every typed command needs an exact declaration). Fix: the manifest classifies its
+  declared verbs (`BatchOnlyPendingRewrite`, data only); an undeclared verb's edit is authored through the store with that
+  verb stamped (`set_authoring_verb`) — the realistic case of an edit from a peer or another app version — and logged by
+  the backfill. Fixture and TS twin unchanged (twin docstring updated).
+- Run `test-tt-2` (17:00, filters `time_travel supersede history_label_reload history_alternatives ui_history_panel
+  rendering_the_history_body activated_tool_factory document_archive`): **48 passed, 2 failed** (the two above, fixed
+  since); `document_archive` 7/7 pass incl. R2-2 `a_document_archive_round_trip_lists_every_history_row_of_its_source`.
+- Rerun of the two fixed laws blocked at 17:25 by a peer's in-flight `🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs`
+  (E0433 `wgpu::layout` / `wgpu::stepper`), not mine.
+- 17:52: `history_label_reload` law **passes** (1/1) and the bijection law **passes** (1/1). Final shape of the label
+  law: every fixture command publishes through `dispatch_emit` (the seam every typed command's emit lands in, where
+  the verb is stamped and the live row recorded) under its verb, declared or not; the typed admission lane itself cannot
+  run here without a full Migrated factory/job harness (`BatchOnlyPendingRewrite` is refused `interactive-job.not-ui-safe`
+  by UI dispatch), and its emit seam is what carries the verb.
+
+#### Update 21:40–22:10 (after the 18:00–21:30 cut): G9 runtime adoption + notices — SOURCE WRITTEN, compiling next
+
+- `P/🦀️.rs`: the document store defers remote replays (`defer_remote_replays(Some(TIME_TRAVEL_REMOTE_REPLAY_OPERATIONS = 256))`)
+  at construction and after every store-replacement publish; `history_patch` carries `remote_replay`;
+  `ui_history_panel(history, time_travel, remote_replay, …)` (every call site updated, 11 in tests) shows the remote section.
+- `P/⏪️time-travel/🦀️.rs`: `step_remote_replay` per driver turn (adoption → cache reset, `BaseMoved`, full refresh; refusal
+  → code on the row); `historyEditCancelReplay` / `historyEditRerun` while no session is open pause / resume it (no new
+  verb, no descriptor change); `time_travel_remote_section` (`framework.history.remoteReplay`: status row + Cancel replay /
+  Replay again, en/de); `author_supersede` (undo/redo of a finalize, Backwards on a history-edit row) is now
+  `begin_report_replay` + per-turn steps + `commit_finished_replay(…, Overwrite | Scope{alternative_id})`, a stale base
+  replays the same inputs again, `historyEditBegin` and a second undo/redo answer `timeTravel.busy` meanwhile.
+- Kernel wire (for S2-W2B/S2-W2C): `HistoryPatch.remoteReplay?: {done, total, paused?, fault?}` (Rust `HistoryRemoteReplay`,
+  TS twin, schema, fixture: 2 valid + 1 invalid). Notices: `K` `HISTORY_NOTICE_LABELS` / `history_notice(code)` (TS
+  `historyNotice`) for `toolTransaction.open`, `toolTransaction.unknown`, `history.full` (W1-G's texts; German
+  "abschließen"), fixture `K/🧫️fixtures/🧫️history-notices/`, schema `K/🧬️schema/🔣️history-notices/`, Rust + TS laws.
+- New laws: `a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel`,
+  `the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver`. Ticket inputs `🧪️s2-w2a-g9-runtime.py`,
+  `🧪️s2-w2a-g9-panel.py`.
+
+#### Update 22:10–23:06 and 02:40 (cargo hold since 02:45, rule 26)
+
+- Peer fallout repaired in my crate: `P/🧪️tests/🖥️test-app-mutations-document/🦀️.rs` — a retirement-macro sweep (18:57)
+  wrote `crate::semio_framework_value::retirement::…` (6 paths; the crate is extern) → `semio_framework_value::retirement::…`;
+  it broke the whole lib-test target (E0433 + the `TestSnapshot: RetireOwned` bound in the builder-contract test).
+- Run `test-tt-7` (23:06; filters `time_travel supersede history_label_reload history_alternatives ui_history_panel
+  rendering_the_history_body activated_tool_factory document_archive`): **51 passed, 1 failed**. Green: every Session-2
+  law (selection, editing targets, introduced warning after finalize + reload, several drafts → one Supersede, Branch +
+  scoped Supersede, label reload, bijection, `the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver`), the
+  existing undo/redo-of-finalize laws on the new resumable path, S2-W1G's streamed-transaction law, S2-W2D's
+  draft-references law, `document_archive` 7/7 (R2-2 included).
+  Red: `a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel` — its fixture, not the runtime: relaying a
+  3000-op edit to a fresh replica exceeds the store's fixed displaced-owner retirement authority (`module.vcs` "…retirement
+  authority is saturated"). Rewritten (02:42) to the plain seed with the remote store at `defer_remote_replays(Some(1))`;
+  rerun queued for after the hold.
+- The remote section now also shows for a viewer and during a session, without controls there (a viewer rejects the verbs;
+  a session's Cancel/Replay again address the session).
+- Queued after the hold (one cargo at a time): the targeted plugin run above; `cargo test -p semio-framework --lib --
+  history_patch history_notices history_edit`; kernel vitest; `cargo check -p semio-framework-plugin --target wasm32-wasip2`;
+  `cargo check -p semio-framework-os-renderer-wgpu --tests` (my two wgpu fallout edits); the full plugin lib suite vs the
+  918/13 baseline.
+- 03:03 (hold lifted): `cargo test -p semio-framework --lib -- history_patch history_notices history_edit` **blocked** by a
+  peer's in-flight `RecordSpecProducer` dsl refactor (E0308/E0618 in `🗣️dsl`, `🏪️store`); every plugin/kernel cargo run
+  waits for it. Kernel vitest (needs `SEMIO_VITEST_POLICY` since a peer's 🏃️process change; scratch policy under
+  `🗑️generated/s2-w2a/vitest-*`): **6 files, 75 passed**, incl. the new `🧪️history-notices` (2) and `🧪️history-patch` (3,
+  with the `remoteReplay` + `introduced` cases).
+
+## Session 3 — 2026-10-02
+
+Successor S3-W2A (coordinator `⚪b7db773a…`). Nothing committed, no ticket or goal touched, no describe/activate/serve run.
+Scratch: `🗑️generated/s3-w2a/`. Aliases as above (`P`, `K`, `M`, `R`, `FWT`), plus `PZ2D` (plan alias).
+Status: **in progress** — this section is updated at every milestone.
+
+### 9.1 Repair (rule 28)
+
+- Owned files newer than §8's last update (03:03): `K/🟦️.ts` (03:20: notices + `remoteReplay` twin, plus a peer's move of the
+  ephemeral lane into `K/🫧️transient`), `P/⏪️time-travel/🦀️.rs` (03:24), `P/🦀️.rs` (07:56, peers), test files (07:52, peers).
+  Checked by compiling (9.3).
+
+### 9.2 Coordinator items received in session 3 (12:00–12:40) — SOURCE WRITTEN, verification in 9.3
+
+- **§19.1 intent-labelled transaction rows.** `ArtifactApp::tool_intent_kinds(tool: &str) -> &'static [&'static str]`
+  (default `&[]`; `tool` = the stamped `TransactionRef.tool`, `<appId>#<toolId>`), mirrored on `ArtifactEditor` and forwarded
+  by `EditorApp`. `P/🦀️.rs` `history_intent_label::<A>(tool, ops, mutations)` picks the first op whose
+  `SemanticDescriptor::kind` the tool declares (label from its mutation row = effective input); the `transaction.is_some()`
+  label arm of `build_history_view` uses it, else the first leaf as before. No wire change. Law
+  `a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reload` (toy declares `#gesture` → `["set-label"]`).
+- **N1 every mutation reachable.** A history row is now a `tree_window_indexed_item` over ALL its mutations: projected ones
+  first (flagged leading), then the rest of its edit in op order, materialised on demand from the store for the slice a host
+  window opened (`VcsArtifactApp::history_mutation_pages` → `HistoryMutationPages`, new `ui_history_panel` parameter;
+  `history_row_mutation_extent`, `history_row_window_path`, `history_row_requested_rows`, `history_mutation_view_of` in
+  `P/⏪️time-travel/🦀️.rs` region `🔖️MutationPages`). `HISTORY_PANEL_MUTATION_ROWS` (8) is deleted; the projection/wire cap
+  (32 + flagged ≤ 64) is unchanged, so memory stays bounded. Rows default closed (as before) and announce `window.total`.
+  Open item: child-member rows beyond a member's own projection are not paged (parent ops only).
+- **N15 Edit follows the Begin law.** Reducer query `TimeTravelSession::begin_refusal()` (+ TS twin `timeTravelBeginRefusal`,
+  `FWT`), law `begin_is_refused_exactly_where_the_reducer_refuses_it` (Rust, every fixture context) and the TS conformance
+  twin; `TimeTravelPanel.begin_refusal`; the mutation row's Edit action is `disabled` with label "Edit: <reason>" and no row
+  activation while refused (replaying/choosing/finalizing → "Not possible right now"; changed draft → "Blocked: …").
+- **N3 generic chip default.** `resolve_time_travel_reference_labels`: app hook `ArtifactApp::entity_label` (the refinement
+  hook, unchanged) → the entity's own `label|name|title|text` in the previewed document (`time_travel_entity_names`, bounded
+  walk, `{en,de}` pairs honoured; member sessions read the member preview) → `time_travel_reference_fallback_label` =
+  glossary kind word (en/de) + short id. Law `reference_chips_fall_back_to_the_document_name_then_the_kind_and_a_short_id`.
+- Ticket inputs: `🧪️s3-w2a-n1-time-travel.py`, `🧪️s3-w2a-n1-panel.py`, `🧪️s3-w2a-n3-entity-labels.py`.
+- **N1 refinement (12:45).** A row opens by default while one of its (session-overlaid) mutation rows carries an outcome
+  (`history_row_opens_by_default`), so a warning stays visible without expanding; the page builder mirrors the first-paint
+  slice (`history_row_window_rows`: host request, else default-open first `min(total, 64, viewport rows)`). Rows without
+  outcomes stay closed and announce `window.total`. Agreed with S3-W1E: ONE paging mechanism (tree windows) for history rows,
+  editor inputs, chips and long option lists; no `historyEditView` verb; `historyEditInput{edit?: insert|remove}` is W1E's.
+- **§20.6 no hand-written runtime label.** `dispatch_catalogue_example` no longer sets `description: "Set Active Example"`;
+  `runtime_verb_label(verb)` (framework en/de: "Load example" / "Beispiel laden") backs `verb_label` for runtime verbs no app
+  declares (`CATALOGUE_EXAMPLE_ACTION_ID`). Law `the_catalogue_route_reads_the_framework_label_never_a_hand_written_one`
+  (toy gains `catalogue_example_document("five")`).
+- **Puzzle 2d witness (item 3), SOURCE WRITTEN.** New language-agnostic corpus
+  `PZ2D/✏️editor/🧫️fixtures/🧫️history-edit-runtime/🔣️.json` (5 scenarios) + schema `PZ2D/✏️editor/🧬️schema/🔣️history-edit-runtime/🔣️.json`;
+  Rust laws `PZ2D/✏️editor/🧪️tests/🧪️history-edit-runtime/🦀️.rs` (mounted as `history_edit_runtime_tests` in `✏️editor/🦀️.rs`):
+  `every_corpus_scenario_reaches_its_session_outcomes_rows_and_heads` (several drafts from a review → ONE overwrite + undo/redo;
+  replay cancelled → needsReplay → rerun → ready; introduced Warning after finalize + text reload + pack reload, en/de words;
+  Fatal `duplicate-id` + Error `target-missing` → Next problem → withdraw → Next problem → Use selection → ready → overwrite
+  (undo/redo) and new alternative "Fixed" (undo/redo within it); every head = fresh fold of its edited log),
+  `replay_progress_rides_the_ui_frames_over_a_long_downstream` (900 downstream drags), and
+  `a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_board` (G9 store half through the runtime:
+  `remoteReplay` on the wire, Cancel replay pauses, Replay again resumes, adoption = author head). Independent Python oracle
+  `🐍️.py` beside it (jsonschema + shapely, reuses the select-tool oracle's `fold`): **5 scenarios, 20 head nodes agree**;
+  negative control (one head x off by 1) exits 1. Taxonomy report on the 3 new dirs: clean ×3.

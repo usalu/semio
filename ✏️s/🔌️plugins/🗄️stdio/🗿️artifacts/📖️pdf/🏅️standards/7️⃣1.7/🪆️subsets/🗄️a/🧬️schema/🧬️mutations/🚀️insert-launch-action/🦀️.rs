@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertLaunchAction {
         vec![PdfAMutation::RemoveLaunchAction(RemoveLaunchAction { target: self.target.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert launch action", "Launch-Aktion einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert launch action", "Launch-Aktion einfügen")
     }
 
     fn target(&self) -> Vec<String> {

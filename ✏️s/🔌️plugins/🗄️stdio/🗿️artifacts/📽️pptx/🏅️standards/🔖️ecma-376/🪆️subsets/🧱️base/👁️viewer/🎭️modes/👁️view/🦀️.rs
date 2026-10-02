@@ -2,7 +2,12 @@
 //! full-pane Document window, same page-per-slide content, no edit affordances.
 
 use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const PPTX_VIEW_MODE_ID: &str = "view";
 

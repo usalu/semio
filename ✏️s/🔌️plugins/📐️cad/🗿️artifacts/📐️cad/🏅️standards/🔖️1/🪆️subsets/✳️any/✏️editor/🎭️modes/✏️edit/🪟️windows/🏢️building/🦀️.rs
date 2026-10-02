@@ -6,7 +6,13 @@ use crate::editor::cad::modes::edit::options;
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{CadPlayRuntime, CadPlayView};
 use crate::CadPaneId;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 use ui_wgpu::wgpu::SurfaceKind;
 
 #[path = "🎚️config/🦀️.rs"]

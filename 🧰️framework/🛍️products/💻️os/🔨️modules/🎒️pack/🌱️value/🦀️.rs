@@ -10,9 +10,18 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
 //! byte layout this module implements against.
 
-use crate::os_dsl::schema::{DslValue, FieldSpec, FieldValue, Number, RecordSpec, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
+use crate::os_dsl::schema::{DslValue, FieldSpec, FieldValue, Number, RecordSpec, RecordSpecProducer, RecordValue, Shape, WireEdgeLabel, WireNode, WireValue};
 use crate::os_pack::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
 use std::collections::{HashMap, HashSet};
+
+#[path = "🛫️encode/🦀️.rs"]
+mod controlled_encoding;
+
+/// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
+pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut protocol::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{controlled_encoding::record_body(spec,record,options,control)}
+
+/// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
+pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut protocol::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{controlled_encoding::document(spec,record,options,control)}
 
 //#region 🔖️Tags
 /// 🕳️ `FieldValue::Absent` — never written at record-field granularity (canonical mode
@@ -55,7 +64,7 @@ fn elem_shape_of(shape: Option<&Shape>) -> Option<&Shape> {
 }
 
 /// 📊️ Extracts a `Table` field's lazy element-spec constructor, if `shape` is `Table`.
-fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
+fn table_spec_of(shape: Option<&Shape>) -> Option<RecordSpecProducer> {
     match shape {
         Some(Shape::Table(spec_fn)) => Some(*spec_fn),
         _ => None,
@@ -65,7 +74,7 @@ fn table_spec_of(shape: Option<&Shape>) -> Option<fn() -> RecordSpec> {
 /// 🧾️ Resolves a `Record` field's nested spec, if `shape` is `Record`.
 fn record_spec_of(shape: Option<&Shape>) -> Option<RecordSpec> {
     match shape {
-        Some(Shape::Record(spec_fn)) => Some(spec_fn()),
+        Some(Shape::Record(spec_fn)) => Some((spec_fn.ordinary)()),
         _ => None,
     }
 }
@@ -77,7 +86,7 @@ fn block_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
     }
 }
 
-fn statements_variants(shape: Option<&Shape>) -> Option<&Vec<(String, fn() -> RecordSpec)>> {
+fn statements_variants(shape: Option<&Shape>) -> Option<&Vec<(String, RecordSpecProducer)>> {
     match shape {
         Some(Shape::Statements(variants)) => Some(variants),
         _ => None,
@@ -234,7 +243,7 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
                 // Walk each row's `TableSoA` columns, forcing `Text`-typed columns (they're
                 // always symrefs on the wire) and recursing generically into every other column
                 // shape for nested strings.
-                let element_spec = spec_fn();
+                let element_spec = (spec_fn.ordinary)();
                 for row in items {
                     let FieldValue::Record(r) = row else { continue };
                     for field in &element_spec.fields {
@@ -267,7 +276,7 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
             let variants = statements_variants(shape);
             for (keyword, record) in items {
                 force_symbol(counts, forced, keyword);
-                let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
+                let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| (f.ordinary)());
                 walk_record_for_symbols(counts, forced, spec.as_ref(), record);
             }
         }
@@ -503,13 +512,13 @@ fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shap
 
 /// 📜️ Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
 /// always a bare forced symref (never a self-describing string tag) per the wire contract.
-fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     out.push(TAG_STATEMENTS);
     write_varint_u64(out, items.len() as u64);
     for (keyword, record) in items {
         write_symref_forced(ctx, keyword, out)?;
-        let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
+        let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| (f.ordinary)());
         let fields = encode_record_fields(ctx, spec.as_ref(), record, depth + 1)?;
         out.extend_from_slice(&fields);
     }
@@ -1959,7 +1968,7 @@ struct DecCtx<'a> {
     verification: crate::os_pack::format::VerificationLevel,
     preserve_unknown: bool,
     unknown_field_ids: Vec<u16>,
-    materialization: Option<ValueMaterialization>,
+    materialization: &'a dyn MaterializationAdmission,
 }
 
 /// 🧮️ Logical owned storage: UTF-8 bytes, 32-byte symbol slots, and 64-byte value/map slots.
@@ -1976,45 +1985,44 @@ impl ValueMaterialization {
     }
 }
 
-fn copy_decoded_string(value: &str, materialization: Option<&ValueMaterialization>) -> Result<String, PackError> {
-    if let Some(budget) = materialization {
-        budget.charge(value.len() as u64)?;
-    }
-    let mut owned = String::new();
-    owned.try_reserve_exact(value.len()).map_err(|_| PackError::LimitExceeded("decoded string allocation"))?;
-    owned.push_str(value);
-    Ok(owned)
+trait MaterializationAdmission {
+    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackError>{Ok((producer.ordinary)())}
+    fn charge(&self,bytes:u64)->Result<(),PackError>;
+    fn step(&self)->Result<(),PackError>{Ok(())}
+    fn controlled(&self)->bool{false}
+    fn copy_text(&self,text:&str)->Result<String,PackError>{self.charge(text.len() as u64)?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_|PackError::LimitExceeded("decoded string allocation"))?;output.push_str(text);Ok(output)}
+    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackError>{self.charge(bytes.len() as u64)?;let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;output.extend_from_slice(bytes);Ok(output)}
+    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackError>{self.charge(count as u64)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;Ok(output)}
+    fn append_chunk(&self,_file:&crate::os_pack::format::PackFile<&[u8]>,_id:ChunkId,_verification:crate::os_pack::format::VerificationLevel,_output:&mut Vec<u8>)->Result<(),PackError>{Err(PackError::Schema("chunk owner has no controlled admission".into()))}
+    fn expression(&self,text:&str,_maximum_depth:u16)->Result<crate::os_dsl::schema::ExprValue,String>{crate::os_dsl::schema::parse_expr_text(text).map_err(|error|error.message)}
+    fn copy_utf8(&self,bytes:&[u8],offset:u64,what:&'static str)->Result<String,PackError>{let value=std::str::from_utf8(bytes).map_err(|_|PackError::Malformed{what,offset,detail:"invalid utf8".into()})?;self.copy_text(value)}
 }
 
+impl MaterializationAdmission for ValueMaterialization {fn charge(&self,bytes:u64)->Result<(),PackError>{ValueMaterialization::charge(self,bytes)}}
+
+struct ControlledMaterialization<'a,'callback>{control:std::cell::RefCell<&'a mut protocol::value::native_decoding::NativeDecodeControl<'callback>>,maximum:u64}
+impl ControlledMaterialization<'_,'_>{
+    fn check(&self,bytes:u64)->Result<(),PackError>{if (self.control.borrow().owned_bytes() as u64).checked_add(bytes).filter(|next|*next<=self.maximum).is_none(){return Err(PackError::LimitExceeded("controlled native materialization exceeds max_total_alloc"));}Ok(())}
+}
+impl MaterializationAdmission for ControlledMaterialization<'_,'_>{
+    fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackError>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);self.control.borrow_mut().scoped_maximum(maximum,|control|producer.decode(control)).map_err(PackError::Schema)}
+    fn charge(&self,bytes:u64)->Result<(),PackError>{self.check(bytes)?;self.control.borrow_mut().charge(usize::try_from(bytes).map_err(|_|PackError::LimitExceeded("native allocation exceeds address space"))?).map_err(PackError::Schema)}
+    fn step(&self)->Result<(),PackError>{self.control.borrow_mut().step().map_err(PackError::Schema)}
+    fn controlled(&self)->bool{true}
+    fn copy_text(&self,text:&str)->Result<String,PackError>{self.check(text.len() as u64)?;self.control.borrow_mut().copy_text(text).map_err(PackError::Schema)}
+    fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackError>{self.check(bytes.len() as u64)?;self.control.borrow_mut().copy_bytes(bytes).map_err(PackError::Schema)}
+    fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackError>{self.check(count as u64)?;self.control.borrow_mut().allocate_vec(count).map_err(PackError::Schema)}
+    fn append_chunk(&self,file:&crate::os_pack::format::PackFile<&[u8]>,id:ChunkId,verification:crate::os_pack::format::VerificationLevel,output:&mut Vec<u8>)->Result<(),PackError>{self.control.borrow_mut().scoped_stage(|control|crate::os_io::resolve_ready(file.append_chunk_controlled(id,verification,output,control)))}
+    fn expression(&self,text:&str,maximum_depth:u16)->Result<crate::os_dsl::schema::ExprValue,String>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);let mut limits=crate::os_dsl::diagnostic::Limits::default();limits.max_depth=usize::from(maximum_depth);self.control.borrow_mut().scoped_maximum(maximum,|control|crate::os_dsl::schema::parse_expr_text_controlled(text,&limits,control).map_err(|error|error.message))}
+    fn copy_utf8(&self,bytes:&[u8],_offset:u64,_what:&'static str)->Result<String,PackError>{self.check(bytes.len() as u64)?;let mut control=self.control.borrow_mut();if bytes.len()>control.maximum_bytes().saturating_sub(control.owned_bytes()){return Err(PackError::LimitExceeded("native text exceeds caller allowance"));}let value=control.borrow_text(bytes).map_err(PackError::Schema)?;control.copy_text(value).map_err(PackError::Schema)}
+}
+
+fn copy_decoded_string(value:&str,materialization:&dyn MaterializationAdmission)->Result<String,PackError>{materialization.copy_text(value)}
+
 impl DecCtx<'_> {
-    fn check_items(&self, n: u64) -> Result<(), PackError> {
-        if n > self.limits.max_items {
-            return Err(PackError::LimitExceeded("item count exceeds max_items"));
-        }
-        Ok(())
-    }
-
-    fn value_slots<T>(&self, count: u64) -> Result<Vec<T>, PackError> {
-        self.check_items(count)?;
-        let capacity = if let Some(budget) = &self.materialization {
-            budget.charge(count.checked_mul((size_of::<T>() as u64).max(64)).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;
-            usize::try_from(count).map_err(|_| PackError::LimitExceeded("wire value slot count"))?
-        } else {
-            count.min(4096) as usize
-        };
-        let mut slots = Vec::new();
-        slots.try_reserve_exact(capacity).map_err(|_| PackError::LimitExceeded("wire value slot allocation"))?;
-        Ok(slots)
-    }
-
-    fn record_slots(&self, record: &mut RecordValue, count: u64) -> Result<(), PackError> {
-        self.check_items(count)?;
-        if let Some(budget) = &self.materialization {
-            budget.charge(count.checked_mul((size_of::<(u16, FieldValue)>() as u64).max(64)).ok_or(PackError::LimitExceeded("record slot overflow"))?)?;
-            record.fields.try_reserve(usize::try_from(count).map_err(|_| PackError::LimitExceeded("record slot count"))?).map_err(|_| PackError::LimitExceeded("record slot allocation"))?;
-        }
-        Ok(())
-    }
+    fn check_items(&self,n:u64)->Result<(),PackError>{if n>self.limits.max_items{return Err(PackError::LimitExceeded("item count exceeds max_items"));}Ok(())}
+    fn value_slots<T>(&self,count:u64)->Result<Vec<T>,PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<T>() as u64).max(64)).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;let mut output=Vec::new();output.try_reserve_exact(usize::try_from(count).map_err(|_|PackError::LimitExceeded("wire value slot count"))?).map_err(|_|PackError::LimitExceeded("wire value slot allocation"))?;Ok(output)}
+    fn record_slots(&self,record:&mut RecordValue,count:u64)->Result<(),PackError>{self.check_items(count)?;self.materialization.charge(count.checked_mul((size_of::<(u16,FieldValue)>() as u64).max(64)).ok_or(PackError::LimitExceeded("record slot overflow"))?)?;record.fields.try_reserve(usize::try_from(count).map_err(|_|PackError::LimitExceeded("record slot count"))?).map_err(|_|PackError::LimitExceeded("record slot allocation"))?;Ok(())}
 }
 
 fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
@@ -2026,7 +2034,7 @@ fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
             detail: format!("symref {symref} out of range for inline table of {}", symbols.len()),
         })?,
     };
-    copy_decoded_string(value, ctx.materialization.as_ref())
+    copy_decoded_string(value, ctx.materialization)
 }
 
 /// 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
@@ -2044,15 +2052,13 @@ fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<S
     // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
     // the position is read up front rather than awaited inside the closure.
     let offset = reader.position() as u64;
-    let value = std::str::from_utf8(bytes).map_err(|_| PackError::Malformed { what: "text", offset, detail: "invalid utf8".to_string() })?;
-    copy_decoded_string(value, ctx.materialization.as_ref())
+    ctx.materialization.copy_utf8(bytes,offset,"text")
 }
 
 fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
     let bytes=read_len_prefixed_bytes(reader,&ctx.limits)?;
     if bytes.len()as u64>ctx.limits.max_total_alloc{return Err(PackError::LimitExceeded("decoded octets exceed max_total_alloc"));}
-    if let Some(budget)=&ctx.materialization{budget.charge(bytes.len()as u64)?;}
-    let mut owned=Vec::new();owned.try_reserve_exact(bytes.len()).map_err(|_|PackError::LimitExceeded("decoded octet allocation"))?;owned.extend_from_slice(bytes);Ok(owned)
+    ctx.materialization.copy_bytes(bytes)
 }
 
 /// 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
@@ -2060,6 +2066,13 @@ fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Ve
 fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
+    if ctx.materialization.controlled(){
+        let DecSource::File(file)=&ctx.source else{return Err(PackError::Malformed{what:"chunk_id",offset:reader.position() as u64,detail:"chunked octets require an owned chunk catalog".into()});};let mut sizes=reader.fork();let mut length=0u64;
+        for _ in 0..count{ctx.materialization.step()?;let raw_id=sizes.read_varint_u64()?;let id=u32::try_from(raw_id).map_err(|_|PackError::Malformed{what:"chunk_id",offset:sizes.position() as u64,detail:"chunk id exceeds u32".into()})?;let bytes=file.chunk_decoded_len(ChunkId(id))?;if bytes>ctx.limits.max_segment_len{return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));}length=length.checked_add(bytes).filter(|length|*length<=ctx.limits.max_total_alloc).ok_or(PackError::LimitExceeded("controlled octet length exceeds caller limits"))?;}
+        let length=usize::try_from(length).map_err(|_|PackError::LimitExceeded("chunk octets exceed address space"))?;let mut output=ctx.materialization.octet_buffer(length)?;
+        for _ in 0..count{ctx.materialization.step()?;let id=u32::try_from(reader.read_varint_u64()?).map_err(|_|PackError::Malformed{what:"chunk_id",offset:reader.position() as u64,detail:"chunk id exceeds u32".into()})?;ctx.materialization.append_chunk(file,ChunkId(id),ctx.verification,&mut output)?;}
+        if output.len()!=length{return Err(PackError::Malformed{what:"chunks",offset:reader.position() as u64,detail:"chunk output differs from admitted length".into()});}return Ok(output);
+    }
     let mut out = Vec::new();
     for _ in 0..count {
         let id = reader.read_varint_u64()?;
@@ -2071,7 +2084,7 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
                 let length=pack_file.chunk_decoded_len(ChunkId(id as u32))?;
                 let total=(out.len()as u64).checked_add(length).ok_or(PackError::LimitExceeded("decoded octet length overflow"))?;
                 if total>ctx.limits.max_total_alloc||usize::try_from(total).is_err(){return Err(PackError::LimitExceeded("decoded octets exceed max_total_alloc"));}
-                if let Some(budget)=&ctx.materialization{budget.charge(length)?;}
+                ctx.materialization.charge(length)?;
                 crate::os_io::resolve_ready(pack_file.read_chunk(ChunkId(id as u32),ctx.verification))?
             },
             DecSource::Inline { .. } => {
@@ -2107,6 +2120,7 @@ fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String
 /// byte-aligned) but dropped from the returned `RecordValue`. Every `spec` field not seen on the
 /// wire is inserted as `Absent` — the decode-side half of canonical mode's "omit `Absent`" rule.
 fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackError> {
+    ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -2121,7 +2135,7 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
         let field_shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
         let value = decode_value(reader, field_shape, ctx, depth + 1)?;
         if field_shape.is_none() {
-            if let Some(budget) = &ctx.materialization { budget.charge(8)?; }
+            ctx.materialization.charge(8)?;
             ctx.unknown_field_ids.try_reserve_exact(1).map_err(|_| PackError::LimitExceeded("unknown field report allocation"))?;
             ctx.unknown_field_ids.push(id);
             if ctx.preserve_unknown {
@@ -2147,6 +2161,7 @@ fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, 
 // 🔁️ Mutually recursive with `decode_record_fields`/`decode_seq_body`/`decode_map` (and directly
 // self-recursive for `TAG_BLOCK`) — same `Box::pin(...).await` requirement as `encode_value`.
 fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+    ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
     match tag {
@@ -2176,11 +2191,11 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
             }
         }
         TAG_RECORD => {
-            let nested_spec = record_spec_of(shape);
+            let nested_spec = match shape{Some(Shape::Record(producer))=>Some(ctx.materialization.schema(producer)?),_=>None};
             Ok(FieldValue::Record(decode_record_fields(reader, nested_spec.as_ref(), ctx, depth + 1)?))
         }
         TAG_BLOCK => {
-            if let Some(budget) = &ctx.materialization { budget.charge(size_of::<FieldValue>() as u64)?; }
+            ctx.materialization.charge(size_of::<FieldValue>() as u64)?;
             Ok(FieldValue::Block(Box::new(decode_value(reader, block_inner_shape(shape), ctx, depth + 1)?)))
         },
         TAG_STATEMENTS => decode_statements(reader, statements_variants(shape), ctx, depth),
@@ -2192,7 +2207,7 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
             // 🔁️ Same closure constraint as `read_inline_string`: read the position before the
             // sync `map_err` closure, don't `.await` inside it.
             let offset = reader.position() as u64;
-            crate::os_dsl::schema::parse_expr_text(&text).map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset, detail: e.message })
+            ctx.materialization.expression(&text,ctx.limits.max_depth).map(FieldValue::Expr).map_err(|detail| PackError::Malformed { what: "expr", offset, detail })
         }
         TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape), ctx, depth)?)),
         TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape), ctx),
@@ -2217,6 +2232,7 @@ fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool, ctx: &Dec
     let count = reader.read_varint_u64()?;
     let mut items = ctx.value_slots(count)?;
     for _ in 0..count {
+        ctx.materialization.step()?;
         items.push(FieldValue::Float(reader.read_f64_le()?));
     }
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
@@ -2230,6 +2246,7 @@ fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Sh
     let count = reader.read_varint_u64()?;
     let mut items = ctx.value_slots(count)?;
     for _ in 0..count {
+        ctx.materialization.step()?;
         let v = reader.read_varint_i64()?;
         let fv = match elem_shape {
             Some(Shape::UInt) => {
@@ -2264,7 +2281,7 @@ fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mu
     Ok(FieldValue::Map(entries))
 }
 
-fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, RecordSpecProducer)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -2272,7 +2289,7 @@ fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String,
     for _ in 0..count {
         let symref = reader.read_varint_u64()?;
         let keyword = resolve_symref(ctx, symref)?;
-        let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| *k == keyword)).map(|(_, f)| f());
+        let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| *k == keyword)).map(|(_, f)| ctx.materialization.schema(f)).transpose()?;
         let record = decode_record_fields(reader, spec.as_ref(), ctx, depth + 1)?;
         items.push((keyword, record));
     }
@@ -2281,6 +2298,7 @@ fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String,
 
 // 🔁️ Self-recursive (`TAG_LIST`/`TAG_MAP` arms) — boxed for the same reason as `decode_value`.
 fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackError> {
+    ctx.materialization.step()?;
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
     match tag {
@@ -2342,6 +2360,7 @@ fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) ->
 }
 
 fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
+    ctx.materialization.step()?;
     let presence = reader.read_u8()?;
     let id = decode_string(reader, ctx)?;
     let kind = if presence & 0b01 != 0 { Some(decode_string(reader, ctx)?) } else { None };
@@ -2380,9 +2399,9 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
 /// bitmap unconditionally (simpler than compacting individual bits). `Text` columns are always
 /// interned (forced symrefs, matching `build_symbols`'s pre-pass); every other shape falls back to
 /// self-describing per-present-row values.
-fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: RecordSpecProducer, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
-    let element_spec = spec_fn();
+    let element_spec = (spec_fn.ordinary)();
     let mut columns: Vec<&FieldSpec> = element_spec.fields.iter().collect();
     columns.sort_by_key(|f| f.id);
     let row_count = items.len();
@@ -2502,23 +2521,21 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
 /// know the table's element `RecordSpec` (`spec_fn` is `Some`), it is threaded into the
 /// fallback (non-primitive) column branch so a nested `Record` column's own `Absent` sub-fields
 /// get backfilled correctly instead of merely reflecting what was present on the wire.
-fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
+fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProducer>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
-    let element_spec = spec_fn.map(|f| f());
+    let element_spec = spec_fn.map(|producer|ctx.materialization.schema(&producer)).transpose()?;
     let row_count_raw = reader.read_varint_u64()?;
     ctx.check_items(row_count_raw)?;
     let col_count = reader.read_varint_u64()?;
     ctx.check_items(col_count)?;
     let row_count = usize::try_from(row_count_raw).map_err(|_| PackError::LimitExceeded("table row count"))?;
     let column_count = usize::try_from(col_count).map_err(|_| PackError::LimitExceeded("table column count"))?;
-    if let Some(budget) = &ctx.materialization {
-        budget.charge(row_count_raw.checked_mul(col_count).and_then(|count| count.checked_mul((size_of::<(u16, FieldValue)>() as u64).max(64))).ok_or(PackError::LimitExceeded("table field storage overflow"))?)?;
-    }
+    ctx.materialization.charge(row_count_raw.checked_mul(col_count).and_then(|count| count.checked_mul((size_of::<(u16, FieldValue)>() as u64).max(64))).ok_or(PackError::LimitExceeded("table field storage overflow"))?)?;
     let mut values = ctx.value_slots(row_count_raw)?;
     let mut rows: Vec<RecordValue> = ctx.value_slots(row_count_raw)?;
     for _ in 0..row_count {
         let mut row = RecordValue::default();
-        if ctx.materialization.is_some() { row.fields.try_reserve(column_count).map_err(|_| PackError::LimitExceeded("table field allocation"))?; }
+        row.fields.try_reserve(column_count).map_err(|_| PackError::LimitExceeded("table field allocation"))?;
         rows.push(row);
     }
     for _ in 0..col_count {
@@ -2531,6 +2548,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
         match elem_tag {
             ELEM_F64 => {
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let f = reader.read_f64_le()?;
                         rows[i].fields.insert(field_id, FieldValue::Float(f));
@@ -2539,6 +2557,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             }
             ELEM_INT => {
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let v = reader.read_varint_i64()?;
                         rows[i].fields.insert(field_id, FieldValue::Int(v));
@@ -2547,6 +2566,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             }
             ELEM_UINT => {
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let v = reader.read_varint_u64()?;
                         rows[i].fields.insert(field_id, FieldValue::UInt(v));
@@ -2555,6 +2575,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             }
             ELEM_ENUM => {
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let v = reader.read_varint_u64()?;
                         rows[i].fields.insert(field_id, FieldValue::Enum(v as u32));
@@ -2564,6 +2585,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             ELEM_BOOL => {
                 let bitmap = reader.read_bytes(row_count.div_ceil(8))?;
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let b = bitmap[i / 8] & (1 << (i % 8)) != 0;
                         rows[i].fields.insert(field_id, FieldValue::Bool(b));
@@ -2572,6 +2594,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             }
             ELEM_STR => {
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let symref = reader.read_varint_u64()?;
                         let s = resolve_symref(ctx, symref)?;
@@ -2582,6 +2605,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             _ => {
                 let field_shape = element_spec.as_ref().and_then(|s| s.fields.iter().find(|f| f.id == field_id)).map(|f| &f.shape);
                 for i in 0..row_count {
+                    ctx.materialization.step()?;
                     if present(i) {
                         let v = decode_value(reader, field_shape, ctx, depth + 1)?;
                         rows[i].fields.insert(field_id, v);
@@ -2590,6 +2614,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordS
             }
         }
         for i in 0..row_count {
+                    ctx.materialization.step()?;
             if !present(i) {
                 rows[i].fields.entry(field_id).or_insert(FieldValue::Absent);
             }
@@ -2648,7 +2673,7 @@ pub struct PackSchemaField {
 }
 
 /// 🕸️ The canonical structural form of a `RecordSpec` tree: the minimal record graph of the
-/// fully unfolded schema (bisimulation quotient, so recursion and duplicated `fn() -> RecordSpec`
+/// fully unfolded schema (bisimulation quotient, so recursion and duplicated `RecordSpecProducer`
 /// items collapse to the same graph), numbered by breadth-first first visit from the root in
 /// schema order (fields by id, statements by keyword). Record `0` is the root; nested records and
 /// cycles are `Record(index)`/`Table(index)`/`Statements(.., index)` edges.
@@ -2657,8 +2682,11 @@ pub struct PackSchemaGraph {
     pub records: Vec<Vec<PackSchemaField>>,
 }
 
-fn pack_schema_shape(shape: &Shape, edges: &mut Vec<fn() -> RecordSpec>) -> PackSchemaShape {
-    let mut edge = |spec_fn: fn() -> RecordSpec| {
+#[path="🏭️schema/🦀️.rs"]
+mod controlled_schema;
+
+fn pack_schema_shape(shape: &Shape, edges: &mut Vec<RecordSpecProducer>) -> PackSchemaShape {
+    let mut edge = |spec_fn: RecordSpecProducer| {
         edges.push(spec_fn);
         (edges.len() - 1) as u32
     };
@@ -2679,7 +2707,7 @@ fn pack_schema_shape(shape: &Shape, edges: &mut Vec<fn() -> RecordSpec>) -> Pack
         Shape::Record(spec_fn) => PackSchemaShape::Record(edge(*spec_fn)),
         Shape::Block(inner) => PackSchemaShape::Block(Box::new(pack_schema_shape(inner, edges))),
         Shape::Statements(variants) => {
-            let mut sorted: Vec<&(String, fn() -> RecordSpec)> = variants.iter().collect();
+            let mut sorted: Vec<&(String, RecordSpecProducer)> = variants.iter().collect();
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             PackSchemaShape::Statements(sorted.into_iter().map(|(keyword, spec_fn)| (keyword.clone(), edge(*spec_fn))).collect())
         }
@@ -2804,7 +2832,7 @@ impl PackSchemaShape {
 
 impl PackSchemaGraph {
     /// 🕸️ Builds the canonical graph of `spec`. Discovery follows each distinct
-    /// `fn() -> RecordSpec` once (so it terminates on recursive schemas), then Moore partition
+    /// `RecordSpecProducer` once (so it terminates on recursive schemas), then Moore partition
     /// refinement merges every pair of structurally identical records, which makes the result
     /// independent of how often the compiler duplicated a spec function.
     pub fn of(spec: &RecordSpec) -> Self {
@@ -2816,19 +2844,19 @@ impl PackSchemaGraph {
             let current = if cursor == 0 { spec } else if let Some(next) = pending.get(cursor - 1) { next } else { break };
             let mut ordered: Vec<&FieldSpec> = current.fields.iter().collect();
             ordered.sort_by_key(|field| field.id);
-            let mut edges: Vec<fn() -> RecordSpec> = Vec::new();
+            let mut edges: Vec<RecordSpecProducer> = Vec::new();
             let fields = ordered.into_iter().map(|field| PackSchemaField { id: field.id, key: field.key.clone(), optional: field.optional, flatten: field.flatten, shape: pack_schema_shape(&field.shape, &mut edges) }).collect();
             let mut discovered = Vec::new();
             let targets = edges
                 .into_iter()
                 .map(|spec_fn| {
-                    *seen.entry(spec_fn as usize).or_insert_with(|| {
+                    *seen.entry(spec_fn.ordinary as usize).or_insert_with(|| {
                         discovered.push(spec_fn);
                         pending.len() + discovered.len()
                     })
                 })
                 .collect();
-            pending.extend(discovered.into_iter().map(|spec_fn| spec_fn()));
+            pending.extend(discovered.into_iter().map(|spec_fn| (spec_fn.ordinary)()));
             nodes.push((fields, targets));
             cursor += 1;
         }
@@ -2878,6 +2906,9 @@ impl PackSchemaGraph {
             .collect();
         Self { records }
     }
+
+    /// 🧮️ Hashes the owned graph incrementally without copying a canonical-byte carrier.
+    pub fn hash_controlled<C:crate::os_dsl::NativeSchemaControl>(&self,control:&mut C)->Result<[u8;32],PackError>{controlled_schema::hash_graph(self,control).map_err(PackError::Schema)}
 
     /// 🗺️ The language-neutral JSON form of this graph (`🧫️fixtures/🔑️schema-hash`): one array
     /// of field objects per record, each shape `{ "kind": .., payload }`, so any language can
@@ -2967,6 +2998,9 @@ impl PackSchemaGraph {
 pub fn schema_hash(spec: &RecordSpec) -> [u8; 32] {
     *semio_framework_hash::hash(&PackSchemaGraph::of(spec).canonical_bytes()).as_bytes()
 }
+/// 🧮️ Preserves canonical graph identity under the declared metadata factories and one ownership ceiling.
+pub fn schema_hash_controlled<C:crate::os_dsl::NativeSchemaControl>(spec:&RecordSpec,control:&mut C)->Result<[u8;32],PackError>{controlled_schema::hash(spec,control).map_err(PackError::Schema)}
+
 //#endregion 🔖️SchemaHash
 
 //#region 🔖️Document
@@ -3077,11 +3111,26 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     let body = crate::os_io::resolve_ready(pack_file.body_bytes(options.verification))?;
 
     let mut reader = ByteReader::new(&body);
-    let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: None };
+    let retained=pack_file.owned_catalog_bytes()?.checked_add(body.capacity() as u64).ok_or(PackError::LimitExceeded("document materialization allocation overflow"))?;
+    if retained>options.limits.max_total_alloc{return Err(PackError::LimitExceeded("document materialization exceeds max_total_alloc"));}
+    let budget=ValueMaterialization{used:std::cell::Cell::new(retained),maximum:options.limits.max_total_alloc};
+    let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
     Ok((record, report))
+}
+
+/// 🛬️ Controls catalog/source/inflation/primitive ownership using the caller's typed-construction budget.
+pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut protocol::value::native_decoding::NativeDecodeControl<'_>)->Result<(RecordValue,DecodeReport),PackError>{
+    let file=crate::os_io::resolve_ready(crate::os_pack::format::PackFile::open_manifest_controlled(bytes,&options.limits,options.verification,control))?;
+    let manifest=file.manifest().ok_or(PackError::Schema("controlled manifest absent".into()))?;let schema_drift=manifest.schema_hash!=schema_hash_controlled(spec,control)?;
+    let body=crate::os_io::resolve_ready(file.body_bytes_controlled(options.verification,control))?;
+    control.begin_stage(0).map_err(PackError::Schema)?;let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
+    let mut context=DecCtx{source:DecSource::File(&file),limits:options.limits.clone(),verification:options.verification,preserve_unknown:options.preserve_unknown,unknown_field_ids:Vec::new(),materialization:&materialization};let mut reader=ByteReader::new(&body);
+    let record=decode_record_fields(&mut reader,Some(spec),&mut context,0)?;
+    if reader.remaining()!=0{return Err(PackError::Malformed{what:"document",offset:reader.position() as u64,detail:"trailing document body bytes".into()});}
+    Ok((record,DecodeReport{unknown_field_ids:context.unknown_field_ids,unknown_segments:Vec::new(),schema_drift,verified:options.verification}))
 }
 
 /// 🎯️ Container-less twin of [`encode_document`] for small payloads (operation/command
@@ -3125,29 +3174,39 @@ pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &Decod
     decode_record_body_inner(bytes, spec, options, true).map(|(record, _)| record)
 }
 
-fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: Option<&ValueMaterialization>) -> Result<Vec<String>, PackError> {
+/// 🛬️ Parses a terminal container-less record under the same control used by its typed constructor.
+pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&DecodeOptions,control:&mut protocol::value::native_decoding::NativeDecodeControl<'_>)->Result<RecordValue,PackError>{
+    if bytes.len() as u64>options.limits.max_file_len{return Err(PackError::LimitExceeded("record body exceeds max_file_len"));}
+    control.begin_stage(0).map_err(PackError::Schema)?;
+    let mut reader=ByteReader::new(bytes);
+    let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
+    let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;
+    let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};
+    let record=decode_record_fields(&mut reader,Some(spec),&mut ctx,0)?;
+    if reader.position()!=bytes.len(){return Err(PackError::Malformed{what:"record body",offset:reader.position() as u64,detail:"trailing bytes after terminal record".into()});}
+    if !ctx.unknown_field_ids.is_empty(){return Err(PackError::Malformed{what:"record body",offset:reader.position() as u64,detail:"unknown terminal record fields".into()});}
+    Ok(record)
+}
+
+fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: &dyn MaterializationAdmission) -> Result<Vec<String>, PackError> {
     let symbol_count = reader.read_varint_u64()?;
     if symbol_count > u64::from(limits.max_symbols) {
         return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
     }
-    if let Some(budget) = materialization {
-        if size_of::<String>() > 32 {
-            return Err(PackError::LimitExceeded("wire symbol slot representation"));
-        }
-        budget.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
-    }
+    if size_of::<String>()>32{return Err(PackError::LimitExceeded("wire symbol slot representation"));}
+    materialization.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
     let count = usize::try_from(symbol_count).map_err(|_| PackError::LimitExceeded("wire symbol slot count"))?;
     let mut symbols = Vec::new();
     symbols.try_reserve_exact(count).map_err(|_| PackError::LimitExceeded("wire symbol slot allocation"))?;
     for _ in 0..symbol_count {
+        materialization.step()?;
         let len = reader.read_varint_u64()?;
         if len > limits.max_segment_len {
             return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
         }
         let raw = reader.read_bytes(usize::try_from(len).map_err(|_| PackError::LimitExceeded("wire symbol byte length"))?)?;
         let symbol_offset = reader.position() as u64;
-        let s = std::str::from_utf8(raw).map_err(|_| PackError::Malformed { what: "symbol", offset: symbol_offset, detail: "invalid utf8".to_string() })?;
-        symbols.push(copy_decoded_string(s, materialization)?);
+        symbols.push(materialization.copy_utf8(raw,symbol_offset,"symbol")?);
     }
     Ok(symbols)
 }
@@ -3161,11 +3220,11 @@ pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &Pack
     }
     let mut reader = ByteReader::new(bytes);
     let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: limits.max_total_alloc };
-    let symbols = decode_inline_symbols(&mut reader, limits, Some(&budget))?;
+    let symbols = decode_inline_symbols(&mut reader, limits, &budget)?;
     if reader.read_varint_u64()? != 1 || reader.read_varint_u64()? != u64::from(field_id) || reader.read_u8()? != TAG_VALUE {
         return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "expected exactly one declared Value field".into() });
     }
-    let mut ctx = DecCtx { source: DecSource::Inline { symbols }, limits: limits.clone(), verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: false, unknown_field_ids: Vec::new(), materialization: Some(budget) };
+    let mut ctx = DecCtx { source: DecSource::Inline { symbols }, limits: limits.clone(), verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: false, unknown_field_ids: Vec::new(), materialization: &budget };
     let value = decode_dsl_value(&mut reader, &mut ctx, 0)?;
     if reader.position() != bytes.len() {
         return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() });
@@ -3174,9 +3233,11 @@ pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &Pack
 }
 
 fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackError> {
+    if bytes.len() as u64 > options.limits.max_file_len { return Err(PackError::LimitExceeded("record body exceeds max_file_len")); }
     let mut reader = ByteReader::new(bytes);
-    let symbols = decode_inline_symbols(&mut reader, &options.limits, None)?;
-    let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: None };
+    let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: options.limits.max_total_alloc };
+    let symbols = decode_inline_symbols(&mut reader, &options.limits, &budget)?;
+    let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
     if exact && reader.position() != bytes.len() {
         return Err(PackError::Malformed { what: "record body", offset: reader.position() as u64, detail: "trailing bytes after the terminal record".into() });

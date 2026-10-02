@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeMaterialAlphaModeMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-material-alpha-mode");
-    super::super::component::fixture_corpus_tests::assert_case("💎️material/🌫️change-alpha/🎭️switches");
+    super::super::component::fixture_corpus_tests::assert_case("💎️material/🌫️change/🎭️switches");
 }
 
 #[semio_framework_async_macros::async_test]

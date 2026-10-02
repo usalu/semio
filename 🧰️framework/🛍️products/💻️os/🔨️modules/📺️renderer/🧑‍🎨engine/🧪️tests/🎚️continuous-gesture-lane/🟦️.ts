@@ -24,7 +24,7 @@
  */
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
-import { createContinuousGestureLane, type ContinuousGestureAbortReason, type ContinuousGesturePhase } from "@semio-tech/framework";
+import { continuousPressIdentity, createContinuousGestureLane, type ContinuousGestureAbortReason, type ContinuousGesturePhase } from "@semio-tech/framework";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { interpretUiNode, UiDocumentStore, type UiInterpreterContext } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
@@ -156,6 +156,28 @@ describe("🎚️ continuous gesture lane", () => {
     expect(sent.map((entry) => entry.value)).toEqual([1, 2, 3]);
     expect(lane.inFlight()).toBe(false);
   });
+
+  it("settles at once for a sink that answers anything but a promise, never wedging the gesture", () => {
+    const sent: Sent[] = [];
+    const faults: unknown[] = [];
+    const sink = (value: number, phase: ContinuousGesturePhase): unknown => sent.push({ value, phase });
+    const lane = createContinuousGestureLane<number>({ send: sink as (value: number, phase: ContinuousGesturePhase) => void, onFault: (error) => faults.push(error) });
+    lane.offer(1);
+    lane.offer(2);
+    lane.commit(3);
+    expect(sent).toEqual([
+      { value: 1, phase: "live" },
+      { value: 2, phase: "live" },
+      { value: 3, phase: "commit" },
+    ]);
+    expect([lane.inFlight(), faults]).toEqual([false, []]);
+  });
+
+  it("mints a distinct press identity for every press of one control, even within one millisecond", () => {
+    const identities = Array.from({ length: 64 }, () => continuousPressIdentity("panel.width"));
+    expect(new Set(identities).size).toBe(identities.length);
+    for (const identity of identities) expect(identity).toMatch(/^panel\.width:\d+:\d+$/);
+  });
 });
 
 describe("🎚️ continuous gesture lane: host cancel", () => {
@@ -253,7 +275,7 @@ describe("🎚️ interpreted continuous controls speak the scrub protocol", () 
       { value: 6, gesture: intents[0]!.input!.gesture, commit: false },
       { value: 6, gesture: intents[0]!.input!.gesture, commit: true },
     ]);
-    expect(String(intents[0]!.input!.gesture)).toMatch(/^inspector\.opacity:\d+$/);
+    expect(String(intents[0]!.input!.gesture), "a press is named by its control, its start and a page-wide serial").toMatch(/^inspector\.opacity:\d+:\d+$/);
   });
 
   it("a slider unmounted mid-press cancels the press as retired, with no value", () => {

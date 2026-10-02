@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change plant loop {} supply temperature to {:?}", self.id.0, self.new_supply_temperature_c), &format!("Vorlauftemperatur von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_supply_temperature_c))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change plant loop {} supply temperature to {:?}", self.id.0, self.new_supply_temperature_c), &format!("Vorlauftemperatur von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_supply_temperature_c))
     }
 
     fn target(&self) -> Vec<String> {

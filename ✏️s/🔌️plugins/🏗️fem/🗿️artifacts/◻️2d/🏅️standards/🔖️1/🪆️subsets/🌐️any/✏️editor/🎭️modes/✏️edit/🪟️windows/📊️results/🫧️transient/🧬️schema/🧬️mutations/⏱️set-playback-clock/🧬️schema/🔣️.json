@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/results-window/transient/mutation/set-playback-clock/schema.json",
+  "title": "SetPlaybackClock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clock"],
+  "properties": {
+    "clock": {
+      "anyOf": [
+        { "$ref": "#/$defs/Fem2dPlaybackClock" },
+        { "type": "null" }
+      ],
+      "x-semio-ui": { "role": "value", "label": { "en": "Playback clock", "de": "Wiedergabetakt" }, "group": "record", "order": 10 }
+    }
+  },
+  "$defs": {
+    "Fem2dPlaybackClock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "reverse"],
+      "properties": {
+        "phase": { "type": "number", "minimum": 0, "maximum": 1, "x-semio-ui": { "widget": "slider", "role": "value", "label": { "en": "Phase", "de": "Phase" }, "description": { "en": "Position within one animation cycle, 0 to 1.", "de": "Position innerhalb eines Animationszyklus, 0 bis 1." }, "step": 0.01, "precision": 2, "group": "playback", "order": 10 } },
+        "reverse": { "type": "boolean", "x-semio-ui": { "widget": "toggle", "role": "value", "label": { "en": "Reverse", "de": "Rückwärts" }, "group": "playback", "order": 20 } }
+      }
+    }
+  }
+}

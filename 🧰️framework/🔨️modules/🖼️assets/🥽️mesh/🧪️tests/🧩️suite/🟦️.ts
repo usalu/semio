@@ -20,7 +20,10 @@ describe("explicit mesh delivery authority", () => {
     const products = resolve(import.meta.dir, "../../../../../🛍️products") + "/";
     const program = `import { parseMeshDeliveryCatalog, meshAssetTransportUrl } from ${JSON.stringify(resolve(import.meta.dir, "../../🟦️.ts"))}; const fixture=${JSON.stringify(fixture)}; const catalog=parseMeshDeliveryCatalog(fixture.delivery,path=>fixture.catalogs[path]); console.log(JSON.stringify(fixture.transport.map(row=>{try{return {valid:true,output:meshAssetTransportUrl(row.url,catalog)}}catch{return {valid:false,output:null}}})));`;
     const bundle = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "mesh-product-removal", setup(builder) {
-      builder.onLoad({ filter: /.*/ }, input => input.path.replaceAll("\\", "/").startsWith(products.replaceAll("\\", "/")) ? { errors: [{ text: "General mesh imports a concrete framework product: " + input.path }] } : undefined);
+      builder.onLoad({ filter: /.*/ }, input => {
+        const path = input.path.replaceAll("\\", "/");
+        if (path.startsWith(products.replaceAll("\\", "/")) || path.includes("/🖼️assets/🌱️metabolism/") || path.endsWith("/🥽️mesh/📇️catalog.json")) return { errors: [{ text: "General mesh loads a concrete product or asset collection: " + input.path }] };
+      });
     } }] });
     const node = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(bundle.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
     expect(node.exitCode, Buffer.from(node.stderr).toString()).toBe(0);

@@ -25,15 +25,15 @@ use semio_framework_artifact_space_collection::{artifact_backbone_uri, collectio
 use semio_framework_artifact_space_space::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_os::{
     create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document,
-    materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort,
+    materialize_backbone_snapshot, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort,
     WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use store::{BackbonePorts, LocalStorageBackbonePort};
 
 //#region 🔖️Constants
@@ -47,21 +47,9 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Constants
 
 //#region 🔖️Fixtures
-/// 🧵️ Registers the draw/writer fixture documents referenced by the demo space's app instances —
-/// shared by the Home editor's catalog seed and the Studio app's media export path, both of which need
-/// these fixtures resolvable before they touch a studio document that references them.
-pub async fn ensure_space_fixtures_registered() {
-    static FIXTURES: LazyLock<()> = LazyLock::new(|| {
-        // 🩹️ draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::ArtifactDsl`);
-        // this registry is still JSON-shaped (framework/product/os hasn't migrated yet), so
-        // `materialize_os_app_instance_document_json`'s `pack::from_json_str` will fall back to
-        // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
-        // not required for correctness.
-        register_os_fixture_json("🖍️semio.draw.json", include_str!("../../🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio"));
-        register_os_fixture_json("✒️jack.writer.json", include_str!("../../✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio"));
-    });
-    let _ = &*FIXTURES;
-}
+#[path = "🧫️fixtures/🦀️.rs"]
+pub mod fixtures;
+pub use fixtures::{prepare_space_fixture_sources, register_space_fixture_sources, SpaceFixtureCodec, SpaceFixtureFormat, SpaceFixtureSource};
 
 /// 🌱️ Parses the packaged demo studio fixture into a full `OsWorkflowArtifactDocument` envelope —
 /// shared by the Home editor's catalog seed and the Studio app's `initial_snapshot`. The fixture
@@ -97,7 +85,6 @@ async fn catalog_port_concrete() -> Arc<OsBackbonePorts> {
     if let Some(port) = PORT.get() {
         return port.clone();
     }
-    ensure_space_fixtures_registered().await;
     let port = Arc::new(OsBackbonePorts::Store(BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     if list_os_space_catalog_entries(&port).map_or(true, |entries| entries.is_empty()) {
         let demo = parse_demo_space_document().await;

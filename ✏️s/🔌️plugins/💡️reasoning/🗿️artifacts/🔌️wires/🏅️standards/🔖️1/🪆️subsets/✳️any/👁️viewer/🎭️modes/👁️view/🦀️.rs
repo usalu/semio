@@ -1,7 +1,10 @@
 //! 👁️ Wires viewer — the `view` mode: the sole window layout (the read-only WIRES canvas, full width).
 
 use crate::viewer::wires::modes::view::windows::canvas;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const WIRES_VIEW_MODE_VIEW: &str = "view";
 

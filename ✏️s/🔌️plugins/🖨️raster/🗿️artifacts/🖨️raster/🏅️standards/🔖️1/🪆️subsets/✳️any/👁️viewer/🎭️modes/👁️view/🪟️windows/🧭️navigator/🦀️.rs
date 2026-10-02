@@ -9,7 +9,12 @@
 use crate::viewer::raster::modes::view::windows::composite;
 use crate::RasterSnapshot;
 use semio_framework_plugin::app::{ImageWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const RASTER_VIEW_WINDOW_NAVIGATOR: &str = "raster-view-navigator";

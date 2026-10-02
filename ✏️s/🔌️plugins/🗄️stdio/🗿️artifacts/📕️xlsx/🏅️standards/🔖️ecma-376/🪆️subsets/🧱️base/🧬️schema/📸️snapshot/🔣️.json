@@ -249,12 +249,10 @@
       ],
       "properties": {
         "path": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "contentType": {
           "type": "string",
-          "minLength": 1,
           "x-semio-ui": {
             "widget": "text",
             "label": {

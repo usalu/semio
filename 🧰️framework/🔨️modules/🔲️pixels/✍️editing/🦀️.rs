@@ -374,6 +374,73 @@ pub fn paint_stroke_in_place(image: &mut RasterImage, operation: &PixelOperation
     Ok(Some(rect))
 }
 
+/// 🪣️ The 4-connected region of `image` around the seed `(x, y)` whose RGBA channels all lie within `tolerance` of the
+/// seed's, as per-pixel coverage: 255, or the optional `selection`'s coverage — an unselected pixel is never taken and
+/// blocks the region behind it. The region a bucket fills and a magic wand selects, byte-equal to the TypeScript twin
+/// `floodSelection` (shared corpus section `floodSelections`).
+pub fn flood_selection(image: &RasterImage, x: u32, y: u32, tolerance: u8, selection: Option<&[u8]>) -> Result<Vec<u8>, PixelEditError> {
+    validate_image(image)?;
+    let count = image.pixels.len() / 4;
+    if selection.is_some_and(|mask| mask.len() != count) {
+        return Err(PixelEditError::Invalid("Selection extent does not match image"));
+    }
+    if x >= image.width || y >= image.height {
+        return Err(PixelEditError::Invalid("Invalid flood selection seed or tolerance"));
+    }
+    let (width, height) = (image.width as usize, image.height as usize);
+    let seed = y as usize * width + x as usize;
+    let target: PixelColor = [image.pixels[seed * 4], image.pixels[seed * 4 + 1], image.pixels[seed * 4 + 2], image.pixels[seed * 4 + 3]];
+    let mut mask = vec![0_u8; count];
+    let mut seen = vec![false; count];
+    let mut queue = vec![seed as u32];
+    seen[seed] = true;
+    let mut head = 0;
+    while let Some(&next) = queue.get(head) {
+        head += 1;
+        let index = next as usize;
+        let coverage = selection.map_or(255, |selection| selection[index]);
+        if coverage == 0 || image.pixels[index * 4..index * 4 + 4].iter().zip(target).any(|(channel, seed)| channel.abs_diff(seed) > tolerance) {
+            continue;
+        }
+        mask[index] = coverage;
+        let (px, py) = (index % width, index / width);
+        for (neighbour, inside) in [(index.wrapping_sub(1), px > 0), (index + 1, px + 1 < width), (index.wrapping_sub(width), py > 0), (index + width, py + 1 < height)] {
+            if inside && !seen[neighbour] {
+                seen[neighbour] = true;
+                queue.push(neighbour as u32);
+            }
+        }
+    }
+    Ok(mask)
+}
+
+/// 🪣️ Applies a `Fill` or `AlphaFill` to `image` in place under the per-pixel `coverage` of a region (a
+/// [`flood_selection`]): byte-identical to a whole-image [`PixelEditJob`] of the same operation selected by `coverage`,
+/// touching only the covered pixels — the deterministic filler a replayed region-fill leaf runs. Answers whether a pixel
+/// changed.
+pub fn fill_in_place(image: &mut RasterImage, operation: &PixelOperation, coverage: &[u8]) -> Result<bool, PixelEditError> {
+    validate_image(image)?;
+    if !matches!(operation, PixelOperation::Fill(_) | PixelOperation::AlphaFill { .. }) {
+        return Err(PixelEditError::Invalid("Only a fill fills a region in place"));
+    }
+    if coverage.len() != image.pixels.len() / 4 {
+        return Err(PixelEditError::Invalid("Selection extent does not match image"));
+    }
+    operation.validate(image, true)?;
+    let width = image.width as usize;
+    let mut changed = false;
+    for (index, amount) in coverage.iter().enumerate().filter(|(_, amount)| **amount > 0) {
+        let offset = index * 4;
+        let before = [image.pixels[offset], image.pixels[offset + 1], image.pixels[offset + 2], image.pixels[offset + 3]];
+        let after = operation.filtered_color(image, before, (index % width) as u32, (index / width) as u32, f64::from(*amount) / 255.0);
+        if after != before {
+            image.pixels[offset..offset + 4].copy_from_slice(&after);
+            changed = true;
+        }
+    }
+    Ok(changed)
+}
+
 /// 🧵️ An unpublished result whose work is bounded by an explicit pixel grant.
 pub struct PixelEditJob {
     source: RasterImage,

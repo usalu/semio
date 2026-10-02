@@ -80,7 +80,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.html".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Html", "Html"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Html", "Html"),
         source_format: STDIO_HTML_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

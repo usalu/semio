@@ -964,7 +964,7 @@ mod bridge {
         assert_eq!(entries.len(), 1);
         let (path, value) = &entries[0];
         assert_eq!(path, "counter");
-        let new_value: Counter = dsl::from_dsl_value(value.clone().unwrap()).unwrap();
+        let new_value: Counter = semio_framework_value::FromValue::from_value(value.clone().unwrap()).unwrap();
         assert_eq!(new_value.value, 15);
     }
 }
@@ -1796,9 +1796,9 @@ impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirement
     }
 }
 
-impl store::retirement::RetireOwned for HashProjection {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::RetireOwned::retirement(self.latest_hash)
+impl semio_framework_value::retirement::RetireOwned for HashProjection {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.latest_hash)
     }
 }
 
@@ -2490,7 +2490,7 @@ async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_reti
         HistoryReplayPhase::Verify { index: 0 },
         HistoryReplayPhase::Frame { index: 0 },
         HistoryReplayPhase::CommittedBody { index: 0 },
-        HistoryReplayPhase::Envelope { index: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, mutation_id: None } },
+        HistoryReplayPhase::Envelope { index: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, target_segments: 0, verb: false, line: false, mutation_id: None } },
         HistoryReplayPhase::CopyMutation { index: 0, range: 0..0, copied: 0, result_start: 0 },
         HistoryReplayPhase::Frontier { index: 0, cursor: HistoryFrontierCursor { pos: 0, end: 0, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] } },
         HistoryReplayPhase::Publish { index: 0, head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 },

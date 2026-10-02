@@ -448,11 +448,11 @@ async fn space_labels_resolve_native_english_by_default() {
     let config = SpaceConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let _app = SpaceApp::default();
-    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("catalogue tree");
+    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("catalogue tree");
     let catalogue_json = plugin_laws::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
     assert!(catalogue_json.contains("\"Apps\""));
 
-    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("parameters tree");
+    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("parameters tree");
     let parameters_json = plugin_laws::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
     assert!(parameters_json.contains("Add Parameter"));
     assert!(parameters_json.contains("\"Name\""));
@@ -466,7 +466,7 @@ async fn space_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
-    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default());
+    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let selected_node_ids = vec!["node-1".to_string()];
     let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids).await;
     assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());
@@ -478,7 +478,7 @@ async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail()
 #[semio_framework_async_macros::async_test]
 async fn graph_hit_context_menu_owns_the_remove_target_argument() {
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
-    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default());
+    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
         surface_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_SURFACE_WORKFLOW.into(),
         kind: "nodeGraph".into(),

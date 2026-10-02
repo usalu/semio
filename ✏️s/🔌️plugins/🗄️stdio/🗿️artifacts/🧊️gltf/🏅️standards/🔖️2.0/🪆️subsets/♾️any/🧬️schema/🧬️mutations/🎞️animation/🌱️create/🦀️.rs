@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAnimati
         vec![super::GltfMutation::CreateAnimation(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Create Animation", "Animation erstellen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Create Animation", "Animation erstellen")
     }
 
     fn target(&self) -> Vec<String> {

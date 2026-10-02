@@ -86,10 +86,10 @@ enum Process3dMountedFrame {
     Machine { spec: dsl::RecordSpec, value: WorkshopMachine, field: Option<u16> },
     Capability { spec: dsl::RecordSpec, value: Capability, field: Option<u16> },
     List { list: Process3dMountedList, item: dsl::Shape },
-    Rules { variants: Vec<(String, fn() -> dsl::RecordSpec)>, keyword: Option<String> },
+    Rules { variants: Vec<(String, dsl::RecordSpecProducer)>, keyword: Option<String> },
     Record { spec: dsl::RecordSpec, record: dsl::RecordValue, field: Option<u16> },
     Sequence { item: dsl::Shape, tuple: bool, items: Vec<dsl::FieldValue> },
-    Statements { variants: Vec<(String, fn() -> dsl::RecordSpec)>, items: Vec<(String, dsl::RecordValue)>, keyword: Option<String> },
+    Statements { variants: Vec<(String, dsl::RecordSpecProducer)>, items: Vec<(String, dsl::RecordValue)>, keyword: Option<String> },
 }
 
 struct Process3dMountedString {
@@ -119,7 +119,7 @@ fn process3d_field_shape(spec: &dsl::RecordSpec, id: u16) -> Result<(&str, dsl::
     Ok((field.key.as_str(), shape))
 }
 
-fn process3d_variant_shape(variants: &[(String, fn() -> dsl::RecordSpec)], keyword: &Option<String>) -> Result<dsl::Shape, &'static str> {
+fn process3d_variant_shape(variants: &[(String, dsl::RecordSpecProducer)], keyword: &Option<String>) -> Result<dsl::Shape, &'static str> {
     let keyword = keyword.as_deref().ok_or("process3d-mounted.statement-keyword")?;
     variants.iter().find(|(name, _)| name == keyword).map(|(_, spec)| dsl::Shape::Record(*spec)).ok_or("process3d-mounted.statement-variant")
 }
@@ -262,7 +262,7 @@ impl Process3dMountedSnapshotOwner {
                 Process3dMountedFrame::Capability { spec: Capability::__dsl_spec(), value, field: None }
             }
             (_, _, Container::Record) => match shape {
-                dsl::Shape::Record(spec) => Process3dMountedFrame::Record { spec: spec(), record: dsl::RecordValue::default(), field: None },
+                dsl::Shape::Record(spec) => Process3dMountedFrame::Record { spec: (spec.ordinary)(), record: dsl::RecordValue::default(), field: None },
                 _ => return Err("process3d-mounted.record-shape"),
             },
             (_, _, Container::Tuple | Container::List | Container::PackedF64 | Container::PackedVarint) => {

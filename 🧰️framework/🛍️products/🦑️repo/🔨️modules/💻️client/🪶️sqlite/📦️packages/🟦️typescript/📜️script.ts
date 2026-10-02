@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ Repo SQLite schema package router: `bun ./📜️script.ts test`. */
-import { resolveTestLevel, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
@@ -6,7 +8,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
-import { buildBudgetMs, getWorkspaceRoot, packageTestBudgetMs, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, runTestBudgeted, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, packageTestBudgetMs, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/🟦️.ts";
@@ -62,9 +64,17 @@ process.exit(keys.some(protectedKey) || process.env.SEMIO_DIRECT_CHILD_BENIGN !=
  */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "worker-cell") {
+      if (segments.length !== 1) throw new Error("Expected test worker-cell");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts")], {
+        cwd: this.repoRoot, env: process.env, budgetMs: 15000, throwOnFailure: true,
+      });
+      return;
+    }
     assertRendererOutputOwnership();
     const { rest } = resolveTestLevel(segments, "long");
-    await runCargoTestBudgeted([crateName], this.repoRoot, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, rest);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
@@ -73,7 +83,7 @@ class TestScript extends BundleScript {
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runCargoTestBudgeted([crateName], this.repoRoot, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, rest);
   }
 }
 
@@ -94,7 +104,7 @@ class NativeTestScript extends BundleScript {
 class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runCargoTestBudgeted([crateName], this.repoRoot, ["--lib", ...rest]);
+    await runRepositoryCargoTests([crateName], this.repoRoot, ["--lib", ...rest]);
   }
 }
 
@@ -112,7 +122,7 @@ class MediaSlotContractTestScript extends BundleScript {
       "media_slot_identity_registry_requeries_none_and_rejects_retired_or_foreign_replies",
       "media_slot_tokens_survive_ui_generation_but_change_with_document_and_resource_authority",
     ].map((law) => `media_slots::tests::${law}`);
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       env: { ...process.env, RUST_MIN_STACK: "33554432" },
       nativeEnv: { RUST_MIN_STACK: "134217728" },
@@ -262,7 +272,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
       throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     }
     const checks = directoryRetainedHomeBootstrapOracle();
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: repoRoot,
       artifactDir: resolve(artifactDir),
       env: { ...process.env, CARGO_BUILD_JOBS: "1" },
@@ -312,7 +322,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
     const ticketRoot = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
     if (!artifactDir || !isAbsolute(artifactDir) || !resolve(artifactDir).startsWith(`${ticketRoot}${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     const checks = normalizedPresenceRowsOracle();
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: repoRoot,
       artifactDir: resolve(artifactDir),
       env: { ...process.env, CARGO_BUILD_JOBS: "1" },
@@ -381,7 +391,7 @@ function stageNativeRuntime(variant: string, profile: "dev" | "release"): string
 
 /** 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */
 async function runLiveLaw(law: string, env: Record<string, string>): Promise<void> {
-  await runTestBudgeted("cargo", ["test", "-p", crateName, "--lib", "--", law, "--exact", "--ignored", "--show-output"], {
+  await runRepositoryTestCommand("cargo", ["test", "-p", crateName, "--lib", "--", law, "--exact", "--ignored", "--show-output"], {
     cwd: repoRoot,
     env: { ...process.env, ...env },
     budgetMs: packageTestBudgetMs([crateName], "exhaustive"),

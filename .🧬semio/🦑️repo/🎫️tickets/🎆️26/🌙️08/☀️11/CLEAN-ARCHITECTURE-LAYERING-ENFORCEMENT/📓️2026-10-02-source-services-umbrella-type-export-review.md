@@ -1,0 +1,17 @@
+# Source Services Umbrella Type Exports
+
+Read-only source/fixture/schema inspection; no test, typecheck or build was run. Paths below are relative to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/`.
+
+`🧹️normalization/🟦️.ts:14–15` still forwards `TaxonomyProgress` from `🏃️operation/🟦️.ts` and `TaxonomyNodeKind` from `🚪️source-admission/🟦️.ts`. Their canonical declarations are respectively operation line4 and admission line4. Umbrella imports at lines8–9 legitimately support its own APIs: progress options at265/277/293 and nodeKind at50. Those internal imports need to remain when the two forwarding exports are removed. Imported first-party types can appear in exported interfaces without an additional named reexport; the rule requiring explicit foreign-type reexports does not require these first-party forwarding routes.
+
+The scoped current named-consumer census finds the workspace-contract test importing progress directly from operation at `🧪️tests/🔬️workspace-contract/🟦️.ts:35`, and IO importing it directly at `🧹️normalization/🚪️source-admission/📁️io/🟦️.ts:9`. All remaining scoped occurrences are canonical declarations, internal use or the two umbrella exports. This establishes no current named consumer necessity for the forwarding routes; it is not a proof about arbitrary dynamic namespace consumers.
+
+## Existing Contract Gap
+
+The actual six-owner test, fixture and schema are all under **normalization**, at `🧹️normalization/{🧪️tests,🧫️fixtures,🧬️schema}/🏗️source-services/…`. The test's second law checks no ExportDeclaration in each of the six leaves and exact acyclic imports; it does not inspect forwarding from the umbrella. The fixture's denied `🟦️.ts` prevents leaf runtime bundle dependence on the umbrella, but does not prevent the umbrella exposing leaf names. Thus the current laws neither require nor reject these two exports. They are surviving alternate import routes, rather than an authored required boundary.
+
+Removal is warranted under the session's canonical-owner/no-compatibility policy, but should have a closed test first. Extend the existing language-neutral source-services fixture/schema with an exact two-row forwarding prohibition: umbrella path, exported symbol and canonical owner for `TaxonomyProgress` and `TaxonomyNodeKind`. Keep the existing exact six-owner roster and dependency matrix unchanged. A TypeScript AST assertion should reject either named reexport (including alias to another export name), namespace/star forwarding from those leaves, or an exported local alias of the imported target; preserve legitimate internal imports. Do not blanket-ban all umbrella exports, since it owns orchestration APIs.
+
+Use the existing source-services owner law/registered route, not a new runner. AJV must reject a dropped/extra/renamed prohibition row. The independent TypeScript compiler API should verify direct canonical imports still export the intended types, while importing either named type from the umbrella has the expected missing-export diagnostic. This is a focused compiler proof, not a widened full semantic graph or runtime dependency test. Current source-services leaf bundle/acyclic, loaded-taxonomy mandatory-input/private-parser, and workspace progress tests remain unchanged. The borrowed source-services declaration helper needs no remap because the definitions already live in their canonical leaves.
+
+No claim of passing removal verification is made; production and authored contracts were not changed by this audit.

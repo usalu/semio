@@ -262,7 +262,7 @@ mod subject {
     use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
     use crate::Fem3dSnapshot;
     use semio_s_artifact_fem_3d::model::{Dof, StaticResult};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use std::collections::BTreeMap;
 
     //#region 🔖️Plan

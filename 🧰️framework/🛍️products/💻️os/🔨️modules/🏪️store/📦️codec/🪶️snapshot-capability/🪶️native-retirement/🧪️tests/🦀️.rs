@@ -27,6 +27,22 @@ fn value_database(value: i64) -> SqliteDatabase {
 
 impl ArtifactSqliteSnapshot for RetainedSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("../🧬️schema/🗄️.sql");
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<crate::io_schema::IoPayload,String>{
+        use semio_framework_value::native_encoding::{NativeEncodeControl,NativeEncodeProgress};
+        let limits=control.limits();let mut callback=|event:NativeEncodeProgress|control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total).is_ok();let mut native=NativeEncodeControl::new(limits.max_value_bytes,&mut callback);native.begin_stage(1)?;let output=match encoding{SnapshotEncoding::Binary=>{if self.value == -2{return Err("owner encoder refusal".into())}crate::io_schema::IoPayload::Binary(native.copy_bytes(&self.value.to_le_bytes())?)},SnapshotEncoding::Text=>{native.charge(20)?;crate::io_schema::IoPayload::Text(self.value.to_string())}};native.step()?;Ok(output)
+    }
+    fn decode_sqlite_snapshot_native(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+        control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+        control.check_value_bytes(std::mem::size_of::<Self>())?;
+        let length=match payload{crate::io_schema::IoPayload::Binary(bytes)=>bytes.len(),crate::io_schema::IoPayload::Text(text)=>text.len()};
+        if length>control.limits().max_file_bytes{return Err("retained scalar exceeds file byte limit".into());}
+        let value=match payload{
+            crate::io_schema::IoPayload::Binary(bytes)=>i64::from_le_bytes(bytes.as_slice().try_into().map_err(|_|"expected exact integer word")?),
+            crate::io_schema::IoPayload::Text(text)if text.len()<=20=>text.parse::<i64>().map_err(|_|"expected bounded integer text")?,
+            _=>return Err("expected bounded integer text".into()),
+        };
+        Ok(Self{value,retired:false})
+    }
     fn retire_sqlite_snapshot(mut self) { self.retired = true; RETIREMENTS.with(|count| count.set(count.get() + 1)); }
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, String> { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?; Ok(value_database(self.value)) }
     fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, String> { control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?; Ok(Self { value: database.table("retained_value")?.single_row()?.integer(1)?, retired: false }) }

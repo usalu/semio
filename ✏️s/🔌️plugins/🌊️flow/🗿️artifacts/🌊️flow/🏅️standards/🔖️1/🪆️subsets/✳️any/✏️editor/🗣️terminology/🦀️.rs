@@ -2,10 +2,10 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale×terminology combination is compile-checked in one place.
 
-use semio_framework_plugin::Label;
+use semio_framework_ui_locale::Label;
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale×terminology combination compile-checked.
     pub struct FlowPlayLabels {
         widgets: native_en "Widgets", native_de "Widgets", reuse_en "Widgets", reuse_de "Widgets";

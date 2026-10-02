@@ -3,7 +3,7 @@
 //! value is that every locale combination is compile-checked in one place.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
     pub struct WriterPlayLabels {
         artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";

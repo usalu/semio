@@ -1,3 +1,5 @@
+import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { createBrowserBundleTests } from "../🧪️tests/🌐️browser-bundle/🟦️.ts";
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
@@ -10,8 +12,8 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import { exactExecutableFingerprint, readStableBuildFile, runExactCargoLawProcess } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type BrowserComponentFactoryControl = Readonly<{ importInterfaces?: readonly string[]; cancelled?: () => boolean; progress?: (completedBytes: number, totalBytes: number) => void }>;
@@ -439,7 +441,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     });
     writeFileSync(join(evidence, "codegen-policy.json"), policy.canonical, { mode: 0o600 });
     check();
-    const generated = await runExactCargoLawProcess(executable.path, ["--no-install", "--no-env-file", "--conditions=browser", "--config=" + configPath, "--eval", `
+    const generated = await captureOwnedProcess(executable.path, ["--no-install", "--no-env-file", "--conditions=browser", "--config=" + configPath, "--eval", `
       import assert from "node:assert/strict";
       import { closeSync, fstatSync, lstatSync, openSync, readSync, writeFileSync } from "node:fs";
       import { createHash } from "node:crypto";
@@ -886,12 +888,11 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly readFileSync: typeof readFileSync;
   readonly realpathSync: typeof realpathSync;
   readonly renameSync: typeof renameSync;
-  readonly runExactCargoLawProcess: typeof runExactCargoLawProcess;
   readonly sealBrowserCodegenPolicy: typeof sealBrowserCodegenPolicy;
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testClosedBrowserComponentFactory = createBrowserBundleTestsInstance.testClosedBrowserComponentFactory;
 const testBrowserCodegenCapsule = createBrowserBundleTestsInstance.testBrowserCodegenCapsule;
 const testBrowserCodegenSources = createBrowserBundleTestsInstance.testBrowserCodegenSources;

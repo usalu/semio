@@ -11,7 +11,7 @@ fn sequence_semantic_panels_match_the_json_oracle() {
     let document = neural_engine::ColdOwner::new(crate::default_snapshot());
     let fixture = neural_engine::ColdOwner::new(document.to_host_snapshot());
     for row in vectors["cases"].as_array().expect("locales") {
-        let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() };
+        let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
         let labels = crate::editor::sequence::terminology::sequence_play_labels(&view_state);
         let document = project(crate::editor::sequence::panels::document::render(&fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document tree"));
         assert_eq!(document["children"][0]["component"]["label"], row["steps"]);

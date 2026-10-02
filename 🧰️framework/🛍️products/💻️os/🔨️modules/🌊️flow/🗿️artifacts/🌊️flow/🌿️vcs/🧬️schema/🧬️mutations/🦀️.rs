@@ -62,7 +62,7 @@ impl crate::os_spr::OpText for FlowMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -72,7 +72,7 @@ impl crate::os_spr::OpText for FlowMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 

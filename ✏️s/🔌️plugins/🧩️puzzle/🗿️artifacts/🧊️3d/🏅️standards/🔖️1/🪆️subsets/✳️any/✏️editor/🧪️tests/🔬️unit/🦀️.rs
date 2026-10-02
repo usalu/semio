@@ -178,7 +178,7 @@ pub(crate) mod context {
         /// app resolves its label set from `ViewModel.locale`/`.terminology` and fails closed on an axis it
         /// never authored (`puzzle3d_labels`), so a test that asserts German or reuse text has to say so —
         /// there is no default language to fall back to.
-        pub fn set_label_axes(&mut self, locale: semio_framework_plugin::Locale, terminology: semio_framework_plugin::Terminology) {
+        pub fn set_label_axes(&mut self, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) {
             self.view.locale = locale;
             self.view.terminology = terminology;
         }
@@ -302,6 +302,8 @@ pub(crate) mod context {
     pub fn puzzle3d_manifest_for_tests() -> App {
         App { definition: create_puzzle3d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../..");
     
     /// 🧰️ The registry-backed, instance-bound fixture app — the ONLY constructor this plugin can use.
     /// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
@@ -323,7 +325,7 @@ pub(crate) mod context {
         let registry = puzzle3d_action_registry();
         let mut app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry).await;
         app.bind_instance_id(1).await;
-        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..Default::default() };
+        let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         Puzzle3dApp { raw: Some(Box::new(app)), view, maintenance: Box::new(MaintenanceStageBudget::default()) }
     }
     
@@ -692,7 +694,7 @@ pub(crate) mod context {
     /// 🪟️ The ViewModel is addressed at the very window the body key names (`<body>:<windowInstanceId>`,
     /// else the main instance), exactly like `dispatch`: a host never asks "render this pane" without
     /// saying which pane, and the window-owned config/transient partitions are captured through
-    /// `ViewModel::window_id` — a bare `ViewModel::default()` renders every window-owned field at its
+    /// `ViewModel::window_id` — a bare `ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)` renders every window-owned field at its
     /// type default (no camera, no suggestion popup, no engagement scratch), which is a state no real
     /// render can be in.
     pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
@@ -2001,7 +2003,7 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
 async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carrier() {
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
-    let view = semio_framework_plugin::ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }], ..Default::default() };
+    let view = semio_framework_plugin::ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let payloads = [
         (semio_framework_plugin::UiRefreshSection::Engagements, serde_json::to_string(&app.window_engagements(&view).await).expect("engagements serialize")),
         (semio_framework_plugin::UiRefreshSection::Measures, serde_json::to_string(&app.window_measures(&view).await).expect("measures serialize")),
@@ -2625,7 +2627,8 @@ async fn every_declared_action_round_trips_through_the_command_enum() {
 /// directly via `.resolve(Terminology, Locale)` — no shell round-trip needed to assert on it.
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Reuse, Locale::De);
@@ -2647,7 +2650,7 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
             assert!(!options.is_empty() && options.len() <= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX, "the objectKind select offers the declared examples' bounded catalog rows; observed {}", options.len());
             for option in options {
                 assert!(!option.value.is_empty(), "every offered object kind names a catalog row");
-                assert_eq!(option.label.resolve(terminology, locale), option.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "catalog row {} is document data and must not be re-authored per axis", option.value);
+                assert_eq!(option.label.resolve(terminology, locale), option.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "catalog row {} is document data and must not be re-authored per axis", option.value);
             }
         }
         _ => panic!("objectKind arg is not a select"),
@@ -2678,7 +2681,8 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
 
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_stay_english_native_without_brand_locks() {
-    use semio_framework_plugin::{Locale, Terminology};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Native, Locale::En);
@@ -2694,7 +2698,7 @@ async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     let mut app = app().await;
     // 🗣️ Panels resolve their label set from the host's own axes and fail closed on an unauthored one
     // (`puzzle3d_labels`), so the German reuse text this law is about only exists once the axes name it.
-    app.set_label_axes(semio_framework_plugin::Locale::De, semio_framework_plugin::Terminology::Reuse);
+    app.set_label_axes(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Reuse);
     let document_json = render_body(&mut app, artifact::BODY_KEY).await.to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).await.to_string();
     let view = app.window_view(main::WINDOW_KIND_ID);
@@ -3318,7 +3322,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     let actions: Vec<&str> = dispatchable_actions(&definition).into_iter().map(|action| action.id.as_str()).collect();
     assert!(!actions.contains(&"suggestionsTick"), "the suggestions tick loop is gone");
     assert!(actions.contains(&"targetBrushSuggestions"));
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
     assert_eq!(find_measure_select(&main::window_measures(&scene, labels), "puzzle3d-brush-placement"), None, "the candidate search's readout is the framework ToolRun panel, not a picker");
 }
@@ -3775,7 +3779,7 @@ async fn vortex_direction_option_is_local_to_the_window_instance() {
 fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     let mut runtime = Puzzle3dRuntime::default();
     runtime.active_tool_id = Some(fill_tool::TOOL_ID.into());
-    let mut view = semio_framework_plugin::ViewModel::default();
+    let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
     view.active_utility_by_window_id.insert("pane".into(), "select".into());
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
@@ -4143,7 +4147,7 @@ async fn puzzle3d_vortex_joint_edit_redistributes_siblings_and_preserves_object_
 /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
 #[semio_framework_async_macros::async_test]
 async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     let fixture = nakagin_fixture();
     let object_ids = puzzle3d_kind_ids(&fixture, "objects");
     assert!(!object_ids.is_empty(), "default fixture must expose object kinds");
@@ -4185,7 +4189,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
     {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&fill_scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");
@@ -5099,7 +5103,7 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
 
 #[semio_framework_async_macros::async_test]
 async fn transform_utility_options_expose_move_and_rotate_flags() {
-    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
     let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
     let measures = main::window_measures(&scene, labels);
     assert_eq!(measure_group_tag(&measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform")), Some(Some(utilities::transform::UTILITY_ID.into())));
@@ -5224,12 +5228,14 @@ async fn gumball_rotate_and_scale_are_one_transaction_each() {
 }
 
 /// 🧲️ A gumball drag of an attracting object re-solves the attraction graph inside the SAME transaction: on
-/// Nakagin the object an attraction hangs off the dragged one is re-placed from it — one row, one
+/// Nakagin (which ships no attraction, so the law first attracts the compatible door pair `25b0dba0-…:link` →
+/// `5f0266bc-…:sl0_d0`) the object the attraction hangs off the dragged one is re-placed from it — one row, one
 /// `drag-selection` op whose leaf carries the follower — and one undo restores both poses exactly.
 #[semio_framework_async_macros::async_test]
 async fn a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
+    dispatch(&mut app, "createAttraction", Some(&json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).await.expect("attract the compatible door pair");
     let fixture = puzzle3d_fixture_from_projection(&projection_of(&app));
     let owner = |full_id: &str| full_id.split(':').next().unwrap_or_default().to_string();
     let (parent, child) = fixture
@@ -5260,6 +5266,48 @@ async fn a_motionless_gumball_release_leaves_zero_trace() {
 }
 
 //#endregion 🔖️Gumball
+
+//#region 🔖️HistoryEditReferences
+/// 🪧️ N3 (design §16.4): a history-edit reference chip names a puzzle 3d entity as the outliner does — an unlabelled
+/// object by its kind's catalog label, a vortex as `<object> · <vortex>`, an attraction as `<object> → <object>` — and
+/// leaves target volumes, undeclared kinds and unknown ids to the framework's generic `<Kind> <short id>`.
+#[test]
+fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
+    use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT};
+    let mut snapshot = parse_dsl(PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("the example parses");
+    let object = snapshot.objects[0].id.clone();
+    let vortex = puzzle3d_vortex_full_id(&object, &snapshot.objects[0].vortices[0].id);
+    let vortex_label = snapshot.objects[0].vortices[0].label.clone().expect("the example labels its vortices");
+    let kind = snapshot.objects[0].object_kind.clone().expect("the seed names its kind");
+    snapshot.objects[0].label = None;
+    snapshot.meta.kind_catalogs.as_mut().expect("the example ships its kind catalogs").objects.iter_mut().find(|entry| entry.id == kind).expect("the seed's kind is catalogued").label = "Forest Left".into();
+    snapshot.attractions.push(crate::Puzzle3dAttraction { id: "attraction-chip".into(), attracting: vortex.clone(), attracted: vortex.clone(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string());
+    assert_eq!(chip(&[PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_TARGET_VOLUME], &object).as_deref(), Some("Forest Left"), "an unlabelled object reads its kind's catalog label");
+    assert_eq!(chip(&[PUZZLE3D_GRANULARITY_VORTEX], &vortex), Some(format!("Forest Left \u{b7} {vortex_label}")), "a vortex reads its object and its own label");
+    assert_eq!(chip(&[PUZZLE3D_GRANULARITY_ATTRACTION], "attraction-chip").as_deref(), Some("Forest Left \u{2192} Forest Left"), "an attraction reads its two objects");
+    assert_eq!(chip(&[PUZZLE3D_GRANULARITY_TARGET_VOLUME], &object), None, "an id outside the reference's declared kinds keeps the generic label");
+    assert_eq!(chip(&[], "ghost"), None, "an unknown id keeps the generic label");
+}
+
+/// 🔗️ N3 (design §16.4): while a history edit of a gesture is open, the world paints exactly the objects its draft
+/// references highlighted (one changed instance record, so the delta lane carries it) — and none once the edit exits.
+#[semio_framework_async_macros::async_test]
+async fn a_history_edit_draft_highlights_exactly_the_objects_it_references() {
+    let (mut app, object_id) = gumball_app().await;
+    let (result, settled) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).await;
+    result.expect("the drag commits");
+    let mutation_id = edit_rows(&settled).first().and_then(|row| row.mutations.first()).map(|mutation| mutation.mutation_id.clone()).expect("the drag is one editable mutation");
+    let highlighted = |node: &Value| instances_of(node).into_iter().filter(|instance| instance.get("highlighted").and_then(Value::as_bool) == Some(true)).filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect::<Vec<_>>();
+    assert!(highlighted(&render_composite(&mut app).await).is_empty(), "nothing is highlighted before a draft opens");
+    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, Some(&json!({ "mutationId": mutation_id })), None).await.expect("historyEditBegin admits");
+    settle_reserved(&mut app, admitted).await.expect("historyEditBegin settles");
+    assert_eq!(highlighted(&render_composite(&mut app).await), vec![object_id.clone()], "the draft's target is painted highlighted");
+    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::HISTORY_EDIT_EXIT_ACTION_ID, None, None).await.expect("historyEditExit admits");
+    settle_reserved(&mut app, admitted).await.expect("historyEditExit settles");
+    assert!(highlighted(&render_composite(&mut app).await).is_empty(), "closing the edit clears the highlight");
+}
+//#endregion 🔖️HistoryEditReferences
 
 //#region 🔖️KitInPort
 /// 🔌️ The flagship `kit:in` seam: feeding a `kit.catalog` fragment shaped exactly like block3d's
@@ -5410,7 +5458,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
     let fingerprint = main::fixture_geometry_fingerprint(&fixture);
     let session = Some((4_001_u32, Some("document-geometry".to_string())));
     let cold = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
-    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&fixture, &std::collections::BTreeSet::new()));
+    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&fixture, &std::collections::BTreeSet::new(), &[]));
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
     let second = with_puzzle3d_app_for(session, &config, |app| {
@@ -5418,7 +5466,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
         assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
         assert_eq!(app.instance_residency.lock().expect("instance residency").as_ref().map(|residency| residency.revision()), Some(1), "the per-object instance residency came back with the slot too");
-        app.geometry_jsons(&fixture, &std::collections::BTreeSet::new())
+        app.geometry_jsons(&fixture, &std::collections::BTreeSet::new(), &[])
     });
     assert_eq!(PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get), after_first, "the second call on the same instance must not re-serialize anything");
     assert_eq!(first, second, "a cache hit returns byte-identical instance and mesh json");
@@ -5594,7 +5642,7 @@ fn measured_view_state() -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
         window_id: Some(main::WINDOW_KIND_ID.to_string()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 
@@ -5903,7 +5951,7 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
     assert!(opener.in_palette, "the dialog opener IS the user-facing add-object row");
     assert!(!parametrized.in_palette, "the dialog's parametrized verb must not publish a second identical row");
     fn label(action: &ActionDefinition) -> &str {
-        action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En)
+        action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En)
     }
     assert!(label(opener).starts_with(label(parametrized)), "both rows describe the same verb, which is exactly why only one may be offered: {:?} vs {:?}", label(opener), label(parametrized));
     let visible: Vec<&str> = actions.iter().filter(|action| action.in_palette && label(action).starts_with("Add Object")).map(|action| action.id.as_str()).collect();
@@ -6350,11 +6398,12 @@ async fn relocate_target_volume_undoes_and_redoes_as_one_mutation() {
     let volume_id = first_target_volume_id(&app);
     let start = volume_origin(&app, &volume_id);
     let pose = |position: [f64; 3]| json!({ "position": position, "quaternion": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0] });
-    let (_, settled) = dispatch_reporting(&mut app, "relocateTargetVolume", Some(&json!({ "volumeId": volume_id, "mode": "translate", "before": pose([1.0, 2.0, 3.0]), "after": pose([4.0, 5.0, 6.0]) })), None).await;
+    let (before, after) = ([start[0], start[1], start[2]], [start[0] + 3.0, start[1] + 3.0, start[2] + 3.0]);
+    let (_, settled) = dispatch_reporting(&mut app, "relocateTargetVolume", Some(&json!({ "volumeId": volume_id, "mode": "translate", "before": pose(before), "after": pose(after) })), None).await;
     let rows = edit_rows(&settled);
     assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection") && rows[0].transaction.is_some(), "the volume gumball is one relative drag transaction: {rows:?}");
     let moved = volume_origin(&app, &volume_id);
-    assert!((moved[0] - 4.0).abs() < 1e-9 && (moved[1] - 5.0).abs() < 1e-9 && (moved[2] - 6.0).abs() < 1e-9, "relocateTargetVolume must write the after pose, got {moved:?} from {start:?}");
+    assert!(moved.iter().zip(after).all(|(landed, wanted)| (landed - wanted).abs() < 1e-9), "relocateTargetVolume must land the gumball's after pose, got {moved:?} from {start:?}");
     dispatch(&mut app, "undo", None, None).await.expect("undo");
     assert_eq!(volume_origin(&app, &volume_id), start, "undo restores the volume pose");
     dispatch(&mut app, "redo", None, None).await.expect("redo");
@@ -7023,6 +7072,7 @@ fn leftover_copy_paste_clones_selected_object() {
         granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),
         selected: vec!["seed-left-001".into()],
         hovered: Vec::new(),
+        referenced: Vec::new(),
     };
     let objects = puzzle3d_selected_objects_from(&marks, &fixture);
     assert_eq!(objects.len(), 1, "leftover selected object id must copy even when granularity is vortex: {objects:?}");
@@ -7072,6 +7122,7 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         granularity: PUZZLE3D_GRANULARITY_VORTEX.into(),
         selected: vec!["5de35caa-0f02-43d7-ae74-aa730efd3386".into()],
         hovered: Vec::new(),
+        referenced: Vec::new(),
     };
     let objects = puzzle3d_selected_objects_from(&marks, &fixture);
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");

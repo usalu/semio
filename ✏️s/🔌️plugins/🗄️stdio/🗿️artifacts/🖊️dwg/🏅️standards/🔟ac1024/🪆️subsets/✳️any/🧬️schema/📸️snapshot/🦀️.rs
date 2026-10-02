@@ -16,6 +16,108 @@ pub mod sqlite;
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
 
+#[cfg(test)]
+#[path = "🧪️tests/🎛️metadata/🦀️.rs"]
+mod controlled_metadata_tests;
+
+macro_rules! dwg_ordinary_shape {
+    ([primitive $kind:ident]) => { dsl::Shape::$kind };
+    ([typed $child:ty]) => { <$child as dsl::DslField>::shape() };
+    ([tuple $kind:ident $count:literal]) => { dsl::Shape::Tuple(Box::new(dsl::Shape::$kind), Some($count)) };
+    ([enum $(($label:literal, $ordinal:literal)),+]) => { dsl::Shape::Enum(vec![$(($label.into(), $ordinal)),+]) };
+}
+
+macro_rules! dwg_controlled_shape {
+    ([primitive $kind:ident], $control:ident) => {{ $control.checkpoint()?; Ok::<_, String>(dsl::Shape::$kind) }};
+    ([typed $child:ty], $control:ident) => { <$child as dsl::DslField>::shape_controlled($control) };
+    ([tuple $kind:ident $count:literal], $control:ident) => { dsl::schema::producer::boxed(dsl::Shape::$kind, $control).map(|shape| dsl::Shape::Tuple(shape, Some($count))) };
+    ([enum $(($label:literal, $ordinal:literal)),+], $control:ident) => {{
+        $control.scoped_stage(|control| {
+            const LABELS: &[(&str, u32)] = &[$(($label, $ordinal)),+];
+            control.begin_stage(LABELS.len())?;
+            let mut labels = control.allocate_vec::<(String, u32)>(LABELS.len())?;
+            for &(label, ordinal) in LABELS {
+                control.checkpoint()?;
+                labels.push((control.copy_text(label)?, ordinal));
+                control.step()?;
+            }
+            Ok(dsl::Shape::Enum(labels))
+        })
+    }};
+}
+
+macro_rules! dwg_metadata {
+    ($spec:ident $(<$generic:ident>)?, $controlled:ident, $producer:ident; $($id:literal, $key:literal, $optional:literal, $shape:tt;)+) => {
+        fn $spec $(<$generic: dsl::DslField>)?() -> dsl::RecordSpec {
+            let fields = vec![$({ let mut field = dsl::FieldSpec::new($id, $key, dwg_ordinary_shape!($shape)); field.optional = $optional; field }),+];
+            dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, fields)
+        }
+        fn $controlled<C: dsl::NativeSchemaControl $(, $generic: dsl::DslField)?>(control: &mut C) -> Result<dsl::RecordSpec, String> {
+            control.scoped_stage(|control| {
+                const COUNT: usize = [$(stringify!($id)),+].len();
+                control.begin_stage(COUNT)?;
+                let mut fields = control.allocate_vec::<dsl::FieldSpec>(COUNT)?;
+                $(control.checkpoint()?;
+                let shape = dwg_controlled_shape!($shape, control)?;
+                let mut field = dsl::schema::producer::field($id, $key, shape, control)?;
+                field.optional = $optional;
+                fields.push(field);
+                control.step()?;)+
+                dsl::schema::producer::record(None, dsl::RecordLayout::Inline, fields, control)
+            })
+        }
+        fn $producer $(<$generic: dsl::DslField>)?() -> dsl::RecordSpecProducer {
+            dsl::RecordSpecProducer {
+                ordinary: $spec $(::<$generic>)?,
+                decoding: |control| $controlled::<_ $(, $generic)?>(control),
+                encoding: |control| $controlled::<_ $(, $generic)?>(control),
+            }
+        }
+    };
+}
+
+macro_rules! dwg_controlled_payloads {
+    ($tag_field:literal; units[$($unit:ident = $unit_tag:literal),*]; $($tag:literal, $field:literal, $variant:ident, $ty:ty;)+) => {
+        fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{
+            control.scoped_stage(|control|{
+                let count=match self{$(Self::$unit=>1,)*_=>2};
+                control.begin_stage(count)?;
+                let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+                match self{
+                    $(Self::$unit=>{record.insert($tag_field,dsl::FieldValue::Enum($unit_tag));control.step()?;},)*
+                    $(Self::$variant(value)=>{
+                        record.insert($tag_field,dsl::FieldValue::Enum($tag));control.step()?;
+                        let field=control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as dsl::DslField>::to_value_controlled(value,control)})?;
+                        record.insert($field,field);control.step()?;
+                    },)+
+                }
+                Ok(dsl::FieldValue::Record(record.take()))
+            })
+        }
+        fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+            let dsl::FieldValue::Record(record)=value else{return Err("DWG typed payload requires a record".into())};
+            Self::from_record_controlled(record,control)
+        }
+        fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+            control.scoped_stage(|control|{
+                control.begin_stage(record.fields.len())?;
+                let kind=match record.get($tag_field){Some(dsl::FieldValue::Enum(value))=>*value,_=>return Err("DWG typed payload requires its authored kind".into())};
+                let payload=match kind{$($unit_tag=>None,)*$($tag=>Some($field),)+_=>return Err("DWG typed payload kind is unknown".into())};
+                for(field,value)in &record.fields{
+                    if *field!=$tag_field&&Some(*field)!=payload&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG typed payload has an unowned field".into())}
+                    control.step()?;
+                }
+                match kind{
+                    $($unit_tag=>Ok(Self::$unit),)*
+                    $($tag=>Ok(Self::$variant(control.scoped_stage(|control|{control.begin_stage(0)?;<$ty as dsl::DslField>::from_value_controlled(record.get($field).ok_or("DWG typed payload is missing")?,control)})?)),)+
+                    _=>unreachable!()
+                }
+            })
+        }
+        fn retire_decoded(self){match self{$(Self::$unit=>{},)*$(Self::$variant(value)=><$ty as dsl::DslField>::retire_decoded(value),)+}}
+    };
+}
+
 //#region 🔖️DrawingModel
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
 #[value(rename_all = "camelCase")]
@@ -105,43 +207,64 @@ impl Default for DwgXRecordValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![
-                    ("string".into(), 0),
-                    ("real".into(), 1),
-                    ("boolean".into(), 2),
-                    ("integer8".into(), 3),
-                    ("integer16".into(), 4),
-                    ("integer32".into(), 5),
-                    ("integer64".into(), 6),
-                    ("point3d".into(), 7),
-                    ("binary".into(), 8),
-                    ("handle".into(), 9),
-                    ("objectId".into(), 10),
-                ]),
-            ),
-            dsl::FieldSpec::new(1, "group_code", dsl::Shape::Int),
-            dsl::FieldSpec::new(2, "string_value", dsl::Shape::Text).optional(),
-            dsl::FieldSpec::new(3, "real_value", dsl::Shape::Float).optional(),
-            dsl::FieldSpec::new(4, "boolean_value", dsl::Shape::Bool).optional(),
-            dsl::FieldSpec::new(5, "integer_value", dsl::Shape::Int).optional(),
-            dsl::FieldSpec::new(6, "point_value", dsl::Shape::Tuple(Box::new(dsl::Shape::Float), Some(3))).optional(),
-            dsl::FieldSpec::new(7, "binary_octets", dsl::Shape::Bytes64).optional(),
-            dsl::FieldSpec::new(8, "handle_value", dsl::Shape::UInt).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_xrecord_value_spec, dwg_xrecord_value_spec_controlled, dwg_xrecord_value_spec_producer;
+    0, "kind", false, [enum ("string", 0), ("real", 1), ("boolean", 2), ("integer8", 3), ("integer16", 4), ("integer32", 5), ("integer64", 6), ("point3d", 7), ("binary", 8), ("handle", 9), ("objectId", 10)];
+    1, "group_code", false, [primitive Int];
+    2, "string_value", true, [primitive Text];
+    3, "real_value", true, [primitive Float];
+    4, "boolean_value", true, [primitive Bool];
+    5, "integer_value", true, [primitive Int];
+    6, "point_value", true, [tuple Float 3];
+    7, "binary_octets", true, [primitive Bytes64];
+    8, "handle_value", true, [primitive UInt];
+);
 
 impl dsl::DslField for DwgXRecordValue {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+        control.begin_stage(3)?;let mut record=dsl::native_encoding::EncodedRecord::new(3,control)?;
+        let (kind,group_code,payload_id,payload)=match self{
+            Self::String{group_code,value}=>(0,*group_code,2,control.scoped_stage(|control|{control.begin_stage(0)?;<String as dsl::DslField>::to_value_controlled(value,control)})?),
+            Self::Real{group_code,value}=>(1,*group_code,3,dsl::FieldValue::Float(*value)),
+            Self::Boolean{group_code,value}=>(2,*group_code,4,dsl::FieldValue::Bool(*value)),
+            Self::Integer8{group_code,value}=>(3,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
+            Self::Integer16{group_code,value}=>(4,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
+            Self::Integer32{group_code,value}=>(5,*group_code,5,dsl::FieldValue::Int(i64::from(*value))),
+            Self::Integer64{group_code,value}=>(6,*group_code,5,dsl::FieldValue::Int(*value)),
+            Self::Point3d{group_code,value}=>(7,*group_code,6,control.scoped_stage(|control|{control.begin_stage(0)?;<[f64;3] as dsl::DslField>::to_value_controlled(value,control)})?),
+            Self::Binary{group_code,octets}=>(8,*group_code,7,dsl::FieldValue::Bytes64(control.copy_bytes(octets)?)),
+            Self::Handle{group_code,value}=>(9,*group_code,8,dsl::FieldValue::UInt(*value)),
+            Self::ObjectId{group_code,absolute_value}=>(10,*group_code,8,dsl::FieldValue::UInt(*absolute_value)),
+        };record.insert(payload_id,payload);control.step()?;record.insert(0,dsl::FieldValue::Enum(kind));control.step()?;record.insert(1,dsl::FieldValue::Int(i64::from(group_code)));control.step()?;
+        Ok(dsl::FieldValue::Record(record.take()))
+    })}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG XRECORD value requires a record".into())};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(dsl::FieldValue::Enum(kind))=>*kind,_=>return Err("DWG XRECORD kind missing".into())};
+        let payload_id=match kind{0=>2,1=>3,2=>4,3..=6=>5,7=>6,8=>7,9|10=>8,_=>return Err("DWG XRECORD kind unknown".into())};
+        for(id,value)in &record.fields{if *id!=0&&*id!=1&&*id!=payload_id&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG XRECORD has an unowned field".into())}control.step()?;}
+        let group_code=control.scoped_stage(|control|{control.begin_stage(0)?;<i16 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG XRECORD group code missing")?,control)})?;
+        let payload=record.get(payload_id).ok_or("DWG XRECORD payload missing")?;
+        control.scoped_stage(|control|{control.begin_stage(0)?;match kind{
+            0=>Ok(Self::String{group_code,value:<String as dsl::DslField>::from_value_controlled(payload,control)?}),
+            1=>Ok(Self::Real{group_code,value:<f64 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            2=>Ok(Self::Boolean{group_code,value:<bool as dsl::DslField>::from_value_controlled(payload,control)?}),
+            3=>Ok(Self::Integer8{group_code,value:<i8 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            4=>Ok(Self::Integer16{group_code,value:<i16 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            5=>Ok(Self::Integer32{group_code,value:<i32 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            6=>Ok(Self::Integer64{group_code,value:<i64 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            7=>Ok(Self::Point3d{group_code,value:<[f64;3] as dsl::DslField>::from_value_controlled(payload,control)?}),
+            8=>{let dsl::FieldValue::Bytes64(bytes)=payload else{return Err("DWG XRECORD octets missing".into())};Ok(Self::Binary{group_code,octets:control.copy_bytes(bytes)?})},
+            9=>Ok(Self::Handle{group_code,value:<u64 as dsl::DslField>::from_value_controlled(payload,control)?}),
+            10=>Ok(Self::ObjectId{group_code,absolute_value:<u64 as dsl::DslField>::from_value_controlled(payload,control)?}),_=>unreachable!(),
+        }})
+    })}
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_xrecord_value_spec)
+        dsl::Shape::Record(dwg_xrecord_value_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_xrecord_value_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -268,7 +391,6 @@ impl dsl::DslField for DwgXRecordValue {
             },
             other => return Err(format!("unknown XRECORD value kind ordinal {other}")),
         };
-        result.validate()?;
         Ok(result)
     }
 }
@@ -330,13 +452,32 @@ pub struct DwgTableControlEntry {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "has_handle", dsl::Shape::Bool), dsl::FieldSpec::new(1, "handle", dsl::Shape::UInt).optional()])
-}
+dwg_metadata!(dwg_table_control_entry_spec, dwg_table_control_entry_spec_controlled, dwg_table_control_entry_spec_producer;
+    0, "has_handle", false, [primitive Bool];
+    1, "handle", true, [primitive UInt];
+);
 
 impl dsl::DslField for DwgTableControlEntry {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+        let count=if self.handle.is_some(){2}else{1};control.begin_stage(count)?;
+        let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+        record.insert(0,dsl::FieldValue::Bool(self.handle.is_some()));control.step()?;
+        if let Some(handle)=self.handle{record.insert(1,dsl::FieldValue::UInt(handle));control.step()?;}
+        Ok(dsl::FieldValue::Record(record.take()))
+    })}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG table-control entry requires a record".into())};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let has=control.scoped_stage(|control|{control.begin_stage(0)?;<bool as dsl::DslField>::from_value_controlled(record.get(0).ok_or("DWG handle presence missing")?,control)})?;
+        for(id,value)in &record.fields{if *id!=0&&!(has&&*id==1)&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG table-control entry has an unowned field".into())}control.step()?;}
+        Ok(Self{handle:if has{Some(control.scoped_stage(|control|{control.begin_stage(0)?;<u64 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG handle missing")?,control)})?)}else{None}})
+    })}
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_table_control_entry_spec)
+        dsl::Shape::Record(dwg_table_control_entry_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_table_control_entry_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -427,37 +568,33 @@ impl DwgTableControlBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_control_body_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                1,
-                "kind",
-                dsl::Shape::Enum(vec![
-                    ("block".into(), 0),
-                    ("layer".into(), 1),
-                    ("textStyle".into(), 2),
-                    ("linetype".into(), 3),
-                    ("view".into(), 4),
-                    ("ucs".into(), 5),
-                    ("viewport".into(), 6),
-                    ("registeredApplication".into(), 7),
-                    ("dimensionStyle".into(), 8),
-                ]),
-            ),
-            dsl::FieldSpec::new(2, "entries", <DwgTableControlEntries as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "block", <DwgBlockTableControl as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "linetype", <DwgLinetypeTableControl as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "dimensionStyle", <DwgDimensionStyleTableControl as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(table_control_body_spec, table_control_body_spec_controlled, table_control_body_spec_producer;
+    1, "kind", false, [enum ("block", 0), ("layer", 1), ("textStyle", 2), ("linetype", 3), ("view", 4), ("ucs", 5), ("viewport", 6), ("registeredApplication", 7), ("dimensionStyle", 8)];
+    2, "entries", true, [typed DwgTableControlEntries];
+    3, "block", true, [typed DwgBlockTableControl];
+    4, "linetype", true, [typed DwgLinetypeTableControl];
+    5, "dimensionStyle", true, [typed DwgDimensionStyleTableControl];
+);
 
 impl dsl::DslField for DwgTableControlBody {
+    dwg_controlled_payloads!(1; units[];
+        0,3,Block,DwgBlockTableControl;
+        1,2,Layer,DwgTableControlEntries;
+        2,2,TextStyle,DwgTableControlEntries;
+        3,4,Linetype,DwgLinetypeTableControl;
+        4,2,View,DwgTableControlEntries;
+        5,2,Ucs,DwgTableControlEntries;
+        6,2,Viewport,DwgTableControlEntries;
+        7,2,RegisteredApplication,DwgTableControlEntries;
+        8,5,DimensionStyle,DwgDimensionStyleTableControl;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(table_control_body_spec)
+        dsl::Shape::Record(table_control_body_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(table_control_body_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -550,27 +687,46 @@ pub enum DwgComplexColorValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![("none".into(), 0), ("byLayer".into(), 1), ("byBlock".into(), 2), ("byColor".into(), 3), ("byAci".into(), 4), ("byPen".into(), 5), ("foreground".into(), 6), ("layerOff".into(), 7), ("layerFrozen".into(), 8)]),
-            ),
-            dsl::FieldSpec::new(1, "red", <u8 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(2, "green", <u8 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "blue", <u8 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "index", <u16 as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_complex_color_value_spec, dwg_complex_color_value_spec_controlled, dwg_complex_color_value_spec_producer;
+    0, "kind", false, [enum ("none", 0), ("byLayer", 1), ("byBlock", 2), ("byColor", 3), ("byAci", 4), ("byPen", 5), ("foreground", 6), ("layerOff", 7), ("layerFrozen", 8)];
+    1, "red", true, [typed u8];
+    2, "green", true, [typed u8];
+    3, "blue", true, [typed u8];
+    4, "index", true, [typed u16];
+);
 
 impl dsl::DslField for DwgComplexColorValue {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+        let count=match self{Self::ByColor{..}=>4,Self::ByAci{..}|Self::ByPen{..}=>2,_=>1};control.begin_stage(count)?;
+        let mut record=dsl::native_encoding::EncodedRecord::new(count,control)?;
+        let kind=match self{
+            Self::None=>0,Self::ByLayer=>1,Self::ByBlock=>2,
+            Self::ByColor{red,green,blue}=>{record.insert(1,dsl::FieldValue::UInt(u64::from(*red)));control.step()?;record.insert(2,dsl::FieldValue::UInt(u64::from(*green)));control.step()?;record.insert(3,dsl::FieldValue::UInt(u64::from(*blue)));control.step()?;3},
+            Self::ByAci{index}=>{record.insert(4,dsl::FieldValue::UInt(u64::from(*index)));control.step()?;4},
+            Self::ByPen{index}=>{record.insert(4,dsl::FieldValue::UInt(u64::from(*index)));control.step()?;5},
+            Self::Foreground=>6,Self::LayerOff=>7,Self::LayerFrozen=>8,
+        };record.insert(0,dsl::FieldValue::Enum(kind));control.step()?;Ok(dsl::FieldValue::Record(record.take()))
+    })}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG complex color requires a record".into())};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(dsl::FieldValue::Enum(kind))=>*kind,_=>return Err("DWG complex-color kind missing".into())};
+        let allowed:&[u16]=match kind{0|1|2|6|7|8=>&[],3=>&[1,2,3],4|5=>&[4],_=>return Err("DWG complex-color kind unknown".into())};
+        for(id,value)in &record.fields{if *id!=0&&!allowed.contains(id)&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG complex color has an unowned field".into())}control.step()?;}
+        control.scoped_stage(|control|{control.begin_stage(0)?;match kind{
+            0=>Ok(Self::None),1=>Ok(Self::ByLayer),2=>Ok(Self::ByBlock),
+            3=>Ok(Self::ByColor{red:<u8 as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG red missing")?,control)?,green:<u8 as dsl::DslField>::from_value_controlled(record.get(2).ok_or("DWG green missing")?,control)?,blue:<u8 as dsl::DslField>::from_value_controlled(record.get(3).ok_or("DWG blue missing")?,control)?}),
+            4=>Ok(Self::ByAci{index:<u16 as dsl::DslField>::from_value_controlled(record.get(4).ok_or("DWG ACI missing")?,control)?}),
+            5=>Ok(Self::ByPen{index:u8::try_from(<u16 as dsl::DslField>::from_value_controlled(record.get(4).ok_or("DWG pen missing")?,control)?).map_err(|_|"DWG pen exceeds u8")?}),
+            6=>Ok(Self::Foreground),7=>Ok(Self::LayerOff),8=>Ok(Self::LayerFrozen),_=>unreachable!(),
+        }})
+    })}
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_complex_color_value_spec)
+        dsl::Shape::Record(dwg_complex_color_value_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_complex_color_value_spec_producer()))
     }
     fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
@@ -892,30 +1048,34 @@ impl Default for DwgTableRecordBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn table_record_body_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                1,
-                "kind",
-                dsl::Shape::Enum(vec![("registeredApplication".into(), 0), ("textStyle".into(), 1), ("layer".into(), 2), ("linetype".into(), 3), ("blockHeader".into(), 4), ("viewport".into(), 5), ("dimensionStyle".into(), 6)]),
-            ),
-            dsl::FieldSpec::new(2, "registeredApplication", <DwgRegisteredApplicationTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "textStyle", <DwgTextStyleTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "layer", <DwgLayerTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "linetype", <DwgLinetypeTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "blockHeader", <DwgBlockHeaderTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(7, "viewport", <DwgViewportTableRecord as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(8, "dimensionStyle", <DwgDimensionStyleTableRecord as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(table_record_body_spec, table_record_body_spec_controlled, table_record_body_spec_producer;
+    1, "kind", false, [enum ("registeredApplication", 0), ("textStyle", 1), ("layer", 2), ("linetype", 3), ("blockHeader", 4), ("viewport", 5), ("dimensionStyle", 6)];
+    2, "registeredApplication", true, [typed DwgRegisteredApplicationTableRecord];
+    3, "textStyle", true, [typed DwgTextStyleTableRecord];
+    4, "layer", true, [typed DwgLayerTableRecord];
+    5, "linetype", true, [typed DwgLinetypeTableRecord];
+    6, "blockHeader", true, [typed DwgBlockHeaderTableRecord];
+    7, "viewport", true, [typed DwgViewportTableRecord];
+    8, "dimensionStyle", true, [typed DwgDimensionStyleTableRecord];
+);
 
 impl dsl::DslField for DwgTableRecordBody {
+    dwg_controlled_payloads!(1; units[];
+        0,2,RegisteredApplication,DwgRegisteredApplicationTableRecord;
+        1,3,TextStyle,DwgTextStyleTableRecord;
+        2,4,Layer,DwgLayerTableRecord;
+        3,5,Linetype,DwgLinetypeTableRecord;
+        4,6,BlockHeader,DwgBlockHeaderTableRecord;
+        5,7,Viewport,DwgViewportTableRecord;
+        6,8,DimensionStyle,DwgDimensionStyleTableRecord;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(table_record_body_spec)
+        dsl::Shape::Record(table_record_body_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(table_record_body_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -1532,13 +1692,22 @@ pub enum DwgEvaluationVariant {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "kind", dsl::Shape::Enum(vec![("integer32".into(), 0)])), dsl::FieldSpec::new(1, "integer32", <i32 as dsl::DslField>::shape()).optional()])
-}
+dwg_metadata!(dwg_evaluation_variant_spec, dwg_evaluation_variant_spec_controlled, dwg_evaluation_variant_spec_producer;
+    0, "kind", false, [enum ("integer32", 0)];
+    1, "integer32", true, [typed i32];
+);
 
 impl dsl::DslField for DwgEvaluationVariant {
+    dwg_controlled_payloads!(0; units[];
+        0,1,Integer32,i32;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_evaluation_variant_spec)
+        dsl::Shape::Record(dwg_evaluation_variant_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_evaluation_variant_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -1592,30 +1761,34 @@ pub enum DwgEvaluationExpressionValue {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![("empty".into(), 0), ("double".into(), 1), ("pointGroup10".into(), 2), ("pointGroup11".into(), 3), ("string".into(), 4), ("integer32".into(), 5), ("objectReference".into(), 6), ("integer16".into(), 7)]),
-            ),
-            dsl::FieldSpec::new(1, "double", <f64 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(2, "point_group_10", <Vec<f64> as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "point_group_11", <Vec<f64> as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "string", <String as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "integer32", <i32 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "object_reference", <u64 as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(7, "integer16", <i16 as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_evaluation_expression_value_spec, dwg_evaluation_expression_value_spec_controlled, dwg_evaluation_expression_value_spec_producer;
+    0, "kind", false, [enum ("empty", 0), ("double", 1), ("pointGroup10", 2), ("pointGroup11", 3), ("string", 4), ("integer32", 5), ("objectReference", 6), ("integer16", 7)];
+    1, "double", true, [typed f64];
+    2, "point_group_10", true, [typed Vec<f64>];
+    3, "point_group_11", true, [typed Vec<f64>];
+    4, "string", true, [typed String];
+    5, "integer32", true, [typed i32];
+    6, "object_reference", true, [typed u64];
+    7, "integer16", true, [typed i16];
+);
 
 impl dsl::DslField for DwgEvaluationExpressionValue {
+    dwg_controlled_payloads!(0; units[Empty=0];
+        1,1,Double,f64;
+        2,2,PointGroup10,Vec<f64>;
+        3,3,PointGroup11,Vec<f64>;
+        4,4,String,String;
+        5,5,Integer32,i32;
+        6,6,ObjectReference,u64;
+        7,7,Integer16,i16;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_evaluation_expression_value_spec)
+        dsl::Shape::Record(dwg_evaluation_expression_value_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_evaluation_expression_value_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -1749,13 +1922,33 @@ pub struct DwgVisualStyleProperty<T> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(None, dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "value", T::shape()), dsl::FieldSpec::new(1, "operation", <DwgVisualStylePropertyOperation as dsl::DslField>::shape())])
-}
+dwg_metadata!(dwg_visual_style_property_spec<T>, dwg_visual_style_property_spec_controlled, dwg_visual_style_property_spec_producer;
+    0, "value", false, [typed T];
+    1, "operation", false, [typed DwgVisualStylePropertyOperation];
+);
 
 impl<T: dsl::DslField> dsl::DslField for DwgVisualStyleProperty<T> {
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{control.scoped_stage(|control|{
+        control.begin_stage(2)?;let mut record=dsl::native_encoding::EncodedRecord::new(2,control)?;
+        record.insert(0,control.scoped_stage(|control|{control.begin_stage(0)?;T::to_value_controlled(&self.value,control)})?);control.step()?;
+        record.insert(1,control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as dsl::DslField>::to_value_controlled(&self.operation,control)})?);control.step()?;
+        Ok(dsl::FieldValue::Record(record.take()))
+    })}
+    fn from_value_controlled(value:&dsl::FieldValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{let dsl::FieldValue::Record(record)=value else{return Err("DWG visual-style property requires a record".into())};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&dsl::RecordValue,control:&mut dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.scoped_stage(|control|{
+        control.begin_stage(record.fields.len())?;for(id,value)in &record.fields{if *id>1&&!matches!(value,dsl::FieldValue::Absent){return Err("DWG visual-style property has an unowned field".into())}control.step()?;}
+        let value=dsl::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(record.get(0).ok_or("DWG property value missing")?,control)})?,T::retire_decoded);
+        let operation=control.scoped_stage(|control|{control.begin_stage(0)?;<DwgVisualStylePropertyOperation as dsl::DslField>::from_value_controlled(record.get(1).ok_or("DWG property operation missing")?,control)})?;
+        Ok(Self{value:value.take(),operation})
+    })}
+    fn retire_decoded(self){T::retire_decoded(self.value);<DwgVisualStylePropertyOperation as dsl::DslField>::retire_decoded(self.operation);}
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_visual_style_property_spec::<T>)
+        dsl::Shape::Record(dwg_visual_style_property_spec_producer::<T>())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_visual_style_property_spec_producer::<T>()))
     }
     fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
@@ -2782,44 +2975,40 @@ pub enum DwgConstraintNode {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_constraint_node_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![
-                    ("constrainedImplicitPoint".into(), 0),
-                    ("pointCurveConstraint".into(), 1),
-                    ("constrainedBoundedLine".into(), 2),
-                    ("pointCoincidenceConstraint".into(), 3),
-                    ("distanceConstraint".into(), 4),
-                    ("perpendicularConstraint".into(), 5),
-                    ("horizontalConstraint".into(), 6),
-                    ("parallelConstraint".into(), 7),
-                    ("midPointConstraint".into(), 8),
-                    ("equalLengthConstraint".into(), 9),
-                    ("colinearConstraint".into(), 10),
-                    ("constrainedDatumLine".into(), 11),
-                    ("fixedConstraint".into(), 12),
-                    ("verticalConstraint".into(), 13),
-                ]),
-            ),
-            dsl::FieldSpec::new(1, "constrained_implicit_point", <DwgConstrainedImplicitPoint as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(2, "geometric_constraint", <DwgGeometricConstraint as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "constrained_bounded_line", <DwgConstrainedBoundedLine as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "distance_constraint", <DwgDistanceConstraint as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "axis_constraint", <DwgAxisConstraint as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "constrained_datum_line", <DwgConstrainedDatumLine as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_constraint_node_spec, dwg_constraint_node_spec_controlled, dwg_constraint_node_spec_producer;
+    0, "kind", false, [enum ("constrainedImplicitPoint", 0), ("pointCurveConstraint", 1), ("constrainedBoundedLine", 2), ("pointCoincidenceConstraint", 3), ("distanceConstraint", 4), ("perpendicularConstraint", 5), ("horizontalConstraint", 6), ("parallelConstraint", 7), ("midPointConstraint", 8), ("equalLengthConstraint", 9), ("colinearConstraint", 10), ("constrainedDatumLine", 11), ("fixedConstraint", 12), ("verticalConstraint", 13)];
+    1, "constrained_implicit_point", true, [typed DwgConstrainedImplicitPoint];
+    2, "geometric_constraint", true, [typed DwgGeometricConstraint];
+    3, "constrained_bounded_line", true, [typed DwgConstrainedBoundedLine];
+    4, "distance_constraint", true, [typed DwgDistanceConstraint];
+    5, "axis_constraint", true, [typed DwgAxisConstraint];
+    6, "constrained_datum_line", true, [typed DwgConstrainedDatumLine];
+);
 
 impl dsl::DslField for DwgConstraintNode {
+    dwg_controlled_payloads!(0; units[];
+        0,1,ConstrainedImplicitPoint,DwgConstrainedImplicitPoint;
+        1,2,PointCurveConstraint,DwgGeometricConstraint;
+        2,3,ConstrainedBoundedLine,DwgConstrainedBoundedLine;
+        3,2,PointCoincidenceConstraint,DwgGeometricConstraint;
+        4,4,DistanceConstraint,DwgDistanceConstraint;
+        5,2,PerpendicularConstraint,DwgGeometricConstraint;
+        6,5,HorizontalConstraint,DwgAxisConstraint;
+        7,2,ParallelConstraint,DwgGeometricConstraint;
+        8,2,MidPointConstraint,DwgGeometricConstraint;
+        9,2,EqualLengthConstraint,DwgGeometricConstraint;
+        10,2,ColinearConstraint,DwgGeometricConstraint;
+        11,6,ConstrainedDatumLine,DwgConstrainedDatumLine;
+        12,2,FixedConstraint,DwgGeometricConstraint;
+        13,5,VerticalConstraint,DwgAxisConstraint;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_constraint_node_spec)
+        dsl::Shape::Record(dwg_constraint_node_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_constraint_node_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -2882,62 +3071,58 @@ pub struct DwgAssoc2dConstraintGroup {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_entity_body_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![
-                    ("line".into(), 0),
-                    ("arc".into(), 1),
-                    ("lwPolyline".into(), 2),
-                    ("blockBegin".into(), 3),
-                    ("blockEnd".into(), 4),
-                    ("insert".into(), 5),
-                    ("dimensionLinear".into(), 6),
-                    ("viewport".into(), 7),
-                    ("point".into(), 8),
-                    ("circle".into(), 9),
-                    ("ellipse".into(), 10),
-                    ("text".into(), 11),
-                    ("spline".into(), 12),
-                    ("face3d".into(), 13),
-                    ("polyline3d".into(), 14),
-                    ("polyfaceMesh".into(), 15),
-                    ("vertex".into(), 16),
-                    ("polyfaceFace".into(), 17),
-                    ("sequenceEnd".into(), 18),
-                ]),
-            ),
-            dsl::FieldSpec::new(1, "line", <DwgLineEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(2, "arc", <DwgArcEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "lw_polyline", <DwgLwPolylineEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "block_begin", <DwgBlockBeginEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "block_end", <DwgBlockEndEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "insert", <DwgInsertEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(7, "dimension_linear", <DwgLinearDimensionEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(8, "viewport", <DwgViewportEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(9, "point", <DwgPointEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(10, "circle", <DwgCircleEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(11, "ellipse", <DwgEllipseEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(12, "text", <DwgTextEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(13, "spline", <DwgSplineEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(14, "face3d", <DwgFace3dEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(15, "polyline3d", <DwgPolyline3dEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(16, "polyface_mesh", <DwgPolyfaceMeshEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(17, "vertex", <DwgVertexEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(18, "polyface_face", <DwgPolyfaceFaceEntity as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(19, "sequence_end", <DwgSequenceEndEntity as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_entity_body_spec, dwg_entity_body_spec_controlled, dwg_entity_body_spec_producer;
+    0, "kind", false, [enum ("line", 0), ("arc", 1), ("lwPolyline", 2), ("blockBegin", 3), ("blockEnd", 4), ("insert", 5), ("dimensionLinear", 6), ("viewport", 7), ("point", 8), ("circle", 9), ("ellipse", 10), ("text", 11), ("spline", 12), ("face3d", 13), ("polyline3d", 14), ("polyfaceMesh", 15), ("vertex", 16), ("polyfaceFace", 17), ("sequenceEnd", 18)];
+    1, "line", true, [typed DwgLineEntity];
+    2, "arc", true, [typed DwgArcEntity];
+    3, "lw_polyline", true, [typed DwgLwPolylineEntity];
+    4, "block_begin", true, [typed DwgBlockBeginEntity];
+    5, "block_end", true, [typed DwgBlockEndEntity];
+    6, "insert", true, [typed DwgInsertEntity];
+    7, "dimension_linear", true, [typed DwgLinearDimensionEntity];
+    8, "viewport", true, [typed DwgViewportEntity];
+    9, "point", true, [typed DwgPointEntity];
+    10, "circle", true, [typed DwgCircleEntity];
+    11, "ellipse", true, [typed DwgEllipseEntity];
+    12, "text", true, [typed DwgTextEntity];
+    13, "spline", true, [typed DwgSplineEntity];
+    14, "face3d", true, [typed DwgFace3dEntity];
+    15, "polyline3d", true, [typed DwgPolyline3dEntity];
+    16, "polyface_mesh", true, [typed DwgPolyfaceMeshEntity];
+    17, "vertex", true, [typed DwgVertexEntity];
+    18, "polyface_face", true, [typed DwgPolyfaceFaceEntity];
+    19, "sequence_end", true, [typed DwgSequenceEndEntity];
+);
 
 impl dsl::DslField for DwgEntityBody {
+    dwg_controlled_payloads!(0; units[];
+        0,1,Line,DwgLineEntity;
+        1,2,Arc,DwgArcEntity;
+        2,3,LwPolyline,DwgLwPolylineEntity;
+        3,4,BlockBegin,DwgBlockBeginEntity;
+        4,5,BlockEnd,DwgBlockEndEntity;
+        5,6,Insert,DwgInsertEntity;
+        6,7,DimensionLinear,DwgLinearDimensionEntity;
+        7,8,Viewport,DwgViewportEntity;
+        8,9,Point,DwgPointEntity;
+        9,10,Circle,DwgCircleEntity;
+        10,11,Ellipse,DwgEllipseEntity;
+        11,12,Text,DwgTextEntity;
+        12,13,Spline,DwgSplineEntity;
+        13,14,Face3d,DwgFace3dEntity;
+        14,15,Polyline3d,DwgPolyline3dEntity;
+        15,16,PolyfaceMesh,DwgPolyfaceMeshEntity;
+        16,17,Vertex,DwgVertexEntity;
+        17,18,PolyfaceFace,DwgPolyfaceFaceEntity;
+        18,19,SequenceEnd,DwgSequenceEndEntity;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_entity_body_spec)
+        dsl::Shape::Record(dwg_entity_body_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_entity_body_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
@@ -3099,110 +3284,106 @@ pub enum DwgLogicalObjectBody {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        None,
-        dsl::RecordLayout::Inline,
-        vec![
-            dsl::FieldSpec::new(
-                0,
-                "kind",
-                dsl::Shape::Enum(vec![
-                    ("dictionary".into(), 0),
-                    ("tableControl".into(), 1),
-                    ("tableRecord".into(), 2),
-                    ("xrecord".into(), 3),
-                    ("entity".into(), 4),
-                    ("associativeDependency".into(), 5),
-                    ("associativeValueDependency".into(), 6),
-                    ("associativeGeometryDependency".into(), 7),
-                    ("blockGripLocationComponent".into(), 8),
-                    ("dynamicBlockProxyNode".into(), 9),
-                    ("associativeVariable".into(), 10),
-                    ("associativeDimensionDependencyBody".into(), 11),
-                    ("visualStyle".into(), 12),
-                    ("blockParameterDependencyBody".into(), 13),
-                    ("blockRepresentationData".into(), 14),
-                    ("dynamicBlockPurgePreventer".into(), 15),
-                    ("evaluationGraph".into(), 16),
-                    ("blockFlipParameter".into(), 17),
-                    ("blockVisibilityParameter".into(), 18),
-                    ("placeholder".into(), 19),
-                    ("dictionaryVariable".into(), 20),
-                    ("annotationScale".into(), 21),
-                    ("sortEntitiesTable".into(), 22),
-                    ("tableStyle".into(), 23),
-                    ("mlineStyle".into(), 24),
-                    ("mLeaderStyle".into(), 25),
-                    ("material".into(), 26),
-                    ("blockMoveAction".into(), 27),
-                    ("assocNetwork".into(), 28),
-                    ("assoc2dConstraintGroup".into(), 29),
-                    ("blockLinearParameter".into(), 30),
-                    ("blockLinearGrip".into(), 31),
-                    ("blockFlipGrip".into(), 32),
-                    ("blockVisibilityGrip".into(), 33),
-                    ("blockAlignmentParameter".into(), 34),
-                    ("blockAlignmentGrip".into(), 35),
-                    ("blockStretchAction".into(), 36),
-                    ("blockScaleAction".into(), 37),
-                    ("blockFlipAction".into(), 38),
-                    ("blockBasePointParameter".into(), 39),
-                    ("blockVerticalConstraintParameter".into(), 40),
-                    ("blockHorizontalConstraintParameter".into(), 41),
-                    ("layout".into(), 42),
-                ]),
-            ),
-            dsl::FieldSpec::new(1, "dictionary", <DwgDictionaryBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(2, "table_control", <DwgTableControlBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(3, "table_record", <DwgTableRecordBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(4, "xrecord", <DwgXRecordBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(5, "entity", <DwgEntityBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(6, "associative_dependency", <DwgAssociativeDependency as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(7, "associative_value_dependency", <DwgAssociativeValueDependency as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(8, "associative_geometry_dependency", <DwgAssociativeGeometryDependency as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(9, "block_grip_location_component", <DwgBlockGripLocationComponent as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(10, "dynamic_block_proxy_node", <DwgDynamicBlockProxyNode as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(11, "associative_variable", <DwgAssociativeVariable as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(12, "associative_dimension_dependency_body", <DwgAssociativeDimensionDependencyBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(13, "visual_style", <DwgVisualStyle as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(14, "block_parameter_dependency_body", <DwgBlockParameterDependencyBody as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(15, "block_representation_data", <DwgBlockRepresentationData as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(16, "dynamic_block_purge_preventer", <DwgDynamicBlockPurgePreventer as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(17, "evaluation_graph", <DwgEvaluationGraph as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(18, "block_flip_parameter", <DwgBlockFlipParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(19, "block_visibility_parameter", <DwgBlockVisibilityParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(20, "placeholder", <DwgPlaceholder as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(21, "dictionary_variable", <DwgDictionaryVariable as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(22, "annotation_scale", <DwgAnnotationScale as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(23, "sort_entities_table", <DwgSortEntitiesTable as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(24, "table_style", <DwgTableStyle as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(25, "mline_style", <DwgMlineStyle as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(26, "m_leader_style", <DwgMLeaderStyle as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(27, "material", <DwgMaterial as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(28, "block_move_action", <DwgBlockMoveAction as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(29, "assoc_network", <DwgAssocNetwork as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(30, "assoc_2d_constraint_group", <DwgAssoc2dConstraintGroup as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(31, "block_linear_parameter", <DwgBlockLinearParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(32, "block_linear_grip", <DwgBlockLinearGrip as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(33, "block_flip_grip", <DwgBlockFlipGrip as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(34, "block_visibility_grip", <DwgBlockVisibilityGrip as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(35, "block_alignment_parameter", <DwgBlockAlignmentParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(36, "block_alignment_grip", <DwgBlockAlignmentGrip as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(37, "block_stretch_action", <DwgBlockStretchAction as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(38, "block_scale_action", <DwgBlockScaleAction as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(39, "block_flip_action", <DwgBlockFlipAction as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(40, "block_base_point_parameter", <DwgBlockBasePointParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(41, "block_vertical_constraint_parameter", <DwgBlockLinearConstraintParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(42, "block_horizontal_constraint_parameter", <DwgBlockLinearConstraintParameter as dsl::DslField>::shape()).optional(),
-            dsl::FieldSpec::new(43, "layout", <DwgLayout as dsl::DslField>::shape()).optional(),
-        ],
-    )
-}
+dwg_metadata!(dwg_logical_object_body_spec, dwg_logical_object_body_spec_controlled, dwg_logical_object_body_spec_producer;
+    0, "kind", false, [enum ("dictionary", 0), ("tableControl", 1), ("tableRecord", 2), ("xrecord", 3), ("entity", 4), ("associativeDependency", 5), ("associativeValueDependency", 6), ("associativeGeometryDependency", 7), ("blockGripLocationComponent", 8), ("dynamicBlockProxyNode", 9), ("associativeVariable", 10), ("associativeDimensionDependencyBody", 11), ("visualStyle", 12), ("blockParameterDependencyBody", 13), ("blockRepresentationData", 14), ("dynamicBlockPurgePreventer", 15), ("evaluationGraph", 16), ("blockFlipParameter", 17), ("blockVisibilityParameter", 18), ("placeholder", 19), ("dictionaryVariable", 20), ("annotationScale", 21), ("sortEntitiesTable", 22), ("tableStyle", 23), ("mlineStyle", 24), ("mLeaderStyle", 25), ("material", 26), ("blockMoveAction", 27), ("assocNetwork", 28), ("assoc2dConstraintGroup", 29), ("blockLinearParameter", 30), ("blockLinearGrip", 31), ("blockFlipGrip", 32), ("blockVisibilityGrip", 33), ("blockAlignmentParameter", 34), ("blockAlignmentGrip", 35), ("blockStretchAction", 36), ("blockScaleAction", 37), ("blockFlipAction", 38), ("blockBasePointParameter", 39), ("blockVerticalConstraintParameter", 40), ("blockHorizontalConstraintParameter", 41), ("layout", 42)];
+    1, "dictionary", true, [typed DwgDictionaryBody];
+    2, "table_control", true, [typed DwgTableControlBody];
+    3, "table_record", true, [typed DwgTableRecordBody];
+    4, "xrecord", true, [typed DwgXRecordBody];
+    5, "entity", true, [typed DwgEntityBody];
+    6, "associative_dependency", true, [typed DwgAssociativeDependency];
+    7, "associative_value_dependency", true, [typed DwgAssociativeValueDependency];
+    8, "associative_geometry_dependency", true, [typed DwgAssociativeGeometryDependency];
+    9, "block_grip_location_component", true, [typed DwgBlockGripLocationComponent];
+    10, "dynamic_block_proxy_node", true, [typed DwgDynamicBlockProxyNode];
+    11, "associative_variable", true, [typed DwgAssociativeVariable];
+    12, "associative_dimension_dependency_body", true, [typed DwgAssociativeDimensionDependencyBody];
+    13, "visual_style", true, [typed DwgVisualStyle];
+    14, "block_parameter_dependency_body", true, [typed DwgBlockParameterDependencyBody];
+    15, "block_representation_data", true, [typed DwgBlockRepresentationData];
+    16, "dynamic_block_purge_preventer", true, [typed DwgDynamicBlockPurgePreventer];
+    17, "evaluation_graph", true, [typed DwgEvaluationGraph];
+    18, "block_flip_parameter", true, [typed DwgBlockFlipParameter];
+    19, "block_visibility_parameter", true, [typed DwgBlockVisibilityParameter];
+    20, "placeholder", true, [typed DwgPlaceholder];
+    21, "dictionary_variable", true, [typed DwgDictionaryVariable];
+    22, "annotation_scale", true, [typed DwgAnnotationScale];
+    23, "sort_entities_table", true, [typed DwgSortEntitiesTable];
+    24, "table_style", true, [typed DwgTableStyle];
+    25, "mline_style", true, [typed DwgMlineStyle];
+    26, "m_leader_style", true, [typed DwgMLeaderStyle];
+    27, "material", true, [typed DwgMaterial];
+    28, "block_move_action", true, [typed DwgBlockMoveAction];
+    29, "assoc_network", true, [typed DwgAssocNetwork];
+    30, "assoc_2d_constraint_group", true, [typed DwgAssoc2dConstraintGroup];
+    31, "block_linear_parameter", true, [typed DwgBlockLinearParameter];
+    32, "block_linear_grip", true, [typed DwgBlockLinearGrip];
+    33, "block_flip_grip", true, [typed DwgBlockFlipGrip];
+    34, "block_visibility_grip", true, [typed DwgBlockVisibilityGrip];
+    35, "block_alignment_parameter", true, [typed DwgBlockAlignmentParameter];
+    36, "block_alignment_grip", true, [typed DwgBlockAlignmentGrip];
+    37, "block_stretch_action", true, [typed DwgBlockStretchAction];
+    38, "block_scale_action", true, [typed DwgBlockScaleAction];
+    39, "block_flip_action", true, [typed DwgBlockFlipAction];
+    40, "block_base_point_parameter", true, [typed DwgBlockBasePointParameter];
+    41, "block_vertical_constraint_parameter", true, [typed DwgBlockLinearConstraintParameter];
+    42, "block_horizontal_constraint_parameter", true, [typed DwgBlockLinearConstraintParameter];
+    43, "layout", true, [typed DwgLayout];
+);
 
 impl dsl::DslField for DwgLogicalObjectBody {
+    dwg_controlled_payloads!(0; units[];
+        0,1,Dictionary,DwgDictionaryBody;
+        1,2,TableControl,DwgTableControlBody;
+        2,3,TableRecord,DwgTableRecordBody;
+        3,4,XRecord,DwgXRecordBody;
+        4,5,Entity,DwgEntityBody;
+        5,6,AssociativeDependency,DwgAssociativeDependency;
+        6,7,AssociativeValueDependency,DwgAssociativeValueDependency;
+        7,8,AssociativeGeometryDependency,DwgAssociativeGeometryDependency;
+        8,9,BlockGripLocationComponent,DwgBlockGripLocationComponent;
+        9,10,DynamicBlockProxyNode,DwgDynamicBlockProxyNode;
+        10,11,AssociativeVariable,DwgAssociativeVariable;
+        11,12,AssociativeDimensionDependencyBody,DwgAssociativeDimensionDependencyBody;
+        12,13,VisualStyle,DwgVisualStyle;
+        13,14,BlockParameterDependencyBody,DwgBlockParameterDependencyBody;
+        14,15,BlockRepresentationData,DwgBlockRepresentationData;
+        15,16,DynamicBlockPurgePreventer,DwgDynamicBlockPurgePreventer;
+        16,17,EvaluationGraph,DwgEvaluationGraph;
+        17,18,BlockFlipParameter,DwgBlockFlipParameter;
+        18,19,BlockVisibilityParameter,DwgBlockVisibilityParameter;
+        19,20,Placeholder,DwgPlaceholder;
+        20,21,DictionaryVariable,DwgDictionaryVariable;
+        21,22,AnnotationScale,DwgAnnotationScale;
+        22,23,SortEntitiesTable,DwgSortEntitiesTable;
+        23,24,TableStyle,Box<DwgTableStyle>;
+        24,25,MlineStyle,DwgMlineStyle;
+        25,26,MLeaderStyle,DwgMLeaderStyle;
+        26,27,Material,DwgMaterial;
+        27,28,BlockMoveAction,DwgBlockMoveAction;
+        28,29,AssocNetwork,DwgAssocNetwork;
+        29,30,Assoc2dConstraintGroup,DwgAssoc2dConstraintGroup;
+        30,31,BlockLinearParameter,DwgBlockLinearParameter;
+        31,32,BlockLinearGrip,DwgBlockLinearGrip;
+        32,33,BlockFlipGrip,DwgBlockFlipGrip;
+        33,34,BlockVisibilityGrip,DwgBlockVisibilityGrip;
+        34,35,BlockAlignmentParameter,DwgBlockAlignmentParameter;
+        35,36,BlockAlignmentGrip,DwgBlockAlignmentGrip;
+        36,37,BlockStretchAction,DwgBlockStretchAction;
+        37,38,BlockScaleAction,DwgBlockScaleAction;
+        38,39,BlockFlipAction,DwgBlockFlipAction;
+        39,40,BlockBasePointParameter,DwgBlockBasePointParameter;
+        40,41,BlockVerticalConstraintParameter,DwgBlockLinearConstraintParameter;
+        41,42,BlockHorizontalConstraintParameter,DwgBlockLinearConstraintParameter;
+        42,43,Layout,DwgLayout;);
+
     fn shape() -> dsl::Shape {
-        dsl::Shape::Record(dwg_logical_object_body_spec)
+        dsl::Shape::Record(dwg_logical_object_body_spec_producer())
+    }
+
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        control.checkpoint()?;
+        Ok(dsl::Shape::Record(dwg_logical_object_body_spec_producer()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {

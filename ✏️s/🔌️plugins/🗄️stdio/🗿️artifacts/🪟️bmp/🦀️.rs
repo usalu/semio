@@ -78,7 +78,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.bmp".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Bmp", "Bmp"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Bmp", "Bmp"),
         source_format: STDIO_BMP_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

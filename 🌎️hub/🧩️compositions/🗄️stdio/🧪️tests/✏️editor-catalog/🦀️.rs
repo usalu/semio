@@ -175,7 +175,6 @@ fn neutral_catalog_requires_each_edit_operation_once() {
     assert_eq!(actual, expected);
     assert_eq!(actual.len(), fixture["actions"].as_array().unwrap().len());
     assert_eq!(fixture["editorCount"].as_u64().unwrap() as usize, EDITOR_COUNT);
-    eprintln!("[DEBUG] retained Stdio editor pairs admitted: {EDITOR_COUNT}");
 }
 
 async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {

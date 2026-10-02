@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { scaleLinear } from "d3-scale";
 import { curveLinear, curveStepAfter, curveStepBefore, line as d3Line, stack, type CurveFactory } from "d3-shape";
-import { defineTestAdapter, type AdapterContext } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { compileVizProbe, probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 

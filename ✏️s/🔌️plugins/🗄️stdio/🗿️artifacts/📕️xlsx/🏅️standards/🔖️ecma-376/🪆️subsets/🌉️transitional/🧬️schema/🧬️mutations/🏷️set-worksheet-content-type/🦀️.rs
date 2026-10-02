@@ -21,8 +21,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetWorks
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
         agg_inverse(&XlsxTransitionalMutation::SetWorksheetContentType(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set worksheet content type", "Inhaltstyp des Arbeitsblatts setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set worksheet content type", "Inhaltstyp des Arbeitsblatts setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

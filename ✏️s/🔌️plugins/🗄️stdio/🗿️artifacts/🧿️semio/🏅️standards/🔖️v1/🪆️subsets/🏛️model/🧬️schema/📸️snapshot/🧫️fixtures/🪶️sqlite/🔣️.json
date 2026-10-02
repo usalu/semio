@@ -79,5 +79,11 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32
+  },
+  "nativeOutputBytes": 100000
 }

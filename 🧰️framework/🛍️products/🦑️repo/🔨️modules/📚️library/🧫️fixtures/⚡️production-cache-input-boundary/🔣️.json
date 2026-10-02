@@ -43,5 +43,53 @@
       "production": true,
       "test": true
     }
+  ],
+  "nativeVocabulary": [
+    {
+      "id": "general-default",
+      "root": "neutral/tool",
+      "inputs": {},
+      "target": "nativeSources",
+      "samples": [
+        {
+          "path": "neutral/tool/producer.ts",
+          "selected": true
+        },
+        {
+          "path": "neutral/other/producer.ts",
+          "selected": false
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "native-override",
+      "root": "neutral/compiler",
+      "inputs": {
+        "nativeSources": [
+          "{projectRoot}/**/*.rs"
+        ]
+      },
+      "target": "nativeSources",
+      "samples": [
+        {
+          "path": "neutral/compiler/implementation.rs",
+          "selected": true
+        },
+        {
+          "path": "neutral/compiler/package.json",
+          "selected": false
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "unknown-vocabulary",
+      "root": "neutral/tool",
+      "inputs": {},
+      "target": "missingNativeSources",
+      "samples": [],
+      "refused": true
+    }
   ]
 }

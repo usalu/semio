@@ -112,7 +112,7 @@ impl OpText for TrinityGraphOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -122,7 +122,7 @@ impl OpText for TrinityGraphOperationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -1192,19 +1192,19 @@ impl JackSnapshotCloneAuthority {
         Ok(value)
     }
 
-    fn value_type_owned_bytes(source: &semio_framework_graph::manifest::ValueType, maximum_bytes: usize) -> Result<usize, &'static str> {
+    fn value_type_owned_bytes(source: &semio_framework_value::ValueType, maximum_bytes: usize) -> Result<usize, &'static str> {
         let mut bytes = 0usize;
         let mut value = source;
         loop {
             match value {
-                semio_framework_graph::manifest::ValueType::List(inner) => {
-                    bytes = bytes.checked_add(size_of::<Box<semio_framework_graph::manifest::ValueType>>()).ok_or("jack-store.initializer-property-size")?;
+                semio_framework_value::ValueType::List(inner) => {
+                    bytes = bytes.checked_add(size_of::<Box<semio_framework_value::ValueType>>()).ok_or("jack-store.initializer-property-size")?;
                     if bytes > maximum_bytes {
                         return Err("jack-store.initializer-property-too-large");
                     }
                     value = inner;
                 }
-                semio_framework_graph::manifest::ValueType::Schema(schema) => {
+                semio_framework_value::ValueType::Schema(schema) => {
                     bytes = bytes.checked_add(schema.len()).ok_or("jack-store.initializer-property-size")?;
                     return (bytes <= maximum_bytes).then_some(bytes).ok_or("jack-store.initializer-property-too-large");
                 }

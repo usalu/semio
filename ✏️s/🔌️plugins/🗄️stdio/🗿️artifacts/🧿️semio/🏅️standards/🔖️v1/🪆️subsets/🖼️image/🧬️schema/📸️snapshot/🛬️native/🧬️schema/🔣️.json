@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:stdio.semio.image:controlled-native-admission",
+  "type": "object",
+  "required": ["collectionItems", "cancelAfter", "largeBytes", "smallOwnedBytes"],
+  "additionalProperties": false,
+  "properties": {
+    "collectionItems": {"const": 1024},
+    "cancelAfter": {"const": 256},
+    "largeBytes": {"const": 100000},
+    "smallOwnedBytes": {"const": 128}
+  }
+}

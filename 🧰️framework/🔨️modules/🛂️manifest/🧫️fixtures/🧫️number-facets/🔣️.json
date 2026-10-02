@@ -1,0 +1,428 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "🎛️ `ActionArgDef::number_facets` / `actionArgNumberFacets`: the UI-contract facets every renderer of an input derives from its descriptor — key range (a slider's or dial's travel; a stepper's, number field's or vector axis' hard bounds, an excluded bound none), step (a non-positive one none), look, axis, unit symbols (deg reads °, percent reads %), display factor, precision (at most 15), the detents the detent law and the limits admit (ascending, inside the key range), and the schema's hard limits with refusals in the case's locale naming the bound in display units (twelve significant digits) beside the shown unit. `facets: null` for an input that is no number. Written by the ticket script `🧪️s3-w1e-number-facets.py` (an independent Python implementation).",
+  "cases": [
+    {
+      "name": "dial-radians-shown-in-degrees",
+      "locale": "en",
+      "def": {
+        "id": "/angle",
+        "label": {
+          "native": {
+            "en": "Angle",
+            "de": "Winkel"
+          },
+          "reuse": {
+            "en": "Angle",
+            "de": "Winkel"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "step": 0.017453292519943295,
+          "unit": "rad",
+          "snaps": [
+            -3.141592653589793,
+            -1.5707963267948966,
+            0,
+            1.5707963267948966,
+            3.141592653589793
+          ],
+          "softMin": -3.141592653589793,
+          "softMax": 3.141592653589793,
+          "displayUnit": "deg",
+          "displayFactor": 57.29577951308232
+        },
+        "presentation": {
+          "kind": "dial"
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "dial",
+        "scale": "linear",
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "step": 0.017453292519943295,
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "limits": {}
+      }
+    },
+    {
+      "name": "log-slider-soft-travel-inside-an-exclusive-floor",
+      "locale": "en",
+      "def": {
+        "id": "/factor",
+        "label": {
+          "native": {
+            "en": "Factor",
+            "de": "Faktor"
+          },
+          "reuse": {
+            "en": "Factor",
+            "de": "Faktor"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "min": 0,
+          "minExclusive": true,
+          "max": 100,
+          "step": 0.01,
+          "snaps": [
+            0.25,
+            0.5,
+            1,
+            2,
+            4,
+            50
+          ],
+          "softMin": 0.1,
+          "softMax": 10,
+          "precision": 2,
+          "scale": "log"
+        },
+        "presentation": {
+          "kind": "slider"
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "log",
+        "min": 0.1,
+        "max": 10,
+        "step": 0.01,
+        "precision": 2,
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ],
+        "limits": {
+          "min": {
+            "value": 0,
+            "exclusive": true,
+            "refusal": "Must be greater than 0"
+          },
+          "max": {
+            "value": 100,
+            "refusal": "Must be at most 100"
+          }
+        }
+      }
+    },
+    {
+      "name": "stepper-excluded-floor-is-no-key-end",
+      "locale": "de",
+      "def": {
+        "id": "/width",
+        "label": {
+          "native": {
+            "en": "Width",
+            "de": "Breite"
+          },
+          "reuse": {
+            "en": "Width",
+            "de": "Breite"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "min": 0,
+          "minExclusive": true,
+          "max": 10,
+          "integer": true,
+          "unit": "mm",
+          "snaps": [
+            0,
+            2,
+            5,
+            5,
+            12
+          ]
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "linear",
+        "max": 10,
+        "unit": "mm",
+        "snaps": [
+          2,
+          5
+        ],
+        "limits": {
+          "min": {
+            "value": 0,
+            "exclusive": true,
+            "refusal": "Muss größer als 0 mm sein"
+          },
+          "max": {
+            "value": 10,
+            "refusal": "Darf höchstens 10 mm sein"
+          }
+        }
+      }
+    },
+    {
+      "name": "stepper-angle-bounds-in-display-units",
+      "locale": "en",
+      "def": {
+        "id": "/turn",
+        "label": {
+          "native": {
+            "en": "Turn",
+            "de": "Drehung"
+          },
+          "reuse": {
+            "en": "Turn",
+            "de": "Drehung"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "min": -3.141592653589793,
+          "max": 3.141592653589793,
+          "step": 0.017453292519943295,
+          "unit": "rad",
+          "precision": 0,
+          "displayUnit": "deg",
+          "displayFactor": 57.29577951308232
+        },
+        "presentation": {
+          "kind": "stepper"
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "linear",
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "step": 0.017453292519943295,
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "precision": 0,
+        "snaps": [],
+        "limits": {
+          "min": {
+            "value": -3.141592653589793,
+            "refusal": "Must be at least -180 °"
+          },
+          "max": {
+            "value": 3.141592653589793,
+            "refusal": "Must be at most 180 °"
+          }
+        }
+      }
+    },
+    {
+      "name": "number-field-display-factor",
+      "locale": "de",
+      "def": {
+        "id": "/length",
+        "label": {
+          "native": {
+            "en": "Length",
+            "de": "Länge"
+          },
+          "reuse": {
+            "en": "Length",
+            "de": "Länge"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "min": 0,
+          "step": 0.001,
+          "unit": "m",
+          "precision": 1,
+          "displayUnit": "cm",
+          "displayFactor": 100
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "linear",
+        "min": 0,
+        "step": 0.001,
+        "unit": "m",
+        "displayUnit": "cm",
+        "displayFactor": 100,
+        "precision": 1,
+        "snaps": [],
+        "limits": {
+          "min": {
+            "value": 0,
+            "refusal": "Muss mindestens 0 cm sein"
+          }
+        }
+      }
+    },
+    {
+      "name": "vector-axes-share-the-facets",
+      "locale": "en",
+      "def": {
+        "id": "/offset",
+        "label": {
+          "native": {
+            "en": "Offset",
+            "de": "Versatz"
+          },
+          "reuse": {
+            "en": "Offset",
+            "de": "Versatz"
+          }
+        },
+        "schema": {
+          "kind": "vector",
+          "dims": 3,
+          "min": -1,
+          "max": 1,
+          "unit": "percent",
+          "step": 0.1,
+          "snaps": [
+            -1,
+            0,
+            1,
+            2
+          ],
+          "precision": 2
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "linear",
+        "min": -1,
+        "max": 1,
+        "step": 0.1,
+        "unit": "%",
+        "precision": 2,
+        "snaps": [
+          -1,
+          0,
+          1
+        ],
+        "limits": {
+          "min": {
+            "value": -1,
+            "refusal": "Must be at least -1 %"
+          },
+          "max": {
+            "value": 1,
+            "refusal": "Must be at most 1 %"
+          }
+        }
+      }
+    },
+    {
+      "name": "slider-without-step-and-clamped-precision",
+      "locale": "en",
+      "def": {
+        "id": "/mix",
+        "label": {
+          "native": {
+            "en": "Mix",
+            "de": "Mischung"
+          },
+          "reuse": {
+            "en": "Mix",
+            "de": "Mischung"
+          }
+        },
+        "schema": {
+          "kind": "number",
+          "min": 0,
+          "max": 1,
+          "step": 0,
+          "precision": 40
+        },
+        "required": true
+      },
+      "facets": {
+        "appearance": "track",
+        "scale": "linear",
+        "min": 0,
+        "max": 1,
+        "precision": 15,
+        "snaps": [],
+        "limits": {
+          "min": {
+            "value": 0,
+            "refusal": "Must be at least 0"
+          },
+          "max": {
+            "value": 1,
+            "refusal": "Must be at most 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "text-has-no-facets",
+      "locale": "en",
+      "def": {
+        "id": "/name",
+        "label": {
+          "native": {
+            "en": "Name",
+            "de": "Name"
+          },
+          "reuse": {
+            "en": "Name",
+            "de": "Name"
+          }
+        },
+        "schema": {
+          "kind": "string"
+        },
+        "required": true
+      },
+      "facets": null
+    },
+    {
+      "name": "colour-vector-has-no-facets",
+      "locale": "en",
+      "def": {
+        "id": "/color",
+        "label": {
+          "native": {
+            "en": "Color",
+            "de": "Farbe"
+          },
+          "reuse": {
+            "en": "Color",
+            "de": "Farbe"
+          }
+        },
+        "schema": {
+          "kind": "vector",
+          "dims": 4,
+          "min": 0,
+          "max": 1
+        },
+        "presentation": {
+          "kind": "color"
+        },
+        "required": true
+      },
+      "facets": null
+    }
+  ]
+}

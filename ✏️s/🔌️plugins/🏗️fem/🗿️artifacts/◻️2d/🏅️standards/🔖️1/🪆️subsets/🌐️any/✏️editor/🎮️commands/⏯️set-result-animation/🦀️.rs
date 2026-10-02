@@ -6,19 +6,19 @@
 //! the host merges a control's own scalar under the single key `value`
 //! (`🛠️ShellHelpers/🟦️.tsx`'s `uiIntentPayload`) and a slider therefore cannot name which field it
 //! just moved. A dispatch that names neither — the bare `space` chord — toggles play/pause.
+//!
+//! Every publication is ONE plain window-config edit (design §20.1: no amend on any lane): a transport press is
+//! one edit, and a dragged phase or speed slider rides the framework's config-lane press (`gesture`/`commit`
+//! args), whose ticks stay provisional until the release publishes ONE edit and whose cancel leaves none.
 
 use crate::editor::fem2d::modes::edit::windows::results;
 use crate::editor::fem2d::modes::edit::windows::results::config::{Fem2dLoopMode, Fem2dResultsAnimation, Fem2dWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
+use crate::editor::fem2d::modes::edit::windows::results::transient::Fem2dPlaybackClock;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, WindowTransientMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
-
-/// 🪢️ Every playback publication amends the previous one instead of appending: a window-config
-/// store keeps a FIXED applied-edit capacity ("batched publication requires preinstalled fixed
-/// applied and revision capacity"), which a 30 fps clock exhausted in minutes on the React lane.
-pub const PLAYBACK_COALESCE_KEY: &str = "fem2d.results.playback";
 
 //#region 🔖️Clock
 /// ⏱️ The action the playback clock re-dispatches onto itself.
@@ -30,9 +30,9 @@ const REARM_REQUEST: u64 = 141;
 /// 🔁️ The hop that arms — or keeps — the playback clock of ONE results window.
 ///
 /// `Effect::DispatchAction` carries no window of its own; the React ShellHost redispatches it under
-/// the `resolvedTargetViewState` of the dispatch that emitted it (`🏛️ShellHost/🟦️.tsx`'s
-/// `scheduleDispatchAction`), which is how the chain keeps addressing the window the user pressed
-/// play in. `windowId` rides along as the address the hop was armed for.
+/// the `resolvedTargetViewState` of the dispatch that emitted it, which is how the chain keeps
+/// addressing the window the user pressed play in. `windowId` rides along as the address the hop was
+/// armed for.
 pub fn rearm_effect(window_id: &str) -> Effect {
     Effect::DispatchAction {
         req: semio_framework_plugin::RequestId(REARM_REQUEST),
@@ -40,6 +40,21 @@ pub fn rearm_effect(window_id: &str) -> Effect {
         args: Some(dsl::DslValue::object([("windowId".to_string(), dsl::DslValue::String(window_id.to_string()))])),
         delay_ms: ANIMATION_TICK_MS,
     }
+}
+
+/// 🪟️ The dirty scope every playback publication declares: the results body and the panel that
+/// reads its transport.
+pub fn playback_dirty_scope() -> semio_framework::kernel::UiDirtyScope {
+    semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+}
+
+/// 🫧️ What one playback command publishes: the config lane (transport settings, resting phase) and
+/// the results window's transient lane (the running clock) — the retained route folds both into
+/// one `CompleteWithEphemeral` step.
+#[derive(Default)]
+pub struct Fem2dPlaybackStep {
+    pub emit: Emit<Fem2dMutation, NoConfigMutation>,
+    pub window_transient: Vec<WindowTransientMutation>,
 }
 //#endregion 🔖️Clock
 
@@ -60,7 +75,6 @@ pub struct SetResultAnimation {
     pub window_id: Option<String>,
 }
 
-/// 🔢️ One control's scalar, as the bridge stringified it.
 fn number(value: &str) -> Result<f64, Fault> {
     value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem2d.result-animation.value: '{value}' is not a number")))
 }
@@ -97,7 +111,7 @@ fn apply_field(animation: &mut Fem2dResultsAnimation, field: &str, value: &str) 
 }
 
 /// ⏯️ Merges everything the payload names into `animation`; names nothing ⇒ toggle play/pause.
-fn merge(payload: &SetResultAnimation, animation: &mut Fem2dResultsAnimation) -> Result<(), Fault> {
+pub fn merge(payload: &SetResultAnimation, animation: &mut Fem2dResultsAnimation) -> Result<(), Fault> {
     let field = payload.field.as_deref().filter(|field| !field.is_empty());
     let mut named = field.is_some();
     if let Some(phase) = payload.phase {
@@ -140,12 +154,29 @@ pub fn handle(_payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem2dSnapsh
 /// would advance the phase by its own frame, so the structure would run at double speed and never
 /// slow down again.
 pub fn handle_window(payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    step(payload, cfg, view, None).map(|step| step.emit)
+}
+
+/// ⏯️ The retained route: the gesture lands on the transport with the window's RUNNING clock folded
+/// in first — a pause rests exactly where the animation was, a seek or a retune mid-playback
+/// starts the next frame from the phase the user sees — and a clock that existed is cleared so the
+/// chain restarts from the published config instead of a stale frame. `clock` is `None` both when
+/// the gesture carried no window tag (the keyboard chord; the next tick parks the clock itself) and
+/// when the window is not playing.
+pub fn step(payload: &SetResultAnimation, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel, clock: Option<Fem2dPlaybackClock>) -> Result<Fem2dPlaybackStep, Fault> {
     let window_id = results::config::addressed_window_id(cfg, view, payload.window_id.as_deref())?;
     let current = results::config::current(cfg);
     let mut next = current.clone();
+    if let Some(clock) = clock {
+        next.animation = clock.parked_into(&next.animation);
+    }
     merge(payload, &mut next.animation)?;
     let effects = if next.animation.playing && !current.animation.playing { vec![rearm_effect(&window_id)] } else { Vec::new() };
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
+    let window_transient = clock.map(|_| results::transient::addressed_to(&window_id, None)).into_iter().collect();
+    Ok(Fem2dPlaybackStep {
+        emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, ui_scope: playback_dirty_scope(), ..Default::default() },
+        window_transient,
+    })
 }
 //#endregion 🔖️SetResultAnimation
 

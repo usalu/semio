@@ -15,7 +15,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
 #[cfg(test)]
 use crate::EquationGeometry;
 use crate::{EquationEdge, EquationGraph, EquationNode, EquationSnapshot};
@@ -132,7 +131,7 @@ impl ArtifactDsl for EquationSnapshot {
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
+            Ok((envelope, rest)) => {if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl,1){return Err(dsl::__rt::field_error("Equation logical text identity differs"));}rest},
             Err(_) => text,
         };
         super::binary::parse_pack_record_text(body)

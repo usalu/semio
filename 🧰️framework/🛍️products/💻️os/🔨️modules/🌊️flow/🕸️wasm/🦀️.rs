@@ -4888,7 +4888,7 @@ impl FlowActionState for FlowAction2593 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_593),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.align_selection(text(args, "mode")?).map(|_| Vec::new()).map_err(domain_error) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.align_selection(text(args, "mode")?).map(|_| domain.host.take_graph_edits_json().into_bytes()).map_err(domain_error) };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),

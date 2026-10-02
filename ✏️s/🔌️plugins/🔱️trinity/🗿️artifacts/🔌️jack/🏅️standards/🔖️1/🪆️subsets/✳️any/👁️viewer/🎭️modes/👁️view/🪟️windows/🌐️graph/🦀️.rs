@@ -6,7 +6,13 @@
 //! and emits no mutations by construction (`ViewEmit`).
 
 use crate::{JackSnapshot, Node, PortDirection};
-use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphEdgeRecord;
+use semio_framework_plugin::NodeGraphNodeRecord;
+use semio_framework_plugin::NodeGraphPortRecord;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind;
 

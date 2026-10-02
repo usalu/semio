@@ -43,7 +43,7 @@ mod subject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{
         decode_semio_model_pack, encode_semio_model_pack, parse_semio_model_dsl, print_semio_model_dsl, ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
     };
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️JsonReaders
     /// 🧫️ Structural readers over the framework's dependency-free `Json`. Every one of them mirrors

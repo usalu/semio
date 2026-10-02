@@ -2,7 +2,10 @@
 //! read-only counterpart of the editor's `edit` mode.
 
 use crate::viewer::zip::base::modes::view::windows::main;
-use semio_framework_plugin::{create_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_stack_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const ZIP_ANY_VIEW_MODE_ID: &str = "view";
 

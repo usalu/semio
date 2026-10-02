@@ -72,6 +72,7 @@ semio-s-artifact-stdio-deflate = { workspace = true, features = ["component-app-
 semio-s-artifact-stdio-zip = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-epw = { workspace = true, features = ["component-app-assembly"] }
 # /🧩️ Composition Dependencies
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

@@ -9,9 +9,9 @@
 //! local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::stl::standards::v_ascii::subsets::any::{oracle_apply_mutation, oracle_document_projection, oracle_inverse_spec, oracle_round_trip};
-use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
+use semio_s_artifact_stdio_stl_test_oracle::standards::v_ascii::subsets::any::{oracle_apply_mutation, oracle_document_projection, oracle_inverse_spec, oracle_round_trip};
+use semio_s_plugin_stdio_mesh_test_oracle::project_stl;
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
 
 //#region 🔖️Profile
@@ -109,7 +109,7 @@ mod subject {
     use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_stl::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, StlMutation};
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;

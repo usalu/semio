@@ -1049,7 +1049,6 @@ pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::Pa
     let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
     T::dsl_from_record(&record).map_err(store::text_error_to_pack_error)
 }
-
 /// 🧩️ Implements `store::ArtifactDsl` + `store::ArtifactPack` for a norm family's snapshot type,
 /// entirely by delegating to the four shared functions above. `$extension`/`$envelope_id` are the
 /// two literals every one of the fifteen hand-written impls previously hardcoded independently.

@@ -5,7 +5,6 @@ type ShootingConfig {
   selectedShotIds: [String!]! @state(class: CONFIG)
   centerModel: Boolean! @state(class: CONFIG)
   fitRevision: Int! @state(class: CONFIG)
-  cameraDraftLabel: String! @state(class: CONFIG)
   camera: ShootingCamera! @state(class: CONFIG)
 }
 

@@ -159,7 +159,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.bcf".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Bcf", "Bcf"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Bcf", "Bcf"),
         source_format: STDIO_BCF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

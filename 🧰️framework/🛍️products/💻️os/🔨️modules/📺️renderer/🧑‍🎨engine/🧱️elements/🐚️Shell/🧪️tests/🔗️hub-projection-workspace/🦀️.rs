@@ -2,7 +2,7 @@ use super::*;
 use serde::Deserialize;
 
 fn shell() -> ShellState {
-    ShellState::new(Vec::new(), String::new())
+    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
 }
 
 #[derive(Deserialize)]
@@ -596,8 +596,8 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let mut ledger = CollaborationLedger::default();
     let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id.as_str()), "the staged runtime carries {}", journey.plugin_id);
-    let mut a = ShellState::new(plugins.clone(), variant.clone());
-    let mut b = ShellState::new(plugins, variant);
+    let mut a = ShellState::new(plugins.clone(), variant.clone(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut b = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
 
     let a_retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
     let b_retry = sign_in_live(&mut b, &relay.origin, &b_email, &b_password);
@@ -777,7 +777,7 @@ fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     let variant = live_env("SEMIO_PLUGIN");
     let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
     assert!(plugins.iter().any(|entry| entry.plugin_id == journey.plugin_id), "the staged runtime carries {}", journey.plugin_id);
-    let mut shell = ShellState::new(plugins, variant);
+    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let document_id = format!("native-guest-journey-{}", chrome_now_ms() as u64);
     let started = std::time::Instant::now();
     shell_command(
@@ -908,7 +908,7 @@ fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
     let modules = std::path::PathBuf::from(live_env("SEMIO_PLUGIN_MODULES"));
     let variant = live_env("SEMIO_PLUGIN");
     let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
-    let mut shell = ShellState::new(plugins, variant);
+    let mut shell = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let open = |shell: &mut ShellState, document_id: &str| {
         let started = std::time::Instant::now();
         shell_command(shell, "os.open-artifact", &[("artifactRef", journey.artifact_ref.as_str()), ("pluginId", journey.plugin_id.as_str()), ("appId", journey.app_id.as_str()), ("documentId", document_id), ("schema", journey.schema.as_str())]);
@@ -1078,7 +1078,7 @@ impl CrossShellMeeting {
         let variant = live_env("SEMIO_PLUGIN");
         let mut ledger = CollaborationLedger::default();
         let plugins = drive(crate::program_bridge::load_wasm_plugins(&variant, &modules)).expect("the staged native runtime loads");
-        let mut a = ShellState::new(plugins, variant);
+        let mut a = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
 
         let retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
         let a_user = a.hub_workspace.session.user_id.clone();

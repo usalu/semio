@@ -32,11 +32,11 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextE
         let count_kind = if max_corners > 255 { PlyScalarType::UInt } else { PlyScalarType::UChar };
         ply.elements.push(PlyElement {
             name: "vertex".into(),
-            count: vertex_rows.len(),
+            count: u64::try_from(vertex_rows.len()).map_err(|_| crate::io::mesh_geometry::text_error("PLY vertex occurrence count exceeds u64"))?,
             properties: ["x", "y", "z"].iter().map(|n| PlyProperty::Scalar { name: (*n).into(), kind: PlyScalarType::Float }).collect(),
             rows: vertex_rows,
         });
-        ply.elements.push(PlyElement { name: "face".into(), count: face_rows.len(), properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind, value_kind: PlyScalarType::Int }], rows: face_rows });
+        ply.elements.push(PlyElement { name: "face".into(), count: u64::try_from(face_rows.len()).map_err(|_| crate::io::mesh_geometry::text_error("PLY face occurrence count exceeds u64"))?, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind, value_kind: PlyScalarType::Int }], rows: face_rows });
     }
     Ok(ply)
 }

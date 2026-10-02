@@ -1,3 +1,4 @@
+import type { MeshCollectionAssetSpecV1 } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -46,10 +47,11 @@ import {
   WCAG_AAA_CONTRAST,
   type Rgba8,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { meshCollectionVitePlugin, serveFileWithValidatorsV1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
+import { meshCollectionVitePlugin, serveFileWithValidatorsV1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
 import type { OwnedBuildMiddleware, OwnedBuildServer } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
+import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
+import { MESH_DELIVERY_CATALOG } from "../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
 import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
@@ -638,7 +640,7 @@ describe("nested mesh source identity", () => {
 });
 
 describe("puzzle3d mesh-collection asset spec", () => {
-  const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
+  const puzzle3dMeshSpec: MeshCollectionAssetSpecV1 = {
     kind: "mesh-collection",
     route: "/mesh",
     catalog: "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json",
@@ -659,7 +661,7 @@ describe("puzzle3d mesh-collection asset spec", () => {
       const hash = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
       for (const entry of MESH_DELIVERY_CATALOG) {
         const expected = hash(readFileSync(resolve(repoRoot, entry.source)));
-        const response = await fetch(`http://127.0.0.1:${address.port}${meshAssetTransportUrl(entry.url)}`);
+        const response = await fetch(`http://127.0.0.1:${address.port}${meshAssetTransportUrl(entry.url, MESH_DELIVERY_CATALOG)}`);
         expect(response.status).toBe(200);
         expect(response.headers.get("content-type")).toBe("model/gltf-binary");
         expect(hash(new Uint8Array(await response.arrayBuffer()))).toBe(expected);
@@ -668,7 +670,7 @@ describe("puzzle3d mesh-collection asset spec", () => {
       const { default: glob } = await import("fast-glob");
       expect((await glob("**/*", { cwd: resolve(sandbox, "output/mesh"), onlyFiles: true })).sort()).toEqual(MESH_DELIVERY_CATALOG.map(entry => entry.path).sort());
       expect(MESH_DELIVERY_CATALOG).toHaveLength(93);
-      expect(() => meshAssetTransportUrl("/mesh/🧊️ellipsoid-🧊️capsule_J.glb")).toThrow();
+      expect(() => meshAssetTransportUrl("/mesh/🧊️ellipsoid-🧊️capsule_J.glb", MESH_DELIVERY_CATALOG)).toThrow();
     } finally {
       await new Promise<void>((done, reject) => server.close(error => error ? reject(error) : done()));
       rmSync(sandbox, { recursive: true, force: true });
@@ -676,8 +678,8 @@ describe("puzzle3d mesh-collection asset spec", () => {
   }, 30_000);
 
   it("resolves kit glb roots and shared placeholder", () => {
-    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule_J.glb").source))).toBe(true);
-    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️placeholder.glb").source))).toBe(true);
+    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️capsule_J.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
+    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️placeholder.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
   });
 
   it("registers a generic mesh-collection serve/build program pair", () => {
@@ -686,7 +688,7 @@ describe("puzzle3d mesh-collection asset spec", () => {
   });
 
   it("includes 🧊️base.glb for shooting's default fixture", () => {
-    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️base.glb").source))).toBe(true);
+    expect(existsSync(resolve(repoRoot, resolveMeshAsset("/mesh/🧊️base.glb", MESH_DELIVERY_CATALOG).source))).toBe(true);
   });
 });
 

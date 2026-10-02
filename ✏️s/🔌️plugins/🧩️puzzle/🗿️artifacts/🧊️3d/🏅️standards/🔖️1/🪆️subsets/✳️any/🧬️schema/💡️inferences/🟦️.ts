@@ -67,16 +67,16 @@ export const puzzlePuzzle3dInferenceGuardConstant = <T extends string | number |
 export function parsePuzzle3dInference(value: unknown, at = "$"): Puzzle3dInference {
   const row = puzzlePuzzle3dInferenceGuardObject(value, at);
   return {
-    flatPositions: puzzlePuzzle3dInferenceGuardObject(row["flatPositions"], `${at}.flatPositions`),
+    flatPositions: Object.fromEntries(Object.entries(puzzlePuzzle3dInferenceGuardObject(row["flatPositions"], `${at}.flatPositions`)).map(([key,value])=>[key,parseFlattenPose(value,at+".flatPositions."+key)])),
   };
 }
 
 export function parseFlattenPlane(value: unknown, at = "$"): FlattenPlane {
   const row = puzzlePuzzle3dInferenceGuardObject(value, at);
   return {
-    origin: puzzlePuzzle3dInferenceGuardArray(row["origin"], `${at}.origin`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dInferenceGuardNumber(item, `${at}.origin[${index}]`)),
-    xAxis: puzzlePuzzle3dInferenceGuardArray(row["xAxis"], `${at}.xAxis`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dInferenceGuardNumber(item, `${at}.xAxis[${index}]`)),
-    yAxis: puzzlePuzzle3dInferenceGuardArray(row["yAxis"], `${at}.yAxis`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dInferenceGuardNumber(item, `${at}.yAxis[${index}]`)),
+    origin: puzzle3dInferenceTuple3(row["origin"],at+".origin"),
+    xAxis: puzzle3dInferenceTuple3(row["xAxis"],at+".xAxis"),
+    yAxis: puzzle3dInferenceTuple3(row["yAxis"],at+".yAxis"),
   };
 }
 
@@ -84,7 +84,11 @@ export function parseFlattenPose(value: unknown, at = "$"): FlattenPose {
   const row = puzzlePuzzle3dInferenceGuardObject(value, at);
   return {
     plane: parseFlattenPlane(row["plane"], `${at}.plane`),
-    center: puzzlePuzzle3dInferenceGuardArray(row["center"], `${at}.center`, {"minItems": 2, "maxItems": 2}).map((item, index) => puzzlePuzzle3dInferenceGuardNumber(item, `${at}.center[${index}]`)),
-    orientation: puzzlePuzzle3dInferenceGuardArray(row["orientation"], `${at}.orientation`, {"minItems": 4, "maxItems": 4}).map((item, index) => puzzlePuzzle3dInferenceGuardNumber(item, `${at}.orientation[${index}]`)),
+    center: puzzle3dInferenceTuple2(row["center"],at+".center"),
+    orientation: puzzle3dInferenceTuple4(row["orientation"],at+".orientation"),
   };
 }
+
+const puzzle3dInferenceTuple3=(value:unknown,at:string):[number,number,number]=>{const items=puzzlePuzzle3dInferenceGuardArray(value,at,{minItems:3,maxItems:3}).map((item,index)=>puzzlePuzzle3dInferenceGuardNumber(item,at+"["+index+"]"));return[items[0]!,items[1]!,items[2]!]};
+const puzzle3dInferenceTuple2=(value:unknown,at:string):[number,number]=>{const items=puzzlePuzzle3dInferenceGuardArray(value,at,{minItems:2,maxItems:2}).map((item,index)=>puzzlePuzzle3dInferenceGuardNumber(item,at+"["+index+"]"));return[items[0]!,items[1]!]};
+const puzzle3dInferenceTuple4=(value:unknown,at:string):[number,number,number,number]=>{const items=puzzlePuzzle3dInferenceGuardArray(value,at,{minItems:4,maxItems:4}).map((item,index)=>puzzlePuzzle3dInferenceGuardNumber(item,at+"["+index+"]"));return[items[0]!,items[1]!,items[2]!,items[3]!]};

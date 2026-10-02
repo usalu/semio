@@ -12,7 +12,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "jack-document-contract") {
-      const { testJackDocumentContract } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
+      const { testJackDocumentContract } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testJackDocumentContract();
       return;
     }

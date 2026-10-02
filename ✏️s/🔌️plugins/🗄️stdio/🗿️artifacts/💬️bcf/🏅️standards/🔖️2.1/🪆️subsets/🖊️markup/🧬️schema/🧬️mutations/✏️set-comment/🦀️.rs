@@ -30,8 +30,8 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetComment {
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
         agg_inverse(&BcfMutation::SetComment(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set comment", "Kommentar setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -106,7 +106,7 @@ impl<P> PackMemberSnapshotOpen<P> {
     }
 }
 
-impl<P: ArtifactPack + crate::os_store::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
+impl<P: ArtifactPack + semio_framework_value::retirement::RetireOwned> MemberSnapshotOpenOperation for PackMemberSnapshotOpen<P> {
     type Snapshot = P;
 
     fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
@@ -171,7 +171,7 @@ impl<P: ArtifactPack + crate::os_store::retirement::RetireOwned> MemberSnapshotO
     }
 }
 
-impl<P: crate::os_store::retirement::RetireOwned> ErasedSnapshotRetirement for PackMemberSnapshotOpen<P> {
+impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for PackMemberSnapshotOpen<P> {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.terminal {
             return Ok(SnapshotRetirementStep::Complete);
@@ -192,7 +192,7 @@ impl<P: crate::os_store::retirement::RetireOwned> ErasedSnapshotRetirement for P
             };
         }
         if let Some(snapshot) = self.snapshot.take() {
-            *self.active = Some(crate::os_store::retirement::owned_retirement(snapshot));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(snapshot));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(request) = self.request.as_mut() {
@@ -279,7 +279,7 @@ enum Phase {
 pub struct InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     snapshot_open: ManuallyDrop<Option<P::SnapshotOpen>>,
@@ -311,7 +311,7 @@ where
 impl<F, P, M> InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     fn ownership_is_empty(&self) -> bool {
@@ -335,7 +335,7 @@ where
 impl<F, P, M> InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn begin(request: MemberOpenRequest) -> Result<Self, MemberOpenAdmissionError> {
@@ -571,7 +571,7 @@ where
                         let decoder = self.history_decoder.as_mut().expect("faulted retained history decoder remains present");
                         let history = decoder.take_partial();
                         let auxiliary = decoder.take_auxiliary_owners();
-                        *self.active = Some(crate::os_store::retirement::owned_retirement((history, auxiliary)));
+                        *self.active = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));
                         let decoder = self.history_decoder.take().expect("terminal retained history decoder remains present");
                         assert!(decoder.terminal_is_empty());
                         drop(decoder);
@@ -590,7 +590,7 @@ where
                         let decoder = self.history_decoder.as_mut().expect("ready retained history decoder remains present");
                         let history = decoder.take_ready().expect("ready history remains retained");
                         let auxiliary = decoder.take_auxiliary_owners();
-                        *self.active = Some(crate::os_store::retirement::owned_retirement(auxiliary));
+                        *self.active = Some(semio_framework_value::retirement::owned_retirement(auxiliary));
                         let decoder = self.history_decoder.take().expect("terminal retained history decoder remains present");
                         assert!(decoder.terminal_is_empty());
                         drop(decoder);
@@ -709,7 +709,7 @@ where
 impl<F, P, M> ErasedSnapshotRetirement for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -755,7 +755,7 @@ where
                 }
                 drop(decoder);
             }
-            *self.active = Some(crate::os_store::retirement::owned_retirement((history, auxiliary)));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history_bytes) = self.history_bytes.as_mut() {
@@ -816,7 +816,7 @@ where
 impl<F, P, M> MemberOpenOperation for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     type Member = Box<ArtifactStore<P, M>>;
@@ -837,7 +837,7 @@ where
 impl<F, P, M> Drop for InitialMemberStoreOpen<F, P, M>
 where
     F: MemberFactory + 'static,
-    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the

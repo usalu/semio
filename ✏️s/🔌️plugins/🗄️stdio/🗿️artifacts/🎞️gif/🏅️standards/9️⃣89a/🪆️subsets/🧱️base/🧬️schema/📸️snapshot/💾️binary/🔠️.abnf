@@ -1,3 +1,7 @@
-; abnf stdio.gif snapshot
-document = payload
-payload = *OCTET
+snapshot-pack = semio-envelope semio-pack-document
+semio-envelope = %x89.53.45.4D.0D.0A.1A.0A token-length token
+token-length = 4OCTET
+token = "stdio.gif.89a.pack v1"
+semio-pack-document = 1*OCTET
+; Chunk framing belongs to the first-party semio.pack protocol; the sibling
+; protocol.semio declares every palette/image/frame/extension entity field.

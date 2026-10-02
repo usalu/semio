@@ -9,7 +9,6 @@
       "required": [
         "version",
         "states",
-        "mountedCases",
         "cases"
       ],
       "properties": {
@@ -22,68 +21,6 @@
             "closing",
             "stopped"
           ]
-        },
-        "mountedCases": {
-          "type": "array",
-          "minItems": 5,
-          "maxItems": 5,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "pool",
-              "database",
-              "authority",
-              "externalUses",
-              "databaseActivities",
-              "expectedShutdown"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "pool": {
-                "enum": [
-                  "open",
-                  "stopped"
-                ]
-              },
-              "database": {
-                "enum": [
-                  "absent",
-                  "open",
-                  "opening-non-runnable",
-                  "terminal"
-                ]
-              },
-              "authority": {
-                "enum": [
-                  "empty",
-                  "ready"
-                ]
-              },
-              "externalUses": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "databaseActivities": {
-                "enum": [
-                  "open",
-                  "closed",
-                  "blocked"
-                ]
-              },
-              "expectedShutdown": {
-                "enum": [
-                  "busy-1",
-                  "stopped"
-                ]
-              }
-            }
-          }
         },
         "cases": {
           "type": "array",

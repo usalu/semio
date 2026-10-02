@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest: that file registers `lopdf` under the `pdf-edit`/`pdf-parse` capabilities its own cases exercise; this file registers the SAME package under a distinct id and the `pdf-1-7-mutate` capability this subset's exhaustive mutation case (`mutate-pdf-1-7`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`). 🧾️ The manifest declares all sixty kinds production dispatch offers. The sixteen page and COS-graph kinds are claimed by the thesis differential case `mutate-pdf-1-7` through the `pdf-1-7-base` catalog; the forty-four resource, catalog, page and identity kinds that ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE added are evidenced by lopdf-generated before/after pairs (🏭️generator/🔁️codec, registered below) and held to them by `🧬️schema/🧬️mutations/🧪️tests/⚖️lopdf-vectors`, which applies each kind, writes the result with this subset's writer, reads it back and requires lopdf's after-document — then requires the inverse to write back to the before-document.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🔮️oracles/🦀️.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "lopdf",
@@ -62,7 +62,7 @@
         "win32-x64"
       ],
       "homepage": "https://github.com/J-F-Liu/lopdf",
-      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-s-plugin-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`⚖️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
+      "rationale": "📖️ A READER, over a corpus that had to be REBUILT before one could mean anything.\n\nThe previous generator imported `oracle_apply_mutation` and `project_conformance` from `semio-hub-stdio-test-oracle`, this repository's own crate, so the mutated bytes AND the expected projection of them were both ours and `lopdf` was a codec for our own answer. Registering a reader beside that corpus would have changed the label and nothing else.\n\n`⚖️lopdf-engine` depends on `lopdf` and nothing else: it lays out the seed, performs each mutation through lopdf's own public COS API, and reads the conformance axes back through it. It refuses to write a pair whose projection does not move, so a no-op cannot be committed as a fixture that would pass forever.\n\nThe two encryption kinds are `-uncarried`, not routed around: lopdf 0.44's writer takes its encryption path whenever the trailer carries `/Encrypt` and then needs the encryption state a genuine decryption would have recorded, so a synthetic encryption dictionary can be neither written nor read back. A writer-side limit, not a reader gap."
     }
   ],
   "noOracleDecisions": [],
@@ -5321,5 +5321,6 @@
         }
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -357,7 +357,7 @@ pub fn oracle_restore(base: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8
 /// preamble region is ZEROED first, so a byte-identical result cannot come from a `memcpy` that
 /// never parsed anything: every one of those 21 bytes has to be re-derived from the parse.
 ///
-/// 🔒️ This carrier is bound by [`carrier_is_exact`](semio_s_plugin_stdio_test_oracle::law::carrier_is_exact),
+/// 🔒️ This carrier is bound by [`carrier_is_exact`](semio_repo_test_host::law::carrier_is_exact),
 /// NOT by the no-byte-pass-through law. Reproducing the input exactly is the CORRECT answer here and
 /// anything else is the defect: the preamble is fixed-width with no writer freedom whatsoever, and
 /// the R2004+ section map that follows is a compressed, checksummed, proprietary structure that

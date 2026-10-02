@@ -811,6 +811,14 @@
         "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
       },
       "severity": "warning"
+    },
+    {
+      "code": "timeTravel.member-gone",
+      "text": {
+        "en": "The part this history edit targets was closed",
+        "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
+      },
+      "severity": "warning"
     }
   ],
   "transitions": [
@@ -834,7 +842,9 @@
         "sessionId": "1",
         "generation": 3,
         "stage": "editing",
-        "target": "m-2"
+        "target": "m-2",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "to": {
         "sessionId": "1",
@@ -842,7 +852,9 @@
         "stage": "replaying",
         "target": "m-2",
         "done": 0,
-        "total": 8
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
       },
       "reveal": false,
       "focus": "band"
@@ -855,7 +867,9 @@
         "stage": "replaying",
         "target": "m-2",
         "done": 3,
-        "total": 8
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
@@ -863,7 +877,9 @@
         "stage": "replaying",
         "target": "m-2",
         "done": 5,
-        "total": 8
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
       },
       "reveal": false,
       "focus": null
@@ -876,7 +892,9 @@
         "stage": "replaying",
         "target": "m-2",
         "done": 8,
-        "total": 8
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
@@ -895,13 +913,17 @@
         "sessionId": "1",
         "generation": 5,
         "stage": "reviewing",
-        "review": "blocked"
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
         "generation": 6,
         "stage": "editing",
-        "target": "m-5"
+        "target": "m-5",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "reveal": false,
       "focus": "editor"
@@ -912,13 +934,17 @@
         "sessionId": "1",
         "generation": 6,
         "stage": "editing",
-        "target": "m-5"
+        "target": "m-5",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "to": {
         "sessionId": "1",
         "generation": 7,
         "stage": "editing",
-        "target": "m-6"
+        "target": "m-6",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "reveal": false,
       "focus": "editor"
@@ -929,14 +955,17 @@
         "sessionId": "1",
         "generation": 7,
         "stage": "editing",
-        "target": "m-6"
+        "target": "m-6",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "to": {
         "sessionId": "1",
         "generation": 7,
         "stage": "editing",
         "target": "m-6",
-        "acceptedCount": 1
+        "acceptedCount": 1,
+        "blocking": false
       },
       "reveal": false,
       "focus": null
@@ -947,12 +976,16 @@
         "sessionId": "1",
         "generation": 8,
         "stage": "reviewing",
-        "review": "ready"
+        "review": "ready",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
         "generation": 9,
-        "stage": "choosing"
+        "stage": "choosing",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "reveal": false,
       "focus": "dialog"
@@ -962,13 +995,17 @@
       "from": {
         "sessionId": "1",
         "generation": 9,
-        "stage": "choosing"
+        "stage": "choosing",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
         "generation": 10,
         "stage": "reviewing",
-        "review": "ready"
+        "review": "ready",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "reveal": false,
       "focus": "band"
@@ -978,12 +1015,16 @@
       "from": {
         "sessionId": "1",
         "generation": 11,
-        "stage": "choosing"
+        "stage": "choosing",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "1",
         "generation": 12,
-        "stage": "finalizing"
+        "stage": "finalizing",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "reveal": false,
       "focus": null
@@ -993,7 +1034,9 @@
       "from": {
         "sessionId": "1",
         "generation": 12,
-        "stage": "finalizing"
+        "stage": "finalizing",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": null,
       "reveal": false,
@@ -1005,13 +1048,17 @@
         "sessionId": "1",
         "generation": 10,
         "stage": "reviewing",
-        "review": "ready"
+        "review": "ready",
+        "blocking": false,
+        "acceptedCount": 1
       },
       "to": {
         "sessionId": "2",
         "generation": 1,
         "stage": "editing",
-        "target": "m-2"
+        "target": "m-2",
+        "blocking": false,
+        "acceptedCount": 0
       },
       "reveal": true,
       "focus": "editor"
@@ -1025,10 +1072,30 @@
         "stage": "reviewing",
         "review": "needsReplay",
         "rerunnable": true,
-        "acceptedCount": 1
+        "acceptedCount": 1,
+        "blocking": false
       },
       "reveal": true,
       "focus": "band"
     }
-  ]
+  ],
+  "editorKeys": {
+    "panel": "framework.panel.history",
+    "accept": {
+      "control": "framework.history.editor.accept",
+      "row": "framework.history.editor.accept.row"
+    },
+    "inputs": [
+      {
+        "pointer": "/dx",
+        "control": "framework.history.editor.input.dx",
+        "row": "framework.history.editor.input.dx.row"
+      },
+      {
+        "pointer": "/pivot/x",
+        "control": "framework.history.editor.input.pivot.x",
+        "row": "framework.history.editor.input.pivot.x.row"
+      }
+    ]
+  }
 }

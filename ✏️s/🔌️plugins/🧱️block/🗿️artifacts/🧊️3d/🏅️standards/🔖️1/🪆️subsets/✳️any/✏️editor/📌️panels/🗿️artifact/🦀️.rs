@@ -4,7 +4,18 @@
 use crate::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::{ui_label, BLOCK3D_GRANULARITY_SURFACE, BLOCK3D_GRANULARITY_VORTEX, BLOCK3D_INTERACTION_VORTEX, BLOCK3D_PLAY_APP_ID};
-use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const BLOCK3D_BODY_ARTIFACT: &str = "block3d.play.artifact";

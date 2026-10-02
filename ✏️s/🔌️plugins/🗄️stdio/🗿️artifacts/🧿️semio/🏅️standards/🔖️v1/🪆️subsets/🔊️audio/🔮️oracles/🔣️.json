@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.audio`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.audio` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars rather than a third-party package.",
   "oracles": [
@@ -691,5 +691,6 @@
       "family": "structural",
       "notes": "Applied set-tag-value (payload {\"kind\": \"set-tag-value\", \"params\": {\"index\": 0, \"value\": \"F1 mutated value\"}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

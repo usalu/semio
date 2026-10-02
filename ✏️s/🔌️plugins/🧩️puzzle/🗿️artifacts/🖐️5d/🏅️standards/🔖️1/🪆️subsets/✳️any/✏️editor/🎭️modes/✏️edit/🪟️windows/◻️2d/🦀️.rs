@@ -24,18 +24,15 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`. Like puzzle2d,
-/// puzzle5d freezes the first `window_measures()` frame into `options.measures` so the shell has LOD
-/// and utility chrome before the first `refreshUi` tick; every later frame comes from
-/// `ArtifactApp::window_measures`.
-pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKindDefinition {
+/// 🧱️ Declares localized metadata; resolved chrome is supplied by the actual host view.
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_2d),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
         icon_id: "layout-grid".into(),
-        options: WindowOptions { measures: window_measures(envelope, labels), engagement: WindowEngagementSlot::Some(engagement(envelope, labels)) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
@@ -182,7 +179,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         // from the framework-owned `vortex` domain the ONE 5d interaction snapshot reads — the same
         // domain the world pane projects, so a part picked or hovered in either pane paints in both.
         selection_json: envelope.interaction.selection_json(),
-        highlighted_ids_json: "[]".into(),
+        highlighted_ids_json: envelope.interaction.referenced_json(),
         interactive: true,
         hovered_id: envelope.interaction.hovered_id().map(str::to_string),
         active_utility: Some(puzzle5d_scene_mode(&envelope.active_utility).to_string()),

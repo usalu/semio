@@ -9,7 +9,7 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { compileOwnedMarkdownToHtml } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
 // #endregion 🔌️Adapters
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔌️ References for the repo MCP module. The protocol cases are checked against Anthropic's own TypeScript SDK — a second, independently written implementation of the same specification, driven through an in-memory transport so it never links this repository's code. The hash chain is checked against Node's `crypto` SHA-256, which is the FIPS 180-4 reference every implementation's hand-rolled digest must reproduce.",
   "oracles": [

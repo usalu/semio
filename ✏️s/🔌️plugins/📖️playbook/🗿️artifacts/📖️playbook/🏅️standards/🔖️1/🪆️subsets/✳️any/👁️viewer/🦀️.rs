@@ -7,12 +7,24 @@
 use crate::viewer::playbook::modes::view;
 use crate::viewer::playbook::modes::view::windows::steps;
 use crate::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
 // 🚧️ SDK GAP: `ArtifactViewer` is reachable bare (w0-f gap 1 closed it), but this trait's own
 // `InteractionView` parameter type is NOT in the crate-root curated re-export list yet — only
 // reachable through `app`. Flagged for the coordinator (see this packet's notes file).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

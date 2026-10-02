@@ -490,7 +490,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::OpenDialog { req: semio_framework::kernel::RequestId(inner.req), dialog_id: inner.params.dialog_id, args }
         }
         E::IconRenderExport(inner) => K::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
-        E::VideoRenderExport(inner) => K::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default() },
+        E::VideoRenderExport(inner) => K::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default() },
         E::DownloadMediaExport(inner) => K::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => K::RequestFileOpen { req: semio_framework::kernel::RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
         E::RequestMediaFrames(inner) => {

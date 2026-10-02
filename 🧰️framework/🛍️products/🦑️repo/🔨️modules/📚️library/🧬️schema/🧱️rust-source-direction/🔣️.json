@@ -8,9 +8,138 @@
     "rules",
     "directions",
     "mounts",
-    "unsupported"
+    "unsupported",
+    "targets",
+    "escapes",
+    "ownerCases",
+    "contribution",
+    "ownerRejections",
+    "inlineScopes",
+    "inlineRejections",
+    "traversals",
+    "referenceRejections",
+    "macroScopes",
+    "macroRejections",
+    "macroOwners",
+    "graphAuthority",
+    "attributeOrigins"
   ],
   "properties": {
+    "graphAuthority": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "files",
+          "unavailable",
+          "nativeInputs",
+          "contexts",
+          "targets",
+          "invalidManifests",
+          "participations"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "readable-empty-root",
+              "unavailable-root-bytes",
+              "readable-empty-leaf",
+              "unavailable-leaf-bytes",
+              "invalid-manifest-revokes-targets"
+            ]
+          },
+          "files": {
+            "type": "object",
+            "required": [
+              "Cargo.toml",
+              "root.rs"
+            ],
+            "properties": {
+              "Cargo.toml": {
+                "type": "string"
+              },
+              "root.rs": {
+                "type": "string"
+              },
+              "leaf.rs": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "enum": [
+                "Cargo.toml",
+                "root.rs",
+                "leaf.rs"
+              ]
+            },
+            "additionalProperties": false
+          },
+          "unavailable": {
+            "enum": [
+              null,
+              "root.rs",
+              "leaf.rs"
+            ]
+          },
+          "nativeInputs": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "root.rs",
+                "leaf.rs"
+              ]
+            }
+          },
+          "contexts": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "root.rs",
+                "leaf.rs"
+              ]
+            }
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "const": "root.rs\u0000leaf"
+                },
+                {
+                  "const": "leaf.rs"
+                }
+              ],
+              "items": false
+            }
+          },
+          "invalidManifests": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "const": "Cargo.toml"
+            }
+          },
+          "participations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/participationProjection"
+            }
+          }
+        }
+      }
+    },
     "schemaVersion": {
       "const": 1
     },
@@ -76,6 +205,13 @@
                 },
                 "directory": {
                   "const": true
+                },
+                "inlineBase": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expansion": {
+                  "$ref": "#/$defs/compileExpansion"
                 }
               },
               "allOf": [
@@ -95,6 +231,42 @@
                       "path": {
                         "minLength": 1,
                         "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "required": [
+                      "inlineBase"
+                    ],
+                    "properties": {
+                      "inlineBase": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "modulePath"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "path"
+                      },
+                      "base": false,
+                      "inlineBase": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/|[A-Za-z]:)[^\\\\\\u0000]+$"
+                      },
+                      "modulePath": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
                       }
                     }
                   }
@@ -297,6 +469,1831 @@
           }
         }
       }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "inventory",
+          "sources",
+          "problem"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directory": {
+            "const": true
+          },
+          "inventory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "kind"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory",
+                    "symlink"
+                  ]
+                }
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "problem": {
+            "enum": [
+              null,
+              "linked-input",
+              "missing-input",
+              "non-directory-ancestor",
+              "unexpected-input-kind",
+              "uncensused-source"
+            ]
+          }
+        }
+      }
+    },
+    "escapes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "ownerCases": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "files",
+          "source",
+          "sources",
+          "violations"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "framework-implementation-fixture",
+              "framework-product-fixture",
+              "s-module-plugin-fixture",
+              "plugin-artifact-fixture",
+              "plugin-extension-fixture",
+              "artifact-plugin-fixture",
+              "extension-plugin-fixture",
+              "hub-own-fixture",
+              "root-implementation-fixture",
+              "deleted-specific-owner",
+              "root-manifest-implementation-fixture"
+            ]
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rule",
+                "from",
+                "to",
+                "kind",
+                "line"
+              ],
+              "properties": {
+                "rule": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "include",
+                    "include_str",
+                    "include_bytes",
+                    "path"
+                  ]
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "remove": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "maxItems": 11
+    },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "files"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ownerRejections": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "files"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "linked-root-manifest",
+              "virtual-root-cannot-own-orphan-source",
+              "present-area-is-not-a-directory"
+            ]
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "link": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "target"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "error": {
+            "type": "string",
+            "minLength": 1
+          },
+          "problem": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "detail"
+            ],
+            "properties": {
+              "code": {
+                "const": "unresolved-target"
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "error"
+            ],
+            "properties": {
+              "error": {
+                "type": "string",
+                "minLength": 1
+              },
+              "problem": false
+            }
+          },
+          {
+            "required": [
+              "problem"
+            ],
+            "properties": {
+              "problem": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code",
+                  "detail"
+                ],
+                "properties": {
+                  "code": {
+                    "const": "unresolved-target"
+                  },
+                  "detail": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "error": false
+            }
+          }
+        ]
+      }
+    },
+    "inlineScopes": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "source",
+          "files",
+          "targets"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "orphan-explicit-current-base",
+              "orphan-nested-explicit-base",
+              "orphan-nested-default-after-anchor",
+              "conventional-mounted-explicit-base",
+              "explicit-mounted-explicit-base",
+              "anchor-keeps-include-file-origin",
+              "root-explicit-current-base"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "inlineRejections": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "from",
+          "source",
+          "error"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "unanchored-orphan-keeps-context-obligation",
+              "explicit-anchor-cannot-escape-workspace"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "error": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "traversals": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "files",
+          "native",
+          "failures"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "missing-inline-prefix-before-parent",
+              "linked-inline-prefix-before-parent",
+              "missing-literal-prefix-before-parent",
+              "linked-literal-prefix-before-parent"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "link": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "target"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "failures": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "to",
+                "kind",
+                "line"
+              ],
+              "properties": {
+                "code": {
+                  "enum": [
+                    "missing-input",
+                    "linked-input"
+                  ]
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "path",
+                    "include_str"
+                  ]
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "referenceRejections": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "reference",
+          "invalidSchema"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "inline-base-requires-path-kind",
+              "inline-base-requires-module-scope",
+              "inline-base-cannot-grant-manifest",
+              "inline-base-cannot-be-absolute",
+              "inline-base-cannot-be-drive-qualified",
+              "inline-base-cannot-use-backslashes",
+              "inline-base-cannot-contain-nul",
+              "inline-base-cannot-contradict-context"
+            ]
+          },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "path",
+              "line"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "include",
+                  "include_str",
+                  "include_bytes",
+                  "path"
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "base": {
+                "enum": [
+                  "manifest",
+                  "generated"
+                ]
+              },
+              "modulePath": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "directory": {
+                "const": true
+              },
+              "inlineBase": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "invalidSchema": {
+            "type": "boolean"
+          },
+          "ownership": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "contexts"
+            ],
+            "properties": {
+              "contexts": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "crateRoot",
+                    "manifestPath",
+                    "modulePath",
+                    "sourceScope",
+                    "moduleBase",
+                    "sourceChain",
+                    "mount"
+                  ],
+                  "properties": {
+                    "crateRoot": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "manifestPath": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "modulePath": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "sourceScope": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "moduleBase": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "sourceChain": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "mount": {
+                      "$ref": "#/$defs/moduleMount"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "macroScopes": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "files",
+          "references",
+          "stdout"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "unused-boolean-expression",
+              "unused-identifier-and-closure",
+              "typed-closure-borrowed-slices",
+              "closure-block-and-nested-tuple",
+              "move-empty-closure",
+              "irrelevant-token-tree-group",
+              "reachable-concat-expression",
+              "multiple-finite-invocations",
+              "irrelevant-numeric-literal",
+              "two-template-sites",
+              "same-line-distinct-invocations",
+              "nested-module-invocation",
+              "generated-native-test-registration",
+              "mixed-constant-and-dynamic-sites",
+              "ordinary-template-raw-invocation",
+              "raw-template-and-builtin",
+              "raw-metavariable-binding"
+            ]
+          },
+          "root": {
+            "const": "general/source.rs"
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 2,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "references": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "path",
+                "line"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "include",
+                    "include_str",
+                    "include_bytes",
+                    "path"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "base": {
+                  "enum": [
+                    "manifest",
+                    "generated"
+                  ]
+                },
+                "modulePath": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "directory": {
+                  "const": true
+                },
+                "inlineBase": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expansion": {
+                  "$ref": "#/$defs/compileExpansion"
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "required": [
+                      "directory"
+                    ],
+                    "properties": {
+                      "directory": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "required": [
+                      "inlineBase"
+                    ],
+                    "properties": {
+                      "inlineBase": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "modulePath"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "path"
+                      },
+                      "base": false,
+                      "inlineBase": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!/|[A-Za-z]:)[^\\\\\\u0000]+$"
+                      },
+                      "modulePath": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "nativeTests": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "macroRejections": {
+      "type": "array",
+      "minItems": 42,
+      "maxItems": 42,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "native"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "raw-input-inside-print-token-tree",
+              "unbound-reachable-value",
+              "identifier-cannot-bind-path",
+              "exported-finite-template",
+              "repeated-matcher-binding",
+              "malformed-closure-header",
+              "invalid-identifier-argument",
+              "extra-invocation-argument",
+              "missing-invocation-argument",
+              "multiple-matcher-arms",
+              "repeated-matcher-fragment",
+              "duplicated-template-name",
+              "literal-fragment-requires-token",
+              "qualified-template-invocation",
+              "unmatched-trailing-comma",
+              "recursive-template",
+              "malformed-unused-expression",
+              "finite-code-include-requires-emission-context",
+              "unused-malformed-parenthesis",
+              "unused-malformed-block",
+              "unused-malformed-closure-body",
+              "empty-matcher-parameter",
+              "conditionally-exported-template",
+              "helper-generated-invocation",
+              "mut-after-negation",
+              "mut-after-logical-not",
+              "reserved-mut-expression",
+              "reserved-placeholder-expression",
+              "nonassociative-comparison-chain",
+              "external-file-child-can-invoke-template",
+              "earlier-helper-can-invoke-template",
+              "opaque-macro-token-invocation",
+              "string-cannot-start-struct",
+              "number-cannot-start-struct",
+              "boolean-cannot-start-struct",
+              "reserved-qualified-segment",
+              "reserved-member-segment",
+              "reserved-closure-pattern",
+              "reserved-let-pattern",
+              "placeholder-is-not-ident",
+              "raw-duplicate-symbol",
+              "raw-recursive-symbol"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "macroOwners": {
+      "type": "array",
+      "minItems": 33,
+      "maxItems": 33,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "root",
+          "source",
+          "files",
+          "native",
+          "scope",
+          "mounts"
+        ],
+        "properties": {
+          "contextProof": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceScope",
+              "mounted"
+            ],
+            "properties": {
+              "sourceScope": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "mounted": {
+                "type": "boolean"
+              }
+            }
+          },
+          "id": {
+            "enum": [
+              "private-file-module",
+              "macro-use-parent",
+              "conditional-macro-use-parent",
+              "public-file-module",
+              "root-module-template",
+              "include-only-origin",
+              "include-and-module-dual-origin",
+              "physically-delete-parent-mount",
+              "physically-delete-manifest",
+              "function-local-template",
+              "function-local-with-code-emission",
+              "same-module-key-dual-origin",
+              "alias-can-expose-module-template",
+              "dormant-macro-use-parent",
+              "dormant-module-rewriting-attribute",
+              "authored-module-path-alternatives",
+              "attributed-function-cannot-seal",
+              "function-local-needs-live-manifest",
+              "cfg-predicate-does-not-import-macro",
+              "inner-leaf-rewriting-attribute",
+              "inner-root-rewriting-attribute",
+              "raw-module-default-filename",
+              "raw-module-identity-ambiguous-target",
+              "function-local-in-inline-module",
+              "inner-inline-rewriting-attribute",
+              "known-before-unresolved-module-key",
+              "unresolved-before-known-module-key",
+              "unresolved-same-file-local-scope",
+              "unresolved-parent-descendant-local-scope",
+              "local-function-item-rewriting-producer",
+              "builtin-test-local-scope",
+              "builtin-test-literal-doc-local-scope",
+              "builtin-test-dormant-rewriter-refusal"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "object",
+            "minProperties": 2,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "scope": {
+            "$ref": "#/$defs/macroScope"
+          },
+          "mounts": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "root",
+                "module",
+                "include"
+              ]
+            }
+          },
+          "problem": {
+            "enum": [
+              "unresolved-template-scope",
+              "unsupported-expression"
+            ]
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "replace": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "nativeHarness": {
+            "const": true
+          }
+        }
+      }
+    },
+    "attributeOrigins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "cases"
+      ],
+      "properties": {
+        "provider": {
+          "const": "extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "root",
+              "source",
+              "files",
+              "problem",
+              "native"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "builtin",
+                  "explicit-test",
+                  "renamed-test",
+                  "grouped-test",
+                  "conditional-test",
+                  "wildcard-test",
+                  "imported-literal-doc",
+                  "included-test",
+                  "parent-reexport-test",
+                  "opaque-import-producer"
+                ]
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "files": {
+                "type": "object",
+                "minProperties": 3,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "problem": {
+                "enum": [
+                  null,
+                  "unresolved-template-scope"
+                ]
+              },
+              "native": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "build",
+                  "tests",
+                  "input"
+                ],
+                "properties": {
+                  "build": {
+                    "type": "boolean"
+                  },
+                  "tests": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "input": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "error": {
+                    "const": "E0659"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "moduleMetadataProblem": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "attributes"
+          ],
+          "properties": {
+            "code": {
+              "const": "unsupported-attribute"
+            },
+            "attributes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "paths"
+          ],
+          "properties": {
+            "code": {
+              "const": "ambiguous-path"
+            },
+            "paths": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "moduleScopeFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "modulePath",
+        "bodyStartOffset",
+        "bodyEndOffset"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "root",
+            "inline"
+          ]
+        },
+        "modulePath": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bodyStartOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bodyEndOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved": {
+          "$ref": "#/$defs/moduleMetadataProblem"
+        },
+        "crateCapabilities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "const": "associated_type_defaults"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "crateCapabilities"
+            ],
+            "properties": {
+              "crateCapabilities": {}
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "root"
+              },
+              "modulePath": {
+                "maxItems": 0,
+                "type": "array"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "moduleScopeProof": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "scopes"
+          ],
+          "properties": {
+            "state": {
+              "const": "resolved"
+            },
+            "scopes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/moduleScopeFact"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "modulePath",
+            "problem"
+          ],
+          "properties": {
+            "state": {
+              "const": "unresolved"
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "problem": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/moduleMetadataProblem"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "count"
+                  ],
+                  "properties": {
+                    "code": {
+                      "const": "scope-not-unique"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "files",
+        "references",
+        "violations",
+        "problems"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "references": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rule",
+              "from",
+              "to",
+              "kind",
+              "line"
+            ],
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "include",
+                  "include_str",
+                  "include_bytes",
+                  "path"
+                ]
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expansion": {
+                "$ref": "#/$defs/compileExpansion"
+              }
+            }
+          }
+        },
+        "problems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "from",
+              "detail"
+            ],
+            "properties": {
+              "code": {
+                "enum": [
+                  "unsupported-expression",
+                  "unresolved-target",
+                  "linked-input",
+                  "missing-input",
+                  "non-directory-ancestor",
+                  "unexpected-input-kind",
+                  "uncensused-source",
+                  "unresolved-template-scope"
+                ]
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "include",
+                  "include_str",
+                  "include_bytes",
+                  "path"
+                ]
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 1
+              },
+              "expansion": {
+                "$ref": "#/$defs/compileExpansion"
+              }
+            }
+          }
+        }
+      }
+    },
+    "macroScope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulePath"
+          ],
+          "properties": {
+            "kind": {
+              "const": "module"
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "startOffset",
+            "endOffset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "local-block"
+            },
+            "startOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "endOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compilerAttributes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "test",
+                  "doc"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "compileExpansion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "macro",
+        "definitionLine",
+        "invocationLine",
+        "definitionOffset",
+        "templateOffset",
+        "invocationOffset",
+        "scope"
+      ],
+      "properties": {
+        "kind": {
+          "const": "local-macro"
+        },
+        "macro": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definitionLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "invocationLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "definitionOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "templateOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invocationOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scope": {
+          "$ref": "#/$defs/macroScope"
+        }
+      }
+    },
+    "moduleMount": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "root"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "modulePath",
+            "sourceScope",
+            "declarationOffset",
+            "inline",
+            "visibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "module"
+            },
+            "from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "sourceScope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "declarationOffset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "inline": {
+              "type": "boolean"
+            },
+            "visibility": {
+              "type": "string",
+              "pattern": "^(private|pub|pub\\([^)]*\\))$"
+            },
+            "macroUse": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "modulePath",
+            "sourceScope",
+            "line",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "const": "include"
+            },
+            "from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "sourceScope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "participationProjection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target",
+            "state",
+            "reason"
+          ],
+          "properties": {
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "path"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "manifest"
+                },
+                "path": {
+                  "type": "string"
+                }
+              }
+            },
+            "state": {
+              "const": "denied"
+            },
+            "reason": {
+              "enum": [
+                "invalid-manifest",
+                "unavailable-manifest"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target",
+            "crateRoot",
+            "manifestPath",
+            "modulePath",
+            "sourceScope",
+            "mount",
+            "state",
+            "reason"
+          ],
+          "properties": {
+            "target": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "path"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "source"
+                      ]
+                    },
+                    "path": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "rawPath"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "unresolved"
+                    },
+                    "rawPath": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "crateRoot": {
+              "type": "string"
+            },
+            "manifestPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "modulePath": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sourceScope": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mount": {
+              "enum": [
+                "root",
+                "module",
+                "include"
+              ]
+            },
+            "state": {
+              "enum": [
+                "admitted",
+                "denied"
+              ]
+            },
+            "reason": {
+              "enum": [
+                "invalid-manifest",
+                "unavailable-manifest",
+                "nonportable-target",
+                "unavailable-source",
+                "unresolved-scope",
+                "unresolved-target",
+                "conflicting-target",
+                "cyclic-target",
+                null
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "admitted"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "reason": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }

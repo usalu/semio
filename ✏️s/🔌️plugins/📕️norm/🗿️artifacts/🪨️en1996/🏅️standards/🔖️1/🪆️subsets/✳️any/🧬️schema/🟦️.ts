@@ -1,63 +1,14 @@
-/** 📸️ EN 1996 snapshot TypeScript facet — SI masonry building subject. */
-export type En1996Snapshot = {
+/** 🧬️ `En1996Snapshot` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireArray, normWireBoolean, normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+
+export interface En1996Snapshot {
   annex: string;
   masonryClass: string;
   designSituation: string;
   storeys: number;
-  walls: MasonryWall[];
-};
+  walls: { id: string; labelEn: string; labelDe: string; wallType: string; thicknessM: number; heightM: number; lengthM: number; supportSides: number; openings: { id: string; widthM: number; heightM: number; sillHeightM: number; }[]; slabBearingDepthM: number; eccentricityTopM: number; eccentricityBottomM: number; unitGroup: string; unitMaterial: string; fBPa: number; unitLengthM: number; unitWidthM: number; unitHeightM: number; mortarType: string; mortarClass: string; mortarStrengthPa: number; bedJointThicknessM: number; reinforced: boolean; asVerticalM2: number; asHorizontalM2: number; fYdPa: number; fireReiMin: number; exposure: string; mu: number; densityKgM3: number; phiInfinity: number; isBasement: boolean; loadCases: { id: string; designSituation: string; imposedCategory: string; gKSlabN: number; qKImposedPa: number; tributaryAreaM2: number; slabSpanM: number; qKSnowPa: number; qPWindPa: number; cPe: number; hKEarthN: number; concentrated: { id: string; forceN: number; bearingAreaM2: number; bearingLengthM: number; }[]; }[]; }[];
+}
 
-export type MasonryWall = {
-  id: string;
-  labelEn: string;
-  labelDe: string;
-  wallType: string;
-  thicknessM: number;
-  heightM: number;
-  lengthM: number;
-  supportSides: number;
-  openings: WallOpening[];
-  slabBearingDepthM: number;
-  eccentricityTopM: number;
-  eccentricityBottomM: number;
-  unitGroup: string;
-  unitMaterial: string;
-  fBPa: number;
-  unitLengthM: number;
-  unitWidthM: number;
-  unitHeightM: number;
-  mortarType: string;
-  mortarClass: string;
-  mortarStrengthPa: number;
-  bedJointThicknessM: number;
-  reinforced: boolean;
-  asVerticalM2: number;
-  asHorizontalM2: number;
-  fYdPa: number;
-  fireReiMin: number;
-  exposure: string;
-  mu: number;
-  densityKgM3: number;
-  phiInfinity: number;
-  isBasement: boolean;
-  loadCases: WallLoadCase[];
-};
-
-export type WallOpening = { id: string; widthM: number; heightM: number; sillHeightM: number };
-
-export type WallLoadCase = {
-  id: string;
-  designSituation: string;
-  imposedCategory: string;
-  gKSlabN: number;
-  qKImposedPa: number;
-  tributaryAreaM2: number;
-  slabSpanM: number;
-  qKSnowPa: number;
-  qPWindPa: number;
-  cPe: number;
-  hKEarthN: number;
-  concentrated: ConcentratedLoad[];
-};
-
-export type ConcentratedLoad = { id: string; forceN: number; bearingAreaM2: number; bearingLengthM: number };
+export const parseEn1996Snapshot: NormWireReader<En1996Snapshot> = normWireObject<En1996Snapshot>({ annex: normWireRequired(normWireString), masonryClass: normWireRequired(normWireString), designSituation: normWireRequired(normWireString), storeys: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), walls: normWireRequired(normWireArray(normWireObject<{ id: string; labelEn: string; labelDe: string; wallType: string; thicknessM: number; heightM: number; lengthM: number; supportSides: number; openings: { id: string; widthM: number; heightM: number; sillHeightM: number; }[]; slabBearingDepthM: number; eccentricityTopM: number; eccentricityBottomM: number; unitGroup: string; unitMaterial: string; fBPa: number; unitLengthM: number; unitWidthM: number; unitHeightM: number; mortarType: string; mortarClass: string; mortarStrengthPa: number; bedJointThicknessM: number; reinforced: boolean; asVerticalM2: number; asHorizontalM2: number; fYdPa: number; fireReiMin: number; exposure: string; mu: number; densityKgM3: number; phiInfinity: number; isBasement: boolean; loadCases: { id: string; designSituation: string; imposedCategory: string; gKSlabN: number; qKImposedPa: number; tributaryAreaM2: number; slabSpanM: number; qKSnowPa: number; qPWindPa: number; cPe: number; hKEarthN: number; concentrated: { id: string; forceN: number; bearingAreaM2: number; bearingLengthM: number; }[]; }[]; }>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), wallType: normWireRequired(normWireString), thicknessM: normWireRequired(normWireNumber), heightM: normWireRequired(normWireNumber), lengthM: normWireRequired(normWireNumber), supportSides: normWireRequired(normWireInteger), openings: normWireRequired(normWireArray(normWireObject<{ id: string; widthM: number; heightM: number; sillHeightM: number; }>({ id: normWireRequired(normWireString), widthM: normWireRequired(normWireNumber), heightM: normWireRequired(normWireNumber), sillHeightM: normWireRequired(normWireNumber) }))), slabBearingDepthM: normWireRequired(normWireNumber), eccentricityTopM: normWireRequired(normWireNumber), eccentricityBottomM: normWireRequired(normWireNumber), unitGroup: normWireRequired(normWireString), unitMaterial: normWireRequired(normWireString), fBPa: normWireRequired(normWireNumber), unitLengthM: normWireRequired(normWireNumber), unitWidthM: normWireRequired(normWireNumber), unitHeightM: normWireRequired(normWireNumber), mortarType: normWireRequired(normWireString), mortarClass: normWireRequired(normWireString), mortarStrengthPa: normWireRequired(normWireNumber), bedJointThicknessM: normWireRequired(normWireNumber), reinforced: normWireRequired(normWireBoolean), asVerticalM2: normWireRequired(normWireNumber), asHorizontalM2: normWireRequired(normWireNumber), fYdPa: normWireRequired(normWireNumber), fireReiMin: normWireRequired(normWireInteger), exposure: normWireRequired(normWireString), mu: normWireRequired(normWireNumber), densityKgM3: normWireRequired(normWireNumber), phiInfinity: normWireRequired(normWireNumber), isBasement: normWireRequired(normWireBoolean), loadCases: normWireRequired(normWireArray(normWireObject<{ id: string; designSituation: string; imposedCategory: string; gKSlabN: number; qKImposedPa: number; tributaryAreaM2: number; slabSpanM: number; qKSnowPa: number; qPWindPa: number; cPe: number; hKEarthN: number; concentrated: { id: string; forceN: number; bearingAreaM2: number; bearingLengthM: number; }[]; }>({ id: normWireRequired(normWireString), designSituation: normWireRequired(normWireString), imposedCategory: normWireRequired(normWireString), gKSlabN: normWireRequired(normWireNumber), qKImposedPa: normWireRequired(normWireNumber), tributaryAreaM2: normWireRequired(normWireNumber), slabSpanM: normWireRequired(normWireNumber), qKSnowPa: normWireRequired(normWireNumber), qPWindPa: normWireRequired(normWireNumber), cPe: normWireRequired(normWireNumber), hKEarthN: normWireRequired(normWireNumber), concentrated: normWireRequired(normWireArray(normWireObject<{ id: string; forceN: number; bearingAreaM2: number; bearingLengthM: number; }>({ id: normWireRequired(normWireString), forceN: normWireRequired(normWireNumber), bearingAreaM2: normWireRequired(normWireNumber), bearingLengthM: normWireRequired(normWireNumber) }))) }))) }))) });

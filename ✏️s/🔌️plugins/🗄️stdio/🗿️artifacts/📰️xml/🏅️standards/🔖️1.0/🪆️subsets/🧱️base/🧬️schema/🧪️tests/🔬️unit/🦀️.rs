@@ -48,27 +48,27 @@ async fn codec_round_trip() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn snapshot_decoders_and_builder_refuse_invalid_document_boundaries() {
+async fn snapshot_codecs_preserve_intermediate_boundaries_and_builder_refuses_invalid_wire() {
     let mut invalid = sample_snapshot();
-    invalid.doc.doctype = Some(XmlDoctype { prolog_position: invalid.doc.prolog.len() + 1, name: "root".into(), external_id: None, declarations: Vec::new() });
+    invalid.doc.doctype = Some(XmlDoctype { prolog_position: invalid.doc.prolog.len() as u64 + 1, name: "root".into(), external_id: None, declarations: Vec::new() });
 
     let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject an out-of-range doctype position");
+    assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid);
 
     let mut binary = Vec::new();
     crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-    assert!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).is_err(), "binary ingress must reject an out-of-range doctype position");
+    assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid);
     assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid).build().is_err(), "builder ingress must reject an out-of-range doctype position");
 
     let mut invalid_epilog = sample_snapshot();
     invalid_epilog.doc.epilog = vec![XmlNode::Element { name: "outside".into(), attrs: Vec::new(), children: Vec::new() }];
     let text = crate::schema::mutation_support::encode_snapshot(&invalid_epilog);
-    assert!(crate::schema::mutation_support::decode_snapshot(&text).is_err(), "structured text ingress must reject a non-miscellaneous epilog node");
+    assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid_epilog);
     assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid_epilog).build().is_err(), "builder ingress must reject a non-miscellaneous epilog node");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn every_xml_snapshot_ingress_refuses_unpublishable_declarations() {
+async fn snapshot_codecs_preserve_declarations_and_xml_wire_ingress_refuses_unpublishable_declarations() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧭️document-boundaries/🔣️.json")).expect("neutral XML document-boundary fixture");
     for case in fixture["invalidAuthored"].as_array().expect("invalid authored cases").iter().skip(2) {
         let mut invalid = sample_snapshot();
@@ -78,10 +78,10 @@ async fn every_xml_snapshot_ingress_refuses_unpublishable_declarations() {
         let expected = case["error"].as_str().expect("error");
 
         let text = crate::schema::mutation_support::encode_snapshot(&invalid);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).expect_err("structured text ingress"), expected, "{}", case["id"]);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot(&text).unwrap(), invalid, "{}", case["id"]);
         let mut binary = Vec::new();
         crate::schema::mutation_support::encode_snapshot_binary(&invalid, &mut binary);
-        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).expect_err("binary ingress"), expected, "{}", case["id"]);
+        assert_eq!(crate::schema::mutation_support::decode_snapshot_binary(&mut store::ByteReader::new(&binary)).unwrap(), invalid, "{}", case["id"]);
         assert!(crate::schema::XmlBuilderConstruction::from_snapshot(invalid.clone()).build().is_err(), "{} builder ingress", case["id"]);
         assert_eq!(XmlArtifact::from_snapshot(invalid.clone()).expect_err("raw artifact conversion"), expected, "{}", case["id"]);
         let mut artifact = XmlArtifact::default();
@@ -572,20 +572,6 @@ mod conformance_laws {
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xml_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
-    /// 🏭️ Regenerates the two shipped demo fixtures from `demo_xml_snapshot()` with the crate's OWN
-    /// printer/packer (never by hand) — the writer `fixture_honesty_law` above is the gate for. The
-    /// committed pair predated the `encode_snapshot`/`encode_snapshot_binary` wire this artifact's
-    /// `ArtifactDsl`/`ArtifactPack` have emitted since 2026-08-27: they still held the document's own
-    /// `<?xml ...?>` markup, which `parse_dsl` (preamble present → `decode_snapshot`) cannot read
-    /// back, and which took `xml_valid_subset_integrated_roundtrip` down with them since
-    /// `📚️examples/🎬️demo::PRIMARY_TEXT` IS this file.
-    #[semio_framework_async_macros::async_test]
-    #[ignore]
-    async fn zzz_write_dsl_and_pack_fixtures() {
-        let demo = demo_xml_snapshot();
-        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
-        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
-        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
-    }
+
 }
 //#endregion 🔖️ConformanceLaws

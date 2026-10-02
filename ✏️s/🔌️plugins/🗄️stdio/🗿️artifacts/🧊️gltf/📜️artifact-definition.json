@@ -40,8 +40,12 @@
       "id": "s.stdio.gltf.standard.2-0.representation.document",
       "standard": "s.stdio.gltf.standard.2-0",
       "representation": "document",
-      "mimes": ["model/gltf+json"],
-      "extensions": [".gltf"],
+      "mimes": [
+        "model/gltf+json"
+      ],
+      "extensions": [
+        ".gltf"
+      ],
       "is_binary": false,
       "aliases": [],
       "neutral": true,
@@ -51,8 +55,12 @@
       "id": "s.stdio.gltf.standard.2-0.representation.binary",
       "standard": "s.stdio.gltf.standard.2-0",
       "representation": "binary",
-      "mimes": ["model/gltf-binary"],
-      "extensions": [".glb"],
+      "mimes": [
+        "model/gltf-binary"
+      ],
+      "extensions": [
+        ".glb"
+      ],
       "is_binary": true,
       "aliases": [],
       "neutral": true,
@@ -60,7 +68,21 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.gltf.standard.2-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.gltf.standard.2-0.dialect.source", "to": "s.stdio.gltf.standard.2-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.gltf.v1", "artifact_kind": "s.stdio.gltf", "artifact_schema": "stdio.gltf", "extension": "gltf", "pack_schema_hash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8", "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1" } },
+    {
+      "id": "s.stdio.gltf.standard.2-0.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.gltf.standard.2-0.dialect.source",
+      "to": "s.stdio.gltf.standard.2-0.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.gltf.v1",
+        "artifact_kind": "s.stdio.gltf",
+        "artifact_schema": "stdio.gltf",
+        "extension": "gltf",
+        "pack_schema_hash": "f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f",
+        "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1"
+      }
+    },
     {
       "id": "s.stdio.gltf.standard.2-0.codec.inference-binary.v1",
       "status": "unimplemented",
@@ -105,78 +127,358 @@
     }
   ],
   "mutations": [
-    { "id": "s.stdio.gltf.mutation.change-material-alpha-mode.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.change-material-double-sided.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.mutation.create-scene.v1", "status": "unimplemented", "executable_registration": true }
+    {
+      "id": "s.stdio.gltf.mutation.change-material-alpha-mode.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.mutation.change-material-double-sided.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.mutation.create-scene.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    }
   ],
   "inferences": [
-    { "id": "s.stdio.gltf.inference.overall-size.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.oriented-bounds.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.bounding-box-dimensions.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.characteristic-length.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.footprint-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.projected-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.surface-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.total-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.exposed-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.contact-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.enclosed-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.material-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.void-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.compactness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.surface-to-volume-ratio.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.sphericity.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.compactness-index.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.hull-fill-ratio.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.aspect-ratios.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.slenderness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.flatness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.elongation.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.centroid.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.principal-frame.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.principal-axes.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.moments-of-inertia.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.inertia-tensor.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.mean-curvature.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.gaussian-curvature.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.curvature-histogram.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.sharp-feature-proportion.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.mean-thickness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.minimum-thickness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.thickness-variability.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.thickness-distribution.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.convex-hull-gap.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.reentrant-area.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.reentrant-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.concavity-index.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.clearance-distribution.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.interference-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.overlap-volume.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.number-of-contacts.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.contact-graph-degree.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.connected-components.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.main-axis-direction.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.face-normal-distribution.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.orientation-consistency.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.reflection-symmetry-score.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.rotational-symmetry-score.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.reflection-symmetries.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.rotational-symmetries.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.repetition-ratio.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.modularity-ratio.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.deviation-from-ideal.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.normal-variation.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.surface-waviness.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.irregularity.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.holes.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.handles.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.boundary-loops.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.euler-characteristic.v1", "status": "unimplemented", "executable_registration": true },
-    { "id": "s.stdio.gltf.inference.genus.v1", "status": "unimplemented", "executable_registration": true }
+    {
+      "id": "s.stdio.gltf.inference.overall-size.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.axis-aligned-bounds.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.oriented-bounds.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.bounding-box-dimensions.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.characteristic-length.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.footprint-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.projected-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.surface-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.total-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.exposed-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.contact-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.enclosed-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.material-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.void-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.compactness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.surface-to-volume-ratio.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.sphericity.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.compactness-index.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.hull-fill-ratio.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.aspect-ratios.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.slenderness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.flatness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.elongation.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.centroid.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.principal-frame.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.principal-axes.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.moments-of-inertia.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.inertia-tensor.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.mean-curvature.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.gaussian-curvature.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.curvature-histogram.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.sharp-feature-proportion.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.mean-thickness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.minimum-thickness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.thickness-variability.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.thickness-distribution.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.convex-hull-gap.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.reentrant-area.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.reentrant-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.concavity-index.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.minimum-distance-to-neighbors.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.clearance-distribution.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.interference-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.overlap-volume.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.number-of-contacts.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.contact-graph-degree.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.connected-components.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.main-axis-direction.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.face-normal-distribution.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.orientation-consistency.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.reflection-symmetry-score.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.rotational-symmetry-score.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.reflection-symmetries.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.rotational-symmetries.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.repetition-ratio.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.modularity-ratio.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.deviation-from-ideal.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.normal-variation.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.surface-waviness.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.irregularity.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.holes.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.handles.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.boundary-loops.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.euler-characteristic.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.gltf.inference.genus.v1",
+      "status": "unimplemented",
+      "executable_registration": true
+    }
   ],
   "resources": [
     {

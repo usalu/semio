@@ -6,7 +6,7 @@
 // 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination
 // compile-checked. (A plain `//` comment, not `///`: rustdoc does not generate documentation for macro
 // invocations, so a doc comment here is dead and clippy/rustc flag it as unused.)
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     pub struct ShootingLabels {
         inspection_title: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         shots: native_en "Shots", native_de "Aufnahmen", reuse_en "Shots", reuse_de "Aufnahmen";

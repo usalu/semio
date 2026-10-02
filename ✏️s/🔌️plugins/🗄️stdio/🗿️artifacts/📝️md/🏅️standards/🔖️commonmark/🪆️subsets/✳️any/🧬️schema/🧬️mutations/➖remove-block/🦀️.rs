@@ -21,8 +21,8 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for RemoveBlock {
     fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
         agg_inverse(&MdMutation::RemoveBlock(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove block", "Block entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

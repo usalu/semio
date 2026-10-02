@@ -43,3 +43,15 @@ fn the_bindings_round_trip_through_their_json_projection() {
     assert_eq!(decode_local_folder_bindings_json("{\"bindings\":[]}").expect("empty bindings decode"), LocalFolderBindings::default());
     assert!(decode_local_folder_bindings_json("{\"bindings\":[{\"documentId\":\"a\",\"pluginId\":\"p\",\"appId\":\"q\",\"folder\":{\"kind\":\"handle\",\"handleId\":\"h\"}}]}").is_err(), "a folder reference names a path, nothing else");
 }
+
+#[test]
+fn the_folder_is_edited_in_history_through_its_path_and_its_kind_is_no_input() {
+    use protocol::MutationLeaf;
+    let inputs = semio_framework::mutation_input_defs(AttachLocalFolder::PAYLOAD_SCHEMA, &|_: &str| None).expect("the payload schema derives every input");
+    let folder = inputs.iter().find(|input| input.id == "/folder").expect("the folder input");
+    let semio_framework::ArgSchema::Object { fields } = &folder.schema else { panic!("the folder is an object of fields: {:?}", folder.schema) };
+    assert_eq!(fields.iter().map(|field| field.id.as_str()).collect::<Vec<_>>(), vec!["/path"], "the kind discriminates the reference and is never an input");
+    assert_eq!(fields[0].control(), semio_framework::ActionArgControl::Text { placeholder: None }, "a path is retyped in a text field");
+    let label = serde_json::to_string(&fields[0].label).expect("the label encodes");
+    assert!(label.contains("\"Path\"") && label.contains("\"Pfad\""), "the path is labelled in English and German: {label}");
+}

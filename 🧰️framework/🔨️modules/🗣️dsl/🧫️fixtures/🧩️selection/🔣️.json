@@ -1,0 +1,8 @@
+[
+  {"id": "standalone-explicit-selection", "uses": [], "selectedFragments": [], "expectedMissing": []},
+  {"id": "selected-named-fragment", "uses": ["terms"], "selectedFragments": ["terms"], "expectedMissing": []},
+  {"id": "selected-two-fragments", "uses": ["terms", "operators"], "selectedFragments": ["operators", "terms"], "expectedMissing": []},
+  {"id": "missing-required-fragment", "uses": ["terms"], "selectedFragments": [], "expectedMissing": ["terms"]},
+  {"id": "unrelated-selection-cannot-substitute", "uses": ["terms"], "selectedFragments": ["operators"], "expectedMissing": ["terms"]},
+  {"id": "partial-selection-refuses-each-missing-fragment", "uses": ["terms", "operators", "literals"], "selectedFragments": ["terms"], "expectedMissing": ["operators", "literals"]}
+]

@@ -20,8 +20,8 @@ fatigue-details [id:TEXT member-id:TEXT detail-category:TEXT delta-sigma-c:NUM d
   fat-hot beam-fail "40-weld" 40000000 70000000 800000 3.4 5.4
 }
 cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM welded:BOOL actions:LIST] {
-  sheet-fail mat-6060 0.0012 0.25 1.5 true [ id=G-sheet kind=permanent category=self source=external g-k-line=90 q-k-line=0 n-k=2000 v-y-k=0 v-z-k=0 m-y-k=800 m-z-k=0 id=Q-sheet kind=imposed category=office source=external g-k-line=0 q-k-line=140 n-k=3000 v-y-k=0 v-z-k=0 m-y-k=1700 m-z-k=0 ]
+  sheet-fail mat-6060 0.0012 0.25 1.5 true [ { id=G-sheet kind=permanent category=self source=external g-k-line=90 q-k-line=0 n-k=2000 v-y-k=0 v-z-k=0 m-y-k=800 m-z-k=0 } { id=Q-sheet kind=imposed category=office source=external g-k-line=0 q-k-line=140 n-k=3000 v-y-k=0 v-z-k=0 m-y-k=1700 m-z-k=0 } ]
 }
 shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM actions:LIST] {
-  shell-fail mat-6060 0.8 0.003 3 [ id=G-shell kind=permanent category=self source=external g-k-line=5000 q-k-line=0 n-k=80000000 v-y-k=0 v-z-k=20000000 m-y-k=50000000 m-z-k=0 id=Q-shell kind=imposed category=office source=external g-k-line=0 q-k-line=9000 n-k=100000000 v-y-k=0 v-z-k=80000000 m-y-k=70000000 m-z-k=0 ]
+  shell-fail mat-6060 0.8 0.003 3 [ { id=G-shell kind=permanent category=self source=external g-k-line=5000 q-k-line=0 n-k=80000000 v-y-k=0 v-z-k=20000000 m-y-k=50000000 m-z-k=0 } { id=Q-shell kind=imposed category=office source=external g-k-line=0 q-k-line=9000 n-k=100000000 v-y-k=0 v-z-k=80000000 m-y-k=70000000 m-z-k=0 } ]
 }

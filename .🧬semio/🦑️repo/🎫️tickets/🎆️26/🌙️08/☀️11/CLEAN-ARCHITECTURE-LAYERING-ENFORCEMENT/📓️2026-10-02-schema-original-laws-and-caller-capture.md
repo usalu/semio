@@ -1,0 +1,270 @@
+# Original Schema Proof and Mounted Caller Evidence
+
+Read-only source capture, no tests/builds. This is exact literal occurrence evidence, not proof of complete semantic alias resolution. Preserve bytes and original law bodies before any extraction.
+
+## Original source hashes
+
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs` SHA256 `228cb2e2543a4dabd211c5ec0e758829da69ff720a2788ac201fa89afcd53aaa`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs` SHA256 `6399dc57d8825d80dac2453dc33da6b9c53897aa992d4a089f74696d8eab5b5b`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs` SHA256 `b2ad8e5e3f68d4a500ff80b5e1ecb24936ab50d34108120d92c6df5f4c99f143`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs` SHA256 `e1fc4ef7f0fd1c0e7073106a6359ea001119d80d87dbe0f66922052786e30679`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs` SHA256 `be3ff0edab5dbc80637a32642e0a6f6e9e3641928ad00bfb8036b750c9d5bc7c`
+
+## Original component law roster
+
+- `artifact_composition_fields_derive_emits_expected_slot_tables` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:103`
+- `artifact_composition_fields_default_to_empty_for_leaf_artifacts` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:115`
+- `artifact_composition_projection_walks_aliases_nested_options_and_cancels` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:122`
+- `artifact_composition_projection_real_child_alias_has_fixed_admission_bounds` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:157`
+- `registry_descriptors_carry_valid_snapshot_state_and_match_field_states` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:186`
+- `graphql_state_preamble_matches_normative_sdl` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:218`
+- `state_class_kebab_round_trips_exactly_the_four_lanes` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:225`
+- `retired_state_vocabulary_no_longer_parses` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:237`
+- `derived_fields_leave_the_state_class_axis_entirely` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:256`
+- `schema_catalog_still_registers_json` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:266`
+- `owned_validator_preserves_supported_keyword_corpus` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:274`
+- `owned_validator_preserves_every_exercised_keyword_family` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:313`
+- `owned_validator_diagnostics_progress_and_cancellation_are_deterministic` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:338`
+- `schema_versions_ignore_whitespace_and_detect_drift` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:354`
+- `artifact_inference_registry_registers_independently_of_the_snapshot_diff_mutations_descriptor` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:366`
+- `artifact_inference_graphql_sdl_composes_shared_preamble_with_facet_leaf` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:383`
+- `app_schema_registry_accepts_placeholder_owner_for_wave_structure` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:415`
+- `artifact_schema_descriptor_registration_mirrors_its_facets_into_the_export_registry` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:443`
+- `framework_schema_exports_match_the_modules_json_schema_defs_and_resolve` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:458`
+- `framework_schema_facet_validates_a_real_runtime_entries_dump` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:485`
+- `validation_diagnostics_round_trip_through_the_validation_error` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:503`
+- `structural_validator_resolves_cross_scope_refs_by_document_id` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:512`
+- `scope_schema_exports_register_into_the_os_wide_catalog` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:538`
+- `owned_validator_agrees_with_the_shared_draft07_vectors` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:556`
+- `owned_format_policy_matches_the_shared_format_lists` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:584`
+- `owned_pattern_matcher_covers_the_supported_ecma_subset` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:595`
+- `fragment_validation_uses_only_the_smallest_required_post_edit_frontier` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:623`
+- `entity_kind_catalog_data_validates_through_the_owned_validator_and_matches_the_rust_projection` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:750`
+- `entity_kind_emoji_index_is_first_wins_in_the_rust_projection` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:776`
+- `entity_kind_catalog_rejects_every_declared_violation` at `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:785`
+
+## Lower versus higher partition
+
+Move only original artifact_composition_projection_real_child_alias_has_fixed_admission_bounds (component-unit157 attribute through183 closing brace) to higher OS store/schema composition. It proves64 child limit,65 overflow,257 traversal refusal,128 German UTF8 repetitions accepted and one additional byte refused using real ArtifactChild and ChildRestoreProjection. Its local DerivedParent derives real ArtifactSchema and uses actual ChildAlias; preserve these identity/visitor constraints and every assertion. Full exact retained source slice SHA256: f13da38d3a6e1a01c7c9ba63fc7c9897ce1cabd4323d8a01a6f7ebe79df374dd. The slice includes the async-test attribute, entire original function and closing brace.
+
+Keep lower original slot tables and aliased nested Option/Vec visitor law103/115 with local structural child fixture; it proves seven steps and exact four-step cancellation refusal. Derive expansion270–271 explicitly emits ::semio_framework_schema::ArtifactCompositionFields/ChildRefVisitor, so lower schema export must refer to the same single canonical traits implemented by higher real ArtifactChild. Duplicate mounting breaks Rust identity even if names/bytes match.
+
+All remaining component laws stay lower, including catalog/descriptor/export consistency, validators, state lane vocabulary and drift/version semantics. Naming “OS-wide catalog” does not by itself require higher ownership if actual catalog implementation is neutral. Existing registry leaf Cargo describes dependency-free registry; prefer a narrow owned descriptor/catalog contract rather than importing replication's complete package without proving direction.
+
+Component production346/501/666 prevalidates descriptor batches atomically; underlying replication wire360 inserts into HashMap. Preserve the conflict checks and no-partial-batch semantics at public registration boundaries, not only underlying insertion. Add language-neutral equal-repeat/conflicting-existing/conflicting-in-batch/unrelated-batch vectors plus independent map oracle and actual native registry callbacks. Current component-unit source lacks a named conflict-specific law; do not claim these hostile cases already exercised based docstring alone.
+
+## Canonical caller and mount evidence
+
+OS package265–266 mounts schema composition; lower schema component123 reexports that OS mount. Replication package wire58–61 mounts descriptor/state source. Schema package7 mounts component and component871–872 mounts original unit collection. Derive emits lower schema qualified traits; higher store implements them through os_schema_composition. Rebind all occurrences below directly to one lower provider; preserve each admitted manifest context and associated generated derive paths. No old API forwarding aliases.
+
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs:178:impl store::os_schema_composition::ArtifactCompositionFields for ModuleRenderPayload {`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs:179:    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🦀️.rs:301:    let contracts = semio_framework_os_kernel::with_kernel_artifact_schema_catalog(|entries| entries.iter().map(|entry| entry.id).collect::<Vec<_>>());`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/🔬️unit/🦀️.rs:56:    assert_eq!(projection.len(), <crate::DagSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/🔬️unit/🦀️.rs:64:    assert_eq!(projection.len(), <crate::FormsSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/🔬️unit/🦀️.rs:192:    assert_eq!(projection.len(), <crate::NoteSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🧪️tests/🔬️unit/🦀️.rs:59:    assert_eq!(projection.len(), <crate::ProcedureSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs:1325:impl semio_framework_schema::ArtifactCompositionFields for WorkflowSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs:1326:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/🔬️unit/🦀️.rs:140:    assert_eq!(projection.len(), <crate::WiresSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3326:impl<S> crate::os_schema_composition::ChildFieldRefs for ArtifactChild<S> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3328:    fn visit_child_field<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3332:            crate::os_schema_composition::ChildRefFields {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3432:    slots: &'static [crate::os_schema_composition::ChildSlotSpec],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3433:    rows: [Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)>; CHILD_RESTORE_MAXIMUM_REFERENCES],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3440:    pub fn from_snapshot<S: crate::os_schema_composition::ArtifactCompositionFields>(snapshot: &'a S) -> Result<Self, ChildRestoreProjectionError> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3471:    pub fn get(&self, index: usize) -> Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3488:    pub fn admit_complete<'b>(&self, incoming: impl IntoIterator<Item = (&'b str, crate::os_schema_composition::ChildRefFields<'b>)>) -> Result<(), ChildRestoreProjectionError> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3509:impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProjection<'a> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3518:    fn child(&mut self, slot: &'static str, fields: crate::os_schema_composition::ChildRefFields<'a>) -> Result<(), Self::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3559:/// ChildSlotSpec/LinkSlotSpec schema facets).`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:24078:    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:24447:        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:24456:        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:1496:    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:1689:impl crate::os_schema_composition::ArtifactCompositionFields for DemoSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:1690:    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3308:impl crate::os_schema_composition::ArtifactCompositionFields for RetainedTextSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:3309:    fn visit_child_refs<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8448:    use crate::os_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8450:    fn fields(row: &serde_json::Value) -> ChildRefFields<'_> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8451:        ChildRefFields {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8459:    impl ArtifactCompositionFields for Parent<'_> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8460:        fn child_slots() -> &'static [ChildSlotSpec] {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8461:            &[ChildSlotSpec { name: "single", kind: "s.test.member", many: false }, ChildSlotSpec { name: "many", kind: "s.test.member", many: true }, ChildSlotSpec { name: "other", kind: "s.test.member", many: false }]`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs:8463:        fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs:213:impl store::os_schema_composition::ArtifactCompositionFields for ProbeSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs:214:    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:282:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:314:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:338:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:712:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:819:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs:840:    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<M> + crate::os_schema_composition::ArtifactCompositionFields,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:3:use crate::os_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:11:impl ArtifactCompositionFields for FixtureNode {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:12:    fn child_slots() -> &'static [ChildSlotSpec] {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:14:            ChildSlotSpec { name: "objects", kind: "s.stdio.semio", many: true },`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:15:            ChildSlotSpec { name: "mesh", kind: "s.stdio.semio", many: true },`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:16:            ChildSlotSpec { name: "value", kind: "s.stdio.semio", many: true },`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:17:            ChildSlotSpec { name: "children", kind: "s.stdio.semio", many: true },`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:18:            ChildSlotSpec { name: "other", kind: "s.stdio.semio", many: true },`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:21:    fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🦀️.rs:25:            visitor.child(slot, ChildRefFields {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs:1528:impl store::os_schema_composition::ArtifactCompositionFields for HashProjection {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs:1529:    fn visit_child_refs<'a, V: store::os_schema_composition::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:1191:    /// (semio_framework_schema::ArtifactCompositionFields), rather than only foreign-dialect IO`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:1200:        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec];`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:1203:        /// ChildSlotSpec.kind) — the composition-side counterpart to decompose_to_children.`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:1221:        fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:1367:        /// — a child slot names only a kind, per ChildSlotSpec.kind: &'static str, never a`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3008:        /// 🧒️🔗️ Pulled from <Snapshot as ArtifactCompositionFields>::{child_slots,link_slots} via`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3012:        /// runtime reads ArtifactCompositionFields straight off the snapshot type on demand); they`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3016:        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3018:        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3067:        child_slots: &'static [::semio_framework_schema::ChildSlotSpec],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3068:        link_slots: &'static [::semio_framework_schema::LinkSlotSpec],`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3367:        /// 🧒️🔗️ Pulls child_slots/link_slots from <Snapshot as ArtifactCompositionFields> — the`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:3371:        pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:7383:            S: semio_framework_schema::ArtifactCompositionFields,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:10143:        P: semio_framework_schema::ArtifactCompositionFields,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:11536:    impl semio_framework_schema::ArtifactCompositionFields for NoConfig {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:11537:        fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:13729:        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:22477:        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:22517:        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:23115:        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:36922:        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:37644:        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:38970:        /// (composition still reads <Snapshot as ArtifactCompositionFields> directly; capabilities`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs:106:impl semio_framework_schema::ArtifactCompositionFields for TestSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs:107:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs:108:        semio_framework_schema::ChildFieldRefs::visit_child_field(&self.slot, "slot", visitor)`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs:111:    fn child_slots() -> &'static [semio_framework_schema::ChildSlotSpec] {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs:112:        &[semio_framework_schema::ChildSlotSpec { name: "slot", kind: "s.test.child", many: true }]`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🦀️.rs:8:impl semio_framework_schema::ArtifactCompositionFields for Snapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🦀️.rs:9:    fn visit_child_refs<'a,V:semio_framework_schema::ChildRefVisitor<'a>>(&'a self,_visitor:&mut V)->Result<(),V::Error>{Ok(())}`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs:855:        P: Clone + store::ToValue + store::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs:878:        P: Clone + store::ToValue + store::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs:896:        P: Clone + store::ToValue + store::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🦀️.rs:1394:        P: Clone + store::ToValue + store::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:693:impl semio_framework_schema::ArtifactCompositionFields for Puzzle5dPlaySnapshot {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:694:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:718:impl semio_framework_schema::ArtifactCompositionFields for Puzzle2dPlaySnapshot {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:719:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️derived-artifact-children/🦀️.rs:84:const CHILD_SLOTS: &[::semio_framework_schema::ChildSlotSpec] = &[::semio_framework_schema::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️derived-artifact-children/🦀️.rs:90:    fn slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs:38:            impl semio_framework_schema::ArtifactCompositionFields for $snapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🦀️.rs:39:                fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs:52:impl semio_framework_schema::ArtifactCompositionFields for SurfaceSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs:53:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs:50:impl semio_framework_schema::ArtifactCompositionFields for DummySnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs:51:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs:52:impl semio_framework_schema::ArtifactCompositionFields for TxnSnapshot {`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs:53:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1018:impl semio_framework_schema::ArtifactCompositionFields for Puzzle3dPlaySnapshot {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1019:    fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1020:        semio_framework_schema::ArtifactCompositionFields::visit_child_refs(self.typed.as_ref(), visitor)`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1022:    fn child_slots() -> &'static [semio_framework_schema::ChildSlotSpec] {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1023:        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::child_slots()`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1025:    fn link_slots() -> &'static [semio_framework_schema::LinkSlotSpec] {`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:1026:        <Puzzle3dSnapshot as semio_framework_schema::ArtifactCompositionFields>::link_slots()`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:331:pub struct KernelFacetLeaves {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:341:pub struct KernelArtifactSchemaDescriptor {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:343:    pub artifact: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:344:    pub snapshot: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:345:    pub diff: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:346:    pub mutations: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:350:    by_id: HashMap<&'static str, KernelArtifactSchemaDescriptor>,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:360:pub fn register_kernel_artifact_schema_descriptor(descriptor: KernelArtifactSchemaDescriptor) {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:375:pub fn with_kernel_artifact_schema_catalog<R>(visit: impl FnOnce(&[KernelArtifactSchemaDescriptor]) -> R) -> R {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:377:    let mut entries: Vec<KernelArtifactSchemaDescriptor> = guard.by_id.values().cloned().collect();`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:385:/// [KernelArtifactSchemaDescriptor], not a field on it: the four-facet descriptor already has ~107`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:392:pub struct KernelArtifactInferenceDescriptor {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:394:    pub inference: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:398:    by_id: HashMap<&'static str, KernelArtifactInferenceDescriptor>,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:408:pub fn register_kernel_artifact_inference_descriptor(descriptor: KernelArtifactInferenceDescriptor) {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:423:pub fn with_kernel_artifact_inference_catalog<R>(visit: impl FnOnce(&[KernelArtifactInferenceDescriptor]) -> R) -> R {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:425:    let mut entries: Vec<KernelArtifactInferenceDescriptor> = guard.by_id.values().cloned().collect();`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:434:pub struct KernelAppSchemaDescriptor {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:436:    pub config: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:437:    pub presence: KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:441:    by_id: HashMap<&'static str, KernelAppSchemaDescriptor>,`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:451:pub fn register_kernel_app_schema_descriptor(descriptor: KernelAppSchemaDescriptor) {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:466:pub fn with_kernel_app_schema_catalog<R>(visit: impl FnOnce(&[KernelAppSchemaDescriptor]) -> R) -> R {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs:468:    let mut entries: Vec<KernelAppSchemaDescriptor> = guard.by_id.values().cloned().collect();`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🧪️tests/🔬️unit/🦀️.rs:426:fn empty_kernel_facet_leaves() -> KernelFacetLeaves {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🧪️tests/🔬️unit/🦀️.rs:427:    KernelFacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🧪️tests/🔬️unit/🦀️.rs:433:    register_kernel_artifact_inference_descriptor(KernelArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty_kernel_facet_leaves() });`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🧪️tests/🔬️unit/🦀️.rs:437:    with_kernel_artifact_inference_catalog(|entries| {`
+- `🧰️framework/🔨️modules/📡️replication/🧾️wire/🧪️tests/🔬️unit/🦀️.rs:440:    assert!(found, "registered inference descriptor must be visible via with_kernel_artifact_inference_catalog");`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:123:pub use semio_framework_os_kernel::os_schema_composition::{ArtifactCompositionFields, ChildFieldRefs, ChildRefFields, ChildRefVisitor, ChildSlotSpec, LinkSlotSpec};`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:209:    // fixed-signature with_kernel_artifact_schema_catalog, and the semio-framework-plugin`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:250:    register_kernel_app_schema_descriptor, register_kernel_artifact_inference_descriptor, register_kernel_artifact_schema_descriptor, with_kernel_app_schema_catalog, with_kernel_artifact_inference_catalog, with_kernel_artifact_schema_catalog,`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:251:    KernelAppSchemaDescriptor, KernelArtifactInferenceDescriptor, KernelArtifactSchemaDescriptor, KernelFacetLeaves,`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:269:fn facet_leaves_to_kernel(leaves: FacetLeaves) -> KernelFacetLeaves {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:270:    KernelFacetLeaves { rust: leaves.rust, typescript: leaves.typescript, graphql: leaves.graphql, json_schema: leaves.json_schema, proto: leaves.proto }`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:274:// forced sync by the wire crate's fixed-signature with_kernel_artifact_schema_catalog closure.`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:275:fn facet_leaves_from_kernel(leaves: &KernelFacetLeaves) -> FacetLeaves {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:279:fn descriptor_to_kernel(descriptor: &ArtifactSchemaDescriptor) -> KernelArtifactSchemaDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:280:    KernelArtifactSchemaDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:291:// with_kernel_artifact_schema_catalog (fixed signature outside this packet's scope).`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:292:fn descriptor_from_kernel(kernel: &KernelArtifactSchemaDescriptor) -> ArtifactSchemaDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:320:    register_kernel_artifact_schema_descriptor(descriptor_to_kernel(&descriptor));`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:365:    with_kernel_artifact_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:376:    with_kernel_artifact_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:386:    with_kernel_artifact_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:407:/// [ArtifactSchemaDescriptor], not a field on it (see [KernelArtifactInferenceDescriptor]'s own`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:415:fn inference_descriptor_to_kernel(descriptor: &ArtifactInferenceDescriptor) -> KernelArtifactInferenceDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:416:    KernelArtifactInferenceDescriptor { id: descriptor.id, inference: facet_leaves_to_kernel(descriptor.inference) }`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:420:// with_artifact_inference_registry hands to with_kernel_artifact_inference_catalog (fixed`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:422:fn inference_descriptor_from_kernel(kernel: &KernelArtifactInferenceDescriptor) -> ArtifactInferenceDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:474:    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(&descriptor));`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:520:    with_kernel_artifact_inference_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:532:    with_kernel_artifact_inference_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:543:    with_kernel_artifact_inference_catalog(|entries| entries.iter().find(|entry| entry.id == key).map(|entry| graphql_leaf_with_preamble(entry.inference.graphql)))`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:620:async fn app_descriptor_to_kernel(descriptor: &AppSchemaDescriptor) -> KernelAppSchemaDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:621:    KernelAppSchemaDescriptor { id: descriptor.id, config: facet_leaves_to_kernel(descriptor.config), presence: facet_leaves_to_kernel(descriptor.presence) }`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:625:// with_app_schema_registry hands to with_kernel_app_schema_catalog (fixed signature outside`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:627:fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDescriptor {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:640:    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(&descriptor).await);`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:685:    with_kernel_app_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:696:    with_kernel_app_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/⚛️component/🦀️.rs:707:    with_kernel_app_schema_catalog(|entries| {`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:63:impl<T> ChildFieldRefs for ArtifactChild<T> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:65:    fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:67:        visitor.child(slot, ChildRefFields { child_id: "child", artifact_id: "child", artifact_kind: "s.stdio.mesh", standard: "v1", subset: "*" })`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:106:    assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false });`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:107:    assert_eq!(children[1], ChildSlotSpec { name: "textures", kind: "s.stdio.image", many: true });`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:111:    assert_eq!(links[0], LinkSlotSpec { name: "baseMaterial", roles: &["base", "material"], many: false });`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:128:    impl<'a> ChildRefVisitor<'a> for Visitor {`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:137:        fn child(&mut self, slot: &'static str, fields: ChildRefFields<'a>) -> Result<(), ()> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:144:    assert_eq!(slots, &[ChildSlotSpec { name: "optionalChild", kind: "s.stdio.mesh", many: false }, ChildSlotSpec { name: "children", kind: "s.stdio.mesh", many: true }]);`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:235:                ::semio_framework_schema::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: <#ty as ::semio_framework_schema::ChildFieldRefs>::MANY }`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:238:                ::semio_framework_schema::ChildFieldRefs::visit_child_field(&self.#name, #name_lit, visitor)?;`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:249:                    ::semio_framework_schema::LinkSlotSpec { name: #name_lit, roles: &[#(#role_lits),*], many: #many }`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:270:        impl ::semio_framework_schema::ArtifactCompositionFields for #ident {`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:271:            fn visit_child_refs<'a, V: ::semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:275:            fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/⚙️expansion/🦀️.rs:278:            fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {`
+- `🧰️framework/🔨️modules/🧬️schema/✨️derive/🦀️.rs:10:/// sibling [ArtifactCompositionFields] impl from ArtifactChild<T> / ArtifactLink field types`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:11:pub struct ChildSlotSpec {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:19:pub struct ChildRefFields<'a> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:28:pub trait ChildRefVisitor<'a> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:31:    fn child(&mut self, slot: &'static str, fields: ChildRefFields<'a>) -> Result<(), Self::Error>;`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:35:pub trait ChildFieldRefs {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:37:    fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error>;`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:40:impl<T: ChildFieldRefs> ChildFieldRefs for Option<T> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:42:    fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:51:impl<T: ChildFieldRefs> ChildFieldRefs for Vec<T> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:53:    fn visit_child_field<'a, V: ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:65:pub struct LinkSlotSpec {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:72:pub trait ArtifactCompositionFields {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:73:    fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error>;`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:74:    fn child_slots() -> &'static [ChildSlotSpec] {`
+- `🧰️framework/🔨️modules/🧬️schema/🧩️composition/🦀️.rs:77:    fn link_slots() -> &'static [LinkSlotSpec] {`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs:59:impl semio_framework_schema::ChildFieldRefs for LayoutDrawingChild {`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs:61:    fn visit_child_field<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs:63:        semio_framework_schema::ChildFieldRefs::visit_child_field(&self.handle, slot, visitor)`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🔬️unit/🦀️.rs:303:    assert_eq!(projection.len(), <crate::JackSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🧪️tests/🔬️unit/🦀️.rs:124:    assert_eq!(projection.len(), <crate::EquationSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());`

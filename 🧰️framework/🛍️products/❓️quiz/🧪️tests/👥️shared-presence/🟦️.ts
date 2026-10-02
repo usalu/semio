@@ -3,7 +3,12 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/👥️presence/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+/** 👥️ Subject adapter of the shared-presence case: the scopes and the presence admission of `@semio-tech/quiz`.
+ *
+ * @see ./🥒️.feature
+ * @see ../../🔨️modules/👥️presence/🟦️.ts
+ */
+import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type CursorState, type Place, type PresenceState, type ThinkingState, cursorProblem, presenceProblem, roomScope, rosterScope, thinkingProblem, thinkingScope } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://👥️shared-presence/🔣️.json";

@@ -32,7 +32,7 @@ async fn presence_css_var_only_addresses_the_base_cycle() {
 #[semio_framework_async_macros::async_test]
 async fn build_presence_bar_renders_one_stack_child_per_peer_under_max() {
     let peers = vec![peer("user:a#1", "Alice", Some(PresenceRole::Author)), peer("user:b#1", "Bob", Some(PresenceRole::Spectator))];
-    let node = build_presence_bar("s-presence-peers", &peers, None);
+    let node = build_presence_bar("s-presence-peers", &peers, None, Locale::En);
     let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
     assert_eq!(root.id.as_deref(), Some("s-presence-peers"));
     assert_eq!(root.children.len(), 2);
@@ -48,7 +48,7 @@ async fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
     for i in 0..7 {
         peers.push(peer(&format!("user:{i}#1"), &format!("Peer {i}"), None));
     }
-    let node = build_presence_bar("s-presence-peers", &peers, Some(5));
+    let node = build_presence_bar("s-presence-peers", &peers, Some(5), Locale::En);
     let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
     // 5 visible peers + 1 overflow node.
     assert_eq!(root.children.len(), 6);
@@ -58,8 +58,8 @@ async fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn build_presence_bar_empty_peers_renders_localized_empty_text() {
-    let en = build_presence_bar_localized("s-presence-peers", &[], None, Locale::En);
-    let de = build_presence_bar_localized("s-presence-peers", &[], None, Locale::De);
+    let en = build_presence_bar("s-presence-peers", &[], None, Locale::En);
+    let de = build_presence_bar("s-presence-peers", &[], None, Locale::De);
     for (node, expected) in [(en, "No one else is here"), (de, "Niemand sonst ist hier")] {
         let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
         assert_eq!(root.children.len(), 1);
@@ -75,7 +75,7 @@ async fn an_agent_row_carries_the_agent_badge_in_both_tongues_and_a_person_never
     let agent = PresencePeerRow { is_agent: true, ..peer("actor-agent", "Drafting agent", Some(PresenceRole::Author)) };
     let peers = vec![peer("actor-a", "Ada", Some(PresenceRole::Author)), agent];
     for (locale, word) in [(Locale::En, "AI agent"), (Locale::De, "KI-Agent")] {
-        let tree = format!("{:?}", build_presence_bar_localized("s-presence-peers", &peers, None, locale));
+        let tree = format!("{:?}", build_presence_bar("s-presence-peers", &peers, None, locale));
         assert!(tree.contains("peer-agent-badge:actor-agent") && tree.contains(word), "{locale:?}: the agent row carries its badge");
         assert!(!tree.contains("peer-agent-badge:actor-a\""), "a person never gets the badge");
         assert_eq!(presence_bar_chip_text(&peers, None, locale), format!("Ada · Drafting agent ({word})"));
@@ -90,7 +90,7 @@ async fn an_activity_badges_its_row_and_is_announced_in_the_accessible_name() {
     let editing = PresencePeerRow { activity: Some(PresenceActivity { text: "Ada is editing Drag selection in time travel".into(), badge: "⏪".into() }), ..peer("actor-a", "Ada", Some(PresenceRole::Author)) };
     let agent = PresencePeerRow { is_agent: true, activity: Some(PresenceActivity { text: "Drafting agent is editing the history in time travel".into(), badge: "⏪".into() }), ..peer("actor-agent", "Drafting agent", None) };
     let peers = vec![editing, agent, peer("actor-b", "Bob", None)];
-    let tree = format!("{:?}", build_presence_bar_localized("s-presence-peers", &peers, None, Locale::En));
+    let tree = format!("{:?}", build_presence_bar("s-presence-peers", &peers, None, Locale::En));
     assert!(tree.contains("peer-activity-badge:actor-a") && tree.contains("peer-activity-badge:actor-agent") && !tree.contains("peer-activity-badge:actor-b"));
     assert_eq!(presence_bar_chip_text(&peers, None, Locale::En), "Ada ⏪ · Drafting agent (AI agent) ⏪ · Bob");
     assert_eq!(
@@ -99,4 +99,3 @@ async fn an_activity_badges_its_row_and_is_announced_in_the_accessible_name() {
     );
     assert_eq!(presence_bar_chip_accessible_text(&[], None, Locale::De), "Niemand sonst ist hier");
 }
-

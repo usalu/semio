@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["variants","maximumBytes","refusedBytes"],
+  "properties":{
+    "variants":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["keyword","fields"],"properties":{"keyword":{"enum":["document","blob"]},"fields":{"type":"array","minItems":2,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","key","shape"],"properties":{"id":{"type":"integer","minimum":0,"maximum":2},"key":{"enum":["schema","document-id","hash","size","media-type"]},"shape":{"enum":["text","uint"]}}}}}}},
+    "maximumBytes":{"type":"integer","minimum":1},
+    "refusedBytes":{"type":"integer","minimum":0}
+  }
+}

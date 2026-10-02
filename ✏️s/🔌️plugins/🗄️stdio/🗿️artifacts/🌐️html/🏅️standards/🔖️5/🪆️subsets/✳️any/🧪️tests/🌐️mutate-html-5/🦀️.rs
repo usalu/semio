@@ -14,7 +14,7 @@
 //! implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_html_5};
+use semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_html_5};
 
 
 //#region 🔖️Input
@@ -109,10 +109,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_html::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::{parse_html_document, write_html_document};
-    use semio_s_plugin_stdio_test_oracle::artifacts::html::standards::v5::subsets::any::project_html_5;
+    use semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::project_html_5;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own

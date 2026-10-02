@@ -23,7 +23,7 @@
 //   bun 📜️script.ts mesh-compare      --input <expected.mesh.json> --input <actual.mesh.json>
 //   bun 📜️script.ts step-mesh-compare --input <expected.step> --input <actual.step> --tolerance 1e-3
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️w4-brepjs-qualification.md
 
 //#endregion 🧲️Header

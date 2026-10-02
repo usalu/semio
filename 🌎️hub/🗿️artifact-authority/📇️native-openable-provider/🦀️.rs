@@ -7,9 +7,12 @@ use std::collections::BTreeSet;
 
 /// 🚪 Exact identity of the statically linked provider admitted by this boundary.
 pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "stdio+gis+vcs/native-codecs/v1";
-/// 🧮 Complete fixed stdio, GIS and VCS factory closure admitted by V1.
-pub const NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS: usize = 32;
-const NATIVE_STDIO_PROVIDER_RECEIPTS: usize = 29;
+/// 🧮 Counts the current complete schema-qualified stdio, GIS and VCS factory closure.
+pub fn native_openable_provider_receipt_count() -> Result<usize, AuthorityError> {
+    Ok(semio_hub_stdio::catalog::live_native_codec_factory_receipts().map_err(provider_error)?.len()
+        + semio_hub_gis::native_codecs::native_codec_factory_receipts().map_err(provider_error)?.len()
+        + semio_hub_vcs::native_codecs::native_codec_factory_receipts().map_err(provider_error)?.len())
+}
 const NATIVE_VCS_PROVIDER_RECEIPTS: usize = 1;
 
 struct NativeCodecProviderEntryV1 {
@@ -152,14 +155,22 @@ impl NativeOpenableCatalogProviderV1 {
     }
 
     fn from_receipts(version: &str, receipts: Vec<NativeCodecFactoryReceipt>) -> Result<Self, AuthorityError> {
-        if receipts.len() != NATIVE_STDIO_PROVIDER_RECEIPTS {
-            return Err(provider_error(format!("provider closure has {} receipts", receipts.len())));
+        let expected = semio_hub_stdio::catalog::live_native_codec_factory_receipts().map_err(provider_error)?;
+        let expected_factories = expected.iter().map(|receipt| receipt.factory_id.clone()).collect::<BTreeSet<_>>();
+        let expected_descriptors = expected.iter().map(|receipt| receipt.descriptor_codec_id.clone()).collect::<BTreeSet<_>>();
+        let expected_pairs = expected.iter().map(|receipt| (receipt.artifact_kind.clone(), receipt.schema.clone())).collect::<BTreeSet<_>>();
+        if receipts.len() != expected.len() || expected_factories.len() != expected.len() || expected_descriptors.len() != expected.len() || expected_pairs.len() != expected.len() {
+            return Err(provider_error(format!("provider closure has {} receipts outside its compiled kind/schema roster", receipts.len())));
         }
         let mut factories = BTreeSet::new();
         let mut descriptor_codecs = BTreeSet::new();
         let mut artifact_schemas = BTreeSet::new();
         let mut bindings = Vec::with_capacity(receipts.len());
         for receipt in receipts {
+            let owner = expected.iter().find(|owner| owner.factory_id == receipt.factory_id).ok_or_else(|| provider_error("receipt factory is outside its compiled roster"))?;
+            if receipt.descriptor_codec_id != owner.descriptor_codec_id || receipt.runtime_capability_id != owner.runtime_capability_id || receipt.artifact_kind != owner.artifact_kind || receipt.schema != owner.schema || receipt.extension != owner.extension || receipt.pack_schema_hash != owner.pack_schema_hash {
+                return Err(provider_error(format!("receipt {} differs from its exact compiled kind/schema owner", receipt.factory_id)));
+            }
             if receipt.plugin_id != "stdio"
                 || receipt.package_id != "semio:stdio"
                 || receipt.package_version != version
@@ -176,7 +187,7 @@ impl NativeOpenableCatalogProviderV1 {
             }
             bindings.push(NativeCodecBinding::new(receipt.plugin_id, receipt.package_id, receipt.artifact_kind, codec));
         }
-        if factories.len() != NATIVE_STDIO_PROVIDER_RECEIPTS || descriptor_codecs.len() != NATIVE_STDIO_PROVIDER_RECEIPTS || artifact_schemas.len() != NATIVE_STDIO_PROVIDER_RECEIPTS {
+        if factories != expected_factories || descriptor_codecs != expected_descriptors || artifact_schemas != expected_pairs {
             return Err(provider_error("provider receipt closure is incomplete"));
         }
         Ok(Self { bindings })

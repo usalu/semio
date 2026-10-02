@@ -18,7 +18,17 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",
@@ -26,7 +36,17 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-long": {
       "executor": "nx:run-commands",
@@ -34,7 +54,17 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
@@ -42,7 +72,17 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     },
     "conformance": {
       "executor": "nx:run-commands",
@@ -80,7 +120,17 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json"
+      ]
     }
   },
   "namedInputs": {

@@ -1,3 +1,18 @@
 syntax = "proto3";
-package semio.s.reasoning.wires.snapshot_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.s.reasoning.wires.snapshot;
+message Document { uint64 fixture_root=1; uint64 meta_root=2; Child content=3; repeated Node nodes=4; }
+message Child { string child_id=1; Target target=2; }
+message Target { string artifact_id=1; string artifact_kind=2; string standard=3; string subset=4; }
+message Member { string name=1; uint64 value=2; }
+message Node {
+ enum Kind { NULL=0; BOOLEAN=1; UNSIGNED=2; SIGNED=3; FLOAT=4; TEXT=5; BYTES=6; ARRAY=7; OBJECT=8; }
+ Kind kind=1;
+ optional bool boolean=2;
+ optional uint64 unsigned=3;
+ optional sint64 signed=4;
+ optional fixed64 float_ieee754_bits=5;
+ optional string text=6;
+ optional bytes bytes=7;
+ repeated uint64 items=8;
+ repeated Member members=9;
+}

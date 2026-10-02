@@ -143,16 +143,18 @@ def stroked(buffer, payload):
     """🖌️ `apply-paint-stroke`'s pixels: every dab of the stroke stamped in order onto a copy of the square RGBA
     buffer, in float32 — the centre is the UV point (v up) rounded half away from zero onto the pixel grid, every
     pixel within the radius (at least half a pixel) gains `round((hardness + (1 - hardness)·(1 - dist/radius)) ·
-    opacity · 255)` of alpha under the brush colour, or loses it under the eraser, saturating either way."""
+    opacity · 255)` of alpha under the brush colour (its sRGB unit channels scaled to bytes, rounded half away from
+    zero), or loses it under the eraser, saturating either way."""
     f32 = numpy.float32
     away = lambda value: math.floor(float(value) + 0.5) if float(value) >= 0 else -math.floor(-float(value) + 0.5)
     unit = lambda value: min(max(f32(value), f32(0.0)), f32(1.0))
     held = bytearray(buffer)
     side = math.isqrt(len(held) // 4)
-    if side * side * 4 != len(held) or not payload["points"] or not payload["radius"] > 0 or not 0 <= payload["hardness"] <= 1 or not 0 <= payload["opacity"] <= 1 or any(not 0 <= value <= 1 for point in payload["points"] for value in point):
+    if side * side * 4 != len(held) or not payload["points"] or not payload["radius"] > 0 or not 0 <= payload["hardness"] <= 1 or not 0 <= payload["opacity"] <= 1 or any(not 0 <= value <= 1 for point in payload["points"] for value in point) or any(not 0 <= channel <= 1 for channel in payload["color"]):
         raise AssertionError("apply-paint-stroke: the layer is not a square texture, or the brush cannot dab, or a dab lies off the texture")
     size, radius = f32(side), max(f32(payload["radius"]), f32(0.5))
     hard, alpha = unit(payload["hardness"]), unit(payload["opacity"])
+    color = bytes(int(min(max(away(unit(channel) * f32(255.0)), 0), 255)) for channel in payload["color"])
     for u, v in payload["points"]:
         cx, cy = away(unit(u) * (size - f32(1.0))), away((f32(1.0) - unit(v)) * (size - f32(1.0)))
         reach = math.ceil(float(radius))
@@ -169,7 +171,7 @@ def stroked(buffer, payload):
                 if payload["eraser"]:
                     held[at + 3] = max(held[at + 3] - amount, 0)
                 else:
-                    held[at:at + 3] = bytes(payload["color"][:3])
+                    held[at:at + 3] = color
                     held[at + 3] = min(held[at + 3] + amount, 255)
     return bytes(held)
 

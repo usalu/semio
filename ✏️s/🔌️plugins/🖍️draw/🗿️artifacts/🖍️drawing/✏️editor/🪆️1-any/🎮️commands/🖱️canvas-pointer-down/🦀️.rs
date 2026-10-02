@@ -1206,7 +1206,7 @@ fn trace_layer_bounds_with_matrix(layer: &DrawingLayerNode, matrix: [f64;6]) -> 
         if let Some(bounds)=crate::schema::path_segments_bounds_with_matrix(&crate::schema::layer_to_path_segments(layer),matrix) {return bounds;}
     }
     let local = match layer {
-        DrawingLayerNode::Text(value) => {let [w,h]=semio_s_2d::text::drawing_text_fallback_extent(&value.content,value.size);(value.x,value.y,w.max(8.0),h.max(8.0))},
+        DrawingLayerNode::Text(value) => {let [w,h]=semio_framework_2d::text::drawing_text_fallback_extent(&value.content,value.size);(value.x,value.y,w.max(8.0),h.max(8.0))},
         DrawingLayerNode::Image(value) => (0.0, 0.0, value.width, value.height),
         DrawingLayerNode::Shape(value) => match value.shape_kind.as_str() {
             "rect" => value.rect.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |rect| (rect.x, rect.y, rect.width, rect.height)),

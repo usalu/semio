@@ -36,6 +36,7 @@ export type WgpuHostIoRequest =
   | { readonly op: "extension-store-uninstall"; readonly extensionId: string }
   | ({ readonly op: "format-temporal-values" } & HostTemporalFormatRequestV1)
   | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly timeoutMs: number; readonly bearer?: string; readonly body?: string; readonly accept?: string }
+  | { readonly op: "backbone-folder"; readonly verb: "read" | "write"; readonly uri: string; readonly documentId: string; readonly schema?: string }
   | { readonly op: "storage"; readonly verb: "get" | "set" | "remove"; readonly scope?: WgpuHostStorageScope; readonly key: string; readonly value?: string }
   | { readonly op: "socket"; readonly verb: "open"; readonly socketId: number; readonly url: string; readonly protocols?: readonly string[] }
   | { readonly op: "socket"; readonly verb: "send"; readonly socketId: number; readonly text?: string; readonly binary?: string }
@@ -331,6 +332,37 @@ async function directoryHttp(request: Extract<WgpuHostIoRequest, { op: "director
   }
 }
 
+/** 🗃️ The dev host's backbone route — the one React's worker keeps folder and file documents through
+ * (`🏪️store/👷️worker/🟦️.ts`, served by the Vite `semioBackboneVitePlugin`). */
+export const WGPU_BACKBONE_FOLDER_ENDPOINT = "/semio-backbone";
+
+/** 📬️ One backbone hop's answer: the HTTP status (a read's stored archive as base64), or the transport refusal. */
+export type WgpuBackboneFolderAnswer = { readonly status: number; readonly bodyBase64?: string } | { readonly error: string };
+
+/** ⏳️ How long one backbone hop may hang before it is refused — React's `FOLDER_FETCH_TIMEOUT_MS`. */
+const WGPU_BACKBONE_FOLDER_TIMEOUT_MS = 15_000;
+
+/** 🗃️ One folder-document hop for the browser shell, which has no filesystem: a read answers the stored archive as
+ * base64 (`204` = nothing written yet), a write PUTs the archive bytes it was handed. A status is answered as itself and
+ * a fetch that never reached the host as `{error}` — the shell tells the two apart. Pinned for both halves by
+ * `🧑‍🎨engine/🧫️fixtures/🧫️wgpu-backbone-folder-door`. */
+export async function backboneFolderHop(request: Extract<WgpuHostIoRequest, { op: "backbone-folder" }>, bytes: Uint8Array | null, fetchImpl: typeof fetch = fetch): Promise<WgpuBackboneFolderAnswer> {
+  const query = new URLSearchParams({ uri: request.uri, documentId: request.documentId, ...(request.schema === undefined ? {} : { schema: request.schema }) });
+  const write = request.verb === "write";
+  if (write && bytes === null) return { error: "backbone-folder: a write carries no archive" };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(new Error("backbone-folder deadline exceeded")), WGPU_BACKBONE_FOLDER_TIMEOUT_MS);
+  try {
+    const response = await fetchImpl(`${WGPU_BACKBONE_FOLDER_ENDPOINT}?${query.toString()}`, write ? { body: bytes!.slice().buffer as ArrayBuffer, headers: { "content-type": "application/octet-stream" }, method: "PUT", signal: controller.signal } : { method: "GET", signal: controller.signal });
+    if (!write && response.status === 200) return { bodyBase64: socketBytesToBase64(await response.arrayBuffer()), status: 200 };
+    return { status: response.status };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /** 🗄️ Services one preference hop against the page's real stores. Bounded on BOTH sides: the key must
  * be one the census carries and a written value must fit {@link WGPU_HOST_STORAGE_VALUE_MAX_BYTES}, so
  * the door can never become a wider hole into the origin's storage than the shell's own store already
@@ -517,6 +549,7 @@ export function createWgpuPageHostIo(): WgpuHostIo {
     const request = JSON.parse(requestJson) as WgpuHostIoRequest;
     if (request.op === "format-temporal-values") return JSON.stringify(formatHostTemporalValuesV1(request, temporalProfile));
     if (request.op === "directory-http") return JSON.stringify(await directoryHttp(request));
+    if (request.op === "backbone-folder") return JSON.stringify(await backboneFolderHop(request, bytes));
     if (request.op === "storage") return JSON.stringify(storageHop(request));
     if (request.op === "socket") return JSON.stringify(socketDoor(request));
     if (request.op.startsWith("extension-store-")) return JSON.stringify(await extensionStoreHop(request as Extract<WgpuHostIoRequest, { readonly op: `extension-store-${string}` }>));

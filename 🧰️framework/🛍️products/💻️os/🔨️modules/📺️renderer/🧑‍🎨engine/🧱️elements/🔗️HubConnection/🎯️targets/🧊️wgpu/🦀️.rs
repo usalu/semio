@@ -31,7 +31,15 @@ use semio_framework_os_kernel::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::wgpu::component::ui::UiState;
-use ui_wgpu::wgpu::{ActionDescriptor, Label, Locale, UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
+use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::Locale;
+use ui_wgpu::wgpu::UiButtonNode;
+use ui_wgpu::wgpu::UiInputNode;
+use ui_wgpu::wgpu::UiNode;
+use ui_wgpu::wgpu::UiPresence;
+use ui_wgpu::wgpu::UiStackNode;
+use ui_wgpu::wgpu::UiTextNode;
 
 //#region 🆔️SurfaceIds
 /// 🆔️ The panel leaf id the shell registers and routes `/hub` to. Byte-identical to the React
@@ -574,6 +582,7 @@ fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<
         on_repeat_last: None,
         presence: UiPresence::default(),
         menu: None,
+        ..Default::default()
     })
 }
 

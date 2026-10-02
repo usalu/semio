@@ -4,12 +4,19 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
+      const snapshot = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
+      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")], this.repoRoot, "architect-snapshot-sqlite-public-types");
+      return;
+    }
+
 if (segments[0] === "architect-window-ownership") {
       const windowsRoot = join(this.repoRoot, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
       const configRoots = ["📋️register", "↔️adjacency", "🕸️graph", "📓️report"].map((window) => join(windowsRoot, window, "🎚️config"));
@@ -58,4 +65,4 @@ if (segments[0] === "program-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

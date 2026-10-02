@@ -36,10 +36,10 @@ fn every_example_round_trips_dsl_and_pack() {
 
 #[test]
 fn example_labels_are_localized_en_and_de() {
-    assert_eq!(two_room_corridor::label(), semio_framework_plugin::LocalizedLabel::native("Two Rooms And A Corridor", "Zwei Räume und ein Korridor"));
-    assert_eq!(wall_roof_facade_strip::label(), semio_framework_plugin::LocalizedLabel::native("Wall And Roof Facade Strip", "Wand-Dach-Fassadenstreifen"));
-    assert_eq!(hex_ring::label(), semio_framework_plugin::LocalizedLabel::native("Hexagonal Ring", "Sechseckiger Ring"));
-    assert_eq!(terrain_ring::label(), semio_framework_plugin::LocalizedLabel::native("Terrain Ring", "Gelände-Ring"));
+    assert_eq!(two_room_corridor::label(), semio_framework_ui_locale::LocalizedLabel::native("Two Rooms And A Corridor", "Zwei Räume und ein Korridor"));
+    assert_eq!(wall_roof_facade_strip::label(), semio_framework_ui_locale::LocalizedLabel::native("Wall And Roof Facade Strip", "Wand-Dach-Fassadenstreifen"));
+    assert_eq!(hex_ring::label(), semio_framework_ui_locale::LocalizedLabel::native("Hexagonal Ring", "Sechseckiger Ring"));
+    assert_eq!(terrain_ring::label(), semio_framework_ui_locale::LocalizedLabel::native("Terrain Ring", "Gelände-Ring"));
 }
 
 /// 🧭️ The routed inference metadata names the owner, the artifact and the tool id the plugin root

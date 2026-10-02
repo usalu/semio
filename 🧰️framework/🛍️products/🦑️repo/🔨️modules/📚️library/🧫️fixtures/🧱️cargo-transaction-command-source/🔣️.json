@@ -416,38 +416,5 @@
     "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
     "discovery": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
     "runOwnerDirectory": "🧾️runs"
-  },
-  "ownedExecution": {
-    "cases": [
-      {
-        "name": "complete UTF-8 progress lines",
-        "mode": "lines",
-        "expectedLines": [
-          "first 🧪",
-          "last"
-        ],
-        "expectedError": null
-      },
-      {
-        "name": "pre-cancel refuses child creation",
-        "mode": "pre-abort",
-        "expectedLines": [],
-        "expectedError": "cancelled"
-      },
-      {
-        "name": "live cancellation stops child",
-        "mode": "abort",
-        "expectedLines": [
-          "ready"
-        ],
-        "expectedError": "cancelled"
-      },
-      {
-        "name": "nonzero status remains an error",
-        "mode": "failure",
-        "expectedLines": [],
-        "expectedError": "failed (7)"
-      }
-    ]
   }
 }

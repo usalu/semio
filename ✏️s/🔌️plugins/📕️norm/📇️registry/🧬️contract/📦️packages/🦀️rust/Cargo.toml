@@ -24,6 +24,8 @@ default = []
 compliance-testing = ["dep:serde", "dep:serde_json"]
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 semio-framework = { workspace = true }

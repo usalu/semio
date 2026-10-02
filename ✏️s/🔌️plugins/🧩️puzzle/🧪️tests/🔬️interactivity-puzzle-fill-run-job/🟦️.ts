@@ -71,14 +71,6 @@ pub fn puzzle3d_dispatch(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Op
         _ => {}
     }
 }
-
-pub fn coalesce(action: &str) -> Option<String> {
-    let coalesce_key = match action {
-        "translateSelection" => Some("gumball-translate".to_string()),
-        _ => None,
-    };
-    coalesce_key
-}
 `,
   tool: `//! 🪣️ Fill tool.
 pub const TOOL_ID: &str = "fill";
@@ -195,7 +187,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
   ["plugin-spawn", "report", [["precompute", "    pub fn fill_run_job", "    pub fn enqueue_fill_job(&mut self) {}\n\n    pub fn fill_run_job"]]],
   ["plugin-cancel-verb", "report", [["editor", '"setFillCount" => set_fill_count::apply(ctx, args),', '"setFillCount" => set_fill_count::apply(ctx, args),\n        "cancelFillBuild" => cancel(ctx, args),']]],
   ["lock-is-commit", "report", [["setFillCount", "pub(crate) fn parse_count", "pub(crate) fn take_locked_into_fixture() {}\n\npub(crate) fn parse_count"]]],
-  ["history-coalesced-count", "report", [["editor", '"translateSelection" => Some("gumball-translate".to_string()),', '"translateSelection" => Some("gumball-translate".to_string()),\n        "setFillCount" => Some("fill-count".to_string()),']]],
+  ["history-coalesced-count", "report", [["editor", "pub fn puzzle3d_dispatch", 'const FILL_KEY: &str = "fill-count";\n\npub fn puzzle3d_dispatch']]],
   ["tick-command-survives", "report", [["fillBuildTick", "", "pub fn fill_build_tick() {}"]]],
   ["lock-is-commit-fixture-survives", "report", [["editorTests", "    #[test]\n    fn fill_run_finalize", "    #[test]\n    fn fill_build_tick_locks_planned_placements_into_the_document_in_bounded_chunks() {}\n    #[test]\n    fn fill_run_finalize"]]],
   ["missing-successor-fixture", "report", [["editorTests", "fill_run_finalize_publishes_one_edit_with_every_provisional_placement", "fill_finalize_smoke"]]],
@@ -205,7 +197,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
   ["unqualified-verdict", "report", [["runFixture", '"danger:collision"', '"collision"']]],
   ["malformed-fixture", "report", [["runFixture", "", "{"]]],
   ["commented-legacy-is-silent", "silent", [["precompute", "pub struct Puzzle3dPrecomputeSession {", "// enqueue_fill_job and \"fill-count\" were retired with take_locked_into_fixture.\npub struct Puzzle3dPrecomputeSession {"]]],
-  ["test-only-legacy-is-silent", "silent", [["editor", "pub fn coalesce", "#[cfg(test)]\nmod tests {\n    fn legacy() { let _ = \"fillBuildTick\"; }\n}\n\npub fn coalesce"]]],
+  ["test-only-legacy-is-silent", "silent", [["editor", "pub fn puzzle3d_dispatch", "#[cfg(test)]\nmod tests {\n    fn legacy() { let _ = \"fillBuildTick\"; }\n}\n\npub fn puzzle3d_dispatch"]]],
 ];
 
 /** 🧪️ Mutation self-test of the puzzle fill run-job law: the clean fixture passes, every planted regression is reported, and comment- or test-only mentions stay silent. Returns the executed case count. */

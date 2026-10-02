@@ -854,7 +854,7 @@ impl CommandAckOutcome {
 /// tree (serde-shaped), shared by the wasm `store_worker` and `🏪️store/👷️worker/🟦️.ts`.
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
-    use crate::os_dsl::{from_dsl_value, to_dsl_value};
+    
     use semio_framework_value_derive::{FromValue, ToValue};
 
     pub const MAGIC: u8 = 0x01;
@@ -901,11 +901,11 @@ pub mod backbone_worker_wire {
         }
     }
 
-    pub async fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
-        let dsl = to_dsl_value(request)?;
+    pub fn encode_request(request: &BackboneWorkerRequest) -> Vec<u8> {
+        let dsl = semio_framework_value::ToValue::to_value(request);
         let mut bytes = vec![MAGIC];
         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
-        Ok(bytes)
+        bytes
     }
 
     pub async fn decode_request(bytes: &[u8]) -> Result<BackboneWorkerRequest, String> {
@@ -914,14 +914,14 @@ pub mod backbone_worker_wire {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
         let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
-        from_dsl_value(dsl)
+        semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 
-    pub async fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
-        let dsl = to_dsl_value(response)?;
+    pub fn encode_response(response: &BackboneWorkerResponse) -> Vec<u8> {
+        let dsl = semio_framework_value::ToValue::to_value(response);
         let mut bytes = vec![MAGIC];
         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
-        Ok(bytes)
+        bytes
     }
 
     pub async fn decode_response(bytes: &[u8]) -> Result<BackboneWorkerResponse, String> {
@@ -930,7 +930,7 @@ pub mod backbone_worker_wire {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
         let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
-        from_dsl_value(dsl)
+        semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 }
 //#endregion 🔖️BackboneWorkerWire

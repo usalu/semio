@@ -10,7 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
+import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
@@ -543,7 +543,7 @@ function WasmEditorSurface({
               showTextEditorSpliceViewV1(session, refused.show);
               return;
             }
-            typingRef.current?.commit("selectionJump");
+            typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.caretMove);
             if (selectionUndeclaredRef.current) return;
             const reason = refusalReason(await onAction({ controllerId, action: textEditorActions.select, args: { surfaceId, start: next.start, end: next.end, splice: spliceHost.seq } }));
             if (reason === "undeclared-action") selectionUndeclaredRef.current = true;
@@ -551,7 +551,7 @@ function WasmEditorSurface({
           }
           const echo = echoStateRef.current;
           const guestHasText = echo.pending.length > 0 ? echo.pending.at(-1) === next.text : echo.acknowledged === next.text;
-          if (guestHasText) typingRef.current?.commit("selectionJump");
+          if (guestHasText) typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.caretMove);
           if (!guestHasText && !readOnlyRef.current) {
             const before = echo.pending.at(-1) ?? echo.acknowledged ?? next.text;
             echoStateRef.current = { ...echoStateRef.current, pending: [...echoStateRef.current.pending, next.text].slice(-TEXT_EDITOR_PENDING_EDIT_LIMIT) };
@@ -727,8 +727,8 @@ function WasmEditorSurface({
     const sink = sinkRef.current;
     if (!sink) return;
     const document = sink.ownerDocument;
-    const blur = () => typingRef.current?.commit("blur");
-    const hidden = () => typingRef.current?.commit("hidden");
+    const blur = () => typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.blur);
+    const hidden = () => typingRef.current?.commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.hidden);
     const visibility = () => {
       if (document.visibilityState === "hidden") hidden();
     };

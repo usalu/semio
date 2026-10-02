@@ -1,6 +1,7 @@
 //! 📚️ Example `heb240-compliant` — realistic compliant HEB 240 S355 frame.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "heb240-compliant";
 pub fn label() -> LocalizedLabel {

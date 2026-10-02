@@ -143,7 +143,31 @@ pub mod derived_analysis {
     /// the D5 validate-on-build hook.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_valid_conformance(snapshot: &XmlSnapshot) -> Vec<Diagnostic> {
+        check_conformance(snapshot, &mut |_, _| Ok(())).expect("uncontrolled validity callback cannot refuse")
+    }
+
+    /// ⏱️ Checks owned validity with cancellation inside the literal boundary collections.
+    pub fn check_valid_conformance_controlled(snapshot: &XmlSnapshot, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, String> {
+        check_conformance(snapshot, &mut |completed, total| control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, completed, total))
+    }
+
+    fn check_conformance(snapshot: &XmlSnapshot, progress: &mut dyn FnMut(usize, usize) -> Result<(), String>) -> Result<Vec<Diagnostic>, String> {
         let mut out = Vec::new();
+        let total = snapshot.doc.prolog.len().checked_add(snapshot.doc.epilog.len()).ok_or("XML validity boundary count overflow")?; progress(0, total)?;
+        if root_element_name(snapshot).is_none() { out.push(hard("stdio.xml.valid.document-element-missing", "XML validity requires a document element".into())); }
+        let mut invalid_boundary = false;
+        for (ordinal, node) in snapshot.doc.prolog.iter().chain(&snapshot.doc.epilog).enumerate() { if ordinal % 256 == 0 { progress(ordinal, total)?; } invalid_boundary |= !matches!(node, XmlNode::Comment { .. } | XmlNode::ProcessingInstruction { .. }); }
+        if invalid_boundary { out.push(hard("stdio.xml.valid.boundary-kind", "XML validity permits only comments and processing instructions outside the document element".into())); }
+        if snapshot.doc.doctype.as_ref().is_some_and(|value| value.prolog_position > snapshot.doc.prolog.len() as u64) { out.push(hard("stdio.xml.valid.doctype-position", "XML validity requires the doctype to occupy its declared prolog position".into())); }
+        if let Some(declaration) = &snapshot.doc.declaration {
+            if declaration.version != "1.0" { out.push(hard("stdio.xml.valid.version", "XML 1.0 validity requires declaration version 1.0".into())); }
+            if let Some(encoding) = &declaration.encoding {
+                let mut valid = !encoding.is_empty(); progress(0, encoding.len())?;
+                for (ordinal, byte) in encoding.bytes().enumerate() { if ordinal % 256 == 0 { progress(ordinal, encoding.len())?; } valid &= if ordinal == 0 { byte.is_ascii_alphabetic() } else { byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-') }; }
+                progress(encoding.len(), encoding.len())?;
+                if !valid { out.push(hard("stdio.xml.valid.encoding-name", "XML validity requires a syntactically valid declared encoding name".into())); }
+            }
+        }
         match &snapshot.doc.doctype {
             None => {
                 out.push(hard(CODE_DOCTYPE_MISSING, "no <!DOCTYPE ...> declaration present -- XML 1.0 §5.1 validity requires one (a document without one can be well-formed at best)".into()));
@@ -161,9 +185,9 @@ pub mod derived_analysis {
         }
         out.push(soft(
             CODE_VALIDITY_NOT_VERIFIED,
-            "validity not fully verified: this schema retains <!DOCTYPE ...> as a raw unparsed String with no internal/external subset markup declarations parsed, so full DTD element/attribute-list content-model validation (§3.2/§3.3) is out of scope from this data -- only the presence of a doctype and its declared-root-name/actual-root-name agreement are checked".into(),
+            "validity not fully verified: the typed doctype retains its name, external identifiers and entity declarations; DTD element and attribute content models (§3.2/§3.3) are absent from this owned schema".into(),
         ));
-        out
+        progress(total, total)?; Ok(out)
     }
     //#endregion 🔖️Conformance
 

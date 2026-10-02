@@ -28,8 +28,11 @@ path = "../../🧪️tests/🧩️module-compile/🦀️.rs"
 default = []
 
 [dependencies]
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-schema-validator = { path = "../../✅️validator/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack = { workspace = true }
 semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-schema-derive" }
 semio-framework-schema-registry = { path = "../../📇️registry/📦️packages/🦀️rust", package = "semio-framework-schema-registry" }

@@ -51,7 +51,7 @@ pub struct En1997Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1997Snapshot, extension = "en1997", envelope_id = "norm.en1997");
+crate::impl_norm_artifact_record!(En1997Snapshot, extension = "en1997", envelope_id = "norm.en1997", sqlite = crate::snapshot::sqlite::codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1997Snapshot {
@@ -250,3 +250,9 @@ pub fn encode_en1997_pack(snapshot: &En1997Snapshot) -> Vec<u8> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️regen-assets/🦀️.rs"]
 mod regen_assets;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;

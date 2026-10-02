@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native Owner Command Policy Corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "classification",
+          "policy"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cwd": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifestText": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classification": {
+            "enum": [
+              "package",
+              "workspace",
+              "invalid"
+            ]
+          },
+          "policy": {
+            "enum": [
+              "owned",
+              "absent",
+              "refused"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "manifest",
+              "cwd"
+            ],
+            "properties": {
+              "classification": {
+                "const": "package"
+              },
+              "policy": {
+                "const": "owned"
+              },
+              "manifest": {},
+              "cwd": {}
+            },
+            "not": {
+              "required": [
+                "manifestText"
+              ],
+              "properties": {
+                "manifestText": {}
+              }
+            }
+          },
+          {
+            "required": [
+              "manifest",
+              "cwd"
+            ],
+            "properties": {
+              "classification": {
+                "const": "workspace"
+              },
+              "policy": {
+                "const": "absent"
+              },
+              "manifest": {},
+              "cwd": {}
+            },
+            "not": {
+              "required": [
+                "manifestText"
+              ],
+              "properties": {
+                "manifestText": {}
+              }
+            }
+          },
+          {
+            "required": [
+              "manifestText"
+            ],
+            "properties": {
+              "classification": {
+                "const": "invalid"
+              },
+              "policy": {
+                "const": "refused"
+              },
+              "manifestText": {}
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "manifest"
+                  ],
+                  "properties": {
+                    "manifest": {}
+                  }
+                },
+                {
+                  "required": [
+                    "cwd"
+                  ],
+                  "properties": {
+                    "cwd": {}
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,7 +1,47 @@
 {
   "mutation": "replaceSparse",
   "sparse": {
-    "points": "AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABA",
+    "points": {
+      "kind": "inline",
+      "values": [
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "40000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "40000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "40000000"
+        }
+      ]
+    },
     "colors": null
   }
 }

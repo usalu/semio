@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/stdio-dwg-rs",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-controlled-metadata": "nx run @semio-tech/stdio-dwg-rs:test-controlled-metadata",
+    "test-grammar-shape": "nx run @semio-tech/stdio-dwg-rs:test-grammar-shape"
+  }
+}

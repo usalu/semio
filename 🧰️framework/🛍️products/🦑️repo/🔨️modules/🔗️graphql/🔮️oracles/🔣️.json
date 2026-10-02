@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔗️ Contribution of the repo GraphQL grammar owner. The only third-party reference this domain needs is a conforming GraphQL parser; it is a devDependency of the repository root, imported exclusively from 🧪️tests/**/🟦️.ts, and never reachable from any implementation.",
   "oracles": [

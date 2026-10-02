@@ -45,7 +45,7 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::framework_schema::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
         semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_plugin::StandardId("riff-pcm"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
@@ -56,7 +56,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::framework_schema::register_artifact_inference_descriptor(crate::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 }

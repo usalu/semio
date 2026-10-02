@@ -9,7 +9,18 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
 use crate::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
-use semio_framework_plugin::{row_action, row_target, tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowActionPlacement, TreeWindows, UiAssemblyResult};
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::row_target;
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";

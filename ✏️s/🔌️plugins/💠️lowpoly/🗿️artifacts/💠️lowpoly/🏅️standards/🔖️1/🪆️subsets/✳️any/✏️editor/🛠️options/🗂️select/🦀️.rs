@@ -12,7 +12,8 @@ use crate::editor::lowpoly::lowpoly_window_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{LabelText, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_plugin::WindowMeasure;
 
 /// 🎯️ What the mesh domain currently selects with: the armed granularity and the selection mode.
 #[derive(Clone, Debug, PartialEq, Eq)]

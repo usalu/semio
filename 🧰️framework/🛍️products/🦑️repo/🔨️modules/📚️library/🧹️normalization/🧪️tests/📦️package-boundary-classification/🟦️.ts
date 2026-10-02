@@ -1,3 +1,4 @@
+import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🔌️Adapters
 import Ajv from "ajv/dist/2020";
 import { describe, expect, test } from "bun:test";
@@ -7,7 +8,7 @@ import { tmpdir } from "node:os";
 import ts from "typescript";
 import { classifyPackageSource, classifyPackageSourceDisposition, clearDiscoveryCache, discoverPackageProblems, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, loadCatalogTaxonomy, type PackageGlueGrammarSpec, type PackageSourceRole, type PackageSourceDisposition } from "../../../🔍️discovery/🟦️.ts";
 import { fixedContractScopeSpecificityRank, inventoryTaxonomy, inventoryTaxonomyWithCapturedSourceRead, type FixedContractScopeKind } from "../../🟦️.ts";
-import { testLevelAtLeast } from "../../../🟦️.ts";
+
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -356,7 +357,7 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
       }
       if (!ts.isIdentifier(callee)) return false;
       const binding = scope.resolve(callee.text);
-      if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
+      if (binding?.kind !== "import-value" || !["runScriptMain", "runRepoScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
       if (!expression.arguments.every((row) => router(row, scope) || ["data", "finite"].includes(value(row, scope)))) return false;
       terminals++;
       return true;
@@ -494,8 +495,8 @@ function ecmaTypeScriptSemanticEvidence(rows: readonly { readonly id: string; re
   const options: ts.CompilerOptions = { allowImportingTsExtensions: true, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ESNext, types: [] };
   const sources = new Map(rows.map((row) => [`/${row.id}.ts`, row.content])), files = new Map<string, string>([
     ...sources,
-    ["/📜️script.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runPolicyOnlyMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\n"],
-    ["/owner/🟦️.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare class MaterializeScript {}\nexport declare class SupportScript {}\nexport declare function runBundleScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\nexport declare function prepare(...args: any[]): any;\nexport declare function dirname(value: string): string;\nexport declare function fileURLToPath(value: string): string;\n"],
+    ["/📜️script.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare function runScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runPolicyOnlyMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\n"],
+    ["/owner/🟦️.ts", "export abstract class Script { abstract run(...args: any[]): unknown }\nexport abstract class BundleScript extends Script {}\nexport declare class ScriptRouter { constructor(...args: any[]); register(...args: any[]): this; run(segments: string[]): Promise<void> }\nexport declare class MaterializeScript {}\nexport declare class SupportScript {}\nexport declare function runScriptMain(...args: any[]): Promise<void>;\nexport declare function runWorkspaceScriptMain(...args: any[]): Promise<void>;\nexport declare function runArtifactRustPackageMain(...args: any[]): Promise<void>;\nexport declare function runArtifactTypeScriptPackageMain(...args: any[]): Promise<void>;\nexport declare function execute(...args: any[]): any;\nexport declare function prepare(...args: any[]): any;\nexport declare function dirname(value: string): string;\nexport declare function fileURLToPath(value: string): string;\n"],
     ["/🧪️tests/🟦️.ts", "export declare function registerTests1(vitest: NonNullable<ImportMeta[\"vitest\"]>, dependencies: Readonly<Record<string, unknown>>, source: { readonly directory: string; readonly url: string }): Promise<void>;\n"],
     ["/node-path.d.ts", "export declare function dirname(value: string): string;\n"],
     ["/node-url.d.ts", "export declare function fileURLToPath(value: string): string;\n"],
@@ -699,7 +700,7 @@ describe("package boundary glue-content classification", () => {
       write("app/api/body/route.ts", 'export async function POST(request: Request) { const body = await request.json(); return Response.json({ id: crypto.randomUUID(), body }); }\n');
       write("🟦️.ts", "export interface Ticket { readonly id: string }\n");
       writeRust("Cargo.toml", '[package]\nname = "package-body-rust-fixture"\nversion = "0.0.0"\n[package.metadata.semio]\nrole = "framework"\nid = "package-body-rust-fixture"\n');
-      writeRust("📜️script.ts", 'import { runBundleScriptMain } from "@semio/process";\nawait runBundleScriptMain(import.meta);\n');
+      writeRust("📜️script.ts", 'import { runScriptMain } from "@semio/process";\nawait runScriptMain(import.meta);\n');
       clearDiscoveryCache();
       const roles = discoverPackageProblems(root, loadCatalogTaxonomy()).filter((row) => row.kind === "package-implementation" || row.kind === "package-role-unresolved");
       expect(roles.map((row) => row.path).sort()).toEqual([
@@ -707,7 +708,7 @@ describe("package boundary glue-content classification", () => {
         "🧰️framework/🔨️modules/🎫️ticket/📦️packages/🟦️typescript/🟦️.ts",
       ].sort());
       expect(roles.every((row) => row.kind === "package-implementation" && row.message.includes(": "))).toBe(true);
-      writeRust("📜️script.ts", 'import { runBundleScriptMain } from "@semio/process";\nclass Domain { compute() { return 42; } }\nawait runBundleScriptMain(import.meta);\n');
+      writeRust("📜️script.ts", 'import { runScriptMain } from "@semio/process";\nclass Domain { compute() { return 42; } }\nawait runScriptMain(import.meta);\n');
       clearDiscoveryCache();
       expect(discoverPackageProblems(root, loadCatalogTaxonomy()).some((row) => row.kind === "package-implementation" && row.path.endsWith("/🦀️rust/📜️script.ts"))).toBe(true);
     } finally {

@@ -1,4 +1,5 @@
-scalar ObjSourceLineUInt64
+scalar ObjIndexUInt32
+scalar ObjSourceUInt64
 
 # 🧬️ ObjMutation union — mirrors 🦀️.rs's tagged enum (GraphQL has no native
 # discriminated union, so this models it as one input type with the tag plus optional
@@ -31,11 +32,11 @@ enum ObjMutationTag {
 input ObjVertexInput { x: Float! y: Float! z: Float! w: Float }
 input ObjTexCoordInput { u: Float! v: Float! w: Float }
 input ObjNormalInput { x: Float! y: Float! z: Float! }
-input ObjFaceVertexInput { vertex: Int! texcoord: Int normal: Int }
+input ObjFaceVertexInput { vertex: ObjIndexUInt32! texcoord: ObjIndexUInt32 normal: ObjIndexUInt32 }
 input ObjFaceInput { vertices: [ObjFaceVertexInput!]! }
-input ObjUsemtlRangeInput { faceIndexFrom: Int! material: String! }
-input ObjSmoothingRangeInput { faceIndexFrom: Int! group: Int }
-input ObjUnknownStatementInput { lineIndex: ObjSourceLineUInt64! raw: String! }
+input ObjUsemtlRangeInput { faceIndexFrom: ObjSourceUInt64! material: String! }
+input ObjSmoothingRangeInput { faceIndexFrom: ObjSourceUInt64! group: ObjIndexUInt32 }
+input ObjUnknownStatementInput { lineIndex: ObjSourceUInt64! raw: String! }
 
 input ObjMutationInput {
   mutation: ObjMutationTag!
@@ -46,7 +47,7 @@ input ObjMutationInput {
   texcoord: ObjTexCoordInput
   normal: ObjNormalInput
   face: ObjFaceInput
-  faces: [Int!]
+  faces: [ObjSourceUInt64!]
   mtllib: String
   usemtl: [ObjUsemtlRangeInput!]
   smoothingGroups: [ObjSmoothingRangeInput!]

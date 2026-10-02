@@ -2,6 +2,9 @@ import { boardTestSession } from "../../🧱️elements/🪪️WasmSessionLoader
 import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json";
 import gumballTargetsFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🧭️gesture-targets.json";
 import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🧭️gesture-targets/🔣️.json";
+import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json";
+import gumballLiveProtocolSchema from "../../🧱️elements/🌐️World3dHost/🧬️schema/🛠️gumball-live-protocol/🔣️.json";
+import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
 import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
 import textInputFixture from "../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json";
@@ -5325,6 +5328,22 @@ describe("framework renderer hosts", () => {
     expect(changes).not.toHaveBeenCalled();
   });
 
+  /** ⚖️ LAW (scrub protocol, `📓️api-scrub-machine.md`): a graph slider cancels its open press like every continuous
+   * control — a lost pointer capture as `captureLost`, a blur as `blur` — so the guest drops the press with zero trace. */
+  it("cancels a graph slider press on lost capture and on blur", () => {
+    const item = graphSliderFixture.cases[1]!;
+    const aborts = vi.fn();
+    const view = render(createElement(GraphSliderOverlays, { scopeId: item.scopeId, stateJson: JSON.stringify({ sliders: [item.row] }), logicalW: 800, logicalH: 600, editable: true, onSliderChange: vi.fn(), onSliderAbort: aborts }));
+    const slider = view.getByRole("slider", { name: item.row.label });
+    const root = slider.closest('[data-slot="slider"]')!;
+    fireEvent.pointerDown(root, { pointerId: 1, clientX: 0 });
+    fireEvent.pointerCancel(root, { pointerId: 1 });
+    expect(aborts).toHaveBeenLastCalledWith(item.row.widgetId, "captureLost");
+    slider.focus();
+    fireEvent.blur(slider);
+    expect(aborts).toHaveBeenLastCalledWith(item.row.widgetId, "blur");
+  });
+
   /** ⚖️ LAW: a knob has ONE value. The readout painted beside the track and the `aria-valuenow` a
    * screen reader announces are two renderings of the same published number, so they can never
    * disagree — the readout used to be painted on the GPU, where it moved only when a frame was
@@ -10196,31 +10215,22 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(transformRotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
   });
 
-  it("a gumball drag whose pose never moved commits nothing — no fabricated axis step", async () => {
-    const { readFileSync, existsSync } = await import("node:fs");
-    const { resolve } = await import("node:path");
-    // 📄️ `import.meta.url` is not a file URL under this suite's transform, so the host source is located by
-    // walking up from the runner's cwd to the repo root that actually holds it — and the existence check is
-    // an assertion, so a moved file fails the law instead of silently skipping it.
-    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
-    let root = process.cwd();
-    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
-    expect(existsSync(resolve(root, relative))).toBe(true);
-    const source = readFileSync(resolve(root, relative), "utf8");
-    const start = source.indexOf("const dispatchGumballPoseDelta");
-    expect(start).toBeGreaterThan(0);
-    const branch = source.slice(start, source.indexOf("[dispatch, selection.transformMode, selectionArgs]", start));
-    const skipped = branch.indexOf('"gumball pose delta skipped"');
-    expect(skipped).toBeGreaterThan(0);
-    const zeroDelta = branch.slice(skipped);
-    // 🧯️ Wave B31: the zero-delta branch used to mint `translateSelection` with a hardcoded 0.5 step along
-    // the handle's axis — a document edit the user never made, minted precisely when the gesture said
-    // nothing, and a green `gumball-scene-delta` that measured the fabrication rather than the drag.
-    expect(zeroDelta).not.toMatch(/dispatch\(\s*["']translateSelection["']/);
-    expect(zeroDelta).not.toMatch(/synthesized/);
-    expect(
-      gumballTransformDeltaBetweenPoses("transform", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { mode: "mesh", ids: ["obj-1"] }, "moveY"),
-    ).toBeNull();
+  it("worldGumballStep answers every step of the language-agnostic gumball live protocol exactly (local one-shot, live stream/commit/abort, no fabricated axis step)", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(gumballLiveProtocolSchema);
+    expect(validate(gumballLiveProtocolFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const testCase of gumballLiveProtocolFixture.cases) {
+      const targets = testCase.targets as WorldGumballTargets;
+      let gesture = WORLD_GUMBALL_IDLE;
+      for (const [index, step] of testCase.steps.entries()) {
+        const raw = step.event as Record<string, unknown>;
+        const event = (raw.kind === "start" ? { ...raw, targets, live: testCase.live, transformMode: testCase.transformMode } : raw.kind === "release" ? { ...raw, targets } : raw) as WorldGumballEvent;
+        const next = worldGumballStep(gesture, event);
+        expect(next.dispatch, `${testCase.name} — step ${index} (${raw.kind})`).toEqual(step.dispatch);
+        expect(next.skipped, `${testCase.name} — step ${index} skip`).toBe((step as { readonly skipped?: string }).skipped);
+        gesture = next.gesture;
+      }
+      expect(gesture.targets, `${testCase.name} ends at rest`).toBeNull();
+    }
   });
 
   it("gumball gesture targets pin opaque component IDs independently of rendered instances", () => {

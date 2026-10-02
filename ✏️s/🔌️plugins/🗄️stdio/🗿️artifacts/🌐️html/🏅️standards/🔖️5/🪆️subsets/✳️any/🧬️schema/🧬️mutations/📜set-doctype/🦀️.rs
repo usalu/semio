@@ -20,8 +20,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetDoctype {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetDoctype(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

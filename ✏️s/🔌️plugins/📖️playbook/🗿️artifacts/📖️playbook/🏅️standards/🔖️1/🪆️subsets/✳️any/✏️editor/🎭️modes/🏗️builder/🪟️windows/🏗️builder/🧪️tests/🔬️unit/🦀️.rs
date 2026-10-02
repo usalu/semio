@@ -35,7 +35,7 @@ async fn render_builder_palette_includes_topic_contributed_block_kinds() {
 #[semio_framework_async_macros::async_test]
 async fn render_builder_emits_playbook_list_component_scene() {
     let mut app = playbook_app().await;
-    let tree = app.render(BODY_BUILDER, None, &semio_framework_plugin::ViewModel::default()).await.expect("builder surface");
+    let tree = app.render(BODY_BUILDER, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("builder surface");
     let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
     let expected = app.snapshot().expect("snapshot").as_kernel();

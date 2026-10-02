@@ -2,7 +2,7 @@
 
 use crate::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Relocated from `⚙️engine/🦀️.rs` (ticket
@@ -64,10 +64,10 @@ impl ToValue for EnergyModelArtifact {
         DslValue::object([
             ("schema".to_string(), self.schema.to_value()),
             ("model".to_string(), self.model.to_value()),
-            ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
-            ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
-            ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
-            ("weatherLink".to_string(), to_dsl_value(&self.weather_link).unwrap_or(DslValue::Null)),
+            ("structure".to_string(), semio_framework_value::ToValue::to_value(&self.structure)),
+            ("zones".to_string(), semio_framework_value::ToValue::to_value(&self.zones)),
+            ("referencedModel".to_string(), semio_framework_value::ToValue::to_value(&self.referenced_model)),
+            ("weatherLink".to_string(), semio_framework_value::ToValue::to_value(&self.weather_link)),
             ("resultsJson".to_string(), self.results_json.to_value()),
         ])
     }
@@ -79,10 +79,10 @@ impl FromValue for EnergyModelArtifact {
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,
-            structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
-            zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
-            referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
-            weather_link: from_dsl_value(field("weatherLink")).map_err(ValueError::new)?,
+            structure: semio_framework_value::FromValue::from_value(field("structure"))?,
+            zones: semio_framework_value::FromValue::from_value(field("zones"))?,
+            referenced_model: semio_framework_value::FromValue::from_value(field("referencedModel"))?,
+            weather_link: semio_framework_value::FromValue::from_value(field("weatherLink"))?,
             results_json: String::from_value(field("resultsJson"))?,
         })
     }
@@ -121,25 +121,25 @@ impl EnergyModelArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
-pub fn energy_model_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn energy_model_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

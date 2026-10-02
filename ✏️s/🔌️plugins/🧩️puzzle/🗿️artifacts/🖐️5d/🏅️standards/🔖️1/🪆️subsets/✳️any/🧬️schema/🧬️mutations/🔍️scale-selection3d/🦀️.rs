@@ -27,10 +27,10 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleSelecti
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (factors_en, factors_de) = puzzle5d_selection_triple(self.factors);
         let (en, de) = puzzle5d_selection_items(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by {factors_en}"), &format!("{de} um {factors_de} skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

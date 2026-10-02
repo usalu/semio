@@ -35,8 +35,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceQ
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace qc", "Qualitätsprüfung ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace qc", "Qualitätsprüfung ersetzen")
     }
 }
 //#endregion 🔖️Mutation

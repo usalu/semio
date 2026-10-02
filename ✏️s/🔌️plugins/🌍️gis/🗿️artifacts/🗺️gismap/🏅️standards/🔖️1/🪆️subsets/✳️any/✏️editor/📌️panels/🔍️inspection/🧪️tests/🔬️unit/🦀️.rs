@@ -18,7 +18,7 @@ async fn the_inspector_always_summarises_the_schema_and_visible_count() {
 async fn the_inspector_detail_section_follows_the_features_selection() {
     let document = crate::schema::default_document();
     let cfg = MapWindowConfig::default();
-    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🧩️ A `BuiltNode` carries retained page children, so it is projected through the fixture
     // transport (the same route `unit_tests::context::render` takes) rather than serialized directly.
     let json = |interaction: &Gis2dInteractionSnapshot| -> String {
@@ -49,7 +49,7 @@ async fn the_inspector_detail_section_follows_the_features_selection() {
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_summary_projects_each_document_collection_extent() {
     let cfg = MapWindowConfig::default();
-    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let json = |document: &GisMapSnapshot| -> String {
         let tree = semio_framework_plugin::built_to_component_tree(render(document, &cfg, &Gis2dInteractionSnapshot::default(), labels).expect("inspector"));
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")

@@ -15,7 +15,7 @@ fn selected_frame_page_and_document_expose_edit_inputs() {
     let snapshot = crate::standards::v1::subsets::any::schema::default_document();
     let config = LayoutWindowConfig { active_page_id: "page-1".into(), ..LayoutWindowConfig::default() };
     let interaction = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], ..Default::default() };
-    let labels = crate::editor::layout::terminology::layout_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = crate::editor::layout::terminology::layout_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(&snapshot, &config, &interaction, labels).expect("inspector");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project inspector");
     assert!(json.contains("patchFrame"), "{json}");

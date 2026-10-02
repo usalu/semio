@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "arrayLength",
+    "totalRows",
+    "refusedRows",
+    "cancelAt",
+    "counts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.pdf.native-row-admission/v1"
+    },
+    "arrayLength": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "totalRows": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "refusedRows": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cancelAt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minProperties": 1
+    }
+  }
+}

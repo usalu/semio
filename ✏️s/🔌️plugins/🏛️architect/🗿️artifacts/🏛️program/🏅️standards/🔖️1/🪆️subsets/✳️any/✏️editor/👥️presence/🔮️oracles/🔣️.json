@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The presence state lane of `s.architect.program`'s editor (✏️editor/👥️presence): its mutation vocabulary `ArchitectPresenceMutation` over `ArchitectPresence`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/👥️mutate-architect-program-1-any-editor-presence` and backed by one committed vector per declared outcome class.",
   "oracles": [],

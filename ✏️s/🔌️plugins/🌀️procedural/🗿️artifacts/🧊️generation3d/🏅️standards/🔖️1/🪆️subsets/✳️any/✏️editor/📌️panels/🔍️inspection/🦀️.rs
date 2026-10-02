@@ -7,7 +7,15 @@ use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_artifact_flow_flow::neural::Value;
 use dsl::ToValue as _;
 use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
-use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";

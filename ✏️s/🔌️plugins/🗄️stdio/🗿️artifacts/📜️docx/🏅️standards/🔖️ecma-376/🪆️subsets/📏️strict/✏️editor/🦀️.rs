@@ -7,9 +7,25 @@ use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
 use crate::schema::mutations::{set_snapshot, DocxXmlAddress};
 use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.docx@ecma-376/strict`. Duplicated (not imported) in the
@@ -136,14 +152,14 @@ impl ArtifactEditor for DocxStrictEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxStrictEditorCommand::SetPage { address, text }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
         let Some(mutation) = build_set_page_mutation(doc.snapshot, address, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set DOCX run in {}", address.part_path)), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -183,7 +199,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
             return Err(Fault::from("stdio-docx-native-edit-command-mismatch"));
         };
         let Some(mutation) = build_set_page_mutation(snapshot, address, text)? else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set DOCX run in {}", address.part_path)), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
     },
     work: docx_strict_set_page_work,
     preparation_route: crate::editor::docx::standards::v_ecma_376::subsets::base::preparation::route,

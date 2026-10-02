@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ⚙️ Builds and tests the `semio-framework-repo-search` crate (nx bridge for `repo/search/rs`). */
-import { devToolingEnv, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, runRepositoryCargoTests, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -15,7 +16,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted([crate], this.repoRoot, rest);
+    await runRepositoryCargoTests([crate], this.repoRoot, rest);
   }
 }
 

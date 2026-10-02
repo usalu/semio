@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ResizeGrid {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Resize grid to {}×{}", self.width, self.height), &format!("Größe des Rasters auf {}×{} ändern", self.width, self.height))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Resize grid to {}×{}", self.width, self.height), &format!("Größe des Rasters auf {}×{} ändern", self.width, self.height))
     }
 }
 //#endregion 🔖️ResizeGrid

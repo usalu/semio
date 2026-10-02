@@ -891,7 +891,7 @@ impl Operator for ExportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
-            let value = kernel.export_step(&[geometry]).map_err(|error| map_kernel_error(&error))?;
+            let value = semio_s_artifact_stdio_step::geometry::export_step(kernel, &[geometry]).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("step", text_dictionary(value)))
         })
     }
@@ -929,7 +929,7 @@ impl Operator for ImportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let data = read_text(input, "data")?;
-            let shapes = kernel.import_step(&data).map_err(|error| map_kernel_error(&error))?;
+            let shapes = semio_s_artifact_stdio_step::geometry::import_step(kernel, &data).map_err(|error| map_kernel_error(&error))?;
             let handle = shapes.into_iter().next().ok_or_else(|| EvalError::InvalidInput("step import produced no solids".into()))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })

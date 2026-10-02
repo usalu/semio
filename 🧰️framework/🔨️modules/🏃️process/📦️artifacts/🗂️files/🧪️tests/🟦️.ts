@@ -56,6 +56,5 @@ export async function testArtifactFiles(outputDirectory: string): Promise<void> 
       const child = spawnSync(runtime, ["--input-type=module", "-e", program], { encoding: "utf8", timeout: 15000 });
       assert.equal(child.status, 0, `${runtime}: ${child.stderr}`); assert.deepEqual(JSON.parse(child.stdout), corpus.collections.map(row => row.ordered));
     }
-    console.log(`[DEBUG] artifact-files writes=${corpus.writes.length} collections=${corpus.collections.length} refusals=${corpus.refusals.length} Ajv-fast-glob-Bun-Node=true`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

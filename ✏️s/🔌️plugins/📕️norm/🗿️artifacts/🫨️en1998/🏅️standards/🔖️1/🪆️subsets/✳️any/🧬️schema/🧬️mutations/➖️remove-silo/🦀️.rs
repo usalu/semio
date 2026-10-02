@@ -25,8 +25,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for RemoveSilo {
     fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove silo", "Silo entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove silo", "Silo entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

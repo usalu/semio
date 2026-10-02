@@ -15,13 +15,27 @@ use crate::op::Iso16757Mutation;
 use crate::Iso16757Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation};
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
 use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 // 🚧️ SDK GAP: `Dialect` is not in `semio_framework_plugin`'s curated crate-root re-export list
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
 use semio_framework_plugin::app::Dialect;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.
@@ -106,7 +120,7 @@ impl ArtifactEditor for Iso16757PlayApp {
 
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::app_surface::app_schema_descriptor())
     }
 

@@ -1,6 +1,6 @@
 //! 🗣️ Trinity Rewriting app — locale/terminology label set.
 
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 
 app_labels! {
     /// 🗣️ Complete UI label set for the Rewrite rule app; one field per label makes every locale×terminology combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.

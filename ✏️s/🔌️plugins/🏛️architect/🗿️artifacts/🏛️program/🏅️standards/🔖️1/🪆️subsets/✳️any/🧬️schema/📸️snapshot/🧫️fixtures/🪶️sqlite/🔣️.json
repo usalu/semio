@@ -1,0 +1,1143 @@
+{
+  "schemaLimitOffsets": [
+    [
+      -1,
+      false
+    ],
+    [
+      0,
+      true
+    ]
+  ],
+  "malformedSql": [
+    "DELETE FROM architect_meta",
+    "UPDATE architect_child SET slot='other' WHERE id=1",
+    "UPDATE architect_child SET slot='knowledge' WHERE slot='benchmarks'",
+    "UPDATE architect_stakeholder SET id=900000",
+    "DELETE FROM architect_stakeholder",
+    "UPDATE architect_entity_header SET register='other' WHERE register='stakeholders'",
+    "UPDATE architect_entity_header SET ordinal=2 WHERE register='stakeholders'",
+    "UPDATE architect_entity_header SET document_id=900000 WHERE register='stakeholders'",
+    "UPDATE architect_quantity_spec SET entity_id=900000",
+    "UPDATE architect_quantity_spec SET slot='other'",
+    "UPDATE architect_benchmark_record SET value_ieee754_class='nan'",
+    "UPDATE architect_search_filter SET use_count_decimal='00'",
+    "UPDATE architect_search_filter SET use_count_u64_bits=1",
+    "UPDATE architect_survey SET response_count=-1",
+    "UPDATE architect_workshop SET workshop_status='other'"
+  ],
+  "binary64IntegerQueries": [
+    [
+      "9007199254740992",
+      "4340000000000000",
+      true
+    ],
+    [
+      "9007199254740993",
+      "4340000000000000",
+      false
+    ],
+    [
+      "9223372036854775807",
+      "43e0000000000000",
+      false
+    ],
+    [
+      "-9223372036854775808",
+      "c3e0000000000000",
+      true
+    ]
+  ],
+  "registerFixtures": [
+    [
+      "stakeholders",
+      "👥️stakeholder",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "users",
+      "🧑️user",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "activities",
+      "🏃️activity",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "functions",
+      "⚙️function",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "elements",
+      "🧱️program-element",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "quantities",
+      "🔢️quantity",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "relationships",
+      "🕸️relationship",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "adjacencies",
+      "🧲️adjacency",
+      "🧲️connect/🧲️reception"
+    ],
+    [
+      "processes",
+      "🔄️process",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "flows",
+      "🌊️flow",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "accessRules",
+      "🔑️access-rule",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "operations",
+      "📋️operational",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "equipment",
+      "🛠️equipment",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "resources",
+      "📦️resource",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "storage",
+      "🗄️storage",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "environmental",
+      "🌿️environmental",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "humanFactors",
+      "🧠️human",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "accessibility",
+      "♿️accessibility",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "privacy",
+      "🔒️privacy",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "safety",
+      "🦺️safety",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "security",
+      "🛡️security",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "regulatory",
+      "📜️regulatory",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "siteContext",
+      "📍️site",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "organizational",
+      "🏢️organizational",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "services",
+      "🛎️service",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "infrastructure",
+      "🏗️infrastructure",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "information",
+      "ℹ️information",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "communication",
+      "📡️communication",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "wayfinding",
+      "🧭️wayfinding",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "schedules",
+      "📅️schedule",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "flexibility",
+      "🧩️flexibility",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "growth",
+      "📈️growth-plan",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "sustainability",
+      "♻️sustainability",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "resilience",
+      "💪️resilience",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "costs",
+      "💰️cost",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "delivery",
+      "🚚️delivery-constraint",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "risks",
+      "⚠️risk",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "conflicts",
+      "⚔️conflict",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "requirements",
+      "📌️requirement",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "priorities",
+      "⭐️priority-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "scenarios",
+      "🎬️scenario",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "options",
+      "⚖️option",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "decisions",
+      "✅️decision",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "validations",
+      "✔️validation-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "performance",
+      "📊️performance",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "quality",
+      "💎️quality-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "artifacts",
+      "📃️document",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "assumptions",
+      "💭️assumption",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "constraints",
+      "🚧️constraint-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "complianceRecords",
+      "🛂️compliance-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "approvals",
+      "👍️approval-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "meetings",
+      "🗓️meeting-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "changes",
+      "🔀️change-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "collaboration",
+      "🤝️collaboration",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "analyses",
+      "🔬️analysis-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "reports",
+      "📑️report-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "searchFilters",
+      "🔍️search-filter",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "statusRecords",
+      "📶️status-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "workshops",
+      "🎓️workshop",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "surveys",
+      "🗳️survey",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "issues",
+      "🐛️issue",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "auditEvents",
+      "📒️audit",
+      "🌱️create/🌱️creates"
+    ],
+    [
+      "templates",
+      "📐️template-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "knowledgePayload",
+      "📚️knowledge-record",
+      "🌱️create/🌱️creates-a"
+    ],
+    [
+      "benchmarksPayload",
+      "🏁️benchmark-record",
+      "🌱️create/🌱️creates-a"
+    ]
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "fff0000000000123",
+    "7ff8000000004321"
+  ],
+  "unsigned64Corpus": {
+    "valid": [
+      "0",
+      "1",
+      "9007199254740991",
+      "9007199254740992",
+      "9007199254740993",
+      "9223372036854775807",
+      "9223372036854775808",
+      "18446744073709551615"
+    ],
+    "invalid": [
+      "-1",
+      "18446744073709551616"
+    ]
+  },
+  "unsigned64Fields": [
+    [
+      "AnalysisRecord",
+      "durationMs"
+    ],
+    [
+      "SearchFilter",
+      "useCount"
+    ],
+    [
+      "TemplateRecord",
+      "usageCount"
+    ],
+    [
+      "KnowledgeRecord",
+      "usageCount"
+    ]
+  ],
+  "unsigned64Fixtures": {
+    "AnalysisRecord": [
+      "🧫️fixtures/🧬️mutations/🔬️analysis-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "analyses"
+    ],
+    "SearchFilter": [
+      "🧫️fixtures/🧬️mutations/🔍️search-filter/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "searchFilters"
+    ],
+    "TemplateRecord": [
+      "🧫️fixtures/🧬️mutations/📐️template-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "templates"
+    ],
+    "KnowledgeRecord": [
+      "🧫️fixtures/🧬️mutations/📚️knowledge-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "knowledgePayload"
+    ]
+  },
+  "idTexts": [
+    "",
+    "same",
+    "世界\u0000!@",
+    "__proto__",
+    "semio:s.stdio.semio:1:table"
+  ],
+  "control": {
+    "largeCharacters": 65537,
+    "maxOwnedBytes": 200000
+  },
+  "snapshotPath": "../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+  "coreColumns": {
+    "architect_document": 2,
+    "architect_meta": 18,
+    "architect_project": 27,
+    "architect_governance": 14,
+    "architect_child": 8,
+    "architect_entity_header": 17,
+    "architect_trace": 8
+  },
+  "registerTables": {
+    "stakeholders": "architect_stakeholder",
+    "users": "architect_user_profile",
+    "activities": "architect_activity",
+    "functions": "architect_function",
+    "elements": "architect_program_element",
+    "quantities": "architect_quantity_requirement",
+    "relationships": "architect_relationship",
+    "adjacencies": "architect_adjacency",
+    "processes": "architect_process",
+    "flows": "architect_flow_requirement",
+    "accessRules": "architect_access_rule",
+    "operations": "architect_operational_requirement",
+    "equipment": "architect_equipment",
+    "resources": "architect_resource",
+    "storage": "architect_storage_requirement",
+    "environmental": "architect_environmental_requirement",
+    "humanFactors": "architect_human_factor_requirement",
+    "accessibility": "architect_accessibility_requirement",
+    "privacy": "architect_privacy_requirement",
+    "safety": "architect_safety_requirement",
+    "security": "architect_security_requirement",
+    "regulatory": "architect_regulatory_requirement",
+    "siteContext": "architect_site_context",
+    "organizational": "architect_organizational_requirement",
+    "services": "architect_service_requirement",
+    "infrastructure": "architect_infrastructure_requirement",
+    "information": "architect_information_requirement",
+    "communication": "architect_communication_requirement",
+    "wayfinding": "architect_wayfinding_requirement",
+    "schedules": "architect_schedule_requirement",
+    "flexibility": "architect_flexibility_requirement",
+    "growth": "architect_growth_plan",
+    "sustainability": "architect_sustainability_requirement",
+    "resilience": "architect_resilience_requirement",
+    "costs": "architect_cost_requirement",
+    "delivery": "architect_delivery_constraint",
+    "risks": "architect_risk",
+    "conflicts": "architect_conflict",
+    "requirements": "architect_requirement",
+    "priorities": "architect_priority_record",
+    "scenarios": "architect_scenario",
+    "options": "architect_option_evaluation",
+    "decisions": "architect_decision",
+    "validations": "architect_validation_record",
+    "performance": "architect_performance_criterion",
+    "quality": "architect_quality_record",
+    "artifacts": "architect_artifact_record",
+    "assumptions": "architect_assumption",
+    "constraints": "architect_constraint_record",
+    "complianceRecords": "architect_compliance_record",
+    "approvals": "architect_approval_record",
+    "meetings": "architect_meeting_record",
+    "changes": "architect_change_record",
+    "collaboration": "architect_collaboration_record",
+    "analyses": "architect_analysis_record",
+    "reports": "architect_report_record",
+    "searchFilters": "architect_search_filter",
+    "statusRecords": "architect_status_record",
+    "workshops": "architect_workshop",
+    "surveys": "architect_survey",
+    "issues": "architect_issue",
+    "auditEvents": "architect_audit_event",
+    "templates": "architect_template_record",
+    "knowledgePayload": "architect_knowledge_record",
+    "benchmarksPayload": "architect_benchmark_record"
+  },
+  "firstBodyColumns": {
+    "architect_stakeholder": [
+      "id",
+      "role",
+      "organization",
+      "department",
+      "contact_email",
+      "contact_phone",
+      "influence",
+      "interest",
+      "engagement",
+      "decision_authority",
+      "reporting_frequency",
+      "availability",
+      "representative_of",
+      "delegated_to",
+      "relationship_to_client",
+      "stakeholder_type",
+      "influence_strategy"
+    ],
+    "architect_user_profile": [
+      "id",
+      "category",
+      "demographic",
+      "age_range",
+      "occupation",
+      "role_title",
+      "department",
+      "usage_frequency",
+      "usage_duration",
+      "technology_proficiency",
+      "research_method",
+      "persona_archetype",
+      "validated"
+    ],
+    "architect_activity": [
+      "id",
+      "code",
+      "category",
+      "frequency",
+      "duration",
+      "intensity",
+      "activity_type",
+      "location_context",
+      "temporal_pattern",
+      "supervision_level"
+    ],
+    "architect_function": [
+      "id",
+      "code",
+      "kind",
+      "purpose_text",
+      "purpose_format",
+      "criticality",
+      "service_level",
+      "operating_hours",
+      "owner_stakeholder_id",
+      "hierarchy_parent_id"
+    ],
+    "architect_program_element": [
+      "id",
+      "code",
+      "kind",
+      "parent_identity",
+      "level",
+      "location_hint",
+      "orientation",
+      "daylight_requirement",
+      "acoustic_class",
+      "security_zone",
+      "growth_allocation",
+      "circulation_role",
+      "visibility_level",
+      "environmental_zone"
+    ],
+    "architect_quantity_spec": [
+      "id",
+      "entity_id",
+      "slot",
+      "unit",
+      "min",
+      "min_ieee754_bits",
+      "min_ieee754_class",
+      "max",
+      "max_ieee754_bits",
+      "max_ieee754_class",
+      "target",
+      "target_ieee754_bits",
+      "target_ieee754_class",
+      "current",
+      "current_ieee754_bits",
+      "current_ieee754_class",
+      "forecast",
+      "forecast_ieee754_bits",
+      "forecast_ieee754_class",
+      "peak",
+      "peak_ieee754_bits",
+      "peak_ieee754_class",
+      "average",
+      "average_ieee754_bits",
+      "average_ieee754_class"
+    ]
+  },
+  "unsigned32Fields": [
+    [
+      "Equipment",
+      "lifecycleYears"
+    ],
+    [
+      "ScheduleRequirement",
+      "floatDays"
+    ],
+    [
+      "ScheduleRequirement",
+      "contingencyDays"
+    ],
+    [
+      "GrowthPlan",
+      "horizonYears"
+    ],
+    [
+      "PriorityRecord",
+      "rank"
+    ],
+    [
+      "Survey",
+      "responseCount"
+    ],
+    [
+      "BenchmarkRecord",
+      "sampleSize"
+    ],
+    [
+      "BenchmarkRecord",
+      "collectionYear"
+    ]
+  ],
+  "unsigned32Corpus": {
+    "valid": [
+      0,
+      4294967295
+    ],
+    "invalid": [
+      -1,
+      0.5,
+      4294967296
+    ]
+  },
+  "unsigned32Fixtures": {
+    "BenchmarkRecord": [
+      "🧫️fixtures/🧬️mutations/🏁️benchmark-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "benchmarksPayload"
+    ],
+    "Equipment": [
+      "🧫️fixtures/🧬️mutations/🛠️equipment/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "equipment"
+    ],
+    "GrowthPlan": [
+      "🧫️fixtures/🧬️mutations/📈️growth-plan/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "growth"
+    ],
+    "PriorityRecord": [
+      "🧫️fixtures/🧬️mutations/⭐️priority-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "priorities"
+    ],
+    "ScheduleRequirement": [
+      "🧫️fixtures/🧬️mutations/📅️schedule/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "schedules"
+    ],
+    "Survey": [
+      "🧫️fixtures/🧬️mutations/🗳️survey/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json",
+      "surveys"
+    ]
+  },
+  "binary64Fields": [
+    [
+      "benchmarksPayload",
+      "value",
+      "architect_benchmark_record",
+      "value"
+    ],
+    [
+      "statusRecords",
+      "progressPercent",
+      "architect_status_record",
+      "progress_percent"
+    ],
+    [
+      "workshops",
+      "budget",
+      "architect_workshop",
+      "budget"
+    ],
+    [
+      "surveys",
+      "responseRate",
+      "architect_survey",
+      "response_rate"
+    ],
+    [
+      "changes",
+      "costImpact",
+      "architect_change_record",
+      "cost_impact"
+    ],
+    [
+      "performance",
+      "target",
+      "architect_performance_criterion",
+      "target"
+    ],
+    [
+      "performance",
+      "minimum",
+      "architect_performance_criterion",
+      "minimum"
+    ],
+    [
+      "performance",
+      "maximum",
+      "architect_performance_criterion",
+      "maximum"
+    ],
+    [
+      "performance",
+      "baseline",
+      "architect_performance_criterion",
+      "baseline"
+    ],
+    [
+      "performance",
+      "weight",
+      "architect_performance_criterion",
+      "weight"
+    ],
+    [
+      "performance",
+      "penaltyThreshold",
+      "architect_performance_criterion",
+      "penalty_threshold"
+    ],
+    [
+      "performance",
+      "incentiveThreshold",
+      "architect_performance_criterion",
+      "incentive_threshold"
+    ],
+    [
+      "scenarios",
+      "probability",
+      "architect_scenario",
+      "probability"
+    ],
+    [
+      "scenarios",
+      "costDelta",
+      "architect_scenario",
+      "cost_delta"
+    ],
+    [
+      "scenarios",
+      "areaDelta",
+      "architect_scenario",
+      "area_delta"
+    ],
+    [
+      "scenarios",
+      "headcountDelta",
+      "architect_scenario",
+      "headcount_delta"
+    ],
+    [
+      "options",
+      "weightedScore",
+      "architect_option_evaluation",
+      "weighted_score"
+    ],
+    [
+      "options",
+      "costEstimate",
+      "architect_option_evaluation",
+      "cost_estimate"
+    ],
+    [
+      "decisions",
+      "costImpact",
+      "architect_decision",
+      "cost_impact"
+    ],
+    [
+      "priorities",
+      "weight",
+      "architect_priority_record",
+      "weight"
+    ],
+    [
+      "priorities",
+      "score",
+      "architect_priority_record",
+      "score"
+    ],
+    [
+      "risks",
+      "riskScore",
+      "architect_risk",
+      "risk_score"
+    ],
+    [
+      "conflicts",
+      "costImpact",
+      "architect_conflict",
+      "cost_impact"
+    ],
+    [
+      "requirements",
+      "costEstimate",
+      "architect_requirement",
+      "cost_estimate"
+    ],
+    [
+      "sustainability",
+      "baseline",
+      "architect_sustainability_requirement",
+      "baseline"
+    ],
+    [
+      "sustainability",
+      "targetValue",
+      "architect_sustainability_requirement",
+      "target_value"
+    ],
+    [
+      "sustainability",
+      "embodiedCarbon",
+      "architect_sustainability_requirement",
+      "embodied_carbon"
+    ],
+    [
+      "sustainability",
+      "operationalCarbon",
+      "architect_sustainability_requirement",
+      "operational_carbon"
+    ],
+    [
+      "costs",
+      "amount",
+      "architect_cost_requirement",
+      "amount"
+    ],
+    [
+      "costs",
+      "unitCost",
+      "architect_cost_requirement",
+      "unit_cost"
+    ],
+    [
+      "costs",
+      "contingencyPercent",
+      "architect_cost_requirement",
+      "contingency_percent"
+    ],
+    [
+      "costs",
+      "escalationRate",
+      "architect_cost_requirement",
+      "escalation_rate"
+    ],
+    [
+      "growth",
+      "growthRate",
+      "architect_growth_plan",
+      "growth_rate"
+    ],
+    [
+      "growth",
+      "budgetEnvelope",
+      "architect_growth_plan",
+      "budget_envelope"
+    ],
+    [
+      "wayfinding",
+      "maximumSignageDistanceM",
+      "architect_wayfinding_requirement",
+      "maximum_signage_distance_m"
+    ],
+    [
+      "flexibility",
+      "costOfChange",
+      "architect_flexibility_requirement",
+      "cost_of_change"
+    ],
+    [
+      "infrastructure",
+      "peakDemand",
+      "architect_infrastructure_requirement",
+      "peak_demand"
+    ],
+    [
+      "infrastructure",
+      "diversityFactor",
+      "architect_infrastructure_requirement",
+      "diversity_factor"
+    ],
+    [
+      "infrastructure",
+      "lifecycleCost",
+      "architect_infrastructure_requirement",
+      "lifecycle_cost"
+    ],
+    [
+      "siteContext",
+      "latitude",
+      "architect_site_context",
+      "latitude"
+    ],
+    [
+      "siteContext",
+      "longitude",
+      "architect_site_context",
+      "longitude"
+    ],
+    [
+      "siteContext",
+      "elevationM",
+      "architect_site_context",
+      "elevation_m"
+    ],
+    [
+      "siteContext",
+      "maxHeightM",
+      "architect_site_context",
+      "max_height_m"
+    ],
+    [
+      "siteContext",
+      "maxCoverage",
+      "architect_site_context",
+      "max_coverage"
+    ],
+    [
+      "accessibility",
+      "clearWidthM",
+      "architect_accessibility_requirement",
+      "clear_width_m"
+    ],
+    [
+      "accessibility",
+      "clearHeightM",
+      "architect_accessibility_requirement",
+      "clear_height_m"
+    ],
+    [
+      "accessibility",
+      "turningCircleM",
+      "architect_accessibility_requirement",
+      "turning_circle_m"
+    ],
+    [
+      "accessibility",
+      "rampSlope",
+      "architect_accessibility_requirement",
+      "ramp_slope"
+    ],
+    [
+      "environmental",
+      "targetValue",
+      "architect_environmental_requirement",
+      "target_value"
+    ],
+    [
+      "environmental",
+      "minValue",
+      "architect_environmental_requirement",
+      "min_value"
+    ],
+    [
+      "environmental",
+      "maxValue",
+      "architect_environmental_requirement",
+      "max_value"
+    ],
+    [
+      "storage",
+      "volumeM3",
+      "architect_storage_requirement",
+      "volume_m3"
+    ],
+    [
+      "storage",
+      "weightKg",
+      "architect_storage_requirement",
+      "weight_kg"
+    ],
+    [
+      "storage",
+      "growthAllowance",
+      "architect_storage_requirement",
+      "growth_allowance"
+    ],
+    [
+      "equipment",
+      "weightKg",
+      "architect_equipment",
+      "weight_kg"
+    ],
+    [
+      "equipment",
+      "powerKw",
+      "architect_equipment",
+      "power_kw"
+    ],
+    [
+      "equipment",
+      "noiseLevelDb",
+      "architect_equipment",
+      "noise_level_db"
+    ],
+    [
+      "equipment",
+      "replacementCost",
+      "architect_equipment",
+      "replacement_cost"
+    ],
+    [
+      "resources",
+      "costPerUnit",
+      "architect_resource",
+      "cost_per_unit"
+    ],
+    [
+      "resources",
+      "sharingRatio",
+      "architect_resource",
+      "sharing_ratio"
+    ],
+    [
+      "flows",
+      "peakRate",
+      "architect_flow_requirement",
+      "peak_rate"
+    ],
+    [
+      "flows",
+      "clearWidthM",
+      "architect_flow_requirement",
+      "clear_width_m"
+    ],
+    [
+      "flows",
+      "clearHeightM",
+      "architect_flow_requirement",
+      "clear_height_m"
+    ],
+    [
+      "operations",
+      "uptimeTarget",
+      "architect_operational_requirement",
+      "uptime_target"
+    ],
+    [
+      "adjacencies",
+      "weight",
+      "architect_adjacency",
+      "weight"
+    ],
+    [
+      "adjacencies",
+      "distanceMaxM",
+      "architect_adjacency",
+      "distance_max_m"
+    ],
+    [
+      "adjacencies",
+      "distanceMinM",
+      "architect_adjacency",
+      "distance_min_m"
+    ],
+    [
+      "quantities",
+      "tolerancePercent",
+      "architect_quantity_requirement",
+      "tolerance_percent"
+    ],
+    [
+      "quantities",
+      "peakFactor",
+      "architect_quantity_requirement",
+      "peak_factor"
+    ],
+    [
+      "quantities",
+      "growthFactor",
+      "architect_quantity_requirement",
+      "growth_factor"
+    ],
+    [
+      "quantities",
+      "unitCost",
+      "architect_quantity_requirement",
+      "unit_cost"
+    ],
+    [
+      "relationships",
+      "strength",
+      "architect_relationship",
+      "strength"
+    ],
+    [
+      "relationships",
+      "distanceConstraintM",
+      "architect_relationship",
+      "distance_constraint_m"
+    ]
+  ]
+}

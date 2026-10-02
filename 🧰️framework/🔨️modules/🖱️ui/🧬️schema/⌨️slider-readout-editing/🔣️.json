@@ -43,13 +43,14 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "input", "exit", "expectedDisplay", "actionCount"],
+        "required": ["id", "input", "exit", "expectedDisplay", "actionCount", "editing"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "input": { "type": "string" },
           "exit": { "enum": ["Enter", "Escape", "blur"] },
           "expectedDisplay": { "type": "string" },
-          "actionCount": { "type": "integer", "minimum": 0 }
+          "actionCount": { "type": "integer", "minimum": 0 },
+          "editing": { "type": "boolean", "description": "Whether the readout editor stays open on the refused draft after the exit (a value beyond the hard range is refused visibly, never silently dropped)." }
         }
       }
     },

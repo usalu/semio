@@ -14,6 +14,7 @@
 //! reusing the shared `enc_named_triple`/`dec_named_triple`/`split_top_level`/`strip_brackets`
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
+use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::base::schema::triples::{dec_named_triple, enc_named_triple, split_top_level, strip_brackets, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::brep::schema::snapshot::{
@@ -581,7 +582,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    crate::standards::v1::subsets::base::schema::geometry::native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
@@ -632,7 +633,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 //#region 🔖️ValueCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
-    format!("[{},{},{}]", p.x, p.y, p.z)
+    format!("[{},{},{}]", NativeF64(p.x), NativeF64(p.y), NativeF64(p.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
@@ -648,11 +649,11 @@ pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 pub(crate) fn enc_curve(c: &BrepCurve) -> String {
     match c {
         BrepCurve::Line { origin, direction } => format!("L[{},{}]", enc_point3(origin), enc_point3(direction)),
-        BrepCurve::Circle { center, axis, radius } => format!("C[{},{},{}]", enc_point3(center), enc_point3(axis), radius),
+        BrepCurve::Circle { center, axis, radius } => format!("C[{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*radius)),
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
-            format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), radius_major, radius_minor)
+            format!("E[{},{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*radius_major), NativeF64(*radius_minor))
         }
-        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| w.to_string()), degree, enc_list(knots, |k: &f64| k.to_string()),),
+        BrepCurve::Nurbs { control_points, weights, degree, knots } => format!("N[{},{},{},{}]", enc_list(control_points, enc_point3), enc_list(weights, |w: &f64| NativeF64(*w).to_string()), degree, enc_list(knots, |k: &f64| NativeF64(*k).to_string()),),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -688,20 +689,20 @@ pub(crate) fn dec_curve(s: &str) -> Result<BrepCurve, String> {
 pub(crate) fn enc_surface(s: &BrepSurface) -> String {
     match s {
         BrepSurface::Plane { origin, normal } => format!("P[{},{}]", enc_point3(origin), enc_point3(normal)),
-        BrepSurface::Cylinder { origin, axis, radius } => format!("C[{},{},{}]", enc_point3(origin), enc_point3(axis), radius),
-        BrepSurface::Cone { origin, axis, radius, half_angle } => format!("O[{},{},{},{}]", enc_point3(origin), enc_point3(axis), radius, half_angle),
-        BrepSurface::Sphere { center, radius } => format!("S[{},{}]", enc_point3(center), radius),
-        BrepSurface::Torus { center, axis, major_radius, minor_radius } => format!("T[{},{},{},{}]", enc_point3(center), enc_point3(axis), major_radius, minor_radius),
+        BrepSurface::Cylinder { origin, axis, radius } => format!("C[{},{},{}]", enc_point3(origin), enc_point3(axis), NativeF64(*radius)),
+        BrepSurface::Cone { origin, axis, radius, half_angle } => format!("O[{},{},{},{}]", enc_point3(origin), enc_point3(axis), NativeF64(*radius), NativeF64(*half_angle)),
+        BrepSurface::Sphere { center, radius } => format!("S[{},{}]", enc_point3(center), NativeF64(*radius)),
+        BrepSurface::Torus { center, axis, major_radius, minor_radius } => format!("T[{},{},{},{}]", enc_point3(center), enc_point3(axis), NativeF64(*major_radius), NativeF64(*minor_radius)),
         BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => format!(
             "N[{},{},{},{},{},{},{},{}]",
             enc_list(control_points, enc_point3),
-            enc_list(weights, |w: &f64| w.to_string()),
+            enc_list(weights, |w: &f64| NativeF64(*w).to_string()),
             u_count,
             v_count,
             degree_u,
             degree_v,
-            enc_list(knots_u, |k: &f64| k.to_string()),
-            enc_list(knots_v, |k: &f64| k.to_string()),
+            enc_list(knots_u, |k: &f64| NativeF64(*k).to_string()),
+            enc_list(knots_v, |k: &f64| NativeF64(*k).to_string()),
         ),
     }
 }
@@ -820,7 +821,7 @@ pub(crate) fn dec_solid(s: &str) -> Result<BrepSolid, String> {
 //#region 🔖️DiffValueCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_vertex_diff(d: &BrepVertexDiff) -> String {
-    format!("[{},{}]", encode_option(&d.point, enc_point3), encode_option(&d.tol, |v: &f64| v.to_string()))
+    format!("[{},{}]", encode_option(&d.point, enc_point3), encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
@@ -831,7 +832,7 @@ fn dec_vertex_diff(s: &str) -> Result<BrepVertexDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_edge_diff(d: &BrepEdgeDiff) -> String {
-    format!("[{},{},{},{}]", encode_option(&d.start_vertex, |v: &String| enc_str(v)), encode_option(&d.end_vertex, |v: &String| enc_str(v)), encode_option(&d.curve, enc_curve), encode_option(&d.tol, |v: &f64| v.to_string()))
+    format!("[{},{},{},{}]", encode_option(&d.start_vertex, |v: &String| enc_str(v)), encode_option(&d.end_vertex, |v: &String| enc_str(v)), encode_option(&d.curve, enc_curve), encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_edge_diff(s: &str) -> Result<BrepEdgeDiff, String> {
@@ -855,10 +856,10 @@ fn enc_face_diff(d: &BrepFaceDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.outer_loop, |v: &String| enc_str(v)),
-        encode_option(&d.inner_loops, |v: &Vec<String>| enc_list(v, |s: &String| enc_str(s))),
+        encode_option(&d.inner_loops, |v: &Vec<String>| enc_list(v, |s: &String| crate::standards::v1::subsets::brep::schema::snapshot::enc_loop_id(s))),
         encode_option(&d.surface, enc_surface),
         encode_option(&d.orientation, |b: &bool| enc_bool(*b).to_string()),
-        encode_option(&d.tol, |v: &f64| v.to_string()),
+        encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()),
     )
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -867,7 +868,7 @@ fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
     let [outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face diff: expected 5 fields, got {}", parts.len())) };
     Ok(BrepFaceDiff {
         outer_loop: decode_option(outer_loop, dec_str)?,
-        inner_loops: decode_option(inner_loops, |s| dec_list(s, dec_str))?,
+        inner_loops: decode_option(inner_loops, |s| dec_list(s, crate::standards::v1::subsets::brep::schema::snapshot::dec_loop_id))?,
         surface: decode_option(surface, dec_surface)?,
         orientation: decode_option(orientation, parse_bool)?,
         tol: decode_option(tol, parse_f64)?,

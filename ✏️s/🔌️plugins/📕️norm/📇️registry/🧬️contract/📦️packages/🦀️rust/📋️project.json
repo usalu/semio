@@ -12,7 +12,6 @@
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/⚖️compliance/**/*.rs",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🖥️app-surface/**/*.rs",
-      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🦀️.rs",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/**/*"
     ]
   },
@@ -46,6 +45,28 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-byte-property": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-byte-property",
+        "forwardAllArgs": true
+      }
+    },
+    "test-definition-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "nativeSources"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-definition-ownership",
         "forwardAllArgs": true
       }
     }

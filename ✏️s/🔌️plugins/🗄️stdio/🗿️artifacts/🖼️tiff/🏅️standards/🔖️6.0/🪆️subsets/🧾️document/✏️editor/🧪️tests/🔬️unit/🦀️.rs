@@ -3,7 +3,7 @@ use super::*;
 /// 🧬️ Registers the document schema tiff's declaration contributes — the contract every snapshot edit validates against;
 /// a fixture editor runs without the plugin assembly that publishes it.
 fn register_document_schema() {
-    framework_schema::register_artifact_schema_descriptors(vec![crate::standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor()]).expect("the tiff document schema registers");
+    semio_framework_schema_registry::register_artifact_schema_descriptors(vec![crate::standards::v6_0::subsets::document::schema::tiff_artifact_schema_descriptor()]).expect("the tiff document schema registers");
 }
 
 #[semio_framework_async_macros::async_test]

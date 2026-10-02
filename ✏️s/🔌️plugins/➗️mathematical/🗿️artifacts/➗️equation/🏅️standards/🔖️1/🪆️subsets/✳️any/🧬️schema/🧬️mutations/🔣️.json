@@ -182,6 +182,30 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/equation/mutation/change-coefficient/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveNodes"
+      ],
+      "properties": {
+        "MoveNodes": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/move-nodes/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetNodePositions"
+      ],
+      "properties": {
+        "SetNodePositions": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/mathematical/equation/1/graph/mutation/set-node-positions/schema.json"
+        }
+      }
     }
   ]
 }

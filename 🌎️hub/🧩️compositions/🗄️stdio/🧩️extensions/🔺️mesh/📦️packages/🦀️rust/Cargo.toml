@@ -73,6 +73,7 @@ semio-s-artifact-stdio-stl = { workspace = true, features = ["component-app-asse
 semio-s-artifact-stdio-ply = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-stdio-las = { workspace = true, features = ["component-app-assembly"] }
 # /🧩️ Composition Dependencies
+semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true }

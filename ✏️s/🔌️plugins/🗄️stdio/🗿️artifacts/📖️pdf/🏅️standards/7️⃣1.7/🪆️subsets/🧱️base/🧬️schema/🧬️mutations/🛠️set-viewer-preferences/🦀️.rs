@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetViewerPreferences {
         vec![PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: base.viewer_preferences.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set viewer-preferences", "Betrachtereinstellungen setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set viewer-preferences", "Betrachtereinstellungen setzen")
     }
 
     fn target(&self) -> Vec<String> {

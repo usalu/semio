@@ -2,13 +2,6 @@
 use super::*;
 
 #[semio_framework_async_macros::async_test]
-#[ignore = "manual fixture export"]
-async fn export_demo_stock_fixture_text() {
-    let document = crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new());
-    println!("{}", store::ArtifactDsl::print_dsl(&document));
-}
-
-#[semio_framework_async_macros::async_test]
 async fn demo_stock_example_dsl_round_trips() {
     let document = parse_dsl(DEMO_STOCK_TEXT).expect("parse demo-stock example");
     store::os_store::test_support::assert_dsl_round_trip(&document);

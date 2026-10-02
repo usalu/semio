@@ -14,11 +14,13 @@ pub struct EntityId(pub u32);
 // 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports named-field
 // structs, not a tuple struct like this one (see `semio-framework-value-derive`'s own docstring).
 impl ToValue for EntityId {
+    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
     fn to_value(&self) -> DslValue {
         self.0.to_value()
     }
 }
 impl FromValue for EntityId {
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         u32::from_value(value).map(EntityId)
     }
@@ -519,11 +521,13 @@ pub struct ScheduleId(pub u32);
 
 // 🌱️ Hand-written, not derived — same tuple-struct reason as `EntityId` above.
 impl ToValue for ScheduleId {
+    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
     fn to_value(&self) -> DslValue {
         self.0.to_value()
     }
 }
 impl FromValue for ScheduleId {
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         u32::from_value(value).map(ScheduleId)
     }

@@ -27,9 +27,12 @@ deflate = ["dep:semio-framework-deflate"]
 # crate's own `#[cfg(test)]` code, so a real cross-crate consumer (`os-flow`'s
 # `Widget`/`FlowPreviewGui`, whose own `#[cfg_attr(test, derive(Serialize, Deserialize))]` needs
 # this bound) must enable this feature explicitly instead.
-ordered-set-serde = []
+ordered-set-serde = ["semio-framework-value/ordered-set-serde"]
 
 [dependencies]
+semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust", optional = true }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }

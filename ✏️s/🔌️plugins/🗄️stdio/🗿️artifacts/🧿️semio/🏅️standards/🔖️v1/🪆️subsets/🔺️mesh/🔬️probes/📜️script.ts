@@ -26,7 +26,7 @@
 //   bun 📜️script.ts mesh-compare     --input <expected.*> --input <actual.*>
 //   bun 📜️script.ts material-compare --input <expected.gltf> --input <actual.gltf>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🔬️probes/📜️script.ts — the sibling BRep suite
 
 //#endregion 🧲️Header
@@ -427,5 +427,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 }
 
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
+// 🚰️ `exitCode`, never `process.exit()`: the orchestrator reads stdout through a pipe that bun is still draining, and an
+// explicit exit cuts the report at 64 KiB, so any larger report parses as nothing.
+if (import.meta.main) process.exitCode = await main(process.argv.slice(2));
 //#endregion 🚀️Entry

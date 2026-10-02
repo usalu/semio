@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The transient state lane of `s.wfc.wfc2d`'s editor (✏️editor/🫧️transient): its mutation vocabulary `Wfc2dTransientMutation` over `Wfc2dTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-wfc-wfc2d-1-any-editor-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],
@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a239185921d49426d1dd30170e7e02566a0d3dbe8ee5ae06246ac34613826c8",
           "bytes": 50
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🏁️set-solve/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:02367d12602539a8a4b7e59a653f172c870c4b92b0633013b18b901c91823f3d",
           "bytes": 216
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:cbf80387c87535c667c49ea83bd675c5bca96b121a77114b888b76ef208597d9",
           "bytes": 174
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🏁️set-solve/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:cbf80387c87535c667c49ea83bd675c5bca96b121a77114b888b76ef208597d9",
           "bytes": 174
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🏁️set-solve/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

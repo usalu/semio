@@ -104,6 +104,7 @@ union RasterMutation =
   | ChangeLayerMask
   | ChangeLayerTransform
   | PaintStroke
+  | FillRegion
 
 type ChangeLayerTransform {layerId: String! expected: RasterTransform! transform: RasterTransform!}
 
@@ -111,3 +112,5 @@ type RasterStrokePoint { x: Float!, y: Float! }
 type RasterBrush { size: Float!, hardness: Float!, opacity: Float!, color: [Float!]! }
 type RasterSelectionSpan { start: Int!, length: Int!, coverage: Int! }
 type PaintStroke { layerId: String!, target: String!, tool: String!, brush: RasterBrush!, points: [RasterStrokePoint!]!, selection: [RasterSelectionSpan!] }
+type RasterSeed { x: Int!, y: Int! }
+type FillRegion { layerId: String!, target: String!, seed: RasterSeed!, tolerance: Int!, color: [Float!]!, selection: [RasterSelectionSpan!] }

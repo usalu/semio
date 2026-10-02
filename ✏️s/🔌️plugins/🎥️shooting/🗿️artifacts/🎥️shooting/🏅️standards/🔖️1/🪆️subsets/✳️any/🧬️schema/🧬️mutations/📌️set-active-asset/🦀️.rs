@@ -22,8 +22,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for SetActiveAsset {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.asset_id {
             Some(id) => format!("Set active asset to \"{id}\""),
             None => "Clear active asset".into(),

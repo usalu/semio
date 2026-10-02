@@ -7,8 +7,8 @@
  *
  * 1. THE VOCABULARY. wgpu hand-builds every `nodeGraphEdit` sub-operation into a bounded action, so
  *    nothing in Rust catches it drifting from the shape the GUEST decodes. Each operation's name and
- *    field names are read out of the reference guest's own closed row declarations (flow's
- *    `node-graph-edit` command, `action_row_fields(row, operation, &[…])`) and out of React's
+ *    field names are read out of the ONE row decoder every guest shares (`🛠️tool-machine`
+ *    `NodeGraphEditRow::from_row`, `closed(&[…])`) and out of React's
  *    `NodeGraph`, never restated here — a rename on either side fails this test instead of silently
  *    splitting the two renderers.
  * 2. THE ADMISSION RULE. That a plain pointer move must not be priced like a mutation is a property
@@ -27,7 +27,7 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const engineRoot = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
 const canvasSource = resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
-const guestSource = resolve(repoRoot, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs");
+const guestSource = resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs");
 
 type EditRow = Record<string, unknown>;
 type FixtureCase = { readonly name: string; readonly rule: string; readonly gesture: Record<string, unknown>; readonly expectedEdits?: readonly EditRow[]; readonly expectedSelection?: readonly string[]; readonly expectedCameraMoves?: boolean };
@@ -49,7 +49,7 @@ const guest = readFileSync(guestSource, "utf8");
 const guestFields = (operation: string): readonly string[] => {
   if (operation === NODE_DRAG_OPERATION) return NODE_DRAG_ROW_FIELDS.filter((field) => field !== "operation");
   const arm = guest.slice(guest.indexOf(`"${operation}" =>`));
-  const declared = /action_row_fields\(row, operation, &\[([^\]]*)\]\)/u.exec(arm)?.[1] ?? "";
+  const declared = /closed\(&\[([^\]]*)\]\)/u.exec(arm)?.[1] ?? "";
   return [...declared.matchAll(/"(\w+)"/gu)].map((match) => match[1]!).filter((field) => field !== "operation");
 };
 
@@ -157,29 +157,19 @@ describe("node graph gestures", () => {
     expect(law.rules.aClickIsNotAMove).toContain("zero-delta");
   });
 
-  it("lets the HOST decide whether a released screen gesture owes a document write at all", () => {
-    // 🩸️ React read an empty `operations` as permission to re-publish the WHOLE fixture, so every plain
-    // click on the graph canvas dispatched a `setFixture` `nodeGraphEdit` — and since a landed document
-    // mutation owes every attached preview a fresh evaluation, a QUIET shell invoked
-    // `["nodeGraphEdit","flowEvalTick","flowEvalTick"]` against a preview already settled at 7/7 nodes.
-    // The predicate exists and always did: `commit_gesture_history` decides an undo entry by
-    // `content_changed`; it is published as `hostSnapshotChanged`, true only for content the narrow journal does not
-    // narrate (a node drag is narrated as its gesture record), and it is the only thing that authorises the commit
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
+  it("lets the HOST journal every content change a released gesture made, so no renderer publishes the fixture", () => {
     const flowHost = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
     const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
-    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain('("hostSnapshotChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content))');
+    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain("dag::dag_graph_edit_rows_json(self.dag.take_graph_edits())");
     const commit = flowHost.slice(flowHost.indexOf("fn commit_gesture_history"));
     const commitBody = commit.slice(0, commit.indexOf("\n    }\n"));
-    expect(commitBody).toContain("self.gesture_changed_content = false;");
     expect(commitBody).toContain("if !Self::content_changed(&baseline, &self.host_snapshot)");
-    expect(commitBody).toContain("self.gesture_changed_content = !self.journal_gesture_moves(&baseline);");
-
+    expect(commitBody).toContain("self.journal_gesture_moves(&baseline);");
+    expect(flowHost).toContain("self.dag.journal_port_insert(widget_id, side, index);");
     const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
-    expect(reactGraph).toContain("hostSnapshotChanged: parsed?.hostSnapshotChanged === true");
-    expect(reactGraph).toContain("const { operations, hostSnapshotChanged } = graphGestureAnswer(value);");
-    expect(reactGraph).toContain("else if (hostSnapshotChanged) commitFixture();");
-    expect(reactGraph).not.toContain("else commitFixture();");
+    expect(reactGraph).not.toContain("commitFixture");
+    expect(reactGraph).not.toContain("hostSnapshotChanged");
+    expect(reactGraph).toContain("dispatchGraphEdits();");
     expect(law.rules.aContentlessGestureDispatchesNothing).toContain("dispatches NOTHING");
   });
 

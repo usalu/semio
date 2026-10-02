@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-run-period-year/schema.json",
+  "title": "ChangeRunPeriodYear",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newYear"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRunPeriodYear"
+    },
+    "newYear": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Year",
+          "de": "Jahr"
+        },
+        "description": {
+          "en": "Calendar year that fixes the weekdays.",
+          "de": "Kalenderjahr, das die Wochentage festlegt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "calendar",
+        "order": 50
+      }
+    }
+  }
+}

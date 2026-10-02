@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPattern {
         match base.patterns.iter().find(|item| item.id == self.pattern.id) { Some(previous) => vec![PdfMutation::SetPattern(SetPattern { pattern: previous.clone() })], None => vec![PdfMutation::RemovePattern(super::remove_pattern::RemovePattern { id: self.pattern.id.clone() })] }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set pattern {}", self.pattern.id), &format!("Muster {} setzen", self.pattern.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set pattern {}", self.pattern.id), &format!("Muster {} setzen", self.pattern.id))
     }
 
     fn target(&self) -> Vec<String> {

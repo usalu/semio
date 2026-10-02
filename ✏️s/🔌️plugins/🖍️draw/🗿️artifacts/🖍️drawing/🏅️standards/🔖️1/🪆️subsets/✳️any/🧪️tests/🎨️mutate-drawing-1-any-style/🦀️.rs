@@ -12,10 +12,10 @@
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none —
 //! so every law this case claims is asserted INSIDE the subject handler, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law` module.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_repo_test_host::law;
 
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🎨️style/🧬️schema/🧬️mutations/🦀️.rs` — duplicated,
@@ -35,24 +35,24 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "replace-layer-fill" => (
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/🦠️mutation/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🦠️mutation/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/📸️snapshot/➡️after/🔣️.json"),
         ),
         "replace-layer-stroke" => (
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/🦠️mutation/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/🦠️mutation/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-blend-mode" => (
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/🦠️mutation/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🦠️mutation/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-opacity" => (
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/🦠️mutation/🔣️.json"),
-            include_str!("../../../🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims/🦠️mutation/🔣️.json"),
+            include_str!("../../../🎨️style/🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-style: {other:?} is not a declared kind of this subset"),
     }
@@ -95,7 +95,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_draw_drawing::standards::v1::subsets::any::schema::mutations::{apply_drawing_mutation_json, undo_drawing_mutation_json};
 
     /// 📥️ Splits a bridge answer into the resulting document and the diagnostic codes it raised.

@@ -5,7 +5,10 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;

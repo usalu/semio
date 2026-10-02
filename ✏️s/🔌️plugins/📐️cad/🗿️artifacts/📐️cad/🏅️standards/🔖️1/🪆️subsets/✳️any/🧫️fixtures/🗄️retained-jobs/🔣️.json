@@ -189,7 +189,7 @@
       "id": "engagementSubmit",
       "intendedLanes": [
         "artifact",
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -198,7 +198,8 @@
       "id": "setActiveExample",
       "intendedLanes": [
         "config",
-        "hostEffect"
+        "hostEffect",
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -207,7 +208,7 @@
       "id": "worldPointerDown",
       "intendedLanes": [
         "artifact",
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -271,7 +272,7 @@
     {
       "id": "engagementInput",
       "intendedLanes": [
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -279,7 +280,8 @@
     {
       "id": "engagementPossibleSelect",
       "intendedLanes": [
-        "config"
+        "artifact",
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -287,7 +289,7 @@
     {
       "id": "engagementRepeatLast",
       "intendedLanes": [
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -295,7 +297,7 @@
     {
       "id": "engagementAbort",
       "intendedLanes": [
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"
@@ -303,7 +305,7 @@
     {
       "id": "worldPointerMove",
       "intendedLanes": [
-        "config"
+        "windowTransient"
       ],
       "disposition": "migrated",
       "blocker": "none"

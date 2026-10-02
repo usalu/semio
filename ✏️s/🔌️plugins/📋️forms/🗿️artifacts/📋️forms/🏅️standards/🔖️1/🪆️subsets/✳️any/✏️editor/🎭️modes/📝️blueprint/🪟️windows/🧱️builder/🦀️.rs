@@ -2,7 +2,10 @@
 
 use crate::editor::forms::config::FormsConfig;
 use crate::FormsSnapshot;
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";

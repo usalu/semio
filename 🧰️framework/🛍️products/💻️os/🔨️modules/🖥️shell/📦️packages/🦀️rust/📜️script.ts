@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os-shell-rs` task router: `bun ./📜️script.ts <check|test|typegen|schema-check|preview-generated>`. */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { buildBudgetMs, resolveTestLevel, runCargo, runCargoTestBudgeted, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -16,7 +18,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-os-shell"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-shell"], this.repoRoot, rest);
   }
 }
 

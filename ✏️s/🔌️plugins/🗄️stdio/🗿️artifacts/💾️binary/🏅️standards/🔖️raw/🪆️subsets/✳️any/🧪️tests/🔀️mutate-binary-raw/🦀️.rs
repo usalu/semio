@@ -13,8 +13,8 @@
 //! `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::{oracle_apply_mutation, oracle_round_trip};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
+use semio_s_artifact_stdio_binary_test_oracle::standards::v_raw::subsets::any::{oracle_apply_mutation, oracle_round_trip};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";
@@ -149,9 +149,9 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::apply_binary_mutation;
     use semio_s_artifact_stdio_binary::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, BinaryMutation, BinarySnapshot};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::inverse_restores;
+    use semio_repo_test_host::law::wire_operation;
+    use semio_s_artifact_stdio_binary_test_oracle::standards::v_raw::subsets::any::oracle_apply_mutation;
+    use semio_repo_test_host::law::inverse_restores;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire

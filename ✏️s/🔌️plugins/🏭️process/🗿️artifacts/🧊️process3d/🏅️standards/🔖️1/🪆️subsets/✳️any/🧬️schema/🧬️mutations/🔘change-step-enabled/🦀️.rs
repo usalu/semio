@@ -26,8 +26,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         if self.new_enabled {
             format!("Enable step \"{}\"", self.id)
         } else {

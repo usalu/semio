@@ -10,7 +10,8 @@
 //! upper piece's `c-b` vortices land exactly on the lower piece's `c-t` vortices — the same joint the
 //! puzzle's `c-b`/`c-t` kind-compatibility row expresses.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "concrete-forest";
 pub fn label() -> LocalizedLabel {

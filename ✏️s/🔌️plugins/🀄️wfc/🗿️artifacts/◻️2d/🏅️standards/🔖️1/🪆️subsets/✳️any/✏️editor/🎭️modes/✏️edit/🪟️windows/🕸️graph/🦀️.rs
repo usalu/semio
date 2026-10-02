@@ -20,9 +20,20 @@
 //! wire between. Edge direction on screen is the authored `from`→`to`, which the solver symmetrises.
 
 use semio_framework::InteractiveJobClassification;
-use semio_framework_plugin::{
-    scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions,
-};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NodeGraphEdgeRecord;
+use semio_framework_plugin::NodeGraphNodeRecord;
+use semio_framework_plugin::NodeGraphPortRecord;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use store::Viewport2d;
 
 //#region 🔖️Constants

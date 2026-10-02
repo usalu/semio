@@ -13,8 +13,8 @@
 //! `create-skin` call, since `create-skin`'s payload carries no field content to restore.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, undo_delete_skin};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, undo_delete_skin};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
 
 
 //#region 🔖️Input
@@ -106,7 +106,7 @@ mod subject {
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_skin, delete_skin, gltf_inverse_restored_document, move_skin, reorder_skins};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params
     fn num(params: &Json, key: &str) -> Result<usize, String> {

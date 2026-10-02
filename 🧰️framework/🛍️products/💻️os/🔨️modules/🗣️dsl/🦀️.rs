@@ -26,7 +26,11 @@ pub use crate::os_dsl::grammar::{
     parse_grammar, parse_protocol, print_grammar, print_protocol, verify_protocol_bytes, verify_protocol_source, walk_protocol, Block, Count, Field, FragmentRegistry, Framing, GrammarFile, Prim, ProtocolFile, ProtocolMismatch, ProtocolTrace,
     Recognizer, SemioDialect,
 };
-pub use crate::os_dsl::schema::{from_dsl_value, to_dsl_value};
+
+pub use protocol::value::native_decoding::NativeDecodeControl;
+pub use protocol::value::native_encoding::NativeEncodeControl;
+#[path = "🛫️encode/🦀️.rs"]
+pub mod native_encoding;
 
 //#region 🔖️Field
 /// 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
@@ -38,21 +42,49 @@ pub trait DslField: Sized {
     // `fn() -> RecordSpec`; every `shape()` implementation ultimately feeds one, directly or
     // through a derived `__dsl_spec` — see R9.
     fn shape() -> Shape;
+    /// 🏭️ Constructs only the explicitly declared shape metadata under caller admission.
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Err("field owner has no controlled native schema implementation".into())}
     fn to_value(&self) -> FieldValue;
+    /// 🛫️ Projects explicitly owned fields under cumulative output admission and cancellation.
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.checkpoint()?;Err("field owner has no controlled native projection implementation".into())}
+    /// 📑️ Projects a record without an intermediate boxed field carrier.
+    fn to_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,String>{control.checkpoint()?;Err("field owner has no controlled record projection implementation".into())}
     fn from_value(value: &FieldValue) -> Result<Self, String>;
+    /// 🧹️ Retires a completed field according to its owner after partial reconstruction fails.
+    fn retire_decoded(self) { drop(self); }
+    /// 🛬️ Constructs an owned field under the caller's cumulative allocation and work control.
+    fn from_value_controlled(_value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.checkpoint()?;
+        Err("field owner has no controlled native construction implementation".into())
+    }
+    /// 📑️ Binds a record view without cloning a temporary FieldValue carrier.
+    fn from_record_controlled(_record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{
+        control.checkpoint()?;
+        Err("field owner has no controlled record construction implementation".into())
+    }
 }
 
 /// 📦️ Boxed ownership preserves the inner field's schema, value, and decoding errors.
 impl<T: DslField> DslField for Box<T> {
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{T::to_value_controlled(self.as_ref(),control)}
+    fn to_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,String>{T::to_record_controlled(self.as_ref(),control)}
+
+    fn retire_decoded(self) { T::retire_decoded(*self); }
     fn shape() -> Shape {
         T::shape()
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{T::shape_controlled(control)}
     fn to_value(&self) -> FieldValue {
         T::to_value(self.as_ref())
     }
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         T::from_value(value).map(Box::new)
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.charge(std::mem::size_of::<T>())?;
+        control.scoped_stage(|control|T::from_value_controlled(value, control)).map(Box::new)
+    }
+    fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{control.charge(std::mem::size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
 }
 
 macro_rules! impl_dsl_field_int {
@@ -62,14 +94,20 @@ macro_rules! impl_dsl_field_int {
             fn shape() -> Shape {
                 $shape
             }
+            fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok($shape)}
             fn to_value(&self) -> FieldValue {
                 FieldValue::$variant(*self as $as_ty)
             }
+            fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::$variant(*self as $as_ty))}
             fn from_value(value: &FieldValue) -> Result<Self, String> {
                 match value {
                     FieldValue::$variant(v) => <$ty>::try_from(*v).map_err(|_| format!("integer {v} out of range for {}", stringify!($ty))),
                     other => Err(format!("expected {}, found {other:?}", stringify!($variant))),
                 }
+            }
+            fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+                control.step()?;
+                if matches!(value,FieldValue::$variant(_)){<Self as DslField>::from_value(value)}else{Err(concat!("expected ",stringify!($variant)).into())}
             }
         }
     };
@@ -91,15 +129,18 @@ impl DslField for bool {
     fn shape() -> Shape {
         Shape::Bool
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Bool)}
     fn to_value(&self) -> FieldValue {
         FieldValue::Bool(*self)
     }
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Bool(*self))}
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Bool(b) => Ok(*b),
             other => Err(format!("expected Bool, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Bool(_)){<Self as DslField>::from_value(value)}else{Err("expected Bool".into())} }
 }
 
 impl DslField for f32 {
@@ -107,15 +148,18 @@ impl DslField for f32 {
     fn shape() -> Shape {
         Shape::Float
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Float)}
     fn to_value(&self) -> FieldValue {
         let bits=self.to_bits();let value=if bits&0x7f800000==0x7f800000&&bits&0x7fffff!=0{f64::from_bits(((bits as u64&0x80000000)<<32)|0x7ff0000000000000|((bits as u64&0x7fffff)<<29))}else{*self as f64};FieldValue::Float(value)
     }
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(<Self as DslField>::to_value(self))}
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Float(f)=>{let bits=f.to_bits();if bits&0x7ff0000000000000==0x7ff0000000000000&&bits&0xfffffffffffff!=0{if bits&0x1fffffff!=0{return Err("NaN word is not exactly representable at binary32 width".into());}Ok(f32::from_bits(((bits>>32)as u32&0x80000000)|0x7f800000|((bits>>29)as u32&0x7fffff)))}else{Ok(*f as f32)}},
             other => Err(format!("expected Float, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Float(_)){<Self as DslField>::from_value(value)}else{Err("expected Float".into())} }
 }
 
 impl DslField for f64 {
@@ -123,15 +167,18 @@ impl DslField for f64 {
     fn shape() -> Shape {
         Shape::Float
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Float)}
     fn to_value(&self) -> FieldValue {
         FieldValue::Float(*self)
     }
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Float(*self))}
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Float(f) => Ok(*f),
             other => Err(format!("expected Float, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> { control.step()?;if matches!(value,FieldValue::Float(_)){<Self as DslField>::from_value(value)}else{Err("expected Float".into())} }
 }
 
 /// 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
@@ -143,14 +190,20 @@ impl DslField for String {
     fn shape() -> Shape {
         Shape::Text
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Text)}
     fn to_value(&self) -> FieldValue {
         FieldValue::Text(self.clone())
     }
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{control.step()?;Ok(FieldValue::Text(control.copy_text(self)?))}
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Text(s) => Ok(s.clone()),
             other => Err(format!("expected Text, found {other:?}")),
         }
+    }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.step()?;
+        match value { FieldValue::Text(text)=>control.copy_text(text),_=>Err("expected Text".into()) }
     }
 }
 
@@ -165,6 +218,7 @@ impl DslField for Wire {
     fn shape() -> Shape {
         Shape::Wire
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Wire)}
     fn to_value(&self) -> FieldValue {
         FieldValue::Wire(self.0.clone())
     }
@@ -181,10 +235,14 @@ impl DslField for Wire {
 /// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
 /// a special-cased `FieldKind` for every depth of nesting.
 impl<T: DslField> DslField for Vec<T> {
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_list(self,control).map(FieldValue::List)}
+
+    fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::List(Box::new(T::shape()))
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::List(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?)))}
     // 🔁 `Iterator::map` cannot await per-element (residue shape 1) and `T::to_value`/`from_value`
     // are AFIT over an arbitrary implementor, so — unlike a known-pure leaf fn — R9 does not apply;
     // the fix is a plain sequential loop that awaits each element in turn.
@@ -207,6 +265,13 @@ impl<T: DslField> DslField for Vec<T> {
             other => Err(format!("expected List, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.step()?;
+        match value {
+            FieldValue::List(items)=>__rt::decode_list_controlled(items,control),
+            _=>Err("expected List".into()),
+        }
+    }
 }
 
 /// 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
@@ -214,10 +279,14 @@ impl<T: DslField> DslField for Vec<T> {
 /// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
 /// (same `Shape::Map` this produces), so the two never conflict.
 impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_map(self,control)}
+
+    fn retire_decoded(self) { for (_,value) in self { T::retire_decoded(value); } }
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Map(Box::new(T::shape()))
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::Map(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?)))}
     // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut entries = Vec::with_capacity(self.len());
@@ -238,14 +307,31 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
             other => Err(format!("expected Map, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.step()?;
+        match value {
+            FieldValue::Map(entries)=>{
+                let slot=std::mem::size_of::<(String,T)>().checked_add(128).ok_or("map slot size overflow")?;
+                control.charge(entries.len().checked_mul(slot).ok_or("map ownership size overflow")?)?;
+                let mut output=__rt::DecodedFieldOwner::new(Self::new(),Self::retire_decoded);
+                for (key,value) in entries {if let Some(previous)=output.as_mut().insert(control.copy_text(key)?,control.scoped_stage(|control|T::from_value_controlled(value,control))?){T::retire_decoded(previous);}}
+                Ok(output.take())
+            },
+            _=>Err("expected Map".into()),
+        }
+    }
 }
 
 /// 📐️ Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
 impl<T: DslField, const N: usize> DslField for [T; N] {
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{native_encoding::project_list(self,control).map(FieldValue::Tuple)}
+
+    fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
     // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Tuple(Box::new(T::shape()), Some(N))
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.scoped_depth(64,|control|Ok(Shape::Tuple(crate::os_dsl::schema::producer::boxed(T::shape_controlled(control)?,control)?,Some(N))))}
     // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut items = Vec::with_capacity(N);
@@ -266,6 +352,13 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
             other => Err(format!("expected a {N}-item Tuple, found {other:?}")),
         }
     }
+    fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, String> {
+        control.step()?;
+        match value {
+            FieldValue::Tuple(items) if items.len()==N=>{let mut output=__rt::DecodedFieldOwner::new(control.allocate_vec::<T>(N)?,<Vec<T> as DslField>::retire_decoded);for item in items {output.as_mut().push(control.scoped_stage(|control|T::from_value_controlled(item,control))?);}output.take().try_into().map_err(|values:Vec<T>|{<Vec<T> as DslField>::retire_decoded(values);"tuple arity mismatch".into()})},
+            _=>Err(format!("expected a {N}-item Tuple")),
+        }
+    }
 }
 
 /// 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
@@ -274,9 +367,13 @@ impl DslField for DslValue {
     fn shape() -> Shape {
         Shape::Value
     }
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,String>{control.checkpoint()?;Ok(Shape::Value)}
     fn to_value(&self) -> FieldValue {
         FieldValue::Value(self.clone())
     }
+    fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,String>{<Self as protocol::value::ToValue>::to_value_controlled(self,control).map(FieldValue::Value).map_err(|error|error.to_string())}
+    fn from_value_controlled(value:&FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,String>{match value{FieldValue::Value(value)=><Self as protocol::value::FromValue>::from_value_controlled(value,control).map_err(|error|error.to_string()),_=>Err("expected an intrinsic Value field".into())}}
+    fn retire_decoded(self){<Self as protocol::value::FromValue>::retire_decoded(self)}
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Value(dsl_value) => Ok(dsl_value.clone()),
@@ -296,13 +393,24 @@ pub trait DslVariants: Sized {
     /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
     // 🚫️async: E4 — the returned `Vec<(String, fn() -> RecordSpec)>` IS a fn-pointer table, and
     // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
-    fn variants() -> Vec<(String, fn() -> RecordSpec)>;
+    fn variants() -> Vec<(String, RecordSpecProducer)>;
+    /// 🌿️ Owns literal variant labels and their lazy controlled schema producers.
+    fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,String>{control.checkpoint()?;Err("variant owner has no controlled native schema implementation".into())}
     fn to_named_record(&self) -> (String, RecordValue);
+    /// 🌿️ Projects a declared tagged variant under the same cumulative output control.
+    fn to_named_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<(String,RecordValue),String>{control.checkpoint()?;Err("variant owner has no controlled native projection implementation".into())}
     /// ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
     /// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's
     /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
     fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
+    /// 🌲️ Retires a completed tagged value through its domain owner.
+    fn retire_decoded_variant(self) { drop(self); }
+    /// 🌿️ Constructs a declared variant without invoking an unchecked owner binding.
+    fn from_named_record_controlled(_keyword:&str,_record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,TextError>{
+        control.checkpoint().map_err(__rt::field_error)?;
+        Err(__rt::field_error("variant owner has no controlled native construction implementation"))
+    }
 }
 //#endregion 🔖️Variants
 
@@ -310,6 +418,27 @@ pub trait DslVariants: Sized {
 /// ⚙️ Helpers remaining after P6 flag day — DslField/DslVariants derive bodies only (codec paths deleted).
 pub mod __rt {
     use super::*;
+
+    /// 🧹️ Holds a completed typed field until construction commits or invokes its actual owner retirement.
+    pub struct DecodedFieldOwner<T> { value:Option<T>, retire:fn(T) }
+    impl<T> DecodedFieldOwner<T> {
+        /// 📥️ Adopts one owned field with its declared retirement function.
+        pub fn new(value:T,retire:fn(T))->Self { Self{value:Some(value),retire} }
+        /// 🌿️ Allows bounded construction inside the guarded owned collection.
+        pub fn as_mut(&mut self)->&mut T { self.value.as_mut().expect("decoded owner already transferred") }
+        /// 📤️ Transfers ownership only after every required constructor succeeds.
+        pub fn take(mut self)->T { self.value.take().expect("decoded owner already transferred") }
+    }
+    impl<T> Drop for DecodedFieldOwner<T> { fn drop(&mut self){if let Some(value)=self.value.take(){(self.retire)(value);}} }
+
+    /// 📋️ Binds declared list elements with one known collection workload and cumulative ownership.
+    pub fn decode_list_controlled<T:DslField>(items:&[FieldValue],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,String>{
+        control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len())?,<Vec<T> as DslField>::retire_decoded);for item in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(item,control)})?);control.step()?;}Ok(output.take())})
+    }
+    /// 🌿️ Binds tagged variants with exact collection progress and declared variant retirement.
+    pub fn decode_statements_controlled<T:DslVariants>(items:&[(String,RecordValue)],control:&mut NativeDecodeControl<'_>)->Result<Vec<T>,TextError>{
+        control.scoped_stage(|control|{control.begin_stage(items.len()).map_err(field_error)?;let mut output=DecodedFieldOwner::new(control.allocate_vec::<T>(items.len()).map_err(field_error)?,|values:Vec<T>|{for value in values{T::retire_decoded_variant(value);}});for(keyword,record)in items{output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0).map_err(field_error)?;T::from_named_record_controlled(keyword,record,control)})?);control.step().map_err(field_error)?;}Ok(output.take())})
+    }
 
     // 🚫️async: E1 pure error constructor, consumed by `Option::ok_or_else` sync closures in every
     // `#[derive(DslRecord)]`-generated body (`✨️derive/🦀️.rs`'s `quote!{}` templates) — see R9
@@ -336,9 +465,14 @@ pub mod __rt {
     // site (`✨️derive/🦀️.rs`'s `dsl_variants_codegen`), and it calls the now-sync `DslField::shape`.
     pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {
         match T::shape() {
-            Shape::Record(spec_fn) => spec_fn(),
+            Shape::Record(spec_fn) => (spec_fn.ordinary)(),
             other => panic!("newtype variant's inner type must have Record shape, found {other:?}"),
         }
+    }
+
+    /// 🪆️ Delegates a declared record variant through its explicit lazy schema producer.
+    pub fn newtype_variant_producer<T:DslField>()->RecordSpecProducer{
+        RecordSpecProducer{ordinary:newtype_variant_spec::<T>,decoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.decode(control),_=>Err("newtype variant requires a controlled Record schema".into())}},encoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.encode(control),_=>Err("newtype variant requires a controlled Record schema".into())}}}
     }
 
     pub fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {
@@ -371,7 +505,7 @@ pub mod variants_text {
         let variants = T::variants();
         for (keyword, spec_fn) in &variants {
             if line == keyword.as_str() || line.starts_with(&format!("{keyword} ")) {
-                let record = super::parse_exact(line, &spec_fn(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
+                let record = super::parse_exact(line, &(spec_fn.ordinary)(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
                 return T::from_named_record(keyword, &record);
             }
         }
@@ -382,7 +516,7 @@ pub mod variants_text {
         let (keyword, record) = op.to_named_record();
         let variants = T::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        print(&record, &spec_fn(), JoinMode::Inline)
+        print(&record, &(spec_fn.ordinary)(), JoinMode::Inline)
     }
 }
 //#endregion 🔖️OpTextRt
@@ -544,7 +678,7 @@ pub mod variants_binary {
         let variants = T::variants();
         let ordinal = variants.iter().position(|(k, _)| k == &keyword).ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword '{keyword}' missing from variants()") })?;
         let tag = tag_of(&keyword, ordinal)?;
-        let spec = variants[ordinal].1();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = encode_record_body(&spec, &record, &EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -553,7 +687,7 @@ pub mod variants_binary {
         Ok(out)
     }
 
-    fn decode_with<T: DslVariants>(bytes: &[u8], index_of: impl Fn(u64, &[(String, fn() -> super::RecordSpec)]) -> Result<usize, ProtocolError>, reencode: impl Fn(&T) -> Result<Vec<u8>, ProtocolError>) -> Result<T, ProtocolError> {
+    fn decode_with<T: DslVariants>(bytes: &[u8], index_of: impl Fn(u64, &[(String, super::RecordSpecProducer)]) -> Result<usize, ProtocolError>, reencode: impl Fn(&T) -> Result<Vec<u8>, ProtocolError>) -> Result<T, ProtocolError> {
         let mut reader = ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
@@ -563,7 +697,7 @@ pub mod variants_binary {
         let variants = T::variants();
         let index = index_of(tag, &variants)?;
         let (keyword, spec_fn) = &variants[index];
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let record = decode_record_body_exact(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -1108,6 +1242,14 @@ mod checked_integer_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🏷️protocol-record/🦀️.rs"]
 mod protocol_record_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️hygienic-bindings/🦀️.rs"]
+mod hygienic_binding_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️carrier-record-lists/🦀️.rs"]
+mod carrier_record_list_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

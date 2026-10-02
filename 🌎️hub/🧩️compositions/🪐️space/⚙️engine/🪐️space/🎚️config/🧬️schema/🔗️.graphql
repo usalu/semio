@@ -1,3 +1,4 @@
+"""🎚️ Hub Studio configuration: https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/config/schema.json"""
 type SpaceConfig {
   camera: [SpaceWindowCameraEntry!]! @state(class: CONFIG)
   collapsedNodeIds: [String!]! @state(class: CONFIG)

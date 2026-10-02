@@ -253,7 +253,7 @@ fn archive_primary_window_materializes_only_the_requested_slice() {
         (crate::editor::zip::iso21320::modes::edit::windows::main::BODY_KEY, crate::editor::zip::iso21320::modes::edit::windows::main::render),
     ];
     for (body_key, render) in mounts {
-        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: body_key.into(), node_key: "archive-fields".into(), open: Some(true), offset: 100, rows: 4 }], tree_viewport_rows: Some(4), ..Default::default() };
+        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: body_key.into(), node_key: "archive-fields".into(), open: Some(true), offset: 100, rows: 4 }], tree_viewport_rows: Some(4), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let node = render(&snapshot, &TreeWindows::for_body(&view, body_key), Locale::En).unwrap();
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
         assert!(projection.contains("\"total\":301"));

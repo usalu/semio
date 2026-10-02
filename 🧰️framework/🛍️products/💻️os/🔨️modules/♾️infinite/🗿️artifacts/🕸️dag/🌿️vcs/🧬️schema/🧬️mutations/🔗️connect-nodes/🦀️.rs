@@ -26,8 +26,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     fn inverse(&self, _base: &DagSnapshot) -> Vec<DagMutation> {
         vec![DagMutation::DisconnectNodes(DisconnectNodes { id: self.id.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect {}", self.id), &format!("{} verbinden", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect {}", self.id), &format!("{} verbinden", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["edges".into(), self.id.clone()]

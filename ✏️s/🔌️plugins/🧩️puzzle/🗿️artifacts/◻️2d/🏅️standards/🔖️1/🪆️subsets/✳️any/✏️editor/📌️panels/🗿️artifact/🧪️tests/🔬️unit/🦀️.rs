@@ -15,10 +15,10 @@ async fn labels_resolve_native_english_and_german_and_reuse() {
     let mut app = concrete_forest_app();
     let english = render_body(&mut app, PUZZLE2D_PLAY_BODY_LAYERS);
     assert!(english.contains("\"Nodes\"") && english.contains("\"Edges\""));
-    let german_view = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let german_view = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     let german = render_body_with_view(&mut app, PUZZLE2D_PLAY_BODY_LAYERS, &german_view);
     assert!(german.contains("\"Knoten\"") && german.contains("\"Kanten\""));
-    let reuse_view = semio_framework_plugin::ViewModel { terminology: semio_framework_plugin::Terminology::Reuse, ..Default::default() };
+    let reuse_view = semio_framework_plugin::ViewModel { terminology: semio_framework_ui_locale::Terminology::Reuse, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Reuse) };
     let reuse = render_body_with_view(&mut app, PUZZLE2D_PLAY_BODY_LAYERS, &reuse_view);
     assert!(reuse.contains("Building components"));
     close_app(&mut app);
@@ -48,7 +48,7 @@ fn drain_retired_ui_owners() {
 }
 
 fn labels() -> &'static Puzzle2dLabels {
-    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::default())
+    crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🏗️ A synthetic fixture of `nodes` nodes and `edges` edges — the shape Nakagin has (180/179),
@@ -91,7 +91,7 @@ fn child_of<'a>(node: &'a BuiltNode, key: &str) -> &'a BuiltNode {
 }
 
 fn view_with(requests: Vec<semio_framework_plugin::TreeWindowRequest>) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel { tree_windows: requests, ..Default::default() }
+    semio_framework_plugin::ViewModel { tree_windows: requests, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> semio_framework_plugin::TreeWindowRequest {

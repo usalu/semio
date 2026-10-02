@@ -8,7 +8,7 @@
 //! no-oracle case is never dispatched in the oracle role, and an oracle handler that could only
 //! re-read what the subject just produced would be a stub reporting a pass. All evidence therefore
 //! lives in the SUBJECT role below, where each handler asserts its law through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module before it returns.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module before it returns.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role (fleet brief §5.3).
@@ -40,7 +40,7 @@ mod subject {
     use semio_s_artifact_flow_flow::document_dsl::{parse_dsl, print_dsl};
     use semio_s_artifact_flow_flow::mutations::{apply_flow_mutation, decode_flow_mutation_json, decode_flow_scene_json, encode_flow_projection_json, inverse_flow_mutation, FlowMutation};
     use semio_s_artifact_flow_flow::{flow_content_child_handle_and_cache, FlowSnapshot};
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
     //#region 🔖️CommittedInput
     /// 📄️ The real committed artifact, decoded by production's own reader, with its composed content
@@ -49,7 +49,7 @@ mod subject {
     fn base(ctx: &Context) -> Result<FlowSnapshot, String> {
         let bytes = ctx.fixture_bytes(FLOW_ASSET)?;
         let committed = String::from_utf8(bytes).map_err(|error| format!("the committed flow artifact is not UTF-8: {error}"))?;
-        let mut decoded = parse_dsl(&committed).map_err(|error| format!("the committed flow artifact does not parse: {error:?}"))?;
+        let mut decoded = semio_s_artifact_flow_flow::examples::demo::snapshot_from_text(&committed).map_err(|error| format!("the committed flow artifact does not parse: {error:?}"))?;
         let scene = String::from_utf8(ctx.fixture_bytes(BASE_SCENE)?).map_err(|error| format!("the committed base scene is not UTF-8: {error}"))?;
         let (widgets, synapses, layout) = decode_flow_scene_json(&scene)?;
         if widgets.is_empty() {
@@ -116,7 +116,7 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = ctx.fixture_bytes(FLOW_ASSET)?;
         let committed = String::from_utf8(input.clone()).map_err(|error| format!("the committed flow artifact is not UTF-8: {error}"))?;
-        let decoded = parse_dsl(&committed).map_err(|error| format!("identity-round-trip: the committed flow artifact does not parse: {error:?}"))?;
+        let decoded = semio_s_artifact_flow_flow::examples::demo::snapshot_from_text(&committed).map_err(|error| format!("identity-round-trip: the committed flow artifact does not parse: {error:?}"))?;
         let printed = print_dsl(&decoded);
         carrier_is_exact(printed.as_bytes(), &input)?;
         let reparsed = parse_dsl(&printed).map_err(|error| format!("identity-round-trip: this codec's own output does not parse back: {error:?}"))?;

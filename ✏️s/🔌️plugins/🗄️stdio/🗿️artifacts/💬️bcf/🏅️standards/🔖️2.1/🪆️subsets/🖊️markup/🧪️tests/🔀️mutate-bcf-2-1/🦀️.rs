@@ -12,7 +12,7 @@
 //! host's `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::markup::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_bcf_2_1};
+use semio_s_artifact_stdio_bcf_test_oracle::standards::v2_1::subsets::markup::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_bcf_2_1};
 
 
 //#region 🔖️Input
@@ -129,11 +129,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_bcf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::io::{decode_bcf, encode_bcf};
     use semio_s_artifact_stdio_bcf::BcfSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::bcf::standards::v2_1::subsets::markup::project_bcf_2_1;
+    use semio_s_artifact_stdio_bcf_test_oracle::standards::v2_1::subsets::markup::project_bcf_2_1;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<BcfMutation, String> {

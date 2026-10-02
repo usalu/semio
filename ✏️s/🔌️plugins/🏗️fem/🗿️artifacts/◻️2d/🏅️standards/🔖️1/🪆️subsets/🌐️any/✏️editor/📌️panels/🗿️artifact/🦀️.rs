@@ -18,11 +18,24 @@ use crate::editor::fem2d::interaction::{
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{ui_label, FEM2D_PLAY_CONTROLLER_ID};
 use crate::{element_id, load_id, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport, Fem2dSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, Label as UiLabel};
-use semio_framework_plugin::{
-    tree_item_desc, tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_ui_contract::Label as UiLabel;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

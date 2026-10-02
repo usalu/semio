@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change sizing object {} design day type to {:?}", self.id.0, self.new_design_day_type), &format!("Auslegungstagtyp von Auslegungsobjekt {} auf {:?} ändern", self.id.0, self.new_design_day_type))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change sizing object {} design day type to {:?}", self.id.0, self.new_design_day_type), &format!("Auslegungstagtyp von Auslegungsobjekt {} auf {:?} ändern", self.id.0, self.new_design_day_type))
     }
 
     fn target(&self) -> Vec<String> {

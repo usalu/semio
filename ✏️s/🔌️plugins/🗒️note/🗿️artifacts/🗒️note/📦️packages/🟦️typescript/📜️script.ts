@@ -7,7 +7,7 @@ import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modu
 class TestScript extends BundleScript {
   run(): void {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any");
-    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"), join(subset, "../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🔬️unit/🟦️.ts")]);
+    runCmd(process.execPath, ["test", join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-blocks/🟦️.ts")]);
   }
 }
 class SqliteTestScript extends BundleScript {

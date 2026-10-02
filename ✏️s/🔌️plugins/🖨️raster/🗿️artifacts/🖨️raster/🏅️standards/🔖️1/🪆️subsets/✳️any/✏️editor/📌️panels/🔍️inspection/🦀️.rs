@@ -5,7 +5,18 @@ use crate::editor::raster::{raster_action, ui_label, ui_value_list, ui_value_map
 use crate::standards::v1::subsets::any::schema::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
 use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{activation_target, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID};
+use semio_framework_plugin::activation_target;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 use semio_framework_ui_contract as ui;
 
 pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";

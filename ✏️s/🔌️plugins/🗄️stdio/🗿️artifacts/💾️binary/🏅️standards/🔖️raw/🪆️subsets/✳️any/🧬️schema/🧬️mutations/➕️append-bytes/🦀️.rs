@@ -28,8 +28,8 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {
         agg_inverse(&BinaryMutation::AppendBytes(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Append bytes", "Bytes anhängen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Append bytes", "Bytes anhängen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

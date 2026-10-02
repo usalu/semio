@@ -3,7 +3,11 @@
  *  surface id, window roster or example row fails in every language at once. SUBJECT role: a second reading of the
  *  statement, never a reference for the Rust half, which measures the real surfaces. */
 
-import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+/** 🧪️ Language-agnostic bitmap mount contract — the TypeScript reader. It reads the SAME committed statement
+ *  `shared://🧩️mount-contract/🔣️.json` the Rust and Python halves read and checks its canonical forms, so a drift in any
+ *  surface id, window roster or example row fails in every language at once. SUBJECT role: a second reading of the
+ *  statement, never a reference for the Rust half, which measures the real surfaces. */
+import { defineTestAdapter } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 
 //#region 🧬️Statement
 type MountContract = {

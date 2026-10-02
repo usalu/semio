@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🟦️.ts";
 import { proveGisControlledProposal } from "../💡️inference-control/🟦️.ts";
@@ -70,7 +70,7 @@ export class NativeCodecCheckScript extends BundleScript {
     await proveGisNativeCodecReceipts(this.repoRoot);
     await proveGisControlledProposal(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       groups: [{ package: "semio-hub-gis", target: { kind: "test", name: "native_codecs" }, cargoArgs: ["--no-default-features"], laws: ["gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution", "gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 60_000,

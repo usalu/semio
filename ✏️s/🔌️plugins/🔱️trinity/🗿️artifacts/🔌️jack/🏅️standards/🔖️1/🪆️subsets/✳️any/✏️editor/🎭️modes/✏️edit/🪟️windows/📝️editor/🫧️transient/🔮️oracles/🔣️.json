@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The transient state lane of `s.trinity.jack`'s editor (✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient): its mutation vocabulary `JackEditorWindowTransientMutation` over `JackEditorWindowTransient`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/🫧️mutate-trinity-jack-1-any-editor-edit-editor-transient` and backed by one committed vector per declared outcome class.",
   "oracles": [],

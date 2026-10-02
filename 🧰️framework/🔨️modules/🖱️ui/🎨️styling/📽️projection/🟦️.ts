@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { oklabMix, rgba8ToLinear, linearToOklab, type Rgba8 } from "../🌗️mixing/🟦️.ts";
 import { parseUiTheme, resolveThemeGeometry, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🌓️theme/🏛️model/🟦️.ts";
 import { SEMIO_ASSET_ROUTE } from "../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
-import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { loadFontCatalog, resolveFontSource } from "../🔤️fonts/🟦️.ts";
 
 const moduleRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));

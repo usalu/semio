@@ -10,8 +10,8 @@
 //! see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::{oracle_apply_mutation, project_tsv_grid, read_grid, write_grid};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
+use semio_s_artifact_stdio_tsv_test_oracle::standards::v_iana::subsets::any::{oracle_apply_mutation, project_tsv_grid, read_grid, write_grid};
+use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
 
 //#region 🔖️Input
@@ -138,11 +138,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tsv::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, parse_tsv_document, print_tsv_document};
     use semio_s_artifact_stdio_tsv::{TsvMutation, TsvSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::project_tsv_grid;
+    use semio_s_artifact_stdio_tsv_test_oracle::standards::v_iana::subsets::any::project_tsv_grid;
 
     /// 🔀️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own
     /// derive-generated payload constructor — the only channel between the feature's parameters and the subject's codec.

@@ -25,8 +25,8 @@ pub struct BitmapInputWindowTransient {
     pub brush: Option<Box<BitmapBrushToolState>>,
 }
 
-store::artifact_retire_struct!(BitmapBrushToolState { states, authoring_seed, transaction, stroke });
-store::artifact_retire_struct!(BitmapInputWindowTransient { brush });
+semio_framework_value::artifact_retire_struct!(BitmapBrushToolState { states, authoring_seed, transaction, stroke });
+semio_framework_value::artifact_retire_struct!(BitmapInputWindowTransient { brush });
 //#endregion 🔖️State
 
 //#region 🔖️Mutation
@@ -76,10 +76,10 @@ impl protocol::MutationDiff<BitmapInputWindowTransient> for BitmapInputWindowTra
     }
 }
 
-impl store::retirement::RetireOwned for BitmapInputWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for BitmapInputWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
         }
     }
 }
@@ -103,11 +103,11 @@ impl store::ArtifactDsl for BitmapInputWindowTransient {
 /// 🎒️ Value-form pack.
 impl store::ArtifactPack for BitmapInputWindowTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map_err(store::PackError::Schema)
+        semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::Schema(error.to_string()))
     }
 }
 
@@ -159,8 +159,8 @@ impl semio_framework_plugin::WindowTransientOwner for BitmapInputWindowTransient
     type State = BitmapInputWindowTransient;
     type Mutation = BitmapInputWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

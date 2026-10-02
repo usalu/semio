@@ -2,7 +2,10 @@
 //! and the compiled script.
 
 use crate::editor::procedure::modes::edit::windows::{main, script};
-use semio_framework_plugin::{create_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_stack_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const IMPERATIVE_PLAY_MODE_EDIT: &str = "edit";
 

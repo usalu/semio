@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { resolveTestLevel, runCargo, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { bundleFlowBrowserModule, previewFlowBrowserPackage, publishFlowBrowserDeclarations, publishFlowBrowserPackage } from "../../../🕸️wasm/🌐️browser/📦️publication/🟦️.ts";
@@ -27,7 +28,7 @@ class BrowserOwnershipScript extends BundleScript {
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await runWasmPackWebBuild({
+    await buildRepositoryWasmWebV1({
       rsDir: FAMILY_RS_DIR,
       logPrefix: "os/flow/core",
       wasmBaseName: "flow_core",
@@ -61,7 +62,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-os-flow"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-flow"], this.repoRoot, rest);
   }
 }
 

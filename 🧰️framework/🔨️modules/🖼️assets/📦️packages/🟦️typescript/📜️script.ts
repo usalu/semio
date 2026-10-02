@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
+import { createChromiumSvgVideoRuntimeV1 } from "../../../🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { testLevelBudgetMs } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */
 import { resolve } from "node:path";
-import { runTestBudgeted } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { renderCatalogArtifacts } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
@@ -23,7 +26,31 @@ class GenerateCatalogScript extends BundleScript {
 class MeshContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test-mesh-contract accepts no arguments");
-    await runTestBudgeted(process.execPath, ["test", resolve(this.root, "../../🥽️mesh/🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot });
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🥽️mesh/🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot , budgetMs: testLevelBudgetMs()});
+  }
+}
+
+/** 🗺️ Verifies the caller-owned tile transport contract without any concrete product. */
+class TileProxyContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-tile-proxy-contract accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🗺️tile-proxy/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
+  }
+}
+
+/** 🧭️ Verifies explicit asset providers and actual transport after concrete owners are removed. */
+class AssetDispatchContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-dispatch-contract accepts no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🔍️resolver/🧭️dispatch/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
+  }
+}
+
+/** 🖋️Proves neutral SVG video export with independent native media observation. */
+class SvgVideoContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-svg-video-contract takes no arguments");
+    await runBudgetedTestCommand(process.execPath, ["test", resolve(this.repoRoot, "🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }
 
@@ -43,7 +70,14 @@ class GenerateLogoScript extends BundleScript {
 
 class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
-    await exportLogoAnimation(this.repoRoot);
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACTS_DIR;
+    if (!artifactRoot) throw new Error("Logo video export requires caller-owned SEMIO_TEST_ARTIFACTS_DIR");
+    const runtime = await createChromiumSvgVideoRuntimeV1();
+    try {
+      await exportLogoAnimation({ artifactRoot, openBrowser: runtime.openBrowser, encoderExecutable: "ffmpeg" });
+    } finally {
+      await runtime.close();
+    }
   }
 }
 
@@ -70,6 +104,9 @@ class CheckGeneratedScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("generate", GenerateCatalogScript)
   .register("test-mesh-contract", MeshContractScript)
+  .register("test-tile-proxy-contract", TileProxyContractScript)
+  .register("test-dispatch-contract", AssetDispatchContractScript)
+  .register("test-svg-video-contract", SvgVideoContractScript)
   .register("generate-metabolism", GenerateMetabolismScript)
   .register("generate-logo", GenerateLogoScript)
   .register("export-logo", ExportLogoScript)

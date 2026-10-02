@@ -4,7 +4,7 @@ mod tests {
     #[test]
     fn owned_artifact_kind_formats_survive_host_registry_projection() {
         let value: semio_framework::DslValue = dsl::os_pack::json::from_json_str(include_str!("../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
-        let spec: ArtifactKindSpec = semio_framework::from_dsl_value(value).unwrap();
+        let spec: ArtifactKindSpec = semio_framework_value::FromValue::from_value(value).unwrap();
         assert_eq!(spec.export_stdio_kinds, ["stdio.svg", "stdio.png"]);
         assert_eq!(spec.import_stdio_kinds, ["stdio.dwg", "stdio.svg"]);
         register_artifact_descriptor(&spec);
@@ -14,7 +14,7 @@ mod tests {
         assert_eq!(projected.schema, spec.schema);
         assert_eq!(projected.media_type, spec.media_type);
         assert_eq!(projected.label, spec.label, "the host descriptor presents the kind's own label");
-        assert_eq!(projected.label.resolve(semio_framework::Terminology::Native, semio_framework::Locale::De), "Format-Rundlauf");
+        assert_eq!(projected.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Format-Rundlauf");
     }
 
     #[test]

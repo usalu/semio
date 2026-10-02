@@ -372,7 +372,7 @@ impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
             };
         }
         if let Some(snapshot) = self.snapshot.take() {
-            *self.active = Some(store::retirement::owned_retirement(snapshot));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(snapshot));
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(request) = self.request.as_mut() {

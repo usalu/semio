@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ Test-only references of the quiz product (Protocol v2). Every case under ../🧪️tests names one of these oracles; the TypeScript twin (@semio-tech/quiz) and the Rust twin (semio-framework-quiz) are the subjects and are additionally held to each other. The Python references live inside the case adapters (🧪️tests/*/🐍️.py) and are written from the design text only. Shared vectors under ../🧫️fixtures are generated from those same adapters, so a committed vector and its oracle can never disagree; the generation command is stated in every feature.",
   "oracles": [

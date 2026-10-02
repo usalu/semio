@@ -24,8 +24,8 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackDimensions {
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
         agg_inverse(&Mp4Mutation::SetTrackDimensions(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set track dimensions", "Abmessungen der Spur setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set track dimensions", "Abmessungen der Spur setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

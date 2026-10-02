@@ -9,11 +9,13 @@ async fn cad_scene_round_trips_through_pack() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cad_pack_schema_identity_is_derived_and_rejects_foreign_children() {
+async fn cad_pack_schema_identity_preserves_literal_children_and_rejects_foreign_domains() {
     let mut scene = sample_scene();
     store::os_store::test_support::assert_pack_schema_identity(&scene);
     scene.drawings.push(store::ArtifactChild::new("drawing-1".into(), store::os_io::ArtifactRef::parse_uri("other-id!s.stdio.semio@v1/drawing").expect("uri")));
-    assert!(decode(&encode(&scene)).is_err(), "a child whose id differs from its target must not decode");
+    assert_eq!(decode(&encode(&scene)).unwrap(),scene);
+    scene.drawings.last_mut().unwrap().target.dialect.subset="model".into();
+    assert!(decode(&encode(&scene)).is_err(), "a drawing child from the model domain must not decode");
 }
 
 //#region 🔖️CommandEnvelopeTests

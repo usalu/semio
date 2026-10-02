@@ -39,6 +39,6 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerMask 
         vec![RasterMutation::ChangeLayerMask(Self { layer_id: self.layer_id.clone(), expected: self.mask.clone(), mask: mask.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Change layer mask", "Ebenenmaske ändern") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "statuses",
+    "nodeStatuses",
+    "triggers",
+    "binary64Words",
+    "malformedSql",
+    "control"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://semio.tech/schemas/framework/workflow/run/snapshot"
+    },
+    "statuses": {
+      "const": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "canceled"
+      ]
+    },
+    "nodeStatuses": {
+      "const": [
+        "computed",
+        "cacheHit",
+        "failed"
+      ]
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "$ref": "https://semio.tech/schemas/framework/workflow/run/snapshot#/definitions/trigger"
+      }
+    },
+    "binary64Words": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "malformedSql": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectionLength",
+        "largeCharacters",
+        "cancelAfterBytes",
+        "maxOwnedBytes",
+        "tinyFileBytes"
+      ],
+      "properties": {
+        "collectionLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "largeCharacters": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cancelAfterBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxOwnedBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tinyFileBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

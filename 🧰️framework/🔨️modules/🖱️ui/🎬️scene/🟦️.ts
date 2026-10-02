@@ -931,6 +931,22 @@ export type ContinuousGestureLane<Value> = {
   readonly sent: () => number;
 };
 
+/** 🔢️ Page-wide press serial behind {@link continuousPressIdentity}. */
+let continuousPressSerial = 0;
+
+/** 🪪️ A fresh press identity for the control `key`: `<key>:<ms>:<serial>` with a page-wide serial, so two presses of one
+ * control in the same millisecond still carry distinct identities and the guest never takes the second for a late tick of
+ * the first it already closed (scrub protocol, `📓️api-scrub-machine.md` of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). */
+export function continuousPressIdentity(key: string): string {
+  continuousPressSerial += 1;
+  return `${key}:${Date.now()}:${continuousPressSerial}`;
+}
+
+/** 🤝️ Whether a port's answer is a promise to wait for; any other answer settles its round trip at once. */
+function isPromiseLike(value: unknown): value is PromiseLike<void> {
+  return typeof (value as { readonly then?: unknown } | null | undefined)?.then === "function";
+}
+
 /** 🎚️ At most ONE send in flight and at most ONE owed value — always the latest.
  *
  * A 60 Hz drag over a round trip that costs more than 16 ms has exactly two honest answers: queue
@@ -952,7 +968,8 @@ export type ContinuousGestureLane<Value> = {
  * of the cancelled press is ignored — the receiver drops the press with zero trace.
  *
  * A send that rejects frees the lane; the fault reaches `onFault` and the owed value is still sent,
- * because a gesture must not be wedged by one refused round trip.
+ * because a gesture must not be wedged by one refused round trip. A port that answers anything but a
+ * promise has settled its round trip at once.
  */
 export function createContinuousGestureLane<Value>(ports: ContinuousGestureLanePorts<Value>): ContinuousGestureLane<Value> {
   let inFlight = false;
@@ -964,7 +981,7 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
   let sent = 0;
   const pump = (): void => {
     if (inFlight || (owed === null && cancel === null)) return;
-    let settled: void | Promise<void>;
+    let settled: unknown;
     inFlight = true;
     try {
       if (cancel !== null) {
@@ -983,12 +1000,12 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
       pump();
       return;
     }
-    if (settled === undefined) {
+    if (!isPromiseLike(settled)) {
       inFlight = false;
       pump();
       return;
     }
-    void settled
+    void Promise.resolve(settled)
       .catch((error: unknown) => ports.onFault?.(error))
       .finally(() => {
         inFlight = false;

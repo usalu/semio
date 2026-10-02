@@ -20,7 +20,7 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &Puzzle5dSnapshot) -> Result<JsonSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw = dsl::ToValue::to_value(snapshot);
+    let raw=crate::standards::v1::subsets::any::io::puzzle5d_json::convert(dsl::ToValue::to_value(snapshot),false).map_err(|message|store::TextError::new(message,dsl::TextSpan::at(1,1)))?;
     Ok(JsonSnapshot::from_value(dsl::json::from_dsl_value(&raw)))
 }
 

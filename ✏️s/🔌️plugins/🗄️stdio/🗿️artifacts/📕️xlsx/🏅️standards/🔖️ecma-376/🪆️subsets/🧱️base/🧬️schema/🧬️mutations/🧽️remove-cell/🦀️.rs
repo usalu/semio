@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::RemoveCell(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove cell", "Zelle entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove cell", "Zelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         let mut target = vec!["xmlParts".into(), self.address.part_path.clone(), "document".into(), "root".into()];

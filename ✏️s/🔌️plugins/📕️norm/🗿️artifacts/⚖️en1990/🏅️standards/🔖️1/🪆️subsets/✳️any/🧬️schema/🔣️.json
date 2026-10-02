@@ -43,6 +43,10 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
+    "altitudeM": {
+      "type": "number",
+      "x-semio-state": "artifact"
+    },
     "consequenceClass": {
       "type": "integer",
       "minimum": 0,
@@ -120,21 +124,17 @@
       },
       "x-semio-state": "artifact"
     },
-    "effects": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/MemberEffect"
-      },
-      "x-semio-state": "artifact"
-    },
-    "altitudeM": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
     "bridgeSls": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/BridgeSls"
+      },
+      "x-semio-state": "artifact"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MemberEffect"
       },
       "x-semio-state": "artifact"
     }

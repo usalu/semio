@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplacePixelsMutation 
         }
         vec![PngMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-pixels".into()]
@@ -47,8 +47,8 @@ pub fn contribute(base: &PngSnapshot, pixels: Vec<u8>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-pixels payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-pixels payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

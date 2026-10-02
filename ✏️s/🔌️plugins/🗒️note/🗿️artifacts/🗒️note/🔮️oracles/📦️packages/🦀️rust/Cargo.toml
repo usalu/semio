@@ -1,0 +1,28 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-note-note-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_note_note_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["semio-s-plugin-stdio-document-test-oracle/oracles", "semio-s-plugin-stdio-drawing-test-oracle/oracles", "semio-s-plugin-stdio-markup-test-oracle/oracles"]
+
+[dependencies]
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../../🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-markup-test-oracle" = { path = "../../../../../../🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust", default-features = false }
+
+"semio-s-plugin-stdio-drawing-test-oracle" = { path = "../../../../../../🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust", default-features = false }
+
+[dev-dependencies]
+"lopdf" = { version = "0.44" }

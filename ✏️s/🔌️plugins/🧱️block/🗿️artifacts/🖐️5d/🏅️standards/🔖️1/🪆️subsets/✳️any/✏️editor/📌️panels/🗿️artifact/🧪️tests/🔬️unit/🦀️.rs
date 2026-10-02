@@ -29,13 +29,13 @@ fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
 }
 
 fn project(document: &Block5dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = block5d_labels(&ViewModel::default());
+    let labels = block5d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(document, labels, windows).expect("document tree renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("document projection")
 }
 
 fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> ViewModel {
-    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: BLOCK5D_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..Default::default() }
+    ViewModel { tree_windows: vec![TreeWindowRequest { body_key: BLOCK5D_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🌾️ A document an order of magnitude past any viewport: 40 grip kinds and 160 rim grips.

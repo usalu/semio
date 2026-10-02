@@ -24,8 +24,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetArchiveComment {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::SetArchiveComment(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

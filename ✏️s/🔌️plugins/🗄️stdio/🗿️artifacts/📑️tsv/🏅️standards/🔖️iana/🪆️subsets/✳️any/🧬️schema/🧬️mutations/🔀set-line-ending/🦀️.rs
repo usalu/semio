@@ -21,8 +21,8 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetLineEnding {
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
         agg_inverse(&TsvMutation::SetLineEnding(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set line ending", "Zeilenende setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

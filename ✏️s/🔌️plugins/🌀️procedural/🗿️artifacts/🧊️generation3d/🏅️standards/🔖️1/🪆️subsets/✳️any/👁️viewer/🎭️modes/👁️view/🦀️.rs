@@ -5,7 +5,13 @@
 //! follow-up, not a purity or completeness requirement.
 
 use crate::viewer::generation3d::modes::view::windows::preview;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, ToolRef, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const GENERATION3D_VIEW_MODE_VIEW: &str = "view";
 

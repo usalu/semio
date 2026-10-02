@@ -789,6 +789,7 @@ export type UiTranslationSchema = {
         readonly schemaUnavailable: UiLabelValue;
         readonly replayFaulted: UiLabelValue;
         readonly commitFailed: UiLabelValue;
+        readonly memberGone: UiLabelValue;
       };
     };
     /** 🛟️ The hub and event-log refusals of history transitions (`history.malformed-transition`,

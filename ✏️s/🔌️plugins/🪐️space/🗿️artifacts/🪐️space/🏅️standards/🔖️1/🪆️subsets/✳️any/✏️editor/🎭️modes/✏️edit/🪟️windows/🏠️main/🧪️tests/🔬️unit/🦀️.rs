@@ -36,7 +36,7 @@ fn text_arg(binding: &semio_framework_ui_contract::ActionBinding, key: &str) -> 
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_node_for_the_default_document() {
-    let _ = project(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::default()).expect("default Space rows"));
+    let _ = project(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("default Space rows"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -49,7 +49,7 @@ async fn render_reflects_live_presence_for_a_row() {
         presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }],
         ..Default::default()
     };
-    let json = project(render(&document, &config, &semio_framework_plugin::ViewModel::default()).expect("Space rows with presence"));
+    let json = project(render(&document, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("Space rows with presence"));
     assert!(json.contains("user:1, user:2"), "presence must reach the table cell: {json}");
 }
 
@@ -78,7 +78,7 @@ async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_op
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_a_real_create_artifact_button() {
     use crate::editor::space_index::SPACE_INDEX_CONTROLLER_ID;
-    observe(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::default()).expect("Space rows with create action"), |root| {
+    observe(render(&SSpaceSnapshot::default(), &SpaceIndexConfig::default(), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("Space rows with create action"), |root| {
         let button = root.children.iter().find(|child| child.key.as_str() == "s-space-create-artifact").expect("a create-artifact button somewhere in the stack");
         assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
         let binding = button.bindings.get(0).expect("create artifact button carries action");

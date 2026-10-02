@@ -18,11 +18,7 @@
   ],
   "properties": {
     "annex": {
-      "type": "string",
-      "enum": [
-        "de",
-        "en"
-      ]
+      "type": "string"
     },
     "site": {
       "$ref": "#/$defs/En1998Site"
@@ -591,7 +587,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         }
       },
       "x-semio-formats": [

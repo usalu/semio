@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeNodeMorphWeightsMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-node-morph-weights");
-    super::super::component::fixture_corpus_tests::assert_case("🌳️node/⚖️change-weights/⚖️sets");
+    super::super::component::fixture_corpus_tests::assert_case("🌳️node/⚖️change/⚖️sets");
 }

@@ -6,7 +6,10 @@
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, layout_run_job, layout_run_overlay_positions, LayoutRunConfig, LayoutRunEdge, LayoutRunEncodeError, LayoutRunGraph, LayoutRunNode, LayoutRunOpEncoder, LayoutRunPoint, LayoutRunResume};
-use semio_framework_plugin::{Fault, LocalizedLabel, ToolDefinition, ToolRunJob};
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJob;
 use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
 use std::collections::{BTreeSet, HashMap};
 

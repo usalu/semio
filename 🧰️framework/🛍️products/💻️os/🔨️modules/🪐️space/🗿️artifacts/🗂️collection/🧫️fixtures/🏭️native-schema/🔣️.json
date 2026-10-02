@@ -1,0 +1,8 @@
+{
+  "variants": [
+    {"keyword":"document","fields":[{"id":0,"key":"schema","shape":"text"},{"id":1,"key":"document-id","shape":"text"}]},
+    {"keyword":"blob","fields":[{"id":0,"key":"hash","shape":"text"},{"id":1,"key":"size","shape":"uint"},{"id":2,"key":"media-type","shape":"text"}]}
+  ],
+  "maximumBytes": 65536,
+  "refusedBytes": 1
+}

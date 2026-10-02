@@ -1,0 +1,11 @@
+# 🧬️ SetNodePositions mutation payload.
+
+type WiresNodePosition {
+  nodeId: String!
+  x: Float!
+  y: Float!
+}
+
+type SetNodePositions {
+  positions: [WiresNodePosition!]!
+}

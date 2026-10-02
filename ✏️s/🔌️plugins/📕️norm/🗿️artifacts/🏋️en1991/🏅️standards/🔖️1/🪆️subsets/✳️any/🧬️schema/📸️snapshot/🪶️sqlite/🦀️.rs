@@ -52,9 +52,15 @@ fn read_flag(row: FloatRow<'_>, column: usize) -> Result<bool, String> { match r
 fn read_u8(row: FloatRow<'_>, column: usize) -> Result<u8, String> { u8::try_from(row.integer(column)?).map_err(|error| error.to_string()) }
 
 impl ArtifactSqliteSnapshot for En1991Snapshot {
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),Self::__dsl_from_record_controlled,control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
 
-    fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or("Native semantic row count overflow");let mut rows=1usize;for size in[self.floors.len(),self.self_weight_elements.len(),self.roofs.len(),self.wind_faces.len(),self.accidental_cases.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,case)in self.accidental_cases.iter().enumerate(){rows=add(add(rows,case.impact.len())?,case.explosion.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.accidental_cases.len())?}}
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ }
+
+ fn preflight_sqlite_snapshot_encoding(&self, _: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
         let mut bound = NativeEncodingBound::new(control)?;
         bound.add(65536)?;
         for text in [&self.snow_zone, &self.thermal_element_type, &self.fire_occupancy, &self.construction_activity, &self.bridge_load_group, &self.crane_class, &self.hoist_class, &self.silo_kind] { bound.repeated(text.len(), 24)?; }

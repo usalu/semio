@@ -58,10 +58,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din4108Bui
 
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din4108.inference` facet leaves.
-pub fn din4108_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn din4108_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.din4108.inference",
-        inference: framework_schema::FacetLeaves {
+        inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

@@ -9,8 +9,8 @@
 //! implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_wav_mutation};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_wav_mutation};
+use semio_repo_test_host::law;
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav";
@@ -84,11 +84,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_wav::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_s_artifact_stdio_wav_test_oracle::standards::v_riff_pcm::subsets::any::project_wav_mutation;
+    use semio_repo_test_host::law;
 
     //#region 🔖️SpecReading
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read

@@ -12,7 +12,14 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{gis2d_layer_tree_item, ui_label, GIS2D_INTERACTION_DOMAIN, GIS2D_LAYER_GRANULARITY, GIS2D_PLAY_APP_ID, GIS_MAP_LAYER_IDS};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_ARTIFACT: &str = "gis2d.play.artifact";

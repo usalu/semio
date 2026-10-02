@@ -32,7 +32,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeMemberBuck
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change member buckling length", "Knicklänge des Bauteils ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change member buckling length", "Knicklänge des Bauteils ändern")
     }
 }

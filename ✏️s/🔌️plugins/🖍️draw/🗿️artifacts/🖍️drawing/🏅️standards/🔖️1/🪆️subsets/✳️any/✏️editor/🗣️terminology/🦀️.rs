@@ -1,6 +1,6 @@
 //! 🗣️ Drawing play app — the complete UI label set (constitutional: was `ui`'s Locale/Terminology region).
 
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the drawing app; one field per label makes every locale combination compile-checked.
     pub struct DrawingPlayLabels {
         nodes: native_en "Path Nodes", native_de "Pfadknoten", reuse_en "Path Nodes", reuse_de "Pfadknoten";

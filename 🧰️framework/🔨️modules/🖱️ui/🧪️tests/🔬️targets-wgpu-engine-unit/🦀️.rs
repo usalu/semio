@@ -1,5 +1,5 @@
 use super::*;
-use crate::dsl::DslValue;
+use semio_framework_value::DslValue;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{
     ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence,
@@ -212,7 +212,7 @@ fn root_scene_host(tree: &UiTree) -> Option<String> {
 #[test]
 fn candidate_scene_removal_retires_only_after_presentation_acknowledgement() {
     let window_id = "candidate-scene-removal";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
     acknowledge_scene_lifetime_candidate(&mut ui, window_id, 11);
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
@@ -232,7 +232,7 @@ fn candidate_scene_removal_retires_only_after_presentation_acknowledgement() {
 #[test]
 fn superseded_candidate_rechecks_deferred_scene_retirement() {
     let window_id = "superseded-scene-removal";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
     acknowledge_scene_lifetime_candidate(&mut ui, window_id, 15);
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
@@ -249,7 +249,7 @@ fn superseded_candidate_rechecks_deferred_scene_retirement() {
 #[test]
 fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount() {
     let window_id = "alternating-scene-host";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
     acknowledge_scene_lifetime_candidate(&mut ui, window_id, 21);
     let first = ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).expect("first presented host");
@@ -279,7 +279,7 @@ fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount
 #[test]
 fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() {
     let window_id = "presented-captured-slider";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, captured_slider_document(window_id, 1, 2.0, &[2])));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     let mut atlas = FontAtlas::builtin();
@@ -322,7 +322,7 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
     let hold = &fixture["hold"];
     let window_id = "clock-held-stepper";
     let generation = 1;
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, held_stepper_document(window_id, generation, hold)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
     let mut atlas = FontAtlas::builtin();
@@ -390,14 +390,14 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
 #[test]
 fn a_late_hidden_visibility_ack_cannot_suspend_a_reused_surface_id() {
     let window_id = "reused-clock-surface";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     ui.apply_tree(window_id, &stack_ui(Vec::new()));
     let retired = ui.surface_token(window_id).expect("first surface token");
     assert!(ui.seal_presented_input_candidate(80, &[]));
     close_surface_to_terminal(&mut ui, retired);
 
     let stepper =
-        UiNode::NumberStepper(UiNumberStepperNode { id: "reused.stepper".into(), value: 2.0, step: 1.0, uniform: true, min: Some(0.0), max: Some(5.0), precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None });
+        UiNode::NumberStepper(UiNumberStepperNode { id: "reused.stepper".into(), value: 2.0, step: 1.0, uniform: true, min: Some(0.0), max: Some(5.0), precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None, ..Default::default() });
     ui.apply_tree(window_id, &stack_ui(vec![stepper]));
     let successor = ui.surface_token(window_id).expect("successor surface token");
     assert_ne!(successor, retired);
@@ -424,7 +424,7 @@ fn accepted_input_caret_starts_solid_blinks_resets_and_cancels_from_the_shared_f
     assert_eq!(half_period, crate::wgpu::events::CARET_BLINK_SECONDS);
     for (case_index, case) in fixture["cases"].as_array().expect("caret cases").iter().enumerate() {
         let window_id = format!("caret-cadence-{case_index}");
-        let mut ui = Ui::new();
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         publish_blur_commit_input_document(&mut ui, &window_id);
         let mut atlas = FontAtlas::builtin();
         drive_layout(&mut ui, &window_id, 180.0, 28.0, &mut atlas);
@@ -469,7 +469,7 @@ fn accepted_input_caret_starts_solid_blinks_resets_and_cancels_from_the_shared_f
 #[test]
 fn scene_caret_requires_exact_accepted_surface_and_document_identity() {
     let window_id = "accepted-scene-caret";
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let component = serde_json::json!({ "type": "surface", "kind": "text-editor", "docSchema": "text-editor@1", "doc": { "bytes": [13,1,6,6,98,117,102,102,101,114,6,0] } });
     let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 1, "key": "caret/editor", "component": component,
@@ -509,7 +509,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     let generation = 1;
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, generation, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
     let mut atlas = FontAtlas::builtin();
@@ -590,7 +590,7 @@ fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replac
     let window_id = "accepted-tooltip-text";
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ui.publish_document(window_id, tooltip_document(window_id, 1, label, shortcut)));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     let mut atlas = FontAtlas::builtin();
@@ -843,7 +843,7 @@ fn rect_matches(actual: [f32; 4], expected: Rect) -> bool {
 fn puzzle3d_settings_document_completes_retained_paint() {
     let law = puzzle3d_settings_law();
     let window_id = law["document"]["surface"].as_str().expect("surface");
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     reconcile_puzzle3d_settings(&mut ui, window_id, &law);
 
     let mut atlas = FontAtlas::builtin();
@@ -925,7 +925,7 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
     let law = puzzle3d_settings_law();
     let gestures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
     for gesture in gestures["cases"].as_array().expect("gesture cases") {
-        let mut ui = Ui::new();
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         let window_id = law["document"]["surface"].as_str().expect("surface");
         reconcile_puzzle3d_settings(&mut ui, window_id, &law);
         drive_layout(&mut ui, window_id, 360.0, 480.0, &mut FontAtlas::builtin());
@@ -967,7 +967,7 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
 
 #[test]
 fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "conformance.a11y.projection";
     publish_accessibility_document(&mut ui, window_id);
     let first_generation = ui.surface_generation(window_id).expect("published surface generation");
@@ -1025,7 +1025,7 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
 #[test]
 fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "surface-close-same-id";
     publish_accessibility_document(&mut ui, window_id);
     let old_token = ui.surface_token(window_id).unwrap();
@@ -1051,7 +1051,7 @@ fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
 fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let count = law["sequentialMounts"].as_u64().unwrap() as usize;
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     for index in 0..count {
         let id = format!("queued-surface-{index}");
         publish_accessibility_document(&mut ui, &id);
@@ -1068,7 +1068,7 @@ fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
 #[test]
 fn surface_close_silently_discards_a_focused_blur_commit() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let id = "silent-input-unmount";
     publish_blur_commit_input_document(&mut ui, id);
     let generation = ui.surface_generation(id).unwrap();
@@ -1089,7 +1089,7 @@ fn surface_close_silently_discards_a_focused_blur_commit() {
 
 #[test]
 fn accessibility_blur_input_stages_values_and_commits_exactly_once_on_blur() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "framework.settings.general";
     publish_blur_commit_input_document(&mut ui, window_id);
     let generation = ui.surface_generation(window_id).unwrap();
@@ -1118,7 +1118,7 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
     let window_id = law["window"]["id"].as_str().unwrap();
     let node_id = law["select"]["nodeId"].as_u64().unwrap();
     let node_key = law["select"]["key"].as_str().unwrap();
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     publish_select_accessibility_document(&mut ui, &law);
     let generation = ui.surface_generation(window_id).expect("published Select surface generation");
 
@@ -1158,7 +1158,7 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
 
 #[test]
 fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
 
@@ -1171,7 +1171,7 @@ fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
 
 #[test]
 fn frame_before_any_apply_tree_returns_none() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.frame::<RecordingSceneHost>("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
 }
@@ -1231,7 +1231,7 @@ fn retained_paint_walk_depth_cap_plus_one_faults_without_dynamic_spill() {
 
 #[test]
 fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
     ui.apply_tree("main", &ui_node);
@@ -1245,7 +1245,7 @@ fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
 
 #[test]
 fn dispatch_event_emits_a_button_click_command_once() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
     drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
@@ -1260,14 +1260,14 @@ fn dispatch_event_emits_a_button_click_command_once() {
 
 #[test]
 fn set_window_layout_wires_into_the_facades_shell() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     ui.set_window_layout(crate::wgpu::even_window_layout(&["app.viewport".to_string()]));
     assert!(ui.shell().window_layout().is_some());
 }
 
 #[test]
 fn resize_storm_coalesces_to_one_latest_surface_job() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("resize", &stack_ui(vec![button_ui("go", "Go")]));
     for width in 1..=2_000 {
@@ -1282,7 +1282,7 @@ fn resize_storm_coalesces_to_one_latest_surface_job() {
 
 #[test]
 fn interactive_storm_does_not_starve_background_surface_lane() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("interactive", &stack_ui(vec![button_ui("go", "Go")]));
     ui.apply_tree("background", &stack_ui(vec![button_ui("bg", "Background")]));
@@ -1331,7 +1331,7 @@ fn interactive_storm_does_not_starve_background_surface_lane() {
 #[test]
 fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
     let labels: Vec<String> = (0..1_024).map(|index| format!("node-{index}")).collect();
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let children = labels.iter().map(|label| UiNode::Text(UiTextNode { value: Label::data(label.clone()), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })).collect();
     ui.apply_tree("large", &stack_ui(children));
@@ -1372,7 +1372,7 @@ fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
 
 #[test]
 fn mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     for index in 0..UI_LAYOUT_SURFACE_SLOTS {
         let id = SurfaceId::try_from(format!("mounted-{index}")).unwrap_or_else(|_| panic!("bounded mounted surface"));
         assert!(ui.windows.try_admit(id).is_ok());
@@ -1389,7 +1389,7 @@ fn mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation() {
 
 #[test]
 fn mounted_layout_equal_theme_does_not_invalidate_or_requeue() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     ui.apply_tree("theme", &stack_ui(vec![button_ui("same", "Same")]));
     let before_generation = ui.windows.get("theme").map(|window| window.layout_generation);
     let before_theme_revision = ui.windows.get("theme").map(|window| window.theme_revision);
@@ -1402,7 +1402,7 @@ fn mounted_layout_equal_theme_does_not_invalidate_or_requeue() {
 
 #[test]
 fn changed_theme_propagates_one_fixed_surface_slot_per_opportunity() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     ui.apply_tree("theme-a", &stack_ui(vec![button_ui("a", "A")]));
     ui.apply_tree("theme-b", &stack_ui(vec![button_ui("b", "B")]));
     let before_a = ui.windows.get("theme-a").map(|window| window.theme_revision);
@@ -1420,7 +1420,7 @@ fn changed_theme_propagates_one_fixed_surface_slot_per_opportunity() {
 
 #[test]
 fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("atomic", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("atomic"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), button_ui("target", "Target")]));
     drive_layout(&mut ui, "atomic", 320.0, 200.0, &mut atlas);
@@ -1455,7 +1455,7 @@ fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
 
 #[test]
 fn mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let original = stack_ui(vec![button_ui("original", "Original")]);
     ui.apply_tree("max", &original);
     let original_theme = ui.theme();
@@ -1486,7 +1486,7 @@ fn mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias() {
 
 #[test]
 fn mounted_layout_replay_and_resize_supersede_are_deterministic() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let input = stack_ui(vec![button_ui("replay", "Replay")]);
     ui.apply_tree("replay", &input);
@@ -1588,7 +1588,7 @@ impl SceneHost for BackpressureSceneHost {
 /// dispatched (see [`Ui::scene_at`]).
 #[test]
 fn scene_at_answers_the_component_scene_leaf_under_the_point() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.at")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1603,7 +1603,7 @@ fn scene_at_answers_the_component_scene_leaf_under_the_point() {
 /// own `"window"` menu instead of inventing a surface for it.
 #[test]
 fn scene_at_answers_none_outside_every_scene() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![button_ui("b", "Button")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1617,7 +1617,7 @@ fn scene_at_answers_none_outside_every_scene() {
 /// whole reason `scene_at` exists instead of dispatching an event to find out.
 #[test]
 fn scene_at_is_read_only_where_a_press_is_not() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.readonly")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1657,7 +1657,7 @@ fn assert_close(left: (f32, f32), right: (f32, f32), what: &str) {
  * `PopoverContent`'s fixed positioning. */
 #[test]
 fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1679,7 +1679,7 @@ fn an_open_overlays_body_is_positioned_at_its_resolved_placement() {
 /// frame, never a stored offset, so nothing has to be unwound.
 #[test]
 fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1699,7 +1699,7 @@ fn closing_an_overlay_returns_its_body_to_the_in_flow_position() {
 /// one origin rule — `OverlayKind::default_placement`'s `Centered` branch.
 #[test]
 fn a_modal_overlays_body_is_centered_in_the_viewport() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.dialog")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1734,7 +1734,7 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     let overlay_instances = |draw: &DrawList| -> usize { draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum() };
     let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
 
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
@@ -1767,7 +1767,7 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
 #[test]
 fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
     let body = Rect::new(12.0, 18.0, 240.0, 160.0);
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("atomic-frame", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("Accepted label"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
     drive_layout(&mut ui, "atomic-frame", body.w, body.h, &mut atlas);
@@ -1805,7 +1805,7 @@ fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_ext
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     assert_eq!(fixture["sceneBackpressure"]["externalCompleted"], serde_json::json!([0, 0, 1]));
     let body = Rect::new(0.0, 0.0, 240.0, 160.0);
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let mut host = BackpressureSceneHost { calls: 0, released: false, external_completed: 0 };
     ui.apply_tree("scene-backpressure", &stack_ui(vec![component_scene_ui("surface.backpressure")]));
@@ -1845,7 +1845,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
     let initial = rect(&fixture["sameSizeOriginMove"]["initial"]);
     let moved = rect(&fixture["sameSizeOriginMove"]["moved"]);
     assert_eq!((initial.w, initial.h), (moved.w, moved.h));
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("moved-origin", &stack_ui(vec![button_ui("target", "Target")]));
     drive_layout(&mut ui, "moved-origin", initial.w, initial.h, &mut atlas);
@@ -1875,7 +1875,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
 
 #[test]
 fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1886,7 +1886,7 @@ fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
 
 #[test]
 fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.host-test")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
@@ -1905,7 +1905,7 @@ fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot()
     // 🌳️ Nests the ComponentScene under a Group (not just a bare Stack) — regression for the
     // shadow-walk gap this bridge replaces: `collect_scene_slots` must still find it, and the
     // Group's own header/frame chrome (unrelated to the scene leaf) must still paint normally.
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let group_node = UiNode::Group(UiGroupNode {
         id: "group".into(),
@@ -2107,7 +2107,7 @@ fn stats(draw: &DrawList) -> (usize, usize, usize) {
 }
 
 fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("golden", node);
     drive_layout(&mut ui, "golden", 400.0, 400.0, &mut atlas);
@@ -2230,6 +2230,7 @@ fn golden_input() {
             on_repeat_last: None,
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         })),
     );
 }
@@ -2258,7 +2259,7 @@ fn checkbox_checked_state_does_not_paint_a_selection_outline() {
     let height = paint["availableHeight"].as_f64().unwrap() as f32;
     let side = paint["controlSide"].as_f64().unwrap() as f32;
     for checked in paint["checkedStates"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
-        let mut ui = Ui::new();
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let toggle = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Checkbox, id: "checkbox".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(checked), menu: None });
         ui.apply_tree("checkbox-paint", &leaf(toggle));
@@ -2305,7 +2306,7 @@ fn golden_key_value() {
 
 #[test]
 fn golden_slider() {
-    assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None })));
+    assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: action(), presence: UiPresence::default(), menu: None, ..Default::default() })));
 }
 
 /// 🔀️ Mixed values share the same placeholder and chrome in both WGPU painting paths.
@@ -2313,7 +2314,7 @@ fn golden_slider() {
 fn golden_mixed_number_stepper() {
     assert_equivalent(
         "MixedNumberStepper",
-        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None, ..Default::default() })),
     );
 }
 
@@ -2321,7 +2322,7 @@ fn golden_mixed_number_stepper() {
 fn golden_number_stepper() {
     assert_equivalent(
         "NumberStepper",
-        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None })),
+        &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, min: None, max: None, precision: None, on_absolute: action(), on_delta: action(), presence: UiPresence::default(), menu: None, ..Default::default() })),
     );
 }
 
@@ -2407,7 +2408,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
             menu: None,
             interaction_domain: None,
         });
-        let mut ui = Ui::new();
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
         let mut draw = DrawList::default();
         let bounds = Rect::new(120.0, 300.0, 300.0, 48.0);
@@ -2471,6 +2472,7 @@ fn golden_field_known_gap() {
             on_repeat_last: None,
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         })),
         presence: UiPresence::default(),
         menu: None,
@@ -2601,7 +2603,7 @@ fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
 //#region 🔬️IntrospectionTests
 #[test]
 fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert_eq!(ui.window_ids().count(), 0);
     assert_eq!(ui.viewport("win"), None);
     assert!(ui.tree("win").is_none());
@@ -3124,7 +3126,7 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
 /// `📓️w14b-generation3d-labels-preview-layout.md`).
 #[test]
 fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("panel", &stack_ui(vec![button_ui("one", "One"), button_ui("two", "Two")]));
     drive_layout(&mut ui, "panel", 300.0, 780.0, &mut atlas);
@@ -3150,7 +3152,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
     for node in nodes {
         document.try_upsert_record(serde_json::from_value(node.clone()).expect("compact row record")).unwrap();
     }
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);
@@ -3197,7 +3199,7 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
         }
         document
     };
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     assert!(ui.publish_document(surface, document(sequence[0]["generation"].as_u64().unwrap(), sequence[0]["presentation"].as_str().unwrap())));
     drive_scene_lifetime_reconcile(&mut ui, surface, 1);

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package semio.app.space.space;
+package semio.hub.compositions.space.engine.space.presence;
 message SpacePresence {
   // @state presence
   map<string, SpaceWindowCamera> camera = 1;

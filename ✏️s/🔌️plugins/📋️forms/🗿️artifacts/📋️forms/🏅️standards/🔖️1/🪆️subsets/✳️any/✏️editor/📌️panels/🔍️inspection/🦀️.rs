@@ -40,7 +40,15 @@ pub fn inspection_model(steps: &[crate::FormStep], selected: &[String]) -> schem
     schema::FormsInspection { scope: "question".into(), ids: questions.iter().map(|question| question.id.clone()).collect(), fields }
 }
 use crate::{forms_steps, FormsSnapshot};
-use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";

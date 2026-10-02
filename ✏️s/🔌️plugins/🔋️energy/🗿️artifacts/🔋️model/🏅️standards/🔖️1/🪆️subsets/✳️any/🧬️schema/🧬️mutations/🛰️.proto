@@ -21,26 +21,58 @@ message ChangeModelVersion {
   string new_version = 1;
 }
 
-message UpdateSite {
-  double latitude_deg = 1;
-  double longitude_deg = 2;
-  double elevation_m = 3;
-  double time_zone_hours = 4;
-  double north_axis_deg = 5;
+message ChangeSiteLatitude {
+  double new_latitude_deg = 1;
 }
 
-message UpdateGroundTemperature {
-  repeated double building_surface_c = 1;
-  repeated double shallow_c = 2;
-  double deep_c = 3;
+message ChangeSiteLongitude {
+  double new_longitude_deg = 1;
 }
 
-message UpdateRunPeriod {
-  uint32 start_month = 1;
-  uint32 start_day = 2;
-  uint32 end_month = 3;
-  uint32 end_day = 4;
-  uint32 year = 5;
+message ChangeSiteElevation {
+  double new_elevation_m = 1;
+}
+
+message ChangeSiteTimeZone {
+  double new_time_zone_hours = 1;
+}
+
+message ChangeSiteNorthAxis {
+  double new_north_axis_deg = 1;
+}
+
+message ChangeGroundTemperatureBuildingSurface {
+  uint32 month = 1;
+  double new_temperature_c = 2;
+}
+
+message ChangeGroundTemperatureShallow {
+  uint32 month = 1;
+  double new_temperature_c = 2;
+}
+
+message ChangeGroundTemperatureDeep {
+  double new_temperature_c = 1;
+}
+
+message ChangeRunPeriodStartMonth {
+  uint32 new_start_month = 1;
+}
+
+message ChangeRunPeriodStartDay {
+  uint32 new_start_day = 1;
+}
+
+message ChangeRunPeriodEndMonth {
+  uint32 new_end_month = 1;
+}
+
+message ChangeRunPeriodEndDay {
+  uint32 new_end_day = 1;
+}
+
+message ChangeRunPeriodYear {
+  uint32 new_year = 1;
 }
 
 message ReplaceAirflowNetwork {
@@ -1608,9 +1640,19 @@ message EnergyModelMutation {
   oneof kind {
     RenameModel rename_model = 1;
     ChangeModelVersion change_model_version = 2;
-    UpdateSite update_site = 3;
-    UpdateGroundTemperature update_ground_temperature = 4;
-    UpdateRunPeriod update_run_period = 5;
+    ChangeSiteLatitude change_site_latitude = 924;
+    ChangeSiteLongitude change_site_longitude = 925;
+    ChangeSiteElevation change_site_elevation = 926;
+    ChangeSiteTimeZone change_site_time_zone = 927;
+    ChangeSiteNorthAxis change_site_north_axis = 928;
+    ChangeGroundTemperatureBuildingSurface change_ground_temperature_building_surface = 929;
+    ChangeGroundTemperatureShallow change_ground_temperature_shallow = 930;
+    ChangeGroundTemperatureDeep change_ground_temperature_deep = 931;
+    ChangeRunPeriodStartMonth change_run_period_start_month = 932;
+    ChangeRunPeriodStartDay change_run_period_start_day = 933;
+    ChangeRunPeriodEndMonth change_run_period_end_month = 934;
+    ChangeRunPeriodEndDay change_run_period_end_day = 935;
+    ChangeRunPeriodYear change_run_period_year = 936;
     ReplaceAirflowNetwork replace_airflow_network = 6;
     AddOutputVariable add_output_variable = 7;
     RemoveOutputVariable remove_output_variable = 8;

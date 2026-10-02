@@ -21,8 +21,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertStream {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::InsertStream(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert stream", "Datenstrom einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert stream", "Datenstrom einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

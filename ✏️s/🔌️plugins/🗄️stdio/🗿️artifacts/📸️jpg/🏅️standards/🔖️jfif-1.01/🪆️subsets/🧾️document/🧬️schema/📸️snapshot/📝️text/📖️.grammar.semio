@@ -4,20 +4,19 @@ extension jpg
 start document
 comment none
 
-# P2-FG2: real M1-dialect grammar, replacing the pre-Phase-2 ABNF-flavored placeholder (wrong
-# header dialect -- `dialect protocol stdio.jpg.snapshot` on one line, `%x` ranges, `/`
-# alternation, `~` negation -- none of it this dialect's real syntax, see
-# `📖️grammar-recipe.md` §1.1). `📸️jpg` is BINARY-NATIVE (per the ticket's own classification for
-# this wave): the TEXT DSL wire form `store::ArtifactDsl::parse_dsl`/`print_dsl` actually round
-# trip (`../../🦀️.rs`) is a semio preamble line, then the real JFIF byte stream
-# (SOI..EOI, ITU-T T.81/ISO 10918-1) hex-encoded verbatim -- so this grammar honestly models the
-# TEXT form (a hex-dump grammar, matching png's own accurate precedent per the recipe) and does
-# NOT re-describe the binary marker-segment structure that job belongs to
-# `../💾️binary/📡️.protocol.semio`.
-#
-# `comment none`: hex digits are lowercase-only and never contain `#`; kept for consistency with
-# every other stdio artifact's snapshot grammar and so a stray `#` in future fixture growth fails
-# loudly as a real parse mismatch instead of silently vanishing as a comment.
 document = artifact-mark payload
 artifact-mark = "stdio.jpg"
-payload = hex*
+payload = "schema" "=" text "width" "=" uint "height" "=" uint "pixels" "=" text "jfifXDensity" "=" uint "jfifYDensity" "=" uint "sofMarker" "=" uint "arithmetic" "=" bool "reEncodeQuality" "=" optional-uint "jfifVersion" "=" version "jfifDensityUnits" "=" text "jfifThumbnail" "=" thumbnail "frame" "=" frame "quantTables" "=" "[" quantizer* "]" "huffmanTables" "=" "[" huffman* "]" "restartInterval" "=" optional-uint "otherSegments" "=" "[" segment* "]"
+optional-uint = "null" / uint
+version = "[" uint uint "]"
+octets = "bytes64" "(" text ")"
+thumbnail = "null" / "{" "height" "=" uint "rgbData" "=" octets "width" "=" uint "}"
+frame = "null" / "{" "components" "=" "[" component* "]" "height" "=" uint "precision" "=" uint "width" "=" uint "}"
+component = "{" "hSampling" "=" uint "id" "=" uint "quantTableId" "=" uint "vSampling" "=" uint "}"
+quantizer = "{" "id" "=" uint "precision" "=" uint "values" "=" "[" uint* "]" "}"
+huffman = "{" "bits" "=" "[" uint* "]" "class" "=" text "id" "=" uint "values" "=" octets "}"
+segment = "{" "data" "=" octets "marker" "=" uint "}"
+
+uint = INT
+text = STRING / IDENT / INT / FLOAT
+bool = "true" / "false"

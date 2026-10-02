@@ -39,8 +39,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
             vec![JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: base.jfif_version, density_units: base.jfif_density_units, x_density: base.jfif_x_density, y_density: base.jfif_y_density, thumbnail: base.jfif_thumbnail.clone() })]
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-jfif-header".into()]

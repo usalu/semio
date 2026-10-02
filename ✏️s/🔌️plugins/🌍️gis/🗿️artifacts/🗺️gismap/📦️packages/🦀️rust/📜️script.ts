@@ -56,4 +56,4 @@ if (segments[0] === "map-document-contract") {
 }
 
 if (process.argv[2] === "test") process.env.RUST_MIN_STACK ??= "268435456";
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-gis-gismap", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-gis-gismap", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

@@ -22,7 +22,7 @@ impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerTransf
         if validate(self,base).is_err(){return Vec::new();}
         vec![RasterMutation::ChangeLayerTransform(Self {layer_id:self.layer_id.clone(),expected:self.transform.clone(),transform:self.expected.clone()})]
     }
-    fn label(&self)->protocol::LocalizedLabel {protocol::LocalizedLabel::native("Transform layer","Ebene transformieren")}
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Transform layer","Ebene transformieren")}
     fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }
 #[cfg(test)]

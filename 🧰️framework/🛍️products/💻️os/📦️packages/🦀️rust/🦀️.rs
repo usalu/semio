@@ -206,14 +206,7 @@ pub mod os_spr {
     pub mod protocol_laws;
 }
 
-// 🌐️ Locale × terminology axes and the label carriers built on them (`Locale`/`Terminology`/
-// `Label`/`LabelText`/`LocalizedLabel`/`AppLabels`). They live below the UI crate because
-// `MutationKind::label` returns a `LocalizedLabel` and this crate owns that trait; `ui_wgpu`'s
-// wgpu target re-exports every name. Ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END (U3).
-#[path = "../../🔨️modules/🌐️locale/🦀️.rs"]
-pub mod os_locale;
-
-pub use crate::os_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
 #[path = "../../🔨️modules/🌿️vcs/🦀️.rs"]
 pub mod os_vcs;
@@ -262,8 +255,6 @@ pub mod io_schema;
 #[path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs"]
 pub mod sqlite_snapshot;
 
-#[path = "../../../../🔨️modules/🧬️schema/🧩️composition/🦀️.rs"]
-pub mod os_schema_composition;
 
 #[path = "."]
 pub mod os_store {
@@ -289,13 +280,6 @@ pub mod os_store {
     #[cfg(all(feature = "worker", target_arch = "wasm32", not(target_env = "p2")))]
     #[path = "../../🔨️modules/🏪️store/👷️worker/🦀️.rs"]
     pub mod worker;
-}
-
-#[path = "."]
-pub mod os_engine {
-    #[path = "../../🔨️modules/⚙️engine/🦀️.rs"]
-    mod component;
-    pub use component::*;
 }
 
 #[path = "."]
@@ -325,7 +309,6 @@ pub mod os_semio;
 #[path = "../../🔨️modules/🧩️extension/🦀️.rs"]
 pub mod os_extension;
 
-pub use crate::os_engine::*;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub use crate::os_extension as extension;
 pub use crate::os_semio::*;
@@ -342,18 +325,15 @@ pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 /// crate under that literal name needs them reachable at the crate root, not only as
 /// `crate::schema::ToValue`.
 pub use crate::os_dsl::schema::{edit_through_value, DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+pub use semio_framework_schema_state::StateClass;
+pub use semio_framework_schema_composition as os_schema_composition;
+/// 📶️ Canonical artifact state class, reachable anywhere `Mutations` is derived.
 pub use protocol::dsl_value;
+pub use protocol::value::native_decoding;
 pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
 
-/// 🌿️ Crate-root re-export of the `#[derive(ToValue, FromValue)]` proc-macros themselves (distinct
-/// Rust namespace from the trait re-export directly above — a derive macro and a trait can share an
-/// identifier with zero conflict). `semio_framework_plugin::app_commands!` (`🔌️plugin/🦀️.rs`)
-/// spells these as `$crate::ToValue`/`$crate::FromValue` in its generated `#[derive(...)]` line so the
-/// path is robust regardless of what the *invoking* plugin crate has imported — `macro_rules!` gives
-/// bare (non-`$crate`) identifiers def-site hygiene only for local bindings, not for macro/item paths,
-/// so relying on every one of the ~190 `app_commands!` call sites to already `use
-/// semio_framework_value_derive::{ToValue, FromValue}` would be fragile; `$crate::` sidesteps that.
-pub use semio_framework_value_derive::{FromValue, RetainedClone, RetireOwned, ToValue};
+/// 🌿️ Publishes the canonical retained ownership derives beside their owned value traits.
+pub use semio_framework_value_derive::{RetainedClone,RetireOwned};
 
 //#region 🧪️Tests
 #[cfg(test)]

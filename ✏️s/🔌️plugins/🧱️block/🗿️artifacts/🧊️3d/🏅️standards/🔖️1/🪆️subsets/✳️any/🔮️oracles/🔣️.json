@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.block.3d` is a semio-NATIVE KIND DEFINITION — one object kind's identity, its mesh representations, the vortex kinds it exposes, the vortices placed on it in 3-space, the compatibility relation between those kinds, its attributes, authors, camera and metadata. No component- or symbol-library format models that and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas and specification vectors, exactly as the sibling `mutate-block-2d-1` does over the same carrier.",
   "oracles": [
@@ -1275,11 +1275,5 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    }
-  ]
+  "oracleHostPackages": []
 }

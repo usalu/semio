@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete Material {}", self.id.0), &format!("Material {} löschen", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete Material {}", self.id.0), &format!("Material {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

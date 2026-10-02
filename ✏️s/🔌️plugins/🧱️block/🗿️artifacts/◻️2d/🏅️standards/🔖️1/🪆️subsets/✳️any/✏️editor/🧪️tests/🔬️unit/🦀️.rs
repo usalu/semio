@@ -50,6 +50,8 @@ pub(crate) mod context {
     pub fn block2d_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_block2d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("block", Block2dPlayApp, block2d_app_manifest_for_tests, "../..");
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
@@ -69,7 +71,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut Block2dApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
 }
 

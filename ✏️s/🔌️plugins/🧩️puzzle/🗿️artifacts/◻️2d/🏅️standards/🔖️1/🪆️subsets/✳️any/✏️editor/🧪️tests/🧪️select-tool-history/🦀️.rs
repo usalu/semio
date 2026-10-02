@@ -105,6 +105,24 @@ fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
     node["children"].as_array()?.iter().find_map(|child| find_node(child, key))
 }
 
+/// 🖲️ The first node under `node` bound to `action`, with that binding — the control a host click dispatches.
+fn find_binding<'a>(node: &'a Value, action: &str) -> Option<(&'a Value, &'a Value)> {
+    if let Some(binding) = node["bindings"].as_array().into_iter().flatten().find(|binding| binding["action"]["name"].as_str() == Some(action)) {
+        return Some((node, binding));
+    }
+    node["children"].as_array()?.iter().find_map(|child| find_binding(child, action))
+}
+
+/// 🔤️ Every text a projected node carries, depth first.
+fn texts(node: &Value) -> Vec<&str> {
+    match node {
+        Value::String(text) => vec![text.as_str()],
+        Value::Array(items) => items.iter().flat_map(texts).collect(),
+        Value::Object(entries) => entries.values().flat_map(texts).collect(),
+        _ => Vec::new(),
+    }
+}
+
 /// ⚖️ `actual` holds `expected`: every expected key, numbers within 1e-12, id lists in any order.
 fn same(actual: &Value, expected: &Value) -> bool {
     match (actual, expected) {
@@ -137,12 +155,19 @@ fn row_mutation(row: &HistoryEntry) -> Value {
 //#endregion 🧰️Harness
 
 //#region 🎬️Steps
-/// ▶️ Runs one corpus step on the app.
+/// 🖱️ Selects `ids` as nodes of the board's interaction domain (`interactionSelect`), as a pick or a marquee does.
+fn select(app: &mut Puzzle2dApp, ids: Vec<String>) {
+    let targets: Vec<InteractionTarget> = ids.into_iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id }).collect();
+    dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&targets).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select");
+}
+
+/// ▶️ Runs one corpus step on the app; a drag grabs a selection the app holds, painted into the engine as hosts paint it.
 fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
     let (action, spec) = step.as_object().expect("step").iter().find(|(key, _)| key.as_str() != "expect").expect("one action per step");
     let point = |value: &Value| (value[0].as_f64().expect("x"), value[1].as_f64().expect("y"));
     match action.as_str() {
         "drag" => {
+            select(app, ids(&spec["selection"]));
             let mut host = painted_host_of(&painted(app));
             host.set_selection_ids_silent(&ids(&spec["selection"]));
             let (x, y) = point(&spec["from"]);
@@ -170,10 +195,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
             assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "{what}: a pick is never frozen");
             close_board_host(host);
         }
-        "select" => {
-            let targets: Vec<InteractionTarget> = ids(spec).into_iter().map(|id| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id }).collect();
-            dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&targets).expect("targets"), "merge": "replace", "method": "pick" })), None).expect("select");
-        }
+        "select" => select(app, ids(spec)),
         "translate" | "rotate" | "scale" => {
             let verb = match action.as_str() {
                 "translate" => "translateSelection",
@@ -195,7 +217,16 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
             history_edit(app, "historyEditBegin", json!({ "mutationId": mutation }));
         }
         "input" => history_edit(app, "historyEditInput", json!({ "path": spec["path"], "value": spec["value"] })),
-        "useSelection" => history_edit(app, "historyEditUseSelection", json!({ "path": spec })),
+        "useSelection" => {
+            let pointer = spec.as_str().expect("the reference input's path");
+            let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
+            let key = format!("framework.history.editor.input{}.row", pointer.replace('/', "."));
+            let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
+            let (button, binding) = find_binding(control, "historyEditUseSelection").unwrap_or_else(|| panic!("{what}: {key} offers Use selection: {control}"));
+            assert_ne!(button["disabled"], Value::Bool(true), "{what}: Use selection is enabled for a reference into the board's domain: {button}");
+            assert_eq!(binding["args"]["path"].as_str(), Some(pointer), "{what}: Use selection drafts {pointer}: {binding}");
+            history_edit(app, "historyEditUseSelection", binding["args"].clone());
+        }
         "withdraw" => history_edit(app, "historyEditWithdraw", json!({})),
         "accept" => {
             history_edit(app, "historyEditAccept", json!({}));
@@ -239,6 +270,9 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
     for outcome in expect["outcomes"].as_array().into_iter().flatten() {
         let mutation = row_mutation(&rows[outcome["row"].as_u64().expect("outcome row") as usize]);
         assert_eq!(mutation["worst"], outcome["worst"], "{what}: worst of {mutation}");
+        if let Some(introduced) = outcome.get("introduced") {
+            assert_eq!(&mutation["introduced"], introduced, "{what}: whether the edit made the outcome new: {mutation}");
+        }
         assert!(mutation["messages"].as_array().into_iter().flatten().any(|message| message["code"] == outcome["code"] && same(&message["target"], &outcome["target"])), "{what}: {} at {} in {mutation}", outcome["code"], outcome["target"]);
     }
     if let Some(problem) = expect.get("nextProblem") {
@@ -278,6 +312,11 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
                 let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
                 assert!(same(&control["component"]["step"], step), "{what}: {key} steps by the window's grid: {}", control["component"]);
             }
+            if let Some(component) = input.get("component") {
+                let key = format!("framework.history.editor.input{}", path.replace('/', "."));
+                let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
+                assert!(same(&control["component"], component), "{what}: {key} renders every facet of its descriptor: {} holds {component}", control["component"]);
+            }
         }
     }
     if let Some(preview) = expect["preview"].as_object() {
@@ -294,6 +333,17 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
         let scene = board_scene(app);
         let painted: Value = serde_json::from_str(scene["highlightedIdsJson"].as_str().unwrap_or("[]")).expect("highlighted ids parse");
         assert!(same(&painted, highlighted), "{what}: the board highlights {painted}, the draft references {highlighted}");
+    }
+    if let Some(chips) = expect["chips"].as_object() {
+        let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
+        for (pointer, labels) in chips {
+            let key = format!("framework.history.editor.input{}", pointer.replace('/', "."));
+            let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
+            let shown = texts(control);
+            for label in labels.as_array().expect("chip labels") {
+                assert!(shown.contains(&label.as_str().expect("chip label")), "{what}: a {key} chip reads {label}: {shown:?}");
+            }
+        }
     }
     if let Some(draft) = expect["draft"].as_object() {
         let value = Value::from(&app.time_travel_ledger().editor().expect("the draft editor").value);
@@ -338,6 +388,35 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
         close_app(&mut app);
         close_app(&mut fresh);
     }
+}
+
+/// 🪧️ LAW (design §16.4): a reference chip names its board entity as the outliner does — a node by its text, a target
+/// region by its label, an edge by its endpoint nodes, a handle by its node and kind — for the declared kinds only, as
+/// data in every locale; an entity only its id would name, or one the document lacks, reads `None` and shows its id.
+#[test]
+fn reference_chips_name_board_entities_like_the_outliner() {
+    let fixture = json!({
+        "nodes": [
+            { "id": "a", "x": 0.0, "y": 0.0, "text": "Alpha", "handles": [{ "id": "a:h", "handleKind": "door" }] },
+            { "id": "b", "x": 0.0, "y": 0.0, "handles": [{ "id": "b:h", "handleKind": "door" }] }
+        ],
+        "edges": [{ "id": "e", "source": "a:h", "target": "b:h" }],
+        "targetRegions": [{ "id": "r", "label": "Courtyard" }, { "id": "s" }]
+    });
+    let label = |kinds: &[&str], id: &str| {
+        let kinds: Vec<String> = kinds.iter().map(|kind| kind.to_string()).collect();
+        puzzle2d_entity_label(&fixture, &kinds, id).map(|label| (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()))
+    };
+    let both = |text: &str| Some((text.to_string(), text.to_string()));
+    assert_eq!(label(&["node", "targetRegion"], "a"), both("Alpha"));
+    assert_eq!(label(&[], "a"), both("Alpha"), "no declared kind admits every kind");
+    assert_eq!(label(&["node"], "b"), None, "a node only its id names shows the id");
+    assert_eq!(label(&["node", "targetRegion"], "r"), both("Courtyard"));
+    assert_eq!(label(&["node", "targetRegion"], "s"), None);
+    assert_eq!(label(&["node"], "r"), None, "an undeclared kind is never looked up");
+    assert_eq!(label(&["edge"], "e"), both("Alpha → b"));
+    assert_eq!(label(&["handle"], "a:h"), both("Alpha \u{b7} door"));
+    assert_eq!(label(&["node"], "ghost"), None, "an entity the document lacks shows its id");
 }
 
 /// ✏️ The scenario's edited log: every logged leaf with its draft, a withdrawn one dropped.

@@ -29,8 +29,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDescri
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change description", "Beschreibung ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change description", "Beschreibung ändern")
     }
 }
 //#endregion 🔖️Mutation

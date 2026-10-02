@@ -162,7 +162,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.obj".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Obj", "Obj"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Obj", "Obj"),
         source_format: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

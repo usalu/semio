@@ -6,7 +6,20 @@ use crate::editor::layout::{layout_action, ui_label, ui_value_map, ui_value_text
 use crate::standards::v1::subsets::any::schema::rgba_to_hex;
 use crate::{Frame, LayoutSnapshot, Page, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{tree_item_desc, ui_node_list, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_ui_contract as ui;
 
 pub const LAYOUT_PLAY_BODY_INSPECTION: &str = "layout.play.inspection";

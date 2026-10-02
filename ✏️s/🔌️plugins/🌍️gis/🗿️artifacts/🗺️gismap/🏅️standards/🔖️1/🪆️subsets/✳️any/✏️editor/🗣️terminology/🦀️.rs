@@ -2,7 +2,7 @@
 //! reaches for.
 
 //#region 🔖️Labels
-semio_framework_plugin::app_labels! {
+semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the GIS 2D app; one field per label makes every locale combination compile-checked.
     pub struct Gis2dPlayLabels {
         window_map: native_en "Map", native_de "Karte", reuse_en "Map", reuse_de "Karte";

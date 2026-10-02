@@ -50,12 +50,12 @@ fn document_backbone_event_envelopes(event: &ArtifactEvent) -> Option<Vec<Mutati
 async fn document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages() {
     let attempt = "11111111-1111-4111-8111-111111111111";
     let request = backbone_worker_wire::BackboneWorkerRequest::Open { document_id: "document-a".into(), client_instance_id: Some(attempt.into()), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: Some(true), actor: "actor-a".into() };
-    let wire = backbone_worker_wire::encode_request(&request).await.expect("encode exact opening owner");
+    let wire = backbone_worker_wire::encode_request(&request);
     let decoded = backbone_worker_wire::decode_request(&wire).await.expect("decode exact opening owner");
     assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerRequest::Open { client_instance_id: Some(owner), .. } if owner == attempt));
 
     let response = backbone_worker_wire::BackboneWorkerResponse::Event { document_id: "document-a".into(), client_instance_id: attempt.into(), event: ArtifactEvent::Status(ArtifactSyncStatus::default()) };
-    let wire = backbone_worker_wire::encode_response(&response).await.expect("encode exact event owner");
+    let wire = backbone_worker_wire::encode_response(&response);
     let decoded = backbone_worker_wire::decode_response(&wire).await.expect("decode exact event owner");
     assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerResponse::Event { client_instance_id: owner, .. } if owner == attempt));
 }
@@ -285,7 +285,7 @@ impl OpText for DemoMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -295,7 +295,7 @@ impl OpText for DemoMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -304,7 +304,7 @@ impl OpBinary for DemoMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
-        let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+        let body = crate::os_pack::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
         let mut out = Vec::with_capacity(2 + body.len());
         out.push(pack_rt::OP_BINARY_FORMAT);
         out.push(idx as u8);
@@ -320,7 +320,7 @@ impl OpBinary for DemoMutation {
         let ordinal = reader.read_u8().map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let offset = reader.position() as u64;

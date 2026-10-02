@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
-import { acquireQueuedResourceLease } from "../../../../⚡️caching/🔒️leases/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🕰️queued-preparation/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🕰️queued-preparation/🔣️.json", import.meta.url), "utf8"));

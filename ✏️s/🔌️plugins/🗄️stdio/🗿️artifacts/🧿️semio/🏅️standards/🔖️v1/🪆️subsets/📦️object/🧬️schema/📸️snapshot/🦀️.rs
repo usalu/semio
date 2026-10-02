@@ -57,13 +57,13 @@ impl dsl::ToValue for SemioObjectSnapshot {
     fn to_value(&self) -> dsl::DslValue {
         let mut entries = vec![("schema".to_string(), dsl::ToValue::to_value(&self.schema)), ("transform".to_string(), dsl::ToValue::to_value(&self.transform))];
         if let Some(brep) = &self.brep {
-            entries.push(("brep".to_string(), dsl::to_dsl_value(brep).expect("ArtifactChild serializes")));
+            entries.push(("brep".to_string(), semio_framework_value::ToValue::to_value(brep)));
         }
         if let Some(mesh) = &self.mesh {
-            entries.push(("mesh".to_string(), dsl::to_dsl_value(mesh).expect("ArtifactChild serializes")));
+            entries.push(("mesh".to_string(), semio_framework_value::ToValue::to_value(mesh)));
         }
         if let Some(properties) = &self.properties {
-            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+            entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(properties)));
         }
         dsl::DslValue::object(entries)
     }
@@ -140,14 +140,16 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
+    format!("[{},{},{},{}]",enc_str(&r.artifact_id),enc_str(&r.dialect.artifact_kind),enc_str(&r.dialect.standard),enc_str(&r.dialect.subset))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+    let parts=crate::standards::v1::subsets::base::schema::triples::split_top_level(crate::standards::v1::subsets::base::schema::triples::strip_brackets(s)?,',');
+    let[id,kind,standard,subset]=parts.as_slice()else{return Err("reference requires four literal fields".into())};
+    Ok(store::os_io::ArtifactRef{artifact_id:dec_str(id)?,dialect:store::os_io::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
 }
 
-/// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete.
+/// 🪪️ One literal child identity and four literal reference fields.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
@@ -175,7 +177,8 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_transform(t: &SemioTransform) -> String {
-    format!("[{},{},{},{},{},{},{},{},{},{}]", t.translation.x, t.translation.y, t.translation.z, t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w, t.scale.x, t.scale.y, t.scale.z,)
+    use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
+    format!("[{},{},{},{},{},{},{},{},{},{}]", NativeF64(t.translation.x), NativeF64(t.translation.y), NativeF64(t.translation.z), NativeF64(t.rotation.x), NativeF64(t.rotation.y), NativeF64(t.rotation.z), NativeF64(t.rotation.w), NativeF64(t.scale.x), NativeF64(t.scale.y), NativeF64(t.scale.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
@@ -183,7 +186,7 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
-    let f = |s: &str| s.trim().parse::<f64>().map_err(|e| e.to_string());
+    let f = crate::standards::v1::subsets::base::schema::geometry::native::parse;
     use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
@@ -246,11 +249,11 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
+    for field in [&r.artifact_id,&r.dialect.artifact_kind,&r.dialect.standard,&r.dialect.subset]{write_str_lp(out,field);}
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+    Ok(store::os_io::ArtifactRef{artifact_id:read_str_lp(reader)?,dialect:store::os_io::ArtifactDialect{artifact_kind:read_str_lp(reader)?,standard:read_str_lp(reader)?,subset:read_str_lp(reader)?}})
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
@@ -453,3 +456,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
+
+#[path="🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path="🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

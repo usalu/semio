@@ -8,7 +8,9 @@ use crate::editor::grid2d::modes::edit::windows::preview;
 use crate::schema::inferences::{solve_with_job, Grid2dInferenceCommit};
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, Operation, StepContext, StepOutcome};
-use semio_framework_plugin::{LocalizedLabel, ToolDefinition, ToolRunJobPort};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunRebasePolicy, ToolRunReasonDefinition, ToolRunReconfigurePolicy, ToolRunSettingsReads,
     ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID,

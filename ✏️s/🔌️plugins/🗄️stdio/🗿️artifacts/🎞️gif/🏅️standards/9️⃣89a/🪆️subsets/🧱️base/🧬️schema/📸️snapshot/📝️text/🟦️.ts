@@ -49,5 +49,5 @@ export const stdioGif89aBaseSnapshotTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parseGifSnapshotText(value: unknown, at = "$"): GifSnapshotText {
-  return stdioGif89aBaseSnapshotTextGuardObject(value, `${at}`);
+  return stdioGif89aBaseSnapshotTextGuardString(value, `${at}`);
 }

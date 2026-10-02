@@ -31,10 +31,9 @@ edge-list = edge {"," edge}*
 edge = "[" hex "," port "," port "," hex "]"
 port = "[" hex "," hex "]"
 
-# `SemioPoint2.x`/`.y` print via plain Rust `{v}` Display (`0`, `120.5`, `-30.25`, ...) — the shared
-# lexer's `INT`/`FLOAT` scanners already capture a leading `-` when digit-adjacent (P2-M1's
-# trailing-dot-float work), matching `enc_f64`/`dec_f64` lexeme-for-lexeme.
-number = INT | FLOAT
+# Finite binary64 values retain their Rust decimal display. Nonfinite values use inf/-inf
+# or nan64_ followed by exactly sixteen hexadecimal bits; the codec validates NaN class.
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `id`/`kind`/`label`/`key`/

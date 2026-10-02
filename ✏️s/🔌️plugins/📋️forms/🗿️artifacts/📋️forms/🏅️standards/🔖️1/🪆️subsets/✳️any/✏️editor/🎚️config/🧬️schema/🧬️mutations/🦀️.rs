@@ -22,7 +22,7 @@ impl protocol::OpText for FormsConfigMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -31,7 +31,7 @@ impl protocol::OpText for FormsConfigMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| spec()).expect("declared Forms config mutation");
+        let spec = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("declared Forms config mutation");
         dsl::print(&record, &spec, dsl::JoinMode::Inline)
     }
 }

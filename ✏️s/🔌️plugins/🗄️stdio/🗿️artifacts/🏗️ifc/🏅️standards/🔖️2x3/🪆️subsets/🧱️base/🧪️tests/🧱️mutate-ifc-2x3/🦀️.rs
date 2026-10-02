@@ -12,7 +12,7 @@
 //! ruststep is not a second PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_any};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_any};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc";
@@ -160,8 +160,8 @@ mod subject {
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
     use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::base::project_ifc_2x3_any;
+    use semio_repo_test_host::law::wire_operation;
+    use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::base::project_ifc_2x3_any;
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<Ifc2x3Mutation, String> {

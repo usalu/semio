@@ -93,3 +93,10 @@ test("STL artifact, snapshot and sparse diff callers share exact owned coordinat
   expect(parseStlTriangleAdded({index:0,triangle})).toEqual({index:0,triangle});
   expect(()=>parseStlTriangle({normal:[0,0,0],vertices:[[0,0,0],[0,0,0],[0,0,0]]})).toThrow("binary64");
 });
+
+test("STL same-schema changed semantic state refuses while surrogate renumbering remains valid",async()=>{
+ const db=Database.deserialize(await exportSqliteDatabase(await stlSnapshotToSqliteDatabase(input)));
+ try{db.run("UPDATE stl_solid SET name='changed'");expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});await expect(stlSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,await importSqliteDatabase(db.serialize()))).rejects.toThrow("identity");}finally{db.close();}
+ const renumbered=Database.deserialize(await exportSqliteDatabase(await stlSnapshotToSqliteDatabase(input)));
+ try{renumbered.run("UPDATE stl_solid SET id=-19");renumbered.run("UPDATE stl_facet SET solid_id=-19,id=id+100");renumbered.run("UPDATE stl_vertex SET facet_id=facet_id+100,id=id+300");expect(renumbered.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(renumbered.query("PRAGMA foreign_key_check").all()).toEqual([]);await stlSnapshotValidateSqliteSubset(input,ieee.sqliteDialect,await importSqliteDatabase(renumbered.serialize()));}finally{renumbered.close();}
+});

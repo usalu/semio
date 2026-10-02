@@ -105,7 +105,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
                 }
                 ("fault", semio_framework::kernel::RequestOutcome::Err(bytes)) => {
                     let decoded = store::pack_rt::decode_wire_value(bytes).expect("the fault arm is a pack");
-                    let fault: semio_framework::Fault = dsl::from_dsl_value(decoded).expect("the fault arm decodes as a Fault");
+                    let fault: semio_framework::Fault = semio_framework_value::FromValue::from_value(decoded).expect("the fault arm decodes as a Fault");
                     assert_eq!(fault.code.0.as_str(), row.fault_code.as_deref().expect("a fault row declares its code"), "{}", row.name);
                 }
                 (expected, produced) => panic!("{} expected {expected}, got {produced:?}", row.name),

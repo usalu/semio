@@ -14,7 +14,7 @@
 //! links `semio-s-plugin-stdio` -- §5.3's own role separation, NOT a workaround for anything: the
 //! Rust subject phase runs, and wave 14 ran the full differential comparison against the oracle.
 //!
-//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
 //! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
 //! untouched deck's projection, and `identity-round-trip` must both preserve the projection and
@@ -23,8 +23,8 @@
 //! included — is dropped from the inverse law.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_pptx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📽️.pptx";
@@ -90,8 +90,8 @@ mod subject {
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
     use semio_s_artifact_stdio_pptx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, PptxMutation, PptxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::project_pptx_mutation;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_pptx_test_oracle::standards::v_ecma_376::subsets::base::project_pptx_mutation;
+    use semio_repo_test_host::law::wire_operation;
 
     /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
     /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the

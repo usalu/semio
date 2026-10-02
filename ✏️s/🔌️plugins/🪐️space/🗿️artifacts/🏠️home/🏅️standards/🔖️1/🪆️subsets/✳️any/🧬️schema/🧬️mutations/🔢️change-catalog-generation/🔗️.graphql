@@ -1,4 +1,7 @@
+"""🔢️ Exact unsigned64 Home catalog generation, 0..18446744073709551615."""
+scalar HomeCatalogGenerationUInt64
+
 """🔢 Direct change-catalog-generation payload."""
 input ChangeCatalogGenerationInput {
-  newCatalogGeneration: Long!
+  newCatalogGeneration: HomeCatalogGenerationUInt64!
 }

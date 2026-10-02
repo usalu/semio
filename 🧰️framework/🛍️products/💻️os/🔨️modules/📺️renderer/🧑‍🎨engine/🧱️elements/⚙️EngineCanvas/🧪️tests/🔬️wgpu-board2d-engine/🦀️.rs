@@ -93,3 +93,24 @@ fn board_granularity_classification_matches_the_react_table() {
     assert_eq!(by_id.get("never-published"), None, "an unknown id is absent, and the hover writer defaults it to node");
     assert!(board2d_granularity_by_id("not json").is_empty(), "a refused fixture classifies nothing");
 }
+
+/// 🔗️ Law (design §16.4): what an open time-travel draft references reaches the wgpu board engine from the scene's
+/// `highlighted_ids_json` exactly as React's Board2dHost forwards it (`setHighlightedIdsJson`): the ids are highlighted,
+/// an unchanged scene re-applies nothing, a new preview fixture keeps them, and `[]` clears them.
+#[test]
+fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
+    let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
+    let fixture = |x: f64| json!({ "schema": "puzzle.2d.fixture", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("left", -x), node("mid", x)], "edges": [] }).to_string();
+    let mut board = ui_wgpu::wgpu::Board2dScene::base(fixture(40.0), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    board.highlighted_ids_json = json!(["mid", "left"]).to_string();
+    let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
+    assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "the first scene syncs");
+    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#);
+    assert!(!sync_board_engine(&mut host, &mut cache, &board, 800, 600), "an unchanged scene re-applies nothing");
+    board.fixture_json = fixture(80.0);
+    assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "a new preview syncs");
+    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#, "a new preview keeps what the draft references");
+    board.highlighted_ids_json = "[]".into();
+    assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "a closed draft syncs");
+    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), "[]", "a closed draft highlights nothing");
+}

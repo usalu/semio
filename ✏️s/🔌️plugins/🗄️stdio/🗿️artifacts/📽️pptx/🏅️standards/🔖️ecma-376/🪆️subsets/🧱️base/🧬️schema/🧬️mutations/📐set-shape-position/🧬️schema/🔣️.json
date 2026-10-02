@@ -67,46 +67,24 @@
       ],
       "properties": {
         "x": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "y": {
-          "type": "integer"
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cx": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Width",
-              "de": "Breite"
-            },
-            "description": {
-              "en": "Shape extent in EMU (914400 per inch).",
-              "de": "Ausdehnung der Form in EMU (914400 je Zoll)."
-            },
-            "unit": "EMU",
-            "displayUnit": "cm",
-            "displayFactor": 2.777777777777778e-06,
-            "precision": 2
-          }
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         },
         "cy": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Height",
-              "de": "Höhe"
-            },
-            "description": {
-              "en": "Shape extent in EMU (914400 per inch).",
-              "de": "Ausdehnung der Form in EMU (914400 je Zoll)."
-            },
-            "unit": "EMU",
-            "displayUnit": "cm",
-            "displayFactor": 2.777777777777778e-06,
-            "precision": 2
-          }
+          "type": "string",
+          "pattern": "^(-?[1-9][0-9]*|0)$",
+          "maxLength": 20
         }
       }
     }

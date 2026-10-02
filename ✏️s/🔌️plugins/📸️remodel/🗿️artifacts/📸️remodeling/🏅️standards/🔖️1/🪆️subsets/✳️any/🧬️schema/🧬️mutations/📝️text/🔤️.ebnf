@@ -72,7 +72,7 @@ replace trajectory op = 'replace-trajectory', [ ( 'trajectory', '=', trajectory 
 replace tracks op = 'replace-tracks', 'tracks', '=', '[', { track record }, ']' ;
 replace geo products op = 'replace-geo-products', [ ( 'geo', '=', geo products block ) ] ;
 replace qc op = 'replace-qc', [ ( 'qc', '=', qc block ) ] ;
-append content op = 'append-content', 'content-id', '=', name, 'kind', '=', content kind, [ ( 'mime', '=', name ) ], 'width', '=', int terminal, 'height', '=', int terminal, 'first', '=', int terminal, 'chunks', '=', text list ;
+append content op = 'append-content', 'content-id', '=', name, 'kind', '=', content kind, [ ( 'mime', '=', name ) ], 'width', '=', int terminal, 'height', '=', int terminal, 'first', '=', int terminal, 'chunks', '=', octet list ;
 remove content op = 'remove-content', 'content-id', '=', name, 'from', '=', int terminal ;
 commit reconstruction op = 'commit-reconstruction', [ ( 'sparse', '=', sparse block ) ], [ ( 'trajectory', '=', trajectory block ) ], [ ( 'mesh', '=', mesh result block ) ], [ ( 'geo', '=', geo products block ) ], [ ( 'qc', '=', qc block ) ], 'assets', asset commit header, '{', { asset commit row }, '}' ;
 name = ident
@@ -220,13 +220,13 @@ geo param field = 'enabled', '=', bool terminal
 poses header = '[', 'camera-id', ':', 'TEXT', 'rotation-wxyz', ':', 'TUPLE', 'translation', ':', 'CRD', ']' ;
 pose row = name, quad, coord3 ;
 sparse block = '{', sparse field, { sparse field }, '}' ;
-sparse field = 'points', '=', name
-     | 'colors', '=', name ;
+sparse field = 'points', float buffer
+     | 'colors', '=', octets ;
 dense cloud block = '{', dense cloud field, { dense cloud field }, '}' ;
-dense cloud field = 'positions', '=', name
-     | 'colors', '=', name
-     | 'confidence', '=', name
-     | 'classification', '=', name ;
+dense cloud field = 'positions', float buffer
+     | 'colors', '=', octets
+     | 'confidence', float buffer
+     | 'classification', '=', octets ;
 trajectory block = '{', trajectory poses table, '}' ;
 trajectory poses table = 'poses', poses header, '{', { pose row }, '}' ;
 mesh result block = '{', { mesh result part }, '}' ;
@@ -282,3 +282,8 @@ letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' |
        | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'
        | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
 digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+float buffer = '{', float buffer variant, '}' ;
+float buffer variant = 'inline', 'values', '=', '[', { num }, ']' | 'content', 'content-id', '=', name, 'chunk-count', '=', int terminal ;
+octets = text terminal ;
+octet list = '[', { octets }, ']' ;

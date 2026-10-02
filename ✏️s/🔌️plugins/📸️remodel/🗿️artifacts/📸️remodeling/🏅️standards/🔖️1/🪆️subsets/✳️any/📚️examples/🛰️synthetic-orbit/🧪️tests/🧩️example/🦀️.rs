@@ -533,7 +533,7 @@ async fn imported_app() -> RemodelingApp {
     dispatch(&mut app, RemodelingCommand::EditCalibration(calibration)).await;
     settle(&mut app, "the camera calibration").await;
     for (index, (_, bytes)) in FRAMES.iter().enumerate() {
-        let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 };
+        let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: FRAMES.len() as u32 };
         dispatch(&mut app, RemodelingCommand::ImportFramePayload(payload)).await;
         settle(&mut app, "the frame import").await;
     }
@@ -737,7 +737,7 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
 async fn an_unregistrable_capture_completes_without_cameras() {
     let mut app = app_with_registry().await;
     for (index, (_, bytes)) in FRAMES.iter().enumerate() {
-        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32 })).await;
+        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: FRAMES.len() as u32 })).await;
         settle(&mut app, "the frame import").await;
     }
     let before = durable(&mut app).await;

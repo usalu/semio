@@ -21,14 +21,49 @@ use crate::schema::snapshot::{Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dTile, Wf
 use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DIALECT, WFC_2D_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    ActionArgDef, Effect, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft,
-    NoDraftMutation, NoPresence, NoPresenceMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
-};
-use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per real `Wfc2dMutation` kind a UI can
@@ -441,62 +476,57 @@ fn wfc2d_fresh_edge_id(document: &Wfc2dSnapshot, from: &str, to: &str) -> String
     }
 }
 
-/// 🕹️ What ONE `nodeGraphEdit` batch asks for: the wire edits the gesture drew or cut (`prepared`), the node-drag
-/// records of the slots it moved (canvas units), and the description of the edit.
+/// 🕹️ What ONE `nodeGraphEdit` batch asks for: the wire and slot edits the gesture drew, cut or deleted (`prepared`), and
+/// the node-drag records of the slots it moved (canvas units).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Wfc2dGraphGesture {
     pub prepared: Vec<Wfc2dMutation>,
     pub records: Vec<NodeDragRecord>,
-    pub description: String,
 }
 
-/// 🆔️ The press a `setHostSnapshot` release names: that host carries no gesture id, so the batch is the press.
-pub const WFC_2D_HOST_SNAPSHOT_GESTURE: &str = "nodeGraphEdit:setHostSnapshot";
-
-/// 🕹️ Reads ONE `nodeGraphEdit` batch in row order. A `move` row is the node-graph gesture record of a released drag
-/// (design §13.3), refused by name when malformed; a `connect` row draws a wire between two slots, a `disconnect` row
-/// cuts one by its edge id; a `setHostSnapshot` (the wasm surface hands back its whole graph) is read as its one wire
-/// change, or else as the records its displaced nodes make. Any other operation is skipped, because a gesture channel
-/// must never fail a pane on a verb it does not speak.
+/// 🕹️ Reads ONE `nodeGraphEdit` batch of the closed node-graph record vocabulary (design §13.3, schema
+/// `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`) in row order, each row to its intent leaf: `move` → the drag
+/// record (relative `drag-slots`), `connect` → `connect-slots` between two slots, `disconnect` → `disconnect-slots` of an
+/// adjacency, `delete` → the named adjacencies cut and the named slots deleted (each cascading its own wires). A
+/// malformed row refuses the whole batch by name; so do `setSlider` and `insertPort`, because a wfc slot graph has no
+/// inline sliders and no variadic ports. A row whose target the document no longer holds (a wire already drawn, an
+/// adjacency already cut) leaves nothing.
 pub fn wfc2d_node_graph_edit(document: &Wfc2dSnapshot, operations_json: &str) -> Result<Wfc2dGraphGesture, Fault> {
     let refuse = |reason: String| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.node-graph.row"), format!("nodeGraphEdit refusal: {reason}"));
-    let parsed: dsl::DslValue = dsl::json::from_json_str(operations_json).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
-    let rows = parsed.as_array().ok_or_else(|| refuse("the operations are an array".into()))?;
+    let args: dsl::DslValue = dsl::json::from_json_str(&format!("{{\"operations\":{operations_json}}}")).map_err(|error| refuse(format!("the operations are not JSON: {error}")))?;
+    let rows = node_graph_edit_rows(&args).map_err(refuse)?;
     let mut gesture = Wfc2dGraphGesture::default();
     for row in rows {
-        let text = |key: &str| row.get(key).and_then(dsl::DslValue::as_str).map(str::to_string);
-        match row.get("operation").and_then(dsl::DslValue::as_str).unwrap_or_default() {
-            NODE_DRAG_OPERATION => {
-                let record = NodeDragRecord::from_row(row).map_err(refuse)?;
-                gesture.description = format!("Drag {}", record.node_ids.join(", "));
-                gesture.records.push(record);
-            }
-            "connect" => {
-                let (Some(from), Some(to)) = (text("sourceNodeId"), text("targetNodeId")) else { continue };
-                if let Some(edge) = wfc2d_new_wire(document, &gesture.prepared, &from, &to) {
-                    gesture.description = format!("Connect {from} to {to}");
+        match row {
+            NodeGraphEditRow::Move(record) => gesture.records.push(record),
+            NodeGraphEditRow::Connect { source_node_id, target_node_id, .. } => {
+                if let Some(edge) = wfc2d_new_wire(document, &gesture.prepared, &source_node_id, &target_node_id) {
                     gesture.prepared.push(connect_slots(edge));
                 }
             }
-            "disconnect" => {
-                let Some(id) = text("synapseId") else { continue };
-                if document.edges.iter().any(|edge| edge.id == id) && !gesture.prepared.iter().any(|leaf| matches!(leaf, Wfc2dMutation::DisconnectSlots(cut) if cut.id == id)) {
-                    gesture.description = format!("Disconnect {id}");
-                    gesture.prepared.push(disconnect_slots(id));
+            NodeGraphEditRow::Disconnect { synapse_id } => wfc2d_cut_wire(document, &mut gesture.prepared, synapse_id),
+            NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
+                for synapse_id in synapse_ids {
+                    wfc2d_cut_wire(document, &mut gesture.prepared, synapse_id);
+                }
+                for node_id in node_ids {
+                    if document.slots.iter().any(|slot| slot.id == node_id) && !gesture.prepared.iter().any(|leaf| matches!(leaf, Wfc2dMutation::DeleteSlot(gone) if gone.id == node_id)) {
+                        gesture.prepared.push(delete_slot(node_id));
+                    }
                 }
             }
-            "setHostSnapshot" => {
-                let Some(snapshot) = text("hostSnapshotJson") else { continue };
-                if let Some(read) = wfc2d_host_snapshot_edit(document, &snapshot) {
-                    gesture.description = read.description;
-                    gesture.prepared.extend(read.prepared);
-                    gesture.records.extend(read.records);
-                }
-            }
-            _ => continue,
+            NodeGraphEditRow::SetSlider { widget_id, .. } => return Err(refuse(format!("the wfc slot graph has no inline slider {widget_id:?}"))),
+            NodeGraphEditRow::InsertPort { node_id, .. } => return Err(refuse(format!("wfc slot {node_id:?} has fixed ports"))),
         }
     }
     Ok(gesture)
+}
+
+/// ✂️ Cuts the adjacency `id` names, once per gesture, when the document holds it.
+fn wfc2d_cut_wire(document: &Wfc2dSnapshot, prepared: &mut Vec<Wfc2dMutation>, id: String) {
+    if document.edges.iter().any(|edge| edge.id == id) && !prepared.iter().any(|leaf| matches!(leaf, Wfc2dMutation::DisconnectSlots(cut) if cut.id == id)) {
+        prepared.push(disconnect_slots(id));
+    }
 }
 
 /// 🔗️ The edge a wire from `from` to `to` adds, or `None` when either end is no slot, the wire loops, or the
@@ -519,58 +549,6 @@ fn same_adjacency(left: (&str, &str), right: (&str, &str)) -> bool {
     (left.0 == right.0 && left.1 == right.1) || (left.0 == right.1 && left.1 == right.0)
 }
 
-/// 🔌️ Splits the canvas' `"{nodeId}@{portId}"` endpoint grammar down to the node id.
-fn wfc2d_endpoint_node(endpoint: &str) -> &str {
-    endpoint.rsplit_once('@').map_or(endpoint, |(node, _)| node)
-}
-
-/// 🕸️ The wasm node-graph surface hands back its WHOLE graph rather than an edit journal, so one gesture is read as
-/// the difference between that graph and the document: a new wire is a `connect-slots`, a removed wire a
-/// `disconnect-slots`, and otherwise every displaced node joins the node-drag record of its exact canvas offset — a
-/// multi-node drag is ONE record, an align moving nodes by different offsets one record per offset.
-/// ✂️ A wire the canvas dropped. Two guards, both learned the hard way (and confirmed by wfc3d): adjacency is
-/// UNDIRECTED, so an endpoint pair the canvas reports the other way round is the SAME adjacency and not a removal; and
-/// a snapshot that carries no wires at all while the document carries several is a canvas that has not finished
-/// syncing, never a user who deleted every edge in one gesture.
-fn wfc2d_host_snapshot_edit(document: &Wfc2dSnapshot, host_snapshot_json: &str) -> Option<Wfc2dGraphGesture> {
-    let snapshot: dsl::DslValue = dsl::json::from_json_str(host_snapshot_json).ok()?;
-    let nodes = snapshot.get("nodes").and_then(dsl::DslValue::as_array)?;
-    let edges: &[dsl::DslValue] = snapshot.get("edges").and_then(dsl::DslValue::as_array).unwrap_or(&[]);
-    let wires: Vec<(String, String)> = edges
-        .iter()
-        .filter_map(|edge| {
-            let source = edge.get("source").and_then(dsl::DslValue::as_str)?;
-            let target = edge.get("target").and_then(dsl::DslValue::as_str)?;
-            Some((wfc2d_endpoint_node(source).to_string(), wfc2d_endpoint_node(target).to_string()))
-        })
-        .collect();
-    if let Some(edge) = wires.iter().find_map(|(from, to)| wfc2d_new_wire(document, &[], from, to)) {
-        let description = format!("Connect {} to {}", edge.from_slot_id, edge.to_slot_id);
-        return Some(Wfc2dGraphGesture { prepared: vec![connect_slots(edge)], records: Vec::new(), description });
-    }
-    if !(wires.is_empty() && document.edges.len() > 1) {
-        if let Some(edge) = document.edges.iter().find(|edge| !wires.iter().any(|wire| same_adjacency((&edge.from_slot_id, &edge.to_slot_id), (&wire.0, &wire.1)))) {
-            return Some(Wfc2dGraphGesture { prepared: vec![disconnect_slots(edge.id.clone())], records: Vec::new(), description: format!("Disconnect {}", edge.id) });
-        }
-    }
-    let mut records: Vec<NodeDragRecord> = Vec::new();
-    for node in nodes {
-        let Some(id) = node.get("id").and_then(dsl::DslValue::as_str) else { continue };
-        let Some(slot) = document.slots.iter().find(|slot| slot.id == id) else { continue };
-        let (Some(x), Some(y)) = (node.get("x").and_then(dsl::DslValue::as_f64), node.get("y").and_then(dsl::DslValue::as_f64)) else { continue };
-        let (dx, dy) = (x - slot.x * WFC_2D_GRAPH_VIEW_SCALE, y - slot.y * WFC_2D_GRAPH_VIEW_SCALE);
-        if (dx.abs() + dy.abs()) / WFC_2D_GRAPH_VIEW_SCALE <= 1e-4 {
-            continue;
-        }
-        match records.iter_mut().find(|record| (record.dx - dx).abs() <= 1e-6 && (record.dy - dy).abs() <= 1e-6) {
-            Some(record) => record.node_ids.push(id.to_string()),
-            None => records.push(NodeDragRecord { gesture_id: WFC_2D_HOST_SNAPSHOT_GESTURE.into(), node_ids: vec![id.to_string()], dx, dy }),
-        }
-    }
-    let first = records.first()?;
-    let description = format!("Drag {}", first.node_ids.join(", "));
-    Some(Wfc2dGraphGesture { prepared: Vec::new(), records, description })
-}
 //#endregion 🕹️GraphGestures
 
 //#region 🗃️Examples
@@ -649,65 +627,62 @@ fn require_fresh(taken: bool, entity: &'static str, id: &str) -> Result<(), Faul
 /// commits through the drag tool as ONE transaction minted from `authoring_seed` (the admission's; empty for a view
 /// without command authority, which publishes plainly).
 pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: &Wfc2dConfig, authoring_seed: &str) -> Result<Emit<Wfc2dMutation, Wfc2dConfigMutation>, Fault> {
-    let (mutation, description) = match command {
+    let mutation = match command {
         Wfc2dEditorCommand::ChangeCamera { x, y, zoom } => {
             let mutations = vec![Wfc2dConfigMutation::ChangeCamera(crate::editor::wfc2d::config::ChangeCamera { x: *x, y: *y, zoom: *zoom })];
-            return Ok(Emit { config_mutations: mutations, description: Some("Change camera".into()), ..Default::default() });
+            return Ok(Emit::config(mutations));
         }
         Wfc2dEditorCommand::ChangeActiveTile { tile_id } => {
             let mutations = vec![Wfc2dConfigMutation::ChangeActiveTile(crate::editor::wfc2d::config::ChangeActiveTile { tile_id: tile_id.clone() })];
-            return Ok(Emit { config_mutations: mutations, description: Some("Arm tile".into()), ..Default::default() });
+            return Ok(Emit::config(mutations));
         }
         Wfc2dEditorCommand::Solve => {
-            return Ok(Emit { effects: fill::start_fill_effects(), description: Some("Solve".into()), ..Default::default() });
+            return Ok(Emit { effects: fill::start_fill_effects(), ..Default::default() });
         }
         Wfc2dEditorCommand::CommitFill { .. } => {
-            return Ok(Emit { description: Some("Commit fill".into()), ..Default::default() });
+            return Ok(Emit::default());
         }
         Wfc2dEditorCommand::NodeGraphEdit { operations_json } => {
             let gesture = wfc2d_node_graph_edit(document, operations_json)?;
-            return Ok(drag::wfc2d_drag_tool_emit(WFC_2D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_2D_GRAPH_VIEW_SCALE, gesture.description));
+            return Ok(drag::wfc2d_drag_tool_emit(WFC_2D_NODE_GRAPH_EDIT, authoring_seed, document, gesture.prepared, &gesture.records, WFC_2D_GRAPH_VIEW_SCALE));
         }
         Wfc2dEditorCommand::SetActiveExample { example_id } => {
             let Some(next) = wfc2d_example_document(example_id) else {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc2d.example.unknown"), format!("wfc 2d has no example '{example_id}'")));
             };
-            return Ok(Emit { effects: vec![wfc2d_load_document_effect(&next)], description: Some(format!("Load example {example_id}")), ..Default::default() });
+            return Ok(Emit::effect(wfc2d_load_document_effect(&next)));
         }
-        Wfc2dEditorCommand::ChangeSeed { seed } => (change_seed(*seed), format!("Change seed to {seed}")),
+        Wfc2dEditorCommand::ChangeSeed { seed } => change_seed(*seed),
         Wfc2dEditorCommand::CreateSlot { id, x, y, width, height } => {
             require_fresh(document.slots.iter().any(|slot| &slot.id == id), "slot", id)?;
-            (create_slot(Wfc2dSlot { id: id.clone(), x: *x, y: *y, width: *width, height: *height, pinned_tile_id: None }), format!("Create slot {id}"))
+            create_slot(Wfc2dSlot { id: id.clone(), x: *x, y: *y, width: *width, height: *height, pinned_tile_id: None })
         }
         Wfc2dEditorCommand::DeleteSlot { id } => {
             require_slot(document, id)?;
-            (delete_slot(id.clone()), format!("Delete slot {id}"))
+            delete_slot(id.clone())
         }
         Wfc2dEditorCommand::MoveSlot { id, x, y } => {
             require_slot(document, id)?;
-            (move_slot(id.clone(), *x, *y), format!("Move slot {id}"))
+            move_slot(id.clone(), *x, *y)
         }
         Wfc2dEditorCommand::ResizeSlot { id, width, height } => {
             require_slot(document, id)?;
-            (resize_slot(id.clone(), *width, *height), format!("Resize slot {id}"))
+            resize_slot(id.clone(), *width, *height)
         }
         Wfc2dEditorCommand::ConnectSlots { id, from_slot_id, to_slot_id, relation } => {
             require_slot(document, from_slot_id)?;
             require_slot(document, to_slot_id)?;
             require_fresh(document.edges.iter().any(|edge| &edge.id == id), "adjacency", id)?;
-            (
-                connect_slots(Wfc2dSlotEdge {
-                    id: id.clone(),
-                    from_slot_id: from_slot_id.clone(),
-                    to_slot_id: to_slot_id.clone(),
-                    relation: if relation.is_empty() { crate::schema::snapshot::WFC_2D_DEFAULT_RELATION.into() } else { relation.clone() },
-                }),
-                format!("Connect {from_slot_id} to {to_slot_id}"),
-            )
+            connect_slots(Wfc2dSlotEdge {
+                id: id.clone(),
+                from_slot_id: from_slot_id.clone(),
+                to_slot_id: to_slot_id.clone(),
+                relation: if relation.is_empty() { crate::schema::snapshot::WFC_2D_DEFAULT_RELATION.into() } else { relation.clone() },
+            })
         }
         Wfc2dEditorCommand::DisconnectSlots { id } => {
             require_edge(document, id)?;
-            (disconnect_slots(id.clone()), format!("Disconnect {id}"))
+            disconnect_slots(id.clone())
         }
         Wfc2dEditorCommand::PinSlot { id, tile_id } => {
             require_slot(document, id)?;
@@ -716,43 +691,40 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::Plugin, semio_framework_plugin::FaultCode::new("wfc2d.tile.unknown-pin"), "No tile is armed and the document declares none."));
             };
             require_tile(document, &tile)?;
-            (pin_slot(id.clone(), tile.clone()), format!("Pin {id} to {tile}"))
+            pin_slot(id.clone(), tile.clone())
         }
         Wfc2dEditorCommand::UnpinSlot { id } => {
             require_slot(document, id)?;
-            (unpin_slot(id.clone()), format!("Unpin slot {id}"))
+            unpin_slot(id.clone())
         }
         Wfc2dEditorCommand::CreateTile { id, label, weight } => {
             require_fresh(document.tiles.iter().any(|tile| &tile.id == id), "tile", id)?;
-            (create_tile(Wfc2dTile { id: id.clone(), label: label.clone(), weight: *weight, media: Wfc2dTileMedia::default() }), format!("Create tile {id}"))
+            create_tile(Wfc2dTile { id: id.clone(), label: label.clone(), weight: *weight, media: Wfc2dTileMedia::default() })
         }
         Wfc2dEditorCommand::DeleteTile { id } => {
             require_tile(document, id)?;
-            (delete_tile(id.clone()), format!("Delete tile {id}"))
+            delete_tile(id.clone())
         }
         Wfc2dEditorCommand::ChangeTileWeight { tile_id, weight } => {
             require_tile(document, tile_id)?;
-            (change_tile_weight(tile_id.clone(), *weight), format!("Change weight of {tile_id}"))
+            change_tile_weight(tile_id.clone(), *weight)
         }
         Wfc2dEditorCommand::ChangeTileMedia { tile_id } => {
             require_tile(document, tile_id)?;
-            (change_tile_media(tile_id.clone(), Wfc2dTileMedia::default()), format!("Clear media of {tile_id}"))
+            change_tile_media(tile_id.clone(), Wfc2dTileMedia::default())
         }
         Wfc2dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, relation, allowed } => {
             require_tile(document, tile_a_id)?;
             require_tile(document, tile_b_id)?;
             require_fresh(document.rules.iter().any(|rule| &rule.id == id), "rule", id)?;
-            (
-                create_rule(Wfc2dRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), relation: relation.clone(), allowed: *allowed }),
-                format!("Create rule {id}"),
-            )
+            create_rule(Wfc2dRule { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), relation: relation.clone(), allowed: *allowed })
         }
         Wfc2dEditorCommand::DeleteRule { id } => {
             require_rule(document, id)?;
-            (delete_rule(id.clone()), format!("Delete rule {id}"))
+            delete_rule(id.clone())
         }
     };
-    Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
+    Ok(Emit::mutations(vec![mutation]))
 }
 
 /// 🖼️ The whole render rule set, likewise free of the framework's view bundle so a test can call it.

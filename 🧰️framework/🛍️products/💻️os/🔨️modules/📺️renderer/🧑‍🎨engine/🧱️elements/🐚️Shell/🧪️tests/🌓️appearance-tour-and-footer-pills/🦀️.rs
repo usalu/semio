@@ -172,8 +172,8 @@ pub(crate) fn tour_introduction() -> semio_framework::IntroductionDefinition {
 }
 
 pub(crate) fn tour_shell(introduction: Option<semio_framework::IntroductionDefinition>) -> ShellState {
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::default() });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    shell.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -294,7 +294,7 @@ fn the_sync_pill_speaks_reacts_own_vocabulary() {
 /// same reason.
 #[test]
 fn a_shell_with_no_backbone_reads_remote_detached() {
-    let shell = ShellState::new(Vec::new(), String::new());
+    let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert_eq!(shell.sync_pill(), ShellSyncPill::Remote(ShellSyncRemote::Detached));
     assert_eq!(shell_sync_pill_text(shell.sync_pill(), false), "Remote: detached");
     assert!(shell.footer_presence_rows().is_empty());

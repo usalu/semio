@@ -4,10 +4,29 @@ use super::{snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHO
 use crate::kernel::{ArtifactDsl, DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::{
-    tree_window_indexed_section, ActionId, Buildable, BuiltNode, HasBase, HasChildren, InteractiveJobClassification, Locale, LocalizedLabel, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiListBuilder, UiMapBuilder, UiText, UiValue,
-    WindowKindDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
-};
+use semio_framework_plugin::tree_window_indexed_section;
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiListBuilder;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 use semio_framework_ui_contract as ui_contract;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -920,7 +939,7 @@ fn snapshot_schema(schema_id: &str) -> Option<Arc<DslValue>> {
     if let Some(schema) = CACHE.get_or_init(|| Mutex::new(HashMap::new())).lock().ok()?.get(&base_id).cloned() {
         return Some(schema);
     }
-    let (source, documents) = semio_framework_schema::with_artifact_schema_registry(|registry| {
+    let (source, documents) = semio_framework_schema_registry::with_artifact_schema_registry(|registry| {
         let source = registry.get(&base_id)?.snapshot.json_schema;
         Some((source, registry.iter().map(|descriptor| descriptor.snapshot.json_schema).collect::<Vec<_>>()))
     })?;

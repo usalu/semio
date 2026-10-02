@@ -32,7 +32,7 @@ fn manifest_with_example(body: String) -> PluginManifest {
 }
 
 fn encoded_bytes(manifest: &PluginManifest) -> usize {
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(manifest).expect("manifest encodes structurally")).len()
+    store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(manifest)).len()
 }
 
 #[semio_framework_async_macros::async_test]

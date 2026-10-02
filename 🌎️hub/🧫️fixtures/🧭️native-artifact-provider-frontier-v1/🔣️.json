@@ -2,14 +2,20 @@
   "schema": "semio.hub.native-artifact-provider-frontier/v1",
   "headless": {
     "defaultFeatures": false,
-    "features": ["sqlite"],
+    "features": [
+      "sqlite"
+    ],
     "directPluginDependencies": []
   },
   "production": {
     "feature": "native-artifact-execution",
     "providerId": "stdio+gis+vcs/native-codecs/v1",
-    "receiptCount": 32,
-    "pluginDependencies": ["stdio/full-artifact-catalog", "gis", "vcs"]
+    "pluginDependencies": [
+      "stdio/full-artifact-catalog",
+      "gis",
+      "vcs"
+    ],
+    "receiptAuthority": "compiled-kind-schema-roster"
   },
   "configuredWithoutProvider": "reject"
 }

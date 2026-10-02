@@ -11,7 +11,8 @@ use dsl::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::OnceLock;
-use ui::wgpu::{Locale, LocalizedLabel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Limits
 /// 💍️ Newest steps kept by a `ToolRunStepRing`.
@@ -1381,7 +1382,7 @@ fn step_spec_owned() -> RecordSpec {
 
 fn progress_spec_owned() -> RecordSpec {
     spec(vec![
-        field(1, "identity", Shape::Record(identity_spec_owned)),
+        field(1, "identity", Shape::Record(identity_spec_producer())),
         field(2, "sequence", Shape::UInt),
         field(3, "state", Shape::UInt),
         field(4, "stage", Shape::UInt),
@@ -1390,14 +1391,21 @@ fn progress_spec_owned() -> RecordSpec {
         field(7, "counters", Shape::Bytes64).optional(),
         field(8, "unitsPerSecond", Shape::Float),
         field(9, "conflicts", Shape::UInt),
-        field(10, "steps", Shape::List(Box::new(Shape::Record(step_spec_owned)))).optional(),
+        field(10, "steps", Shape::List(Box::new(Shape::Record(step_spec_producer())))).optional(),
     ])
 }
+
+fn identity_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key,shape)in[(1,"appInstanceId",Shape::UInt),(2,"run",Shape::UInt),(3,"generation",Shape::UInt),(4,"baseRevision",Shape::Bytes64)]{fields.push(dsl::schema::producer::field(id,key,shape,control)?);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
+fn step_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(7)?;let mut fields=control.allocate_vec(7)?;for(id,key,shape,optional)in[(1,"sequence",Shape::UInt,false),(2,"kind",Shape::UInt,false),(3,"stage",Shape::UInt,false),(4,"reason",Shape::UInt,false),(5,"subject",Shape::UInt,true),(6,"repeat",Shape::UInt,false),(7,"args",Shape::Bytes64,true)]{let mut field=dsl::schema::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
+fn progress_spec_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,String>{control.scoped_stage(|control|{control.begin_stage(10)?;let mut fields=control.allocate_vec(10)?;let steps=Shape::List(dsl::schema::producer::boxed(Shape::Record(step_spec_producer()),control)?);for(id,key,shape,optional)in[(1,"identity",Shape::Record(identity_spec_producer()),false),(2,"sequence",Shape::UInt,false),(3,"state",Shape::UInt,false),(4,"stage",Shape::UInt,false),(5,"completed",Shape::UInt,false),(6,"total",Shape::UInt,true),(7,"counters",Shape::Bytes64,true),(8,"unitsPerSecond",Shape::Float,false),(9,"conflicts",Shape::UInt,false),(10,"steps",steps,true)]{let mut field=dsl::schema::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}dsl::schema::producer::record(None,RecordLayout::Inline,fields,control)})}
+fn identity_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:identity_spec_owned,decoding:|control|identity_spec_controlled(control),encoding:|control|identity_spec_controlled(control)}}
+fn step_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:step_spec_owned,decoding:|control|step_spec_controlled(control),encoding:|control|step_spec_controlled(control)}}
+fn progress_spec_producer()->dsl::RecordSpecProducer{dsl::RecordSpecProducer{ordinary:progress_spec_owned,decoding:|control|progress_spec_controlled(control),encoding:|control|progress_spec_controlled(control)}}
 
 fn page_spec() -> &'static RecordSpec {
     static SPEC: OnceLock<RecordSpec> = OnceLock::new();
     SPEC.get_or_init(|| {
-        let mut fields = vec![field(1, "identity", Shape::Record(identity_spec_owned)), field(2, "page", Shape::UInt)];
+        let mut fields = vec![field(1, "identity", Shape::Record(identity_spec_producer())), field(2, "page", Shape::UInt)];
         for (id, key) in [(3, "opKinds"), (4, "keys"), (5, "verdicts"), (6, "reasons"), (7, "subjectKinds"), (8, "meshes"), (9, "shapes"), (10, "entities"), (11, "floats")] {
             fields.push(field(id, key, Shape::Bytes64).optional());
         }
@@ -1407,17 +1415,17 @@ fn page_spec() -> &'static RecordSpec {
 
 fn delta_spec() -> &'static RecordSpec {
     static SPEC: OnceLock<RecordSpec> = OnceLock::new();
-    SPEC.get_or_init(|| spec(vec![field(1, "identity", Shape::Record(identity_spec_owned)), field(2, "clear", Shape::Bool), field(3, "next", Shape::UInt), field(4, "pages", Shape::List(Box::new(Shape::Bytes64))).optional()]))
+    SPEC.get_or_init(|| spec(vec![field(1, "identity", Shape::Record(identity_spec_producer())), field(2, "clear", Shape::Bool), field(3, "next", Shape::UInt), field(4, "pages", Shape::List(Box::new(Shape::Bytes64))).optional()]))
 }
 
 fn tick_spec() -> &'static RecordSpec {
     static SPEC: OnceLock<RecordSpec> = OnceLock::new();
     SPEC.get_or_init(|| {
         spec(vec![
-            field(1, "identity", Shape::Record(identity_spec_owned)),
+            field(1, "identity", Shape::Record(identity_spec_producer())),
             field(2, "sequence", Shape::UInt),
-            field(3, "progress", Shape::Record(progress_spec_owned)).optional(),
-            field(4, "steps", Shape::List(Box::new(Shape::Record(step_spec_owned)))).optional(),
+            field(3, "progress", Shape::Record(progress_spec_producer())).optional(),
+            field(4, "steps", Shape::List(Box::new(Shape::Record(step_spec_producer())))).optional(),
             field(5, "trace", Shape::List(Box::new(Shape::Bytes64))).optional(),
             field(6, "appendOps", Shape::List(Box::new(Shape::Bytes64))).optional(),
             field(7, "appendEntities", Shape::Bytes64).optional(),

@@ -61,6 +61,9 @@ export const TIME_TRAVEL_REPLAY_FAULTED_CODE = "timeTravel.replay-faulted";
 /** 🧨️ Driver fault: the finalize commit failed for a reason other than a stale base or a blocking report. */
 export const TIME_TRAVEL_COMMIT_FAILED_CODE = "timeTravel.commit-failed";
 
+/** 🧩️ Driver fault: the composed member store the session edits was closed mid-session. */
+export const TIME_TRAVEL_MEMBER_GONE_CODE = "timeTravel.member-gone";
+
 const utf8Length = (text: string): number => new TextEncoder().encode(text).length;
 
 /** 🔣️ A fault code is non-empty, free of Unicode `White_Space` and at most {@link TIME_TRAVEL_TEXT_MAX_BYTES}. */
@@ -245,6 +248,15 @@ export function timeTravelFinalizeRefusal(session: TimeTravelSession): TimeTrave
   if (session.accepted.length === 0) return "timeTravel.empty";
   if (session.report === null || replayReportBlocksFinalize(session.report)) return "timeTravel.blocked";
   return null;
+}
+
+/** ✏️ Why `begin` would be refused, `null` when it would open (or switch) the draft editor: legal from `inactive` and
+ * `reviewing`, from `editing` only while the pending draft still equals its start (`timeTravel.blocked` otherwise), and
+ * `timeTravel.illegal` while replaying, choosing or finalizing. Mirrors Rust `TimeTravelSession::begin_refusal`. */
+export function timeTravelBeginRefusal(session: TimeTravelSession): TimeTravelRefusal | null {
+  if (session.stage === "inactive" || session.stage === "reviewing") return null;
+  if (session.stage === "editing" && session.pending !== null) return timeTravelUnchanged(session, session.pending) ? null : "timeTravel.blocked";
+  return "timeTravel.illegal";
 }
 
 /** 🔁️ Why `rerun` would be refused, `null` when it would start a replay: it needs `reviewing`, accepted drafts, and either no report or a fault. */
@@ -510,6 +522,7 @@ export const TIME_TRAVEL_LABELS = {
   replayFaulted: { en: "Replay failed: later mutations could not be checked", de: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden" },
   commitFailed: { en: "Finalizing failed: the history is unchanged", de: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert" },
   outcomeIntroduced: { en: "New since this edit", de: "Neu durch diese Bearbeitung" },
+  refusalMemberGone: { en: "The part this history edit targets was closed", de: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen" },
 } as const satisfies Record<string, { en: string; de: string }>;
 export type TimeTravelLabelKey = keyof typeof TIME_TRAVEL_LABELS;
 
@@ -542,6 +555,7 @@ export const TIME_TRAVEL_CODE_LABELS = [
   [TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, "refusalSchemaUnavailable"],
   [TIME_TRAVEL_REPLAY_FAULTED_CODE, "replayFaulted"],
   [TIME_TRAVEL_COMMIT_FAILED_CODE, "commitFailed"],
+  [TIME_TRAVEL_MEMBER_GONE_CODE, "refusalMemberGone"],
 ] as const satisfies readonly (readonly [string, TimeTravelLabelKey])[];
 
 /** 🩹️ Label key of every `timeTravel.*` code a host shows ({@link TIME_TRAVEL_CODE_LABELS}); `undefined` for any other code. */

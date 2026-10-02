@@ -67,7 +67,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         ViewWindowInstance { id: "results-right".into(), window_kind_id: results::WINDOW_KIND_ID.into() },
                         ViewWindowInstance { id: "foreign".into(), window_kind_id: "fem-panel".into() },
                     ],
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let model_left = all.for_window_instance("model-left").expect("model-left");
                 let results_left = all.for_window_instance("results-left").expect("results-left");
@@ -132,7 +132,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         return Err("FEM window values changed during exact config reload".into());
                     }
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
-                    let stale = ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() };
+                    let stale = ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                     if model::config::addressed(&stale, Default::default()).is_ok() {
                         return Err("FEM accepted a stale model window id".into());
                     }

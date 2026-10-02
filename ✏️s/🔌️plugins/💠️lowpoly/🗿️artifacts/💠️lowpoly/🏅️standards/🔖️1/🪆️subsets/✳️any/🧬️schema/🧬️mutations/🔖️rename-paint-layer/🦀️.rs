@@ -25,8 +25,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RenamePaintLay
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename paint layer to \"{}\"", self.new_name), &format!("Malebene in \"{}\" umbenennen", self.new_name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename paint layer to \"{}\"", self.new_name), &format!("Malebene in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

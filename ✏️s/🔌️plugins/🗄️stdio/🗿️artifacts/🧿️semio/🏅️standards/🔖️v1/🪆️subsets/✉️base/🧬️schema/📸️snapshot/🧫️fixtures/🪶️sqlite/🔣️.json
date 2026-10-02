@@ -47,5 +47,10 @@
     "binary32": 2139095041,
     "binary64": "9218868437227405313",
     "unsigned64": "18446744073709551615"
+  },
+  "reconstructionRetirement": {
+    "depth": 8192,
+    "stackBytes": 65536,
+    "schemaBytes": 100000
   }
 }

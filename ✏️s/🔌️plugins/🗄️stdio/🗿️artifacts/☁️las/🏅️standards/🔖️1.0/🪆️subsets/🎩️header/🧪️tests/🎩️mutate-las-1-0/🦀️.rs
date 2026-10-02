@@ -9,8 +9,8 @@
 //! `sut` feature so the oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::header::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
+use semio_s_artifact_stdio_las_test_oracle::standards::v1_0::subsets::header::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
 
 //#region 🔖️Profile
@@ -82,11 +82,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::{decode_las, encode_las};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_las::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_las::standards::v1_0::subsets::any::schema::mutations::{apply_las_mutation, LasMutation};
     use semio_s_artifact_stdio_las::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::header::project_las;
+    use semio_s_artifact_stdio_las_test_oracle::standards::v1_0::subsets::header::project_las;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<LasMutation, String> {

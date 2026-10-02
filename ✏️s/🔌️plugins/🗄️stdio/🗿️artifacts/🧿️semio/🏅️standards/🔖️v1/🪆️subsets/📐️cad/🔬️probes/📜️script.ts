@@ -34,7 +34,7 @@
 //   bun 📜️script.ts step-compare --input <expected.step> --input <actual.step>
 //
 // @see 📖️reader/🦀️.rs — the binary that does the reading
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 
 //#endregion 🧲️Header
 

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "fields": [
+    [
+      0,
+      "child_id",
+      false
+    ],
+    [
+      1,
+      "target",
+      false
+    ]
+  ],
+  "maximumBytes": 1048576,
+  "tinyBytes": 1
+}

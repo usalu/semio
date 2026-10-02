@@ -2,5 +2,5 @@
 
 export interface ChangeRepresentationMeshUrl {
   id: string;
-  newMeshUrl?: string;
+  newMeshUrl: string|null;
 }

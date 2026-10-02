@@ -37,13 +37,45 @@ use semio_framework_plugin::ArtifactReservedJob;
 // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
-    ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError,
-    MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
 use std::collections::HashSet;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_APP_ID: &str = "s.animate.presentation@1/*#editor";
@@ -1039,7 +1071,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(crate::spr::presentation_envelope_decode_owner_bundle())
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }
 
@@ -1083,7 +1115,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// refuses EVERY id (`app.command.unsupported`) — without this bridge the boot
     /// `setActiveExample`, every Actions-pane row and every canvas pick died before reaching
     /// `handle`. The `#[dsl(block)]` payloads (`crop`/`frame`/`source`) decode through
-    /// `dsl::from_dsl_value`, the same codec the typed channel uses.
+    /// `semio_framework_value::FromValue::from_value`, the same codec the typed channel uses.
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PresentationCommand, Fault> {
         let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
         let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64)).unwrap_or_default();
@@ -1094,11 +1126,11 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         };
         fn decode<T: dsl::FromValue>(action: &str, args: Option<&dsl::DslValue>, key: &str) -> Result<T, Fault> {
             let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("presentation {action} requires a '{key}' block")))?;
-            dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid presentation {action} '{key}': {error}")))
+            semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid presentation {action} '{key}': {error}")))
         }
         match action {
             "seedGrid" => Ok(PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: number_arg(&["rows"]) as u32, columns: number_arg(&["columns", "cols"]) as u32 })),
-            "addTile" => Ok(PresentationCommand::AddTile(add_tile::AddTile { crop: args.and_then(|value| value.get("crop")).cloned().map(dsl::from_dsl_value).transpose().map_err(|error| Fault::from(format!("invalid presentation addTile 'crop': {error}")))? })),
+            "addTile" => Ok(PresentationCommand::AddTile(add_tile::AddTile { crop: args.and_then(|value| value.get("crop")).cloned().map(semio_framework_value::FromValue::from_value).transpose().map_err(|error| Fault::from(format!("invalid presentation addTile 'crop': {error}")))? })),
             "deleteTile" => Ok(PresentationCommand::DeleteTile(delete_tile::DeleteTile { id: text_arg(&["id", "tileId", "value"]).unwrap_or_default() })),
             "deleteSelection" => Ok(PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "renameTiles" => Ok(PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: id_list(&["ids", "id"]), value: text_arg(&["value", "name"]).unwrap_or_default() })),

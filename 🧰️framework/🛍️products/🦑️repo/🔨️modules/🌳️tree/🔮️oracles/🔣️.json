@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ Oracle wiring for 🌳️tree. There is no third party to check this domain against: a monorepo tree, a statute tree and a territory tree are this repository's own projections of its own records, and the Mermaid `treemap-beta` dialect has no linkable parser in this checkout. Every decision below is therefore recorded honestly as a no-oracle decision with its substitutes, and the evidence is the committed specification vectors plus two independently written implementations agreeing on them.",
   "oracles": [],

@@ -208,3 +208,76 @@ The census is taken from `.🧬semio/🦑️repo/⚡️cache/breaches/testing.js
 - the catalog, registry and ownership checks.
 
 The copied test binaries (188 MB) were deleted.
+
+## Session 2 — 2026-10-01
+
+Executor S2-NORM (WP-1 NORM-CLOSE + WP-6 NORM-TS-TWINS, `📓️resume-evidence.md` §5), successor of norm-2. This section
+covers EN 1996, DIN EN 16798, DIN V 18599 and DIN 4108; the norm-wide closure table is in `📓️w2-w-norm-3-report.md`
+(Session 2). Scratch: `🗑️generated/s2-norm/`.
+
+Status: IN PROGRESS (started 17:43). Earlier session-1 work that this report never recorded (07:4x–07:59: din18599 folder
+renames, din4108 delta renames, option B, the outcome-law step and its interrupted din4108 part) is reconstructed in
+`📓️resume-evidence.md` §2.7; what this session did about it follows.
+
+### S2.1 DIN 4108 outcome classes (resume-evidence §2.7, the 07:59 failing test) — WRITTEN 17:50–17:52, verification below
+
+**Root cause.** The 07:59 `committed_vectors_are_this_implementations_answer` failure was not a stale descriptor but a model
+gap: six descriptors declared a `rejected` class their diffs could not reach.
+
+- `insert-zone`, `insert-element`, `insert-thermal-bridge`: the `fatal("mutation.invariant")` branch was dead
+  (`apply_in_place` could not fail); a repeated id was silently inserted twice and a position past the end was silently
+  clamped.
+- `change-t-int-c`, `change-rh-int`, `change-airtightness-n50`: the only refusal was `!is_finite()`, which a JSON wire
+  cannot carry; the hard bounds the leaf schemas state (φ_i ∈ [0, 1], n₅₀ ≥ 0) were not enforced, and θ_i had no bound.
+
+**Fix (production, din16798 pattern).**
+
+- The three inserts refuse an id the collection already holds with `mutation.duplicate-id` (Fatal, the id as target) and
+  report a position past the end as a `mutation.clamped` warning; the diff shape (three list wrappers) is unchanged, so
+  every committed `✅apply` diff stays byte-identical.
+- The three indoor-climate changes refuse values outside their schema bound with `mutation.invariant`. `change-t-int-c`
+  gains the physical bound `exclusiveMinimum: -273.15` (absolute zero) in its leaf payload schema; the guard also rejects
+  NaN/∞.
+- Descriptor `outcomeClasses` were already right (`classes` reports no change); the diffs now reach them.
+
+**Vectors (16 new, 59 total).** Written by `🧪️w2w-norm-2-outcomes.py refusals` (extended: `<kind>=rule:<lexeme>` names the
+out-of-bounds value; θ_i uses `-273.15`, exactly the exclusive bound): `⛔dupe` ×3, `📏clamp` ×3 (all three canonical
+inserts are appends, so the clamped insert lands on the canonical after-snapshot), `🟰noop` ×7 (every no-op-class scalar),
+`🚫rule` ×3 (negative witnesses: each fails its leaf schema). Max path 239 bytes.
+
+**Surfaces.** `🧪️w2w-norm-2-cases.py render din4108` (renderer verified idempotent on the pre-change tree first; feature
+paragraph for the new rows added to `REFUSALS`): catalog scenarios, coverage 43 → 59, Python `VECTORS` +16 rows, feature
+Examples. `suite` re-rendered the crate vector suite (template unchanged, 43 → 59 canonical mounts, 16 new
+`<leaf>/🧪️tests/<scenario>/🦀️.rs`). The Rust subject adapter `🧪️tests/🧱️mutate-din4108-1/🦀️.rs` could not run a no-op or
+warning row (it demanded zero messages for `applied` and knew no `no-op`): it now compares production's messages with the
+committed ones exactly and registers the catalog's extra rows (`subject::rows()`), as din16798 does.
+
+**Verification (run).**
+
+- In-process Python oracle (`🗑️generated/s2-norm/oracle-probe.py`): **103/103** (43 mutate + 43 inverse + 16 extra rows +
+  identity).
+- `schema mutation-payloads --under ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108`: **59/59 clean, 3 negative witnesses
+  rejected, 43/43 leaves witnessed, 0 findings**; `schema mutation-inputs`: **90/90, 0 findings**. (`--under` must be
+  repo-relative; an absolute path silently matches nothing.)
+- `cargo test -p semio-s-artifact-norm-din4108 --lib` (manifest `✏️s/Cargo.toml`, private `target-nde-s2-norm`,
+  `CARGO_INCREMENTAL=0`, gated, `-j 4`): first run **167/168**. The one failure was
+  `oracle_manifest_mutation_vectors_match_kinds_len`, which pinned `fixtureCoverage.vectors == KINDS.len()` (true only
+  while every kind had exactly one vector). Restated as
+  `oracle_manifest_fixture_coverage_counts_every_catalog_scenario`: the count equals the catalog's scenario count, and
+  the catalog holds one vector per kind in declaration order. Rerun **168/168**, including `semio_payload_law_din4108_mutation`,
+  `committed_vectors_are_this_implementations_answer` and the 59 canonical vector tests (237 warnings, none in a file
+  touched here: proof of type-check). Logs: `🗑️generated/s2-norm/test-din4108{,-2}.txt`.
+- Peer edits during the cut (sqlite codec 20:12, value-crate `semio-framework-value` dependency 18:54, stray
+  `#[path = "."]` removed from `🧱️din4108/🦀️.rs` 21:26) compiled together with these changes.
+
+### S2.2 EN 1996, DIN EN 16798, DIN V 18599, DIN 4108 — rest of this session (to 03:45)
+
+- **Oracle phase (harness):** en1996 121/121, din16798 89/89, din18599 43/43, din4108 103/103.
+- **TS twins + witness** (`📓️w2-w-norm-3-report.md` S2.4/S2.5): all four artifacts' twins generated; every committed mutation
+  and snapshot passes the witness (Ajv/twin agreement, byte-equal re-encode, closed-member and unknown-tag refusals). The
+  three din4108 `🚫rule` vectors are negative witnesses refused by both Ajv and the twin. din16798's published
+  `Din16798Zone`/`Din16798VentSystem` names are kept for its `🪶️sqlite` companion.
+- **sqlite companion suites on the generated twins:** en1996 54/54, din16798 21/21, din18599 35/35, din4108 23/23.
+- **Owed (cargo):** `cargo test --lib` for en1996, din16798, din18599 (din4108 done, 168/168); `subject|parity exhaustive`
+  for all four; bridge inventory refresh and the contract phase (binary-protocol-drift for en1996 and din18599). Blocked as
+  in S2.1 of the norm-1 report.

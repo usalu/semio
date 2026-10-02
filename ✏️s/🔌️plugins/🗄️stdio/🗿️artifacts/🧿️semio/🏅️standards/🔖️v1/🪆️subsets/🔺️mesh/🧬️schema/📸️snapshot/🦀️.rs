@@ -5,6 +5,7 @@
 //! `SemioPrimitive`, `SemioMaterial`, `SemioTexture` (`SemioPrimitive` was RESERVED at W1b —
 //! this file is where it lands).
 
+use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
@@ -168,11 +169,11 @@ fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_f32(s: &str) -> Result<f32, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    native::parse32(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_u32(s: &str) -> Result<u32, String> {
@@ -206,7 +207,7 @@ fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point3(p: &SemioPoint3) -> String {
-    format!("[{},{},{}]", p.x, p.y, p.z)
+    format!("[{},{},{}]", native::NativeF64(p.x), native::NativeF64(p.y), native::NativeF64(p.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
@@ -216,7 +217,7 @@ fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_uv(v: &SemioUv) -> String {
-    format!("[{},{}]", v.u, v.v)
+    format!("[{},{}]", native::NativeF64(v.u), native::NativeF64(v.v))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_uv(s: &str) -> Result<SemioUv, String> {
@@ -226,7 +227,7 @@ fn dec_uv(s: &str) -> Result<SemioUv, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_rgba(c: &SemioRgba) -> String {
-    format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
+    format!("[{},{},{},{}]", native::NativeF32(c.r), native::NativeF32(c.g), native::NativeF32(c.b), native::NativeF32(c.a))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
@@ -302,7 +303,7 @@ fn dec_mesh(s: &str) -> Result<SemioMesh, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_material(m: &SemioMaterial) -> String {
-    format!("[{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), m.metallic, m.roughness)
+    format!("[{},{},{},{}]", enc_str(&m.id), enc_rgba(&m.base_color), native::NativeF32(m.metallic), native::NativeF32(m.roughness))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_material(s: &str) -> Result<SemioMaterial, String> {
@@ -712,3 +713,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

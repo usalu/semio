@@ -20,7 +20,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for SetDrawingText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "drawing-text", kind: "set-drawing-text", record: "SetDrawingText" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_drawing_text(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_drawing_text(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Set drawing text to \"{}\"", self.text), &format!("Zeichnungstext auf \"{}\" setzen", self.text)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set drawing text to \"{}\"", self.text), &format!("Zeichnungstext auf \"{}\" setzen", self.text)) }
     fn target(&self) -> Vec<String> { vec!["background-drawing".into()] }
 }
 

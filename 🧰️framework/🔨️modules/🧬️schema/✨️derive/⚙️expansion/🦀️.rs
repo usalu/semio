@@ -220,7 +220,7 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             FieldAxis::State(variant) => {
                 let variant_ident = syn::Ident::new(&variant, name.span());
                 field_entries.push(quote! {
-                    (#camel, ::semio_framework_schema::StateClass::#variant_ident)
+                    (#camel, ::semio_framework_schema_state::StateClass::#variant_ident)
                 });
             }
             FieldAxis::Derived => derived_entries.push(quote! { #camel }),
@@ -232,10 +232,10 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             let name_lit = syn::LitStr::new(&camel, name.span());
             let ty = &field.ty;
             child_entries.push(quote! {
-                ::semio_framework_schema::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: <#ty as ::semio_framework_schema::ChildFieldRefs>::MANY }
+                ::semio_framework_schema_composition::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: <#ty as ::semio_framework_schema_composition::ChildFieldRefs>::MANY }
             });
             child_visits.push(quote! {
-                ::semio_framework_schema::ChildFieldRefs::visit_child_field(&self.#name, #name_lit, visitor)?;
+                ::semio_framework_schema_composition::ChildFieldRefs::visit_child_field(&self.#name, #name_lit, visitor)?;
             });
             continue;
         }
@@ -246,7 +246,7 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
                 let name_lit = syn::LitStr::new(&camel, name.span());
                 let role_lits = roles.iter().map(|role| syn::LitStr::new(role, name.span()));
                 link_entries.push(quote! {
-                    ::semio_framework_schema::LinkSlotSpec { name: #name_lit, roles: &[#(#role_lits),*], many: #many }
+                    ::semio_framework_schema_composition::LinkSlotSpec { name: #name_lit, roles: &[#(#role_lits),*], many: #many }
                 });
             }
             CompositionFieldKind::None => {}
@@ -259,7 +259,7 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             async fn artifact_schema_id() -> &'static str {
                 #id_lit
             }
-            async fn field_states() -> &'static [(&'static str, ::semio_framework_schema::StateClass)] {
+            async fn field_states() -> &'static [(&'static str, ::semio_framework_schema_state::StateClass)] {
                 &[#(#field_entries),*]
             }
             async fn derived_fields() -> &'static [&'static str] {
@@ -267,15 +267,15 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             }
         }
 
-        impl ::semio_framework_schema::ArtifactCompositionFields for #ident {
-            fn visit_child_refs<'a, V: ::semio_framework_schema::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
+        impl ::semio_framework_schema_composition::ArtifactCompositionFields for #ident {
+            fn visit_child_refs<'a, V: ::semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
                 #(#child_visits)*
                 Ok(())
             }
-            fn child_slots() -> &'static [::semio_framework_schema::ChildSlotSpec] {
+            fn child_slots() -> &'static [::semio_framework_schema_composition::ChildSlotSpec] {
                 &[#(#child_entries),*]
             }
-            fn link_slots() -> &'static [::semio_framework_schema::LinkSlotSpec] {
+            fn link_slots() -> &'static [::semio_framework_schema_composition::LinkSlotSpec] {
                 &[#(#link_entries),*]
             }
         }

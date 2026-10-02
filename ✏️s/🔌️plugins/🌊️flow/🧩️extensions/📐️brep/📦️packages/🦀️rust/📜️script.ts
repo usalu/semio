@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
 import { brepExtensionRetirementOracle } from "../../🧪️tests/🔬️extension-guest-standalone/🟦️.ts";
-import { resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws, runBun, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests, runRepositoryExactCargoLaws, runBun, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -9,7 +10,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     console.log(`brep-extension-retirement-oracle cases=${brepExtensionRetirementOracle(import.meta.dir)}`);
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-s-plugin-flow-extension-brep"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-flow-extension-brep"], this.repoRoot, rest);
   }
 }
 
@@ -32,7 +33,7 @@ class CanonicalArchitectureScript extends BundleScript {
     if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("canonical-architecture accepts only --oracle-only");
     console.log(`brep-extension-retirement-oracle cases=${brepExtensionRetirementOracle(import.meta.dir)}`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
       nativeEnv: { RUST_MIN_STACK: "268435456" },

@@ -8,14 +8,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment",
         "command": "bun ./📜️script.ts contract-check"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "component-deployment-contract"
-          ]
-        }
       }
     }
   }

@@ -7,26 +7,11 @@ message CadConfig {
   // @state config
   optional string hovered_reference_id = 2;
   // @state config
-  string engagement_input = 3;
+  optional string active_example_id = 3;
   // @state config
-  string engagement_step = 4;
+  optional string selected_reference_model_definition_id = 4;
   // @state config
-  optional string active_example_id = 5;
+  optional string selected_reference_id = 5;
   // @state config
-  optional string selected_reference_model_definition_id = 6;
-  // @state config
-  optional string selected_reference_id = 7;
-  // @state config
-  optional string engagement_pane = 8;
-  // @state config
-  optional string engagement_session_json = 9;
-  // @state config
-  optional string engagement_preview_operation_json = 10;
-  // @state config; lossless domain 0..2147483647
-  int32 engagement_preview_generation = 11;
-  // @state config
-  optional string last_finalized_interaction_id = 12;
-  // @state config
-  string contributions_json = 13;
+  string contributions_json = 6;
 }
-

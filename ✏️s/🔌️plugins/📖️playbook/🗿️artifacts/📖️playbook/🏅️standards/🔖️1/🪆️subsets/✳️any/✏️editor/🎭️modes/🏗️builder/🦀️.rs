@@ -6,7 +6,10 @@ use crate::editor::playbook::modes::builder::windows::changes as changes_window;
 use crate::editor::playbook::modes::builder::windows::files as files_window;
 use crate::editor::playbook::modes::builder::windows::source as source_window;
 use crate::editor::playbook::modes::builder::windows::steps as steps_window;
-use semio_framework_plugin::{create_tab_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_tab_stack_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const PLAYBOOK_PLAY_MODE_BUILDER: &str = "builder";
 

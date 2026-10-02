@@ -5,3 +5,4 @@ import { parseProgramArtifact, type ProgramArtifact } from "../🟦️.ts";
 export type ProgramSnapshot = ProgramArtifact;
 
 export const parseProgramSnapshot = parseProgramArtifact;
+export { programSnapshotToSqliteDatabase, programSnapshotFromSqliteDatabase } from "./🪶️sqlite/🟦️.ts";

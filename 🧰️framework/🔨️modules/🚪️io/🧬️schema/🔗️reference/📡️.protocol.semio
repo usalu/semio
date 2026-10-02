@@ -1,0 +1,14 @@
+dialect protocol
+protocol io.artifact-reference
+version 1
+schema io.artifact-reference
+start ArtifactRef
+framing record
+use semio.pack
+
+record ArtifactRef {
+  artifact-id utf8
+  artifact-kind utf8
+  standard utf8
+  subset utf8
+}

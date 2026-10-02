@@ -1,9 +1,10 @@
 /** 🔁️ The declared all-plugin rebuild chain is well formed, builds each component once for describe AND staging, proves
  * its `s` staging before the catalog, and selects contiguous step ranges. */
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { guestFrameworkCheckArgs, readGuestFrameworkChecks, readRebuildChain, REBUILD_STAGES, selectRebuildSteps } from "../../🔁️rebuild/🟦️.ts";
 
 describe("rebuild-all chain", () => {
@@ -33,9 +34,10 @@ describe("rebuild-all chain", () => {
     expect(chain.findIndex((step) => step.id === "guest-framework")).toBeLessThan(chain.findIndex((step) => step.id === "components"));
     const checks = readGuestFrameworkChecks();
     expect([...new Set(checks.map((check) => check.target))].sort()).toEqual(["wasm32-unknown-unknown", "wasm32-wasip2"]);
-    expect(guestFrameworkCheckArgs(checks[0]!).slice(0, 4)).toEqual(["check", "--lib", "--target", "wasm32-wasip2"]);
+    expect(guestFrameworkCheckArgs(checks[0]!).slice(0, 6)).toEqual(["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-wasip2"]);
     expect(checks.flatMap((check) => check.packages)).toContain("semio-framework-os-kernel");
-    expect(checks.at(-1)).toEqual({ target: "wasm32-wasip2", packages: ["semio-s-plugin-stdio"], features: [] });
+    expect(checks.at(-1)).toEqual({ target: "wasm32-wasip2", workspace: "✏️s/Cargo.toml", packages: ["semio-s-plugin-stdio"], features: [] });
+    expect(checks.every((check) => existsSync(join(getWorkspaceRoot(), check.workspace)))).toBe(true);
     const root = mkdtempSync(join(tmpdir(), "rebuild-guest-checks-"));
     const write = (checks: unknown): string => {
       const path = join(root, `${Math.random()}.json`);
@@ -43,8 +45,33 @@ describe("rebuild-all chain", () => {
       return path;
     };
     expect(() => readGuestFrameworkChecks(write([]))).toThrow(/no guestFrameworkChecks/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "x86_64-apple-darwin", packages: ["semio-framework"], features: [] }]))).toThrow(/known target/);
-    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", packages: ["semio-framework"], features: ["other-crate/sync"] }]))).toThrow(/crate-qualified/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "x86_64-apple-darwin", workspace: "Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/known target/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["semio-framework"], features: ["other-crate/sync"] }]))).toThrow(/crate-qualified/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "../Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "/tmp/Cargo.toml", packages: ["semio-framework"], features: [] }]))).toThrow(/workspace Cargo\.toml/);
+    expect(() => readGuestFrameworkChecks(write([{ target: "wasm32-wasip2", workspace: "Cargo.toml", packages: ["semio-framework"], features: [], extra: true }]))).toThrow(/unknown keys/);
+  });
+
+  it("validates the committed chain with an independent JSON Schema engine that agrees with the reader on portable workspaces", async () => {
+    const { default: Ajv } = await import("ajv");
+    const schema = JSON.parse(readFileSync(new URL("../../🔁️rebuild/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+    const committed = JSON.parse(readFileSync(new URL("../../🔁️rebuild/🔣️.json", import.meta.url), "utf8"));
+    expect(validate(committed), JSON.stringify(validate.errors)).toBe(true);
+    expect(schema.$defs.RebuildStepV1.properties.stage.enum).toEqual([...REBUILD_STAGES]);
+    const root = mkdtempSync(join(tmpdir(), "rebuild-guest-schema-"));
+    const workspaces = ["Cargo.toml", "✏️s/Cargo.toml", "🌎️hub/Cargo.toml", "../Cargo.toml", "/tmp/Cargo.toml", "..\\x\\Cargo.toml", "x\\Cargo.toml", "C:x/Cargo.toml", "C:/Cargo.toml", "a//Cargo.toml", "./Cargo.toml", "a/../Cargo.toml", "Cargo.tomlx", "x/Cargo.toml/"];
+    for (const workspace of workspaces) {
+      const check = { target: "wasm32-wasip2", workspace, packages: ["semio-framework"], features: [] };
+      const path = join(root, `${Math.random()}.json`);
+      writeFileSync(path, JSON.stringify({ ...committed, guestFrameworkChecks: [check] }));
+      const independent = validate({ ...committed, guestFrameworkChecks: [check] });
+      let accepted = true;
+      try { readGuestFrameworkChecks(path); } catch { accepted = false; }
+      expect(accepted, workspace).toBe(independent);
+    }
+    expect(workspaces.filter((workspace) => validate({ ...committed, guestFrameworkChecks: [{ target: "wasm32-wasip2", workspace, packages: ["semio-framework"], features: [] }] }))).toEqual(["Cargo.toml", "✏️s/Cargo.toml", "🌎️hub/Cargo.toml"]);
   });
 
   it("refuses a chain whose stages run backwards or repeat a step", () => {

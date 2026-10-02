@@ -69,7 +69,7 @@ fn the_same_input_compiles_to_a_byte_identical_catalog_hash_twice() {
 
     let source_a = discover_catalog_source(Some(&root));
     let source_b = discover_catalog_source(Some(&root));
-    let catalog_a = crate::compile(&source_a, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("compiles");
-    let catalog_b = crate::compile(&source_b, semio_framework::Locale::En, semio_framework::Terminology::Native).expect("compiles");
+    let catalog_a = crate::compile(&source_a, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("compiles");
+    let catalog_b = crate::compile(&source_b, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("compiles");
     assert_eq!(catalog_a.hash, catalog_b.hash, "discovering + compiling the same install twice must be byte-identical");
 }

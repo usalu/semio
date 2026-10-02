@@ -1,4 +1,17 @@
-import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { safeGitEnv, gitSpawnEnv } from "./🏃️process/🌿️environment/🌳️git/🟦️.ts";
+export { safeGitEnv, gitSpawnEnv };
+import { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir } from "./🗂️workspaces/🧬️metadata/🟦️.ts";
+export { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
+import {captureOwnedProcess} from "../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { runExactCargoLaws, exactExecutableFingerprint, type ExactCargoLawOptions, type ExactCargoLawPort, type ExactCargoLawReceipt } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { type ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📋️context/🟦️.ts";
+import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { BUILD_BUDGET_MS, CMD_BUDGET_MS, buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel, activeTestLevel, atTestLevel, isTestLevel, resolveTestLevel, testLevelAtLeast, testLevelBudgetMs, testLevelBudgetSeconds, testLevelRank } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — @semio-tech/repo-lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
@@ -10,13 +23,13 @@ export { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag }
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
-import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { preparedBinaryen } from "./⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
-import { cargoTargetDirectory, wasmBindgenVersion } from "./⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoDirectories, cargoTargetDirectory, wasmBindgenVersion } from "./⚡️caching/🦀️cargo/🟦️.ts";
 export { wasmBindgenVersion };
 import { isGeneratedPath, repoCacheDirectory } from "./⚡️caching/🟦️.ts";
 import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, loadTaxonomy, taxonomyRelativePathIsExcluded } from "./🔍️discovery/🟦️.ts";
@@ -26,34 +39,9 @@ import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playgrou
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import { cargoRepositoryPackages, cargoRepositoryPackage, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
-import {
-  BUILD_BUDGET_MS,
-  CMD_BUDGET_MS,
-  budgetTimeoutHint,
-  buildBudgetMs,
-  cargoProfileDir,
-  cmdBudgetMs,
-  defaultBudgetMs,
-  daemonBudgetMs,
-  daemonBudgetOpts,
-  orchestratorBudgetMs,
-  orchestratorBudgetOpts,
-  resolveWorkspaceBin,
-  runCmd,
-  runCmdStatus,
-  runNodeBin,
-  runNodeBinStatus,
-  semioBuildMode,
-  semioShipEnv,
-  terminateOwnedProcessTree,
-  tryRun,
-  type RunCmdOpts,
-  type SemioBuildMode,
-} from "./🏃️process/🟦️.ts";
+import { cargoRepositoryPackages, cargoRepositoryPackage, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
-export const SEMIO_ROOT_DIR = ".🧬semio";
-export const REPO_META_DIR_NAME = "🦑️repo";
 export const HUB_DATA_DIR_NAME = "🌐hub";
 export const SPACE_DATA_DIR_NAME = "🔗space";
 export const MAP_CACHE_DIR_NAME = "🗺️map";
@@ -82,16 +70,6 @@ export function readStableBuildFile(path: string, maximum: number, admission: { 
   } finally {
     closeSync(file);
   }
-}
-
-/** 🧬️Workspace-local semio root (`.🧬semio/`). */
-export function getSemioRoot(repoRoot: string): string {
-  return join(repoRoot, SEMIO_ROOT_DIR);
-}
-
-/** 🦑️Repo product meta directory (`.🧬semio/🦑️repo/`). */
-export function getRepoMetaDir(repoRoot: string): string {
-  return join(getSemioRoot(repoRoot), REPO_META_DIR_NAME);
 }
 
 /** 🌐Hub data directory (`.🧬semio/🌐hub/`). */
@@ -993,77 +971,19 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-s-plugin-sourcing-windows": { quick: 600_000 },
 };
 
-function isTestLevel(value: string | undefined): value is TestLevel {
-  return !!value && (TEST_LEVELS as readonly string[]).includes(value);
-}
-
-/** ⏱️Reads the active test level (`SEMIO_TEST_LEVEL`, defaulting to `fundamental`) — set by [[resolveTestLevel]]. */
-function activeTestLevel(): TestLevel {
-  return isTestLevel(process.env.SEMIO_TEST_LEVEL) ? (process.env.SEMIO_TEST_LEVEL as TestLevel) : "fundamental";
-}
-
-/**
- * 🎚️Resolves the test level from `segments[0]` (if it names a level) or `SEMIO_TEST_LEVEL`, else `fundamental`.
- * `minimum` is the floor a suite declares when its own fixed cost (independent oracles, generated-bundle
- * renders, taxonomy loads) already exceeds a lower level's budget, so the suite is levelled honestly
- * instead of being killed at every invocation. Sets `process.env.SEMIO_TEST_LEVEL` so every child process
- * spawned afterwards (vitest, cargo, go, pytest, dotnet) inherits it without explicit plumbing.
- * Returns the remaining segments.
- */
-export function resolveTestLevel(segments: string[], minimum: TestLevel = "fundamental"): { level: TestLevel; rest: string[] } {
-  const [first, ...restIfLevel] = segments;
-  const requested = isTestLevel(first) ? first : activeTestLevel();
-  const level = testLevelRank(requested) >= testLevelRank(minimum) ? requested : minimum;
-  process.env.SEMIO_TEST_LEVEL = level;
-  if (level === "exhaustive" && process.env.SEMIO_COVERAGE === undefined) process.env.SEMIO_COVERAGE = "1";
-  return { level, rest: isTestLevel(first) ? restIfLevel : segments };
-}
-
-/** 🎚️Numeric rank of a test level (0=fundamental..3=exhaustive), for `if (testLevelRank() >= testLevelRank("long"))`-style gating in test files. */
-export function testLevelRank(level: string | undefined = process.env.SEMIO_TEST_LEVEL): number {
-  const idx = TEST_LEVELS.indexOf((isTestLevel(level) ? level : "fundamental") as TestLevel);
-  return idx === -1 ? 0 : idx;
-}
-
-/** 🎚️True when the active level reaches `level` — the predicate behind level-gated test cases and level-gated `includeSource` entries. */
-export function testLevelAtLeast(level: TestLevel): boolean {
-  return testLevelRank() >= testLevelRank(level);
-}
-
-/**
- * 🎚️Level-gates one Vitest case factory: `atTestLevel(it, "long")` runs the case from `long` upwards and
- * reports it as skipped below that, so a case that outgrows its level's wall-clock budget moves level
- * instead of being deleted or silently killed. Structurally typed on `runIf` so this library never
- * depends on Vitest's own types — and typed by what `runIf` RETURNS rather than by the factory itself,
- * because Vitest's `TestAPI.runIf` yields the chainable API, not another `TestAPI`.
- */
-export function atTestLevel<Gated>(factory: { runIf(condition: boolean): Gated }, level: TestLevel): Gated {
-  return factory.runIf(testLevelAtLeast(level));
-}
-
 function levelsAbove(level: TestLevel): readonly TestLevel[] {
   return TEST_LEVELS.slice(TEST_LEVELS.indexOf(level) + 1);
 }
 
-/** ⏱️Wall-clock budget (ms) for the given test level — `SEMIO_TEST_BUDGET_MS` override, else [[TEST_LEVEL_BUDGET_MS]]. */
-export function testLevelBudgetMs(level: TestLevel = activeTestLevel()): number {
-  return Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
-}
-
 /** ⏱️Wall-clock budget for one or more cargo packages at a level — max of level default and [[PACKAGE_TEST_BUDGET_MS]] floors; `SEMIO_TEST_BUDGET_MS` still wins. */
-export function packageTestBudgetMs(packages: readonly string[], level: TestLevel = activeTestLevel()): number {
-  if (process.env.SEMIO_TEST_BUDGET_MS !== undefined) return Number(process.env.SEMIO_TEST_BUDGET_MS);
+export function packageTestBudgetMs(packages: readonly string[], level: TestLevel = activeTestLevel(), environment:Readonly<Record<string,string|undefined>>=process.env): number {
+  if (environment.SEMIO_TEST_BUDGET_MS !== undefined) return Number(environment.SEMIO_TEST_BUDGET_MS);
   let budget = TEST_LEVEL_BUDGET_MS[level];
   for (const pkg of packages) {
     const floor = PACKAGE_TEST_BUDGET_MS[pkg]?.[level];
     if (floor !== undefined) budget = Math.max(budget, floor);
   }
   return budget;
-}
-
-/** ⏱️Wall-clock budget (seconds, rounded up) for the given test level — for toolchains that take second-granularity timeouts. */
-export function testLevelBudgetSeconds(level: TestLevel = activeTestLevel()): number {
-  return Math.ceil(testLevelBudgetMs(level) / 1000);
 }
 
 /** ⏱️Cumulative `go test` args for the active level: per-level `-timeout`, keeps `-short` through `quick`, adds `-skip` for `Test<Level>`-prefixed tests above it. */
@@ -1222,7 +1142,7 @@ export async function runCanonicalGoTests(moduleRoot: string, args: string[], op
   writeFileSync(overlay, `${JSON.stringify({ Replace: plan.replacements }, null, 2)}\n`);
   process.once("exit", cleanup);
   try {
-    await runTestBudgeted("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, throwOnFailure: true });
+    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, throwOnFailure: true });
   } finally {
     process.off("exit", cleanup);
     cleanup();
@@ -1290,39 +1210,12 @@ function killBudgetTree(pid: number): void {
  * statically resolve it: this module is reachable from `⚙️vite.config.ts`, and a literal
  * `import("playwright")` makes bun follow it into a browser build, failing on the uninstalled
  * optional `chromium-bidi`. Runtime behaviour is identical. */
-const PLAYWRIGHT_MODULE_SPECIFIER = "playwright";
 
-/**
- * ⏱️Runs a command under the test-level budget; an explicit zero permits unlimited build preparation.
- * SIGKILLs the whole process tree and fails loudly when a positive budget expires.
- * Deliberately async: Bun's `spawnSync`/`execFileSync` `detached` option does not put the child in its own
- * process group (verified — only the async `spawn` does), so tree-killing on timeout requires the async form.
- * Callers may fire-and-forget this from a synchronous `void`-returning context — the process stays alive on
- * the pending child/timer handles regardless, and the eventual `process.exit()` below still takes effect.
- */
-export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
-  const budgetMs = opts.budgetMs ?? testLevelBudgetMs();
-  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
-  const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
-  let timedOut = false;
-  const timer = budgetMs > 0 ? setTimeout(() => {
-    timedOut = true;
-    if (child.pid) killBudgetTree(child.pid);
-  }, budgetMs) : undefined;
-  const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
-    child.on("error", rejectExit);
-    child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
-  }).finally(() => clearTimeout(timer));
-  if (timedOut) {
-    const hint = opts.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive).";
-    console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${hint}`);
-    if (opts.throwOnFailure) throw new Error(`${cmd} exceeded its ${budgetMs}ms budget`);
-    process.exit(1);
-  }
-  if (signal || code !== 0) {
-    if (opts.throwOnFailure) throw new Error(signal ? `${cmd} was killed by ${signal}` : `${cmd} exited with status ${code}`);
-    process.exit(code ?? 1);
-  }
+/** 🦀️ Composes repository Cargo preparation with neutral bounded test execution. */
+export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
+  const cwd = options.cwd ?? process.cwd();
+  if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
+  await runBudgetedTestCommand(command, args, { ...options, cwd, budgetMs: options.budgetMs ?? testLevelBudgetMs() });
 }
 
 /** 📦️Runs a build-budgeted command while capturing metadata and replaying diagnostics only on failure. */
@@ -1343,42 +1236,6 @@ export function capturedTestFailureDiagnostics(stdout: string, stderr: string): 
   const stderrErrors = stderr.split(/\r?\n/).filter((line) => /^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/.test(line));
   const diagnostics = [...rendered, ...stderrErrors];
   return diagnostics.length > 0 ? diagnostics.join("\n") : `${stdout.slice(-16 * 1024)}${stderr.slice(-16 * 1024)}`;
-}
-
-async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs: number; onTimeoutHint?: string }): Promise<string> {
-  if (cmd === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, opts.cwd ?? process.cwd());
-  const child = spawn(cmd, args, { stdio: ["inherit", "pipe", "pipe"], cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
-  let stdout = "";
-  let stderr = "";
-  child.stdout?.setEncoding("utf8");
-  child.stdout?.on("data", (chunk: string) => {
-    stdout += chunk;
-  });
-  child.stderr?.setEncoding("utf8");
-  child.stderr?.on("data", (chunk: string) => {
-    stderr += chunk;
-  });
-  let timedOut = false;
-  const timer = opts.budgetMs > 0 ? setTimeout(() => {
-    timedOut = true;
-    if (child.pid) killBudgetTree(child.pid);
-  }, opts.budgetMs) : undefined;
-  const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
-    child.on("error", rejectExit);
-    child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
-  }).finally(() => clearTimeout(timer));
-  if (timedOut) {
-    const diagnostics = capturedTestFailureDiagnostics(stdout, stderr);
-    if (diagnostics) process.stderr.write(diagnostics);
-    console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${opts.budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
-    process.exit(1);
-  }
-  if (signal || code !== 0) {
-    const diagnostics = capturedTestFailureDiagnostics(stdout, stderr);
-    if (diagnostics) process.stderr.write(diagnostics);
-    process.exit(code ?? 1);
-  }
-  return stdout;
 }
 
 //#region 🦀️CargoPackageResolver
@@ -1542,89 +1399,6 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 
 //#region 🦀️NextestExecutionFilters
 /** 🧪️ Keeps runtime selection on the metadata execution command and build selection on the warm build. */
-export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
-  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored"]);
-  const requiredBuildOptions = new Set([
-    "-p",
-    "--package",
-    "--exclude",
-    "--manifest-path",
-    "--target",
-    "--target-dir",
-    "--features",
-    "-F",
-    "--jobs",
-    "-j",
-    "--build-jobs",
-    "--cargo-profile",
-    "--cargo-message-format",
-    "--config",
-    "-Z",
-    "--color",
-    "--profile",
-    "-P",
-    "--test",
-    "--bin",
-    "--bench",
-    "--example",
-    "--message-format",
-    "-T",
-    "--list-type",
-    "--archive-file",
-    "--archive-format",
-    "--extract-to",
-    "--cargo-metadata",
-    "--workspace-remap",
-    "--binaries-metadata",
-    "--target-dir-remap",
-    "--build-dir-remap",
-    "--config-file",
-    "--user-config-file",
-    "--tool-config-file",
-  ]);
-  const optionalBuildOptions = new Set(["--timings"]);
-  const joinedBuildOptions = ["-p", "-F", "-j", "-Z", "-P", "-T"];
-  const buildArgs: string[] = [],
-    executionArgs: string[] = [];
-  const separator = args.indexOf("--");
-  const cargoArgs = separator < 0 ? args : args.slice(0, separator);
-  const libtestArgs = separator < 0 ? [] : args.slice(separator + 1);
-  for (let index = 0; index < cargoArgs.length; index += 1) {
-    const arg = cargoArgs[index]!;
-    const key = arg.split("=", 1)[0]!;
-    if (arg === "--ignore-default-filter" || arg === "--no-fail-fast" || (arg.startsWith("-E") && arg.length > 2)) {
-      executionArgs.push(arg);
-    } else if (valuedFilters.has(key)) {
-      if (arg.includes("=")) {
-        if (arg.endsWith("=")) throw new Error(`Nextest filter ${key} requires a value`);
-        executionArgs.push(arg);
-      } else {
-        const value = cargoArgs[index + 1];
-        if (value === undefined || value.length === 0 || value.startsWith("-")) throw new Error(`Nextest filter ${key} requires a value`);
-        executionArgs.push(arg, value);
-        index += 1;
-      }
-    } else {
-      if (!arg.startsWith("-")) executionArgs.push(arg);
-      else {
-        buildArgs.push(arg);
-        const inlineValue = arg.includes("=") || joinedBuildOptions.some((option) => arg.startsWith(option) && arg.length > option.length);
-        const requiresValue = requiredBuildOptions.has(key);
-        const allowsValue = optionalBuildOptions.has(key);
-        if ((requiresValue || allowsValue) && arg.endsWith("=")) throw new Error(`Nextest build option ${key} requires a non-empty value`);
-        if (!inlineValue && requiresValue) {
-          const value = cargoArgs[index + 1];
-          if (value !== undefined && value.length > 0 && !value.startsWith("-")) {
-            buildArgs.push(value);
-            index += 1;
-          } else if (requiresValue) throw new Error(`Nextest build option ${key} requires a value`);
-        }
-      }
-    }
-  }
-  return { buildArgs, executionArgs, libtestArgs };
-}
-
 /** 📁️ Selects a caller-owned artifact root without embedding any task identity in permanent tooling. */
 export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = process.env): { directory: string; retain: boolean } {
   const explicit = env.SEMIO_TEST_ARTIFACT_DIR?.trim();
@@ -1632,114 +1406,27 @@ export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = pr
 }
 //#endregion 🦀️NextestExecutionFilters
 
-/**
- * 🦀️Warm-builds the exact test runner invocation with the opt-in [[buildBudgetMs]], then runs
- * assertions under the active level's budget and [[nextest.toml]] profile (per-test
- * `slow-timeout`), appending cumulative `--skip <level>::` filters for every level above it (tests live in
- * `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`).
- * Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g. `--nocapture`) still
- * compose correctly. Guarantees a 128 MiB `RUST_MIN_STACK` floor for every assertion thread unless the
- * caller sets its own, because app-fixture laws routinely exceed libtest's 2 MiB default stack.
- */
-export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
-  env = env.RUST_MIN_STACK ? env : { ...env, RUST_MIN_STACK: "134217728" };
-  const resolvedPackages = resolveCargoPackageNames(packages, cwd);
-  const repository = getWorkspaceRoot(), rows = resolvedPackages.map(name => cargoRepositoryPackage(repository, name));
-  const scopes = [...new Set(rows.map(row => row.workspace))];
-  if (scopes.length > 1) { for (const scope of scopes) await runCargoTestBudgeted(rows.filter(row => row.workspace === scope).map(row => row.name), cwd, extraArgs, env); return; }
-  const manifestArgs = rows.length ? ["--manifest-path", join(repository, rows[0]!.manifest)] : [];
-  const packageArgs = [...manifestArgs, ...resolvedPackages.flatMap((pkg) => ["-p", pkg])];
-  const dashIdx = extraArgs.indexOf("--");
-  const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
-  const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
-  const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
-  const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
-  const profileArgs = ["--config-file", join(repository, scopes[0] ?? ".", ".config", "nextest.toml"), "--profile", level];
-  const assertionThreads = Math.max(1, availableParallelism() - Math.max(1, Math.ceil(availableParallelism() / 4)));
-  const assertionThreadArgs = level === "fundamental" ? ["--test-threads", String(assertionThreads)] : [];
+/** 🔐️ Authors repository-native execution policy for one selected manifest. */
+export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:Readonly<Record<string,string|undefined>>=process.env):CargoTestPolicyV1 {
+  const repository=getWorkspaceRoot(), path=resolve(repository,manifestPath), relativePath=relative(repository,path).split(sep).join("/"), scope=cargoWorkspaceForManifest(repository,relativePath), cargo=Bun.TOML.parse(readFileSync(path,"utf8")) as {package?:{name?:string}};
+  if(!cargo.package?.name)throw Error(`Cargo test policy requires a package manifest: ${manifestPath}`);
+  const level=isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:activeTestLevel(), configPath=join(repository,scope.directory,".config","nextest.toml"), artifact=nextestArtifactLocation(cwd,env);
+  if(!existsSync(configPath))throw Error(`Selected Cargo test configuration is missing: ${configPath}`);
+  return {version:1,manifestPath:path,targetDirectory:cargoTargetDirectory(repository,env),nextest:cargoNextestAvailable(),configPath,level,assertionBudgets:Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs([cargo.package!.name!],value,env)])) as Record<TestLevel,number>,buildBudgetMs:buildBudgetMs(env),assertionThreads:Math.max(1,availableParallelism()-Math.max(1,Math.ceil(availableParallelism()/4))),artifactDirectory:artifact.directory,retainArtifacts:artifact.retain,coverageEnabled:env.SEMIO_COVERAGE==="1",coveragePath:join(coverageDir(repository,"rust"),`${coverageSlug(cargo.package.name)}.lcov`),rustMinStack:env.RUST_MIN_STACK??"134217728"};
+}
 
-  if (coverageEnabled()) {
-    const testBudgetMs = packageTestBudgetMs(resolvedPackages, level);
-    const nextest = cargoNextestAvailable();
-    const covArgs = nextest
-      ? (["llvm-cov", "nextest", "--release", "--no-report", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
-      : (["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const);
-    if (!nextest) {
-      console.error("[budget] cargo-nextest not installed — coverage uses cargo llvm-cov test fallback");
-    }
-    const buildArgs = nextest ? ["llvm-cov", "nextest", "--no-run", ...covArgs.slice(2)] : [...covArgs, "--list"];
-    await runTestBudgeted("cargo", buildArgs, {
-      cwd,
-      env,
-      budgetMs: buildBudgetMs(),
-      onTimeoutHint: budgetTimeoutHint("cargo"),
-    });
-    await runTestBudgeted("cargo", ["llvm-cov", covArgs[1], "--no-clean", ...covArgs.slice(2)], { cwd, env, budgetMs: testBudgetMs });
-    const lcovPath = join(coverageDir(findWorkspaceRoot(cwd), "rust"), `${coverageSlug(resolvedPackages.join("_"))}.lcov`);
-    await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
-      cwd,
-      env,
-      budgetMs: buildBudgetMs(),
-      onTimeoutHint: budgetTimeoutHint("cargo"),
-    });
-    return;
+/** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
+export async function runRepositoryCargoTests(packages:string[],cwd:string,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+  const repository=getWorkspaceRoot(), rows=packages.map(name=>cargoRepositoryPackage(repository,name));
+  const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
+  const scopes=new Map<string,string[]>();
+  for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
+  for(const manifests of scopes.values()){
+    const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
+    prepareCargoWorkspaceInvocation(repository,["test","--manifest-path",manifest],cwd);
+    const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
+    await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
   }
-
-  if (cargoNextestAvailable()) {
-    const { buildArgs, executionArgs, libtestArgs: nextestLibtestArgs } = partitionNextestExecutionFilters(extraArgs);
-    const artifactLocation = nextestArtifactLocation(cwd, env);
-    if (artifactLocation.retain) mkdirSync(artifactLocation.directory, { recursive: true });
-    const metadataDir = mkdtempSync(join(artifactLocation.directory, "semio-nextest-"));
-    const binariesMetadataPath = join(metadataDir, "binaries-metadata.json");
-    try {
-      const binariesMetadata = await runTestCapturedBudgeted("cargo", ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...buildArgs], {
-        cwd,
-        env,
-        budgetMs: buildBudgetMs(),
-        onTimeoutHint: budgetTimeoutHint("cargo"),
-      });
-      writeFileSync(binariesMetadataPath, binariesMetadata);
-      await runTestBudgeted(
-        "cargo",
-        [
-          "nextest",
-          "run",
-          "--binaries-metadata",
-          binariesMetadataPath,
-          "--no-tests",
-          "warn",
-          "--status-level",
-          "fail",
-          "--final-status-level",
-          "fail",
-          ...assertionThreadArgs,
-          ...profileArgs,
-          ...manifestArgs,
-          ...executionArgs,
-          "--",
-          ...nextestLibtestArgs,
-          ...skipArgs,
-        ],
-        { cwd, env, budgetMs: packageTestBudgetMs(resolvedPackages, level) },
-      );
-    } finally {
-      if (artifactLocation.retain) console.error(`[TRACE] Nextest artifacts retained at ${metadataDir}`);
-      else rmSync(metadataDir, { recursive: true, force: true });
-    }
-    return;
-  }
-  console.error("[budget] cargo-nextest not installed — falling back to cargo test (run setup or: cargo install cargo-nextest --locked)");
-  await runTestBudgeted("cargo", ["build", "--tests", ...packageArgs], {
-    cwd,
-    env,
-    budgetMs: buildBudgetMs(),
-    onTimeoutHint: budgetTimeoutHint("cargo"),
-  });
-  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
-    cwd,
-    env,
-    budgetMs: packageTestBudgetMs(resolvedPackages, level),
-  });
 }
 
 function cargoNextestAvailable(): boolean {
@@ -1835,352 +1522,20 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
 }
 
 /** 🦀️ One explicit Cargo package/target and nonempty exact law selection. */
-export type ExactCargoLawGroup = {
-  package: string;
-  target: { kind: "lib"; name?: string } | { kind: "test" | "bin"; name: string };
-  laws: readonly string[];
-  cargoArgs?: readonly string[];
-};
-export type ExactCargoLawStage = "build" | "list" | "native";
-export type ExactCargoLawProcessResult = RunProbeResult & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };
-export type ExactCargoLawProcessOptions = {
-  cwd: string;
-  env: NodeJS.ProcessEnv;
-  budgetMs: number;
-  maxOutputBytes: number;
-  stdoutPath: string;
-  stderrPath: string;
-  cancelled: () => boolean;
-};
-/** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
-export type ExactCargoLawPort = {
-  probe: (command: string, args: string[], options: ExactCargoLawProcessOptions) => Promise<ExactCargoLawProcessResult>;
-  fingerprint: (path: string) => { path: string; sha256: string };
-};
-export type ExactCargoLawOptions = {
-  cwd: string;
-  groups: readonly ExactCargoLawGroup[];
-  manifestPath?: string;
-  cargoArgs?: readonly string[];
-  env?: NodeJS.ProcessEnv;
-  nativeEnv?: NodeJS.ProcessEnv;
-  artifactDir?: string;
-  buildBudgetMs?: number;
-  listBudgetMs?: number;
-  lawBudgetMs?: number;
-  cancelled?: () => boolean;
-  progress?: (event: { stage: ExactCargoLawStage; package: string; law?: string; artifactDir: string }) => void;
-};
-export type ExactCargoLawReceipt = {
-  package: string;
-  target: ExactCargoLawGroup["target"];
-  executable: string;
-  sha256: string;
-  laws: readonly string[];
-  assertions: number;
-  artifactDir: string;
-  cargoTargetDir: string;
-};
-
-export const EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX = ".exact-cargo-laws-active-";
-export const EXACT_CARGO_ACTIVE_LEASE_MANIFEST = "lease.json";
-export const EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS = 120_000;
-
-/** 🛡️ Recognizes only a fresh lease owned by a live exact-Cargo runner process. */
-export function exactCargoGeneratedOutputHasLiveLease(root: string): boolean {
-  const stack = [{ path: root, depth: 0 }];
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    let names: string[];
-    try {
-      names = readdirSync(current.path);
-    } catch {
-      continue;
-    }
-    for (const name of names) {
-      const path = join(current.path, name);
-      let state;
-      try {
-        state = lstatSync(path);
-      } catch {
-        continue;
-      }
-      if (!state.isDirectory() || state.isSymbolicLink()) continue;
-      if (name.startsWith(EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX)) {
-        const manifestPath = join(path, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
-        try {
-          const manifestState = lstatSync(manifestPath);
-          if (!manifestState.isFile() || manifestState.isSymbolicLink() || manifestState.size > 128 || Date.now() - manifestState.mtimeMs > EXACT_CARGO_ACTIVE_LEASE_MAX_AGE_MS || manifestState.mtimeMs - Date.now() > 5_000) continue;
-          const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { version?: unknown; pid?: unknown };
-          if (manifest.version !== 1 || !Number.isSafeInteger(manifest.pid) || Number(manifest.pid) < 1) continue;
-          try {
-            process.kill(Number(manifest.pid), 0);
-            return true;
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === "EPERM") return true;
-          }
-        } catch {
-          continue;
-        }
-      } else if (current.depth < 4) stack.push({ path, depth: current.depth + 1 });
-    }
-  }
-  return false;
-}
-
-/** 💓 Holds a fresh process-bound lease until the exact Cargo run reaches a terminal result. */
-function beginExactCargoLease(artifactRoot: string): () => void {
-  const leaseRoot = mkdtempSync(join(artifactRoot, EXACT_CARGO_ACTIVE_LEASE_DIRECTORY_PREFIX));
-  const manifestPath = join(leaseRoot, EXACT_CARGO_ACTIVE_LEASE_MANIFEST);
-  const heartbeat = (): void => {
-    try {
-      writeFileSync(manifestPath, JSON.stringify({ version: 1, pid: process.pid }), { mode: 0o600 });
-    } catch {}
+/** 🦀️ Composes exact native execution with the repository's admitted manifest and compiler storage policy. */
+export async function runRepositoryExactCargoLaws(options: Omit<ExactCargoLawOptions, "manifestPaths" | "cargoTargetDir"> & { manifestPath?: string }, port?: ExactCargoLawPort): Promise<readonly ExactCargoLawReceipt[]> {
+  const root = getWorkspaceRoot(), environment = options.env ?? process.env;
+  const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
+  const manifestPaths = Object.fromEntries(options.groups.map(group => [group.package, options.manifestPath ?? join(root, cargoRepositoryPackage(root, group.package).manifest)]));
+  const preparedPort: ExactCargoLawPort = port ?? {
+    fingerprint: exactExecutableFingerprint,
+    probe: async (command, args, capture) => {
+      if (command === "cargo") prepareCargoWorkspaceInvocation(root, args, capture.cwd);
+      return await captureOwnedProcess(command, args, capture);
+    },
   };
-  heartbeat();
-  const timer = setInterval(heartbeat, 10_000);
-  timer.unref?.();
-  return () => {
-    clearInterval(timer);
-    rmSync(leaseRoot, { recursive: true, force: true });
-  };
-}
-
-/** 🚫️ Preserves the precise failing stage and actual child status independently of assertion parsing. */
-export class ExactCargoLawError extends Error {
-  constructor(
-    readonly stage: ExactCargoLawStage,
-    readonly status: number | null,
-    readonly signal: NodeJS.Signals | null,
-    readonly artifactDir: string,
-    detail: string,
-  ) {
-    super(`exact Cargo law ${stage} failed: status=${status} signal=${signal ?? "none"} artifacts=${artifactDir}; ${detail}`);
-  }
-}
-
-/** 🔬️ Fingerprints one retained executable descriptor with bounded streaming and cancellation. */
-export function exactExecutableFingerprint(path: string, control: Readonly<{ cancelled?: () => boolean; progress?: (completed: number, total: number) => void }> = {}): { path: string; sha256: string; byteLength: number } {
-  const check = () => {
-    if (control.cancelled?.()) throw new Error("Executable fingerprint cancelled");
-  };
-  check();
-  if (!isAbsolute(path) || lstatSync(path).isSymbolicLink()) throw new Error("Executable must be one absolute regular file");
-  const canonical = realpathSync(path);
-  const descriptor = openSync(canonical, "r");
-  try {
-    const before = fstatSync(descriptor);
-    const same = (other: typeof before) => other.isFile() && !other.isSymbolicLink() && other.dev === before.dev && other.ino === before.ino && other.size === before.size && other.mtimeMs === before.mtimeMs && other.ctimeMs === before.ctimeMs;
-    if (!before.isFile() || !same(lstatSync(canonical)) || before.size <= 0 || before.size > 8 * 1024 ** 3 || (process.platform !== "win32" && (before.mode & 0o111) === 0)) throw new Error("Executable size or type denied");
-    const digest = createHash("sha256");
-    const buffer = Buffer.alloc(64 * 1024);
-    let count = 0;
-    while (true) {
-      check();
-      const length = readSync(descriptor, buffer);
-      if (length === 0) break;
-      digest.update(buffer.subarray(0, length));
-      count += length;
-      if (count > before.size) throw new Error("Executable changed while hashing");
-      control.progress?.(count, before.size);
-    }
-    const after = fstatSync(descriptor);
-    if (count !== before.size || !same(after) || !same(lstatSync(canonical))) throw new Error("Executable changed while hashing");
-    return { path: canonical, sha256: digest.digest("hex"), byteLength: count };
-  } finally {
-    closeSync(descriptor);
-  }
-}
-
-/** 📥️ Captures a process into caller-owned evidence files; zero disables its deadline while retaining cancellation and output limits. */
-export async function runExactCargoLawProcess(command: string, args: string[], options: ExactCargoLawProcessOptions): Promise<ExactCargoLawProcessResult> {
-  if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, options.cwd);
-  const stdout = openSync(options.stdoutPath, "wx", 0o600);
-  const stderr = openSync(options.stderrPath, "wx", 0o600);
-  return await new Promise((resolveResult) => {
-    let reason: ExactCargoLawProcessResult["reason"] = "exit";
-    let count = 0;
-    let finished = false;
-    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
-    const terminate = (cause: NonNullable<ExactCargoLawProcessResult["reason"]>): void => {
-      if (reason !== "exit") return;
-      reason = cause;
-      if (child.pid) killBudgetTree(child.pid);
-    };
-    const append = (descriptor: number, bytes: Buffer): void => {
-      const remaining = Math.max(0, options.maxOutputBytes - count);
-      if (remaining) writeSync(descriptor, bytes.subarray(0, remaining));
-      count += bytes.length;
-      if (count > options.maxOutputBytes) terminate("output-limit");
-    };
-    child.stdout?.on("data", (bytes) => append(stdout, bytes));
-    child.stderr?.on("data", (bytes) => append(stderr, bytes));
-    const timer = options.budgetMs > 0 ? setTimeout(() => terminate("timeout"), options.budgetMs) : undefined;
-    const cancel = setInterval(() => {
-      if (options.cancelled()) terminate("cancelled");
-    }, 100);
-    child.on("error", (error) => {
-      reason = "spawn-error";
-      append(stderr, Buffer.from(error.message));
-    });
-    child.on("close", (status, signal) => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      clearInterval(cancel);
-      closeSync(stdout);
-      closeSync(stderr);
-      resolveResult({ status, signal, reason, stdout: readFileSync(options.stdoutPath, "utf8"), stderr: readFileSync(options.stderrPath, "utf8") });
-    });
-  });
-}
-
-/** 🧪️ Compiles each explicit target once and executes only its hash-bound, exact-listed native laws. */
-export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: runExactCargoLawProcess, fingerprint: exactExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
-  const configuredEnv = options.env ?? process.env;
-  const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
-  if (!artifactRoot || !isAbsolute(artifactRoot) || !isGeneratedPath(artifactRoot)) throw new Error("Exact Cargo laws require an absolute artifactDir or SEMIO_TEST_ARTIFACT_DIR inside a generated directory");
-  const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot(), configuredEnv);
-  const targetBoundary = process.platform === "win32" ? cargoTargetDir.toLowerCase() : cargoTargetDir;
-  const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);
-  if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
-  const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
-  const nativeEnv: NodeJS.ProcessEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
-  delete nativeEnv.RUST_TEST_NOCAPTURE;
-  if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
-  const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
-  if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
-  for (const group of options.groups) {
-    if (!group.package || !group.laws.length || group.laws.length > 4096 || new Set(group.laws).size !== group.laws.length || group.laws.some((law) => !/^[A-Za-z_][A-Za-z0-9_:]*$/u.test(law)))
-      throw new Error("Exact Cargo law identities must be nonempty and unique");
-  }
-  mkdirSync(artifactRoot, { recursive: true });
-  const endLease = beginExactCargoLease(artifactRoot);
-  try {
-    const runRoot = mkdtempSync(join(artifactRoot, "exact-cargo-laws-"));
-    const cancelled = options.cancelled ?? (() => false);
-    const receipts: ExactCargoLawReceipt[] = [];
-    const checkedBudget = (value: number, build: boolean): number => {
-      if (!Number.isSafeInteger(value) || value < (build ? 0 : 1) || value > 24 * 60 * 60 * 1000) throw new Error("Exact Cargo budget must be finite and positive, or zero for builds");
-      return value;
-    };
-    for (const [index, group] of options.groups.entries()) {
-      const groupRoot = join(runRoot, String(index).padStart(2, "0"));
-      mkdirSync(groupRoot);
-      let stage: ExactCargoLawStage = "build";
-      let last: ExactCargoLawProcessResult = { status: null, signal: null, stdout: "", stderr: "" };
-      const fail = (detail: string): never => {
-        throw new ExactCargoLawError(stage, last.status, last.signal, groupRoot, detail);
-      };
-      const checkpoint = (): void => {
-        if (cancelled()) fail("cancelled");
-      };
-      const capture = async (next: ExactCargoLawStage, command: string, args: string[], budget: number, name: string): Promise<ExactCargoLawProcessResult> => {
-        stage = next;
-        checkpoint();
-        options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
-        const stdoutPath = join(groupRoot, `${name}.stdout`);
-        const stderrPath = join(groupRoot, `${name}.stderr`);
-        last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: checkedBudget(budget, next === "build"), maxOutputBytes: next === "build" ? 256 * 1024 * 1024 : 8 * 1024 * 1024, stdoutPath, stderrPath, cancelled });
-        if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
-        if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
-        writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
-        checkpoint();
-        return last;
-      };
-      const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
-      const cargoArgs = [...(options.cargoArgs ?? []), ...(group.cargoArgs ?? [])];
-      if (
-        cargoArgs.some(
-          (arg) =>
-            ["--", "--test", "--bin", "--lib", "-p", "--package", "--no-run", "--message-format", "--target-dir", "--manifest-path"].includes(arg) || ["--message-format=", "--target-dir=", "--manifest-path="].some((prefix) => arg.startsWith(prefix)),
-        )
-      )
-        fail("Cargo target/control arguments are helper-owned");
-      const built = await capture(
-        "build",
-        "cargo",
-        ["test", "--manifest-path", options.manifestPath ?? join(getWorkspaceRoot(), cargoRepositoryPackage(getWorkspaceRoot(), group.package).manifest), "-p", group.package, ...target, ...cargoArgs, "--no-run", "--message-format=json"],
-        options.buildBudgetMs ?? buildBudgetMs(),
-        "build",
-      );
-      const messages = built.stdout.split("\n").flatMap((line) => {
-        try {
-          return [JSON.parse(line)];
-        } catch {
-          return [];
-        }
-      });
-      const errors = messages.filter((message) => message.reason === "compiler-message" && message.message?.level === "error").map((message) => message.message.rendered ?? message.message.message);
-      if (built.status !== 0 || built.signal !== null || (built.reason && built.reason !== "exit")) fail(`${built.reason ?? "exit"}; ${(errors.length ? errors.slice(0, 3).join("\n") : built.stderr).slice(0, 6000)}`);
-      const artifacts = messages.filter((message) => message.reason === "compiler-artifact" && message.profile?.test === true && typeof message.executable === "string");
-      if (artifacts.length !== 1) fail(`expected one Cargo executable artifact, got ${artifacts.length}`);
-      const artifact = artifacts[0];
-      const packageId = String(artifact.package_id);
-      const packageName = packageId.includes("#") ? packageId.slice(packageId.lastIndexOf("#") + 1).split("@")[0] : packageId.split(" ")[0];
-      const kinds = artifact.target?.kind;
-      if (
-        packageName !== group.package ||
-        !Array.isArray(kinds) ||
-        !kinds.some((kind) => (group.target.kind === "lib" ? ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro"].includes(kind) : kind === group.target.kind)) ||
-        (group.target.name && artifact.target?.name !== group.target.name) ||
-        !isAbsolute(artifact.executable)
-      )
-        fail("Cargo executable package/target/path does not match the explicit group");
-      const fingerprint = (): { path: string; sha256: string } => {
-        try {
-          return port.fingerprint(artifact.executable);
-        } catch (error) {
-          return fail(String(error));
-        }
-      };
-      const initial = fingerprint();
-      const verify = (): void => {
-        checkpoint();
-        const current = fingerprint();
-        if (current.path !== initial.path || current.sha256 !== initial.sha256) fail("Cargo executable changed after its build receipt");
-      };
-      if (!isAbsolute(initial.path) || !/^[0-9a-f]{64}$/u.test(initial.sha256)) fail("Cargo executable fingerprint is invalid");
-      writeFileSync(join(groupRoot, "executable.json"), JSON.stringify({ package: group.package, target: group.target, ...initial }), { flag: "wx", mode: 0o600 });
-      verify();
-      const listed = await capture("list", initial.path, ["--list"], options.listBudgetMs ?? 60_000, "list");
-      verify();
-      if (listed.status !== 0 || listed.signal !== null || (listed.reason && listed.reason !== "exit")) fail(`list ${listed.reason ?? "exit"}; ${listed.stderr.slice(0, 4000)}`);
-      const discovered = listed.stdout
-        .split(/\r?\n/u)
-        .filter((line) => line.endsWith(": test"))
-        .map((line) => line.slice(0, -6));
-      const laws = group.laws.map((selector) => {
-        const matches = discovered.filter((name) => name === selector || name.endsWith(`::${selector}`));
-        if (matches.length !== 1) fail(`expected exactly one ${selector}, selected=${matches.length}`);
-        return matches[0]!;
-      });
-      if (new Set(laws).size !== laws.length) fail("Law selectors resolve to the same native assertion");
-      for (const [lawIndex, law] of laws.entries()) {
-        verify();
-        const result = await capture("native", initial.path, [law, "--exact", "--test-threads=1", "--show-output"], options.lawBudgetMs ?? 60_000, `law-${lawIndex}`);
-        verify();
-        const terminals = [...result.stdout.matchAll(/^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;/gm)];
-        if (
-          result.status !== 0 ||
-          result.signal !== null ||
-          (result.reason && result.reason !== "exit") ||
-          terminals.length !== 1 ||
-          terminals[0]?.[1] !== "1" ||
-          terminals[0]?.[2] !== "0" ||
-          terminals[0]?.[3] !== "0" ||
-          !result.stdout.split(/\r?\n/u).includes(`test ${law} ... ok`)
-        )
-          fail(`native assertion ${law} did not pass exactly once; ${(result.stdout + result.stderr).slice(-6000)}`);
-      }
-      const receipt = { package: group.package, target: group.target, executable: initial.path, sha256: initial.sha256, laws, assertions: laws.length, artifactDir: groupRoot, cargoTargetDir };
-      writeFileSync(join(groupRoot, "receipt.json"), JSON.stringify(receipt), { flag: "wx", mode: 0o600 });
-      receipts.push(receipt);
-    }
-    return receipts;
-  } finally {
-    endLease();
-  }
+  return await runExactCargoLaws({ ...options, manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }, preparedPort);
 }
 
 export interface SpawnDaemonHandle {
@@ -2572,7 +1927,7 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
 }
 
 /**
- * ▶️Vitest run in bundle directory, under the [[runTestBudgeted]] wall-clock budget. Appends v8 lcov coverage
+ * ▶️Vitest run in bundle directory, under the [[runRepositoryTestCommand]] wall-clock budget. Appends v8 lcov coverage
  * flags when [[coverageEnabled]]. Invokes the workspace's own `node_modules/vitest/vitest.mjs` directly rather
  * than `bun x vitest` — `bunx` resolves its own globally cached vitest version, which can silently drift from
  * the workspace's pinned version (observed: a cached 3.x core paired with a locally installed 4.x
@@ -2591,16 +1946,24 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * "No test files found, exiting with code 1" — with the config silently absent, so its `includeSource`
  * never collected the kernel's in-source suites. Resolving here keeps the relative literals at the call
  * sites and makes the launched cwd authoritative again. */
+/** 📋️ Supplies actual Repo storage policy to an explicitly selected executable owner. */
+export function repositoryProcessOwnerContextV1(cwd:string):ProcessOwnerContextV1{
+  const repository=findWorkspaceRoot(cwd);
+  return {version:1,cwd:resolve(cwd),cacheRoot:repoCacheDirectory(repository),leaseDirectory:repoCacheDirectory(repository,"agents","resource-leases")};
+}
+
+export function repositoryVitestPolicyV1(bundleRoot:string,env:Readonly<Record<string,string|undefined>>=process.env):VitestPolicyV1{
+  const repository=findWorkspaceRoot(bundleRoot);
+  return {version:1,cwd:resolve(bundleRoot),toolPath:join(repository,"node_modules","vitest","vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:repoCacheDirectory(repository,"vite"),coverageDirectory:join(coverageDir(repository,"js"),coverageSlug(bundleRoot)),budgetMs:Number(env.SEMIO_TEST_BUDGET_MS??TEST_LEVEL_BUDGET_MS[isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:"fundamental"])};
+}
+
 export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
-  const coverageArgs = collectingCoverage ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findWorkspaceRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`] : [];
-  const vitestBin = join(findWorkspaceRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
-  return [vitestBin, "run", "--config", isAbsolute(config) ? config : resolve(bundleRoot, config), ...vitestLevelArgs(), ...coverageArgs, ...segments];
+  return vitestArgumentsV1(repositoryVitestPolicyV1(bundleRoot),segments,config,collectingCoverage);
 }
 
 export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> {
-  const collectingCoverage = coverageEnabled();
-  const runtime = collectingCoverage ? "node" : process.execPath;
-  await runTestBudgeted(runtime, vitestRunArguments(bundleRoot, segments, config, collectingCoverage), { cwd: bundleRoot, env: devToolingEnv() });
+  const policy=repositoryVitestPolicyV1(bundleRoot),env=devToolingEnv({SEMIO_VITEST_POLICY:JSON.stringify(policy)});
+  await runVitestV1(policy,segments,config,env);
 }
 
 export { SEMIO_LOCKED_LOCALE_ENV, SEMIO_LOCKED_TERMINOLOGY_ENV, SEMIO_LOCKED_THEME_ENV, SEMIO_LOCKED_APPEARANCE_ENV, SEMIO_BRAND_ENV, SEMIO_DEFAULT_EXAMPLE_ENV, frameworkOsLockedPrefsEnv } from "./🎮️playground/🔒️preferences/🟦️.ts";
@@ -2862,16 +2225,6 @@ export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
 }
 
 
-export type WasmPackWebPkg = {
-  name: string;
-  version?: string;
-  files: string[];
-  main: string;
-  module: string;
-  types: string;
-  sideEffects?: string[];
-};
-
 /** 📦️ Resolves an explicitly provisioned binding generator on every supported host. */
 export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
   const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
@@ -2886,26 +2239,6 @@ export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS
   const probe = runProbe(command, ["--version"], { env });
   if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun nx run workspace:deps-wasm`);
   return command;
-}
-
-/** 📦️Collect wasm-bindgen snippet paths produced by threaded builds. */
-function wasmPackSnippetFiles(pkgDir: string): string[] {
-  const snippetsDir = join(pkgDir, "snippets");
-  if (!existsSync(snippetsDir)) return [];
-  const out: string[] = [];
-  const walk = (dir: string, prefix: string) => {
-    for (const entry of readdirSync(dir)) {
-      const rel = prefix ? `${prefix}/${entry}` : entry;
-      const abs = join(dir, entry);
-      if (statSync(abs).isDirectory()) {
-        walk(abs, rel);
-      } else {
-        out.push(`snippets/${rel}`);
-      }
-    }
-  };
-  walk(snippetsDir, "");
-  return out;
 }
 
 /** 🏗️ Shares the browser compiler environment across crates; Cargo's own config governs where it writes, no private default. */
@@ -2925,113 +2258,17 @@ export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: Node
   return environment;
 }
 
-/** 📂️ Validates one portable compiler output owner without executing a compiler. */
-export function wasmOutputDirectory(rsDir: string, outputDirectory: string): string {
-  if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
-  return join(rsDir, outputDirectory);
+/** 🧭️ Authors selected repository tools and compiler storage for one browser source owner. */
+export function repositoryWasmBuildPolicyV1(cwd: string): WasmBuildPolicyV1 {
+  const root = getWorkspaceRoot(), bindgen = resolveWasmBindgenBin(root), environment = wasmPackEnvironment(root, bindgen, process.env), local = resolveWorkspaceBin("wasm-pack", cwd);
+  const cargo = Bun.TOML.parse(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
+  if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
+  return { version: 1, cwd: resolve(cwd), mode: semioBuildMode(), artifactDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root).build, leaseDirectory: repoCacheDirectory(root,"agents","resource-leases"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
 }
-
-/** 🎚️ Keeps wasm-pack profile flags separate from Cargo's explicit profile selection. */
-export function wasmBuildArguments(profile: string): { pack: string[]; cargo: string[] } {
-  return { pack: profile === "release" ? ["--release"] : profile === "dev" ? ["--dev"] : ["--profile", profile], cargo: ["--profile", profile] };
-}
-
-/** ⚡️ The label hot path of the browser canvas bundles: usvg text layout (fontdb, ttf-parser face tables, rustybuzz GSUB/GPOS
- * shaping, tiny-skia-path outlines, roxmltree/svgtypes/simplecss markup) and vello's scene encoding (kurbo, peniko). At
- * `opt-level = 0` one shaping of a ~100-character line cost ~25 ms in wasm, so every typed character of the trinity query
- * editor painted in ~85 ms (ticket 26/09/23 F1). Compiled at `opt-level = 3` in the dev profile too — the browser twin of
- * the root manifest's dev overrides for the wasmtime crates — scoped to the bundles that pass it, so no other build unit
- * changes. */
-export const BROWSER_CANVAS_HOT_CRATES = ["ttf-parser", "rustybuzz", "usvg", "fontdb", "roxmltree", "svgtypes", "simplecss", "strict-num", "tiny-skia-path", "kurbo", "peniko", "vello_encoding"] as const;
-
-/** ⚙️ The `cargo --config` overrides that optimize `crates` in the dev profile of one build. */
-export function devOptimizedCargoConfigArgs(crates: readonly string[]): string[] {
-  return crates.flatMap((crate) => ["--config", `profile.dev.package.${crate}.opt-level=3`]);
-}
-
-/** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
-export function runWasmPackWebBuild(opts: {
-  rsDir: string;
-  logPrefix: string;
-  pkg: WasmPackWebPkg;
-  wasmBaseName: string;
-  outputDirectory?: string;
-  /** When true, build with atomics + `-Z build-std` for wasm-bindgen-rayon thread pools. */
-  threads?: boolean;
-  /** Optional Cargo feature flags passed to wasm-pack / cargo build. */
-  cargoFeatures?: readonly string[];
-  /** 🎲️ When true, pass `--no-default-features` so crates that default to wasip2 guest features can still build a standalone wasm-bindgen web package. */
-  noDefaultFeatures?: boolean;
-  /** 🔿️ Ship-mode Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
-   * (e.g. `wasm-release`) passes `--profile <name>`. Dev mode always uses `--dev` regardless. */
-  shipProfile?: string;
-  /** ⚡️ Crates compiled at `opt-level = 3` even in dev mode (e.g. {@link BROWSER_CANVAS_HOT_CRATES}); ship mode ignores it. */
-  devOptimizedCrates?: readonly string[];
-}): void {
-  const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release", devOptimizedCrates = [] } = opts;
-  const captureRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : join(rsDir, "dist");
-  mkdirSync(captureRoot, { recursive: true });
-  const cargoOutput = mkdtempSync(join(captureRoot, "wasm-cargo-"));
-  try {
-    const pkgDir = wasmOutputDirectory(rsDir, outputDirectory);
-    const profile = semioBuildMode() === "ship" ? shipProfile : "dev";
-    const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
-    const { pack: packProfileArgs, cargo: cargoProfileArgs } = wasmBuildArguments(profile);
-    const profileOutDir = cargoProfileDir(profile);
-    const compilerEnv = { ...wasmBuildEnvironment(getWorkspaceRoot()), CARGO_TARGET_DIR: cargoOutput };
-    const bindgen = resolveWasmBindgenBin(getWorkspaceRoot(), compilerEnv);
-    const buildEnv = wasmPackEnvironment(getWorkspaceRoot(), bindgen, compilerEnv);
-    const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
-    console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
-    const t0 = Date.now();
-    const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature]), ...(profile === "dev" ? devOptimizedCargoConfigArgs(devOptimizedCrates) : [])];
-    let status: number;
-    if (threads) {
-      const repoRoot = getWorkspaceRoot();
-      const crateName = readFileSync(join(rsDir, "Cargo.toml"), "utf8").match(/^name\s*=\s*"([^"]+)"/m)?.[1];
-      if (!crateName) {
-        throw new Error(`[${logPrefix}] missing package name in Cargo.toml`);
-      }
-      const cargoWasm = join(cargoTargetDirectory(repoRoot, buildEnv), `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
-      const threadedCargoArgs = ["build", "--locked", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
-      status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
-      if (status !== 0) {
-        throw new Error(`[${logPrefix}] cargo threaded build failed (${status})`);
-      }
-      if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-      status = runCmdStatus(bindgen, [cargoWasm, "--out-dir", outputDirectory, "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
-    } else {
-      const localWasmPack = resolveWorkspaceBin("wasm-pack", rsDir);
-      const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", outputDirectory, "--out-name", wasmBaseName, "--no-pack", "--", "--locked", ...featureArgs];
-      if (localWasmPack) {
-        status = runCmdStatus(process.execPath, [localWasmPack, ...buildArgs], { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
-      } else {
-        status = runCmdStatus("wasm-pack", buildArgs, { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
-      }
-    }
-    if (status !== 0) {
-      throw new Error(`[${logPrefix}] wasm build failed (${status})`);
-    }
-    console.log(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-
-    if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    const snippetFiles = wasmPackSnippetFiles(pkgDir);
-    const pkgJson = {
-      type: "module",
-      version: pkg.version ?? "0.1.0",
-      sideEffects: pkg.sideEffects ?? ["./snippets/*"],
-      ...pkg,
-      files: [...new Set([...pkg.files, ...snippetFiles])],
-    };
-    writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
-
-    if (existsSync(wasmPath)) {
-      const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
-      console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm ready (${sz} MiB) + pkg/package.json restored`);
-    } else {
-      throw new Error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
-    }
-  } finally { rmSync(cargoOutput, { recursive: true, force: true }); }
+/** 🦀️ Composes actual repository source preparation with neutral browser compiler execution. */
+export async function buildRepositoryWasmWebV1(options: WasmPackWebBuildOptions): Promise<void> {
+  prepareCargoWorkspaceInvocation(getWorkspaceRoot(), ["build", "--manifest-path", join(options.rsDir, "Cargo.toml")], options.rsDir);
+  await buildWasmWebV1(options, repositoryWasmBuildPolicyV1(options.rsDir));
 }
 
 const EXTENSION_COMPONENT_WASM_TARGET = "wasm32-wasip2";
@@ -4462,30 +3699,6 @@ const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
 
 const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
 
-export function safeGitEnv(extraEnv?: Record<string, string>): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-  Object.assign(env, extraEnv);
-  const configuredGlobal = env.GIT_CONFIG_GLOBAL?.trim();
-  const globalConfig = configuredGlobal || join(homedir(), ".gitconfig");
-  try {
-    if (configuredGlobal && !existsSync(globalConfig)) throw new Error("missing configured global Git config");
-    if (existsSync(globalConfig)) readFileSync(globalConfig, "utf8");
-  } catch {
-    env.GIT_CONFIG_GLOBAL = devNull;
-  }
-  return env;
-}
-
-/** 🌳️Git subprocess env with explicit `cwd` — ignores inherited `GIT_DIR` / `GIT_WORK_TREE`. */
-export function gitSpawnEnv(): Record<string, string> {
-  const env = safeGitEnv();
-  delete env.GIT_DIR;
-  delete env.GIT_WORK_TREE;
-  return env;
-}
 
 const GIT_INDEX_LOCK_RE = /Unable to create '.*index\.lock'/;
 const GIT_INDEX_LOCK_MAX_ATTEMPTS = 20;
@@ -6383,82 +5596,7 @@ export function runCommit(root: string, segments: string[]): void {
 
 //#endregion 🔖️commit
 
-//#region 📻️SVG Export
-/** 📻️ Encodes an SVG with bounded frame writes and publishes only a completed MP4. */
-export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path: string, options: { fps?: number; durationSeconds?: number; width?: number; height?: number; signal?: AbortSignal; progress?: (event: { completed: number; total: number }) => void } = {}): Promise<void> {
-  const fps = options.fps ?? 60;
-  const duration = options.durationSeconds ?? Number(readFileSync(inputSvgPath, "utf8").match(/dur="([\d.]+)s"/)?.[1] ?? 10);
-  if (![fps, duration, options.width ?? 1, options.height ?? 1].every((value) => Number.isFinite(value) && value > 0)) throw new Error("SVG export dimensions, frame rate and duration must be positive finite numbers");
-  const total = Math.ceil(fps * duration), controller = new AbortController();
-  const output = resolve(outputMp4Path);
-  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
-  let encoder: ReturnType<typeof spawn> | undefined;
-  let encoded: Promise<Error | undefined> | undefined;
-  let staging: string | undefined;
-  let force: ReturnType<typeof setTimeout> | undefined;
-  const terminate = (): void => {
-    if (!encoder || encoder.exitCode !== null || encoder.signalCode !== null) return;
-    encoder.kill("SIGTERM");
-    force ??= setTimeout(() => encoder?.kill("SIGKILL"), 5000);
-    force.unref();
-  };
-  const cancel = (): void => controller.abort(options.signal?.reason ?? new Error("SVG export cancelled"));
-  const abort = (): void => { terminate(); void browser?.close().catch(() => {}); };
-  controller.signal.addEventListener("abort", abort, { once: true });
-  options.signal?.addEventListener("abort", cancel, { once: true });
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
-  try {
-    if (options.signal?.aborted) cancel();
-    controller.signal.throwIfAborted();
-    browser = await chromium.launch({ headless: true });
-    controller.signal.throwIfAborted();
-    const page = await browser.newPage();
-    await page.goto(pathToFileURL(resolve(inputSvgPath)).href);
-    await page.waitForSelector("svg");
-    const size = await page.evaluate(() => {
-      const svg = document.querySelector("svg")!;
-      return { width: svg.viewBox.baseVal.width || svg.width.baseVal.value || 1920, height: svg.viewBox.baseVal.height || svg.height.baseVal.value || 1080 };
-    });
-    const width = Math.ceil((options.width ?? size.width) / 2) * 2, height = Math.ceil((options.height ?? size.height) / 2) * 2;
-    await page.setViewportSize({ width, height });
-    await page.evaluate(() => document.querySelector("svg")!.pauseAnimations());
-    mkdirSync(dirname(output), { recursive: true });
-    staging = mkdtempSync(join(dirname(output), `.${basename(output)}-stage-`));
-    const artifact = join(staging, "animation.mp4");
-    encoder = spawn("ffmpeg", ["-nostdin", "-loglevel", "error", "-y", "-f", "image2pipe", "-vcodec", "png", "-r", String(fps), "-i", "-", "-c:v", "libx264", "-pix_fmt", "yuv420p", artifact], { stdio: ["pipe", "ignore", "inherit"] });
-    encoded = new Promise((accept) => { encoder!.once("error", accept); encoder!.once("close", (code) => accept(code === 0 ? undefined : new Error(`ffmpeg exited with code ${code}`))); });
-    encoder.stdin!.on("error", () => {});
-    options.progress?.({ completed: 0, total });
-    for (let frame = 0; frame < total; frame++) {
-      controller.signal.throwIfAborted();
-      await page.evaluate((time: number) => document.querySelector("svg")!.setCurrentTime(time), frame / fps);
-      const buffer = await page.screenshot({ omitBackground: true });
-      await new Promise<void>((accept, reject) => encoder!.stdin!.write(buffer, (error) => error ? reject(error) : accept()));
-      options.progress?.({ completed: frame + 1, total });
-    }
-    encoder.stdin!.end();
-    const error = await encoded;
-    controller.signal.throwIfAborted();
-    if (error) throw error;
-    renameSync(artifact, output);
-  } catch (error) {
-    controller.signal.throwIfAborted();
-    throw error;
-  } finally {
-    terminate();
-    if (encoded) await encoded;
-    if (force) clearTimeout(force);
-    await browser?.close();
-    if (staging) rmSync(staging, { recursive: true, force: true });
-    options.signal?.removeEventListener("abort", cancel);
-    controller.signal.removeEventListener("abort", abort);
-    process.removeListener("SIGINT", cancel);
-    process.removeListener("SIGTERM", cancel);
-  }
-}
-//#endregion 📻️SVG Export
+
 
 //#region 🔣️TaxonomyDiscovery
 /** 🔣️ Shared taxonomy vocabulary + repo-wide package discovery contract — see

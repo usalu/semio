@@ -1,5 +1,7 @@
 //! 📦️ Flat owned JSON domain records preserve exact lexemes and ordered members.
 use super::*;
+#[path="🛬️decode/🦀️.rs"]
+pub(super) mod decoding;
 #[derive(dsl::DslScalar)]
 enum Kind { Null, Boolean, Number, String, Array, Object }
 #[derive(dsl::DslRecord)]
@@ -32,12 +34,15 @@ fn child(values:&mut[Option<JsonValue>],parent:usize,key:u64)->Result<JsonValue,
  if key<=parent||key>=values.len(){return Err("JSON logical child topology differs".into())}
  values[key].take().ok_or_else(||"JSON logical child has multiple owners".into())
 }
+fn validate_node(node:&Node)->Result<(),String>{
+ let selected=match node.kind{Kind::Null=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::Boolean=>node.boolean.is_some()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::Number=>node.boolean.is_none()&&node.number_lexeme.is_some()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::String=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_some()&&node.items.is_empty()&&node.members.is_empty(),Kind::Array=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.members.is_empty(),Kind::Object=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()};
+ if !selected{return Err("JSON logical record contains unrelated variant fields".into())}Ok(())
+}
 fn validate(nodes:&[Node])->Result<(),String>{
  if nodes.is_empty(){return Err("JSON logical root is missing".into())}
  let mut owned=vec![false;nodes.len()];owned[0]=true;
  for(index,node)in nodes.iter().enumerate(){
-  let selected=match node.kind{Kind::Null=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::Boolean=>node.boolean.is_some()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::Number=>node.boolean.is_none()&&node.number_lexeme.is_some()&&node.string_value.is_none()&&node.items.is_empty()&&node.members.is_empty(),Kind::String=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_some()&&node.items.is_empty()&&node.members.is_empty(),Kind::Array=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.members.is_empty(),Kind::Object=>node.boolean.is_none()&&node.number_lexeme.is_none()&&node.string_value.is_none()&&node.items.is_empty()};
-  if !selected{return Err("JSON logical record contains unrelated variant fields".into())}
+  validate_node(node)?;
   for key in node.items.iter().copied().chain(node.members.iter().map(|member|member.value)){
    let key=usize::try_from(key).map_err(|_|"JSON logical child index exceeds native domain")?;
    if key<=index||key>=owned.len(){return Err("JSON logical child topology differs".into())}
@@ -74,7 +79,7 @@ impl store::ArtifactDsl for JsonSnapshot{
  fn envelope_id()->&'static str{"stdio.json"}
  fn parse_dsl(text:&str)->Result<Self,store::TextError>{
   let body=match store::semio_format::split_text_preamble(text){Ok((envelope,body))=>{if !envelope.matches_identity("stdio.json",store::semio_format::Component::Dsl,1){return Err(dsl::__rt::field_error("JSON logical text identity differs"))}body},Err(_)=>text};
-  let record=dsl::parse(body,&Snapshot::__dsl_spec(),&dsl::ParseOptions::default())?;
+  let record=dsl::parse_exact(body,&Snapshot::__dsl_spec(),&dsl::ParseOptions::default())?;
   Snapshot::__dsl_from_record(&record)?.try_into().map_err(dsl::__rt::field_error)
  }
  fn print_dsl(&self)->String{
@@ -111,4 +116,10 @@ pub(super) fn preflight(snapshot:&JsonSnapshot,control:&mut store::sqlite_snapsh
   }
  }
  bound.finish()
+}
+
+pub(super) fn retire(snapshot:JsonSnapshot){decoding::retire_value(snapshot.value)}
+
+pub(super) fn reconstruct_record(record:&dsl::RecordValue,control:&mut protocol::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<JsonSnapshot,String>{
+ let snapshot=decoding::bind(record,control,maximum_rows)?;decoding::reconstruct(snapshot,control)
 }

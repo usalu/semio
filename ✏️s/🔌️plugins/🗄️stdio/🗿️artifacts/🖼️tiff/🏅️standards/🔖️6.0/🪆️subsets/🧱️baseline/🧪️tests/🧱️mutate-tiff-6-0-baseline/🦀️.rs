@@ -16,7 +16,7 @@
 //! removal meaningful, and both its observability and its inverse law are measured from THAT state.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::baseline::{apply, project, read_axes, Axes};
+use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::baseline::{apply, project, read_axes, Axes};
 
 //#region 🔖️Kinds
 
@@ -68,11 +68,11 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tiff::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, encode_tiff_baseline_projection_json, tiff_baseline_conformance_codes, TiffBaselineMutation};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ Decodes one `{kind, params}` step — the row itself or its `setup` — through the vocabulary's

@@ -4,6 +4,13 @@ use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, 
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -28,7 +35,7 @@ pub struct Vdi3805Snapshot {
     #[state(artifact)]
     pub limits: SecurityLimits,
 }
-crate::impl_norm_artifact_record!(Vdi3805Snapshot, extension = "vdi3805", envelope_id = "norm.vdi3805");
+crate::impl_norm_artifact_record!(Vdi3805Snapshot,extension="vdi3805",envelope_id="norm.vdi3805",sqlite=sqlite::sqlite_codec);
 
 impl Default for Vdi3805Snapshot {
     fn default() -> Self {

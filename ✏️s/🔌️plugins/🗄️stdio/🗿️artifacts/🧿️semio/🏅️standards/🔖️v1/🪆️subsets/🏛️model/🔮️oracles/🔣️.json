@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `stdio.semio.model` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it — so the reference registered below is a second IMPLEMENTATION in another language rather than a third-party package.",
   "oracles": [
@@ -325,15 +325,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🧱insert-element-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🧱insert-element-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:31f9d7b75b2aed5e59b9f6af7805ca970cb6da2d0fd1e16f659f4db1242bbf08",
-          "bytes": 267983
+          "sha256": "sha256:8df576ba2474b3a997e5e2f0768a84741c6f2f6a354505c01b65c7feef0692a9",
+          "bytes": 267803
         }
       ],
       "generator": {
@@ -376,15 +376,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🪢insert-relation-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🪢insert-relation-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a768cb332b9a466883beab8c834543174473e5a1f8dd526038a7f0fc99baadd3",
-          "bytes": 267587
+          "sha256": "sha256:0c28b795a925d4fd629a321d7f8f46479fe2a41b176d3e79efce6f8e406dd142",
+          "bytes": 267407
         }
       ],
       "generator": {
@@ -427,15 +427,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🏗️insert-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:0f1787f5261d538612955262a83732b85dcb418646b3bf8d064dfaaef271b19f",
-          "bytes": 267847
+          "sha256": "sha256:07fcffed009a38ff8106880f038096c3a9dcd8810a1b4a1f705914ff3c4284d0",
+          "bytes": 267667
         }
       ],
       "generator": {
@@ -478,15 +478,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🔨remove-element-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🔨remove-element-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:65aed25fb9c6adaa5d993cd43b64eb53ae3c968ddf0e583e68906176413b1d32",
-          "bytes": 266313
+          "sha256": "sha256:aa8d808115199247d20f6dad9ec4112605955ad0c4ec9636dba2cd95dd5c4942",
+          "bytes": 266134
         }
       ],
       "generator": {
@@ -529,15 +529,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/✂️remove-relation-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/✂️remove-relation-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:e38302c4b425e145dea4044d1bf00406ab8b968ebbdf4172007dd1472f773135",
-          "bytes": 267225
+          "sha256": "sha256:eaf17f31c56e1657ef2a77e6ed930cbacc3c90e9f93f86faa14519eefba27163",
+          "bytes": 267045
         }
       ],
       "generator": {
@@ -580,15 +580,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🕳️remove-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a1ceec82fa6724274132adfe20447577ac7d9263810824af364702761c648164",
-          "bytes": 266940
+          "sha256": "sha256:574cad5fde19f03fade663d0316f1d58b77dfde732de998bc24cf1f22cc821c8",
+          "bytes": 266760
         }
       ],
       "generator": {
@@ -631,15 +631,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🎛️set-element-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🎛️set-element-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:2dd6ce87ddc6413a9d4df90751421895bf180ad1fdb635fdb4ad69955d87a74d",
-          "bytes": 267412
+          "sha256": "sha256:ffc0a6f01ee20a6271c49a1943744909da6239eae84df2fd45fcd557e3368236",
+          "bytes": 267232
         }
       ],
       "generator": {
@@ -682,15 +682,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🔧️set-relation-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🔧️set-relation-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:7aaabda58fd296c600432f982ecd80d3df34d37abce386d663002a215bd451a5",
-          "bytes": 267408
+          "sha256": "sha256:9f092bee42bac71d0de0f684ed8913109d5a80986ed159b66d3b3c988015ff99",
+          "bytes": 267228
         }
       ],
       "generator": {
@@ -733,15 +733,15 @@
           "role": "expected-before-json",
           "path": "../🧫️fixtures/🧭set-spatial-node-applied/⬅️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:c622a394ba853e316f8bef49d27b4e3fda2c5dcb76fbb1d4bed6f6ab98a55ccd",
-          "bytes": 267407
+          "sha256": "sha256:9641ffcea1e06cb60a9ad1e0609889f17b772e6a800db5660f9d594b963e6f29",
+          "bytes": 267227
         },
         {
           "role": "expected-after-json",
           "path": "../🧫️fixtures/🧭set-spatial-node-applied/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ac4f907ec7340df704c933334d3b67a69f2adb224c3075795b94f0a5f6bb146e",
-          "bytes": 267411
+          "sha256": "sha256:315cf5e5f096d665f1db129d81aa992088e3cc3dbb6a2e4b89570fdbc5fdc82e",
+          "bytes": 267231
         }
       ],
       "generator": {
@@ -764,5 +764,6 @@
       "family": "structural",
       "notes": "Applied set-spatial-node (payload {\"id\": \"3hePCnUzPDnQxT0FznTQjx\", \"kind\": \"building\", \"mutation\": \"setSpatialNode\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

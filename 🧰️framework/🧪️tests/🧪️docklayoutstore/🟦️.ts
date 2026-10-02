@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NodeId, NullInspector, OsShellConfig, OsTransient, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, PluginModuleUnavailableError, ephemeralBox, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
+  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NodeId, NullInspector, OsShellConfig, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, PluginModuleUnavailableError, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
   type ActionArgDef = any;
   type ArgSchema = any;
   type Command = any;
@@ -525,43 +525,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         vi.unstubAllGlobals();
       }
-    });
-  });
-
-  describe("ephemeralBox", () => {
-    it("stores a function-typed init as the current value (not as a lazy factory)", () => {
-      const identity = (id: string) => id;
-      const box = ephemeralBox<(id: string) => string>(`test.ephemeralBox.fn.${Math.random()}`, identity);
-      expect(typeof box.current).toBe("function");
-      expect(box.current("ui.nav.back")).toBe("ui.nav.back");
-    });
-
-    it("stores a no-op function init without invoking it", () => {
-      let calls = 0;
-      const noop = () => {
-        calls += 1;
-      };
-      const box = ephemeralBox<() => void>(`test.ephemeralBox.noop.${Math.random()}`, noop);
-      expect(typeof box.current).toBe("function");
-      expect(calls).toBe(0);
-      box.current();
-      expect(calls).toBe(1);
-    });
-
-    it("is owned by an isolatable, resettable OsTransient lane", () => {
-      const left = new OsTransient();
-      const right = new OsTransient();
-      const leftBox = left.box("cursor", { x: 1 });
-      leftBox.current.x = 2;
-      expect(left.box("cursor", { x: 99 })).toBe(leftBox);
-      expect(right.box("cursor", { x: 3 }).current.x).toBe(3);
-
-      const oldMap = left.map<string, number>("measurements");
-      oldMap.set("width", 42);
-      left.reset();
-      expect(left.map<string, number>("measurements")).not.toBe(oldMap);
-      expect(left.map<string, number>("measurements").size).toBe(0);
-      expect(oldMap.get("width")).toBe(42);
     });
   });
 

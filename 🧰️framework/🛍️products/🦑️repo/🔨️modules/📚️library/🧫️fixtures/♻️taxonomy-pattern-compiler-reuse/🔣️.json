@@ -18,16 +18,62 @@
       "matchingFixedContracts": 1,
       "renderCatalogGlob": 1,
       "projectNestedCargoPackages": 1,
-      "mutationPayloadSchemaOwner": 1,
+      "historicalDocumentEvidence": 2,
       "generatorInputPaths": 1,
       "generatorPlanning": 1,
       "assertRegenerationContract": 1,
-      "assertTicketImportantRemovalAuthority": 2
+      "assertTicketImportantRemovalAuthority": 2,
+      "sourceAdmissionStructuralDirectories": 1,
+      "sourceAdmissionWalk": 1
     },
-    "loadOwners": ["inventoryTaxonomyWithSourceParentPruning", "planTaxonomy", "applyTaxonomyPlan"],
+    "loadOwners": [
+      "inventoryTaxonomyWithSourceParentPruning",
+      "planTaxonomy",
+      "applyTaxonomyPlan",
+      "inventoryTaxonomySources"
+    ],
     "fixedContractCallCount": 6,
-    "changedInput": { "pointer": "/fixedFilenameContracts/cargo-manifest/reason", "suffix": " - fresh invocation" },
-    "freshProbe": { "path": "🔣️fresh-session.json", "pattern": "fresh-session*.json" }
+    "changedInput": {
+      "pointer": "/fixedFilenameContracts/cargo-manifest/reason",
+      "suffix": " - fresh invocation"
+    },
+    "freshProbe": {
+      "path": "🔣️fresh-session.json",
+      "pattern": "🔣️fresh-session*.json"
+    },
+    "sessionContract": {
+      "equalBytes": {
+        "reads": 2,
+        "parses": 1,
+        "validations": 1
+      },
+      "changedBytes": {
+        "reads": 3,
+        "parses": 2,
+        "validations": 2
+      },
+      "invalid": {
+        "reads": 4,
+        "parses": 3,
+        "validations": 3
+      },
+      "lossy": {
+        "reads": 5,
+        "parses": 3,
+        "validations": 3
+      },
+      "syntax": {
+        "reads": 6,
+        "parses": 4,
+        "validations": 3
+      },
+      "callerMutationSuffix": " caller-only mutation",
+      "restoredSuffix": "",
+      "cacheAuthority": "captured-content-hash",
+      "physicalInputs": "fresh",
+      "sessionSchema": "detached",
+      "matcher": "fresh"
+    }
   },
   "oracle": {
     "library": "picomatch",
@@ -38,7 +84,8 @@
       "noext": true,
       "nobrace": true,
       "strictSlashes": true,
-      "flags": "u"
+      "flags": "u",
+      "fastpaths": false
     }
   },
   "cases": [
@@ -56,7 +103,7 @@
     },
     {
       "id": "windows-separators",
-      "path": "🧪️root\\🔣️.json",
+      "path": ".\\🔣️root.json",
       "pattern": "🔣️root.json",
       "expected": true
     },
@@ -98,7 +145,7 @@
     },
     {
       "id": "middle-globstar-zero",
-      "path": "🦀️root.rs",
+      "path": "🧪️root/🦀️.rs",
       "pattern": "🧪️root/**/🦀️.rs",
       "expected": true
     },
@@ -110,7 +157,7 @@
     },
     {
       "id": "unicode-question",
-      "path": "😀.rootts",
+      "path": "root😀.ts",
       "pattern": "root?.ts",
       "expected": true
     },

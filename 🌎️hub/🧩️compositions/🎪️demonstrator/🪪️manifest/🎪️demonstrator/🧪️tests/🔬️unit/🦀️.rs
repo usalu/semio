@@ -143,7 +143,7 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
     ];
     // 🗣️ `ViewModel::locale`/`terminology` are non-optional (the shell always resolves one before the
     // first render), so a bare `"{}"` is not a decodable view state — the host's own default view is.
-    let view_state = serde_json::to_string(&semio_framework_plugin::ViewModel::default()).expect("aggregate view state serializes");
+    let view_state = serde_json::to_string(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("aggregate view state serializes");
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
         let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");

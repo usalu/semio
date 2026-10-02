@@ -20,6 +20,7 @@ name = "fixture_sweep"
 path = "../../🧪️tests/🔬️fleet-example-sweep/🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-artifact-space-space = { workspace = true }

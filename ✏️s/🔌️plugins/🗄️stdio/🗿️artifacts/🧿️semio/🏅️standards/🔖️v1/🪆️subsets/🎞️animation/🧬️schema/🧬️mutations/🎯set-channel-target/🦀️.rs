@@ -24,8 +24,8 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
         agg_inverse(&SemioAnimationMutation::SetChannelTarget(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set channel target", "Kanalziel setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set channel target", "Kanalziel setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

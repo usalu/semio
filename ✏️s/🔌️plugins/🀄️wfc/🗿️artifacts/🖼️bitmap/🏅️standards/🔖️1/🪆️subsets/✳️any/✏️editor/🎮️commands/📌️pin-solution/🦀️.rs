@@ -34,7 +34,7 @@ pub fn handle(payload: &PinSolution, doc: &ArtifactView<'_, BitmapSnapshot>) -> 
     let mutations = solution_operations(doc.snapshot, payload)?;
     match mutations.is_empty() {
         true => Ok(Emit::default()),
-        false => Ok(Emit { artifact_mutations: mutations, description: Some(format!("Pin solution ({}×{})", doc.snapshot.output.width, doc.snapshot.output.height)), ..Default::default() }),
+        false => Ok(Emit::mutations(mutations)),
     }
 }
 

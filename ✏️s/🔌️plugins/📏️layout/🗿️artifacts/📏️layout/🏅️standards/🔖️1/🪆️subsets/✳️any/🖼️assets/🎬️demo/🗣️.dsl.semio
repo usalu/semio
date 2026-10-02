@@ -1,8 +1,8 @@
 semio layout.layout.dsl v1
-schema=layout.layout name=Demo grid=baseline-grid=12 baseline-offset=0 snap-to-baseline=true paragraph-styles=[ id=paragraph.body name=Body font-family="Layout Sans" font-size=12 font-weight=400 leading=14.4 tracking=0 alignment=left ] character-styles=[ ] stories=[ id=story-1 content="Hello layout"
+schema=layout.layout name=Demo grid=baseline-grid=12 baseline-offset=0 snap-to-baseline=true paragraph-styles=[ { id=paragraph.body name=Body font-family="Layout Sans" font-size=12 font-weight=400 leading=14.4 tracking=0 alignment=left } ] character-styles=[ ] stories=[ { id=story-1 content="Hello layout"
 style-runs [start:UINT end:UINT paragraph-style-id:REF character-style-id:REF] {
-}
-] links=[ id=link-missing path=assets/missing.png hash="sha256:missing" width=100 height=100 dpi=300 state=missing artifact-kind="" artifact-ref="" ] parent-pages=[ id=parent-1 name=Master width=400 height=500 layer-ids=[ layer-parent ]
+} }
+] links=[ { id=link-missing path=assets/missing.png hash="sha256:missing" width=100 height=100 dpi=300 state=missing artifact-kind="" artifact-ref="" } ] parent-pages=[ { id=parent-1 name=Master width=400 height=500 layer-ids=[ layer-parent ]
 frames {
   rect id=frame-inherited layer-id=layer-parent stroke=0.4000000059604645,0.5,0.699999988079071,0.800000011920929
   bounds {
@@ -11,8 +11,8 @@ frames {
 }
 layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
   layer-parent Master true false [ frame-inherited ]
-}
-] spreads=[ id=spread-1 name="Spread 1" page-ids=[ page-1 page-2 ] ] pages=[ id=page-1 name="Page 1" spread-id=spread-1 parent-page-id=parent-1 width=400 height=500
+} }
+] spreads=[ { id=spread-1 name="Spread 1" page-ids=[ page-1 page-2 ] } ] pages=[ { id=page-1 name="Page 1" spread-id=spread-1 parent-page-id=parent-1 width=400 height=500
 margins {
   top=0 right=0 bottom=0 left=0
 }
@@ -43,8 +43,8 @@ layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
   layer-1 Content true false [ frame-text-1 frame-image-1 frame-1 ]
 }
 overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
-}
-id=page-2 name="Page 2" spread-id=spread-1 width=400 height=500
+} }
+{ id=page-2 name="Page 2" spread-id=spread-1 width=400 height=500
 margins {
   top=0 right=0 bottom=0 left=0
 }
@@ -59,5 +59,5 @@ guides [x:NUM y:NUM width:NUM height:NUM] {
 layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
 }
 overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
-}
+} }
 ]

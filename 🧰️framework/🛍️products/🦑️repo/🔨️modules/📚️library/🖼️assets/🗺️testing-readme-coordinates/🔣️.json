@@ -14,7 +14,7 @@
   "documents": {
     "readme": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/README.md",
     "registry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️.json",
-    "protocolSchema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+    "protocolSchema": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
     "taxonomy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
   },
   "frozenAuthority": {

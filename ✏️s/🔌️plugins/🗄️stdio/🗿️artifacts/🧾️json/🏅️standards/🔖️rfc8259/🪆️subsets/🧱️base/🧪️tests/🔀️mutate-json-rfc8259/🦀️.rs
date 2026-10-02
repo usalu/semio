@@ -12,8 +12,8 @@
 //! compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 
 //#region 🔖️Input
@@ -152,14 +152,14 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{inverse_spec, mutable_input};
-    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
+    use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, JsonMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot};
     use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
-    use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::base::project_json_value;
+    use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::project_json_value;
 
     /// 🔀️ The scenario's (or its inverse's) `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the
     /// aggregate's own derive-generated payload constructor — the only channel between the feature's parameters and the

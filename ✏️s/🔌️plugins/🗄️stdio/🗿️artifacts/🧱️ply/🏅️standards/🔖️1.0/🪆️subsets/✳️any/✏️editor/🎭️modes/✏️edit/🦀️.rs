@@ -1,7 +1,12 @@
 //! ✏️ PLY editor — the `edit` mode: a single full-pane Main window.
 
 use crate::editor::ply::modes::edit::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const PLY_ANY_EDIT_MODE_ID: &str = "edit";
 

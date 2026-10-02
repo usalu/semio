@@ -18,7 +18,7 @@ fn inspection_controls_bind_to_real_typed_commands() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️authoring.json")).unwrap();
     let steps: Vec<crate::FormStep> = dsl::json::from_json_str(&fixture["steps"].to_string()).unwrap();
     let spec = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "authoring".into(), "1".into(), Some("Authoring".into()), &steps);
-    let view = semio_framework_plugin::ViewModel::default();
+    let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().unwrap() {
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
         let node = render(&spec, &Default::default(), &selected, &view, &semio_framework_plugin::TreeWindows::for_body(&view, FORMS_PLAY_BODY_INSPECTION)).unwrap();
@@ -36,7 +36,7 @@ fn assert_bound_commands(value: &serde_json::Value) -> usize {
             let action = binding["action"]["name"].as_str().expect("a semantic binding must name its action");
             count += 1;
             let mut args = binding["args"].as_object().cloned().unwrap_or_default();
-            if binding["trigger"] == "change" { args.insert("value".into(), serde_json::json!("Edited")); }
+            if binding["trigger"] == "change" || binding["trigger"] == "commit" { args.insert("value".into(), serde_json::json!("Edited")); }
             let args = crate::editor::forms::unit_tests::context::action_args(&serde_json::Value::Object(args));
             crate::editor::forms::FormsPlayApp::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action}: {}", error.message));
         }

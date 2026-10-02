@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeChromaticitiesMu
         }
         vec![PngMutation::ChangeChromaticities(ChangeChromaticitiesMutation { chrm: base.chrm })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change chromaticities", "Chromatizität ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change chromaticities", "Chromatizität ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-chromaticities".into()]

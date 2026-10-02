@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "explicit-artifact-package", "owner": "lower/plugin/artifact/case", "implementation": "rust",
+      "contributions": [
+        { "owner": "higher/composition", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] },
+        { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] }
+      ],
+      "expected": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }]
+    },
+    {
+      "id": "higher-owner-is-not-an-ancestor", "owner": "lower/plugin/artifact/case", "implementation": "rust",
+      "contributions": [{ "owner": "higher/composition", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] }],
+      "expected": []
+    },
+    {
+      "id": "python-ancestor-scope-is-retained", "owner": "lower/plugin/artifact/case", "implementation": "python",
+      "contributions": [
+        { "owner": "lower/plugin", "oracleHostPackages": [{ "implementation": "python", "package": "reference", "version": "1.2.3", "module": "reference" }] },
+        { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] }
+      ],
+      "expected": [{ "implementation": "python", "package": "reference", "version": "1.2.3", "module": "reference" }]
+    },
+    {
+      "id": "sibling-prefix-does-not-apply", "owner": "lower/plugin/artifact-other/case", "implementation": "rust",
+      "contributions": [{ "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] }],
+      "expected": []
+    },
+    {
+      "id": "ancestor-and-subset-features-remain-separate-records", "owner": "lower/plugin/artifact/subset/case", "implementation": "rust",
+      "contributions": [
+        { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] },
+        { "owner": "lower/plugin/artifact/subset", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] }
+      ],
+      "expected": [
+        { "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" },
+        { "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }
+      ]
+    }
+  ]
+}

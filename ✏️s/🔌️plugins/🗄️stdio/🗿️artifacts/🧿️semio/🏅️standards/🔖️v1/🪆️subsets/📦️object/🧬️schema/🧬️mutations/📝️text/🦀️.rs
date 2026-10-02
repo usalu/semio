@@ -43,11 +43,11 @@ fn parse_f64(s: &str) -> Result<f64, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
+    crate::standards::v1::subsets::object::schema::snapshot::enc_ref(r)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+    crate::standards::v1::subsets::object::schema::snapshot::dec_ref(s)
 }
 //#endregion 🔖️Primitives
 

@@ -2,7 +2,10 @@
 //! backdrop plus its crop tiles.
 
 use crate::{FigureTileFrame, PresentationSnapshot};
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::BuiltNode;
 use semio_framework_ui_scene::Canvas2dScene;
 

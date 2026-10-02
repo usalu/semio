@@ -105,11 +105,11 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
 }
 
 fn viewing(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..Default::default() }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn build(document: &LayoutSnapshot, view: &ViewModel) -> BuiltNode {
-    render(document, &LayoutWindowConfig::default(), layout_labels(&ViewModel::default()), &TreeWindows::for_body(view, LAYOUT_PLAY_BODY_ARTIFACT)).expect("layout document tree assembly")
+    render(document, &LayoutWindowConfig::default(), layout_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, LAYOUT_PLAY_BODY_ARTIFACT)).expect("layout document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {

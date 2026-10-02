@@ -68,7 +68,7 @@ record apply-paint-stroke tag=18
 field object-id utf8
 field layer-index varint
 field eraser u8
-field color array u8
+field color array f32
 field radius f32
 field hardness f32
 field opacity f32

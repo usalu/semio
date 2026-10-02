@@ -2,7 +2,10 @@
 //! counterpart of the editor's single-window `edit` mode.
 
 use crate::viewer::process3d::modes::view::windows::workpiece;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const PROCESS3D_VIEW_MODE_VIEW: &str = "view";
 

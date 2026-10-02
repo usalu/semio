@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveEdge
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
         agg_inverse(&SemioFlowMutation::RemoveEdge(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove edge", "Kante entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove edge", "Kante entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

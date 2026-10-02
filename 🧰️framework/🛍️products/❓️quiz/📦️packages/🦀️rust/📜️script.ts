@@ -1,23 +1,24 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `semio-framework-quiz` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]` and `bun ./📜️script.ts build [args…]`. */
-import { resolveTestLevel, runCargoTestBudgeted } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
 /** 🧪️ Runs the crate's unit and fixture suites at the requested level. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-quiz"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-quiz"], this.repoRoot, rest);
   }
 }
 
 /** 🏗️ Builds the crate's cargo artifacts. */
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
   }
 }
 

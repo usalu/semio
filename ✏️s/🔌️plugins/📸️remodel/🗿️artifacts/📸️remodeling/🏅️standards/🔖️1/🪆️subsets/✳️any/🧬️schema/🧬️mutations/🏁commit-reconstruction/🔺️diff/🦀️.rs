@@ -5,11 +5,11 @@
 //! `mutation.target-mismatch`. Inline buffers and constant meshes are plain values. A payload
 //! equal to the stored lanes and bindings ⇒ Warning `mutation.no-op`.
 use crate::diff::RemodelingDiff;
-use crate::{committed_remodeling_asset_handle, remodeling_content_handle_parts, remodeling_content_is_complete, remodeling_mesh_content_handle_parts, RemodelingContentKind, RemodelingSnapshot};
+use crate::{committed_remodeling_asset_handle, remodeling_content_is_complete, remodeling_mesh_content_handle_parts, RemodelingContentKind, RemodelingSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    if let Some((content_id, chunk_count)) = payload.sparse.as_ref().and_then(|sparse| remodeling_content_handle_parts(&sparse.points.0)) {
+    if let Some((content_id, chunk_count)) = payload.sparse.as_ref().and_then(|sparse| sparse.points.content_reference()) {
         if !remodeling_content_is_complete(&base.durable_artifacts, content_id, RemodelingContentKind::Sparse, chunk_count) {
             return protocol::MutationOutcome::error("mutation.target-mismatch", "The sparse cloud names durable content that is not complete.", ["sparse".to_string()]);
         }

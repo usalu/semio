@@ -1,6 +1,7 @@
 //! 🧱️ Flow core module: schema constructors for primitive dictionaries.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value};
+use semio_framework_value::ValueType;
 
 // #region 🔖️Number
 /// 🔢️ Emits a number dictionary.

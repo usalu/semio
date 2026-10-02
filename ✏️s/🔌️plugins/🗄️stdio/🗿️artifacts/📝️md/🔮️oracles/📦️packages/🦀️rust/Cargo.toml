@@ -1,0 +1,22 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-md-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_md_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:comrak"]
+
+[dependencies]
+"comrak" = { version = "0.54", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

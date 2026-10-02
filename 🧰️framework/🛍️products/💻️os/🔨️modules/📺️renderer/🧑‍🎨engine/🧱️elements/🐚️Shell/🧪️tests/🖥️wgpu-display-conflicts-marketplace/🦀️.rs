@@ -160,7 +160,7 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     let child_id = "framework.display.windows.main.projection.parallel.orthographic";
     let chevron_id = format!("tree.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{parallel_id}");
     let child_label_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{child_id}");
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display's authored tree projects into retained records");
     let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
@@ -250,7 +250,7 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
     for record in records {
         document.try_upsert_record(record).expect("Display record admits");
     }
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
     engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
@@ -417,7 +417,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
     for record in records {
         document.try_upsert_record(record).expect("marketplace record admits");
     }
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_MARKETPLACE_TAB_ID, document));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_MARKETPLACE_TAB_ID, 1);
@@ -493,7 +493,7 @@ fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_exec
 
 #[test]
 fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.locale_id = "en".into();
     let source = &fixture["conflict"];
@@ -574,7 +574,7 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
@@ -585,7 +585,7 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
 
 #[test]
 fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.locale_id = "en".into();
     let source = &fixture["conflict"];
@@ -612,7 +612,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = ui_wgpu::wgpu::Ui::new();
+    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);

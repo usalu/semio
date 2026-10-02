@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "maximumBytes": 1048576,
+  "tinyBytes": 1,
+  "largeCharacters": 65537,
+  "cancelAfterBytes": 65536,
+  "triggers": [
+    {
+      "kind": "manual",
+      "actor": "\u0000世界"
+    },
+    {
+      "kind": "automation",
+      "automationRef": "",
+      "eventFingerprint": "😀 !@"
+    }
+  ],
+  "statuses": [
+    "pending",
+    "running",
+    "succeeded",
+    "failed",
+    "canceled"
+  ],
+  "nodeStatuses": [
+    "computed",
+    "cacheHit",
+    "failed"
+  ],
+  "invalidOrdinal": 99
+}

@@ -42,8 +42,8 @@ impl protocol::MutationKind<InteractionState, InteractionConfigMutation> for Set
     fn inverse(&self, base: &InteractionState) -> Vec<InteractionConfigMutation> {
         vec![InteractionConfigMutation::set_state(base.clone())]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set interaction state", "Interaktionszustand setzen")
     }
 }
 //#endregion ⚙️ColdSemantics

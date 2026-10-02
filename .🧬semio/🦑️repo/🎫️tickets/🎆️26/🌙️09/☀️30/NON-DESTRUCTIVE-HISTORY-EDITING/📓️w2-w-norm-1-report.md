@@ -264,3 +264,30 @@ before-state (rejected, ≥ Error), and asserts that the reached classes equal t
   `🧬️schema/🧬️mutations/📝️text/🦀️.rs`, `💾️binary/{📡️.protocol.semio,🥋️.ksy,🌶️.spicy,🔠️.abnf}`,
   `🧬️mutations/🧪️tests/🔬️fixture/🦀️.rs`, `🔮️oracles/🔣️.json`, `🧪️tests/⚖️mutate-en1990-1/🥒️.feature`.
 - Scratch/logs: `🗑️generated/w2w-norm-1/` (left for the coordinator's sweep).
+
+## Session 2 — 2026-10-01
+
+Executor S2-NORM (WP-1 NORM-CLOSE + WP-6 NORM-TS-TWINS, `📓️resume-evidence.md` §5), successor of norm-1/2/3. This section
+covers EN 1991 and EN 1990; the norm-wide closure table is in `📓️w2-w-norm-3-report.md` (Session 2). Scratch:
+`🗑️generated/s2-norm/`.
+
+Status: IN PROGRESS (started 17:43). A sqlite-snapshot peer (`ArtifactSqliteSnapshot` rollout) was editing norm snapshot
+modules at the same time (en1992, en1994, en1997 at 17:20–17:43), so every result below names the time it was taken.
+
+### S2.1 EN 1991 / EN 1990 — what this session changed and verified (to 03:45)
+
+- **Oracle phase (harness):** `⚖️mutate-en1990-1` 72/72, `🏋️mutate-en1991-1` 161/161.
+- **Wire order made canonical** (`📓️w2-w-norm-3-report.md` S2.5): both artifacts' vectors had been written key-sorted. 112
+  en1990 and 165 en1991 fixtures (`🦠️mutation`, `📸️snapshot`) were rewritten in schema order (value and float spelling
+  unchanged; the Rust law and the Python engine compare values, both unaffected); 2 en1990 and 4 en1991 schema records were
+  reordered to their Rust struct field order.
+- **TS twins:** generated (snapshot, diff, artifact, inference, text, 30 + 80 leaf twins, aggregate); the witness test
+  admits, decodes and re-encodes every en1990/en1991 mutation and snapshot byte-equal.
+- **en1990 consumers:** `🧬️schema/🧪parse-en1990-artifact.bun.ts` (run by the Rust io unit test) now asserts the shared
+  `NormWireRefusal` positions (ran: `parse-en1990-artifact:ok`); the en1990 `🪶️sqlite` companion imports the snapshot
+  twin's records (it imported the artifact twin's, whose `PermanentAction.kind` enum contradicts the Rust `String` and the
+  companion's own `"custom"` fixture); its test reads the fixture through `parseEn1990Snapshot`. sqlite suites: en1990 17/17,
+  en1991 29/29.
+- **Owed (cargo):** `cargo test --lib` en1990/en1991 + norm contract; first blocked by the gate and the hold, then by the
+  os-kernel/plugin `RecordSpecProducer` refactor (03:40: `app_commands!` expansion in every norm `✏️editor/🦀️.rs`, framework
+  code). `parity exhaustive` for both cases after that.

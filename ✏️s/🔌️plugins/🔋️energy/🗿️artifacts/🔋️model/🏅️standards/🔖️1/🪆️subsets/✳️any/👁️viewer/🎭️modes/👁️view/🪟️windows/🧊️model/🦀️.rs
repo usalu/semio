@@ -17,7 +17,16 @@ pub mod config;
 
 use crate::scene::{energy_model_scene, EnergySceneStyle};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 /// 🪟️ The viewer manifest's window-kind id — the same spelling the editor's twin uses, since the two

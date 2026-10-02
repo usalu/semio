@@ -6,6 +6,10 @@
 //! the host merges a control's own scalar under the single key `value`
 //! (`🛠️ShellHelpers/🟦️.tsx`'s `uiIntentPayload`) and a slider therefore cannot name which field it
 //! just moved. A dispatch that names neither — the bare `space` chord — toggles play/pause.
+//!
+//! Every publication is ONE plain window-config edit (design §20.1: no amend on any lane): a transport press is
+//! one edit, and a dragged phase or speed slider rides the framework's config-lane press (`gesture`/`commit`
+//! args), whose ticks stay provisional until the release publishes ONE edit and whose cancel leaves none.
 
 use crate::editor::fem3d::modes::edit::windows::results;
 use crate::editor::fem3d::modes::edit::windows::results::config::{Fem3dLoopMode, Fem3dResultsAnimation, Fem3dWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
@@ -15,11 +19,6 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoCo
 use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem3dSnapshot = crate::Fem3dSnapshot;
-
-/// 🪢️ Every playback publication amends the previous one instead of appending: a window-config
-/// store keeps a FIXED applied-edit capacity ("batched publication requires preinstalled fixed
-/// applied and revision capacity"), which a 30 fps clock would exhaust in minutes.
-pub const PLAYBACK_COALESCE_KEY: &str = "fem3d.results.playback";
 
 //#region 🔖️Clock
 /// ⏱️ The action the playback clock re-dispatches onto itself.
@@ -175,7 +174,7 @@ pub fn step(payload: &SetResultAnimation, cfg: &ConfigView<'_, NoConfig>, view: 
     let effects = if next.animation.playing && !current.animation.playing { vec![rearm_effect(&window_id)] } else { Vec::new() };
     let window_transient = clock.map(|_| results::transient::addressed_to(&window_id, None)).into_iter().collect();
     Ok(Fem3dPlaybackStep {
-        emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: playback_dirty_scope(), ..Default::default() },
+        emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, ui_scope: playback_dirty_scope(), ..Default::default() },
         window_transient,
     })
 }

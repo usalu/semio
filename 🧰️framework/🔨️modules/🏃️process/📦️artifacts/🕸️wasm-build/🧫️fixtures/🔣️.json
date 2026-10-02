@@ -1,0 +1,52 @@
+{
+  "schema": "semio.process.wasm-build.fixture/v1",
+  "policy": {
+    "version": 1,
+    "cwd": "/owner",
+    "mode": "dev",
+    "artifactDirectory": "/captures",
+    "buildDirectory": "/compiler",
+    "budgetMs": 0,
+    "packageName": "fixture-package",
+    "bindgen": {
+      "command": "wasm-bindgen",
+      "args": []
+    },
+    "wasmPack": {
+      "command": "wasm-pack",
+      "args": []
+    },
+    "searchPath": "/selected/tools",
+    "leaseDirectory": "/leases"
+  },
+  "wasmHex": "0061736d01000000",
+  "wasm": [
+    {
+      "name": "success",
+      "status": 0,
+      "output": true
+    },
+    {
+      "name": "failure",
+      "status": 1,
+      "output": false
+    },
+    {
+      "name": "missing",
+      "status": 0,
+      "output": false
+    },
+    {
+      "name": "threaded",
+      "status": 0,
+      "output": true,
+      "threads": true
+    },
+    {
+      "name": "ship",
+      "status": 0,
+      "output": true,
+      "mode": "ship"
+    }
+  ]
+}

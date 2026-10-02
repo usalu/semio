@@ -26,7 +26,66 @@
       }
     },
     "media": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/snapshot/schema.json#/$defs/Grid3dTileMedia",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "mesh"],
+          "properties": {
+                "kind": {"const": "mesh", "x-semio-ui": {"widget": "hidden", "role": "discriminator", "label": {"en": "Media Kind", "de": "Medienart"}}},
+            "mesh": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["positions", "indices"],
+              "properties": {
+                    "positions": {"type": "array", "items": {"type": "number"}, "x-semio-ui": {"widget": "hidden", "role": "value", "label": {"en": "Positions", "de": "Positionen"}}},
+                    "indices": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 4294967295}, "x-semio-ui": {"widget": "hidden", "role": "value", "label": {"en": "Triangle Indices", "de": "Dreiecksindizes"}}},
+                "color": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["r", "g", "b", "a"],
+                  "properties": {
+                        "r": {"type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Red", "de": "Rot"}, "step": 1, "precision": 0}},
+                        "g": {"type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Green", "de": "Grün"}, "step": 1, "precision": 0}},
+                        "b": {"type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Blue", "de": "Blau"}, "step": 1, "precision": 0}},
+                        "a": {"type": "integer", "minimum": 0, "maximum": 4294967295, "x-semio-ui": {"widget": "slider", "role": "value", "label": {"en": "Alpha", "de": "Deckkraft"}, "step": 1, "precision": 0}}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "child"],
+          "properties": {
+                "kind": {"const": "meshChild", "x-semio-ui": {"widget": "hidden", "role": "discriminator", "label": {"en": "Media Kind", "de": "Medienart"}}},
+            "child": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["childId", "target"],
+              "properties": {
+                "childId": {"type": "string"},
+                "target": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["artifactId", "dialect"],
+                  "properties": {
+                    "artifactId": {"type": "string"},
+                    "dialect": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["artifactKind", "standard", "subset"],
+                      "properties": {"artifactKind": {"type": "string"}, "standard": {"type": "string"}, "subset": {"type": "string"}}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -35,8 +35,8 @@ pub struct JackArtifact {
 //#region 🔖️ValueCodec
 /// 🔀️ Hand-written, not derived: `content` is a `store::ArtifactChild<S>` composed-artifact
 /// handle, which speaks `serde` (framework-internal, unaffected by this ticket) rather than
-/// `ToValue`/`FromValue` directly — bridged through the pre-existing `dsl::to_dsl_value`/
-/// `dsl::from_dsl_value` seam instead of widening the derive macro to understand child-slot
+/// `ToValue`/`FromValue` directly — bridged through the pre-existing `semio_framework_value::ToValue::to_value`/
+/// `semio_framework_value::FromValue::from_value` seam instead of widening the derive macro to understand child-slot
 /// handles. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
 /// 🔍️research/📓️serde-fanout-playbook.md`'s "composed/child-slot fields" trap.
 impl dsl::ToValue for JackArtifact {
@@ -47,7 +47,7 @@ impl dsl::ToValue for JackArtifact {
             ("manifestId".to_string(), dsl::ToValue::to_value(&self.manifest_id)),
             ("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)),
             ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
-            ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
+            ("content".to_string(), semio_framework_value::ToValue::to_value(&self.content)),
             ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
             ("query".to_string(), dsl::ToValue::to_value(&self.query)),
         ])
@@ -64,7 +64,7 @@ impl dsl::FromValue for JackArtifact {
             manifest_id: dsl::FromValue::from_value(field("manifestId")?)?,
             manifest: dsl::FromValue::from_value(field("manifest")?)?,
             camera: dsl::FromValue::from_value(field("camera")?)?,
-            content: dsl::from_dsl_value(field("content")?).map_err(dsl::ValueError::new)?,
+            content: semio_framework_value::FromValue::from_value(field("content")?)?,
             root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
             query: dsl::FromValue::from_value(field("query")?)?,
         })
@@ -125,27 +125,27 @@ impl JackArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.trinity.jack` — twenty handcrafted schema leaves.
-pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema::ArtifactSchemaDescriptor {
-    ::semio_framework_schema::ArtifactSchemaDescriptor {
+pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.trinity.jack",
-        artifact: ::semio_framework_schema::FacetLeaves {
+        artifact: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
-        snapshot: ::semio_framework_schema::FacetLeaves {
+        snapshot: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: ::semio_framework_schema::FacetLeaves {
+        diff: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: ::semio_framework_schema::FacetLeaves {
+        mutations: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

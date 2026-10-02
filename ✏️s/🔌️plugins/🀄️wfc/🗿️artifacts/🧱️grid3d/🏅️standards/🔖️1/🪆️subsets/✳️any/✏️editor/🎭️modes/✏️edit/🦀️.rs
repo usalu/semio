@@ -4,7 +4,10 @@
 
 use crate::editor::grid3d::modes::edit::tools;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const GRID3D_EDIT_MODE_ID: &str = "edit";
 

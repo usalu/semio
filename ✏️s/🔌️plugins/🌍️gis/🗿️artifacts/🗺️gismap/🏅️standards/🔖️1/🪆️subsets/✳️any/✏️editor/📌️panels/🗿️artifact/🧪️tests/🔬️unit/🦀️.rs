@@ -28,7 +28,7 @@ use semio_framework_ui_contract::TreeWindow;
 /// VIEWPORT: a host that measured room for `rows` rows must still be told the full extent of all
 /// [`GIS_MAP_LAYER_IDS`] and must still receive only what it asked for.
 fn viewport(rows: u32, requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..Default::default() }
+    ViewModel { tree_windows: requests, tree_viewport_rows: Some(rows), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn request(open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
@@ -36,7 +36,7 @@ fn request(open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
 }
 
 fn build(view: &ViewModel) -> BuiltNode {
-    render(&MapWindowConfig::default(), gis2d_labels(&ViewModel::default()), &TreeWindows::for_body(view, GIS2D_PLAY_BODY_ARTIFACT)).expect("gis2d document tree assembly")
+    render(&MapWindowConfig::default(), gis2d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(view, GIS2D_PLAY_BODY_ARTIFACT)).expect("gis2d document tree assembly")
 }
 
 fn projection(node: BuiltNode) -> String {

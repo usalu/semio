@@ -47,6 +47,7 @@ mod value_round_trip_tests {
                 on_repeat_last: None,
                 presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }),
             UiControlNode::Select(UiSelectNode {
                 id: "sel1".into(),
@@ -59,8 +60,8 @@ mod value_round_trip_tests {
             }),
             UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None }),
             UiControlNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "v".into() }], presence: UiPresence::default(), menu: None }),
-            UiControlNode::Slider(UiSliderNode { id: "sld1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: None, snaps: Vec::new(), on_change: act("slide"), presence: UiPresence::default(), menu: None }),
-            UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, min: None, max: None, precision: None, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None }),
+            UiControlNode::Slider(UiSliderNode { id: "sld1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: None, snaps: Vec::new(), on_change: act("slide"), presence: UiPresence::default(), menu: None, ..Default::default() }),
+            UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, min: None, max: None, precision: None, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None, ..Default::default() }),
             UiControlNode::Ring(UiRingNode { id: "ring1".into(), orb_id: "orb".into(), t: 0.25, on_change: act("ring"), presence: UiPresence::default(), menu: None }),
             UiControlNode::IconSelect(UiIconSelectNode { id: "icn1".into(), value: "a".into(), uniform: true, classifier_kind: "kind".into(), on_change: act("iconSelect"), presence: UiPresence::default(), menu: None }),
         ];

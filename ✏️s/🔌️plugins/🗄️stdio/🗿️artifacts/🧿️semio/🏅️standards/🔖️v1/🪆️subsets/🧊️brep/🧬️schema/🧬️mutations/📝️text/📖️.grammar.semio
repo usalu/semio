@@ -38,7 +38,8 @@ solid-shell = "[" hex "," bool "]"
 solid-shell-list = "[" solid-shell-items? "]"
 solid-shell-items = solid-shell {"," solid-shell}*
 hex-list = "[" hex-items? "]"
-hex-items = hex {"," hex}*
+hex-items = loop-id {"," loop-id}*
+loop-id = "[" hex "]"
 
 curve = "L" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "E" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number-list "]"
 surface = "P" "[" point3 "," point3 "]" | "C" "[" point3 "," point3 "," number "]" | "O" "[" point3 "," point3 "," number "," number "]" | "S" "[" point3 "," number "]" | "T" "[" point3 "," point3 "," number "," number "]" | "N" "[" point3-list "," number-list "," number "," number "," number "," number "," number-list "," number-list "]"
@@ -50,7 +51,7 @@ number-list = "[" number-items? "]"
 number-items = number {"," number}*
 bool = "0" | "1"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO — a run of lowercase hex digits (`enc_str`/`hex_encode`'s own alphabet), incl. the

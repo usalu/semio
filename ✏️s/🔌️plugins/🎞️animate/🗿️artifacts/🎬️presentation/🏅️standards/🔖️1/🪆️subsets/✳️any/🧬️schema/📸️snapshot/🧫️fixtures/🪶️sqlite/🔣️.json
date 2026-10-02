@@ -1,0 +1,93 @@
+{
+  "snapshot": {
+    "schema": "animate.presentation 世界\u0000",
+    "source": {
+      "src": "image 世界\u0000",
+      "kind": "image",
+      "frame": {
+        "x": 0,
+        "y": 0.25,
+        "width": 2.5,
+        "height": -3.75
+      },
+      "sourceAspect": 1.5,
+      "pdfPage": 4294967295
+    },
+    "tiles": [
+      {
+        "id": "tile\u0000",
+        "name": "",
+        "crop": {
+          "x": 1,
+          "y": 2,
+          "width": 3,
+          "height": 4
+        }
+      },
+      {
+        "id": "tile\u0000",
+        "name": "duplicate allowed",
+        "crop": {
+          "x": -5,
+          "y": 6,
+          "width": -7,
+          "height": 8
+        }
+      }
+    ],
+    "presentation": {
+      "childId": "presentation child",
+      "target": {
+        "artifactId": "",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "presentation"
+        }
+      }
+    },
+    "animation": {
+      "childId": "animation child",
+      "target": {
+        "artifactId": "!@/\u0000世界",
+        "dialect": {
+          "artifactKind": "",
+          "standard": "",
+          "subset": ""
+        }
+      }
+    }
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8123456789abc",
+    "fff123456789abcd"
+  ],
+  "malformedSql": [
+    "DELETE FROM presentation_source",
+    "DELETE FROM presentation_child WHERE slot='animation'",
+    "UPDATE presentation_child SET slot='presentation'",
+    "UPDATE presentation_child SET document_id=0",
+    "UPDATE presentation_source SET document_id=2",
+    "UPDATE presentation_tile SET ordinal=0",
+    "UPDATE presentation_tile SET ordinal=99",
+    "UPDATE presentation_tile SET document_id=0",
+    "UPDATE presentation_source SET pdf_page=4294967296",
+    "UPDATE presentation_source SET source_aspect_bits=NULL",
+    "UPDATE presentation_tile SET x_class='nan'",
+    "UPDATE presentation_source SET kind=x'00'"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeTextBytes": 131073,
+    "maxOwnedBytes": 65536,
+    "tinyFileBytes": 1024
+  }
+}
+

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "cwd": "/owner",
+  "cacheRoot": "/cache",
+  "leaseDirectory": "/leases"
+}

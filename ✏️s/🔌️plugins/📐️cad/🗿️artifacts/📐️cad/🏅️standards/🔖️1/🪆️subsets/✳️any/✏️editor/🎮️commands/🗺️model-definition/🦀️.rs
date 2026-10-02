@@ -2,7 +2,7 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, CadPlayRuntime};
+use crate::editor::cad::{publish_engagement, reset_document_effect, snapshot_of, CadPlayRuntime};
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
 use crate::CadSnapshot;
@@ -40,7 +40,8 @@ pub mod set_active_example {
             ..CadPlayRuntime::default()
         };
         let mut emit = Emit { effects: vec![reset_document_effect(&scene)], ..Default::default() };
-        emit.config_mutations = vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?];
+        emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)?];
+        publish_engagement(&runtime, ctx);
         Ok(emit)
     }
 }

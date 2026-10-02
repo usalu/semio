@@ -14,9 +14,10 @@ use store::PackError;
 
 //#region 🔖️ArtifactPack
 impl store::ArtifactPack for FormsSnapshot {
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.validate().map_err(store::PackError::Schema)?;
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let inner = store::pack_rt::encode_document(&crate::schema::snapshot::native_pack::record_spec(), &crate::schema::snapshot::native_pack::record(self).map_err(store::PackError::Schema)?, options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
@@ -25,13 +26,13 @@ impl store::ArtifactPack for FormsSnapshot {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        let snapshot = Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
+        let (record, _report) = store::pack_rt::decode_document(&inner, &crate::schema::snapshot::native_pack::record_spec(), options)?;
+        let snapshot = crate::schema::snapshot::native_pack::reconstruct_record(&record).map_err(store::text_error_to_pack_error)?;
         snapshot.validate().map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
     fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(Self::__dsl_spec())
+        Some(crate::schema::snapshot::native_pack::record_spec())
     }
 }
 //#endregion 🔖️ArtifactPack

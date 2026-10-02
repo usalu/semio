@@ -22,8 +22,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetViewBox {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
         agg_inverse(&SvgTinyMutation::SetViewBox(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set view box", "ViewBox setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set view box", "ViewBox setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

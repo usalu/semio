@@ -1,7 +1,7 @@
 //! ♻️ Typed property-tree retirement releases one nested owner per granted step.
 
 use super::PropertyValue;
-use dsl_core::os_store::retirement::{RetireOwned, RetirementCursor, RetirementStep};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};
 
 struct PropertyRetirement(std::mem::ManuallyDrop<Option<PropertyValue>>);
 impl RetirementCursor for PropertyRetirement {

@@ -14,9 +14,9 @@
     { "id": "publish-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", "all"] }
   ],
   "guestFrameworkChecks": [
-    { "target": "wasm32-wasip2", "packages": ["semio-framework", "semio-framework-replication", "semio-framework-os-kernel", "semio-framework-os", "semio-framework-plugin"], "features": ["semio-framework-plugin/component-guest", "semio-framework-os-kernel/deflate", "semio-framework-replication/deflate"] },
-    { "target": "wasm32-unknown-unknown", "packages": ["semio-framework-os-kernel"], "features": ["semio-framework-os-kernel/sync"] },
-    { "target": "wasm32-unknown-unknown", "packages": ["semio-framework-os-renderer-wgpu"], "features": [] },
-    { "target": "wasm32-wasip2", "packages": ["semio-s-plugin-stdio"], "features": [] }
+    { "target": "wasm32-wasip2", "workspace": "Cargo.toml", "packages": ["semio-framework", "semio-framework-replication", "semio-framework-os-kernel", "semio-framework-os", "semio-framework-plugin"], "features": ["semio-framework-plugin/component-guest", "semio-framework-os-kernel/deflate", "semio-framework-replication/deflate"] },
+    { "target": "wasm32-unknown-unknown", "workspace": "Cargo.toml", "packages": ["semio-framework-os-kernel"], "features": ["semio-framework-os-kernel/sync"] },
+    { "target": "wasm32-unknown-unknown", "workspace": "Cargo.toml", "packages": ["semio-framework-os-renderer-wgpu"], "features": [] },
+    { "target": "wasm32-wasip2", "workspace": "✏️s/Cargo.toml", "packages": ["semio-s-plugin-stdio"], "features": [] }
   ]
 }

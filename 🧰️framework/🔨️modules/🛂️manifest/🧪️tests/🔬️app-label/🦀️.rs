@@ -156,7 +156,7 @@ async fn action_arg_def_builder_chain() {
     let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(&1.0).describe(LocalizedLabel::native("scale factor", "Skalierungsfaktor"));
     assert_eq!(arg.id, "scale");
     assert!(arg.required);
-    assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
+    assert_eq!(arg.default, Some(semio_framework_value::ToValue::to_value(&1.0f64)));
     assert_eq!(arg.description.as_ref().map(|description| description.resolve(Terminology::Native, Locale::De)), Some("Skalierungsfaktor"));
     assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
 }

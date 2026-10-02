@@ -5,6 +5,8 @@ use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteSnapshotControl a
 const PAGE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4)];
 
 impl store::ArtifactSqliteSnapshot for PdfSnapshot {
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,String>{control.checkpoint(Phase::EncodeNative,0,0)?;control.check_rows(self.pages.len().checked_add(1).ok_or("PDF page count overflow")?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,String>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),Self::__dsl_from_record_controlled,control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(), String> {
         let mut bound = sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;

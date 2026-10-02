@@ -12,7 +12,7 @@ async fn schema_document_authority_follows_portable_owner_corpus() {
         for dependency in input["dependencies"].as_array().expect("dependencies") {
             builder = builder.depends_on(dependency.as_str().expect("dependency identity"), semio_framework::tree_pin!());
         }
-        let result = builder.schema_documents(owner, semio_framework_schema::ScopeSchemaExports { scope, exports: &[] }).try_build();
+        let result = builder.schema_documents(owner, semio_framework_schema_registry::ScopeSchemaExports { scope, exports: &[] }).try_build();
         assert_eq!(result.is_ok(), row["accepted"].as_bool().expect("expected authority"), "{}", row["id"]);
         if let Err(error) = result {
             assert_eq!(error.code, "plugin-assembly.schema-documents-owner");

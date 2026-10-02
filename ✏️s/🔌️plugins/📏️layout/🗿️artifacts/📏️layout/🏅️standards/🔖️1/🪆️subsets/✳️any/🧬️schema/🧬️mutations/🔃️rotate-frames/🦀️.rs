@@ -31,10 +31,10 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RotateFrames {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         layout_frame_selection_inverse(base, &self.page_id, diff_rotate_frames(self, base))
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = layout_label_number(self.angle.to_degrees());
         let (en, de) = layout_label_frames(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone()]

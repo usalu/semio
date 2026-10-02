@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Edit run #{}", self.index), &format!("Textlauf #{} bearbeiten", self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit run #{}", self.index), &format!("Textlauf #{} bearbeiten", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

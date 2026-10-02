@@ -17,6 +17,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }

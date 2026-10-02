@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireOccupa
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change occupancy for fire design", "Nutzungsart für die Brandschutzbemessung ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change occupancy for fire design", "Nutzungsart für die Brandschutzbemessung ändern")
     }
 }
 //#endregion 🔖️Payload

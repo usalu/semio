@@ -12,6 +12,8 @@ pub(crate) mod context {
     pub(crate) fn sourcing_manifest_for_tests() -> App {
         App { definition: create_sourcing_curation_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("sourcing", SourcingCurationApp, sourcing_manifest_for_tests, "../..");
     
     /// 🧪️ The app wired to the real manifest registry — the ONLY constructor this app has.
     /// `semio_framework_plugin::artifact_app_laws::new_app`'s bare, registry-less instance is unreachable here:
@@ -95,7 +97,7 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render").root).expect("render json")
     }
 
     /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
@@ -111,7 +113,7 @@ pub(crate) mod context {
 
     /// 📊️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
     pub async fn table_of(app: &mut SourcingApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
-        let rendered = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let rendered = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
         let scene = table_scene_of(&rendered.root).expect("a table scene in the rendered body");
         let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
         let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
@@ -516,7 +518,7 @@ fn every_command() -> Vec<SourcingCurationCommand> {
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_resolve_german() {
     let def = &create_sourcing_curation_app();
-    let (terminology, locale) = (semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De);
+    let (terminology, locale) = (semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De);
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == pool::SOURCING_CURATION_WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == curated::SOURCING_CURATION_WINDOW_CURATED).expect("curated window").label.resolve(terminology, locale), "Kuratiert");
     assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATION_MODE_CURATION).expect("curation mode").label.resolve(terminology, locale), "Kuratierung");

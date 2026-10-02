@@ -15,19 +15,22 @@
     {
       "toolId": "importFramePayload",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "WindowTransient"
       ]
     },
     {
       "toolId": "importVideoFramePayload",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "WindowTransient"
       ]
     },
     {
       "toolId": "importVideoDone",
       "lanes": [
-        "Artifact"
+        "Artifact",
+        "WindowTransient"
       ]
     },
     {
@@ -221,6 +224,13 @@
       "lanes": [
         "Artifact"
       ]
+    },
+    {
+      "toolId": "importAbort",
+      "lanes": [
+        "Artifact",
+        "WindowTransient"
+      ]
     }
   ],
   "routes": [
@@ -398,6 +408,11 @@
       "id": "setActiveExample",
       "execution": "bounded",
       "feature": "replace the open document with one committed example in a single bounded first step"
+    },
+    {
+      "id": "importAbort",
+      "execution": "bounded",
+      "feature": "revert the import's open streamed transaction with zero trace"
     }
   ],
   "oracle": {
@@ -406,8 +421,8 @@
     "ownedInterface": "RemodelingRetainedCatalogOracle",
     "runtimeDependency": false,
     "expected": {
-      "routes": 40,
-      "bounded": 40,
+      "routes": 36,
+      "bounded": 36,
       "resumable": 0,
       "unique": true
     }

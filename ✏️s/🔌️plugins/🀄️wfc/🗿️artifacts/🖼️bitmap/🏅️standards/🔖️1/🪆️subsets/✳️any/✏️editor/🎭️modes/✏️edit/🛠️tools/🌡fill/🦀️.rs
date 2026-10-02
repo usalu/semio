@@ -7,7 +7,13 @@ use crate::editor::bitmap::modes::edit::windows::output;
 use crate::editor::bitmap::transient::SetSolve;
 use crate::schema::snapshot::{decode_base64, encode_base64, BitmapSnapshot};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobPayloadStream, StepContext, StepOutcome};
-use semio_framework_plugin::{Effect, EditorApp, Fault, LocalizedLabel, RequestId, ToolDefinition, ToolRunJobRequest};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::RequestId;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunStageDefinition, ToolRunState, ToolRunStepArg,
     ToolRunStepKind, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "📐 This subset's own contribution — the point cloud playground (4 of s.mathematical.equation's 15 mutation kinds; ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). None of the four reach any exported carrier — EquationIntoCsv writes only graph nodes, and the JSON export skips the composed-child scene entirely — so all four fall to the equation-mutation-semantics noOracleDecision recorded on the ✳️graph sibling (the merged test registry resolves it from there; it need not be duplicated per subset).",
   "oracles": [],

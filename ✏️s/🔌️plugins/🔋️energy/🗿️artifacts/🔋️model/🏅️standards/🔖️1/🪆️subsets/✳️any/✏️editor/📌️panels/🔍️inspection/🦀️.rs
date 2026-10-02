@@ -32,10 +32,27 @@ use crate::editor::model::modes::edit::windows::simulation::SET_RESULT_FIELD_ACT
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Surface, Thermostat, Zone};
 use crate::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
-use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, ActionId, BuiltNode, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, Trigger, UiAssemblyResult,
-    UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -543,42 +560,30 @@ fn bind_full<B: HasBase>(builder: B, thermostat: &Thermostat, field: &str) -> Ui
     }
 }
 
-/// 📍️ The site's five scalars, each carrying the other four so the singleton `set-site` payload
-/// stays complete — the same "one wide payload, one edited key" shape the thermostat uses.
+/// 📍️ The site's five scalars, each a continuous control that presses exactly its own `change-site-<field>` leaf.
 fn site_rows(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let site = &model.site;
     let mut rows = UiFixedList::default();
-    push(&mut rows, site_number("site.latitude", say(locale, "Latitude (°)", "Breitengrad (°)"), site, "latitudeDeg", site.latitude_deg))?;
-    push(&mut rows, site_number("site.longitude", say(locale, "Longitude (°)", "Längengrad (°)"), site, "longitudeDeg", site.longitude_deg))?;
-    push(&mut rows, site_number("site.elevation", say(locale, "Elevation (m)", "Höhe (m)"), site, "elevationM", site.elevation_m))?;
-    push(&mut rows, site_number("site.time-zone", say(locale, "Time zone (h)", "Zeitzone (h)"), site, "timeZoneHours", site.time_zone_hours))?;
-    push(&mut rows, site_number("site.north-axis", say(locale, "North axis (°)", "Nordachse (°)"), site, "northAxisDeg", site.north_axis_deg))?;
+    push(&mut rows, site_number("site.latitude", say(locale, "Latitude (°)", "Breitengrad (°)"), "latitudeDeg", site.latitude_deg))?;
+    push(&mut rows, site_number("site.longitude", say(locale, "Longitude (°)", "Längengrad (°)"), "longitudeDeg", site.longitude_deg))?;
+    push(&mut rows, site_number("site.elevation", say(locale, "Elevation (m)", "Höhe (m)"), "elevationM", site.elevation_m))?;
+    push(&mut rows, site_number("site.time-zone", say(locale, "Time zone (h)", "Zeitzone (h)"), "timeZoneHours", site.time_zone_hours))?;
+    push(&mut rows, site_number("site.north-axis", say(locale, "North axis (°)", "Nordachse (°)"), "northAxisDeg", site.north_axis_deg))?;
     Ok(rows)
 }
 
-/// 📍️ Same shape as [`thermostat_args`]: all five scalars at their current values plus the `field`
-/// marker the bridge uses to route the host-merged `value`. Dropping the edited key instead (the
-/// earlier shape) made every site edit write 0.0.
-fn site_args(site: &crate::model::Site, edited: &str) -> UiAssemblyResult<UiValue> {
+/// 📍️ A site control authors only the `field` marker the bridge routes the host-merged `value` to: one press sets one
+/// field (`change-site-<field>`), and the other site fields are never re-sent from a render that may be stale.
+fn site_args(edited: &str) -> UiAssemblyResult<UiValue> {
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
-    let entries: Vec<(&str, String)> = vec![
-        ("elevationM", site.elevation_m.to_string()),
-        ("field", edited.to_string()),
-        ("latitudeDeg", site.latitude_deg.to_string()),
-        ("longitudeDeg", site.longitude_deg.to_string()),
-        ("northAxisDeg", site.north_axis_deg.to_string()),
-        ("timeZoneHours", site.time_zone_hours.to_string()),
-    ];
-    for (key, value) in entries {
-        args.push(key.to_owned(), ui_value_text(value)?).map_err(|_| ui_error("ui.value.map.entry"))?;
-    }
+    args.push("field".to_owned(), ui_value_text(edited.to_string())?).map_err(|_| ui_error("ui.value.map.entry"))?;
     Ok(UiValue::Map(args.finish()))
 }
 
-fn site_number(suffix: &str, label: &str, site: &crate::model::Site, field: &str, value: f64) -> UiAssemblyResult<BuiltNode> {
+fn site_number(suffix: &str, label: &str, field: &str, value: f64) -> UiAssemblyResult<BuiltNode> {
     let row_id = format!("{ROOT}.{suffix}");
     let control = ui_id(ui::input(InputKind::Number).value(ui_text(format!("{value}"))?).step(0.1), format!("{row_id}.input"))?;
-    let (action, args) = energy_model_action(SET_SITE_ACTION_ID, Some(site_args(site, field)?))?;
+    let (action, args) = energy_model_action(SET_SITE_ACTION_ID, Some(site_args(field)?))?;
     let control = match args {
         Some(args) => control.try_on_with(Trigger::Change, action, args).map_err(|_| ui_error("ui.control.binding"))?,
         None => control.try_on(Trigger::Change, action).map_err(|_| ui_error("ui.control.binding"))?,

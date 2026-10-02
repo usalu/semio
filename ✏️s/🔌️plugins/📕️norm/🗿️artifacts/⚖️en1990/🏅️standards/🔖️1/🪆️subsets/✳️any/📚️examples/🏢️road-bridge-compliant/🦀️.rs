@@ -1,6 +1,7 @@
 //! 📚️ Example `road-bridge-compliant` — CC2 road bridge with Annex A2.4 SLS within limits.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 use crate::{BridgeSls, Member, MemberEffect, PermanentAction, VariableAction};
 
 pub const ID: &str = "road-bridge-compliant";

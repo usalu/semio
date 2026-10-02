@@ -361,6 +361,9 @@ pub struct GraphHost {
     /// gesture, read once by [`GraphHost::take_selection_gather`] so the caller can dispatch it as ONE
     /// batched `interactionSelect` — no merge algebra lives here, `next_selection` owns that.
     pending_gather: Option<SelectionGather>,
+    /// ✋️ (c) Preview/Effect — every node's position at the screen-path press, so the release journals what the
+    /// gesture moved as node-graph gesture records (design §13.3); empty outside a screen-path gesture.
+    press_positions: Vec<(String, f64, f64)>,
     interaction_revision: u64,
     interaction_projection: Option<dag::DagInteractionProjection>,
 }
@@ -375,7 +378,7 @@ impl GraphHost {
     pub fn from_host_snapshot(fixture: DagHostSnapshot) -> Self {
         let dag = DagHost::from_host_snapshot_without_layout(fixture);
         let interaction_projection = dag.bounded_interaction_projection(0).ok();
-        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, viewport_size: (1, 1, 1.0), pending_gather: None, interaction_revision: 0, interaction_projection }
+        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, viewport_size: (1, 1, 1.0), pending_gather: None, press_positions: Vec::new(), interaction_revision: 0, interaction_projection }
     }
 
     fn refresh_interaction_projection(&mut self) {
@@ -570,6 +573,7 @@ impl GraphHost {
         if self.interaction_revision != plan.expected_revision() {
             return false;
         }
+        self.press_positions.clear();
         self.dag.apply_pointer_plan(&plan);
         self.interaction_projection = Some(*plan.projection());
         self.interaction_revision = plan.projection().revision();
@@ -591,6 +595,7 @@ impl GraphHost {
     pub fn pointer_down_screen(&mut self, position: [f64; 2], button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         let [sx, sy] = position;
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.press_positions = if pan { Vec::new() } else { self.dag.node_positions() };
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
@@ -611,12 +616,21 @@ impl GraphHost {
         let was_marquee = !self.dag.preselect_widget_ids().is_empty();
         let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+        let baseline = std::mem::take(&mut self.press_positions);
+        self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline);
         let target_ids = self.dag.selected_node_ids();
         self.pending_gather = if target_ids.is_empty() { None } else { Some(SelectionGather { target_ids, method }) };
     }
 
+    /// 🔗️ Drains what the last gesture did to the graph as the `nodeGraphEdit` arguments the renderer dispatches
+    /// (`dag::dag_graph_edit_rows_json`, design §13.3) — never the whole fixture.
+    pub fn take_graph_edits_json(&mut self) -> String {
+        dag::dag_graph_edit_rows_json(self.dag.take_graph_edits())
+    }
+
     pub fn pointer_cancel_screen(&mut self) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.press_positions.clear();
         self.pending_gather = None;
         self.dag.pointer_cancel_screen();
         self.refresh_interaction_projection();
@@ -651,8 +665,14 @@ impl GraphHost {
         self.dag.entity_screen_json(domain, id)
     }
 
+    /// 📐️ Aligns or distributes the selection and journals what it moved as node-graph gesture records (design §13.3),
+    /// which [`Self::take_graph_edits_json`] drains.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
-        Ok(self.dag.align_selection(mode)?)
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        let baseline = self.dag.node_positions();
+        self.dag.align_selection(mode)?;
+        self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline);
+        Ok(())
     }
 
     pub fn host_snapshot_json(&self) -> Result<String, NodeGraphError> {
@@ -671,14 +691,15 @@ pub struct GraphHostRetirement {
     controls_json: String,
     capabilities_json: String,
     pending_gather: Option<SelectionGather>,
+    press_positions: Vec<(String, f64, f64)>,
     interaction_projection: Option<dag::DagInteractionProjection>,
     terminal: bool,
 }
 
 impl GraphHostRetirement {
     pub fn new(host: GraphHost) -> Self {
-        let GraphHost { dag, catalogue_json, controls_json, capabilities_json, last_payload_signature: _, viewport_size: _, pending_gather, interaction_revision: _, interaction_projection } = host;
-        Self { dag: Some(dag::DagHostRetirement::new(dag)), catalogue_json, controls_json, capabilities_json, pending_gather, interaction_projection, terminal: false }
+        let GraphHost { dag, catalogue_json, controls_json, capabilities_json, last_payload_signature: _, viewport_size: _, pending_gather, press_positions, interaction_revision: _, interaction_projection } = host;
+        Self { dag: Some(dag::DagHostRetirement::new(dag)), catalogue_json, controls_json, capabilities_json, pending_gather, press_positions, interaction_projection, terminal: false }
     }
 
     pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
@@ -712,6 +733,10 @@ impl GraphHostRetirement {
             context.consume_fuel(1);
             return false;
         }
+        if self.press_positions.pop().is_some() {
+            context.consume_fuel(1);
+            return false;
+        }
         if self.interaction_projection.take().is_some() {
             context.consume_fuel(1);
             return false;
@@ -722,7 +747,7 @@ impl GraphHostRetirement {
     }
 
     pub fn terminal_nonopaque_is_empty(&self) -> bool {
-        self.terminal && self.dag.is_none() && self.catalogue_json.is_empty() && self.controls_json.is_empty() && self.capabilities_json.is_empty() && self.pending_gather.is_none() && self.interaction_projection.is_none()
+        self.terminal && self.dag.is_none() && self.catalogue_json.is_empty() && self.controls_json.is_empty() && self.capabilities_json.is_empty() && self.pending_gather.is_none() && self.press_positions.is_empty() && self.interaction_projection.is_none()
     }
 }
 
@@ -831,7 +856,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = pointerDownScreen)]
         pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, false);
+            self.state.borrow_mut().host.pointer_down_screen([sx, sy], button, shift, ctrl_or_meta, alt, false);
         }
 
         #[wasm_bindgen(js_name = pointerMoveScreen)]
@@ -980,6 +1005,12 @@ mod wasm_session {
         #[wasm_bindgen(js_name = alignSelection)]
         pub fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// 🔗️ Drains the last gesture's (or align's) graph edits as the `nodeGraphEdit` arguments to dispatch.
+        #[wasm_bindgen(js_name = takeGraphEditsJson)]
+        pub fn take_graph_edits_json(&self) -> String {
+            self.state.borrow_mut().host.take_graph_edits_json()
         }
 
         #[wasm_bindgen(js_name = hostSnapshotJson)]

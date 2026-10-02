@@ -11,7 +11,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..Default::default() };
+    let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let result: Result<(), String> = async {
         let mut seed = crate::empty_wires_snapshot();
         seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
@@ -19,8 +19,8 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         let files = store::print_document_pack(&envelope).await;
         let mut retirement = store::retire_document_envelope(
             envelope,
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
         );
         for _ in 0..100_000 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
@@ -155,7 +155,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let mut seed = crate::empty_wires_snapshot();
@@ -166,8 +166,8 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
         let mut retirement = store::retire_document_envelope(
             envelope,
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
         );
         for _ in 0..100_000 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
@@ -238,7 +238,7 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let mut seed = crate::empty_wires_snapshot();
@@ -248,8 +248,8 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
         app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
         let mut retirement = store::retire_document_envelope(
             envelope,
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
         );
         for _ in 0..100_000 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
@@ -326,7 +326,7 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     }
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: ["canvas-left", "canvas-right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..Default::default() };
+    let view = ViewModel { window_instances: ["canvas-left", "canvas-right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("canvas-left").unwrap();
     let right = view.for_window_instance("canvas-right").unwrap();
     let result: Result<(), String> = async {
@@ -388,7 +388,7 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await;
     app.bind_instance_id(1).await;
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let mut seed = crate::empty_wires_snapshot();
@@ -398,8 +398,8 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
         let mut retirement = store::retire_document_envelope(
             envelope,
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
-            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
         );
         for _ in 0..100_000 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {

@@ -1,7 +1,6 @@
 //! 📜️ Compile-time graph manifest kernel: schema, registry, and strict validation.
 
-use neural_engine::Value;
-pub use neural_engine::ValueType;
+use semio_framework_value::{ValueKind, ValueType};
 
 pub use crate::manifest::Manifest as GraphManifest;
 
@@ -646,19 +645,18 @@ fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> b
     match value {
         PropertyValue::Object(_) if matches!(expected, ValueType::Schema(_)) => true,
         _ => {
-            let neural = property_value_to_neural(value);
-            expected.matches(&neural)
+            expected.matches(property_value_kind(value))
         }
     }
 }
 
-fn property_value_to_neural(value: &PropertyValue) -> Value {
+fn property_value_kind(value: &PropertyValue) -> ValueKind<'_> {
     match value {
-        PropertyValue::Null => Value::null(),
-        PropertyValue::Bool(b) => Value::Atom(neural_engine::Atom::Boolean(*b)),
-        PropertyValue::Number(n) => Value::Atom(neural_engine::Atom::Decimal(*n)),
-        PropertyValue::String(s) => Value::Atom(neural_engine::Atom::String(s.clone())),
-        PropertyValue::Array(_) | PropertyValue::Object(_) => Value::Atom(neural_engine::Atom::Null),
+        PropertyValue::Null => ValueKind::Null,
+        PropertyValue::Bool(_) => ValueKind::Boolean,
+        PropertyValue::Number(_) => ValueKind::Decimal,
+        PropertyValue::String(_) => ValueKind::Text,
+        PropertyValue::Array(_) | PropertyValue::Object(_) => ValueKind::Null,
     }
 }
 
@@ -691,3 +689,7 @@ pub struct TrinityEdgeRef<'a> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 // #endregion 🔖️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🏷️type/🦀️.rs"]
+mod type_tests;

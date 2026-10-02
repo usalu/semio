@@ -33,7 +33,7 @@ pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_p
 pub async fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.shome".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("S Home", "S-Start"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("S Home", "S-Start"),
         source_format: S_HOME_DOCUMENT_SCHEMA.into(),
         component_kind: "home".into(),
         dimension: "data".into(),
@@ -107,6 +107,17 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
         .try_build()
 }
 //#endregion 🔖️Declaration
+
+/// 🏠️ Register the same authored document capability without an app assembly.
+#[cfg(not(feature = "component-app-assembly"))]
+pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)
+        .try_build()
+}
 
 #[path = "."]
         pub mod standards {

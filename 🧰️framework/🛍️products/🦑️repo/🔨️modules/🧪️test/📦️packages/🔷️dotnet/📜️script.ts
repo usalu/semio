@@ -5,7 +5,7 @@ import { runCmd } from "../../../📚️library/📦️packages/🟦️typescrip
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { repoCacheDirectory } from "../../../📚️library/⚡️caching/🟦️.ts";
-import { stageArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 const project = "🧪️Semio.Repo.Test.csproj";
 const nativeState = (root: string): string => repoCacheDirectory(root, "dotnet", "repo-test");
@@ -23,7 +23,7 @@ class BuildScript extends BundleScript {
     if (args.length) throw new Error("The .NET support library has one Release artifact contract");
     const output = join(nativeState(this.repoRoot), "deliverables");
     runCmd("dotnet", ["build", project, "--no-restore", "--configuration", "Release", "--artifacts-path", nativeState(this.repoRoot), "--output", output, `-p:PathMap=${this.repoRoot}=/_/`, "-p:ContinuousIntegrationBuild=true"], { cwd: import.meta.dir });
-    await stageArtifacts(join(import.meta.dir, "dist/build"), "@semio-tech/repo-test-dotnet:build", new Map(readdirSync(output, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => [entry.name, join(output, entry.name)])));
+    await stageRepositoryArtifacts(join(import.meta.dir, "dist/build"), "@semio-tech/repo-test-dotnet:build", new Map(readdirSync(output, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => [entry.name, join(output, entry.name)])));
   }
 }
 

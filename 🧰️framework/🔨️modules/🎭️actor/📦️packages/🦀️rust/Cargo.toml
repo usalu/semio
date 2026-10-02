@@ -31,6 +31,7 @@ path = "🦀️.rs"
 typegen = []
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-job = { workspace = true }
 # 🧱️ `boxed_fixed_slots` — `JobReplayLog`'s fixed record table is built straight on the heap so a

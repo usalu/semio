@@ -25,8 +25,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_page_height(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change page \"{}\" height", self.id), &format!("Höhe von Seite \"{}\" ändern", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change page \"{}\" height", self.id), &format!("Höhe von Seite \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

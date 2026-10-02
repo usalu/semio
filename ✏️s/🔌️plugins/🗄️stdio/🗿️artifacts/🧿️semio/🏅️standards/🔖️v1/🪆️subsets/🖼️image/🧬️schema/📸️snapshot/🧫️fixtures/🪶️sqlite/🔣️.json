@@ -45,5 +45,12 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "controlledAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "largeBytes": 100000,
+    "smallOwnedBytes": 128
+  },
+  "nativeOutputBytes": 100000
 }

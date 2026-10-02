@@ -602,7 +602,7 @@ async fn din4108_10_wrong_application_fails_and_remedy_passes() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn oracle_manifest_mutation_vectors_match_kinds_len() {
+async fn oracle_manifest_fixture_coverage_counts_every_catalog_scenario() {
     let text = std::fs::read_to_string(family_any_dir().join("🔮️oracles/🔣️.json")).expect("oracle manifest");
     let v: serde_json::Value = serde_json::from_str(&text).expect("json");
     let vectors = v["oracles"]
@@ -612,11 +612,11 @@ async fn oracle_manifest_mutation_vectors_match_kinds_len() {
         .find(|o| o["id"] == "din4108-1-python-independent")
         .and_then(|o| o["nativeSecondImplementation"]["fixtureCoverage"]["vectors"].as_u64())
         .expect("vectors");
-    assert_eq!(
-        vectors as usize,
-        crate::standards::v1::subsets::any::schema::mutations::KINDS.len(),
-        "oracle fixtureCoverage.vectors must equal Din4108Mutation::KINDS len"
-    );
+    let catalog = v["mutationCatalogs"][0]["vectors"].as_array().expect("catalog vectors");
+    let scenarios: usize = catalog.iter().map(|vector| vector["scenarios"].as_array().map_or(0, Vec::len)).sum();
+    let kinds: Vec<&str> = catalog.iter().filter_map(|vector| vector["mutationId"].as_str()).collect();
+    assert_eq!(vectors as usize, scenarios, "oracle fixtureCoverage.vectors must count every committed catalog scenario");
+    assert_eq!(kinds, crate::standards::v1::subsets::any::schema::mutations::KINDS, "the catalog must hold one vector per Din4108Mutation kind, in declaration order");
 }
 
 

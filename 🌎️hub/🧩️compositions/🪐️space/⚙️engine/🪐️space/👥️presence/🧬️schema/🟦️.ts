@@ -1,4 +1,4 @@
-/** 🧬️ SpacePresence */
+/** 👥️ Hub Studio presence. @see https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/presence/schema.json */
 export interface SpacePresence {
   /** @state presence */
   camera: Record<string, SpaceWindowCamera>;

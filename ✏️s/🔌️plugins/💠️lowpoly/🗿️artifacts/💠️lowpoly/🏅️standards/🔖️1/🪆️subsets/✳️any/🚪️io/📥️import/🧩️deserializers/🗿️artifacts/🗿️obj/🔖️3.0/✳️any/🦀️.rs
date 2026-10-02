@@ -22,7 +22,7 @@ pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot,
     let polygon = |face_index: usize| -> Vec<u32> { from.faces[face_index].vertices.iter().map(|fv| fv.vertex).collect() };
 
     // 🏷️ Face ownership: `o` objects first, else the first `g` group naming the face.
-    let named: Vec<(String, &Vec<usize>)> = if !from.objects.is_empty() {
+    let named: Vec<(String, &Vec<u64>)> = if !from.objects.is_empty() {
         from.objects.iter().map(|o| (o.name.clone(), &o.faces)).collect()
     } else {
         from.groups.iter().map(|g| (g.name.clone(), &g.faces)).collect()
@@ -30,7 +30,7 @@ pub fn snapshot_from_obj_geometry(from: &ObjSnapshot) -> Result<LowpolySnapshot,
     let mut owner: Vec<Option<usize>> = vec![None; from.faces.len()];
     for (part_index, (_, faces)) in named.iter().enumerate() {
         for &face in faces.iter() {
-            if let Some(slot) = owner.get_mut(face) {
+            if let Some(slot) = usize::try_from(face).ok().and_then(|index| owner.get_mut(index)) {
                 if slot.is_none() {
                     *slot = Some(part_index);
                 }

@@ -1,7 +1,9 @@
 //! ✏️ Txt editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.txt@utf-8/*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`TextWindowKit`), replacing the whole buffer through the direct line, line-ending, and trailing-newline mutations
-//! (`txt_replacement_mutations`: every intermediate document stays a native shape).
+//! (`TextWindowKit`): an explicit Apply is ONE edit of the net line leaves that carry the document to the applied text
+//! (`txt_net_mutations`: the lines unchanged at either end stay untouched), and only a change of line ending or terminator is
+//! the whole-buffer lowering through the direct line, line-ending, and trailing-newline mutations (`txt_replacement_mutations`:
+//! every intermediate document stays a native shape).
 
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
@@ -9,11 +11,39 @@ use crate::schema::mutation_support::{native_snapshot_error, txt_usize_to_u32};
 use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
-    Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
@@ -214,7 +244,46 @@ fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revisi
     if let Some(reason) = native_snapshot_error(&next) {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.txt.replace-text-unrepresentable"), reason));
     }
-    Ok(Emit { artifact_mutations: txt_replacement_mutations(snapshot, &next)?, description: Some("Replace text".into()), ..Default::default() })
+    let artifact_mutations = match txt_net_mutations(snapshot, &next) {
+        Some(leaves) => leaves,
+        None => txt_replacement_mutations(snapshot, &next)?,
+    };
+    Ok(Emit::mutations(artifact_mutations))
+}
+
+/// 🧮️ The net line leaves of one applied text that keeps its line ending and terminator: the lines unchanged at either end stay
+/// untouched, the paired lines between them that changed are re-set, surplus lines are removed (last first) or inserted, so
+/// history edits the lines an author changed. `None` when the shape changes, or when a step on the way would leave the native
+/// shape or say anything at all — then the whole-buffer lowering ([`txt_replacement_mutations`]) carries the Apply.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn txt_net_mutations(snapshot: &TxtSnapshot, next: &TxtSnapshot) -> Option<Vec<TxtMutation>> {
+    if (snapshot.line_ending, snapshot.trailing_newline) != (next.line_ending, next.trailing_newline) {
+        return None;
+    }
+    let (old, new) = (&snapshot.lines, &next.lines);
+    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
+    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
+    let (old_middle, new_middle) = (&old[prefix..old.len() - suffix], &new[prefix..new.len() - suffix]);
+    let paired = old_middle.len().min(new_middle.len());
+    let mut leaves = Vec::new();
+    for (offset, (_, after)) in old_middle.iter().zip(new_middle).enumerate().filter(|(_, (before, after))| before != after) {
+        leaves.push(TxtMutation::SetLine(SetLineMutation { index: txt_usize_to_u32(prefix + offset).ok()?, text: after.clone() }));
+    }
+    for offset in (paired..old_middle.len()).rev() {
+        leaves.push(TxtMutation::RemoveLine(RemoveLineMutation { index: txt_usize_to_u32(prefix + offset).ok()? }));
+    }
+    for (offset, line) in new_middle.iter().enumerate().skip(paired) {
+        leaves.push(TxtMutation::InsertLine(InsertLineMutation { index: txt_usize_to_u32(prefix + offset).ok()?, text: line.clone() }));
+    }
+    let mut running = snapshot.clone();
+    for leaf in &leaves {
+        let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(leaf, &running);
+        if !outcome.messages().is_empty() {
+            return None;
+        }
+        running = protocol::MutationDiff::apply(outcome.diff(), &running).ok()?;
+    }
+    (running == *next).then_some(leaves)
 }
 
 /// 🪜️ The placeholder an unterminated edge line carries while the document is terminated: non-empty, free of CR and LF, so
@@ -505,7 +574,7 @@ impl ArtifactEditor for TxtEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &store::EngineHandles,
+        _engines: &semio_framework_2d::compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             TxtEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
@@ -545,9 +614,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TxtEdit
         if next.schema != snapshot.schema {
             return Err(Fault::from("stdio-txt-schema-is-immutable"));
         }
-        let mut emit = txt_emit(&TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), text: next.to_body() }, snapshot, None)?;
-        emit.description = Some("Edit text details".into());
-        Ok(emit)
+        txt_emit(&TxtEditorCommand::ReplaceText { revision: semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot), text: next.to_body() }, snapshot, None)
     }
 }
 //#endregion 🔖️Editor

@@ -9,7 +9,7 @@ fn receipts() -> Vec<NativeCodecFactoryReceipt> {
 fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
     let provider = NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), receipts()).expect("complete provider");
     let bindings = provider.into_bindings();
-    assert_eq!(bindings.len(), NATIVE_STDIO_PROVIDER_RECEIPTS);
+    assert_eq!(bindings.len(), semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap().len());
     assert!(bindings.iter().all(|binding| binding.codec().pack_schema_hash != [0; 32]), "every headless Stdio codec carries its structural pack schema identity");
 }
 
@@ -80,17 +80,17 @@ mod quick {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
-        let kind: semio_framework::ArtifactKindSpec = semio_framework::from_dsl_value(kind_json.clone().into()).unwrap();
+        let kind: semio_framework::ArtifactKindSpec = semio_framework_value::FromValue::from_value(kind_json.clone().into()).unwrap();
         assert_eq!(serde_json::to_value(&kind).unwrap(), kind_json);
         let independent: semio_framework::ArtifactKindSpec = serde_json::from_value(kind_json.clone()).unwrap();
         assert_eq!(kind, independent);
-        let projected = semio_framework::to_dsl_value(&kind).unwrap();
+        let projected = semio_framework_value::ToValue::to_value(&kind);
         assert_eq!(directory::os_store::pack_rt::encode_wire_value(&projected), directory::os_store::pack_rt::encode_wire_value(&kind_json.clone().into()));
         for field in ["exportStdioKinds", "importStdioKinds"] {
             for invalid in [serde_json::json!([1]), serde_json::json!("stdio.svg")] {
                 let mut candidate = kind_json.clone();
                 candidate[field] = invalid;
-                assert!(semio_framework::from_dsl_value::<semio_framework::ArtifactKindSpec>(candidate.clone().into()).is_err());
+                assert!(<semio_framework::ArtifactKindSpec as semio_framework_value::FromValue>::from_value(candidate.clone().into()).is_err());
                 assert!(serde_json::from_value::<semio_framework::ArtifactKindSpec>(candidate).is_err());
             }
         }
@@ -109,10 +109,10 @@ mod quick {
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             };
-            let descriptor: semio_framework::PackageDescriptor = semio_framework::from_dsl_value(directory::os_store::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();
+            let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(directory::os_store::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();
             assert_eq!(descriptor.package_id, package_id);
             assert_eq!(descriptor.manifest.plugin_id, plugin_id);
-            assert_eq!(directory::os_store::pack_rt::encode_wire_value(&semio_framework::to_dsl_value(&descriptor).unwrap()), emitted);
+            assert_eq!(directory::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)), emitted);
             let selected = NativeCodecProviderPackageV1 { plugin_id, package_id, version: &descriptor.manifest.version };
             let before = directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash));
             for row in fixture["nativeCases"].as_array().unwrap() {
@@ -179,6 +179,12 @@ mod quick {
         let mut substituted_factory = receipts();
         substituted_factory[0].factory = substituted_factory[1].factory;
         assert!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), substituted_factory).is_err());
+
+        let mut swapped_factory_ids = receipts();
+        let first = swapped_factory_ids[0].factory_id.clone();
+        swapped_factory_ids[0].factory_id = swapped_factory_ids[1].factory_id.clone();
+        swapped_factory_ids[1].factory_id = first;
+        assert!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), swapped_factory_ids).is_err());
     }
 
     #[test]
@@ -194,6 +200,30 @@ mod quick {
         let mut duplicate = receipts();
         duplicate[1].factory_id = duplicate[0].factory_id.clone();
         assert!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), duplicate).is_err());
+
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️receipt-pairs.json")).unwrap();
+        for row in corpus["cases"].as_array().unwrap() {
+            let mut candidate = receipts();
+            let pdf14 = candidate.iter().position(|receipt| receipt.artifact_kind == "s.stdio.pdf" && receipt.schema == "stdio.pdf").expect("PDF1.4 owner");
+            let pdf17 = candidate.iter().position(|receipt| receipt.artifact_kind == "s.stdio.pdf" && receipt.schema == "stdio.pdf.1.7").expect("PDF1.7 owner");
+            let json = candidate.iter().position(|receipt| receipt.artifact_kind == "s.stdio.json" && receipt.schema == "stdio.json").expect("JSON owner");
+            match row["mutation"].as_str().unwrap() {
+                "none" => {}
+                "reverse" => candidate.reverse(),
+                "missing-schema" => { candidate.remove(pdf17); }
+                "missing-kind" => { candidate.remove(json); }
+                "duplicate" => candidate[pdf17] = candidate[pdf14].clone(),
+                "foreign-schema" => candidate[pdf17].schema = "foreign.schema".into(),
+                "foreign-kind" => candidate[pdf17].artifact_kind = "foreign.artifact".into(),
+                "extra" => {
+                    let mut extra = candidate[pdf14].clone();
+                    extra.schema = "foreign.schema".into();
+                    candidate.push(extra);
+                }
+                mutation => panic!("unknown receipt pair mutation {mutation}"),
+            }
+            assert_eq!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), candidate).is_ok(), row["accepted"].as_bool().unwrap(), "actual pair roster {}", row["id"]);
+        }
     }
 
     /// 🌱️ TC3b: a native binding carries NO creation authority any more — genesis is the
@@ -205,7 +235,7 @@ mod quick {
         let providers = NativeCodecProviderSetV1::linked();
         let control = SelectionControl { cancelled: false, now_ms: 0 };
         let context = OperationContext::new(u64::MAX, crate::artifact_authority::AuthorityLimits::maximum(), &control);
-        let counts = [("stdio", "semio:stdio", NATIVE_STDIO_PROVIDER_RECEIPTS), ("gis", "semio:gis", 2), ("vcs", "semio:vcs", NATIVE_VCS_PROVIDER_RECEIPTS)];
+        let counts = [("stdio", "semio:stdio", semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap().len()), ("gis", "semio:gis", 2), ("vcs", "semio:vcs", NATIVE_VCS_PROVIDER_RECEIPTS)];
         for profile in fixture["unconsumedProfiles"].as_array().unwrap() {
             let selected = profile["selected"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
             let previews = profile["previews"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
@@ -226,7 +256,7 @@ mod quick {
             assert_eq!(requested, previews, "{}", profile["name"]);
             assert_eq!(receipts, selected.iter().map(|package| counts.iter().find(|(_, id, _)| id == package).expect("compiled package").2).sum::<usize>());
         }
-        assert_eq!(counts.iter().map(|(_, _, count)| count).sum::<usize>(), NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS);
+        assert_eq!(counts.iter().map(|(_, _, count)| count).sum::<usize>(), native_openable_provider_receipt_count().unwrap());
         assert!(providers.preview("note", "semio:note", env!("CARGO_PKG_VERSION"), &context).expect("an unlinked package is previewable").is_empty());
         assert!(providers.preview("note", "semio:gis", env!("CARGO_PKG_VERSION"), &context).is_err());
         assert!(providers.preview("gis", "semio:note", env!("CARGO_PKG_VERSION"), &context).is_err());

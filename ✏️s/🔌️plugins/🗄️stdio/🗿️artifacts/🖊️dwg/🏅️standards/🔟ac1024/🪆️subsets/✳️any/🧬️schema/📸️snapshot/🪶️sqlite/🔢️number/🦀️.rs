@@ -40,13 +40,21 @@ fn cells(value:f64)->[Cell<'static>;3]{
     let bits=I(value.to_bits() as i64);
     if value.is_nan(){[T("nan"),bits,N]}else if value==f64::INFINITY{[T("positive_infinity"),bits,N]}else if value==f64::NEG_INFINITY{[T("negative_infinity"),bits,N]}else if value==0.0&&value.is_sign_negative(){[T("negative_zero"),bits,N]}else{[T("finite"),bits,R(value)]}
 }
-pub(super) struct Projection<'c,'p>{physical:PhysicalProjection<'c,'p>,rows:usize,bytes:usize}
+enum Target<'c,'p>{Database(PhysicalProjection<'c,'p>),Admission{control:&'c mut SqliteSnapshotControl<'p>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,identifiers:std::collections::BTreeMap<&'static str,i64>}}
+pub(super) struct Projection<'c,'p>{target:Target<'c,'p>,rows:usize,bytes:usize}
 impl<'c,'p> Projection<'c,'p>{
-    pub(super) fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,String>{Ok(Self{physical:PhysicalProjection::new(sql,control)?,rows:0,bytes:0})}
-    fn encode<'a>(&self,table:&str,values:&[Cell<'a>])->Result<(Vec<Cell<'a>>,usize),String>{
+    pub(super) fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,String>{Ok(Self{target:Target::Database(PhysicalProjection::new(sql,control)?),rows:0,bytes:0})}
+    pub(super) fn admission(sql:&str,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,String>{
+        control.checkpoint(phase,0,0)?;
+        if sql.len()>control.limits().max_schema_bytes{return Err("DWG authored SQL exceeds schema byte limit".into())}
+        if control.limits().max_tables<277{return Err("DWG authored schema exceeds table limit".into())}
+        Ok(Self{target:Target::Admission{control,phase,identifiers:std::collections::BTreeMap::new()},rows:0,bytes:0})
+    }
+    fn limits(&self)->semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{match &self.target{Target::Database(physical)=>physical.limits(),Target::Admission{control,..}=>control.limits()}}
+    fn measure(&self,table:&str,values:&[Cell<'_>])->Result<(usize,usize),String>{
         let positions=numeric_positions(table);
         let columns=values.len().checked_add(positions.len().checked_mul(2).ok_or("DWG numeric column count overflow")?).and_then(|value|value.checked_add(1)).ok_or("DWG numeric column count overflow")?;
-        if columns>self.physical.limits().max_columns{return Err("DWG numeric row exceeds column limit".into());}
+        if columns>self.limits().max_columns{return Err("DWG numeric row exceeds column limit".into());}
         if positions.last().is_some_and(|position|*position>values.len()){return Err("DWG authored numeric position exceeds its row".into());}
         let mut bytes=self.bytes.checked_add(8).ok_or("DWG numeric byte count overflow")?;
         for(index,value)in values.iter().copied().enumerate(){
@@ -54,16 +62,29 @@ impl<'c,'p> Projection<'c,'p>{
             if numeric{match value{N=>{},R(value)=>{let encoded=cells(value);for value in encoded{bytes=bytes.checked_add(match value{T(value)=>value.len(),R(_)|I(_)=>8,_=>0}).ok_or("DWG numeric byte count overflow")?;}},_=>return Err("DWG authored numeric cell must be REAL or NULL".into())}}
             else{bytes=bytes.checked_add(match value{N=>0,Cell::Integer(_)=>8,T(value)=>value.len(),Cell::Blob(value)=>value.len(),R(_)|Cell::Float32(_)=>return Err("DWG REAL has no authored numeric columns".into())}).ok_or("DWG numeric byte count overflow")?;}
         }
-        self.physical.check_rows(self.rows.checked_add(1).ok_or("DWG numeric row count overflow")?)?;
-        self.physical.check_value_bytes(bytes)?;
+        let rows=self.rows.checked_add(1).ok_or("DWG numeric row count overflow")?;
+        match &self.target{Target::Database(physical)=>{physical.check_rows(rows)?;physical.check_value_bytes(bytes)?},Target::Admission{control,..}=>{control.check_rows(rows)?;control.check_value_bytes(bytes)?}}
+        Ok((columns,bytes))
+    }
+    fn encode<'a>(table:&str,values:&[Cell<'a>],columns:usize)->Vec<Cell<'a>>{
+        let positions=numeric_positions(table);
         let mut encoded=Vec::with_capacity(columns-1);
         for(index,value)in values.iter().copied().enumerate(){if positions.binary_search(&(index+1)).is_ok(){match value{N=>encoded.extend([N,N,N]),R(value)=>encoded.extend(cells(value)),_=>unreachable!()}}else{encoded.push(value);}}
-        Ok((encoded,bytes))
+        encoded
     }
-    pub(super) fn insert(&mut self,table:&str,values:&[Cell<'_>])->Result<i64,String>{let(encoded,bytes)=self.encode(table,values)?;let id=self.physical.insert(table,&encoded)?;self.rows+=1;self.bytes=bytes;Ok(id)}
-    pub(super) fn insert_key(&mut self,table:&str,id:i64,values:&[Cell<'_>])->Result<(),String>{let(encoded,bytes)=self.encode(table,values)?;self.physical.insert_key(table,id,&encoded)?;self.rows+=1;self.bytes=bytes;Ok(())}
-    pub(super) fn checkpoint(&mut self)->Result<(),String>{self.physical.checkpoint()}
-    pub(super) fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,String>{self.physical.finish()}
+    pub(super) fn insert(&mut self,table:&'static str,values:&[Cell<'_>])->Result<i64,String>{
+        let(columns,bytes)=self.measure(table,values)?;
+        let id=match &mut self.target{Target::Database(physical)=>physical.insert(table,&Self::encode(table,values,columns))?,Target::Admission{identifiers,..}=>{let count=identifiers.entry(table).or_default();*count=count.checked_add(1).ok_or("DWG surrogate count overflow")?;*count}};
+        self.rows+=1;self.bytes=bytes;if self.rows%256==0{self.checkpoint()?;}Ok(id)
+    }
+    pub(super) fn insert_key(&mut self,table:&'static str,id:i64,values:&[Cell<'_>])->Result<(),String>{
+        let(columns,bytes)=self.measure(table,values)?;
+        match &mut self.target{Target::Database(physical)=>physical.insert_key(table,id,&Self::encode(table,values,columns))?,Target::Admission{identifiers,..}=>{let count=identifiers.entry(table).or_default();*count=count.checked_add(1).ok_or("DWG surrogate count overflow")?;}}
+        self.rows+=1;self.bytes=bytes;if self.rows%256==0{self.checkpoint()?;}Ok(())
+    }
+    pub(super) fn checkpoint(&mut self)->Result<(),String>{match &mut self.target{Target::Database(physical)=>physical.checkpoint(),Target::Admission{control,phase,..}=>control.checkpoint(*phase,self.rows,0)}}
+    pub(super) fn finish_admission(self)->Result<usize,String>{match self.target{Target::Admission{control,phase,..}=>{control.checkpoint(phase,self.rows,self.rows)?;Ok(self.rows)},Target::Database(_)=>Err("DWG admission requires its owned counting target".into())}}
+    pub(super) fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,String>{match self.target{Target::Database(physical)=>physical.finish(),Target::Admission{..}=>Err("DWG counting target cannot materialize database rows".into())}}
 }
 #[derive(Clone,Copy)]
 pub(super) struct Row<'a>{raw:&'a SqliteRow,numeric:&'static[usize],pub(super) rowid:i64}

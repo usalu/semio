@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🟦️.ts";
 
@@ -59,7 +59,7 @@ export class DurableThreeStoreAssemblyCheckScript extends BundleScript {
 export class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisDurableThreeStoreAssembly(this.repoRoot);
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       groups: [
         { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [

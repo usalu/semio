@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "regular-absolute",
+      "mode": "regular",
+      "expected": {
+        "state": "admitted",
+        "reason": null
+      }
+    },
+    {
+      "id": "regular-relative",
+      "mode": "relative",
+      "expected": {
+        "state": "admitted",
+        "reason": null
+      }
+    },
+    {
+      "id": "linked-root",
+      "mode": "root-link",
+      "expected": {
+        "state": "rejected",
+        "reason": "linked-root"
+      }
+    },
+    {
+      "id": "linked-ancestor",
+      "mode": "ancestor-link",
+      "expected": {
+        "state": "rejected",
+        "reason": "linked-root"
+      }
+    },
+    {
+      "id": "file-root",
+      "mode": "file",
+      "expected": {
+        "state": "rejected",
+        "reason": "non-directory-root"
+      }
+    },
+    {
+      "id": "missing-root",
+      "mode": "missing",
+      "expected": {
+        "state": "rejected",
+        "reason": "missing-root"
+      }
+    },
+    {
+      "id": "raw-dot-root",
+      "mode": "dot",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    },
+    {
+      "id": "raw-parent-root",
+      "mode": "parent",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    },
+    {
+      "id": "linked-prefix-cancellation",
+      "mode": "cancelled-link",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    },
+    {
+      "id": "empty-root",
+      "mode": "empty",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    },
+    {
+      "id": "nul-root",
+      "mode": "nul",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    },
+    {
+      "id": "drive-relative-root",
+      "mode": "drive-relative",
+      "expected": {
+        "state": "rejected",
+        "reason": "unsafe-root"
+      }
+    }
+  ],
+  "native": [
+    {
+      "id": "linked-root",
+      "markers": [
+        "declared"
+      ]
+    },
+    {
+      "id": "linked-prefix-cancellation",
+      "markers": [
+        "declared",
+        "foreign"
+      ]
+    }
+  ],
+  "freshness": {
+    "identity": "root-replacement",
+    "expected": "linked-root",
+    "cancellation": "checked-before-targets"
+  }
+}

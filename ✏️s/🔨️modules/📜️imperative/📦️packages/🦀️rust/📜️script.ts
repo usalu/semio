@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 /** ⚙️ `@semio-tech/s-imperative` router: `bun ./📜️script.ts test`. */
-import { runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-imperative"], this.repoRoot);
+  async run(_segments: string[]): Promise<void> {
+    await runRepositoryCargoTests(["semio-s-imperative"], this.repoRoot);
   }
 }
 

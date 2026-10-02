@@ -11,7 +11,7 @@
 // Every before/after pair `🔁️codec/🏗️generate/🦀️.rs` writes is produced by the SAME registered `lopdf`
 // 0.44 reference implementation named `lopdf-pdf-1-7-a-mutate` in `../🔣️oracle.json` —
 // `document::pdf_conformance` inside the standalone, already-qualified
-// `semio-s-plugin-stdio-test-oracle` crate, the identical engine the differential test case
+// `semio-s-artifact-stdio-pdf-test-oracle` crate, the identical engine the differential test case
 // `../../../../../../🧪️tests/🗄️mutate-pdf-1-7-a` drives — never this repository's own production PDF
 // codec, and never hand-rolled to match it. This script only marshals: it builds and invokes the
 // Rust binary and reports what it wrote; it computes no PDF bytes itself.
@@ -252,5 +252,6 @@ async function encryptionMode(emitManifests: boolean, root: string): Promise<num
   return 2;
 }
 
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
+// 🚰️ `exitCode`, never `process.exit()`: an explicit exit cuts a still-draining piped stdout at 64 KiB.
+if (import.meta.main) process.exitCode = await main(process.argv.slice(2));
 //#endregion 🚪️Entry

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owner",
+    "files",
+    "cancelReason"
+  ],
+  "properties": {
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "files": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "cancelReason": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

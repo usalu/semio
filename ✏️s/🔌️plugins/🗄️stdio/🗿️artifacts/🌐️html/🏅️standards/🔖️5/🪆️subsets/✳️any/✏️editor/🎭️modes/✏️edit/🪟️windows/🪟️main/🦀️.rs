@@ -3,7 +3,10 @@
 
 use crate::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlSnapshot};
 use semio_framework_plugin::app::{TextEditView, TextWindowKit};
-use semio_framework_plugin::{BuiltNode, Locale, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowKit;
 
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TextWindowKit::KIND_ID;

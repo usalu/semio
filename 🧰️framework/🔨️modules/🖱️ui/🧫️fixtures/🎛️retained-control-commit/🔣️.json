@@ -19,7 +19,7 @@
     "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same track cell paint draws, excluding its fixed readout cell, snapped onto step and clamped into min..=max.",
     "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
     "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
-    "continuousPress": "A continuous control (Slider, a NumberStepper's absolute value, a number Input without a commit policy) dispatches PRESSES (scrub protocol, 📓️api-scrub-machine.md): every dispatch of one gesture carries the same non-empty 'gesture' and a 'commit' flag that is true on the release only; 'press' names whether the gesture released ('released': the last dispatch commits) or left its press open ('open': a field still being typed). A keyboard step or a stepper click is a one-shot press: one dispatch that is its own release. Every other dispatch carries neither key.",
+    "continuousPress": "A continuous control (Slider, Ring, a NumberStepper's absolute value, a number Input without a commit policy) dispatches PRESSES (scrub protocol, 📓️api-scrub-machine.md): every dispatch of one gesture carries the same non-empty 'gesture' and a 'commit' flag that is true on the release only; 'press' names whether the gesture released ('released': the last dispatch commits) or left its press open ('open': a field still being typed). A keyboard step or a stepper click is a one-shot press: one dispatch that is its own release. Every other dispatch carries neither key.",
     "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
   },
   "cases": [
@@ -148,7 +148,7 @@
       "binding": { "trigger": "change", "action": "setSunOrbit", "args": { "windowId": "w1" } },
       "bounds": [0.0, 0.0, 100.0, 100.0],
       "gesture": { "kind": "press", "at": [0.5, 0.99] },
-      "expected": { "action": "setSunOrbit", "args": { "windowId": "w1", "value": 0.25 } }
+      "expected": { "action": "setSunOrbit", "args": { "windowId": "w1", "value": 0.25 }, "press": "released" }
     },
     {
       "name": "icon-select-edits-its-icon-string",

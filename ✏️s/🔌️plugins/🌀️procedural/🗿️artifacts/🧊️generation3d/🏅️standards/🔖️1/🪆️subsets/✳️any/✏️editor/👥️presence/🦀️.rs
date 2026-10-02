@@ -149,7 +149,7 @@ impl protocol::OpText for Generation3dPresenceMutation {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(body, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -159,7 +159,7 @@ impl protocol::OpText for Generation3dPresenceMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
+        let body = dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {

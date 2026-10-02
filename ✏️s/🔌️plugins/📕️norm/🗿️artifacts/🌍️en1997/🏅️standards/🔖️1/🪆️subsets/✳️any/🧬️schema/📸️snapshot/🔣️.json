@@ -55,42 +55,42 @@
     "layers": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/SoilLayer"
       },
       "x-semio-state": "artifact"
     },
     "footings": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/SpreadFoundation"
       },
       "x-semio-state": "artifact"
     },
     "piles": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/Pile"
       },
       "x-semio-state": "artifact"
     },
     "retainingWalls": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/RetainingWall"
       },
       "x-semio-state": "artifact"
     },
     "slopes": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/Slope"
       },
       "x-semio-state": "artifact"
     },
     "upliftCases": {
       "type": "array",
       "items": {
-        "type": "object"
+        "$ref": "#/$defs/UpliftCase"
       },
       "x-semio-state": "artifact"
     }
@@ -762,6 +762,152 @@
             "displayFactor": 0.001,
             "precision": 2
           }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
+    },
+    "RetainingWall": {
+      "title": "RetainingWall",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "height",
+        "embedment",
+        "baseWidth",
+        "stemThickness",
+        "backfillPhiDeg",
+        "backfillGamma",
+        "wallFrictionDeg",
+        "earthPressureMode",
+        "wallMovement",
+        "ocr",
+        "concreteGamma",
+        "surcharge",
+        "verticalPermanent",
+        "horizontalPermanent"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number"
+        },
+        "embedment": {
+          "type": "number"
+        },
+        "baseWidth": {
+          "type": "number"
+        },
+        "stemThickness": {
+          "type": "number"
+        },
+        "backfillPhiDeg": {
+          "type": "number"
+        },
+        "backfillGamma": {
+          "type": "number"
+        },
+        "wallFrictionDeg": {
+          "type": "number"
+        },
+        "earthPressureMode": {
+          "type": "string"
+        },
+        "wallMovement": {
+          "type": "string"
+        },
+        "ocr": {
+          "type": "number"
+        },
+        "concreteGamma": {
+          "type": "number"
+        },
+        "surcharge": {
+          "type": "number"
+        },
+        "verticalPermanent": {
+          "type": "number"
+        },
+        "horizontalPermanent": {
+          "type": "number"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
+    },
+    "Slope": {
+      "title": "Slope",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "angleDeg",
+        "height",
+        "length",
+        "governingLayerId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "angleDeg": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "governingLayerId": {
+          "type": "string"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
+    },
+    "UpliftCase": {
+      "title": "UpliftCase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "permanentStabilizing",
+        "permanentDestabilizing",
+        "variableDestabilizing",
+        "porePressure",
+        "totalStress"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "permanentStabilizing": {
+          "type": "number"
+        },
+        "permanentDestabilizing": {
+          "type": "number"
+        },
+        "variableDestabilizing": {
+          "type": "number"
+        },
+        "porePressure": {
+          "type": "number"
+        },
+        "totalStress": {
+          "type": "number"
         }
       },
       "x-semio-formats": [

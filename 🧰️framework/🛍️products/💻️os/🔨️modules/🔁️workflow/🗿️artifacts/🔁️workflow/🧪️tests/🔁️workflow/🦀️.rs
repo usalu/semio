@@ -1,6 +1,41 @@
 //! 🧪️ Workflow artifact replay, connection, and serialization laws.
 use super::*;
+use dsl::DslField as _;
+fn assert_workflow_manual_binding<T:dsl::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
+ let expected=T::to_value(value);let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(maximum,&mut admitted);let encoded=value.to_value_controlled(&mut control).expect("owned workflow field projection");let exact=control.owned_bytes();assert_eq!(encoded,expected);assert!(exact>0);assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
+ let mut admitted=|_|true;let mut control=dsl::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned workflow field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
+ let dsl::FieldValue::Record(record)=&encoded else{panic!("explicit workflow record")};assert_eq!(value.to_record_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
+ let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+}
+#[test]
+fn sqlite_snapshot_workflow_media_contract_binds_literal_values_under_both_native_controls(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ for expected in fixture["contracts"].as_array().unwrap(){let value:MediaContract=dsl::os_pack::json::from_json_str(&serde_json::to_string(expected).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),*expected);assert_workflow_manual_binding(&value,maximum,tiny);}
+}
+#[test]
+fn sqlite_snapshot_workflow_media_port_binds_literal_values_under_both_native_controls(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let value:WorkflowMediaPort=dsl::os_pack::json::from_json_str(&serde_json::to_string(&fixture["port"]).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),fixture["port"]);assert_workflow_manual_binding(&value,maximum,tiny);
+}
+#[test]
+fn sqlite_snapshot_workflow_input_binds_literal_values_and_cancels_owned_utf8(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️binding/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let value:WorkflowInput=dsl::os_pack::json::from_json_str(&serde_json::to_string(&fixture["input"]).unwrap()).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&value)).unwrap(),fixture["input"]);assert_workflow_manual_binding(&value,maximum,tiny);
+ let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=WorkflowInput{id:text.clone(),kind_id:text.clone(),selector:text.clone(),required:true,multiplicity:PortMultiplicity::One};let raw=<WorkflowInput as dsl::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+ let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<WorkflowInput as dsl::DslField>::from_value_controlled(&raw,&mut dsl::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+}
 use protocol::MutationDiff;
+#[test]
+fn sqlite_snapshot_workflow_manual_metadata_preserves_neutral_fields_and_enum_labels_under_both_controls(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ for index in 0..3{
+  let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let shape=match index{0=><MediaContract as dsl::DslField>::shape_controlled(&mut encoding),1=><WorkflowMediaPort as dsl::DslField>::shape_controlled(&mut encoding),_=><WorkflowInput as dsl::DslField>::shape_controlled(&mut encoding)}.unwrap();let dsl::Shape::Record(producer)=shape else{panic!("declared workflow record")};let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();
+  let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
+  for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let labels:Vec<_>=record.fields.iter().filter_map(|field|match &field.shape{dsl::Shape::Enum(labels)=>Some(serde_json::json!([field.id,labels])),_=>None}).collect();assert_eq!(serde_json::json!(labels),fixture["records"][index]["enums"]);}
+  assert!(exact>0);assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+ }
+}
 
 /// 🧾️ Every committed wire witness decodes through `WorkflowMutation`'s `FromValue` and re-encodes to exactly the committed JSON.
 #[test]

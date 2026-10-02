@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for RemoveUnknownChunkMuta
             None => Vec::new(),
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove unknown chunk", "Unbekannten Chunk entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove unknown chunk", "Unbekannten Chunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-unknown-chunk".into()]

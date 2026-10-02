@@ -63,10 +63,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle5dBu
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `puzzle5d_artifact_schema_descriptor`'s registration.
-pub fn puzzle5d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn puzzle5d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle5d.inference",
-        inference: ::semio_framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

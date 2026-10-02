@@ -27,8 +27,8 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for RemoveDataPr
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         let (kind, id) = match &self.entity {
             EntityRef::Node(id) => ("node", id),
             EntityRef::Edge(id) => ("edge", id),

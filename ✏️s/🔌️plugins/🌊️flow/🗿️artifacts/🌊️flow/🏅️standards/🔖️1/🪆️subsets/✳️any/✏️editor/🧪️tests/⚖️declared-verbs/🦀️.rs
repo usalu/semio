@@ -31,7 +31,7 @@ async fn the_content_child_is_the_one_scene_every_verb_and_window_reads() {
     use crate::editor::flow::commands::{add_widget::AddWidget, remove_widget::RemoveWidget};
     let mut app = flow_app().await;
     let coordinate = app.snapshot().expect("snapshot").content.child_id.clone();
-    dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
+    dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
     settle(&mut app).await;
     let added = composed_scene(&app).await;
     let note = added.widgets.iter().map(|widget| crate::schema::widget_id(widget).to_string()).find(|id| id.starts_with("note")).expect("addWidget lands one note in the content child");
@@ -44,6 +44,6 @@ async fn the_content_child_is_the_one_scene_every_verb_and_window_reads() {
     assert!(!removed.widgets.iter().any(|widget| crate::schema::widget_id(widget) == note), "removeWidget finds and removes the child-added widget");
     removed.retire_cold();
     assert_eq!(app.snapshot().expect("snapshot").content.child_id, coordinate, "no verb re-points the parent's content coordinate");
-    dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(80.0), y: Some(80.0) })).await;
+    dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(80.0), y: Some(80.0), label: None, action: None, format: None })).await;
     settle(&mut app).await;
 }

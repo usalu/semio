@@ -1,6 +1,6 @@
 //! 🗣️ Trinity Jack app — locale/terminology label set.
 
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 
 app_labels! {
     /// 🗣️ Complete UI label set for the Jack query app; one field per label makes every locale×terminology

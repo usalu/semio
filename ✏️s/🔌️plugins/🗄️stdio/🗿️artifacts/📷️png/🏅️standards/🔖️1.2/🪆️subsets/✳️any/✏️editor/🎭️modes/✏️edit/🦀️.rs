@@ -2,7 +2,9 @@
 //! full-pane Main window, the only mode this thin surface declares.
 
 use crate::editor::png::modes::edit::windows::main;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const MODE_ID: &str = "edit";
 

@@ -2,7 +2,15 @@
 
 use crate::editor::architect::ui_label;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelTreeBuilder, SurfaceKind, TreeWindows, ViewModel, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

@@ -35,7 +35,7 @@ impl OpText for CounterMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
         for (keyword, spec_fn) in <Self as crate::os_dsl::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(&keyword, &record);
             }
         }
@@ -44,7 +44,7 @@ impl OpText for CounterMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| spec()).expect("owned variant schema");
+        let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("owned variant schema");
         crate::os_dsl::print(&record, &spec, crate::os_dsl::JoinMode::Inline)
     }
 }
@@ -54,7 +54,7 @@ impl OpBinary for CounterMutation {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(name, _)| name == &keyword).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 0, detail: "unknown owned variant".into() })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut bytes = vec![1];
         crate::os_pack::write_varint_u64(&mut bytes, u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds u64".into() })?);
@@ -69,7 +69,7 @@ impl OpBinary for CounterMutation {
         let ordinal = usize::try_from(reader.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds platform width".into() })?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index out of range".into() })?;
-        let (record, _) = crate::os_pack::decode_record_body(&bytes[reader.position()..], &spec_fn(), &crate::os_pack::DecodeOptions::default()).map_err(ProtocolError::from)?;
+        let (record, _) = crate::os_pack::decode_record_body(&bytes[reader.position()..], &(spec_fn.ordinary)(), &crate::os_pack::DecodeOptions::default()).map_err(ProtocolError::from)?;
         <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: 2, detail: error.to_string() })
     }
 }

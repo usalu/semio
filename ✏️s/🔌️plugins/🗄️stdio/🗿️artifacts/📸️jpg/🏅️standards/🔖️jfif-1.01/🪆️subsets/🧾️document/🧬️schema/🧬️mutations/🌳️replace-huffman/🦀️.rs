@@ -40,8 +40,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMut
             }
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace huffman table", "Huffman-Tabelle ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace huffman table", "Huffman-Tabelle ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-huffman-table".into()]

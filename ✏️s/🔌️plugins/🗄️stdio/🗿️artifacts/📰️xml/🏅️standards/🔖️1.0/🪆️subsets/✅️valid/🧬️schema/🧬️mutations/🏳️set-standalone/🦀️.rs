@@ -20,8 +20,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::SetStandalone(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

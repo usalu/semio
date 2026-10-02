@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetFrameInterlace(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set frame interlace", "Zeilensprung des Einzelbilds setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set frame interlace", "Zeilensprung des Einzelbilds setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

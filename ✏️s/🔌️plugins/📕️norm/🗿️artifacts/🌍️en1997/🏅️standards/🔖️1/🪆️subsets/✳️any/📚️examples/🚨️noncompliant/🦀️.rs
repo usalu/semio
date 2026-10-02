@@ -1,5 +1,6 @@
 //! 📚️ Example `noncompliant`.
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 pub const ID: &str = "noncompliant";
 pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Non-compliant project", "Nicht konformes Projekt")

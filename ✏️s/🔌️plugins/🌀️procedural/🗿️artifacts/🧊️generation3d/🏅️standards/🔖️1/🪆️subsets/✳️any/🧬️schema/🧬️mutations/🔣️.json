@@ -59,6 +59,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/move-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/mutation/change-widget-input/schema.json"
     }
   ]
 }

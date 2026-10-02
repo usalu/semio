@@ -12,6 +12,8 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_space_index_editor(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("space", SpaceIndexEditor, space_index_manifest_for_tests, "../..");
+
     /// 🧪️ An app instance carrying the real `AppActionRegistry`. The registry-LESS
     /// `artifact_app_laws::new_app` is unusable here: `with_registry_on_bus` joins
     /// `EditorApp<SpaceIndexEditor>`'s `bounded_first_step_tool_proofs!` roster against the registry's
@@ -168,7 +170,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SpaceIndexConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("unknown body diagnostic tree")).expect("unknown body projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("unknown body diagnostic tree")).expect("unknown body projection");
     assert!(json.contains("Unknown body"));
 }
 
@@ -180,7 +182,7 @@ async fn the_members_panel_body_renders_through_the_editor_dispatch() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = SpaceIndexConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("members panel tree")).expect("members panel projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("members panel tree")).expect("members panel projection");
     assert!(json.contains("s-space-invite"));
 }
 

@@ -1,4 +1,4 @@
-/** 📽️ TypeScript, Go, and Rust entity-kind catalog renderers. */
+/** 📽️ TypeScript and Rust entity-kind catalog renderers. */
 import { entityCatalogProvenance, type EntityCatalogSource } from "../📥️source/🟦️.ts";
 
 //#region 🔖️emit-typescript
@@ -34,51 +34,7 @@ export function entityKindByEmoji(emoji: string): EntityKind | undefined {
 }
 //#endregion 🔖️emit-typescript
 
-//#region 🔖️emit-go
-export function emitGo(source: EntityCatalogSource): string {
-  const [origin, refresh] = entityCatalogProvenance(source);
-  const rows = source.kinds.map((kind) => `\t{ID: ${JSON.stringify(kind.id)}, Emoji: ${JSON.stringify(kind.emoji)}, IconID: ${JSON.stringify(kind.iconId)}, Label: ${JSON.stringify(kind.label)}, Filterable: ${kind.filterable}},`).join("\n");
-  return `// ${origin}
-// ${refresh}
 
-package client
-
-// 🏷️EntityKind holds one entry of the entity-kind catalog (kind → emoji/icon/label/filterable).
-type EntityKind struct {
-\tID         string
-\tEmoji      string
-\tIconID     string
-\tLabel      string
-\tFilterable bool
-}
-
-// EntityKindCatalog is the entity-kind catalog in declaration order — the Go projection of
-// 🏷️entity-kinds/🔣️.json. Named distinctly from the pre-existing EntityKinds (tree-node category
-// strings) elsewhere in this package.
-var EntityKindCatalog = []EntityKind{
-${rows}
-}
-
-// entityKindsByEmoji is the FIRST-WINS emoji index: when two kinds share one emoji the first
-// declared kind wins, so 🌱️ resolves to technology-mono and 📝️ to draft.
-var entityKindsByEmoji = func() map[string]EntityKind {
-\tindex := make(map[string]EntityKind, len(EntityKindCatalog))
-\tfor _, kind := range EntityKindCatalog {
-\t\tif _, taken := index[kind.Emoji]; !taken {
-\t\t\tindex[kind.Emoji] = kind
-\t\t}
-\t}
-\treturn index
-}()
-
-// EntityKindByEmoji resolves one emoji prefix to its entity kind through the first-wins index.
-func EntityKindByEmoji(emoji string) (EntityKind, bool) {
-\tkind, found := entityKindsByEmoji[emoji]
-\treturn kind, found
-}
-`;
-}
-//#endregion 🔖️emit-go
 
 //#region 🔖️emit-rust
 export function emitRust(source: EntityCatalogSource): string {
@@ -103,7 +59,7 @@ ${rows}
 
 /// 🔍️ Looks up an entity kind by its emoji prefix, FIRST-WINS: when two kinds share one emoji the
 /// first declared kind wins, so 🌱️ resolves to \`technology-mono\` (not \`interaction-started\`) and
-/// 📝️ to \`draft\` (not \`todo\`) — the same rule the TypeScript and Go projections apply.
+/// 📝️ to \`draft\` (not \`todo\`) — the same rule the TypeScript projection applies.
 pub fn entity_kind_by_emoji(emoji: &str) -> Option<&'static EntityKind> {
     ENTITY_KINDS.iter().find(|kind| kind.emoji == emoji)
 }

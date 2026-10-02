@@ -9,7 +9,7 @@
 //! no-oracle case is never dispatched in the oracle role, and an oracle handler that could only
 //! re-read what the subject just produced would be a stub reporting a pass. All evidence therefore
 //! lives in the SUBJECT role below, where each handler asserts its law through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module before it returns.
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` module before it returns.
 //!
 //! The subject half is `sut`-gated because the generated host links this repository's crate only
 //! for the subject role (fleet brief §5.3).
@@ -40,7 +40,7 @@ mod subject {
     use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::snapshot::text::{parse_dsl, print_dsl};
     use semio_s_artifact_animate_presentation::mutations::{apply_presentation_mutation, decode_presentation_mutation_json, encode_presentation_projection_json, inverse_presentation_mutation, PresentationMutation};
     use semio_s_artifact_animate_presentation::{presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
     //#region 🔖️CommittedInput
     fn number(value: &Json, key: &str) -> Result<f64, String> {

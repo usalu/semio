@@ -39,10 +39,10 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
         let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let view = ViewModel {
         window_instances: ["leftWindowId", "rightWindowId"].into_iter().map(|key| ViewWindowInstance { id: fixture[key].as_str().unwrap().into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let left = view.for_window_instance(fixture["leftWindowId"].as_str().unwrap()).unwrap();
     let right = view.for_window_instance(fixture["rightWindowId"].as_str().unwrap()).unwrap();
@@ -156,7 +156,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
 
 #[test]
 fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let base: RewritingWindowConfig = pack::from_json_str(&fixture["base"].to_string()).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {
@@ -185,8 +185,11 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
 
 #[test]
 fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
-    use semio_framework_plugin::{Locale, Terminology, ViewModel, ViewWindowInstance};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_ui_locale::Terminology;
+    use semio_framework_plugin::ViewModel;
+    use semio_framework_plugin::ViewWindowInstance;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
     let left = fixture["leftWindowId"].as_str().unwrap();
     let right = fixture["rightWindowId"].as_str().unwrap();
     let view = ViewModel {
@@ -194,7 +197,7 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
         terminology: Terminology::Native,
         window_id: Some(right.into()),
         window_instances: vec![ViewWindowInstance { id: left.into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }, ViewWindowInstance { id: right.into(), window_kind_id: BeforeWindowConfigOwner::WINDOW_KIND_ID.into() }],
-        ..Default::default()
+        ..ViewModel::new(Locale::En, Terminology::Native)
     };
     let emit = crate::editor::rewriting::commands::set_lod_mode("compact", Some(&view)).unwrap();
     assert!(emit.artifact_mutations.is_empty());

@@ -12,7 +12,7 @@ async fn definition_declares_a_table_window() {
 async fn render_lists_one_row_per_cell() {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
     let document = crate::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() });
-    let node = render(&document, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render(&document, semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     let Component::Table(props) = &node.component else { panic!("expected windowed table") };
     assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["Sheet", "Row", "Column", "Value"]);
     let Component::TableRow(row) = &node.children[0].component else { panic!("expected cell row") };
@@ -25,7 +25,10 @@ fn viewer_projects_requested_cell_and_column_windows_without_edit_bindings() {
     use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
     use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
     use calamine::Reader;
-    use semio_framework_plugin::{Locale, TreeWindowRequest, TreeWindows, ViewModel};
+    use semio_framework_ui_locale::Locale;
+    use semio_framework_plugin::TreeWindowRequest;
+    use semio_framework_plugin::TreeWindows;
+    use semio_framework_plugin::ViewModel;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🪟️viewer-cell-window/🔣️.json")).unwrap();
     let sheets = fixture["sheets"]
         .as_array()
@@ -66,7 +69,7 @@ fn viewer_projects_requested_cell_and_column_windows_without_edit_bindings() {
                     rows: fixture["columns"].as_u64().unwrap() as u32,
                 },
             ],
-            ..Default::default()
+            ..ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
         };
         let node = render(&document, locale, &TreeWindows::for_body(&view, BODY_KEY)).unwrap();
         let Component::Table(props) = &node.component else { panic!("expected windowed table") };

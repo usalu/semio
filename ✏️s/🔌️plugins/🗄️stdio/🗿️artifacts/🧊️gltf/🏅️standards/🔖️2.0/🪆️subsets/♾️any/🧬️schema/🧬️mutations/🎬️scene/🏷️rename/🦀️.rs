@@ -57,8 +57,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNa
         vec![super::GltfMutation::ChangeSceneName(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Scene Name", "Szenenname ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Scene Name", "Szenenname ändern")
     }
 
     fn target(&self) -> Vec<String> {

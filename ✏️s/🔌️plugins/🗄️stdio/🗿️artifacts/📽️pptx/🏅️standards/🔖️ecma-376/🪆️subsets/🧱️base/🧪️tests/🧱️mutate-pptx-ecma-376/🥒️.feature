@@ -85,14 +85,14 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
 
     Examples:
       | id                 | params |
-      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":0,"y":0,"cx":100,"cy":100}}]}]}}} |
-      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":457200,"y":274638,"cx":8229600,"cy":1143000}}]}} |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":"0","y":"0","cx":"100","cy":"100"}}]}]}}} |
+      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":"457200","y":"274638","cx":"8229600","cy":"1143000"}}]}} |
       | remove-slide       | {"index":2} |
       | move-slide         | {"from":0,"to":6} |
-      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":100,"y":100,"cx":500,"cy":300}}} |
+      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":"100","y":"100","cx":"500","cy":"300"}}} |
       | remove-shape       | {"slideIndex":1,"shapeIndex":2} |
       | set-shape-text     | {"slideIndex":0,"shapeIndex":0,"textFrame":[{"runs":[{"text":"Changed Title","bold":false,"italic":false}]}]} |
-      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":1,"y":2,"cx":3,"cy":4}} |
+      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":"1","y":"2","cx":"3","cy":"4"}} |
 
   @id-inverse
   @level-exhaustive
@@ -107,14 +107,14 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
 
     Examples:
       | id                 | params |
-      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":0,"y":0,"cx":100,"cy":100}}]}]}}} |
-      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":457200,"y":274638,"cx":8229600,"cy":1143000}}]}} |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":"0","y":"0","cx":"100","cy":"100"}}]}]}}} |
+      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":"457200","y":"274638","cx":"8229600","cy":"1143000"}}]}} |
       | remove-slide       | {"index":2} |
       | move-slide         | {"from":0,"to":6} |
-      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":100,"y":100,"cx":500,"cy":300}}} |
+      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":"100","y":"100","cx":"500","cy":"300"}}} |
       | remove-shape       | {"slideIndex":1,"shapeIndex":2} |
       | set-shape-text     | {"slideIndex":0,"shapeIndex":0,"textFrame":[{"runs":[{"text":"Changed Title","bold":false,"italic":false}]}]} |
-      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":1,"y":2,"cx":3,"cy":4}} |
+      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":"1","y":"2","cx":"3","cy":"4"}} |
 
   @id-identity-round-trip
   @level-long

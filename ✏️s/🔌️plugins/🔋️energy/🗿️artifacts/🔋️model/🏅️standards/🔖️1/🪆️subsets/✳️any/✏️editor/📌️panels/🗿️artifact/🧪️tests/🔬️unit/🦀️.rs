@@ -33,7 +33,7 @@ fn opened(node_key: &str) -> TreeWindowRequest {
 }
 
 fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// ♻️ Every built row is projected AND RETIRED: an argument map dropped without retirement never

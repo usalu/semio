@@ -8,8 +8,8 @@
 //! builds; the subject and parity phases both run.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, oracle_identity_round_trip, project};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_gif_test_oracle::standards::v89a::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, oracle_identity_round_trip, project};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -92,9 +92,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::base::project;
+    use semio_s_artifact_stdio_gif_test_oracle::standards::v89a::subsets::base::project;
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_gif::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
     use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;

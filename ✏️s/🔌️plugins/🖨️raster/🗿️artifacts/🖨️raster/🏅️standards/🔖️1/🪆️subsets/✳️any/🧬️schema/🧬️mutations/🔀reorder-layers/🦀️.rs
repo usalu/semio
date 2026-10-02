@@ -27,8 +27,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> protocol::LocalizedLabel {
-            protocol::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Reihenfolge von Ebene {} ändern", self.layer_id))
+        fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+            semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Reihenfolge von Ebene {} ändern", self.layer_id))
         }
 
         fn target(&self) -> Vec<String> {

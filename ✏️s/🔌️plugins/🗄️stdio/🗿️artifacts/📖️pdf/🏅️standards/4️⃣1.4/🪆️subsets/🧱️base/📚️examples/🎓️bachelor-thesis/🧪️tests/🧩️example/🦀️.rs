@@ -97,46 +97,66 @@ async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
 
 #[semio_framework_async_macros::async_test]
 async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
+    let started=std::time::Instant::now();
+    let mut previous=started;
+    let mut timing=|stage:&str|{eprintln!("[DEBUG] PDF structural stage={stage} elapsed_ms={} total_ms={}",previous.elapsed().as_millis(),started.elapsed().as_millis());previous=std::time::Instant::now();};
     let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
+    timing("fixture decode");
     assert_logical_cos_retained(&original);
     let canonical = encode_pdf(&original).expect("logical writer export");
+    timing("logical writer");
 
     let dsl = original.print_dsl();
+    timing("native DSL print");
     let from_dsl = PdfSnapshot::parse_dsl(&dsl).expect("snapshot DSL roundtrip");
+    timing("native DSL parse");
     assert_eq!(from_dsl, original, "DSL must carry the complete logical snapshot model");
     assert_logical_cos_retained(&from_dsl);
     assert_eq!(encode_pdf(&from_dsl).expect("DSL-restored logical export"), canonical);
+    timing("DSL verification");
 
     let pack = original.encode_pack();
+    timing("native Pack encode");
     let from_pack = PdfSnapshot::decode_pack(&pack).expect("snapshot unpack");
+    timing("native Pack decode");
     assert_eq!(from_pack, original, "pack must carry the complete logical snapshot model");
     assert_logical_cos_retained(&from_pack);
     assert_eq!(encode_pdf(&from_pack).expect("pack-restored logical export"), canonical);
+    timing("Pack verification");
 
     let empty = PdfDiff::between(&original, &original);
     assert!(empty.is_empty());
     assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
+    timing("self diff");
 
     let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }] });
     let mutation_frame = mutation.encode_op().expect("encode structural mutation");
+    timing("mutation encode");
     let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
+    timing("mutation decode");
     assert_eq!(restored_mutation, mutation);
     let diff = restored_mutation.diff(&original);
     let diff_frame = diff.diff().encode_diff().expect("encode structural diff");
+    timing("diff encode");
     let restored_diff = PdfDiff::decode_diff(&diff_frame).expect("decode structural diff");
+    timing("diff decode");
     assert_eq!(&restored_diff, diff.diff());
     let dirty = restored_diff.apply(&original).unwrap();
     let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
     assert_ne!(dirty_bytes, canonical);
     let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
+    timing("dirty writer roundtrip");
     assert!(dirty_redecoded.pages[0].text().ends_with("dirty"));
 
     let inverse = restored_diff.inverse(&original);
     let inverse_frame = inverse.encode_diff().expect("encode inverse diff");
+    timing("inverse diff encode");
     let restored_inverse = PdfDiff::decode_diff(&inverse_frame).expect("decode inverse diff");
+    timing("inverse diff decode");
     let restored = restored_inverse.apply(&dirty).unwrap();
     assert_eq!(restored, original, "diff inverse must restore the complete logical model");
     assert_eq!(encode_pdf(&restored).expect("inverse logical writer export"), canonical);
+    timing("inverse diff verification");
 
     let mut mutation_dirty = original.clone();
     apply_pdf_mutation(&mut mutation_dirty, &restored_mutation);
@@ -147,6 +167,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     }
     assert_eq!(mutation_dirty, original);
     assert_eq!(encode_pdf(&mutation_dirty).expect("mutation inverse logical export"), canonical);
+    timing("inverse mutation verification");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -28,7 +28,7 @@
 //! node fresh.
 
 //#region 🔖️Types
-use dsl::{from_dsl_value, to_dsl_value};
+
 /// 🎞️ The exact binary channel a live UI speaks — re-exported so an `AppChannelHost` implementor
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
@@ -304,7 +304,7 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
         }
     };
     let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: None, kind_id: None, media_type: Some(media.media_type), wire, blob_hash };
-    let descriptor_value = to_dsl_value(&descriptor).map_err(|error| RunError::Host(error))?;
+    let descriptor_value = semio_framework_value::ToValue::to_value(&descriptor);
     Ok((store::pack_rt::encode_wire_value(&descriptor_value), data))
 }
 
@@ -314,7 +314,7 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
 /// whatever `blob_hash` the artifact's own descriptor claimed.
 pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
-    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = from_dsl_value(value).map_err(|error| RunError::Host(error))?;
+    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(value).map_err(|error| RunError::Host(error.to_string()))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
@@ -391,7 +391,7 @@ fn decode_fingerprint_wire(bytes: &[u8]) -> Result<String, RunError> {
 }
 
 fn app_frame_fault_summary(fault: &[u8]) -> String {
-    let decoded = store::pack_rt::decode_wire_value(fault).ok().and_then(|value| from_dsl_value::<semio_framework::Fault>(value).ok());
+    let decoded = store::pack_rt::decode_wire_value(fault).ok().and_then(|value| <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).ok());
     match decoded {
         Some(fault) => format!("{}: {}", fault.code.0, fault.message),
         None => String::from_utf8_lossy(fault).into_owned(),
@@ -410,7 +410,7 @@ fn dispatch_report_summary(report: &[u8]) -> String {
         return String::new();
     }
     let Ok(value) = store::pack_rt::decode_wire_value(report) else { return String::new() };
-    let Ok(decoded) = from_dsl_value::<protocol::DispatchReport>(value) else { return String::new() };
+    let Ok(decoded) = <protocol::DispatchReport as semio_framework_value::FromValue>::from_value(value) else { return String::new() };
     decoded.messages.iter().map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) }).collect::<Vec<_>>().join("; ")
 }
 
@@ -1686,7 +1686,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// ✅️ R1-native-manifest: reads `plugin_id`'s manifest from `descriptor_path_for_plugin`'s
     /// committed `🛂️.descriptor.semio` (packet E1's `describe_component` emitter output, decoded the
     /// SAME way `🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs`'s own `describe_component` decodes
-    /// a live `describe()` return: `store::pack_rt::decode_wire_value` then `dsl::from_dsl_value`) —
+    /// a live `describe()` return: `store::pack_rt::decode_wire_value` then `semio_framework_value::FromValue::from_value`) —
     /// zero wasm instantiations (this struct's own doc). No live-`describe()` fallback yet — that
     /// needs a `GuestRuntime` seam on `🔌️plugin/🖥️host/🦀️.rs`, out of `path_scope` this
     /// packet (lease-requested, see `📓️terra-R1-report.md`) — so a plugin with no committed
@@ -1705,7 +1705,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         }
         let bytes = std::fs::read(path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
         let decoded = store::pack_rt::decode_wire_value(&bytes).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a pack: {error}", path.display())))?;
-        from_dsl_value(decoded).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a PackageDescriptor: {error}", path.display())))
+        semio_framework_value::FromValue::from_value(decoded).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a PackageDescriptor: {error}", path.display())))
     }
 
     /// ✅️ R1-native-manifest: the real recursive-load shape the OLD gap's own doc comment spelled

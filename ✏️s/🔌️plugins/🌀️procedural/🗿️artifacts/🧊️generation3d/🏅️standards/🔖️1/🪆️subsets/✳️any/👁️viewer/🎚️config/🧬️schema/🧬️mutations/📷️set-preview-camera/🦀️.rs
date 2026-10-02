@@ -24,8 +24,8 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
         vec![Self { camera: base.preview_camera.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

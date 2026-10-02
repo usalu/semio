@@ -34,8 +34,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderRegions {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))
     }
 }
 //#endregion 🔹Payload

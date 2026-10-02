@@ -39,6 +39,17 @@ REFUSALS = {
   (`minimum 0` or `exclusiveMinimum 0`): production refuses with `mutation.invariant`, the reference
   refuses the payload its own leaf schema rejects, and both leave the document bit-identical, so these
   rows have no inverse.""",
+    "din4108": """
+
+  Further rows witness every outcome class a leaf declares. `<kind>-dupe` re-applies a zone, element or
+  bridge insert to its own after-snapshot, whose id is already held — a `mutation.duplicate-id` refusal;
+  `<kind>-clamp` asks the same insert for a position past its list's end: both sides insert last, where
+  the canonical append landed, and production reports it as a `mutation.clamped` warning;
+  `<kind>-noop` re-applies a document-scalar change to its own after-snapshot — a `mutation.no-op`
+  warning with an empty diff; `<kind>-rule` asks the indoor-climate changes for a value outside the bound
+  their leaf payload schema states (θ_i above absolute zero, φ_i within [0, 1], n₅₀ ≥ 0) — a
+  `mutation.invariant` refusal. Refused and no-op rows leave the document bit-identical, so none of them
+  has an inverse row.""",
 }
 
 SHAPES = {

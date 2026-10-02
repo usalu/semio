@@ -1,7 +1,10 @@
 //! 👁️ WFC 2D viewer — the `view` mode: one full-pane board preview.
 
 use crate::viewer::wfc2d::modes::view::windows::preview;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const WFC_2D_VIEW_MODE_ID: &str = "view";
 

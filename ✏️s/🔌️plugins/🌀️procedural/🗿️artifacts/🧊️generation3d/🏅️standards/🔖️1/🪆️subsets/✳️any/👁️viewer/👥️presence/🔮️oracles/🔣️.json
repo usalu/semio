@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎚️ The presence state lane of `s.procedural.generation3d`'s viewer (👁️viewer/👥️presence): its mutation vocabulary `Generation3dViewPresenceMutation` over `Generation3dViewPresence`, measured by the plugin bridge on the surface coordinate, claimed by `../../🧪️tests/👥️mutate-procedural-generation3d-1-any-viewer-presence` and backed by one committed vector per declared outcome class.",
   "oracles": [],
@@ -120,35 +120,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-show-mode/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7b311306430090d8122617971a58a5f727a160c670e3930fb62933aa21104b25",
           "bytes": 181
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-show-mode/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:21ad0ca788d06709c988ab0721fd64f7153b1904fcb6b5a0ed84773a2d5c6dc1",
           "bytes": 49
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-show-mode/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e6abd39e9991b6fa0de3007e1f6fcd45f1326bbd141d77f86fbe5a8acfeb2166",
           "bytes": 181
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-show-mode/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e6abd39e9991b6fa0de3007e1f6fcd45f1326bbd141d77f86fbe5a8acfeb2166",
           "bytes": 181
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-show-mode/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -185,35 +185,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📷️set/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7b311306430090d8122617971a58a5f727a160c670e3930fb62933aa21104b25",
           "bytes": 181
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📷️set/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e8d62c20abf6cb20cc3b0f5301a4e1105c07f58c8b32450269505f6708878cf4",
           "bytes": 205
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📷️set/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:5fc6174ed2a2922e5b91974d08c87c57120cf2e8f18403ac364fd10171cecafb",
           "bytes": 182
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📷️set/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:5fc6174ed2a2922e5b91974d08c87c57120cf2e8f18403ac364fd10171cecafb",
           "bytes": 182
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📷️set-preview-camera/✅️set/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📷️set/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

@@ -18,10 +18,14 @@
 #![allow(async_fn_in_trait)]
 
 #[path = "♻️retirement/🦀️.rs"]
-pub mod retirement;
+mod retirement_integration;
+pub use semio_framework_value::{ErasedSnapshotRetirement, SnapshotRetirementStep, SnapshotRetirementFactory, ArtifactOwnedValueRetirementFactory};
 
-#[path = "🧬️retained-clone/🦀️.rs"]
-pub mod retained_clone;
+#[path = "🧬️snapshot-clone/🦀️.rs"]
+pub(crate) mod snapshot_clone_preparation;
+#[cfg(test)]
+#[path = "🧪️tests/🧬️retained-clone/🦀️.rs"]
+mod retained_clone_tests;
 
 #[path = "🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
 mod ephemeral_transfer;
@@ -70,10 +74,9 @@ pub mod durable_group;
 // this crate even when the derive is exercised in-crate.
 // extern crate self removed after merge
 
-use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue, FromValue, ToValue, ValueError};
+use crate::os_dsl::{DslOps, DslRecord, DslValue, FromValue, ToValue, ValueError};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
-use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
@@ -468,12 +471,6 @@ impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SnapshotRetirementStep {
-    Pending { released_items: usize, released_bytes: usize },
-    Blocked,
-    Complete,
-}
 
 /// 🧹️ Spends one caller turn's admitted BYTE grant on a retained owner instead of taking a single
 /// `close_step` from it. The retirement protocol admits at most ONE structural owner and
@@ -1473,6 +1470,7 @@ impl<P, Mutation> ArtifactStoreEnvelopeRetirement<P, Mutation> {
             .or_else(|| envelope.lanes.pop_last().map(|(id, _)| id))
             .or_else(|| envelope.backbone.as_mut().and_then(|backbone| take_nonempty(&mut backbone.uri)))
             .or_else(|| envelope.active_alternative_id.take())
+            .or_else(|| envelope.viewer_checkpoint_id.take())
             .or_else(|| envelope.dialect.as_mut().and_then(|dialect| take_nonempty(&mut dialect.artifact_kind).or_else(|| take_nonempty(&mut dialect.standard)).or_else(|| take_nonempty(&mut dialect.subset))))
             .or_else(|| {
                 envelope.migrated_from.as_mut().and_then(|provenance| {
@@ -1627,6 +1625,7 @@ where
                         && envelope.migrated_from.is_none()
                         && envelope.owner.is_none()
                         && envelope.lanes.is_empty()
+                        && envelope.viewer_checkpoint_id.is_none()
                         && envelope.edit_messages.is_empty()
                         && envelope.conflicts.is_empty()
                         && envelope.transitions.is_empty()
@@ -1690,40 +1689,12 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
     }
 }
 
-pub trait ErasedSnapshotRetirement: Send {
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
-    fn terminal_is_empty(&self) -> bool;
-
-    /// 📏️ The SMALLEST byte grant this retirement's next `close_step` can spend to make physical
-    /// progress. A heap allocation is freed whole or not at all, so a retirement whose next unit is
-    /// one owned buffer legitimately answers that buffer's size and answers `Blocked` (or
-    /// `Pending { 0, 0 }`) below it — which leaves a NESTED driver, holding only a
-    /// `Box<dyn ErasedSnapshotRetirement>`, unable to tell "I under-granted" from "I am waiting on
-    /// someone else". A driver reads this BEFORE it grants, and pays the demand out of its own
-    /// allocation admission rather than out of the caller's payload page.
-    ///
-    /// 🧱️ Defaulted to 1 — the byte-free answer of every retirement that releases owners rather than
-    /// buffers, which is most of them — so no existing implementor changes shape. The inherent
-    /// `next_close_byte_demand` methods that already exist on concrete retirements
-    /// (`🌱️value/🗂️ordered`, `🌊️flow/🧵️retained`) are the same quantity; this is the erased view of
-    /// it, the one a `Box<dyn ErasedSnapshotRetirement>` holder can actually reach.
-    fn next_close_byte_demand(&self) -> usize {
-        1
-    }
-}
 
 pub struct SnapshotRetirementRejected {
     pub snapshot: ErasedSnapshotRead,
     pub reason: String,
 }
 
-pub trait SnapshotRetirementFactory<P>: Send + Sync {
-    fn retire(&self, snapshot: Arc<P>) -> Box<dyn ErasedSnapshotRetirement>;
-}
-
-pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync {
-    fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement>;
-}
 
 struct ReturnedSnapshotReadRetirement<P: Send + Sync + 'static> {
     alias: std::mem::ManuallyDrop<Option<Arc<P>>>,
@@ -3132,6 +3103,44 @@ pub struct OpenToolTransaction {
     pub edit_id: String,
 }
 
+/// 🐢️ A history change this store admitted but has not adopted yet (design §16.6): the remote `transitions` it admitted
+/// ([`ArtifactStore::defer_remote_replays`]) and at most one `local` step this replica authored
+/// ([`ArtifactStore::defer_local_replays`]) wait outside the log while their Report replay steps turn by turn; the replay
+/// restarts whenever the history it started from changed (the content revision it names).
+struct PendingReprojection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    transitions: Vec<crate::os_spr::MutationEnvelope>,
+    local: Option<PendingLocalStep>,
+    replay: Option<([u8; 32], EditReplay<P, Mutation>)>,
+}
+
+impl<P, Mutation> PendingReprojection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// 🫗️ Nothing admitted yet.
+    fn empty() -> Self {
+        Self { transitions: Vec::new(), local: None, replay: None }
+    }
+}
+
+/// 🪃️ A local history step whose Report replay outlasts its dispatch: the transitions it authored (neither recorded nor
+/// announced yet), the head `(line, checkpoint)` it moves this replica to, and whether it finalizes a supersession — whose
+/// report must not block finalizing, or the step is refused with nothing of it recorded.
+struct PendingLocalStep {
+    envelopes: Vec<crate::os_spr::MutationEnvelope>,
+    head: (Option<String>, Option<String>),
+    finalizing: bool,
+}
+
+/// ⏩️ Where one advance of a deferred reprojection left it.
+enum ReprojectionAdvance {
+    Pending(ReplayProgress),
+    Adopted(Vec<crate::os_spr::EditMessages>),
+}
+
 /// ✏️ One input of [`ArtifactCommand::Supersede`]: the superseded operation and the replacement it folds as from now
 /// on (`None` withdraws it).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -3159,6 +3168,12 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::AppendTransaction { .. } | Self::CommitTransaction { .. } => Some(ArtifactProjectionCause::Apply),
             Self::AbortTransaction { .. } => Some(ArtifactProjectionCause::Undo),
         }
+    }
+
+    /// 🚦️ Whether this command moves history positions — an undo, redo, checkpoint, alternative, checkout, supersession or
+    /// conflict resolution: what a store whose local history step still replays refuses ([`VcsError::HistoryReplaying`]).
+    pub fn moves_history(&self) -> bool {
+        !self.history_transition_kinds().is_empty() || matches!(self, Self::ResolveConflict { .. })
     }
 
     /// 🏷️ Every kind of history transition this command may author, in authoring order: what the store's
@@ -3335,13 +3350,13 @@ impl<S> Clone for ArtifactChild<S> {
     }
 }
 
-impl<S> crate::os_schema_composition::ChildFieldRefs for ArtifactChild<S> {
+impl<S> semio_framework_schema_composition::ChildFieldRefs for ArtifactChild<S> {
     const MANY: bool = false;
-    fn visit_child_field<'a, V: crate::os_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
+    fn visit_child_field<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
         visitor.step()?;
         visitor.child(
             slot,
-            crate::os_schema_composition::ChildRefFields {
+            semio_framework_schema_composition::ChildRefFields {
                 child_id: &self.child_id,
                 artifact_id: &self.target.artifact_id,
                 artifact_kind: &self.target.dialect.artifact_kind,
@@ -3372,6 +3387,16 @@ impl<S> ToValue for ArtifactChild<S> {
     fn to_value(&self) -> DslValue {
         DslValue::object([("childId".to_string(), ToValue::to_value(&self.child_id)), ("target".to_string(), ToValue::to_value(&self.target))])
     }
+    fn to_value_controlled(&self,control:&mut protocol::value::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            control.begin_stage(2).map_err(ValueError::new)?;
+            let mut fields=protocol::value::DecodedValue::new(control.allocate_vec::<(String,DslValue)>(2).map_err(ValueError::new)?,|fields:Vec<(String,DslValue)>|{for(_,value)in fields{<DslValue as FromValue>::retire_decoded(value);}});
+            let key=control.copy_text("childId").map_err(ValueError::new)?;let child_id=ToValue::to_value_controlled(&self.child_id,control).map_err(|error|error.under("childId"))?;fields.get_mut().push((key,child_id));control.step().map_err(ValueError::new)?;
+            let key=control.copy_text("target").map_err(ValueError::new)?;let target=ToValue::to_value_controlled(&self.target,control).map_err(|error|error.under("target"))?;fields.get_mut().push((key,target));control.step().map_err(ValueError::new)?;
+            Ok(DslValue::Object(fields.take()))
+        }))
+    }
+
 }
 
 impl<S> FromValue for ArtifactChild<S> {
@@ -3390,6 +3415,24 @@ impl<S> FromValue for ArtifactChild<S> {
         }
         Ok(ArtifactChild { child_id: child_id.ok_or_else(|| ValueError::new("ArtifactChild missing childId"))?, target: target.ok_or_else(|| ValueError::new("ArtifactChild missing target"))?, local_owner: None, _snapshot: PhantomData })
     }
+    fn from_value_controlled(value:&DslValue,control:&mut protocol::value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+        let DslValue::Object(fields)=value else{return Err(ValueError::new("expected an object for ArtifactChild"))};
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            control.begin_stage(fields.len()).map_err(ValueError::new)?;
+            let mut child_id=None;let mut target=None;
+            for(key,entry)in fields{
+                match key.as_str(){
+                    "childId"=>child_id=Some(String::from_value_controlled(entry,control).map_err(|error|error.under("childId"))?),
+                    "target"=>target=Some(crate::os_io::ArtifactRef::from_value_controlled(entry,control).map_err(|error|error.under("target"))?),
+                    _=>return Err(ValueError::new("ArtifactChild has an unknown field")),
+                }
+                control.step().map_err(ValueError::new)?;
+            }
+            control.checkpoint().map_err(ValueError::new)?;
+            Ok(Self{child_id:child_id.ok_or_else(||ValueError::new("ArtifactChild missing childId"))?,target:target.ok_or_else(||ValueError::new("ArtifactChild missing target"))?,local_owner:None,_snapshot:PhantomData})
+        }))
+    }
+
 }
 
 /// 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
@@ -3431,15 +3474,15 @@ impl std::error::Error for ChildRestoreProjectionError {}
 /// 🌳️ Bounded borrowed authority derived only from the loaded parent's declared child fields.
 #[derive(Debug)]
 pub struct ChildRestoreProjection<'a> {
-    slots: &'static [crate::os_schema_composition::ChildSlotSpec],
-    rows: [Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)>; CHILD_RESTORE_MAXIMUM_REFERENCES],
+    slots: &'static [semio_framework_schema_composition::ChildSlotSpec],
+    rows: [Option<(&'static str, semio_framework_schema_composition::ChildRefFields<'a>)>; CHILD_RESTORE_MAXIMUM_REFERENCES],
     length: usize,
     steps: usize,
 }
 
 impl<'a> ChildRestoreProjection<'a> {
     /// 🔎️ Visits actual typed snapshot fields without cloning handles, leases or child content.
-    pub fn from_snapshot<S: crate::os_schema_composition::ArtifactCompositionFields>(snapshot: &'a S) -> Result<Self, ChildRestoreProjectionError> {
+    pub fn from_snapshot<S: semio_framework_schema_composition::ArtifactCompositionFields>(snapshot: &'a S) -> Result<Self, ChildRestoreProjectionError> {
         let slots = S::child_slots();
         if slots.len() > CHILD_RESTORE_MAXIMUM_REFERENCES {
             return Err(ChildRestoreProjectionError::ReferenceLimit);
@@ -3470,7 +3513,7 @@ impl<'a> ChildRestoreProjection<'a> {
     }
 
     /// 🌿️ Reads one admitted typed child row without copying handles or payload owners.
-    pub fn get(&self, index: usize) -> Option<(&'static str, crate::os_schema_composition::ChildRefFields<'a>)> {
+    pub fn get(&self, index: usize) -> Option<(&'static str, semio_framework_schema_composition::ChildRefFields<'a>)> {
         self.rows.get(index).copied().flatten()
     }
 
@@ -3478,7 +3521,6 @@ impl<'a> ChildRestoreProjection<'a> {
     pub fn admits_member(&self, slot: &str, expected: &crate::os_io::ArtifactRef) -> bool {
         self.rows[..self.length].iter().flatten().any(|(name, fields)| {
             *name == slot
-                && fields.child_id == expected.artifact_id
                 && fields.artifact_id == expected.artifact_id
                 && fields.artifact_kind == expected.dialect.artifact_kind
                 && fields.standard == expected.dialect.standard
@@ -3487,7 +3529,7 @@ impl<'a> ChildRestoreProjection<'a> {
     }
 
     /// ⚖️ Admits exactly one unordered complete set: no omission, substitution or duplicate.
-    pub fn admit_complete<'b>(&self, incoming: impl IntoIterator<Item = (&'b str, crate::os_schema_composition::ChildRefFields<'b>)>) -> Result<(), ChildRestoreProjectionError> {
+    pub fn admit_complete<'b>(&self, incoming: impl IntoIterator<Item = (&'b str, semio_framework_schema_composition::ChildRefFields<'b>)>) -> Result<(), ChildRestoreProjectionError> {
         let mut seen = [false; CHILD_RESTORE_MAXIMUM_REFERENCES];
         let mut count = 0;
         for (slot, fields) in incoming {
@@ -3508,7 +3550,7 @@ impl<'a> ChildRestoreProjection<'a> {
     }
 }
 
-impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProjection<'a> {
+impl<'a> semio_framework_schema_composition::ChildRefVisitor<'a> for ChildRestoreProjection<'a> {
     type Error = ChildRestoreProjectionError;
     fn step(&mut self) -> Result<(), Self::Error> {
         if self.steps == CHILD_RESTORE_MAXIMUM_VISIT_STEPS {
@@ -3517,13 +3559,12 @@ impl<'a> crate::os_schema_composition::ChildRefVisitor<'a> for ChildRestoreProje
         self.steps += 1;
         Ok(())
     }
-    fn child(&mut self, slot: &'static str, fields: crate::os_schema_composition::ChildRefFields<'a>) -> Result<(), Self::Error> {
+    fn child(&mut self, slot: &'static str, fields: semio_framework_schema_composition::ChildRefFields<'a>) -> Result<(), Self::Error> {
         if self.length == CHILD_RESTORE_MAXIMUM_REFERENCES {
             return Err(Self::Error::ReferenceLimit);
         }
         let spec = self.slots.iter().find(|spec| spec.name == slot).ok_or(Self::Error::InvalidSlot)?;
-        if fields.child_id != fields.artifact_id
-            || fields.artifact_kind != spec.kind
+        if fields.artifact_kind != spec.kind
             || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES)
         {
             return Err(Self::Error::InvalidReference);
@@ -3761,13 +3802,25 @@ fn validate_member_history_identity(history: &crate::os_spr::HistoryLog, schema:
 /// `LinkPin` (P6 idiom, the same one `BackboneMessage`'s `OpText`/`OpBinary` impls near
 /// `🔖️Backbone` below use) — NOT new `Shape` variants: the design doc's deviation D1 deliberately
 /// keeps `Shape` closed (it is exhaustively matched in ~20 files) and represents every new value
-/// type here as an ordinary `Shape::Record`. `crate::os_io::ArtifactRef` fields encode as their
-/// `to_uri()` wire string (`Shape::Text`) rather than requiring `ArtifactRef: DslField` itself —
-/// same "own the codec at this edge, don't couple types across crates" reasoning `CompositionPin`
-/// (in `🌿️vcs`) already applies to the identical field shape.
+/// type here as an ordinary `Shape::Record`. Targets use the canonical literal
+/// `crate::os_io::ArtifactRef` record so each owned reference component remains independent.
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
 fn artifact_child_spec() -> crate::os_dsl::RecordSpec {
-    crate::os_dsl::RecordSpec::new(None, crate::os_dsl::RecordLayout::Inline, vec![crate::os_dsl::FieldSpec::new(0, "child_id", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "target", crate::os_dsl::Shape::Text)])
+    crate::os_dsl::RecordSpec::new(None, crate::os_dsl::RecordLayout::Inline, vec![crate::os_dsl::FieldSpec::new(0, "child_id", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "target", <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape())])
+}
+
+fn artifact_child_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(2)?;let mut fields=control.allocate_vec::<crate::os_dsl::FieldSpec>(2)?;
+        fields.push(crate::os_dsl::schema::producer::field(0,"child_id",crate::os_dsl::Shape::Text,control)?);control.step()?;
+        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape_controlled(control)?;
+        fields.push(crate::os_dsl::schema::producer::field(1,"target",target,control)?);control.step()?;
+        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+    })
+}
+
+fn artifact_child_spec_producer()->crate::os_dsl::RecordSpecProducer{
+    crate::os_dsl::RecordSpecProducer{ordinary:artifact_child_spec,decoding:|control|artifact_child_spec_controlled(control),encoding:|control|artifact_child_spec_controlled(control)}
 }
 
 // 🚫️async: E1 pure — record conversion with no suspension point, consumed by the sync
@@ -3775,40 +3828,64 @@ fn artifact_child_spec() -> crate::os_dsl::RecordSpec {
 fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
     record.fields.insert(0, crate::os_dsl::FieldValue::Text(child.child_id.clone()));
-    record.fields.insert(1, crate::os_dsl::FieldValue::Text(child.target.to_uri()));
+    record.fields.insert(1, <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value(&child.target));
     record
 }
 
 // 🚫️async: E1 pure — same sync consumer as `artifact_child_to_record`. See R9.
-/// 🧱️ Constructed directly rather than through the still-async `ArtifactChild::new`: this fn is
-/// sync (E1, above) and `new` is a plain struct literal, so inlining it here avoids forcing an
-/// async->sync flip across `new`'s 108 call sites in crates other packets own.
+/// 🧱️ Constructs the persisted child identity and literal target without a local owner.
 fn artifact_child_from_record<S>(record: &crate::os_dsl::RecordValue) -> Result<ArtifactChild<S>, String> {
+    if record.fields.len()!=2||record.fields.keys().any(|id|*id>1){return Err("artifact child requires its two literal fields".into());}
     let child_id = match record.get(0) {
         Some(crate::os_dsl::FieldValue::Text(s)) => s.clone(),
         other => return Err(format!("expected child_id, found {other:?}")),
     };
-    let target = match record.get(1) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
-        other => return Err(format!("expected target, found {other:?}")),
-    };
+    let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value(record.get(1).ok_or("missing artifact child target")?)?;
     Ok(ArtifactChild { child_id, target, local_owner: None, _snapshot: PhantomData })
 }
 
 impl<S> crate::os_dsl::DslField for ArtifactChild<S> {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(artifact_child_spec)
+        crate::os_dsl::Shape::Record(artifact_child_spec_producer())
     }
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(artifact_child_spec_producer()))}
     fn to_value(&self) -> crate::os_dsl::FieldValue {
         crate::os_dsl::FieldValue::Record(artifact_child_to_record(self))
     }
+    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{
+        <Self as crate::os_dsl::DslField>::to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)
+    }
+    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
+        control.scoped_depth(64,|control|control.scoped_stage(|control|{
+            control.begin_stage(2)?;let mut record=crate::os_dsl::native_encoding::EncodedRecord::new(2,control)?;
+            record.insert(0,crate::os_dsl::FieldValue::Text(control.copy_text(&self.child_id)?));control.step()?;
+            record.insert(1,<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value_controlled(&self.target,control)?);control.step()?;
+            Ok(record.take())
+        }))
+    }
+
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
             crate::os_dsl::FieldValue::Record(record) => artifact_child_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
+    }    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected artifact child Record".into());};
+        Self::from_record_controlled(record,control)
     }
+    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+        control.scoped_stage(|control|{
+            control.begin_stage(2)?;
+            if record.fields.len()!=2||record.fields.keys().any(|id|*id>1){return Err("artifact child requires its two literal fields".into());}
+            let Some(crate::os_dsl::FieldValue::Text(child_id))=record.get(0) else{return Err("expected artifact child identity Text".into());};
+            let target=record.get(1).ok_or("missing artifact child target")?;
+            let child_id=control.copy_text(child_id)?;control.step()?;
+            let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value_controlled(target,control)?;control.step()?;
+            Ok(Self{child_id,target,local_owner:None,_snapshot:PhantomData})
+        })
+    }
+
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
@@ -3819,6 +3896,14 @@ fn owner_ref_spec() -> crate::os_dsl::RecordSpec {
         vec![crate::os_dsl::FieldSpec::new(0, "parent", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "slot", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(2, "child_id", crate::os_dsl::Shape::Text)],
     )
 }
+
+fn owner_ref_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(3)?;let mut fields=control.allocate_vec(3)?;
+        for(id,key)in[(0,"parent"),(1,"slot"),(2,"child_id")]{fields.push(crate::os_dsl::schema::producer::field(id,key,crate::os_dsl::Shape::Text,control)?);control.step()?;}
+        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn owner_ref_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:owner_ref_spec,decoding:|control|owner_ref_spec_controlled(control),encoding:|control|owner_ref_spec_controlled(control)}}
 
 fn owner_ref_to_record(owner: &OwnerRef) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
@@ -3847,8 +3932,9 @@ fn owner_ref_from_record(record: &crate::os_dsl::RecordValue) -> Result<OwnerRef
 impl crate::os_dsl::DslField for OwnerRef {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(owner_ref_spec)
+        crate::os_dsl::Shape::Record(owner_ref_spec_producer())
     }
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(owner_ref_spec_producer()))}
     fn to_value(&self) -> crate::os_dsl::FieldValue {
         crate::os_dsl::FieldValue::Record(owner_ref_to_record(self))
     }
@@ -3875,6 +3961,16 @@ fn link_pin_spec() -> crate::os_dsl::RecordSpec {
     )
 }
 
+fn link_pin_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(5)?;let mut fields=control.allocate_vec(5)?;let mut labels=control.allocate_vec(3)?;
+        for(key,id)in[("head",0),("checkpoint",1),("snapshot",2)]{labels.push((control.copy_text(key)?,id));}
+        fields.push(crate::os_dsl::schema::producer::field(0,"kind",crate::os_dsl::Shape::Enum(labels),control)?);control.step()?;
+        for(id,key,shape)in[(1,"checkpoint_id",crate::os_dsl::Shape::Text),(2,"blob_hash",crate::os_dsl::Shape::Text),(3,"blob_size",crate::os_dsl::Shape::UInt),(4,"blob_media_type",crate::os_dsl::Shape::Text)]{fields.push(crate::os_dsl::schema::producer::field(id,key,shape,control)?.optional());control.step()?;}
+        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn link_pin_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:link_pin_spec,decoding:|control|link_pin_spec_controlled(control),encoding:|control|link_pin_spec_controlled(control)}}
+
 fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
     match pin {
@@ -3895,7 +3991,37 @@ fn link_pin_to_record(pin: &LinkPin) -> crate::os_dsl::RecordValue {
     record
 }
 
+fn link_pin_to_record_controlled(pin:&LinkPin,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
+    use crate::os_dsl::{FieldValue as V,native_encoding::EncodedRecord};
+    control.scoped_depth(64,|control|control.scoped_stage(|control|{
+        let count=match pin{LinkPin::Head=>1,LinkPin::Checkpoint{..}=>2,LinkPin::Snapshot{..}=>4};control.begin_stage(count)?;let mut output=EncodedRecord::new(count,control)?;
+        let ordinal=match pin{LinkPin::Head=>0,LinkPin::Checkpoint{..}=>1,LinkPin::Snapshot{..}=>2};output.insert(0,V::Enum(ordinal));control.step()?;
+        match pin{LinkPin::Head=>{},LinkPin::Checkpoint{id}=>{output.insert(1,V::Text(control.copy_text(id)?));control.step()?;},LinkPin::Snapshot{blob}=>{output.insert(2,V::Text(control.copy_text(&blob.hash)?));control.step()?;output.insert(3,V::UInt(blob.size));control.step()?;output.insert(4,V::Text(control.copy_text(&blob.media_type)?));control.step()?;}}
+        Ok(output.take())
+    }))
+}
+
+fn validate_link_pin_record(record:&crate::os_dsl::RecordValue)->Result<u32,String>{
+    let Some(crate::os_dsl::FieldValue::Enum(ordinal))=record.get(0)else{return Err("expected link pin kind Enum".into());};
+    let fields:&[u16]=match ordinal{0=>&[0],1=>&[0,1],2=>&[0,2,3,4],_=>return Err("unknown link pin kind ordinal".into())};
+    if record.fields.keys().any(|id|*id>4)||fields.iter().any(|id|matches!(record.get(*id),None|Some(crate::os_dsl::FieldValue::Absent)))||record.fields.iter().any(|(id,value)|!matches!(value,crate::os_dsl::FieldValue::Absent)&&!fields.contains(id)){return Err("link pin fields differ from its declared branch".into());}
+    Ok(*ordinal)
+}
+fn link_pin_from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<LinkPin,String>{
+    control.scoped_stage(|control|{
+        control.checkpoint()?;let ordinal=validate_link_pin_record(record)?;control.begin_stage(match ordinal{0=>1,1=>2,2=>4,_=>unreachable!()})?;control.step()?;
+        let text=|id|match record.get(id){Some(crate::os_dsl::FieldValue::Text(value))=>Ok(value.as_str()),_=>Err("link pin field must be Text".to_string())};
+        match ordinal{
+            0=>Ok(LinkPin::Head),
+            1=>{let id=control.copy_text(text(1)?)?;control.step()?;Ok(LinkPin::Checkpoint{id})},
+            2=>{let hash=text(2)?;let media_type=text(4)?;let Some(crate::os_dsl::FieldValue::UInt(size))=record.get(3)else{return Err("link pin blob size must be UInt".into());};let hash=control.copy_text(hash)?;control.step()?;let size=*size;control.step()?;let media_type=control.copy_text(media_type)?;control.step()?;Ok(LinkPin::Snapshot{blob:BlobRef{hash,size,media_type}})},
+            _=>unreachable!(),
+        }
+    })
+}
+
 fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, String> {
+    validate_link_pin_record(record)?;
     let ordinal = match record.get(0) {
         Some(crate::os_dsl::FieldValue::Enum(n)) => *n,
         other => return Err(format!("expected kind, found {other:?}")),
@@ -3931,17 +4057,23 @@ fn link_pin_from_record(record: &crate::os_dsl::RecordValue) -> Result<LinkPin, 
 impl crate::os_dsl::DslField for LinkPin {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(link_pin_spec)
+        crate::os_dsl::Shape::Record(link_pin_spec_producer())
     }
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(link_pin_spec_producer()))}
     fn to_value(&self) -> crate::os_dsl::FieldValue {
         crate::os_dsl::FieldValue::Record(link_pin_to_record(self))
     }
+    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{link_pin_to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{link_pin_to_record_controlled(self,control)}
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
             crate::os_dsl::FieldValue::Record(record) => link_pin_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
+    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected link pin Record".into());};link_pin_from_record_controlled(record,control)}
+    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{link_pin_from_record_controlled(record,control)}
+
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
@@ -3949,23 +4081,41 @@ fn artifact_link_spec() -> crate::os_dsl::RecordSpec {
     crate::os_dsl::RecordSpec::new(
         None,
         crate::os_dsl::RecordLayout::Inline,
-        vec![crate::os_dsl::FieldSpec::new(0, "target", crate::os_dsl::Shape::Text), crate::os_dsl::FieldSpec::new(1, "pin", crate::os_dsl::Shape::Record(link_pin_spec)), crate::os_dsl::FieldSpec::new(2, "role", crate::os_dsl::Shape::Text)],
+        vec![crate::os_dsl::FieldSpec::new(0, "target", <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape()), crate::os_dsl::FieldSpec::new(1, "pin", crate::os_dsl::Shape::Record(link_pin_spec_producer())), crate::os_dsl::FieldSpec::new(2, "role", crate::os_dsl::Shape::Text)],
     )
 }
 
+fn artifact_link_spec_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::RecordSpec,String>{
+    control.scoped_stage(|control|{control.begin_stage(3)?;let mut fields=control.allocate_vec(3)?;
+        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::shape_controlled(control)?;
+        for(id,key,shape)in[(0,"target",target),(1,"pin",crate::os_dsl::Shape::Record(link_pin_spec_producer())),(2,"role",crate::os_dsl::Shape::Text)]{fields.push(crate::os_dsl::schema::producer::field(id,key,shape,control)?);control.step()?;}
+        crate::os_dsl::schema::producer::record(None,crate::os_dsl::RecordLayout::Inline,fields,control)
+    })
+}
+fn artifact_link_spec_producer()->crate::os_dsl::RecordSpecProducer{crate::os_dsl::RecordSpecProducer{ordinary:artifact_link_spec,decoding:|control|artifact_link_spec_controlled(control),encoding:|control|artifact_link_spec_controlled(control)}}
+
 fn artifact_link_to_record(link: &ArtifactLink) -> crate::os_dsl::RecordValue {
     let mut record = crate::os_dsl::RecordValue::default();
-    record.fields.insert(0, crate::os_dsl::FieldValue::Text(link.target.to_uri()));
+    record.fields.insert(0, <crate::os_io::ArtifactRef as crate::os_dsl::DslField>::to_value(&link.target));
     record.fields.insert(1, crate::os_dsl::FieldValue::Record(link_pin_to_record(&link.pin)));
     record.fields.insert(2, crate::os_dsl::FieldValue::Text(link.role.clone()));
     record
 }
 
+fn artifact_link_to_record_controlled(link:&ArtifactLink,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{
+    use crate::os_dsl::{DslField,FieldValue as V,native_encoding::EncodedRecord};
+    control.scoped_depth(64,|control|control.scoped_stage(|control|{
+        control.begin_stage(3)?;let mut output=EncodedRecord::new(3,control)?;
+        output.insert(0,<crate::os_io::ArtifactRef as DslField>::to_value_controlled(&link.target,control)?);control.step()?;
+        output.insert(1,V::Record(link_pin_to_record_controlled(&link.pin,control)?));control.step()?;
+        output.insert(2,V::Text(control.copy_text(&link.role)?));control.step()?;
+        Ok(output.take())
+    }))
+}
+
 fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<ArtifactLink, String> {
-    let target = match record.get(0) {
-        Some(crate::os_dsl::FieldValue::Text(s)) => crate::os_io::ArtifactRef::parse_uri(s)?,
-        other => return Err(format!("expected target, found {other:?}")),
-    };
+    if record.fields.len()!=3||record.fields.keys().any(|id|*id>2){return Err("artifact link requires its three declared fields".into());}
+    let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value(record.get(0).ok_or("artifact link requires target")?)?;
     let pin = match record.get(1) {
         Some(crate::os_dsl::FieldValue::Record(record)) => link_pin_from_record(record)?,
         other => return Err(format!("expected pin, found {other:?}")),
@@ -3977,20 +4127,39 @@ fn artifact_link_from_record(record: &crate::os_dsl::RecordValue) -> Result<Arti
     Ok(ArtifactLink { target, pin, role })
 }
 
+fn artifact_link_from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<ArtifactLink,String>{
+    control.scoped_stage(|control|{
+        control.begin_stage(3)?;if record.fields.len()!=3||record.fields.keys().any(|id|*id>2){return Err("artifact link requires its three declared fields".into());}
+        let target=record.get(0).ok_or("artifact link requires target")?;
+        let Some(crate::os_dsl::FieldValue::Record(pin))=record.get(1)else{return Err("artifact link pin must be Record".into());};
+        let Some(crate::os_dsl::FieldValue::Text(role))=record.get(2)else{return Err("artifact link role must be Text".into());};
+        validate_link_pin_record(pin)?;
+        let target=<crate::os_io::ArtifactRef as crate::os_dsl::DslField>::from_value_controlled(target,control)?;control.step()?;
+        let pin=link_pin_from_record_controlled(pin,control)?;control.step()?;let role=control.copy_text(role)?;control.step()?;
+        Ok(ArtifactLink{target,pin,role})
+    })
+}
+
 impl crate::os_dsl::DslField for ArtifactLink {
     /// 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
     fn shape() -> crate::os_dsl::Shape {
-        crate::os_dsl::Shape::Record(artifact_link_spec)
+        crate::os_dsl::Shape::Record(artifact_link_spec_producer())
     }
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(artifact_link_spec_producer()))}
     fn to_value(&self) -> crate::os_dsl::FieldValue {
         crate::os_dsl::FieldValue::Record(artifact_link_to_record(self))
     }
+    fn to_value_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::FieldValue,String>{artifact_link_to_record_controlled(self,control).map(crate::os_dsl::FieldValue::Record)}
+    fn to_record_controlled(&self,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<crate::os_dsl::RecordValue,String>{artifact_link_to_record_controlled(self,control)}
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
             crate::os_dsl::FieldValue::Record(record) => artifact_link_from_record(record),
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
+    fn from_value_controlled(value:&crate::os_dsl::FieldValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{let crate::os_dsl::FieldValue::Record(record)=value else{return Err("expected artifact link Record".into());};artifact_link_from_record_controlled(record,control)}
+    fn from_record_controlled(record:&crate::os_dsl::RecordValue,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<Self,String>{artifact_link_from_record_controlled(record,control)}
+
 }
 //#endregion 🔖️CompositionDsl
 //#endregion 🔖️Composition
@@ -5723,9 +5892,18 @@ pub mod pack_rt {
         crate::os_pack::encode_document(spec, record, options)
     }
 
+    /// 🛫️ Emits complete Pack documents under the caller's cumulative ownership control.
+    pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&PackEncodeOptions,control:&mut crate::os_dsl::NativeEncodeControl<'_>)->Result<Vec<u8>,PackError>{
+        crate::os_pack::encode_document_controlled(spec,record,options,control)
+    }
+
     /// 🚪️ Forwards to `crate::os_pack::decode_document`.
     pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::os_pack::DecodeReport), PackError> {
         crate::os_pack::decode_document(bytes, spec, options)
+    }
+    /// 🛬️ Keeps complete physical Pack reading and typed reconstruction on one caller control.
+    pub fn decode_document_controlled(bytes:&[u8],spec:&RecordSpec,options:&PackDecodeOptions,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<(RecordValue,crate::os_pack::DecodeReport),PackError>{
+        crate::os_pack::decode_document_controlled(bytes,spec,options,control)
     }
 
     /// 🎯️ P6: container-less record body helpers for handcrafted OpBinary impls.
@@ -5734,6 +5912,10 @@ pub mod pack_rt {
     }
     pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, crate::os_pack::DecodeReport), PackError> {
         crate::os_pack::decode_record_body(bytes, spec, options)
+    }
+    /// 🛬️ Keeps terminal Pack parsing and typed construction under one ownership control.
+    pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:&PackDecodeOptions,control:&mut crate::os_dsl::NativeDecodeControl<'_>)->Result<RecordValue,PackError>{
+        crate::os_pack::decode_record_body_exact_controlled(bytes,spec,options,control)
     }
     pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
         crate::os_pack::write_varint_u64(out, value);
@@ -5882,7 +6064,7 @@ pub mod pack_rt {
 /// cursors and wire constants: batch `decode_document`, `decode_record_body`, `RecordValue`, and
 /// their allocation-oriented options are absent from this module's type-level reachability graph.
 pub mod mounted_pack_rt {
-    pub use crate::os_dsl::{DslField, DslValue, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+    pub use crate::os_dsl::{DslField, DslValue, FieldValue, RecordLayout, RecordSpec, RecordSpecProducer, RecordValue, Shape};
     pub use super::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};
     pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
@@ -10695,6 +10877,14 @@ pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 #[path = "📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs"]
 mod sqlite_snapshot_retirement;
 
+#[path = "📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs"]
+mod sqlite_snapshot_native_decoding;
+pub use sqlite_snapshot_native_decoding::decode_sqlite_snapshot_record_native;
+
+#[path="📦️codec/🪶️snapshot-capability/🛫️native-encoding/🦀️.rs"]
+mod sqlite_snapshot_native_encoding;
+pub use sqlite_snapshot_native_encoding::encode_sqlite_snapshot_record_native;
+
 /// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite.
 pub trait ArtifactSqliteSnapshot: Sized {
     const SQLITE_SCHEMA: &'static str;
@@ -10703,6 +10893,15 @@ pub trait ArtifactSqliteSnapshot: Sized {
 
     /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
     fn retire_sqlite_snapshot(self) { drop(self); }
+
+    /// 🛬️ Materializes native snapshot fields under the caller's limits and cancellation control.
+    fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String> {
+        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
+        Err("snapshot owner has no controlled native decoding implementation".into())
+    }
+
+    /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.
+    fn encode_sqlite_snapshot_native(&self,_encoding:crate::sqlite_snapshot::SnapshotEncoding,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<crate::io_schema::IoPayload,String>{control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,0,1)?;Err("snapshot owner has no controlled native encoding implementation".into())}
 
     /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
@@ -10724,19 +10923,7 @@ pub trait ArtifactSqliteSnapshot: Sized {
     {
         fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(match payload {
-                crate::io_schema::IoPayload::Binary(bytes) => {
-                    let limits = control.limits();
-                    let mut options = PackDecodeOptions::default();
-                    options.limits.max_file_len = options.limits.max_file_len.min(limits.max_file_bytes as u64);
-                    options.limits.max_total_alloc = options.limits.max_total_alloc.min(limits.max_value_bytes as u64);
-                    options.limits.max_segment_len = options.limits.max_segment_len.min(options.limits.max_total_alloc);
-                    options.limits.max_items = options.limits.max_items.min(options.limits.max_total_alloc);
-                    options.limits.max_symbols = options.limits.max_symbols.min((options.limits.max_total_alloc / 32).min(u32::MAX as u64) as u32);
-                    P::decode_pack_with(bytes, &options).map_err(|error| error.to_string())?
-                },
-                crate::io_schema::IoPayload::Text(text) => P::parse_dsl(text).map_err(|error| error.to_string())?,
-            });
+            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::decode_sqlite_snapshot_native(payload, control)?);
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1)?;
             let database = snapshot.to_sqlite_database(control)?;
             control.check_database(&database, crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot)?;
@@ -10747,12 +10934,8 @@ pub trait ArtifactSqliteSnapshot: Sized {
         fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, database: crate::sqlite_snapshot::SqliteDatabase, encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
             let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::from_sqlite_database(&database, control)?);
             let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;
-            snapshot.preflight_sqlite_snapshot_encoding(encoding, control)?;
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-            let payload = match encoding {
-                crate::sqlite_snapshot::SnapshotEncoding::Binary => crate::io_schema::IoPayload::Binary(snapshot.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| error.to_string())?),
-                crate::sqlite_snapshot::SnapshotEncoding::Text => crate::io_schema::IoPayload::Text(snapshot.print_dsl()),
-            };
+            let payload = snapshot.encode_sqlite_snapshot_native(encoding, control)?;
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1)?;
             Ok(crate::io_schema::IoOutcome { value: payload, diagnostics: validation.diagnostics })
         }
@@ -12104,6 +12287,9 @@ enum OpsHeaderLine {
     Message { edit: String, data: String },
     /// ⚔️ One first-class conflict, including its content-addressed identity and lifecycle.
     Conflict { data: String },
+    /// 👁 This replica's head, persisted local-only like `.spr`'s `REC_VIEWER`: the alternative it views (`line`, absent =
+    /// the trunk) and an explicit checkpoint (absent = that line's tip). No `viewer` line is the canonical trunk tip.
+    Viewer { line: Option<String>, checkpoint: Option<String> },
 }
 
 /// 🌿️ A text record explicitly carries zero trunk/unknown or one authored branch identity.
@@ -12120,7 +12306,7 @@ impl OpText for OpsHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -12130,7 +12316,7 @@ impl OpText for OpsHeaderLine {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -12141,7 +12327,7 @@ impl OpBinary for OpsHeaderLine {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -12159,7 +12345,7 @@ impl OpBinary for OpsHeaderLine {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -12446,6 +12632,11 @@ where
     let mut ops = String::new();
     ops.push_str(&OpsHeaderLine::Doc { id: envelope.id.clone(), schema: envelope.schema.clone() }.print_op());
     ops.push('\n');
+    let line = envelope.active_alternative_id.clone().filter(|line| line != &crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone())));
+    if line.is_some() || envelope.viewer_checkpoint_id.is_some() {
+        ops.push_str(&OpsHeaderLine::Viewer { line, checkpoint: envelope.viewer_checkpoint_id.clone() }.print_op());
+        ops.push('\n');
+    }
     for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         ops.push_str(&print_edit_lines(edit).await?);
     }
@@ -13237,6 +13428,7 @@ where
     let mut message_order = Vec::new();
     let mut conflicts = Vec::new();
     let mut saw_doc = false;
+    let mut viewer: Option<(Option<String>, Option<String>)> = None;
 
     struct PendingEdit {
         id: String,
@@ -13356,6 +13548,11 @@ where
                 let conflict = crate::os_pack::json::from_json_str(&data).map_err(|error| TextError::new(format!("invalid conflict record: {error}"), TextSpan::at(line_no, 1)))?;
                 conflicts.push(conflict);
             }
+            OpsHeaderLine::Viewer { line, checkpoint } => {
+                if viewer.replace((line, checkpoint)).is_some() {
+                    return Err(TextError::new("ops text repeats its viewer head".to_string(), TextSpan::at(line_no, 1)));
+                }
+            }
         }
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits)?;
@@ -13389,12 +13586,14 @@ where
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new("ops edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
+    let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(id.clone()));
+    let (viewer_line, viewer_checkpoint) = viewer.unwrap_or_default();
     let envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema,
         id,
         vcs: ArtifactVcs { initial_snapshot, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone: None,
-        active_alternative_id: None,
+        active_alternative_id: viewer_line.filter(|line| line != &trunk),
         cursor: None,
         dialect: None,
         migrated_from: None,
@@ -13405,7 +13604,7 @@ where
         transitions,
         history_shape: crate::os_spr::HistoryShape::Document,
         open_transaction: None,
-        viewer_checkpoint_id: None,
+        viewer_checkpoint_id: viewer_checkpoint,
     });
     settle_parsed_envelope(envelope).await
 }
@@ -13609,7 +13808,7 @@ impl OpText for SupersedeInputLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -13619,7 +13818,7 @@ impl OpText for SupersedeInputLine {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -13752,7 +13951,7 @@ impl OpText for CommandHeaderLine {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -13762,7 +13961,7 @@ impl OpText for CommandHeaderLine {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -13773,7 +13972,7 @@ impl OpBinary for CommandHeaderLine {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -13791,7 +13990,7 @@ impl OpBinary for CommandHeaderLine {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
@@ -16775,6 +16974,12 @@ where
     /// amend keeps the verb of the edit it extends). Set by the dispatching runtime via
     /// {@link set_authoring_verb}; not part of the wire envelope.
     authoring_verb: Option<String>,
+    /// 🐢️ Operations one turn of a deferred remote reprojection replays; `None` replays inside the ingest.
+    replay_budget: Option<usize>,
+    /// ⏱️ Operations one turn of a deferred local history step replays; `None` replays inside the dispatch.
+    local_replay_budget: Option<usize>,
+    /// 🐢️ The history change admitted but not adopted yet ([`Self::step_reprojection`]).
+    pending_reprojection: Option<PendingReprojection<P, Mutation>>,
     pending_report: std::mem::ManuallyDrop<PendingCommandReport>,
     durable_group_root: std::mem::ManuallyDrop<Option<durable_group::ArtifactStoreDurableGroupRootV1<P>>>,
 }
@@ -16921,6 +17126,9 @@ where
         local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
         member_inbox: VecDeque::new(),
         authoring_verb: None,
+        replay_budget: None,
+        local_replay_budget: None,
+        pending_reprojection: None,
         merge_policy: crate::os_spr::MergePolicy::default(),
         clock,
         initial_digest,
@@ -17071,6 +17279,9 @@ where
             local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
             member_inbox: VecDeque::new(),
             authoring_verb: None,
+            replay_budget: None,
+            local_replay_budget: None,
+            pending_reprojection: None,
             merge_policy: crate::os_spr::MergePolicy::default(),
             clock,
             initial_digest,
@@ -17280,7 +17491,8 @@ where
 
     /// 💾️ Adopts full store state from `envelope`'s event log — applied edits, redo stack,
     /// checkpoint and alternative are the fold of its edits and transitions, so `Redo` survives
-    /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
+    /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request). A history change still waiting
+    /// for its replay belonged to the replaced log and is dropped with it.
     pub(crate) async fn set_state(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
         let mut candidate = Some(envelope);
         let adopted = self.adopt_state(&mut candidate).await;
@@ -17337,6 +17549,7 @@ where
             self.displaced_retirements.push_reserved(owner);
         }
         self.push_revision_replacement_reserved(revision_accumulator);
+        drop(self.pending_reprojection.take());
         self.bump()?;
         Ok(())
     }
@@ -17980,6 +18193,7 @@ where
             .or_else(|| self.envelope.lanes.pop_last().map(|(id, _)| id))
             .or_else(|| self.envelope.backbone.as_mut().and_then(|backbone| take_nonempty(&mut backbone.uri)))
             .or_else(|| self.envelope.active_alternative_id.take())
+            .or_else(|| self.envelope.viewer_checkpoint_id.take())
             .or_else(|| self.envelope.dialect.as_mut().and_then(|dialect| take_nonempty(&mut dialect.artifact_kind).or_else(|| take_nonempty(&mut dialect.standard)).or_else(|| take_nonempty(&mut dialect.subset))))
             .or_else(|| {
                 self.envelope.migrated_from.as_mut().and_then(|provenance| {
@@ -18009,6 +18223,7 @@ where
             self.envelope.cursor = None;
             self.envelope.backbone = None;
             self.envelope.active_alternative_id = None;
+            self.envelope.viewer_checkpoint_id = None;
             self.envelope.dialect = None;
             self.envelope.migrated_from = None;
             self.envelope.owner = None;
@@ -18563,6 +18778,9 @@ where
         let Some(factory) = factory else {
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutations, description });
         };
+        if std::env::var_os("SEMIO_DEBUG_STORE_UNITS").is_some() {
+            eprintln!("[DEBUG] store-batch begin store={} lane={lane:?} items={} transaction={}", self.envelope.id, mutations.len(), transaction.is_some());
+        }
         let mut inputs = mutations;
         inputs.reverse();
         let source = ArtifactStoreBatchSourceOf { authority: Some(Arc::clone(factory)), inputs, description, marker: PhantomData };
@@ -18779,6 +18997,9 @@ where
         P: Sync,
     {
         self.ensure_durable_group_idle()?;
+        if std::env::var_os("SEMIO_DEBUG_STORE_UNITS").is_some() {
+            eprintln!("[DEBUG] store-batch advance store={} phase={:?} admitted={} preparing={} closing={}", self.envelope.id, publication.phase, publication.admitted_items, publication.preparation.is_some(), publication.item_closing);
+        }
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Complete {
             return Ok(ArtifactStoreOneItemAdvance::Complete);
         }
@@ -19260,29 +19481,50 @@ where
     /// 📥️ Admits remote history transitions the causal graph released: known ones must repeat
     /// their established payload, new ones join the log, and the projection follows the fold.
     async fn admit_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
-        let mut admitted: Vec<MutationId> = Vec::new();
+        let mut fresh: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
         for envelope in transitions {
-            if let Err(error) = self.admit_history_shape(std::slice::from_ref(&envelope)) {
-                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
-                return Err(error);
-            }
-            if let Some(known) = self.envelope.transitions.iter().find(|known| known.mutation_id == envelope.mutation_id) {
+            self.admit_history_shape(std::slice::from_ref(&envelope))?;
+            let pending = self.pending_reprojection.as_ref().map_or(&[][..], |pending| pending.transitions.as_slice());
+            if let Some(known) = self.envelope.transitions.iter().chain(pending).chain(fresh.iter()).find(|known| known.mutation_id == envelope.mutation_id) {
                 if !Self::same_operation_identity_and_payload(known, &envelope) {
                     return Err(VcsError::ValidationFailed(format!("remote transition {} conflicts with its established payload", envelope.mutation_id.0)));
                 }
                 continue;
             }
             self.clock.merge(&envelope.timestamp);
-            admitted.push(envelope.mutation_id.clone());
+            fresh.push(envelope);
+        }
+        if self.pending_reprojection.is_none() && (self.replay_budget.is_none() || fresh.is_empty()) {
+            return self.adopt_remote_transitions(fresh, None).await;
+        }
+        let mut pending = self.pending_reprojection.take().unwrap_or_else(PendingReprojection::empty);
+        let known = pending.transitions.len();
+        pending.transitions.extend(fresh);
+        if let Err(error) = self.pending_fold(&pending) {
+            pending.transitions.truncate(known);
+            self.pending_reprojection = (!pending.transitions.is_empty() || pending.local.is_some()).then_some(pending);
+            return Err(error);
+        }
+        drop(pending.replay.take());
+        self.pending_reprojection = Some(pending);
+        match self.advance_reprojection().await? {
+            Some(ReprojectionAdvance::Adopted(replayed)) => Ok(replayed),
+            Some(ReprojectionAdvance::Pending(_)) | None => Ok(Vec::new()),
+        }
+    }
+
+    /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
+    /// when it is their finished Report replay — or records none of them.
+    async fn adopt_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let admitted: Vec<MutationId> = transitions.iter().map(|envelope| envelope.mutation_id.clone()).collect();
+        for envelope in transitions {
             self.insert_transition(envelope);
         }
-        match self.reproject().await {
-            Ok(replayed) => Ok(replayed),
-            Err(error) => {
-                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
-                Err(error)
-            }
-        }
+        let projected = match replayed {
+            Some(result) => self.reproject_replayed(result),
+            None => self.reproject().await,
+        };
+        projected.inspect_err(|_| self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id)))
     }
 
     /// 🗂️ Refuses the first of `envelopes` whose transition this store's [`crate::os_spr::HistoryShape`] does not hold —
@@ -19356,13 +19598,21 @@ where
     }
 
     /// 🏗️ Records locally authored transition envelopes and materializes the projection once — adopting `replayed` when it
-    /// is the Report replay of exactly the resulting log, replaying otherwise. All of them leave in this dispatch's outbound
-    /// batch, or none is recorded.
+    /// is the Report replay of exactly the resulting log, replaying otherwise (under [`Self::defer_local_replays`] a replay
+    /// longer than one budget waits for later turns). All of them leave in this dispatch's outbound batch, or none is
+    /// recorded.
     async fn install_transitions(&mut self, envelopes: Vec<crate::os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
         if let Err(error) = self.admit_history_shape(&envelopes) {
             drop(replayed);
             return Err(error);
         }
+        let envelopes = match replayed {
+            Some(_) => envelopes,
+            None => match self.defer_local_step(PendingLocalStep { envelopes, head: self.viewer_head_now(), finalizing: false }, clock).await? {
+                Some(step) => step.envelopes,
+                None => return Ok(()),
+            },
+        };
         let identities: Vec<MutationId> = envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect();
         for envelope in &envelopes {
             self.insert_transition(envelope.clone());
@@ -19389,6 +19639,11 @@ where
     /// Transactional: the projection is computed and every capacity its adoption needs is checked before the first fact
     /// is adopted. Answers the messages of every edit a replay re-evaluated.
     async fn reproject(&mut self) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        self.reproject_now()
+    }
+
+    /// ♻️ [`Self::reproject`]'s body, which never suspends: for the history steps that must not.
+    fn reproject_now(&mut self) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         let fold = fold_envelope_history(&self.envelope)?;
         let replay = self.reprojection_replay(&fold)?;
         self.adopt_reprojection(fold, replay)
@@ -19398,8 +19653,9 @@ where
     /// edits from the tail (every remaining edit keeps its prefix, so its durable messages and inverses stay
     /// replay-consistent), otherwise a replay from the first position whose order or effective input differs — an interior
     /// undo, redo or checkout rewrites every downstream edit's messages and inverses exactly as a supersession does.
-    /// Synchronous by budget: one command or ingest turn replays the applied history in place. A longer history still
-    /// replays here; a resumable reprojection is a separate gap.
+    /// Synchronous: one command or ingest replays the applied history in place. A remote change under
+    /// [`Self::defer_remote_replays`] and a local step under [`Self::defer_local_replays`] replay resumably instead
+    /// ([`Self::step_reprojection`]).
     fn reprojection_replay(&self, fold: &crate::os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> {
         if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
             return Ok(None);
@@ -19642,9 +19898,16 @@ where
         Ok(())
     }
 
-    /// 📏️ The prefix-ring stride for `length` applied edits: [`PREFIX_SNAPSHOT_RING_CAPACITY`] entries span them all.
+    /// 📏️ The prefix-ring stride for `length` applied edits: [`Self::prefix_ring_capacity`] entries span them all.
     fn prefix_stride(length: usize) -> usize {
-        length.div_ceil(PREFIX_SNAPSHOT_RING_CAPACITY).max(1)
+        length.div_ceil(Self::prefix_ring_capacity(length)).max(1)
+    }
+
+    /// 📐️ How many prefix projections a history of `length` applied edits retains: about √length, so a `state_before` or a
+    /// replay start folds at most one stride of about √length edits while the retained projections grow only with the square
+    /// root — never fewer than [`PREFIX_SNAPSHOT_RING_FLOOR`], never more than [`PREFIX_SNAPSHOT_RING_CAPACITY`].
+    fn prefix_ring_capacity(length: usize) -> usize {
+        length.isqrt().clamp(PREFIX_SNAPSHOT_RING_FLOOR, PREFIX_SNAPSHOT_RING_CAPACITY)
     }
 
     /// 🗃️ Admits prefix projections `(length, projection)` of the live applied history into the ring at the current
@@ -19684,7 +19947,7 @@ where
                 }
                 self.evict_prefix_snapshot_reserved(position, &factory);
             }
-            if self.prefix_ring.len() == PREFIX_SNAPSHOT_RING_CAPACITY {
+            if self.prefix_ring.len() >= Self::prefix_ring_capacity(self.applied_edit_ids.len()) {
                 let victim = self.prefix_ring.iter().position(|entry| entry.length % stride != 0).unwrap_or(0);
                 self.evict_prefix_snapshot_reserved(victim, &factory);
             }
@@ -19826,6 +20089,10 @@ where
                 return Err(VcsError::TransactionOpen { transaction_id });
             }
         }
+        if command.moves_history() && self.local_step_pending() {
+            retire_command::<P, Mutation>(command);
+            return Err(VcsError::HistoryReplaying);
+        }
         match command {
             ArtifactCommand::Undo => self.undo_with_policy(UndoPolicy::TransformAgainstConcurrent, None).await,
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => self.undo_with_policy(policy, semantic_command).await,
@@ -19885,8 +20152,8 @@ where
             ArtifactCommand::Supersede { scope, inputs } => self.supersede_command(scope, inputs).await,
             ArtifactCommand::CreateAlternativeWithSupersede { name, inputs } => self.create_alternative_with_supersede(name, inputs).await,
             ArtifactCommand::AppendTransaction { mutations, transaction } => self.append_transaction(mutations, transaction).await,
-            ArtifactCommand::CommitTransaction { transaction_id } => self.commit_transaction(&transaction_id).await,
-            ArtifactCommand::AbortTransaction { transaction_id } => self.abort_transaction(&transaction_id).await,
+            ArtifactCommand::CommitTransaction { transaction_id } => self.commit_open_transaction(&transaction_id),
+            ArtifactCommand::AbortTransaction { transaction_id } => self.abort_open_transaction(&transaction_id),
         }
     }
 
@@ -19941,9 +20208,10 @@ where
         self.bump()
     }
 
-    /// 🎗️ `CommitTransaction`: the open edit closes and every operation it holds is announced in one batch — exactly the edit
-    /// one `Apply` of the same operations under the same ref would have recorded.
-    async fn commit_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
+    /// 🎗️ `CommitTransaction`: the open edit closes and every operation it holds is queued for announcement in one batch —
+    /// exactly the edit one `Apply` of the same operations under the same ref would have recorded. Never suspends, so a
+    /// runtime's one-page publisher closes a streamed transaction in place ([`Self::flush_announcements`] sends it).
+    pub fn commit_open_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
         let open = self.open_transaction_named(transaction_id)?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
         edit.finished_at = Some(now_iso());
@@ -19957,8 +20225,8 @@ where
 
     /// 🪃️ `AbortTransaction`: the open edit leaves the ledger, its messages and its operations retire, the edit sequence it
     /// took is returned, and the projection folds back to the history without it — the projection and revision of before
-    /// its first append.
-    async fn abort_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
+    /// its first append. Never suspends.
+    pub fn abort_open_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
         let open = self.open_transaction_named(transaction_id)?;
         let removed = self.envelope.vcs.edits.extract_if(|edit| edit.id == open.edit_id).map_err(|fault| VcsError::ValidationFailed(format!("the open transaction edit cannot leave its ledger: {fault:?}")))?;
         if removed.iter().any(|edit| edit.sequence_number == self.edit_sequence) {
@@ -19967,8 +20235,14 @@ where
         retire_scratch_edits::<P, Mutation>(removed);
         self.replace_edit_messages(&open.edit_id, Vec::new())?;
         self.envelope.open_transaction = None;
-        self.reproject().await?;
+        self.reproject_now()?;
         self.bump()
+    }
+
+    /// 📤️ Sends every announcement a non-suspending history step queued ([`Self::commit_open_transaction`]) as one
+    /// `BackboneMessage::Mutations` batch; nothing queued sends nothing.
+    pub async fn flush_announcements(&mut self) -> Result<(), VcsError> {
+        self.flush_outbound().await
     }
 
     /// 🧿️ The open tool transaction when `transaction_id` names it, else `UnknownTransaction`.
@@ -20016,6 +20290,231 @@ where
     }
     //#endregion 🔖️ToolTransactions
 
+    //#region 🔖️DeferredReprojection
+    /// 🐢️ Steps the Report replay a remote history change needs — a supersession, undo or redo another replica authored —
+    /// in budgets of at most `operations` per turn ([`Self::step_reprojection`], also every [`Self::tick`]) instead of inside
+    /// the ingest that admitted it, so a long downstream replay never freezes this replica. Until the change is adopted the
+    /// replica shows the history before it, and the adoption is exactly the one an ingest without a budget makes. `None`
+    /// replays inside the ingest.
+    pub fn defer_remote_replays(&mut self, operations: Option<usize>) {
+        self.replay_budget = operations.filter(|operations| *operations > 0);
+    }
+
+    /// 🐌️ Steps the Report replay a local history step needs — an interior undo or redo, a checkout or alternative switch
+    /// away from the applied tail, a supersession (finalize) authored without a finished replay (design §16.6) — in budgets
+    /// of at most `operations` per turn instead of inside its dispatch, which replays the first budget and answers. Until
+    /// the step is adopted ([`Self::step_reprojection`], also every [`Self::tick`]) the replica shows the history before it,
+    /// nothing of the step is recorded or announced, every further history step is refused
+    /// ([`VcsError::HistoryReplaying`]) and [`Self::discard_local_step`] drops it with zero trace; edits and remote changes
+    /// meanwhile restart its replay. The adoption is exactly the one an undeferred dispatch makes, a supersession whose
+    /// report blocks finalizing included (refused with `Rejected { policy: Normal }`). Steps that need no replay adopt
+    /// inside their dispatch. `None` replays inside the dispatch.
+    pub fn defer_local_replays(&mut self, operations: Option<usize>) {
+        self.local_replay_budget = operations.filter(|operations| *operations > 0);
+    }
+
+    /// ⏳️ Whether a local history step still replays ([`Self::defer_local_replays`]).
+    pub fn local_step_pending(&self) -> bool {
+        self.pending_reprojection.as_ref().is_some_and(|pending| pending.local.is_some())
+    }
+
+    /// 🗑️ Drops the local history step that still replays ([`Self::defer_local_replays`]): nothing of it was recorded,
+    /// announced or shown, so the store is exactly as before its dispatch; a waiting remote change keeps waiting and
+    /// replays again from its start. Answers whether a step was waiting.
+    pub fn discard_local_step(&mut self) -> bool {
+        let Some(mut pending) = self.pending_reprojection.take() else {
+            return false;
+        };
+        let discarded = pending.local.take().is_some();
+        if discarded {
+            drop(pending.replay.take());
+        }
+        self.pending_reprojection = (!pending.transitions.is_empty() || pending.local.is_some()).then_some(pending);
+        discarded
+    }
+
+    /// 📶️ The progress of the deferred reprojection — a remote change, a local step or both (`done` 0 until its replay
+    /// starts), `None` when nothing waits.
+    pub fn reprojection_progress(&self) -> Option<ReplayProgress> {
+        self.pending_reprojection.as_ref().map(|pending| pending.replay.as_ref().map_or_else(ReplayProgress::default, |(_, replay)| replay.progress()))
+    }
+
+    /// ✋️ Drops the running replay of the deferred reprojection: the store is untouched, the change stays admitted (a
+    /// local step too — [`Self::discard_local_step`] drops it) and the next step replays it from the start. Answers whether a
+    /// replay was running.
+    pub fn cancel_reprojection(&mut self) -> bool {
+        self.pending_reprojection.as_mut().and_then(|pending| pending.replay.take()).is_some()
+    }
+
+    /// ⏭️ Advances the deferred reprojection by one budget of operations and adopts it once its replay finished, announcing
+    /// a local step's transitions. Answers its progress while it still waits, `None` once nothing waits.
+    pub async fn step_reprojection(&mut self) -> Result<Option<ReplayProgress>, VcsError> {
+        match self.advance_reprojection().await? {
+            Some(ReprojectionAdvance::Pending(progress)) => Ok(Some(progress)),
+            Some(ReprojectionAdvance::Adopted(_)) => {
+                self.bump()?;
+                self.last_projection_cause = Some(ArtifactProjectionCause::Replay);
+                Ok(None)
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// 🛗️ Takes a local history step whose Report replay must not run inside its dispatch ([`Self::defer_local_replays`]):
+    /// joins it to the waiting change (with any remote transitions already waiting), advances the clock past its
+    /// transitions, steps one budget and adopts everything once the replay finished — here or in a later turn. Answers the
+    /// step back when it is adopted synchronously instead: local replays are not deferred, or a plain step needs no replay.
+    async fn defer_local_step(&mut self, step: PendingLocalStep, clock: HybridLogicalTimestamp) -> Result<Option<PendingLocalStep>, VcsError> {
+        if self.local_replay_budget.is_none() {
+            return Ok(Some(step));
+        }
+        if !step.finalizing {
+            let fold = self.prospective_fold_at(&step.envelopes, &self.viewer_head(&step.head))?;
+            if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
+                return Ok(Some(step));
+            }
+        }
+        let mut pending = self.pending_reprojection.take().unwrap_or_else(PendingReprojection::empty);
+        if pending.local.is_some() {
+            self.pending_reprojection = Some(pending);
+            return Err(VcsError::HistoryReplaying);
+        }
+        drop(pending.replay.take());
+        pending.local = Some(step);
+        self.pending_reprojection = Some(pending);
+        self.clock = clock;
+        match self.advance_reprojection().await? {
+            Some(ReprojectionAdvance::Adopted(_)) => self.bump().map(|()| None),
+            Some(ReprojectionAdvance::Pending(_)) | None => Ok(None),
+        }
+    }
+
+    /// 🧮️ One budget of the deferred reprojection: (re)starts its Report replay when the history it started from changed,
+    /// steps it, and adopts the change with the finished replay; a change that needs no replay is adopted at once. A
+    /// refused adoption drops the change — a refused local step only, its remote transitions wait again — and answers the
+    /// refusal.
+    async fn advance_reprojection(&mut self) -> Result<Option<ReprojectionAdvance>, VcsError> {
+        let Some(mut pending) = self.pending_reprojection.take() else {
+            return Ok(None);
+        };
+        if pending.replay.as_ref().is_none_or(|(revision, _)| *revision != self.content_revision) {
+            drop(pending.replay.take());
+            let started = self.pending_fold(&pending).and_then(|fold| {
+                if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
+                    return Ok(None);
+                }
+                let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
+                self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len())).map(Some)
+            });
+            match started {
+                Ok(Some(replay)) => pending.replay = Some((self.content_revision, replay)),
+                Ok(None) => return self.adopt_pending(pending, None).await.map(|replayed| Some(ReprojectionAdvance::Adopted(replayed))),
+                Err(error) => {
+                    self.refuse_local_step(pending);
+                    return Err(error);
+                }
+            }
+        }
+        let budget = pending.local.as_ref().and(self.local_replay_budget).or(self.replay_budget).unwrap_or(usize::MAX);
+        let (_, replay) = pending.replay.as_mut().expect("a started deferred replay");
+        let mut left = budget;
+        let step = replay.step(&self.envelope.vcs.edits, &mut || {
+            left = left.saturating_sub(1);
+            left == 0
+        });
+        match step {
+            Ok(ReplayStep::Pending(progress)) => {
+                self.pending_reprojection = Some(pending);
+                Ok(Some(ReprojectionAdvance::Pending(progress)))
+            }
+            Ok(ReplayStep::Finished(_)) => match pending.replay.take().expect("a finished deferred replay").1.finish() {
+                Ok(result) => self.adopt_pending(pending, Some(result)).await.map(|replayed| Some(ReprojectionAdvance::Adopted(replayed))),
+                Err(error) => {
+                    self.refuse_local_step(pending);
+                    Err(error)
+                }
+            },
+            Err(error) => {
+                self.refuse_local_step(pending);
+                Err(error)
+            }
+        }
+    }
+
+    /// 🪐️ The history fold of the event log with a waiting change joined — its remote transitions, and its local step's
+    /// transitions at the head that step moves to — touching nothing.
+    fn pending_fold(&self, pending: &PendingReprojection<P, Mutation>) -> Result<crate::os_spr::HistoryFold, VcsError> {
+        let local = pending.local.as_ref();
+        let candidates: Vec<crate::os_spr::MutationEnvelope> = pending.transitions.iter().chain(local.map_or(&[][..], |local| local.envelopes.as_slice())).cloned().collect();
+        let head = local.map_or_else(|| envelope_viewer_head(&self.envelope), |local| self.viewer_head(&local.head));
+        self.prospective_fold_at(&candidates, &head)
+    }
+
+    /// ⛔️ Drops a refused waiting change: its local step is refused with nothing of it recorded, and its remote transitions
+    /// wait again (their replay restarts) — or, refused themselves, are dropped.
+    fn refuse_local_step(&mut self, mut pending: PendingReprojection<P, Mutation>) {
+        drop(pending.replay.take());
+        if pending.local.take().is_some() && !pending.transitions.is_empty() {
+            self.pending_reprojection = Some(pending);
+        }
+    }
+
+    /// 🧶️ Adopts a waiting change with its finished replay (`None`: it needs none): its remote transitions alone through
+    /// [`Self::adopt_remote_transitions`]; with a local step, both are recorded in the log, this replica moves to the step's
+    /// head, the projection follows and the step's transitions are announced. A finalizing step whose report blocks is
+    /// refused (`Rejected { policy: Normal }`, every replay message) with nothing of it recorded while its remote transitions
+    /// wait again. Atomic: a refused adoption keeps the log and the head.
+    async fn adopt_pending(&mut self, pending: PendingReprojection<P, Mutation>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
+        let PendingReprojection { transitions, local, replay } = pending;
+        drop(replay);
+        let Some(local) = local else {
+            return self.adopt_remote_transitions(transitions, replayed).await;
+        };
+        let report = match replayed.as_ref().filter(|_| local.finalizing).map(|result| self.replay_report(result)).transpose() {
+            Ok(report) => report,
+            Err(error) => {
+                drop(replayed);
+                self.refuse_local_step(PendingReprojection { transitions, local: Some(local), replay: None });
+                return Err(error);
+            }
+        };
+        if let Some(report) = report.as_ref().filter(|report| report.blocks_finalize()) {
+            drop(replayed);
+            let messages = report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect();
+            self.refuse_local_step(PendingReprojection { transitions, local: Some(local), replay: None });
+            return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages });
+        }
+        let PendingLocalStep { envelopes, head, .. } = local;
+        let saved = self.viewer_head_now();
+        let admitted: Vec<MutationId> = transitions.iter().chain(envelopes.iter()).map(|envelope| envelope.mutation_id.clone()).collect();
+        for envelope in transitions.into_iter().chain(envelopes.iter().cloned()) {
+            self.insert_transition(envelope);
+        }
+        (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = head;
+        let projected = match replayed {
+            Some(result) => self.reproject_replayed(result),
+            None => self.reproject().await,
+        };
+        let replayed = match projected {
+            Ok(replayed) => replayed,
+            Err(error) => {
+                self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
+                (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = saved;
+                return Err(error);
+            }
+        };
+        for envelope in &envelopes {
+            self.dag.seed_applied(envelope.mutation_id.clone()).map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        }
+        if let Some(report) = report {
+            self.record_replay_report(&report);
+        }
+        self.pending_report.outbound.extend(envelopes);
+        self.flush_outbound().await?;
+        Ok(replayed)
+    }
+    //#endregion 🔖️DeferredReprojection
+
     //#region 🔖️Supersede
     /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
     /// ([`Self::author_supersession`]).
@@ -20030,14 +20529,14 @@ where
             }
         };
         let (inputs, target) = self.supersede_inputs(inputs)?;
-        self.author_supersession(scope, inputs, target, None).await.map(|_| ())
+        self.author_supersession(scope, inputs, target, None).await
     }
 
     /// 🌿️ `CreateAlternativeWithSupersede`: the pending-edit commit, a `Branch` at the head and the supersession scoped to
     /// the new alternative, authored as one batch ([`Self::author_supersession`]).
     async fn create_alternative_with_supersede(&mut self, name: String, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(), VcsError> {
         let (inputs, target) = self.supersede_inputs(inputs)?;
-        self.author_supersession(SupersedeScope::NewAlternative(name), inputs, target, None).await.map(|_| ())
+        self.author_supersession(SupersedeScope::NewAlternative(name), inputs, target, None).await
     }
 
     /// 🔚️ Finalizes a time-travel session without replaying again: `finished` is the completed Report replay of the
@@ -20053,6 +20552,9 @@ where
         if let Some(open) = self.envelope.open_transaction.as_ref() {
             return Err(VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() });
         }
+        if self.local_step_pending() {
+            return Err(VcsError::HistoryReplaying);
+        }
         if finished.generation != self.generation || finished.revision != self.content_revision {
             return Err(VcsError::Stale { expected_generation: finished.generation, generation: self.generation });
         }
@@ -20066,6 +20568,8 @@ where
         let (inputs, target) = self.draft_inputs(&finished.drafts)?;
         let scope = match finalization {
             HistoryFinalization::Overwrite => SupersedeScope::Document,
+            HistoryFinalization::Scope { alternative_id } if alternative_id == self.trunk_alternative_id() || self.envelope.vcs.alternatives.iter().any(|known| known.id == alternative_id) => SupersedeScope::Alternative(alternative_id),
+            HistoryFinalization::Scope { alternative_id } => return Err(VcsError::UnknownAlternative(alternative_id)),
             HistoryFinalization::Alternative { name } => SupersedeScope::NewAlternative(name),
         };
         self.replace_pending_report_retained(PendingCommandReport::default())?;
@@ -20077,10 +20581,11 @@ where
 
     /// ✍️ The one authoring path of every supersession: builds its transitions (`Document`/`Alternative`: one `Supersede`;
     /// `NewAlternative`: the pending-edit commit, a `Branch` at the head and the scoped `Supersede`), takes `replayed` when it
-    /// is the Report replay of exactly the resulting log and dry-runs it otherwise, refuses a report that blocks finalizing
-    /// (`Error`/`Fatal`, the hub check-in strictness) with `Rejected { policy: Normal }` and every replay message, and installs
-    /// everything atomically without replaying again.
-    async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<protocol::ReplayReport, VcsError> {
+    /// is the Report replay of exactly the resulting log and dry-runs it otherwise (under [`Self::defer_local_replays`] the
+    /// dry run is a local step stepped across turns), refuses a report that blocks finalizing (`Error`/`Fatal`, the hub
+    /// check-in strictness) with `Rejected { policy: Normal }` and every replay message, and installs everything atomically
+    /// without replaying again.
+    async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
         let mut clock = self.clock;
         let mut envelopes = Vec::with_capacity(3);
         let saved_line = self.envelope.active_alternative_id.clone();
@@ -20122,6 +20627,12 @@ where
         };
         let result = match replayed {
             Some(result) if result.order == fold.applied && same_effective_inputs(&result.supersessions, &fold.supersessions) => result,
+            other if self.local_replay_budget.is_some() => {
+                drop((other, fold));
+                let head = self.viewer_head_now();
+                restore_head(self);
+                return self.defer_local_step(PendingLocalStep { envelopes, head, finalizing: true }, clock).await.map(|_| ());
+            }
             other => {
                 drop(other);
                 match self.dry_run(&fold) {
@@ -20151,7 +20662,7 @@ where
             return Err(error);
         }
         self.record_replay_report(&report);
-        Ok(report)
+        Ok(())
     }
 
     /// 🪴️ Authors into `envelopes` the commit of every pending edit (when one is pending or no checkpoint exists) and a
@@ -20184,15 +20695,19 @@ where
 
     /// 🔮️ The history fold of the event log with `candidates` joined, touching nothing.
     fn prospective_fold(&self, candidates: &[crate::os_spr::MutationEnvelope]) -> Result<crate::os_spr::HistoryFold, VcsError> {
+        self.prospective_fold_at(candidates, &envelope_viewer_head(&self.envelope))
+    }
+
+    /// 🧐️ [`Self::prospective_fold`] for `head` instead of this replica's head.
+    fn prospective_fold_at(&self, candidates: &[crate::os_spr::MutationEnvelope], head: &crate::os_spr::ViewerHead) -> Result<crate::os_spr::HistoryFold, VcsError> {
         let mut transitions = self.envelope.transitions.clone();
         transitions.extend(candidates.iter().cloned());
-        let head = envelope_viewer_head(&self.envelope);
-        fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts, &head)
+        fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts, head)
     }
 
     /// 🧪️ The Report replay of everything `fold` changes against the live projection, driven to completion, touching nothing.
-    /// Synchronous by budget: one actor turn replays the applied history in place. A longer history still replays here;
-    /// a resumable replay is a separate gap.
+    /// Synchronous: the supersede command API (agents, text, hub) gets its verdict inside the dispatch. Under
+    /// [`Self::defer_local_replays`] [`Self::author_supersession`] steps the same replay across turns instead.
     fn dry_run(&self, fold: &crate::os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
         let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?;
@@ -20376,13 +20891,10 @@ where
             if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
                 return Err(VcsError::NoCheckpoint);
             }
-            self.envelope.active_alternative_id = Some(alternative_id);
+            self.move_head((Some(alternative_id), None)).await
         } else {
-            self.envelope.active_alternative_id = None;
+            self.move_head((None, None)).await
         }
-        self.envelope.viewer_checkpoint_id = None;
-        self.reproject().await?;
-        self.bump()
     }
 
     /// 👁 Looks at `checkpoint_id` on this replica only. The line stays the current one when that
@@ -20397,10 +20909,33 @@ where
         } else {
             self.envelope.vcs.alternatives.iter().find(|alternative| alternative.checkpoint_ids.iter().any(|id| id == &checkpoint_id)).map(|alternative| alternative.id.clone()).unwrap_or(current)
         };
-        self.envelope.active_alternative_id = self.branched_alternative(line);
-        self.envelope.viewer_checkpoint_id = Some(checkpoint_id);
-        self.reproject().await?;
+        self.move_head((self.branched_alternative(line), Some(checkpoint_id))).await
+    }
+
+    /// 🚶️ Moves this replica's head to `(line, checkpoint)` and materializes the projection; a refused move keeps the head it
+    /// had. Under [`Self::defer_local_replays`] a move whose replay is longer than one budget waits for later turns.
+    async fn move_head(&mut self, head: (Option<String>, Option<String>)) -> Result<(), VcsError> {
+        let Some(PendingLocalStep { head, .. }) = self.defer_local_step(PendingLocalStep { envelopes: Vec::new(), head, finalizing: false }, self.clock).await? else {
+            return Ok(());
+        };
+        let saved = self.viewer_head_now();
+        (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = head;
+        if let Err(error) = self.reproject().await {
+            (self.envelope.active_alternative_id, self.envelope.viewer_checkpoint_id) = saved;
+            return Err(error);
+        }
         self.bump()
+    }
+
+    /// 👀️ This replica's head `(line, checkpoint)` as the envelope holds it.
+    fn viewer_head_now(&self) -> (Option<String>, Option<String>) {
+        (self.envelope.active_alternative_id.clone(), self.envelope.viewer_checkpoint_id.clone())
+    }
+
+    /// 🧿️ The fold head of `(line, checkpoint)`: an absent line (or the trunk's id) is the trunk.
+    fn viewer_head(&self, (line, checkpoint): &(Option<String>, Option<String>)) -> crate::os_spr::ViewerHead {
+        let trunk = self.trunk_alternative_id();
+        crate::os_spr::ViewerHead { line_id: line.clone().filter(|line| *line != trunk).unwrap_or(trunk), checkpoint_id: checkpoint.clone() }
     }
 
     /// 🚩️ Commits every applied-but-uncommitted edit as one change on a new checkpoint.
@@ -20899,7 +21434,10 @@ where
     /// `dispatch` already calls this before every command.
     pub async fn tick(&mut self) -> Result<bool, VcsError> {
         self.ensure_durable_group_idle()?;
-        self.pump().await
+        let pumped = self.pump().await?;
+        let pending = self.pending_reprojection.is_some();
+        let progress = self.step_reprojection().await?;
+        Ok(pumped || (pending && progress.is_none()))
     }
 
     pub async fn tick_backbone_reports(&mut self) -> Result<Vec<crate::os_spr::MergeReport>, VcsError> {
@@ -21604,11 +22142,13 @@ where
 
 }
 
-/// 🏁️ How a time-travel session finalizes its accepted drafts: overwrite them in every alternative and checkpoint
-/// containing the operations, or keep the originals and branch a new alternative `name` at the head that supersedes them.
+/// 🏁️ How a finished replay's drafts are authored: overwrite them in every alternative and checkpoint containing the
+/// operations, supersede them within the existing alternative `alternative_id` only (the line the replay was viewed on — the
+/// undo or redo of a finalize), or keep the originals and branch a new alternative `name` at the head that supersedes them.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HistoryFinalization {
     Overwrite,
+    Scope { alternative_id: String },
     Alternative { name: String },
 }
 
@@ -22864,8 +23404,12 @@ struct PrefixSnapshot<P> {
     snapshot: Arc<P>,
 }
 
-/// 💍️ How many prefix projections a store retains; the stride adapts so they spread over the whole applied history.
-const PREFIX_SNAPSHOT_RING_CAPACITY: usize = 8;
+/// 💍️ The most prefix projections a store retains, whatever its history length; the stride adapts so they spread over the
+/// whole applied history ([`ArtifactStore::prefix_ring_capacity`]).
+const PREFIX_SNAPSHOT_RING_CAPACITY: usize = 16;
+
+/// 🪙️ The fewest prefix projections a store retains once its history is long enough to stride.
+const PREFIX_SNAPSHOT_RING_FLOOR: usize = 8;
 
 /// 🎟️ Displaced owners one reprojection displaces besides its message entries and prefix projections: the tail
 /// snapshot and its id, `current`, the applied, redo and checkpoint owners, the supersessions, the revision bump and a
@@ -22928,7 +23472,7 @@ impl OpText for BackboneMessage {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
+                let record = crate::os_dsl::parse(line, &(spec_fn.ordinary)(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -22938,7 +23482,7 @@ impl OpText for BackboneMessage {
         let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
         let variants = <Self as crate::os_dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
+        crate::os_dsl::print(&record, &(spec_fn.ordinary)(), crate::os_dsl::JoinMode::Inline)
     }
 }
 
@@ -23812,7 +24356,7 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
@@ -24181,7 +24725,7 @@ pub trait MemberStoreVisitor {
     type Output;
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
@@ -24190,7 +24734,7 @@ pub trait MemberStoreVisitorMut {
     type Output;
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: Clone + ToValue + FromValue + ArtifactPack + crate::os_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
@@ -24839,12 +25383,12 @@ impl OpText for SpaceHistoryMutation {
 }
 impl OpBinary for SpaceHistoryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        let value = to_dsl_value(self).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })?;
+        let value = semio_framework_value::ToValue::to_value(self);
         Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
         let value = pack_rt::decode_pack_value(bytes).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
-        from_dsl_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })
+        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
     }
 }
 impl ArtifactDsl for SpaceHistorySnapshot {
@@ -24858,12 +25402,12 @@ impl ArtifactDsl for SpaceHistorySnapshot {
 }
 impl ArtifactPack for SpaceHistorySnapshot {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = to_dsl_value(self).map_err(PackError::Schema)?;
+        let value = semio_framework_value::ToValue::to_value(self);
         Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
         let value = pack_rt::decode_pack_value(bytes)?;
-        from_dsl_value(renormalize_whole_number_floats(value)).map_err(PackError::Schema)
+        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| PackError::Schema(error.to_string()))
     }
 }
 //#endregion SpaceHistoryDocument
@@ -26835,3 +27379,7 @@ pub fn register_store_schema_exports() -> Result<(), semio_framework_schema_regi
     STORE_SCHEMA_EXPORTS.into_iter().try_for_each(semio_framework_schema_registry::register_scope_schema_exports)
 }
 //#endregion 🔖️SchemaExports
+
+#[cfg(test)]
+#[path = "🧪️tests/🧩️schema-composition/🦀️.rs"]
+mod schema_composition_tests;

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
         vec![PdfMutation::SetOpenAction(SetOpenAction { action: base.open_action.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set open-action", "Öffnen-Aktion setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set open-action", "Öffnen-Aktion setzen")
     }
 
     fn target(&self) -> Vec<String> {

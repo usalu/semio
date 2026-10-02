@@ -46,10 +46,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1996Buil
 //#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️Descriptor
-pub fn en1996_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn en1996_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.en1996.inference",
-        inference: framework_schema::FacetLeaves {
+        inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

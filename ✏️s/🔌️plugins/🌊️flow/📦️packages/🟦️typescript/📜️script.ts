@@ -1,17 +1,18 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { runCmd, resolveTestLevel, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

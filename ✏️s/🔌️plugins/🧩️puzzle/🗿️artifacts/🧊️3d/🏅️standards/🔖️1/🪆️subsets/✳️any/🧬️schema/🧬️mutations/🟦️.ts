@@ -10,37 +10,9 @@ import type {
   Puzzle3dVortex,
 } from "../📸️snapshot/🟦️.ts";
 
-/** 🎚️ A placed object's / target volume's freeform pose scale: a scalar broadcast to all three axes, or an explicit per-axis `[x, y, z]` triple. */
-export type Puzzle3dScale = number | [number, number, number];
-
-/** 🎞️ Where a reference image/media's bytes live and what kind of media it is. */
-export interface Puzzle3dReferenceSource {
-  url: string;
-  mediaKind?: string;
-}
-
-/** 🧵️ One cable-kind catalog row. */
-export interface Puzzle3dCatalogCableKind {
-  id: string;
-  label: string;
-  name: string;
-  defaultAttractionKind: string;
-}
-
-/** 🧲 One attraction-kind catalog row. */
-export interface Puzzle3dCatalogAttractionKind {
-  id: string;
-  label: string;
-  name: string;
-}
-
-/** 🗂️ The compile-time-catalog side of a self-contained fixture export: object/vortex/cable/attraction kind rows. */
-export interface Puzzle3dKindCatalogs {
-  objects: Puzzle3dCatalogObjectKind[];
-  vortices: Puzzle3dCatalogVortexKind[];
-  cables: Puzzle3dCatalogCableKind[];
-  attractions: Puzzle3dCatalogAttractionKind[];
-}
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Puzzle3dScale,Puzzle3dReferenceSource,Puzzle3dKindCatalogs,Puzzle3dVector3,Puzzle3dVector4} from "../📸️snapshot/🟦️.ts";
+export type {Puzzle3dScale,Puzzle3dReferenceSource,Puzzle3dKindCatalogs,Puzzle3dCatalogCableKind,Puzzle3dCatalogAttractionKind} from "../📸️snapshot/🟦️.ts";
 
 export type Puzzle3dMutation =
   | ({ mutation: "createObject" } & CreateObject)
@@ -85,7 +57,7 @@ export type Puzzle3dMutation =
 /** 🌱 `create-object` payload — full initial payload at an optional FINAL-state `index` (`null` appends). */
 export interface CreateObject {
   object: Puzzle3dObject;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** 🗑 `delete-object` payload. */
@@ -96,13 +68,13 @@ export interface DeleteObject {
 /** 📍 `move-object` payload — absolute reposition of an object's origin. */
 export interface MoveObject {
   id: string;
-  newOrigin: [number, number, number];
+  newOrigin: Puzzle3dVector3;
 }
 
 /** 🔃 `rotate-object` payload — changes an object's orientation quaternion. */
 export interface RotateObject {
   id: string;
-  newOrientation: [number, number, number, number] | null;
+  newOrientation: Puzzle3dVector4 | null;
 }
 
 /** 📏 `scale-object` payload — changes an object's freeform pose scale. */
@@ -151,7 +123,7 @@ export interface ChangeObjectLocked {
 export interface AddObjectVortex {
   objectId: string;
   vortex: Puzzle3dVortex;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** ➖ `remove-object-vortex` payload — detaches a rim vortex from an object. */
@@ -172,14 +144,14 @@ export interface ConnectVortices {
   id: string;
   attracting: string;
   attracted: string;
-  gap: number;
-  shift: number;
-  rise: number;
-  rotation: number;
-  turn: number;
-  tilt: number;
-  x: number;
-  y: number;
+  gap: Binary64;
+  shift: Binary64;
+  rise: Binary64;
+  rotation: Binary64;
+  turn: Binary64;
+  tilt: Binary64;
+  x: Binary64;
+  y: Binary64;
 }
 
 /** ✂️ `disconnect-vortices` payload — removes an attraction between two vortices. */
@@ -190,20 +162,20 @@ export interface DisconnectVortices {
 /** 🧮 `replace-attraction-geometry` payload — whole-value swap of an attraction's pose-solver connection pose. */
 export interface ReplaceAttractionGeometry {
   id: string;
-  newGap: number;
-  newShift: number;
-  newRise: number;
-  newRotation: number;
-  newTurn: number;
-  newTilt: number;
-  newX: number;
-  newY: number;
+  newGap: Binary64;
+  newShift: Binary64;
+  newRise: Binary64;
+  newRotation: Binary64;
+  newTurn: Binary64;
+  newTilt: Binary64;
+  newX: Binary64;
+  newY: Binary64;
 }
 
 /** 🌍 `create-target-volume` payload — full initial payload at an optional FINAL-state `index` (`null` appends). */
 export interface CreateTargetVolume {
   targetVolume: Puzzle3dTargetVolume;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** 🪦 `delete-target-volume` payload. */
@@ -214,13 +186,13 @@ export interface DeleteTargetVolume {
 /** 🚀 `move-target-volume` payload — absolute reposition of a target volume's origin. */
 export interface MoveTargetVolume {
   id: string;
-  newOrigin: [number, number, number];
+  newOrigin: Puzzle3dVector3;
 }
 
 /** 🌀 `rotate-target-volume` payload — changes a target volume's orientation quaternion. */
 export interface RotateTargetVolume {
   id: string;
-  newOrientation: [number, number, number, number] | null;
+  newOrientation: Puzzle3dVector4 | null;
 }
 
 /** 📐 `scale-target-volume` payload — changes a target volume's freeform pose scale. */
@@ -244,7 +216,7 @@ export interface ChangeTargetVolumeLocked {
 /** 🖼 `create-reference` payload — full initial payload at an optional FINAL-state `index` (`null` appends). */
 export interface CreateReference {
   reference: Puzzle3dReference;
-  index: number | null;
+  index: bigint | null;
 }
 
 /** 🚮 `delete-reference` payload. */
@@ -255,13 +227,13 @@ export interface DeleteReference {
 /** 🎯 `move-reference` payload — absolute reposition of a reference plane's pinned origin. */
 export interface MoveReference {
   id: string;
-  newOrigin: [number, number, number];
+  newOrigin: Puzzle3dVector3;
 }
 
 /** 📎 `resize-reference` payload — changes a reference plane's world-space width. */
 export interface ResizeReference {
   id: string;
-  newWidthWorld: number;
+  newWidthWorld: Binary64;
 }
 
 /** 🖇 `replace-reference-source` payload — whole-value swap of a reference's media source. */
@@ -310,18 +282,18 @@ export interface ReplaceKindCatalogs {
 /** ✋️ `drag-selection` payload — object and target-volume ids moved by one relative world offset. */
 export interface DragSelection {
   targets: string[];
-  offset: [number, number, number];
+  offset: Puzzle3dVector3;
 }
 
 /** 🔄️ `rotate-selection` payload — object and target-volume ids turned, each about its own origin, by `angle` radians about the world `axis`. */
 export interface RotateSelection {
   targets: string[];
-  axis: [number, number, number];
-  angle: number;
+  axis: Puzzle3dVector3;
+  angle: Binary64;
 }
 
 /** 🔍️ `scale-selection` payload — object and target-volume ids whose scales are multiplied per axis by `factors`. */
 export interface ScaleSelection {
   targets: string[];
-  factors: [number, number, number];
+  factors: Puzzle3dVector3;
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📐️ `@semio-tech/cad-js` task router: `bun ./📜️script.ts test|generate|fixture [args…]`. Folds the former cad-js-{core,renderer,kernel-brepjs,query,machine-stately,runtime} package scripts into one. */
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
@@ -6,7 +7,7 @@ import type { BundleLinter } from "../../../../../🧰️framework/🛍️produc
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { resolveTestLevel, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -20,17 +21,17 @@ export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 class FixtureScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

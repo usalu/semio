@@ -156,7 +156,7 @@ fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>
     let prolog_position = match find(&entries, "prologPosition") {
         None => 0,
         Some(raw) => match resolve(&raw, nodes, visiting)? {
-            SemioValue::Int { lexeme } => lexeme.parse::<usize>().map_err(|_| err(format!("value->xml: invalid doctype prologPosition {lexeme:?}")))?,
+            SemioValue::Int { lexeme } => lexeme.parse::<u64>().map_err(|_| err(format!("value->xml: invalid doctype prologPosition {lexeme:?}")))?,
             other => return Err(err(format!("value->xml: doctype prologPosition must be Int, got {other:?}"))),
         },
     };

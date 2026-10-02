@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -8,7 +9,7 @@ import { getNodeValue, parse as parseJson, parseTree, type ParseError } from "js
 import ts from "typescript";
 
 const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
-const source = readFileSync(sourcePath, "utf8"), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const source = normalizationSourceDeclarations(sourcePath), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const sha = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
@@ -362,5 +363,5 @@ test("move source authority gate registration matches the package Nx router and 
     launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })),
   });
   expect(branches[0]!.thenStatement.getText(routerTree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
-  expect(branches[0]!.thenStatement.getText(routerTree)).toContain('await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
+  expect(branches[0]!.thenStatement.getText(routerTree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
 });

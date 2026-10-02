@@ -19,6 +19,17 @@ const INSTALLATION_IDENTITY_MODULE = "../../../../🔨️modules/🪪️identity
 const INSTALLATION_IDENTITY_SCHEMA = "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
 const BROWSER_SESSION_MODULE = "../../../💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs";
 const SOURCE_INPUT_MODULE = "🕸️dependencies/🟦️typescript/🟨️.mjs";
+const COMMAND_INPUT_MODULE = "⚡️caching/📥️inference/🟨️.mjs";
+
+/** 📄️ Reads policy and implementation authority through current real ancestors and leaf. */
+function readPhysicalSource(path) {
+  const ancestors = [];
+  for (let directory = dirname(path); ; directory = dirname(directory)) { ancestors.push(directory); if (directory === dirname(directory)) break; }
+  for (const directory of ancestors.reverse()) { const value = lstatSync(directory); if (!value.isDirectory() || value.isSymbolicLink()) throw Error(`Nx inference requires real authority ancestry: ${directory}`); }
+  const value = lstatSync(path);
+  if (!value.isFile() || value.isSymbolicLink()) throw Error(`Nx inference requires real authority file: ${path}`);
+  return readFileSync(path);
+}
 
 /** 🔁️ Evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
 async function importRevision(source, revision) {
@@ -28,6 +39,14 @@ async function importRevision(source, revision) {
   return import(url.href);
 }
 
+const commandInputHash = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, COMMAND_INPUT_MODULE))).digest("hex");
+const commandInputUrl = new URL(`./${COMMAND_INPUT_MODULE}`, import.meta.url);
+commandInputUrl.searchParams.set("revision", commandInputHash);
+let commandInputs = await import(commandInputUrl.href);
+if (commandInputs.sourceHash !== commandInputHash) commandInputs = await importRevision(commandInputUrl, commandInputHash);
+if (commandInputs.sourceHash !== commandInputHash) throw Error("Stale command input parser implementation");
+const { commandSourceImports } = commandInputs;
+
 let declaredBrowserSessionEnginesV1;
 let admitPlaygroundNativeHostV1;
 let nativeHostSourceFactsV1;
@@ -36,28 +55,28 @@ let runtimeInputAdmissionV1;
 let readSourceInputContract;
 let relativeSourceInputs;
 let componentDeploymentDirectoryV1;
-const libraryBootstrap = importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex")).then((runtime) => {
+const libraryBootstrap = importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex")).then((runtime) => {
   runtimeComponentClosure = runtime.runtimeComponentClosure;
   runtimeInputAdmissionV1 = runtime.runtimeInputAdmissionV1;
-  return importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex"));
+  return importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex"));
 }).then((source) => {
   readSourceInputContract = source.readSourceInputContract;
   relativeSourceInputs = source.relativeSourceInputs;
-  return importRevision(new URL(`./${NATIVE_HOST_MODULE}`,import.meta.url),createHash("sha256").update(readFileSync(join(LIBRARY_ROOT,NATIVE_HOST_MODULE))).digest("hex"));
+  return importRevision(new URL(`./${NATIVE_HOST_MODULE}`,import.meta.url),createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT,NATIVE_HOST_MODULE))).digest("hex"));
  }).then(async nativeHost => {
   admitPlaygroundNativeHostV1 = nativeHost.admitPlaygroundNativeHostV1;
   nativeHostSourceFactsV1 = nativeHost.nativeHostSourceFactsV1;
-  const revision = createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, COMPONENT_DEPLOYMENT_MODULE))).update(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_MODULE))).update(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA))).digest("hex");
+  const revision = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, COMPONENT_DEPLOYMENT_MODULE))).update(readPhysicalSource(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_MODULE))).update(readPhysicalSource(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA))).digest("hex");
   const identity = await importRevision(new URL(INSTALLATION_IDENTITY_MODULE, import.meta.url), revision);
-  const admit = identity.installationDirectoryParserV1(JSON.parse(readFileSync(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA), "utf8")));
+  const admit = identity.installationDirectoryParserV1(JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, INSTALLATION_IDENTITY_SCHEMA)).toString("utf8")));
   const deployment = await importRevision(new URL(`./${COMPONENT_DEPLOYMENT_MODULE}`, import.meta.url), revision);
   componentDeploymentDirectoryV1 = metadata => deployment.componentDeploymentDirectoryV1(metadata, admit);
-  const browser = await importRevision(new URL(BROWSER_SESSION_MODULE, import.meta.url), createHash("sha256").update(readFileSync(join(LIBRARY_ROOT, BROWSER_SESSION_MODULE))).digest("hex"));
+  const browser = await importRevision(new URL(BROWSER_SESSION_MODULE, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, BROWSER_SESSION_MODULE))).digest("hex"));
   declaredBrowserSessionEnginesV1 = browser.declaredBrowserSessionEnginesV1;
 });
 
-const POLICY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json"), "utf8"));
-const TAXONOMY = JSON.parse(readFileSync(join(LIBRARY_ROOT, "🔣️taxonomy.json"), "utf8"));
+const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
+const TAXONOMY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🔣️taxonomy.json")).toString("utf8"));
 const IMPLEMENTATION_REVISION = new URL(import.meta.url).searchParams.get("revision") ?? implementationRevision();
 const nxPath = (path) => path.split("\\").join("/");
 /** 🧭️ Picks a dependency `sourceFile` Nx already indexes so graph validation survives Windows walker encoding drift. */
@@ -289,6 +308,7 @@ function createRustSourceCache(limit = 16 * 1024 * 1024) {
   return { entries: new Map(), bytes: 0, limit, hits: 0, misses: 0 };
 }
 const RUST_SOURCE_CACHE = createRustSourceCache();
+const RUST_INPUT_SNAPSHOTS = new WeakMap();
 
 /** ♻️ Content-addressed discovery never trusts source timestamps or retains token streams. */
 function cachedRustReferences(file, cache, snapshots) {
@@ -317,6 +337,10 @@ function cachedRustReferences(file, cache, snapshots) {
 
 /** 📥️ Resolves Cargo entry points and compact source references without running a compiler. */
 function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snapshots = new Map()) {
+  let closures = RUST_INPUT_SNAPSHOTS.get(snapshots);
+  if (!closures) { closures = new Map(); RUST_INPUT_SNAPSHOTS.set(snapshots, closures); }
+  const key = JSON.stringify([manifestRoot, entries.map(entry => resolve(entry))]);
+  if (closures.has(key)) return [...closures.get(key)];
   const files = new Set(), visited = new Set();
   const literal = (value) => typeof value === "string" ? value : Array.isArray(value) ? value.map(literal).join("") : manifestRoot;
   const visit = (file, moduleBase = dirname(file)) => {
@@ -339,7 +363,9 @@ function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snaps
     scope(references.modules, moduleBase, true);
   };
   for (const entry of entries) visit(resolve(entry));
-  return [...files].sort();
+  const result = [...files].sort();
+  closures.set(key, result);
+  return [...result];
 }
 
 /** 🧭️ Cargo owns compilation; Nx tracks every statically mounted source and embedded asset. */
@@ -360,43 +386,9 @@ function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true) {
   catch { return undefined; }
 }
 
-const SCRIPT_IMPORT_CACHE = new Map();
-
 /** 🗂️ Shares source reads and command closures only within one graph construction. */
 function createScriptInputCache() {
   return { files: new Map(), closures: new Map() };
-}
-
-/** 🔗️ Collects executable import expressions while excluding erased TypeScript declarations. */
-function commandImports(path, source, compiler) {
-  const previous = SCRIPT_IMPORT_CACHE.get(path);
-  if (previous?.source === source) return previous.imports;
-  const imports = new Set(), add = (node) => { if (node && compiler.isStringLiteralLike(node) && node.text.startsWith(".")) imports.add(node.text); };
-  const visit = (node) => {
-    if (compiler.isImportTypeNode(node)) return;
-    if (compiler.isImportDeclaration(node)) {
-      const clause = node.importClause, bindings = clause?.namedBindings;
-      if (!clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
-      return;
-    }
-    if (compiler.isExportDeclaration(node)) {
-      if (!node.isTypeOnly) add(node.moduleSpecifier);
-      return;
-    }
-    if (compiler.isImportEqualsDeclaration(node)) {
-      if (!node.isTypeOnly && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression);
-      return;
-    }
-    if (compiler.isCallExpression(node)) {
-      const expression = node.expression;
-      if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
-    }
-    compiler.forEachChild(node, visit);
-  };
-  if (!/\.(?:json|d\.[cm]?ts)$/.test(path)) visit(compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false));
-  const result = [...imports];
-  SCRIPT_IMPORT_CACHE.set(path, { source, imports: result });
-  return result;
 }
 
 /** 🧭️ Tracks literal relative command imports through the existing TypeScript tooling boundary. */
@@ -412,7 +404,7 @@ function relativeScriptInputs(entries, workspaceRoot, cache = createScriptInputC
     let imports = cache.files.get(path);
     if (!imports) {
       imports = [];
-      for (const entry of commandImports(path, readFileSync(path, "utf8"), compiler)) {
+      for (const entry of commandSourceImports(path, readFileSync(path, "utf8"))) {
         let resolved;
         try { resolved = createRequire(path).resolve(entry); }
         catch (error) {
@@ -910,10 +902,33 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
   };
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
     const policy = targetPolicy(name, targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target }, root, ownsScript));
-    const nativeTarget = nativeProject && (/^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || name === "describe" && Boolean(declared["component-dev"])) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
+    const nativePolicyTarget = nativeProject && nativeTargetCommandInputs(policy,workspaceRoot,commandInputs,scripts).some(path=>path.includes("/🏃️process/🧪️testing/🦀️cargo/")||path.includes("/🏃️process/📦️artifacts/🏗️native-build/")||path.includes("/🏃️process/📦️artifacts/🕸️wasm-build/"));
+    const nativeTarget = nativePolicyTarget || nativeProject && (/^(?:build|wasm|native|test|lint|check|verify)(?:-|$)/.test(name) || name === "describe" && Boolean(declared["component-dev"])) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
+    if(nativePolicyTarget){
+      const command=policy.options?.command;
+      if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Cargo owner test requires one Bun script command: ${json.name}:${name}`);
+      const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"⚡️caching/🦀️cargo/📜️script.ts")));
+      const ownerCwd=target.options?.cwd??root;
+      const boundCommand=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
+      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} native owner-command --manifest ${JSON.stringify(`${nativeRoot}/Cargo.toml`)} --cwd ${JSON.stringify(ownerCwd)} -- ${boundCommand}`};
+      const manifest=readToml(join(workspaceRoot,nativeRoot,"Cargo.toml"));let scope=resolve(workspaceRoot,nativeRoot);
+      if(manifest.package?.workspace)scope=resolve(scope,manifest.package.workspace);
+      else while(scope!==workspaceRoot && (!existsSync(join(scope,"Cargo.toml"))||!readToml(join(scope,"Cargo.toml")).workspace))scope=dirname(scope);
+      const config=nxPath(relative(workspaceRoot,join(scope,".config","nextest.toml")));
+      if(config.startsWith("../"))throw Error(`Cargo test policy escapes workspace: ${nativeRoot}`);
+      policy.cargoTestPolicyInputs=[`{workspaceRoot}/${config}`];
+    }
+    if (!policy.options?.command?.includes(" native owner-command ") && targetScriptClosure(policy, workspaceRoot, scripts)?.some(path=>path.includes("/🏃️process/🧪️testing/🧪️vitest/")||path.includes("/🏃️process/📋️context/"))) {
+      const command=policy.options?.command,ownerCwd=target.options?.cwd??root;
+      if(typeof command!=="string"||!command.startsWith("bun "))throw Error(`Process owner requires one Bun script command: ${json.name}:${name}`);
+      const driver=nxPath(relative(workspaceRoot,join(LIBRARY_ROOT,"📦️packages/🟦️typescript/📜️script.ts")));
+      const bound=command.replace(/^bun\s+("[^"\n]+"|'[^'\n]+'|[^\s]+)/u,(_,source)=>`bun ${JSON.stringify(nxPath(resolve(workspaceRoot,ownerCwd,source.replace(/^["']|["']$/g,""))))}`);
+      policy.options={...policy.options,cwd:".",command:`bun ${JSON.stringify(driver)} owner-command --cwd ${JSON.stringify(ownerCwd)} -- ${bound}`};
+    }
     if (nativeTarget) {
-      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...internCommandSources(nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
+      policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...internCommandSources(nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command),...(policy.cargoTestPolicyInputs??[])];
+      delete policy.cargoTestPolicyInputs;
     }
     if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts))];
@@ -942,8 +957,8 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
 
 /** 🛠️ Exposes wasm-pack's immutable optimizer preparation to Nx before compiler execution. */
 function withWasmTooling(targets, source) {
-  if (!targets.wasm || !/\brunWasmPackWebBuild\s*\(/.test(source)) return targets;
-  return { ...targets, wasm: { ...targets.wasm, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm-opt"])] } };
+  if (!targets.wasm || !/\b(?:buildWasmWebV1|buildRepositoryWasmWebV1)\s*\(/.test(source)) return targets;
+  return { ...targets, wasm: { ...targets.wasm, options: { ...targets.wasm.options, env: { ...targets.wasm.options?.env, SEMIO_WASM_BUILD_REQUIRED: "1" } }, dependsOn: [...new Set([...(targets.wasm.dependsOn ?? []), "workspace:deps-wasm-opt"])] } };
 }
 
 /** 📄️ Projects a document catalog into separately owned PDF tasks without executing a compiler. */
@@ -1252,8 +1267,36 @@ function rootCommandTargets(script) {
  * @param {unknown} _options
  * @param {{ workspaceRoot: string }} context
  */
+/** 🛡️ Admits callback candidates through fresh raw physical workspace ancestry. */
+function inferenceCandidates(configFiles, workspaceRoot) {
+  if (typeof workspaceRoot !== "string" || !workspaceRoot || workspaceRoot.includes("\0") || workspaceRoot.split(/[\\/]/u).some(part => part === "." || part === "..")) throw Error("Nx inference requires raw real workspace ancestry");
+  const root = resolve(workspaceRoot), ancestors = [];
+  for (let path = root; ; path = dirname(path)) { ancestors.push(path); if (path === dirname(path)) break; }
+  for (const path of ancestors.reverse()) { const stat = lstatSync(path); if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error(`Nx inference requires real workspace ancestry: ${path}`); }
+  const directories = new Map([[root, true]]), files = new Set();
+  for (const supplied of configFiles) {
+    if (typeof supplied !== "string" || !supplied || supplied.includes("\0") || supplied.includes("\uFFFD")) continue;
+    const path = nxPath(supplied), parts = path.split("/");
+    if (isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
+    let directory = root, admitted = true;
+    for (const part of parts.slice(0, -1)) {
+      directory = join(directory, part);
+      if (!directories.has(directory)) {
+        try { const value = lstatSync(directory); directories.set(directory, value.isDirectory() && !value.isSymbolicLink()); }
+        catch (error) { if (!["ENOENT", "ENOTDIR"].includes(error.code)) throw error; directories.set(directory, false); }
+      }
+      if (!directories.get(directory)) { admitted = false; break; }
+    }
+    if (!admitted) continue;
+    try { const value = lstatSync(join(root, path)); if (value.isFile() && !value.isSymbolicLink()) files.add(path); }
+    catch (error) { if (!["ENOENT", "ENOTDIR"].includes(error.code)) throw error; }
+  }
+  return [...files].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+}
+
 function emojiProjectJsonNodes(configFiles, _options, context) {
   const { workspaceRoot } = context;
+  configFiles = inferenceCandidates(configFiles, workspaceRoot);
   const rootsByName = new Map(), facts = new Map(), scripts = createScriptInputCache();
   const commandInputs = configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? nativeCommandInputs(workspaceRoot, scripts) : undefined;
   const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
@@ -1285,7 +1328,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       }
       const name = json.name;
       if (!name) throw new Error(`Nx project metadata ${configFile} requires a name`);
-      const projectDir = dirname(realpathSync.native(abs));
+      const projectDir = dirname(abs);
       const root = nxPath(relative(workspaceRoot, projectDir)) || ".";
       const prior = rootsByName.get(name);
       if (prior !== undefined && prior !== root) throw new Error(`Duplicate Nx project ${name}: ${prior} and ${root}`);
@@ -1300,10 +1343,10 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
     })
     .filter(Boolean);
   const declaredRoots = new Set([...rootsByName.values()]);
-  for (const configFile of [...new Set([...configFiles.filter((file) => file.endsWith("Cargo.toml")), ...walkCargoToml(workspaceRoot)])]) {
+  for (const configFile of configFiles.filter((file) => file.endsWith("Cargo.toml"))) {
     if (configFile.includes("\uFFFD") || configFile.startsWith("compose/") || configFile.startsWith("temp/compose/") || configFile.includes(".🧬semio") || POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name))) continue;
     if (!existsSync(join(workspaceRoot, configFile))) continue;
-    const projectDir = dirname(realpathSync.native(join(workspaceRoot, configFile)));
+    const projectDir = dirname(join(workspaceRoot, configFile));
     const root = nxPath(relative(workspaceRoot, projectDir)) || ".";
     if (declaredRoots.has(root)) continue;
     const manifest = readToml(join(projectDir, "Cargo.toml"));
@@ -1515,8 +1558,8 @@ async function createDependenciesImplementation(_options, context) {
 
 /** ♻️ Reloads authored graph code and policy while retaining Nx's daemon and task cache. */
 function implementationRevision() {
-  const hash = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url)));
-  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(readFileSync(join(LIBRARY_ROOT, path)));
+  const hash = createHash("sha256").update(readPhysicalSource(fileURLToPath(import.meta.url)));
+  for (const path of ["⚡️caching/🔣️policy.json", "🔣️taxonomy.json", COMMAND_INPUT_MODULE, RUNTIME_COMPONENT_MODULE, SOURCE_INPUT_MODULE, BROWSER_SESSION_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs", "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"]) hash.update(readPhysicalSource(join(LIBRARY_ROOT, path)));
   return hash.digest("hex");
 }
 

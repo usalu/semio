@@ -207,7 +207,7 @@ async fn graph_op_set_and_clear_data_property_undo_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_registers_semantic_descriptors() {
-    register_trinity_graph_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_trinity_graph_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }

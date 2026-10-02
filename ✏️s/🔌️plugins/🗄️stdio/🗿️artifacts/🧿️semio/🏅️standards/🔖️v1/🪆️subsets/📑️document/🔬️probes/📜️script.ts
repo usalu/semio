@@ -29,7 +29,7 @@
 //   bun 📜️script.ts document-compare   --input <before.ext> --input <after.ext>
 //   bun 📜️script.ts carrier-agreement  --input <a.docx> --input <a.md>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../🔺️mesh/🔬️probes/📜️script.ts — the pilot this file mirrors in report contract and CLI shape
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️document-subset-oracle.md
 

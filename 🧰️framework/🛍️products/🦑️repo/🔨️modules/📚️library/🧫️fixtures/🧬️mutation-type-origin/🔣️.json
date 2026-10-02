@@ -299,6 +299,47 @@
       "leafSource": "pub struct Mutation;\n",
       "compileAccepted": false,
       "expected": null
+    },
+    {
+      "id": "unproven-root-body",
+      "rootSource": "#![cfg_attr(any(), rewrite)]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "unproven-leaf-body",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "#![cfg_attr(any(), rewrite)]\npub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "unproven-child-body",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "extraFiles": [
+        {
+          "path": "🧩️payload/🦀️.rs",
+          "source": "#![cfg_attr(any(), rewrite)]\npub struct ChildPayload;\n"
+        }
+      ],
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "unproven-inline-child-body",
+      "rootSource": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "pub mod payload { #![cfg_attr(any(), rewrite)]\npub struct ChildPayload; }\npub use payload::ChildPayload;\n",
+      "compileAccepted": true,
+      "expected": null
+    },
+    {
+      "id": "known-and-unproven-mount",
+      "rootSource": "#[cfg(any())]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "pub struct Mutation;\n",
+      "compileAccepted": true,
+      "expected": null
     }
   ]
 }

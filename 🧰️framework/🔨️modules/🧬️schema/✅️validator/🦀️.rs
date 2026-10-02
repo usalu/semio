@@ -1,6 +1,6 @@
 use crate::SchemaError;
 use pack::json::{parse as parse_json, Number, Object, Value};
-use semio_framework_os_kernel::DslValue;
+use semio_framework_value::DslValue;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -184,7 +184,8 @@ impl OwnedJsonSchemaValidator {
         Ok((Self { schema, documents, patterns: std::mem::take(&mut traversal.patterns) }, progress))
     }
 
-    pub(crate) fn new(schema: &Value) -> Result<Self, SchemaError> {
+    /// 🧱 Compiles an owned JSON schema representation without serializing the catalog input.
+    pub fn compile_value(schema: &Value) -> Result<Self, SchemaError> {
         let control = ValidationControl::default();
         let documents = HashMap::new();
         let mut traversal = Traversal::new(&control);
@@ -271,7 +272,8 @@ impl OwnedJsonSchemaValidator {
         Ok(traversal.progress())
     }
 
-    pub(crate) fn validate(&self, value: &Value) -> Result<(), SchemaError> {
+    /// ✅ Validates an owned JSON value without an intermediate serialized instance.
+    pub fn validate_value(&self, value: &Value) -> Result<(), SchemaError> {
         let control = ValidationControl::default();
         let mut traversal = Traversal::new(&control);
         validate_value(Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, value, "$", &mut traversal)

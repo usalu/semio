@@ -1,25 +1,28 @@
 #!/usr/bin/env bun
+import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `semio-framework-replication` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { resolveTestLevel, runCargo, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { join, resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { blake3Hex } from "../../../🔏️hash/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargo(["test", "-p", "semio-framework-replication", ...rest], this.repoRoot);
+    await runCargoTestsV1({ manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-replication"],cwd:this.root,extraArgs:rest },readCargoTestPolicyV1(process.env));
   }
 }
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
+    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root));
   }
 }
 
@@ -38,7 +41,7 @@ class LocalInteractionSourceTestScript extends BundleScript {
 class LocalInteractionNativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargo(["test", "-p", "semio-framework-replication", "--lib", "local_interaction_", ...rest], this.repoRoot);
+    await runCargoTestsV1({ manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-replication"],cwd:this.root,extraArgs:["--lib","local_interaction_",...rest] },readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -283,7 +286,7 @@ export class RetainedVerificationScript extends BundleScript {
     console.log(`retained SPR resume oracle: ${fixture.resume.cuts.length} exact prefixes, next sequence/previous offset/hash chain preserved`);
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod retained;"), "retained SPR module is not mounted; native selection cannot run");
-    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `format::retained::tests::${law}`) }] });
+    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `format::retained::tests::${law}`) }] });
     assert.equal(receipts[0]!.assertions, laws.length);
   }
 }
@@ -332,7 +335,7 @@ class RetainedRecordObservationScript extends BundleScript {
     assert(source.includes("impl RetainedSprVerification") && !source.includes("fn push("), "metadata must observe the existing scanner, not parse a second framing grammar");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod record;"), "retained record observation remains unmounted");
-    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: [`format::retained::record::tests::${law}`] }] });
+    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: [`format::retained::record::tests::${law}`] }] });
     assert.equal(receipts[0]!.assertions, 1);
   }
 }
@@ -377,7 +380,7 @@ class PresencePeerCodecScript extends BundleScript {
     assert(source.includes("PRESENCE_PEER_WIRE_LIMITS_V1") && source.includes("reader.position != bytes.len()"), "Rust bounded exact decoder is absent");
     console.log(`presence peer codec oracle: ${fixture.cases.length} neutral Rust/TypeScript vectors, ${fixture.cases.filter((row: { accepted: boolean }) => !row.accepted).length} hostile inputs rejected exactly`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `wire::frames::presence_codec_tests::${law}`) }] });
+    const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-replication": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-replication", target: { kind: "lib", name: "protocol" }, laws: laws.map(law => `wire::frames::presence_codec_tests::${law}`) }] });
     assert.equal(receipts[0]!.assertions, laws.length);
   }
 }

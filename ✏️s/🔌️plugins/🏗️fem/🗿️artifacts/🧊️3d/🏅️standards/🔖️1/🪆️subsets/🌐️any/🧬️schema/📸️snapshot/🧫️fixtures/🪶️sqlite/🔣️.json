@@ -1,0 +1,19 @@
+{
+ "dialect":{"artifactKind":"s.fem.fem3d","standard":"1","subset":"*"},
+ "document":{
+  "nodes":[{"id":"","xBits":"8000000000000000","yBits":"0000000000000001","zBits":"3ff0000000000000"},{"id":"","xBits":"3ff0000000000000","yBits":"4000000000000000","zBits":"4008000000000000"}],
+  "elements":[{"kind":"bar","id":"member!@/\u0000","start":"unresolved start","end":"","materialId":"missing material","sectionId":"missing section"},{"kind":"frame","id":"member!@/\u0000","start":"","end":"unresolved end","materialId":"missing material","sectionId":"missing section","rollBits":"8000000000000000"}],
+  "materials":[{"id":"material","name":"鋼材","eBits":"420a3185c5000000","gBits":"4232a05f20000000","nuBits":"3fd3333333333333","rhoBits":"40bea00000000000"}],
+  "sections":[{"id":"section","name":"","areaBits":"3f847ae147ae147b","iyBits":"3f1a36e2eb1c432d","izBits":"3f1a36e2eb1c432d","jBits":"3f1a36e2eb1c432d"}],
+  "solids":[{"id":"solid 日本🧬","name":"","outlineBits":[["0000000000000000","0000000000000000"],["3ff0000000000000","0000000000000000"]],"holesBits":[[],[["3fe0000000000000","3fe0000000000000"]]],"baseZBits":"8000000000000000","heightBits":"4000000000000000","layers":"18446744073709551615","meshSizeBits":"3fd0000000000000","materialId":"unresolved","axis":"x"}],
+  "supports":[{"id":"support","nodeId":"missing node","fixed":["Tx","Ty","Tz","Rx","Ry","Rz","Tx"]}],
+  "loadCases":[{"id":"case","name":"case \u0000","selfWeight":true,"loads":[{"kind":"nodal","id":"load","nodeId":"unresolved","dof":"Rz","valueBits":"bff0000000000000"},{"kind":"memberUdl","id":"load","elementId":"missing member","wxBits":"8000000000000000","wyBits":"4000000000000000","wzBits":"4008000000000000"},{"kind":"area","id":"load","solidId":"missing solid","pressureBits":"4008000000000000"}]}],
+  "combinations":[{"id":"combination","name":"","terms":[{"caseId":"\ue000","factorBits":"bff0000000000000"},{"caseId":"🧬","factorBits":"3ff0000000000000"}]}],
+  "analysis":{"modalCount":"0","bucklingCount":"18446744073709551615","deformationScaleBits":"4049000000000000"}
+ },
+ "tableRowCounts":{"fem3d_document":1,"fem3d_node":2,"fem3d_element":2,"fem3d_frame":1,"fem3d_material":1,"fem3d_section":1,"fem3d_solid":1,"fem3d_outline_vertex":2,"fem3d_hole":2,"fem3d_hole_vertex":1,"fem3d_support":1,"fem3d_support_dof":7,"fem3d_load_case":1,"fem3d_load":3,"fem3d_nodal_load":1,"fem3d_member_udl":1,"fem3d_area_load":1,"fem3d_combination":1,"fem3d_combination_term":2},
+ "ieee754Words":["0000000000000000","8000000000000000","7ff0000000000000","fff0000000000000","7ff8000000000042","7ff0000000000001","0000000000000001","ffffffffffffffff"],
+ "countWords":["0","4294967295","9007199254740993","18446744073709551615"],
+ "axisWords":["x","y","z"],
+ "controlledAdmission":{"collectionItems":2048,"cancelAfter":256,"largeText":"日本🧬","repeat":32768,"cancelBytes":65536,"smallOwnedBytes":1024}
+}

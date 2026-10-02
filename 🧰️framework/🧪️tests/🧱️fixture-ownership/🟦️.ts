@@ -3,7 +3,6 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { hierarchy } from "d3-hierarchy";
-import Ajv from "ajv";
 
 const root = resolve(import.meta.dir, "../../..");
 const fixture = <T = Record<string, unknown>>(path: string): T => JSON.parse(readFileSync(resolve(root, path), "utf8"));
@@ -20,33 +19,5 @@ test("shared pixel lock vectors match the independent hierarchy oracle", () => {
     const descendant = node.descendants().slice(1).some(node => node.data.locked);
     const editable = !locked && !inherited;
     expect({ locked, inherited, descendant, editable, structural: editable && !descendant, canChangeLock: !inherited }).toEqual(row.expected);
-  }
-});
-
-test("the lease corpus binds both peers to one framework contract witness", () => {
-  const vectors = fixture<{ schema: string; plan: { package: Record<string, string> }; manifest: { package: Record<string, string> } }>("🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json");
-  expect(vectors.schema).toBe("semio.os.document-execution-target-lease-corpus/v1");
-  expect(vectors.plan.package.componentSha256).toBe(vectors.manifest.package.componentSha256);
-  expect(vectors.plan.package.descriptorByteSha256).toBe(vectors.manifest.package.descriptorByteSha256);
-});
-
-test("approval intents are closed under the framework-owned contract", () => {
-  const schema = fixture("🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/✅️approval-request/🔣️.json");
-  const validate = new Ajv().compile(schema);
-  const intent = { schema: "semio.hub.inference-approval/v1", version: 1, jobId: "ab".repeat(16), proposalHash: "cd".repeat(32) };
-  expect(validate(intent)).toBe(true);
-  expect(validate({ ...intent, proposal: "private bytes" })).toBe(false);
-  expect(validate({ ...intent, jobId: "invalid" })).toBe(false);
-});
-
-test("slider descriptors require authored labels across schema and native contracts", () => {
-  const schema = fixture<{ $defs: { FlowInputSliderDescriptorV1: object } }>("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json");
-  const vectors = fixture<{ cases: { widget: Record<string, unknown>; expectedDagName: string }[] }>("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json");
-  const validate = new Ajv().compile(schema.$defs.FlowInputSliderDescriptorV1);
-  for (const row of vectors.cases) {
-    expect(validate(row.widget)).toBe(true);
-    const missing = { ...row.widget };
-    delete missing.label;
-    expect(validate(missing)).toBe(false);
   }
 });

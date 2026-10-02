@@ -18,6 +18,7 @@ name = "semio_framework_time_travel"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 # 🌱️ `ToValue`/`FromValue` derives, rooted at `::protocol::value` through `#[value(crate = …)]`.
 semio-framework-value-derive = { workspace = true }

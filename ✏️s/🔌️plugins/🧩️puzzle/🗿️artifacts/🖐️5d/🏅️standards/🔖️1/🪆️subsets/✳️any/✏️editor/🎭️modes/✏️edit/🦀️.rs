@@ -9,7 +9,14 @@ use crate::editor::puzzle5d::modes::edit::tools::fill;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, Puzzle5dScene};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRunView, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowLayout;
 use dsl::json;
 
 pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";

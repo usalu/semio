@@ -21,8 +21,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::RemoveEntity(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove entity", "Entität entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

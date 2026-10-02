@@ -9,7 +9,8 @@
 //! could not see it: hex text round-trips through a byte-exact split/rejoin codec exactly as well
 //! as real TSV does. `demo_dsl_is_this_subsets_own_printed_table` below is the law that can.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

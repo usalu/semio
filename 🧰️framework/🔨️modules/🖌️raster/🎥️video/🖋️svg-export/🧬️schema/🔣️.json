@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:raster:svg-video-request:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "inputSvgPath",
+    "outputMp4Path",
+    "artifactRoot",
+    "width",
+    "height",
+    "fps",
+    "durationSeconds"
+  ],
+  "properties": {
+    "inputSvgPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u001f]+$"
+    },
+    "outputMp4Path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u001f]+$"
+    },
+    "artifactRoot": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u001f]+$"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+    },
+    "fps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "durationSeconds": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 3600
+    }
+  }
+}

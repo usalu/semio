@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSubdivisions {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change grid subdivisions to {:?}", self.new_subdivisions), &format!("Rasterunterteilungen auf {:?} ändern", self.new_subdivisions))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        crate::schema::mutations::note_setting_label(("grid subdivisions", "Rasterunterteilungen"), self.new_subdivisions.map(crate::schema::mutations::note_label_number))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

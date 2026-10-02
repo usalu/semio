@@ -1,0 +1,614 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/snapshot.json",
+  "title": "Workflow Snapshot",
+  "$defs": {
+    "Port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spec"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "spec": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "label",
+            "direction",
+            "mediaType",
+            "required",
+            "multiplicity"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "direction": {
+              "enum": [
+                "in",
+                "out"
+              ]
+            },
+            "mediaType": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "class",
+                "form"
+              ],
+              "properties": {
+                "class": {
+                  "enum": [
+                    "twoD",
+                    "threeD",
+                    "text",
+                    "data",
+                    "graph",
+                    "kit",
+                    "computation",
+                    "presentation"
+                  ]
+                },
+                "form": {
+                  "enum": [
+                    "any",
+                    "vector",
+                    "raster",
+                    "brep",
+                    "mesh",
+                    "document",
+                    "value",
+                    "dag",
+                    "trinity",
+                    "type",
+                    "design",
+                    "kit",
+                    "flow",
+                    "sequence",
+                    "procedure",
+                    "deck"
+                  ]
+                }
+              }
+            },
+            "kindId": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean"
+            },
+            "multiplicity": {
+              "enum": [
+                "one",
+                "many"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pluginId",
+        "appId",
+        "label",
+        "yields",
+        "artifactRef",
+        "configRef",
+        "x",
+        "y",
+        "width",
+        "height",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "pluginId": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "yields": {
+          "type": "string"
+        },
+        "artifactRef": {
+          "type": "string"
+        },
+        "configRef": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        }
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kindId",
+        "mediaType",
+        "wire",
+        "conversion"
+      ],
+      "properties": {
+        "kindId": {
+          "type": "string"
+        },
+        "mediaType": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "class",
+            "form"
+          ],
+          "properties": {
+            "class": {
+              "enum": [
+                "twoD",
+                "threeD",
+                "text",
+                "data",
+                "graph",
+                "kit",
+                "computation",
+                "presentation"
+              ]
+            },
+            "form": {
+              "enum": [
+                "any",
+                "vector",
+                "raster",
+                "brep",
+                "mesh",
+                "document",
+                "value",
+                "dag",
+                "trinity",
+                "type",
+                "design",
+                "kit",
+                "flow",
+                "sequence",
+                "procedure",
+                "deck"
+              ]
+            }
+          }
+        },
+        "wire": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "format_kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "binary"
+                },
+                "format_kind": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "schema"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "document"
+                },
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "conversion": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "any",
+                  "vector",
+                  "raster",
+                  "brep",
+                  "mesh",
+                  "document",
+                  "value",
+                  "dag",
+                  "trinity",
+                  "type",
+                  "design",
+                  "kit",
+                  "flow",
+                  "sequence",
+                  "procedure",
+                  "deck"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sourceNodeId",
+        "sourcePortId",
+        "targetNodeId",
+        "targetPortId",
+        "contract"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceNodeId": {
+          "type": "string"
+        },
+        "sourcePortId": {
+          "type": "string"
+        },
+        "targetNodeId": {
+          "type": "string"
+        },
+        "targetPortId": {
+          "type": "string"
+        },
+        "contract": {
+          "$ref": "#/$defs/Contract"
+        }
+      }
+    },
+    "Parameter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value",
+            "min",
+            "max",
+            "step"
+          ],
+          "properties": {
+            "type": {
+              "const": "numeric"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "max": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "step": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value",
+            "options"
+          ],
+          "properties": {
+            "type": {
+              "const": "categorical"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "toggle"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kindId",
+        "selector",
+        "required",
+        "multiplicity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "selector": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "multiplicity": {
+          "enum": [
+            "one",
+            "many"
+          ]
+        }
+      }
+    },
+    "ParameterBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameterId",
+        "nodeId",
+        "fieldPath"
+      ],
+      "properties": {
+        "parameterId": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "fieldPath": {
+          "type": "string"
+        }
+      }
+    },
+    "InputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputId",
+        "nodeId",
+        "portId"
+      ],
+      "properties": {
+        "inputId": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "portId": {
+          "type": "string"
+        }
+      }
+    },
+    "OutputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeId",
+        "portId",
+        "pathTemplate"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        },
+        "portId": {
+          "type": "string"
+        },
+        "pathTemplate": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "graph",
+    "parameters",
+    "parameter_bindings",
+    "inputs",
+    "input_bindings",
+    "output_bindings"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Node"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Parameter"
+      }
+    },
+    "parameter_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ParameterBinding"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Input"
+      }
+    },
+    "input_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/InputBinding"
+      }
+    },
+    "output_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OutputBinding"
+      }
+    }
+  }
+}

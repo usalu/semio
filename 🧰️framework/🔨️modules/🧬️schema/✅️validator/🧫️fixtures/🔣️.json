@@ -843,6 +843,60 @@
       "schema": false,
       "value": {},
       "valid": false
+    },
+    {
+      "id": "exclusive-minimum-below",
+      "schema": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "value": -1,
+      "valid": false
+    },
+    {
+      "id": "exclusive-minimum-equal",
+      "schema": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "value": 0,
+      "valid": false
+    },
+    {
+      "id": "exclusive-minimum-above",
+      "schema": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "value": 0.1,
+      "valid": true
+    },
+    {
+      "id": "exclusive-maximum-below",
+      "schema": {
+        "type": "number",
+        "exclusiveMaximum": 10
+      },
+      "value": 9.9,
+      "valid": true
+    },
+    {
+      "id": "exclusive-maximum-equal",
+      "schema": {
+        "type": "number",
+        "exclusiveMaximum": 10
+      },
+      "value": 10,
+      "valid": false
+    },
+    {
+      "id": "exclusive-maximum-above",
+      "schema": {
+        "type": "number",
+        "exclusiveMaximum": 10
+      },
+      "value": 11,
+      "valid": false
     }
   ],
   "comparisons": [

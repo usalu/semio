@@ -39,11 +39,6 @@
     },
     "kind": {
       "type": "string",
-      "enum": [
-        "sparse",
-        "mesh",
-        "image"
-      ],
       "x-semio-ui": {
         "widget": "segmented",
         "role": "value",
@@ -105,7 +100,8 @@
         "precision": 0,
         "group": "media",
         "order": 40
-      }
+      },
+      "maximum": 4294967295
     },
     "height": {
       "type": "integer",
@@ -123,12 +119,11 @@
         "precision": 0,
         "group": "media",
         "order": 50
-      }
+      },
+      "maximum": 4294967295
     },
     "first": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0,
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Unsigned64Transport",
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",
@@ -150,24 +145,7 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "type": "string",
-        "contentEncoding": "base64",
-        "pattern": "^[A-Za-z0-9+/]*={0,2}$",
-        "maxLength": 5464
-      },
-      "x-semio-ui": {
-        "widget": "hidden",
-        "role": "value",
-        "label": {
-          "en": "Chunks",
-          "de": "Blöcke"
-        },
-        "description": {
-          "en": "Base64-encoded raw leaves.",
-          "de": "Base64-kodierte Rohblöcke."
-        },
-        "group": "media",
-        "order": 70
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ByteBuffer"
       }
     }
   }

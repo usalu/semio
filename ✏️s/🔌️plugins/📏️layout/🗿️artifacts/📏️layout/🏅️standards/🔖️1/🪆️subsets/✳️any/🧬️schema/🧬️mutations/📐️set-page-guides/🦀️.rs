@@ -20,7 +20,7 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageGuides {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-guides", kind: "set-page-guides", record: "SetPageGuides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_guides(self, base) }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> { inverse_set_page_guides(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Set guides on page \"{}\"", self.id), &format!("Hilfslinien von Seite \"{}\" setzen", self.id)) }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
 

@@ -39,6 +39,24 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
     }
   }
 }

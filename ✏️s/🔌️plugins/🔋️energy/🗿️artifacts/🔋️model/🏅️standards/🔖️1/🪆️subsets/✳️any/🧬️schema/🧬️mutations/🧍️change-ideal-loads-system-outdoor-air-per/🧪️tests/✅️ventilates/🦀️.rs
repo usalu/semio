@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/✅️ventilates/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads/✅️ventilates/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads/✅️ventilates/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads/✅️ventilates/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads/✅️ventilates/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🧍️change-ideal-loads/✅️ventilates/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {

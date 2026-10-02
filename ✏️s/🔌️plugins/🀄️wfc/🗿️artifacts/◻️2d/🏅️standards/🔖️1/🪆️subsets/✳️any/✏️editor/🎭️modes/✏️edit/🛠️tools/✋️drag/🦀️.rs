@@ -47,13 +47,12 @@ pub fn wfc2d_drag_tool_commit(verb: &str, authoring_seed: &str, base: &Wfc2dSnap
 
 /// 🧾️ The emit one committed release publishes: ONE edit stamped with the ref. A view without command authority (no
 /// authoring seed: a render or test view) publishes the leaves plainly; nothing landed is the empty emit.
-pub fn wfc2d_drag_tool_emit(verb: &str, authoring_seed: &str, base: &Wfc2dSnapshot, prepared: Vec<Wfc2dMutation>, records: &[NodeDragRecord], scale: f64, description: String) -> Emit<Wfc2dMutation, Wfc2dConfigMutation> {
+pub fn wfc2d_drag_tool_emit(verb: &str, authoring_seed: &str, base: &Wfc2dSnapshot, prepared: Vec<Wfc2dMutation>, records: &[NodeDragRecord], scale: f64) -> Emit<Wfc2dMutation, Wfc2dConfigMutation> {
     let Some((transaction, leaves)) = wfc2d_drag_tool_commit(verb, authoring_seed, base, prepared, records, scale) else { return Emit::default() };
-    let emit = match authoring_seed.is_empty() {
-        true => Emit { artifact_mutations: leaves, ..Default::default() },
+    match authoring_seed.is_empty() {
+        true => Emit::mutations(leaves),
         false => Emit::commit_transaction(transaction, leaves),
-    };
-    Emit { description: Some(description), ..emit }
+    }
 }
 
 //#region 🧪️Tests

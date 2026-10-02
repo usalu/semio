@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎨️ This subset's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for SVG 1.1 `any` mutation coverage, the exhaustive 11-kind `SvgMutation` vocabulary it is measured against, and the tolerant-numeric comparison profile the decomposed `viewBox`/`transform` geometry needs. The shared stdio manifest does not register `quick-xml` under any `svg-*` capability at all (only the 📰️xml 1.0 subset, a sibling owner, reaches it for its own vocabulary), so this is a first registration, not a reuse.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
       "rationale": "🫥️ RECLASSIFIED by the `reimplementation-registered-as-third-party` gate. The crate named here does real work — it parses and writes this format — but what a MUTATION SHOULD PRODUCE is computed by this owner's own `🦀️oracle.rs`. Both halves of the comparison then descend from ONE reading of the specification, so a misreading of it yields two agreeing wrong answers: the single failure a differential test exists to prevent.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\" and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation` — a required SUPPLEMENT, never a substitute, and a qualifying third-party reference is still owed.\n\nAny fixtures registered alongside are untouched and remain valuable: real bytes of the real format, byte-reproducible, and exactly what a qualifying reader gets pointed at the day one is registered.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "quick-xml",
@@ -84,7 +84,7 @@
     {
       "id": "semantic-svg-1-1-v1",
       "description": "SVG 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (SVG attribute order is real writer freedom -- see this subset's own `write_svg_xml`, which never claims to preserve source attribute order beyond update-in-place), and the `viewBox`/`transform` attribute values specifically decomposed into typed numeric geometry (never compared as raw strings) with a small absolute tolerance for cross-implementation float-formatting noise between quick-xml's writer and this subset's own. Self-closing vs explicit empty open/close tags are equivalent by construction (both parse to zero children) and never distinguished by either side.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
     },
     {
@@ -918,5 +918,6 @@
       "family": "structural",
       "notes": "<g>'s own transform changes from \"translate(10,20)\" to \"translate(30,40) scale(2)\" (raw string, not decomposed)."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

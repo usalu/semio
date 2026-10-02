@@ -1,0 +1,131 @@
+{
+  "source": "dialect protocol\nprotocol literal.fixture\nversion 1\nschema fixture\nstart Root\nframing literal\nrecord Root { revision u8 entries Array(Ref(Entry),Varint) tail u8 }\nrecord Entry { flag u8 label utf8 child Ref(Entry) if flag eq 1 }\n",
+  "binary": [
+    1,
+    2,
+    0,
+    1,
+    97,
+    1,
+    1,
+    98,
+    0,
+    1,
+    99,
+    7
+  ],
+  "entries": [
+    {
+      "flag": 0,
+      "label": "a",
+      "child": null
+    },
+    {
+      "flag": 1,
+      "label": "b",
+      "child": {
+        "flag": 0,
+        "label": "c",
+        "child": null
+      }
+    }
+  ],
+  "revision": 1,
+  "tail": 7,
+  "depth": 8192,
+  "textBytes": 100000,
+  "cancelAfter": 256,
+  "minimumOwnershipBudget": 1,
+  "fullOwnershipBudget": 16777216,
+  "scalars": {
+    "grammar":"dialect grammar\ngrammar literal.scalar\nstart row\nrow = \"[\" I64 \",\" U32 \"]\";\n",
+    "cases":[
+      {"source":"[-9223372036854775808,4294967295]","signed":"-9223372036854775808","unsigned":"4294967295","valid":true},
+      {"source":"[9223372036854775807,0]","signed":"9223372036854775807","unsigned":"0","valid":true},
+      {"source":"[9007199254740993,1]","signed":"9007199254740993","unsigned":"1","valid":true},
+      {"source":"[-0,0]","signed":"-0","unsigned":"0","valid":false},
+      {"source":"[01,0]","signed":"01","unsigned":"0","valid":false},
+      {"source":"[-9223372036854775809,0]","signed":"-9223372036854775809","unsigned":"0","valid":false},
+      {"source":"[9223372036854775808,0]","signed":"9223372036854775808","unsigned":"0","valid":false},
+      {"source":"[0,4294967296]","signed":"0","unsigned":"4294967296","valid":false},
+      {"source":"[0,00]","signed":"0","unsigned":"00","valid":false}
+    ]
+  },
+  "lexical": {
+    "grammar": "dialect grammar\ngrammar literal.lexical\nstart row\nrow = \"[\" HEX_BYTES \",\" U64 \"]\";\n",
+    "cases": [
+      {
+        "source": "[00ff,0]",
+        "valid": true,
+        "hex": "00ff",
+        "integer": "0"
+      },
+      {
+        "source": "[deadbeef,18446744073709551615]",
+        "valid": true,
+        "hex": "deadbeef",
+        "integer": "18446744073709551615"
+      },
+      {
+        "source": "[c3a9,1]",
+        "valid": true,
+        "hex": "c3a9",
+        "integer": "1"
+      },
+      {
+        "source": "[f,0]",
+        "valid": false,
+        "hex": "f",
+        "integer": "0"
+      },
+      {
+        "source": "[GG,0]",
+        "valid": false,
+        "hex": "GG",
+        "integer": "0"
+      },
+      {
+        "source": "[aa,01]",
+        "valid": false,
+        "hex": "aa",
+        "integer": "01"
+      },
+      {
+        "source": "[aa,18446744073709551616]",
+        "valid": false,
+        "hex": "aa",
+        "integer": "18446744073709551616"
+      },
+      {
+        "source": "[12e034ff,42]",
+        "valid": true,
+        "hex": "12e034ff",
+        "integer": "42"
+      },
+      {
+        "source": "[00 ff,0]",
+        "valid": false,
+        "hex": "00 ff",
+        "integer": "0"
+      },
+      {
+        "source": "[12.34,0]",
+        "valid": false,
+        "hex": "12.34",
+        "integer": "0"
+      },
+      {
+        "source": "[ff_aa,0]",
+        "valid": false,
+        "hex": "ff_aa",
+        "integer": "0"
+      },
+      {
+        "source": "[00ffg,0]",
+        "valid": false,
+        "hex": "00ffg",
+        "integer": "0"
+      }
+    ]
+  }
+}

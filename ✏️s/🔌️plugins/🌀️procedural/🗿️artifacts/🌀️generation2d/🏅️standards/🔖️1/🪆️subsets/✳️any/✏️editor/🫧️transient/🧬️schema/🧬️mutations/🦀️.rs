@@ -2,7 +2,7 @@
 
 use super::Generation2dTransient;
 
-#[path = "👁️set-generation-preview/🦀️.rs"]
+#[path = "👁️set-generation/🦀️.rs"]
 mod set_generation_preview;
 pub use set_generation_preview::SetGenerationPreview;
 
@@ -17,7 +17,7 @@ impl protocol::OpText for Generation2dTransientMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         for (keyword, spec_fn) in <Self as dsl::DslVariants>::variants() {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(&keyword, &record);
             }
         }
@@ -26,7 +26,7 @@ impl protocol::OpText for Generation2dTransientMutation {
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let spec_fn = <Self as dsl::DslVariants>::variants().into_iter().find(|(key, _)| key == &keyword).map(|(_, spec)| spec).expect("declared transient variant");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

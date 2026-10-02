@@ -39,10 +39,7 @@ pub mod runtime;
 mod component_codec;
 pub use component_codec::{OwnedComponentDocumentCodec, GUEST_CODEC_BUDGET};
 
-use semio_framework::{
-    DslValue, PluginManifest,
-    kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
-};
+use semio_framework::{DslValue, PluginManifest, kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId}, };
 use semio_framework_actor::ActorId as RuntimeActorId;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
 // (`semio_framework_actor`, packet A1), so a downstream crate that does not itself depend on
@@ -3570,7 +3567,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
             Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.params.dialog_id, args }
         }
         E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
-        E::VideoRenderExport(inner) => Effect::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default() },
+        E::VideoRenderExport(inner) => Effect::VideoRenderExport { filename: inner.filename, program: decode_dsl(&inner.program).await.and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default() },
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
         E::RequestMediaFrames(inner) => {
@@ -6174,13 +6171,13 @@ pub async fn decode_dispatch_report(bytes: &[u8]) -> Result<protocol::DispatchRe
         return Ok(protocol::DispatchReport { policy: protocol::MergePolicy::default(), worst: None, messages: Vec::new() });
     }
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+    semio_framework_value::FromValue::from_value(value).map_err(|error| PluginHostError::Plugin(error.to_string()))
 }
 
 /// 🔀 Decodes a packed `protocol::MergeReport` — `AppFrame::MergeReport.report`.
 pub async fn decode_merge_report(bytes: &[u8]) -> Result<protocol::MergeReport, PluginHostError> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+    semio_framework_value::FromValue::from_value(value).map_err(|error| PluginHostError::Plugin(error.to_string()))
 }
 
 /// ⚔️ Decodes a packed `Vec<protocol::Conflict>` — `AppFrame::Conflicts.conflicts`.
@@ -6189,7 +6186,7 @@ pub async fn decode_conflicts(bytes: &[u8]) -> Result<Vec<protocol::Conflict>, P
         return Ok(Vec::new());
     }
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+    semio_framework_value::FromValue::from_value(value).map_err(|error| PluginHostError::Plugin(error.to_string()))
 }
 
 //#endregion 🔖️MutationReports
@@ -6508,8 +6505,8 @@ impl IoRouter {
     /// cycle-free route `from -> into` over the merged `io_entries` graph — the WIT `io-routes`
     /// host import. JSON `io_schema::IoRoute` bytes.
     pub async fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
-        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
-        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
         drop(state);
@@ -6529,8 +6526,8 @@ impl IoRouter {
     /// 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
     /// the `ok_or_else` sync closures below.
     pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
-        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let hops = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3)?;
@@ -7185,7 +7182,7 @@ mod plugin_graph_tests;
 /// list-artifact-mutations` roster row) — `semio-framework-plugin-host` does not depend on the
 /// guest SDK crate (same reasoning `ExtensionManifest` below already documents), so this is a
 /// field-for-field shape-identical local copy, decoded off the same `store::pack_rt::
-/// encode_wire_value`/`dsl::to_dsl_value` wire `list_artifact_mutations()` returns, `inputs` included.
+/// encode_wire_value`/`semio_framework_value::ToValue::to_value` wire `list_artifact_mutations()` returns, `inputs` included.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct HostMutationRosterEntry {
@@ -7238,18 +7235,18 @@ pub struct HostArtifactMutationPlanResult {
     pub foreign: Vec<protocol::ForeignStep>,
 }
 
-/// 🪶️ `store::pack_rt::decode_wire_value` + `dsl::from_dsl_value` in one step — the exact decode
+/// 🪶️ `store::pack_rt::decode_wire_value` + `semio_framework_value::FromValue::from_value` in one step — the exact decode
 /// idiom `WasmPluginRuntime::read_manifest` already uses, mirrored here for the two new
 /// `contributor` wire calls (contract §6): the guest's own `encode_wire_serialized` (`🔌️plugin/
 /// 🦀️.rs`) is `store::pack_rt::encode_wire_value(&to_dsl_value(value))`, NOT plain JSON.
 async fn decode_wire_dsl<T: dsl::FromValue>(bytes: &[u8]) -> Result<T, PluginHostError> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     let value = store::pack_rt::renormalize_whole_number_floats(value);
-    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+    semio_framework_value::FromValue::from_value(value).map_err(|error| PluginHostError::Plugin(error.to_string()))
 }
 
 async fn encode_wire_dsl<T: dsl::ToValue>(value: &T) -> Result<Vec<u8>, PluginHostError> {
-    let dsl_value = dsl::to_dsl_value(value).map_err(PluginHostError::Plugin)?;
+    let dsl_value = semio_framework_value::ToValue::to_value(value);
     Ok(store::pack_rt::encode_wire_value(&dsl_value))
 }
 
@@ -7320,7 +7317,7 @@ impl ArtifactMutationRouter {
                     if contributor != plugin_id {
                         return Err(PluginHostError::Plugin(format!("mutation roster row {:?} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", entry.mutation_id)));
                     }
-                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(PluginHostError::Plugin)?.plugin().to_string();
+                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(|error| PluginHostError::Plugin(error.to_string()))?.plugin().to_string();
                     if !dependencies.iter().any(|dependency| dependency.plugin_id == owner_plugin) {
                         return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes a mutation on `{artifact_kind}` (owner `{owner_plugin}`) without declaring `{owner_plugin}` as a dependency (contract §4 rule 1)")));
                     }

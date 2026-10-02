@@ -44,8 +44,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetViewBoxMutat
         vec![super::SvgMutation::SetViewBox(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set View Box", "ViewBox setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set View Box", "ViewBox setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-view-box".to_string()]

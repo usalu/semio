@@ -142,7 +142,7 @@ pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_i
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: GISMAP_DIALECT.artifact_kind.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Map", "2D-Karte"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Map", "2D-Karte"),
         source_format: GIS_MAP_SCHEMA.into(),
         component_kind: "gismap".into(),
         dimension: "2d".into(),
@@ -329,14 +329,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gis.gismap's typed runtime declaration.
-#[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(schema::gismap_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .inference_services([gis_map_inference_service()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::gis2d::Gis2dPlayApp>>()
+        .document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)
         .try_build()
 }
 //#endregion 🔖️Register

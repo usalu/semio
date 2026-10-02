@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
         vec![Self { config: base.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Snapshot", "Momentaufnahme setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Snapshot", "Momentaufnahme setzen")
     }
 
     fn target(&self) -> Vec<String> {

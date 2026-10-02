@@ -1,0 +1,350 @@
+{
+  "snapshot": {
+    "schema": "puzzle.2d.fixture",
+    "camera": {
+      "x": 0,
+      "y": -1,
+      "zoom": 2
+    },
+    "nodes": [
+      {
+        "id": "node!@/",
+        "nodeKind": "unresolved",
+        "shape": "rectangle",
+        "x": 1,
+        "y": 2,
+        "radius": 0,
+        "width": -3,
+        "height": 4,
+        "text": "😀\u0000世界",
+        "iconKind": "",
+        "root": false,
+        "scale": 0,
+        "visible": false,
+        "locked": true,
+        "anchor": "derived",
+        "handles": [
+          {
+            "id": "handle!@/",
+            "handleKind": "unresolved",
+            "angle": 0,
+            "radius": 0,
+            "color": "",
+            "iconKind": "😀",
+            "scale": -1,
+            "visible": false,
+            "locked": true
+          },
+          {
+            "id": "",
+            "angle": -2
+          }
+        ]
+      },
+      {
+        "id": "",
+        "x": -1,
+        "y": 0,
+        "anchor": "fixed",
+        "handles": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "",
+        "source": "handle!@/",
+        "target": "unresolved",
+        "edgeKind": "",
+        "gap": 0,
+        "shift": -1,
+        "rise": 2,
+        "rotation": 3,
+        "turn": 4,
+        "tilt": 5,
+        "x": 6,
+        "y": 7,
+        "sourceTip": "",
+        "targetTip": "😀\u0000",
+        "visible": false,
+        "locked": true
+      },
+      {
+        "id": "",
+        "source": "",
+        "target": "",
+        "gap": -1,
+        "shift": 0,
+        "rise": -2,
+        "rotation": -3,
+        "turn": -4,
+        "tilt": -5,
+        "x": -6,
+        "y": -7
+      }
+    ],
+    "targetRegions": [
+      {
+        "id": "",
+        "x": 1,
+        "y": 2,
+        "width": -3,
+        "height": 4,
+        "label": "",
+        "hidden": false,
+        "locked": true
+      },
+      {
+        "id": "",
+        "x": -1,
+        "y": -2,
+        "width": 0,
+        "height": 0,
+        "hidden": true,
+        "locked": false
+      }
+    ],
+    "meta": {
+      "manifestId": "",
+      "kindCompatibility": [
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": true,
+          "important": false,
+          "specificity": "general"
+        },
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": false,
+          "important": true,
+          "specificity": "node"
+        },
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": true,
+          "important": false,
+          "specificity": "edge"
+        },
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": false,
+          "important": true,
+          "specificity": "handle"
+        },
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": true,
+          "important": false,
+          "specificity": "wire"
+        },
+        {
+          "source": "",
+          "target": "unresolved",
+          "bidirectional": false,
+          "important": true,
+          "specificity": "vortex"
+        }
+      ],
+      "kindCatalogs": {
+        "nodes": [
+          {
+            "id": "nodekind",
+            "name": "",
+            "label": "😀\u0000世界",
+            "description": "",
+            "icon": "",
+            "image": "url!@/",
+            "unit": "",
+            "abstract": false,
+            "baseKinds": [
+              "",
+              "duplicate",
+              "duplicate"
+            ],
+            "representations": [
+              {
+                "id": "",
+                "name": "",
+                "url": "😀\u0000url!@/",
+                "mime": "",
+                "tags": [
+                  "",
+                  "duplicate",
+                  "duplicate"
+                ],
+                "lod": "",
+                "description": ""
+              },
+              {
+                "id": "",
+                "name": "name",
+                "url": "",
+                "mime": "type",
+                "tags": [],
+                "description": "desc"
+              }
+            ],
+            "handles": [
+              {
+                "id": "",
+                "name": "",
+                "label": "",
+                "description": "",
+                "icon": "",
+                "handleKind": "",
+                "angle": 0,
+                "t": 0,
+                "mandatory": false,
+                "radius": -1
+              },
+              {
+                "id": "",
+                "name": "name",
+                "label": "label",
+                "description": "",
+                "icon": "",
+                "angle": -1
+              }
+            ],
+            "attributes": [
+              {
+                "id": "",
+                "key": "",
+                "value": "",
+                "definition": ""
+              },
+              {
+                "id": "",
+                "key": "",
+                "value": "😀\u0000世界"
+              }
+            ],
+            "authors": [
+              {
+                "id": "",
+                "name": "",
+                "email": "",
+                "role": "",
+                "rank": -2147483648
+              },
+              {
+                "id": "",
+                "name": "作者",
+                "email": "",
+                "rank": 2147483647
+              },
+              {
+                "id": "",
+                "name": "",
+                "email": ""
+              }
+            ]
+          },
+          {
+            "id": "",
+            "name": "",
+            "label": "",
+            "description": "",
+            "icon": "",
+            "image": "",
+            "unit": "",
+            "abstract": true,
+            "baseKinds": [],
+            "representations": [],
+            "handles": [],
+            "attributes": [],
+            "authors": []
+          }
+        ],
+        "handles": [
+          {
+            "id": "",
+            "code": "",
+            "label": "",
+            "order": -2147483648,
+            "compatibleWith": [
+              "",
+              "duplicate",
+              "duplicate"
+            ],
+            "description": "",
+            "icon": "",
+            "color": "",
+            "defaultWireKind": "unresolved"
+          },
+          {
+            "id": "",
+            "order": 2147483647,
+            "compatibleWith": [],
+            "description": "",
+            "icon": "",
+            "color": "",
+            "defaultWireKind": ""
+          }
+        ],
+        "edges": [
+          {
+            "id": "",
+            "name": "",
+            "label": "",
+            "description": "😀\u0000世界",
+            "icon": "",
+            "color": ""
+          }
+        ],
+        "wires": [
+          {
+            "id": "",
+            "name": "",
+            "label": "",
+            "description": "",
+            "icon": "",
+            "color": "",
+            "defaultEdgeKind": "unresolved"
+          }
+        ]
+      }
+    }
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8123456789abc",
+    "fff8fedcba987654"
+  ],
+  "malformedSql": [
+    "DELETE FROM puzzle2d_camera",
+    "DELETE FROM puzzle2d_meta",
+    "UPDATE puzzle2d_node SET ordinal=9 WHERE ordinal=0",
+    "UPDATE puzzle2d_node SET anchor='invalid' WHERE ordinal=0",
+    "UPDATE puzzle2d_node SET root=2 WHERE ordinal=0",
+    "UPDATE puzzle2d_handle SET ordinal=9 WHERE ordinal=0",
+    "UPDATE puzzle2d_handle SET angle_bits=1 WHERE ordinal=0",
+    "UPDATE puzzle2d_edge SET gap_class='nan' WHERE ordinal=0",
+    "UPDATE puzzle2d_target_region SET hidden=2 WHERE ordinal=0",
+    "UPDATE puzzle2d_kind_compatibility SET specificity='invalid' WHERE ordinal=0",
+    "DELETE FROM puzzle2d_kind_catalogs",
+    "UPDATE puzzle2d_base_kind SET ordinal=9 WHERE ordinal=0",
+    "UPDATE puzzle2d_representation_tag SET ordinal=9 WHERE ordinal=0",
+    "UPDATE puzzle2d_handle_template SET t_bits=NULL WHERE ordinal=0",
+    "UPDATE puzzle2d_author SET rank=2147483648 WHERE ordinal=0",
+    "UPDATE puzzle2d_catalog_handle_kind SET order_value=-2147483649 WHERE ordinal=0",
+    "UPDATE puzzle2d_compatible_kind SET ordinal=9 WHERE ordinal=0",
+    "DELETE FROM puzzle2d_document"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeTextBytes": 131073,
+    "maxOwnedBytes": 65536,
+    "tinyFileBytes": 1024
+  }
+}

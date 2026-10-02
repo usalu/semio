@@ -17,11 +17,31 @@ use crate::editor::space_index::panels::members as members_panel;
 use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{
-    built_to_component_tree, ActionArgDef, ActionArgOption, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel, NoDraft,
-    NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
-};
-use store::EngineHandles;
+use semio_framework_plugin::built_to_component_tree;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::ActionRef;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DialogDefinition;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Actions
 /// 🎯️ Every panel/dialog-adjacent action this app declares addresses itself through this factory —
@@ -392,7 +412,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot, view_state)?)),
             members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, members_panel::SPACE_INDEX_BODY_MEMBERS))?)),
-            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

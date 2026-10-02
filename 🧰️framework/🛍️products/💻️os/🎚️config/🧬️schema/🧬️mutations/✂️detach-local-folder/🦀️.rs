@@ -36,8 +36,8 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
         base.bindings.iter().find(|entry| entry.document_id == self.document_id).map(|prior| vec![attach_local_folder(prior.clone())]).unwrap_or_default()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Forget the folder of \"{}\"", self.document_id), &format!("Ordner von \"{}\" vergessen", self.document_id))
     }
 
     fn target(&self) -> Vec<String> {

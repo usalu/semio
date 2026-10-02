@@ -5,8 +5,15 @@
 
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
-use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{tree_item_with_action, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows};
+use semio_framework_ui_contract::Label;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ui_node_list;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
 
 pub const SPACE_INDEX_BODY_MEMBERS: &str = "s.space.members";
 pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";

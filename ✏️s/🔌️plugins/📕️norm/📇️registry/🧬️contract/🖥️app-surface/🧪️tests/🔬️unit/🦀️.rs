@@ -104,6 +104,18 @@ async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_ind
 }
 
 #[semio_framework_async_macros::async_test]
+async fn byte_properties_render_their_bounded_localized_extent() {
+    for (locale, extent) in [(Locale::En, "65537 bytes"), (Locale::De, "65537 Bytes")] {
+        let tree = dsl::DslValue::Bytes(vec![255; 65_537]);
+        let root = render_value_editor("payload", &tree, locale, "norm.mock", None, &TreeWindows::unhosted(), 0).expect("byte extent");
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("projection");
+        let projected: serde_json::Value = serde_json::from_str(&json).expect("independent JSON oracle");
+        assert!(projected.to_string().contains(extent));
+        assert!(json.len() < 1024);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn the_view_mode_is_the_same_for_every_viewer() {
     let mode = view_mode_definition();
     assert_eq!(mode.id, MODE_VIEW);
@@ -139,7 +151,9 @@ async fn selected_check_index_arg_reads_the_shell_wire_shape() {
 }
 
 //#region 🪟️WindowLaws
-use semio_framework_plugin::{Locale, TreeWindowRequest, ViewModel};
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::ViewModel;
 
 /// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
 /// real `UiValue` argument-arena credit, shared process-wide, so a law that materialised a full
@@ -157,7 +171,7 @@ fn oversized_report(checks: usize) -> CheckReport {
 
 /// 🪟️ The results body exactly as the host reads it, for the host-known windows in `requests`.
 fn report_body(report: &CheckReport, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..Default::default() };
+    let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render_report(report, &TreeWindows::for_body(&view, "norm.x.play.results"), Locale::En, None).expect("report tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the report tree")
 }
@@ -207,10 +221,10 @@ async fn report_and_summary_localize_en_and_de() {
     let mut report = CheckReport::default();
     report.push(demo_check("1.1"));
     let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::for_body(&ViewModel::default(), "norm.x.play.results"), Locale::En, None).expect("en"),
+        root: render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::En, None).expect("en"),
     }).expect("json");
     let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::for_body(&ViewModel::default(), "norm.x.play.results"), Locale::De, None).expect("de"),
+        root: render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::De, None).expect("de"),
     }).expect("json");
     assert!(en.contains("Pass") || en.contains("demo check"), "{en}");
     assert!(de.contains("Bestanden") || de.contains("Demo-Prüfung"), "{de}");
@@ -329,7 +343,7 @@ async fn render_document_editor_emits_set_field_and_list_verbs() {
             TreeWindowRequest { body_key: BODY.into(), node_key: items_key, open: Some(true), offset: 0, rows: 32 },
         ],
         tree_viewport_rows: Some(32),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
         root: render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("editor"),
@@ -609,7 +623,7 @@ fn collapsed_deep_document_stays_within_retire_slots() {
             rows: 16,
         }],
         tree_viewport_rows: Some(16),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("retire within slots");
@@ -643,7 +657,7 @@ fn expanding_subtree_materialises_windowed_children_within_slots() {
             TreeWindowRequest { body_key: BODY.into(), node_key: objects_path, open: Some(true), offset: 10, rows: 8 },
         ],
         tree_viewport_rows: Some(8),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("retire within slots");
@@ -706,7 +720,7 @@ fn catalogue_table_headers_and_clause_localize_en_and_de() {
             rows: 8,
         }],
         tree_viewport_rows: Some(8),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let en_open = project_catalogue(std::slice::from_ref(&table), Locale::En, &TreeWindows::for_body(&view, BODY));
     let de_open = project_catalogue(std::slice::from_ref(&table), Locale::De, &TreeWindows::for_body(&view, BODY));
@@ -730,11 +744,10 @@ fn catalogue_large_table_stays_within_retire_slots_when_windowed() {
             rows: 8,
         }],
         tree_viewport_rows: Some(8),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let open = project_catalogue(std::slice::from_ref(&table), Locale::En, &TreeWindows::for_body(&view, BODY));
     assert!(open.contains("C40") || open.contains("C41"), "windowed rows materialise: {open}");
     assert!(!open.contains("C250"), "rows outside the window stay out: {open}");
 }
 //#endregion 📚️CatalogueTables
-

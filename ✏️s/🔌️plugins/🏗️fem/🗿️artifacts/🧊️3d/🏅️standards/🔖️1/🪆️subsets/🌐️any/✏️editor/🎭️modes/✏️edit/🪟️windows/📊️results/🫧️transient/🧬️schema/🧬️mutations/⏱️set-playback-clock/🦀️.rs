@@ -24,8 +24,8 @@ impl protocol::MutationKind<Fem3dResultsWindowTransient, Fem3dResultsWindowTrans
         vec![Self { clock: base.clock }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Results Window Playback Clock", "Wiedergabeuhr des Ergebnisfensters setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Results Window Playback Clock", "Wiedergabeuhr des Ergebnisfensters setzen")
     }
 
     fn target(&self) -> Vec<String> {

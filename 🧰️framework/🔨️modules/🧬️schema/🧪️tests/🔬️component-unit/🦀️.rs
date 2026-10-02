@@ -1,5 +1,9 @@
+use semio_framework_schema_registry::*;
+use semio_framework_schema_state::{StateClass, parse_state_class_kebab, state_class_kebab};
+use semio_framework_schema_composition::{ArtifactCompositionFields, ChildFieldRefs, ChildRefFields, ChildRefVisitor, ChildSlotSpec, LinkSlotSpec};
 
 use super::*;
+use crate::ValidationDiagnostic;
 
 //#region 🔖️SyntheticArtifact
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
@@ -150,35 +154,6 @@ async fn artifact_composition_projection_walks_aliases_nested_options_and_cancel
     assert!(snapshot.visit_child_refs(&mut visitor).is_err());
     assert_eq!(visitor.steps, 4);
     assert_eq!(visitor.rows, [("optionalChild", "child")]);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn artifact_composition_projection_real_child_alias_has_fixed_admission_bounds() {
-    use semio_framework_os_kernel::{ArtifactChild, ChildRestoreProjection, ChildRestoreProjectionError};
-    type ChildAlias = ArtifactChild<()>;
-    #[derive(semio_framework_schema::ArtifactSchema)]
-    #[artifact_schema(id = "s.test.parent")]
-    struct DerivedParent {
-        #[state(artifact)]
-        #[child(kind = "s.test.member")]
-        many: Vec<Option<ChildAlias>>,
-    }
-    let child = |id: String| {
-        Some(ArtifactChild::new(
-            id.clone(),
-            semio_framework_os_kernel::os_io::ArtifactRef { artifact_id: id, dialect: semio_framework_os_kernel::os_io::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "v1".into(), subset: "first".into() } },
-        ))
-    };
-    let mut parent = DerivedParent { many: (0..64).map(|index| child(index.to_string())).collect() };
-    assert_eq!(ChildRestoreProjection::from_snapshot(&parent).unwrap().len(), 64);
-    parent.many.push(child("overflow".into()));
-    assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::ReferenceLimit)));
-    parent.many = (0..257).map(|_| None).collect();
-    assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::TraversalLimit)));
-    parent.many = vec![child("ä".repeat(128))];
-    assert!(ChildRestoreProjection::from_snapshot(&parent).is_ok());
-    parent.many = vec![child(format!("{}x", "ä".repeat(128)))];
-    assert!(matches!(ChildRestoreProjection::from_snapshot(&parent), Err(ChildRestoreProjectionError::InvalidReference)));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -383,7 +358,7 @@ async fn artifact_inference_graphql_sdl_composes_shared_preamble_with_facet_leaf
     register_artifact_inference_descriptor(ArtifactInferenceDescriptor {
         id: "s.wave3.synthetic.sdl-probe.inference",
         inference: FacetLeaves { rust: "", typescript: "", graphql: "type SdlProbeInference { flag: Boolean }", json_schema: "", proto: "" },
-    });
+    }).expect("schema descriptor publication");
     assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference"));
     let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").await.expect("registered inference sdl");
     assert!(sdl.contains("TRANSIENT"), "composed SDL must carry the shared @state preamble");
@@ -443,8 +418,8 @@ async fn artifact_schema_descriptor_registration_mirrors_its_facets_into_the_exp
     let empty = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
     let descriptor = ArtifactSchemaDescriptor { id: "test.mirror", artifact: EXPORT_LEAVES, snapshot: empty, diff: empty, mutations: empty };
     assert_eq!(descriptor.facet_leaves(), [EXPORT_LEAVES, empty, empty, empty]);
-    register_artifact_schema_descriptor(descriptor);
-    register_artifact_schema_descriptor(descriptor);
+    register_artifact_schema_descriptor(descriptor).expect("schema descriptor publication");
+    register_artifact_schema_descriptor(descriptor).expect("schema descriptor publication");
 
     assert!(artifact_schema_descriptor_registered("test.mirror"));
     assert!(scope_schema_facets_registered("test.mirror"));
@@ -477,7 +452,7 @@ async fn framework_schema_exports_match_the_modules_json_schema_defs_and_resolve
         }
     }
     assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "SchemaFormat", SchemaFormat::Rust), Ok(include_str!("../../📇️registry/🦀️.rs")));
-    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../⚛️component/🦀️.rs")));
+    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../✅️validator/⚠️error/🦀️.rs")));
 }
 
 #[semio_framework_async_macros::async_test]

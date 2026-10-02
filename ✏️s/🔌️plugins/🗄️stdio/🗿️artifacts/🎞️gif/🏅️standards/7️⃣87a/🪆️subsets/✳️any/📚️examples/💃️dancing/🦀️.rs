@@ -5,7 +5,8 @@
 //! ACTUALLY decoding the real fixture bytes via the 89a engine's real LZW/GCE/loop codec and
 //! serializing the resulting real snapshot.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "dancing";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

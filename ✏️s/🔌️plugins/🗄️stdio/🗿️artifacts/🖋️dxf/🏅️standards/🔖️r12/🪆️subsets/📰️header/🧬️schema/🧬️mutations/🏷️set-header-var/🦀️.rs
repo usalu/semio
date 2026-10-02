@@ -22,8 +22,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetHeaderVar {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::SetHeaderVar(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set header var", "Header-Variable setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set header var", "Header-Variable setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

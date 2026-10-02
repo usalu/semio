@@ -95,6 +95,7 @@ fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
 /// 🪪️ A vortex id that already carries its owner's prefix is passed through untouched.
 #[test]
 fn vortex_full_id_prefixes_only_bare_ids() {
+    use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
     assert_eq!(puzzle3d_vortex_full_id("host", "v0"), "host:v0");
     assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
 }

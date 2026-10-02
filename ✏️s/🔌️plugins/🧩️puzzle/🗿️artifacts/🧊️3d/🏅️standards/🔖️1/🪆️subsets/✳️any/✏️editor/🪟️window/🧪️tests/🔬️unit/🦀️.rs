@@ -42,7 +42,7 @@ use super::*;
         };
         let mutation = Puzzle3dWindowTransientMutation::Snapshot { transient };
         assert!(puzzle3d_window_transient_preflight(&mutation).expect("large Puzzle 3D transient admission").is_admissible());
-        let mut retirement = store::retirement::owned_retirement(mutation);
+        let mut retirement = semio_framework_value::retirement::owned_retirement(mutation);
         for _ in 0..32_768 {
             match retirement.close_step(1, 1).expect("bounded retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -60,7 +60,7 @@ use super::*;
     }
 
     fn retire_returned_puzzle3d_transient(transient: Puzzle3dWindowTransient) {
-        let mut retirement = store::retirement::owned_retirement(Puzzle3dWindowTransientMutation::Snapshot { transient });
+        let mut retirement = semio_framework_value::retirement::owned_retirement(Puzzle3dWindowTransientMutation::Snapshot { transient });
         for _ in 0..4_096 {
             match retirement.close_step(1, 1).expect("returned Puzzle 3D owner retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -162,7 +162,7 @@ use super::*;
     /// is the same precedence `puzzle3d_scene_active_utility` resolves the scene mode with.
     #[test]
     fn host_activation_reads_the_tool_first_then_the_addressed_window_utility() {
-        let mut view = semio_framework_plugin::ViewModel { active_utility_id: Some("transform".into()), ..Default::default() };
+        let mut view = semio_framework_plugin::ViewModel { active_utility_id: Some("transform".into()), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         assert_eq!(host_activation(Some(&view)), "transform");
         view.active_tool_id = Some("fill".into());
         assert_eq!(host_activation(Some(&view)), "fill");

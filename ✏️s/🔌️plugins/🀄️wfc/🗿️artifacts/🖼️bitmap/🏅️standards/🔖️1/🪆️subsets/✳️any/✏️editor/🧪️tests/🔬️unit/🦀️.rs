@@ -70,9 +70,8 @@ fn every_mutation_kind_is_reachable_from_a_window() {
 #[test]
 fn every_typed_command_dispatches_to_the_mutation_it_names() {
     for (command, kind) in commands() {
-        let (mutation, description) = BitmapEditor::command_mutation(&command).unwrap_or_else(|| panic!("command '{kind}' maps to a mutation"));
+        let mutation = BitmapEditor::command_mutation(&command).unwrap_or_else(|| panic!("command '{kind}' maps to a mutation"));
         assert_eq!(protocol::SemanticMutation::semantics(&mutation).kind, kind);
-        assert!(!description.is_empty(), "command '{kind}' describes its own edit");
     }
     for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, stroke(&[(0, 0)], None, None), BitmapEditorCommand::SetActiveColor { index: 0 }] {
         assert!(BitmapEditor::command_mutation(&command).is_none(), "a non-document verb emits no artifact mutation");

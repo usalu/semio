@@ -1,3 +1,37 @@
+/** 🧩️ Describes a non-null, non-array object whose member values are unknown. */
+export type UnknownRecord = Record<string, unknown>;
+
+/** 🛡️ Admits non-null objects without cloning or requiring plain JSON identity. */
+export function requireRecord(value: unknown, name: string): UnknownRecord {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`${name} must be an object`);
+  return value as UnknownRecord;
+}
+
+/** 🧵️ Preserves string-array identity and the language's occupied-slot semantics. */
+export function requireStringArray(value: unknown, name: string): readonly string[] {
+  if (!Array.isArray(value) || value.some(item => typeof item !== "string")) throw new Error(`${name} must be a string array`);
+  return value;
+}
+
+/** 📝️ Requires a non-empty string without trimming or changing its spelling. */
+export function requireString(value: unknown, name: string): string {
+  if (typeof value !== "string" || value.length === 0) throw new Error(`${name} must be a non-empty string`);
+  return value;
+}
+
+/** 🔒️ Narrows an unchanged string to an explicitly admitted literal. */
+export function requireLiteral<T extends string>(value: unknown, name: string, allowed: readonly T[]): T {
+  const text = requireString(value, name);
+  if (!allowed.includes(text as T)) throw new Error(`${name} must be one of ${allowed.join(", ")}`);
+  return text as T;
+}
+
+/** 🔑️ Requires exactly the declared enumerable own keys without changing either input. */
+export function requireExactKeys(value: UnknownRecord, keys: readonly string[], name: string): void {
+  const actual = Object.keys(value).sort(), expected = [...keys].sort();
+  if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) throw new Error(`${name} must contain exactly ${expected.join(", ")}`);
+}
+
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
@@ -77,6 +111,8 @@ function jsonSchemaSubsetErrors(schema: unknown, value: unknown, path: string, r
   }
   if (typeof value === "number" && typeof contract.minimum === "number" && value < contract.minimum) errors.push(`${path} must be at least ${contract.minimum}`);
   if (typeof value === "number" && typeof contract.maximum === "number" && value > contract.maximum) errors.push(`${path} must be at most ${contract.maximum}`);
+  if (typeof value === "number" && typeof contract.exclusiveMinimum === "number" && value <= contract.exclusiveMinimum) errors.push(`${path} must be greater than ${contract.exclusiveMinimum}`);
+  if (typeof value === "number" && typeof contract.exclusiveMaximum === "number" && value >= contract.exclusiveMaximum) errors.push(`${path} must be less than ${contract.exclusiveMaximum}`);
   if (Array.isArray(value)) {
     if (typeof contract.minItems === "number" && value.length < contract.minItems) errors.push(`${path} must contain at least ${contract.minItems} item(s)`);
     if (typeof contract.maxItems === "number" && value.length > contract.maxItems) errors.push(`${path} must contain at most ${contract.maxItems} item(s)`);

@@ -52,13 +52,15 @@ fn both_previews_offer_the_same_gumball_surface() {
 
 /// ⚖️ LAW: the generate preview's selection payload carries a live gumball as soon as something is
 /// selected under a transform utility — the exact predicate `World3dHost` reads
-/// (`gumballVisible = selection.gumballActive && transformGumballMode`).
+/// (`gumballVisible = selection.gumballActive && transformGumballMode`) — and a shape's gumball is
+/// live (`gumballLiveDispatch`): the host streams into the guest's open tool transaction.
 #[test]
 fn the_generate_preview_selection_payload_arms_the_gumball_under_a_transform_utility() {
     let config = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig::default();
     let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload { selected_ids: vec!["extrude@solid#0".into()], ..Default::default() };
     let armed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(&config, "move", &payload)).expect("selection json");
     assert_eq!(armed["gumballActive"], serde_json::Value::Bool(true));
+    assert_eq!(armed["gumballLiveDispatch"], serde_json::Value::Bool(true), "a shape gumball streams into the guest's tool transaction");
     assert_eq!(armed["transformMode"], serde_json::Value::String("move".into()));
     let idle: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(&config, "move", &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload::default())).expect("selection json");
     assert_eq!(idle["gumballActive"], serde_json::Value::Bool(false), "an empty selection must never arm a gumball");

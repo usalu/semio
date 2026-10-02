@@ -5,7 +5,7 @@
  * a catalogue entry makes is the specification, exactly as in `showcase-families`.
  */
 import assert from "node:assert/strict";
-import { type AdapterContext, defineTestAdapter } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 

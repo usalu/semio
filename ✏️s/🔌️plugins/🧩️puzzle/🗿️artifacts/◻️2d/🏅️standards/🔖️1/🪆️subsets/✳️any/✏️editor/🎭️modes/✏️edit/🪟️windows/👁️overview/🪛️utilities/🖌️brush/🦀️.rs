@@ -2,7 +2,9 @@
 //! options (suggestion offset, per-kind distribution, candidate picker) are the mode-level
 //! `☑️options/🖌️brush` measure group, tagged with this utility's id.
 
-use semio_framework_plugin::{LocalizedLabel, UtilityCategory, UtilityDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "brush";
 

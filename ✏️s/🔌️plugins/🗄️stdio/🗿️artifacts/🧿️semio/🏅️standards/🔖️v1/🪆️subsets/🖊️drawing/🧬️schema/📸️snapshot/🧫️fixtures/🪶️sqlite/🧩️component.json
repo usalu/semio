@@ -1,0 +1,13 @@
+{
+  "schema": "semio.drawing.relational-component/v1",
+  "sql": "CREATE TABLE layout_drawing_component (id INTEGER PRIMARY KEY, child_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL, document_id TEXT NOT NULL, drawing_id INTEGER NOT NULL REFERENCES semio_drawing_document(id));",
+  "identity": [
+    "child!/@",
+    "",
+    "v1/@!",
+    "*",
+    ""
+  ],
+  "weakenedColumn": "schema TEXT NOT NULL",
+  "weakenedReplacement": "schema TEXT"
+}

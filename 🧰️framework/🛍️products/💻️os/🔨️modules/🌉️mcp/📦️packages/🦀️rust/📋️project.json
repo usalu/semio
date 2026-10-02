@@ -212,14 +212,6 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts installed-service-check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "mcp-installed-service"
-          ]
-        }
       }
     }
   }

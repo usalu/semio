@@ -138,7 +138,7 @@ fn mesh_component_edit_context_is_scoped_to_the_addressed_editor_preview() {
             active_window_kind_id: Some("procedural-preview".into()),
             window_id: Some("target".into()),
             window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "target".into(), window_kind_id: kind.into() }],
-            ..Default::default()
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         assert_eq!(edits_components(Some(&view), case["granularity"].as_str()), case["components"].as_bool().unwrap(), "{case}");
     }

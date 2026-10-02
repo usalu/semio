@@ -13,10 +13,10 @@
 //! independently against the registered `png` reference crate. The subject side fully parses the
 //! real document into the typed `PngSnapshot` and re-serializes from it — never splices bytes.
 
-use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::oracle_identity_round_trip;
+use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::oracle_identity_round_trip;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_arrange, oracle_undo_mutation, project_png_mutation};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_arrange, oracle_undo_mutation, project_png_mutation};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -99,9 +99,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
+    use semio_s_artifact_stdio_png_test_oracle::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_artifact_stdio_png::ArtifactDsl;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_png::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
     use semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, PngMutation};

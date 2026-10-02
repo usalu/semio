@@ -1,7 +1,8 @@
 //! 🏢️ Compliant DE office RC frame example.
 
 use crate::En1998Snapshot;
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "seismic-rc-frame";
 pub const ICON: &str = "file";

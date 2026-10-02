@@ -35,76 +35,8 @@
       }
     },
     "frame": {
-      "type": "object",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/FrameRef",
       "title": "FrameRef",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "timestampMs",
-        "assetId"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "x-semio-ui": {
-            "widget": "stepper",
-            "role": "value",
-            "label": {
-              "en": "Frame Index",
-              "de": "Bildindex"
-            },
-            "step": 1,
-            "precision": 0,
-            "group": "media",
-            "order": 10
-          }
-        },
-        "timestampMs": {
-          "type": "number",
-          "format": "double",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "role": "value",
-            "label": {
-              "en": "Timestamp (ms)",
-              "de": "Zeitstempel (ms)"
-            },
-            "description": {
-              "en": "Media time of the frame.",
-              "de": "Medienzeit des Bildes."
-            },
-            "unit": "ms",
-            "step": 1,
-            "precision": 1,
-            "group": "timing",
-            "order": 20
-          }
-        },
-        "assetId": {
-          "type": "string",
-          "x-semio-ui": {
-            "widget": "reference",
-            "role": "target",
-            "label": {
-              "en": "Image Asset",
-              "de": "Bild-Asset"
-            },
-            "description": {
-              "en": "The embedded image of this frame.",
-              "de": "Das eingebettete Bild dieses Bildes."
-            },
-            "ref": {
-              "kind": "asset",
-              "domain": "assets",
-              "granularity": "asset"
-            },
-            "group": "media",
-            "order": 30
-          }
-        }
-      },
       "x-semio-ui": {
         "role": "value",
         "label": {

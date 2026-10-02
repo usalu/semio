@@ -51,15 +51,19 @@ mod mleader_style;
 mod constraints;
 
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
+#[path="📏️encoding/🛬️admission/🦀️.rs"]
+mod native_admission;
 
 impl ArtifactSqliteSnapshot for DwgSnapshot {
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,String>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{let limits=control.limits();let snapshot=store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|construct_native_record(record,native,limits),control)?;admit_native_rows(&snapshot,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,control)?;Ok(snapshot)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{encoding::preflight(self,control)}
 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_os_kernel::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
   control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
   if dialect.artifact_kind!="s.stdio.dwg"||!matches!(dialect.standard.as_str(),"ac1018"|"ac1024")||dialect.subset!="*"{return Err(String::from("DWG owned SQLite dialect must be an exact AC1018 or AC1024 full snapshot").into());}
-  let row=database.table("dwg_document")?.single_row()?;
-  if row.rowid!=1||row.text(1)?!=self.schema||row.text(2)?!=self.version{return Err(String::from("DWG owned document identity differs from its semantic projection").into());}
+  let candidate=Self::from_sqlite_database(database,control)?;
+  if candidate.to_sqlite_database(control)?!=self.to_sqlite_database(control)?{return Err(String::from("DWG owned state differs from its semantic projection").into());}
   Ok(semio_framework_os_kernel::io_schema::IoOutcome::clean(()))
  }
  const SQLITE_SCHEMA:&'static str=concat!(
@@ -83,6 +87,14 @@ impl ArtifactSqliteSnapshot for DwgSnapshot {
   let drawing=drawing::reconstruct(&mut reader,reconstruct_body)?;reader.finish()?;
   Ok(Self{schema:document.schema,version:document.version,maintenance_version:document.maintenance_version,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliary_header:document.auxiliary_header,revision_history:document.revision_history,preview:document.preview,application_history:document.application_history})
  }
+}
+pub(super) fn construct_native_record(record:&dsl::RecordValue,native:&mut dsl::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,dsl::TextError>{native_admission::root(record,native,limits).map_err(dsl::__rt::field_error)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
+#[cfg(test)]
+pub(super) fn forecast_native_rows(record:&dsl::RecordValue,native:&mut dsl::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,String>{native_admission::root(record,native,limits)}
+fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,String>{
+    let mut projection=number::Projection::admission(DwgSnapshot::SQLITE_SCHEMA,phase,control)?;
+    document::project(&mut projection,snapshot)?;header::project(&mut projection,&snapshot.header)?;
+    drawing::project(&mut projection,&snapshot.drawing,project_body)?;projection.finish_admission()
 }
 fn project_body(p:&mut number::Projection<'_,'_>,id:i64,value:&DwgLogicalObjectBody)->Result<(),String>{match value{
  DwgLogicalObjectBody::Dictionary(v)=>tables::project_dictionary(p,id,v),

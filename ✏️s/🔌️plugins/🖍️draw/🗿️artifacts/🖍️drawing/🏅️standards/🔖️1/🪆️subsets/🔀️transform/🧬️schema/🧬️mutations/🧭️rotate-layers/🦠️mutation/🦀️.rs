@@ -32,10 +32,10 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RotateLayers {
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = drawing_label_number(self.angle.to_degrees());
         let (en, de) = drawing_label_layers(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

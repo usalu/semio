@@ -35,7 +35,7 @@ import { dwgProjectTableStyle,dwgReconstructTableStyle } from "./🖌️styles/�
 import { dwgProjectLayout,dwgReconstructLayout } from "./📃️layout/🟦️.ts";
 import { dwgProjectMLeader,dwgReconstructMLeader } from "./🖌️styles/↗️mleader/🟦️.ts";
 import { dwgProjectConstraints,dwgReconstructConstraints } from "./📏️constraints/🟦️.ts";
-import { artifactSqliteCheckpoint,artifactSqliteDocument,artifactSqliteText,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 
@@ -55,12 +55,23 @@ export async function dwgSnapshotFromSqliteDatabase(database:SqliteDatabase,opti
   return{schema:document.schema,version:document.version,maintenanceVersion:document.maintenanceVersion,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliaryHeader:document.auxiliaryHeader,revisionHistory:document.revisionHistory,preview:document.preview,applicationHistory:document.applicationHistory};
 }
 
-/** 🛂️ Validate exact owned AC1018/AC1024 dialects and semantic document identity. */
+/** 🛂️ Validate exact AC1018/AC1024 coordinates and every owned semantic field. */
 export async function dwgSnapshotValidateSqliteSubset(snapshot:DwgSnapshot,dialect:ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
   await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
   if(dialect.artifactKind!=="s.stdio.dwg"||(dialect.standard!=="ac1018"&&dialect.standard!=="ac1024")||dialect.subset!=="*")throw new Error("DWG owned SQLite dialect must be an exact AC1018 or AC1024 full snapshot");
-  const table=database.tables.find(table=>table.name.toLowerCase()==="dwg_document"),row=table?artifactSqliteDocument(table.rows):undefined;
-  if(!row||artifactSqliteText(row,1)!==snapshot.schema||artifactSqliteText(row,2)!==snapshot.version)throw new Error("DWG owned document identity differs from its semantic projection");
+  const candidate=await dwgSnapshotFromSqliteDatabase(database,options),expected=await dwgSnapshotToSqliteDatabase(snapshot,options),actual=await dwgSnapshotToSqliteDatabase(candidate,options);
+  if(expected.tables.length!==actual.tables.length)throw new Error("DWG owned state differs from its semantic projection");
+  const total=expected.tables.reduce((sum,table)=>sum+table.rows.length,0);let completed=0;
+  for(let tableIndex=0;tableIndex<expected.tables.length;tableIndex++){
+    const left=expected.tables[tableIndex]!,right=actual.tables[tableIndex]!;
+    if(left.name!==right.name||left.sql!==right.sql||left.rows.length!==right.rows.length)throw new Error("DWG owned state differs from its semantic projection");
+    for(let rowIndex=0;rowIndex<left.rows.length;rowIndex++){
+      const a=left.rows[rowIndex]!,b=right.rows[rowIndex]!;
+      if(a.rowid!==b.rowid||a.values.length!==b.values.length||a.values.some((value,column)=>!Object.is(value,b.values[column])))throw new Error("DWG owned state differs from its semantic projection");
+      if(++completed%256===0)await artifactSqliteCheckpoint(options,"projectSnapshot",completed,total);
+    }
+  }
+  await artifactSqliteCheckpoint(options,"projectSnapshot",total,total);
 }
 
 async function projectBody(p:DwgProjection,id:bigint,body:DwgLogicalObjectBody):Promise<void>{

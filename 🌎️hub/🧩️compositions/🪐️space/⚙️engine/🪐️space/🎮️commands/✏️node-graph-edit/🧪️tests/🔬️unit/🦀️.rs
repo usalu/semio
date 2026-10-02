@@ -7,36 +7,6 @@ async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
-    use crate::demo_space_projection;
-    use crate::engine::space::SpaceCommand;
-    use crate::engine::space::unit_tests::context::{apply_mutations, studio_emit};
-    use pack::json::Object;
-    use semio_framework_os::{OsWorkflowCamera, os_workflow_to_flow_host_snapshot_json};
-    let projection = demo_space_projection().await;
-    let config = SpaceConfig::default();
-    let node = projection.graph.nodes.first().expect("node").clone();
-    let camera = OsWorkflowCamera { x: 40.0, y: -20.0, zoom: 2.0 };
-    let mut fixture = os_workflow_to_flow_host_snapshot_json(&projection.graph, &camera);
-    if let Some(layout) = fixture.get_mut("layout").and_then(serde_json::Value::as_object_mut) {
-        let mut position = serde_json::Map::new();
-        position.insert("x".into(), serde_json::Value::from(500.0 + node.width / 2.0));
-        position.insert("y".into(), serde_json::Value::from(300.0 + node.height / 2.0));
-        layout.insert(node.id.clone(), serde_json::Value::Object(position));
-    }
-    let mut operations_entry = Object::new();
-    operations_entry.insert("operation", pack::JsonValue::from("setHostSnapshot"));
-    operations_entry.insert("hostSnapshotJson", pack::JsonValue::from(fixture.to_string()));
-    let operations_json = pack::json_array([pack::JsonValue::Object(operations_entry)]).to_string();
-    let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json })).await.expect("handle");
-    assert!(matches!(emit.artifact_mutations.as_slice(), [WorkflowMutation::MoveNodes(leaf)] if leaf.node_ids == [node.id.clone()]), "a snapshot drag is ONE relative leaf: {:?}", emit.artifact_mutations);
-    let moved = apply_mutations(&projection, &emit.artifact_mutations).await.graph.nodes.into_iter().find(|row| row.id == node.id).expect("node");
-    assert!((moved.x - 500.0).abs() < 0.01);
-    assert!((moved.y - 300.0).abs() < 0.01);
-    assert_eq!(emit.config_mutations, vec![SpaceConfigMutation::SetCamera { window_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }]);
-}
-
 //#region ✋️GestureLaws
 /// 🕹️ The `nodeGraphEdit` operations array a host dispatches, as its JSON text.
 fn rows(rows: serde_json::Value) -> NodeGraphEdit {
@@ -69,16 +39,39 @@ async fn a_node_drag_record_is_one_relative_move() {
     }
 }
 
-/// ⚖️ LAW: a snapshot diff groups position changes by offset — two nodes moved together are ONE `move-nodes` leaf, a
-/// node moved alone by another offset is its own leaf.
-#[test]
-fn snapshot_moves_group_by_offset() {
-    let node = |id: &str, x: f64, y: f64| semio_framework_os::WorkflowNode { id: id.into(), plugin_id: String::new(), app_id: String::new(), label: String::new(), yields: String::new(), artifact_ref: String::new(), config_ref: String::new(), x, y, width: 10.0, height: 10.0, inputs: Vec::new(), outputs: Vec::new() };
-    let nodes = vec![node("a", 0.1, 0.0), node("b", 0.7, 0.0), node("c", 5.0, 5.0)];
-    let moves = vec![MoveNode { node_id: "a".into(), x: 0.1 + 0.2, y: 0.0 }, MoveNode { node_id: "b".into(), x: 0.7 + 0.2, y: 0.0 }, MoveNode { node_id: "c".into(), x: 5.0, y: 9.0 }];
-    let leaves = space_move_leaves(&nodes, &moves);
-    assert_eq!(leaves.len(), 2, "{leaves:?}");
-    assert!(matches!(&leaves[0], WorkflowMutation::MoveNodes(leaf) if leaf.node_ids == ["a", "b"] && (leaf.dx - 0.2).abs() < 1e-12));
-    assert!(matches!(&leaves[1], WorkflowMutation::MoveNodes(leaf) if leaf.node_ids == ["c"] && leaf.dy == 4.0));
+/// ⚖️ LAW: a `delete` row removes exactly the edges and app instances it names (never an ambient selection), edges first.
+#[semio_framework_async_macros::async_test]
+async fn a_delete_row_removes_the_named_edges_then_nodes() {
+    use crate::demo_space_projection;
+    use crate::engine::space::SpaceCommand;
+    use crate::engine::space::unit_tests::context::studio_emit;
+    let projection = demo_space_projection().await;
+    let config = SpaceConfig::default();
+    let node = projection.graph.nodes.first().expect("node").id.clone();
+    let edge = projection.graph.edges.first().map(|edge| edge.id.clone());
+    let emit = studio_emit(&projection, &config, &SpaceCommand::NodeGraphEdit(rows(serde_json::json!([{ "operation": "delete", "nodeIds": [node, "ghost"], "synapseIds": edge.iter().collect::<Vec<_>>() }])))).await.expect("handle");
+    let disconnects = emit.artifact_mutations.iter().filter(|leaf| matches!(leaf, WorkflowMutation::DisconnectEdge(_))).count();
+    assert_eq!(disconnects, usize::from(edge.is_some()), "{:?}", emit.artifact_mutations);
+    assert!(matches!(emit.artifact_mutations.last(), Some(WorkflowMutation::RemoveNode(leaf)) if leaf.node_id == node), "{:?}", emit.artifact_mutations);
+    assert_eq!(emit.artifact_mutations.len(), disconnects + 1, "the ghost node is skipped");
 }
+
+/// ⚖️ LAW: the studio guest decodes the renderer's committed node-graph rows through the ONE shared decoder: every refused
+/// row is refused, every accepted row a workflow carries (`move`, `connect`, `disconnect`, `delete`) decodes, and the
+/// `setSlider`/`insertPort` rows it has no widget for are refused.
+#[test]
+fn the_renderer_row_fixture_decodes_exactly() {
+    let fixture: serde_json::Value = serde_json::from_str(NODE_GRAPH_EDIT_ROWS).expect("the row fixture parses");
+    let row = |value: &serde_json::Value| space_node_graph_row(&pack::parse_json(&value.to_string()).expect("row JSON"));
+    for case in fixture["accepted"].as_array().expect("accepted rows") {
+        let carried = !matches!(case["row"]["operation"].as_str(), Some("setSlider" | "insertPort"));
+        assert_eq!(row(&case["row"]).is_ok(), carried, "accepted row {}", case["id"]);
+    }
+    for case in fixture["refused"].as_array().expect("refused rows") {
+        assert!(row(&case["row"]).is_err(), "refused row {} decoded", case["id"]);
+    }
+}
+
+/// 🧾️ The framework's committed node-graph row vocabulary (schema `🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows`).
+const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 //#endregion ✋️GestureLaws

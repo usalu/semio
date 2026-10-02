@@ -467,7 +467,7 @@ pub use crate::schema::snapshot::DrawingSnapshot;
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.drawing".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Drawing", "2D-Zeichnung"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Drawing", "2D-Zeichnung"),
         source_format: "drawing.document".into(),
         component_kind: "drawing".into(),
         dimension: "2d".into(),

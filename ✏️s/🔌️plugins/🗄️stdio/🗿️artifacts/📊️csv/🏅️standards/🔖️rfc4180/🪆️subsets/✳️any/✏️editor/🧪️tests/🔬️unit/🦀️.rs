@@ -227,3 +227,5 @@ fn blank_csv_can_build_edit_and_remove_a_table_through_structural_mutations() {
     apply(&mut snapshot, CsvEditorCommand::RemoveColumn { column: 0, revision });
     assert!(snapshot.records[0].fields.is_empty());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../..");

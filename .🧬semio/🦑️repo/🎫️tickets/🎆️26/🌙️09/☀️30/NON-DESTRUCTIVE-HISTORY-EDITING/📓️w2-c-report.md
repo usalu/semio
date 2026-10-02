@@ -637,3 +637,307 @@ The shape is exactly the one in `📓️w3-e2e-report.md` W.3 P1:
   - W2-B relayed a native local-folder reattach request (remembered `os.config.local-folders` binding). It is not in my
     brief; I left it for the coordinator to route.
 
+
+## Session 2 — 2026-10-01
+
+Successor of W2-C (S2-W2C). Briefs: `🧭️plan.md` session-2 roster, `📋️design.md` §16, `📓️resume-core.md` §4.8, `📓️resume-gap.md`
+G2/G5/G13, and the coordinator's relays (refusal codes, S2-W2B's `transitions` and local-folder schema). Cut by the usage limit at
+~13:30 and resumed 16:35; this section is updated at every milestone.
+
+Status (10-02 03:05): S2.1–S2.6 and S2.8 **run and green**: the targeted wgpu laws are **52/52** (03:02, the binary linked
+at 23:25), including the two S2.8 host-route laws. The native `--lib --tests` and `wasm32-unknown-unknown --lib` checks were green at
+22:16 and 22:37. One edit is newer than that binary: the 02:47 restructure of `direct_reattach_candidate` to an early return. Its
+rebuild at 03:00 is **peer-blocked**: `semio-framework-os-kernel` does not compile (27 errors, `RecordSpecProducer`, from a peer's
+in-progress dsl refactor). It will be retried once the kernel is green.
+
+### S2.1 Repair: follow-up 5 (folder re-attach) was source-complete, never run
+
+- `📎️local-folders/🦀️.rs` and `🧪️wgpu-local-folders/🦀️.rs` were whole files (balanced, mounted, wired at the attach, detach,
+  reconnect and forget sites, the chrome phase `FolderReconnectBand` and the a11y projection). Nothing was half-written.
+- **Decision (G5, native re-attach parity), now coded:** the shell reattaches *directly, once per document* whenever its build
+  serves a folder transport (`SHELL_DOCUMENT_TRANSPORTS.folder`, native), and restores the folder's archive (rows, head) like a
+  fresh load; a failed reattach leaves the accessible "Reconnect folder / Forget folder" band (React's band). The browser build is
+  covered by S2.8 (host-route folder door, band always offered like React's browser shell). The predecessor's `Unavailable` copy,
+  the `document-binding.folder-unavailable` branch and `note_folder_reconnect_fault` are deleted (a failure goes through
+  `note_dispatch_fault`); the reattach mode is now the bool `LOCAL_FOLDER_DIRECT_REATTACH` (native true, browser false) held on
+  the shell as `local_folder_direct_reattach`.
+- Per-frame cost: `folder_reconnect_offer` answers before reading the session identity when the device remembers no folder.
+- Laws (`🧪️wgpu-local-folders`): shared corpus (event log, offers, names, copy), the config payload fixtures, native lifecycle
+  (attach → restart → direct reattach → archive restores rows `edit:e-1, edit:e-2` and head `cp-2`; detach → nothing), the band
+  only after a failed reattach (polite status + two buttons, en/de, Forget retires it), and the compact law (S2.4).
+- `📎️local-folder-bindings` now has S2-W2B's schema (`🧑‍🎨engine/🧬️schema/🔣️local-folder-bindings`); the wgpu law reads the same
+  fixture, and the ticket script `🧪️s2-w2c-validate-corpora.py` validates it with Python `jsonschema` (os.config payload schemas
+  registered): **PASS**.
+
+### S2.2 Refusal codes by code (relay: S2-W2A strings, S2-W2B corpus)
+
+- `time_travel::history_refusal_notice` now answers every `timeTravel.*` code of the framework's one table
+  `semio_framework_time_travel::TIME_TRAVEL_CODE_LABELS` (17 codes: session refusals, frozen, cancelled, the plugin's busy …
+  schema-unavailable, replay-faulted, commit-failed) as a warning notice carrying its code, plus the hub's three `history.*` as
+  errors. The shell's own `SESSION_REFUSALS` list and its private name-invalid copy are deleted. The same text reaches the band's
+  fault line, dispatch-fault notices and the ARIA mirror (`shell.notice`, P2).
+- Law `history_refusals_are_localized_notices_carrying_their_code` now also asserts that the corpus's `timeTravel.*` codes are
+  exactly the framework table (and the hub's three beside them).
+- 10-02 03:25 (coordinator relay): `timeTravel.member-gone`. S2-W2A added it to the table at 03:24
+  (`TIME_TRAVEL_MEMBER_GONE_CODE`, `TimeTravelLabel::RefusalMemberGone`, key `refusalMemberGone`, en "The part this history edit
+  targets was closed"; the de text came with it). wgpu therefore renders it as a warning notice carrying its code, on the band's
+  fault line and in the ARIA mirror, with **no shell change**: `history_refusal_notice` reads the table, and no wgpu `match` over
+  `TimeTravelLabel` is exhaustive. Until S2-W2B adds the matching band-corpus row, the law above is red **by design**: 18
+  table codes against 17 corpus codes, and that equality is the gate.
+
+### S2.3 Focus on Begin and on stage changes, in the ARIA mirror (G13, design §16)
+
+- I first wrote a separate focus corpus; S2-W2B then added `transitions` to the shared band corpus, so I deleted mine and wgpu now
+  implements React's `timeTravelTransitionV1` exactly: `time_travel::time_travel_transition(previous, next) → {reveal, focus}`.
+  The edge into a *new session* (also an already-open session the shell first sees, and a second session after a first) reveals
+  the History panel; a draft that starts (Begin, Next problem, another mutation) focuses the editor; a replay or a review focuses
+  the band; choosing focuses the prompt; progress, a draft edit, the commit and the close move nothing.
+- Resolution (`resolve_time_travel_focus`, called in `acknowledge_presented_input` after the frame's documents are published and
+  before the chrome projection is built, so the mirror sees the move in the same frame):
+  - editor: the first enabled control under `framework.history.editor.inputs` (never its row), else the editor's Accept —
+    React's `timeTravelFocusElementV1("editor")` — focused through `dispatch_accessibility_event` in its retained window (new
+    interpreter helper `visible_retained_accessibility_target`);
+  - band: the band's live node `shell.time-travel.status` becomes the focused chrome node (focusable, never a Tab stop) — React
+    focuses its `[data-semio-time-travel]` region;
+  - dialog: the open finalize prompt already focuses its first stop.
+  - React's `timeTravelFocusIsHeldV1`: a chrome text field outside the prompt, or a retained input outside the History panel,
+    keeps its focus; a target not on screen within 1 s is given up (React retries 30 frames).
+- Phone width: below the mobile breakpoint the reveal opens the one mobile panel on the History tab.
+- Laws (`🧪️wgpu-time-travel`): `the_shared_band_transitions_hold_on_wgpu` (every row: reveal + focus, and the observed reveal),
+  `the_editor_target_is_the_first_enabled_input_control_else_accept`,
+  `a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewhere_keeps_it`,
+  `beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection` (a real retained document painted, published,
+  and the stepper — not its row — focused in the published projection), `on_a_phone_the_session_start_opens_the_mobile_panel_on_history`.
+
+### S2.4 Blocking-rule copy and compact layout (design §16.1, G13)
+
+- §16.1 copy, one change in every shared source: `TimeTravelLabel::ReportBlocking` (Rust + TS twin + lifecycle-law fixture +
+  its ticket generator `🧪️w1-b-generate-lifecycle-law.py`), React's `ui.timeTravel.review.blocked` (en/de, normal + beginner),
+  the band corpus case, the wgpu law and the probe's regex: "Errors must be fixed or withdrawn before finalizing" / "Fehler müssen
+  vor dem Abschließen behoben oder zurückgezogen werden" ("zurückziehen" is the editor's Withdraw).
+- Compact layout: `time_travel::chrome_band_layout` is the one bottom-band layout (React's `max-w-[90vw] flex-wrap`): one row
+  while it fits min(max width, 90 % of the viewport); else the message wraps (at " · " segments for the time-travel band, at words
+  for the folder band) over full-width lines with the buttons flowing in rows below. Both the time-travel band and the folder
+  band use it; their plans now carry `lines` instead of one clipped message.
+- Laws: the band layout law gained 375 px / 320 px cases (inside 90 %, still above the footer, every word kept, no line starting
+  or ending on the separator, buttons below and non-overlapping, the replay track on the lower edge);
+  `the_reconnect_band_is_one_row_on_a_desktop_and_wraps_compact_on_a_phone`.
+
+### S2.5 Order-dependent renderer tests (G2)
+
+- Root cause: the renderer's three `WorkerCell`s (interpreter, scenes, engine canvas) became process-global
+  `OnceLock<Mutex<T>>` so state can resume on any pool worker; in one `cargo test` process every law then shares one UI engine,
+  one chrome registry and one scene map — the "presented input candidate could not be sealed", `ArenaFull` and hang reports.
+- Fix: under `cfg(test)` every `WorkerCell` resolves to the calling test thread's own state
+  (`crate::interpreter::test_worker_cell`; libtest runs each law on its own thread). The engine canvas's duplicate `WorkerCell` is
+  deleted in favour of the interpreter's one (which gained `try_borrow_mut`). Production behaviour is unchanged.
+- Remaining limit (not fixed, outside the renderer): the UI contract's own arenas (`UI_VALUE_ARENA` with one live page,
+  `UI_DOCUMENT_ARENA` with 64 slots) are process-global by design, so a single process running hundreds of laws can still exhaust
+  them. The repo's gate already runs each law in its own process: `test-wgpu-unit` → `runCargoTestBudgeted` → `cargo nextest`
+  (process per test). Measured (S2.6): in one process 78 of 1626 laws still fail and 13 hang; 72 of those 78 pass in their
+  own process. So the gate is `test-wgpu-unit` (nextest, process per law); a one-process run is not a gate until the contract
+  arenas get a per-test mode (UI-contract owner, not this WP).
+
+### S2.6 Verification so far
+
+| Command | Result |
+| --- | --- |
+| vitest `♿️wgpu-accessibility-interaction` + `📨️browser-frame-transport` (P1 `dumpBoard2d` transport, P2 notice mirror), `bun …/vitest.mjs run --config …/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts …` from the wgpu TS package | **86/86** |
+| vitest `🧩️package-integration` (16:48, after the registry was re-emitted) | **22/28**: every plugin-bridge law passes, including W2-C's progress-patch queue and the ephemeral `toolRun`/`historyEdit` bytes; the 6 failures are all in "generated worker" (package artifact authority drift, worker/entry render, devcontainer `deps-javascript` pin) — environment and generated artifacts, not W2-C code |
+| `python3 T/🧪️s2-w2c-validate-corpora.py` (band + local-folder corpora vs their schemas) | **PASS, PASS** |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (13:23 run) | my files clean; 3 errors in peer files: `🎬️media-slots` calls `reconcile::media_transport_contract_valid` which a peer made `pub(crate)`; `🧊️renderer/🦀️.rs:19177` lacks the new `MutationEnvelope.line`; `🎞️Scenes` `request_stale_canvas_authority_cancel` passes an `FnMut` where `canvas2d_gumball::request_cancel` wants `Fn` |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (16:51, after the two peer-break fixes below) | **Finished**, 0 errors; no warning in my files after the clean-up (an unused `local_folder_bindings()` accessor deleted, Scenes paths unqualified) |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s2-w2c cargo test -p semio-framework-os-renderer-wgpu --lib --no-run`, then the binary with filters `time_travel local_folders introspection_tests dialog_choices` (17:31) | **50/50** — 29 time-travel laws (incl. `the_shared_band_corpus_holds_on_wgpu` over 12 cases, `history_refusals_…` over the 20 refusal rows, `the_shared_band_transitions_hold_on_wgpu` over 13 transitions, the focus, compact and mobile laws, `beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection`), 5 local-folder laws, 14 interpreter introspection laws (P1 `dumpBoard2d` ×2), 2 dialog-choice laws. The first run (17:24) was 48/50: the restart law asserted the band after a restore (moved before it) and the focus law's tree items lacked `icon` |
+| Whole renderer lib in ONE process, 4 threads, per-thread `WorkerCell` isolation (17:32, killed by a 25-min alarm) | 1242 passed, 78 failed, 13 hung; of the 78, **72 pass when run alone** (each its own process) and 6 fail alone for peer reasons: `engine_canvas_slot_tables_…` (registry element 85 024 vs committed 82 656 bytes), `every_boot_door_names_the_same_axes`, `every_page_door_hands_the_census_across`, `the_browser_appearance_door_is_wired_end_to_end`, `focused_text_editor_clipboard_…`, `the_puzzle3d_app_carries_the_introduction_…` |
+| vitest `🧪️wgpu-backbone-folder-door` (new) + `🧩️package-integration` (21:52) | door **4/4**; package-integration **23/29**: all plugin-bridge laws pass incl. the new `readHistory` law; the same 6 "generated worker" environment failures |
+| `tsc -p T/🧪️s2-w2c-typecheck-folder-door.tsconfig.json` (bridge, host-io, wgpu Vite config, both tests) | **0 errors** |
+| `python3 T/🧪️s2-w2c-validate-corpora.py` | band, local-folder bindings and folder door corpora: **PASS ×3** |
+| `bun ./📜️script.ts verify taxonomy report --scope <dir>` for the three new dirs (`🧫️fixtures/🧫️wgpu-backbone-folder-door`, `🧬️schema/🔣️wgpu-backbone-folder-door`, `🧪️tests/🧪️wgpu-backbone-folder-door`), 10-02 02:45 | **clean ×3** (0 errors, 0 warnings) |
+| The same binary (`target-nde-s2-w2c` unit `55f243d0bd8af08a`, linked 23:25), copied to `T/🗑️generated/s2-w2c/renderer-tests.bin` and run from the renderer crate dir with `RUST_MIN_STACK=67108864` and filters `time_travel local_folders introspection_tests dialog_choices` (10-02 03:02, after the cargo hold was lifted) | **52/52**: the 50 above plus `the_shared_backbone_folder_door_corpus_holds_on_wgpu` and `a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_after_a_restart` |
+| Rebuild for the 02:47 `direct_reattach_candidate` restructure (`cargo test … --lib --no-run`, 10-02 03:00) | **peer-blocked**: `semio-framework-os-kernel` has 27 errors (`🚪️io/🧬️schema/🔗️reference` E0308 and `🎒️pack/🌱️value` E0618, `RecordSpecProducer`), from a peer's in-progress dsl refactor; the renderer was not reached |
+
+Peer-break fixes I made to unblock the crate (coordinator-approved for the last two, 16:50):
+
+- 13:23 — board DAG `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` (untouched since 06:26): the two `DslValue::Bytes` arms
+  the intrinsic-bytes rollout missed (retirement via its existing `bytes`, preview summary `<n bytes>`), mirroring the rollout's
+  own fix in `🗿️artifacts/🕸️dag/🧵️retained`.
+- 16:50 — `🖱️ui/🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs:1065`: a peer narrowed `media_transport_contract_valid` to `pub(crate)` at
+  11:32 with no public replacement, breaking its live cross-crate consumer `📺️renderer/…/🎬️media-slots/🦀️.rs:164` (E0603) for
+  5 h; restored to `pub`.
+- 16:50 — `📺️renderer/…/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs:19177`: the probe's `MutationEnvelope` literal lacked the new
+  `line` field (E0063, per-viewer head); added `line: None` like the field's other sites.
+
+### S2.8 Browser folder transport (coordinator request 17:50, G5 on 6112)
+
+Why it was missing: the browser build's kernel `ArtifactHost` actor has no filesystem (`SHELL_DOCUMENT_TRANSPORTS.folder =
+false`), and the shell runs in the frame Worker, which has no `fetch` with a page origin's cookies. React keeps folder documents in
+its worker through the dev host's backbone route (`GET|PUT /semio-backbone?uri=&documentId=&schema=`, Vite
+`semioBackboneVitePlugin`, archives in `<folder>/.semio/documents.db`). The wgpu browser build now does the same:
+
+- **Dev host.** The wgpu Vite config (`🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts`) now installs `semioBackboneVitePlugin()`, so
+  6112 serves the same route React's 6012 serves.
+- **Page door.** `🚪️host-io/🟦️.ts` gains the op `backbone-folder` (`backboneFolderHop`): a read answers `{status: 200,
+  bodyBase64}` or `{status: 204}`, a write PUTs the archive bytes the shell handed over, any other status is answered as itself and
+  a fetch that never reached the host as `{error}`; 15 s deadline like React's `FOLDER_FETCH_TIMEOUT_MS`.
+- **Bridge.** `🐚️plugin-bridge/🟦️.ts` gains `readHistory` (the guest's `AppChannelClient.readHistory` → `HistorySnapshot`), and
+  `ProgramBridgeEntry::read_history` now answers on both builds, so `seed_history_snapshot` is one target-neutral function: a
+  restored archive (and a session start) shows its rows and head on the browser too. `ProgramFixtureDocument` gained an `archive`
+  hook for the laws.
+- **Shell (`📎️local-folders`, region `🔖️HostRouteFolder`).** `attach_host_route_backbone`: read the stored archive and restore it
+  (`restore_document_archive_bytes`, shared with the native restore), or write the document's own archive first when nothing is
+  stored; keep `HostRouteFolder {uri, documentId, schema, written digest, written cursor}`; remember a folder binding.
+  `flush_host_route_folder` (each frame on the browser) writes the archive again after every history change, never while a
+  history edit is open and never byte-identical; `detach_host_route_folder` writes the last change and forgets the folder. The
+  sync card's attach for `folder://`/`file://` routes there on the browser build; the band is always offered there (gesture),
+  and Reconnect goes the same way.
+- **Corpus (language-neutral, both halves):** `🧑‍🎨engine/🧫️fixtures/🧫️wgpu-backbone-folder-door` + schema
+  `🧬️schema/🔣️wgpu-backbone-folder-door`: three requests (the Rust JSON and the page's one fetch) and six answers (page answer per
+  HTTP outcome and what the shell reads).
+- **Laws:** vitest `🧪️tests/🧪️wgpu-backbone-folder-door` (Ajv schema check, every request → its fetch, every outcome → its answer,
+  a write without bytes refused before fetching; registered in the wgpu vitest include list); Rust
+  `the_shared_backbone_folder_door_corpus_holds_on_wgpu` and
+  `a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_after_a_restart` (fake host in `cfg(test)`: read → 204
+  → write under the schema; bound and remembered; one write per history change, none during a history edit; detach writes and
+  forgets; after a restart the band is offered, Reconnect restores the archive with rows `edit:e-1, edit:e-2` and head `cp-2`).
+- Not covered: external edits to the folder while attached (React listens on the dev stream mux `backbone.folder` route; the wgpu
+  browser re-reads only on attach). The live 6112 run needs the coordinator's activation + serve (the Vite config change takes
+  effect on the next serve).
+
+### S2.9 Open items and coordinator actions
+
+- **Resolved 22:37 (peer-break fixes, coordinator-approved):** the renderer was red on two stalled peer rollouts, and I completed
+  each minimally:
+  - 22:05: the `semio_framework_value` rollout (19:40–19:46). `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs:47–73` and
+    `🛰️Dock/🧪️tests/🔬️wgpu-unit/🦀️.rs:708` needed the crate, so the renderer `📦️packages/🦀️rust/Cargo.toml` gained
+    `semio-framework-value = { workspace = true }`. `🕹️wgpu-reserved-verb-answer` called `.expect` on a now-plain `Vec<u8>`; both
+    calls are dropped.
+  - 22:18: the execution-target lease rollout (21:43). `ShellState.document_execution_target_lease` was native-only, but the
+    peer's three new assignments are target-neutral. The field and its init are now on both builds, and the type is spelled by
+    its full path because its import is native-only.
+  - Result: `cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (native) **Finished** at 22:16, and
+    `cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` **Finished with 0 errors** at 22:37.
+    No warning in my code; the remaining warnings belong to the peers (an unused `checkpoint`, an unnecessary qualification at
+    7181).
+- **Done 03:02:** the built binary ran 52/52 (S2.6). **Pending:** rebuild and re-run once the peer's os-kernel dsl refactor
+  compiles, so that the 02:47 `direct_reattach_candidate` restructure is covered too.
+- **Coordinator:** one activation + serve of 6112 so the probe's `--renderer=wgpu --explore` can calibrate; the new Vite plugin and
+  host-io op need that rebuild. React should adopt the focus contract (S2-W2B already owns `timeTravelTransitionV1`).
+
+### S2.10 S2-W2A wire adopted, and what the `--renderer=wgpu` probe needs (item d)
+
+- **S2-W2A wire (`📓️w2-a-report.md` §8.5), adopted:** `TimeTravelLabel::for_code` / `TIME_TRAVEL_CODE_LABELS` (S2.2: wgpu's one
+  refusal table); `HistoryMutationEntry.introduced` ("New since this edit" is in the Rust-built row description, so wgpu shows it
+  with no shell code; S2-W2A added `introduced: false` to the wgpu peers-corpus literal); chip entity labels, the overflow row
+  and the editor closing on leaving Editing all arrive in the Rust-built body.
+- **P1 still holds.** `semioWgpuIntrospection.dumpBoard2d(windowId?)` (interpreter `🔬️Board2dStats`, worker probe kind `board2d`,
+  `🌐️browser-host` shim) now also carries `highlighted` (S2-W2D, G3).
+- **P2 still holds.** The `shell.notice` polite status names the notice by its message and describes it by its code. Every
+  `timeTravel.*` code is now localized (S2.2).
+- **New or changed mirror facts the probe can rely on:**
+  - **Focus (G13).** `focus-moves-to-the-editor` can read the focused mirror node:
+    - on Begin and Next problem, the first control under `…/framework.history.editor.inputs` (e.g. `…editor.input.dx`, a
+      `spinbutton`);
+    - during a replay or review, `shell.time-travel.status` (`data-focused`);
+    - while choosing, the prompt's first stop.
+    - A person typing elsewhere keeps focus.
+  - **Reveal.** `history-panel-reveals-on-session-start`: the History anchor opens on every new session. Below 768 px the mobile
+    panel opens on History instead.
+  - **Phone width (375 px).** The band and the folder band wrap within 90 % of the viewport: message lines first, then the
+    buttons. Mirror keys are unchanged.
+  - **Folder on 6112 (G5).** The sync card's `framework.sync.folder`, then a typed path, then `framework.sync.attach` now binds the
+    document through the dev host's backbone route (S2.8). After a reload the band offers the folder (`s-folder-reconnect-message`
+    status, `s-folder-reconnect`, `s-folder-forget`), and Reconnect restores the archive with its history rows. S2-E2E's
+    wgpu-only exemption `reload-restores-the-edited-document` ("no folder route", R3.1) can go: the strict reload verdicts apply
+    to wgpu too.
+- **Needs before the run:** the activation must include the wgpu Vite config (the backbone plugin), host-io, bridge and shell
+  changes. Activation #7 compiles from the live tree, so it does. Then serve 6112 and run `--explore` first.
+
+### S2.7 Files (session 2)
+
+- wgpu shell: `🐚️Shell/🎯️targets/🧊️wgpu/{🦀️.rs, ⏪️time-travel/🦀️.rs, 📎️local-folders/🦀️.rs}`;
+  tests `🐚️Shell/🧪️tests/{🧪️wgpu-time-travel, 🧪️wgpu-local-folders}/🦀️.rs`.
+- Renderer: `🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` (`visible_retained_accessibility_target`, `WorkerCell` test isolation,
+  `try_borrow_mut`), `🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs` (test isolation), `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` (duplicate cell
+  deleted).
+- Copy: `🔨️modules/⏪️time-travel/{🦀️.rs, 🟦️.ts, 🧫️fixtures/🧫️lifecycle-law/🔣️.json}`, `🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts`,
+  `🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band/🔣️.json`, ticket `🧪️w1-b-generate-lifecycle-law.py`, `🔍️time-travel-probe.ts`.
+- Peer files (S2.6, S2.9): `♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs`, `🖱️ui/🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs` (one
+  visibility), `📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs` (one field), the renderer
+  `📦️packages/🦀️rust/Cargo.toml` (one dependency line), `🌉️ProgramBridge/🧪️tests/🕹️wgpu-reserved-verb-answer/🦀️.rs` (two calls),
+  and the lease field in `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`.
+- Browser folder transport (S2.8): `🎯️targets/🧊️wgpu/{🚪️host-io/🟦️.ts, 🐚️plugin-bridge/🟦️.ts, 🌐️server/🎚️config/🟦️.ts,
+  🧪️tests/🎚️config/🟦️.ts}`, `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`, `🧑‍🎨engine/{🧫️fixtures/🧫️wgpu-backbone-folder-door,
+  🧬️schema/🔣️wgpu-backbone-folder-door}/🔣️.json`, `🧑‍🎨engine/🧪️tests/{🧪️wgpu-backbone-folder-door, 🧩️package-integration}/🟦️.ts`.
+- Ticket: `🧪️s2-w2c-validate-corpora.py`, `🧪️s2-w2c-typecheck-folder-door.tsconfig.json`. Created then deleted (superseded by S2-W2B's `transitions`):
+  `🛠️ShellHelpers/{🧫️fixtures/🧫️time-travel-focus, 🧬️schema/🔣️time-travel-focus}`.
+
+## Session 3 — 2026-10-02
+
+Successor S3-W2C (session 3, coordinator `⚪b7db773a…`). Focus: verify → fix → close (rule 29). Status: **IN PROGRESS** (updated at
+every milestone).
+
+### S3.1 Repair-first check (rule 28)
+
+- Files this WP owns, newer than the session-2 section (03:26): none. `🧊️wgpu/🦀️.rs` 22:17, `⏪️time-travel/🦀️.rs` 16:34,
+  `📎️local-folders/🦀️.rs` 02:47 (the `direct_reattach_candidate` early-return restructure, complete and balanced),
+  `🧪️wgpu-time-travel` 17:24, `🧪️wgpu-local-folders` 21:45. No half-finished edit.
+- React's `🏛️ShellHost/📎️local-folders` changed at 03:35–03:37 (S2-W2B): three docstring emojis and one phone-width test; the
+  event log, offer, name and copy the wgpu twin mirrors are unchanged, so folder parity needs no wgpu change.
+- The band corpus now carries `timeTravel.member-gone` (S2-W2B, 03:35): 18 corpus codes equal the framework's 18-code table, so the
+  S2.2 equality gate is expected green again (confirmed in S3.2).
+
+### S3.2 Verification (foreground, gated; scratch in `🗑️generated/s3-w2c/`)
+
+| Command | Result |
+| --- | --- |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s3-w2c cargo test -p semio-framework-os-renderer-wgpu --lib --no-run` (10:57→11:22, load ~80) | **Finished**, 0 errors (`test-build-1.txt`); no warning in `⏪️time-travel`, `📎️local-folders` or their test files |
+| The binary (copied to `renderer-tests-1.bin`), from the renderer crate dir, `RUST_MIN_STACK=67108864`, filters `time_travel local_folders introspection_tests dialog_choices` | **52/52** (`run-1.txt`) — now covers the 02:47 `direct_reattach_candidate` restructure (S2.9 owed item closed), `history_refusals_…` with the 18-code `member-gone` gate, the band/transition/focus/mobile laws, the shared folder corpus + native restart reattach, the backbone folder door, `shell.notice`, `dumpBoard2d` (incl. `highlighted`) |
+| Same binary, filters `chrome_overlays_tour_tests board2d_engine_tests board_presence_tests agent_overlays_tests shortcuts_palette window_actions_search_panes panel_anchor_model hub_projection_workspace canvas_presence` | **177/178** (11 ignored) (`run-2.txt`); the one ✘ fails alone too and is a peer's: `shell_shortcuts_palette_tests::find_publishes_filters_and_activates_with_a_physical_row_click` panics at `♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🦀️.rs:629` "bundled DAG demo DSL is valid DagSnapshot text: expected LBrace, found Ident 'id'" (dsl text-grammar refactor; not W2-C) |
+| vitest `bun ./📜️script.ts test-browser 🧪️tests/♿️wgpu-accessibility-interaction/🟦️.ts 🧪️tests/📨️browser-frame-transport/🟦️.ts 🧪️tests/🧪️wgpu-backbone-folder-door/🟦️.ts` (wgpu TS package) | **90/90**, 3 files (`vitest-browser-1.txt`) |
+| vitest `bun ./📜️script.ts test-preview-generated` (`🧩️package-integration`) | **26/29** (`vitest-package-integration-1.txt`): every plugin-bridge law passes (progress-patch queue, ephemeral `toolRun`/`historyEdit`, `readHistory`); the 3 ✘ are "generated worker" environment checks (package artifact authority drift ×2, devcontainer `deps-javascript` pin) — generated artifacts, not W2-C code (was 6 ✘ in S2.6) |
+| `CARGO_INCREMENTAL=0 … cargo test -p semio-framework-ui --features testkit --lib -- conformance_corpus presence_bar peer_notes` (12:02→12:20) | **16/16** (`ui-test-1.txt`): 7 `presence_bar` (incl. W2-C's activity badge + accessible name), 9 `conformance_corpus` (incl. `the_history_editor_controls_project_their_corpus_accessibility`, `peer_notes_are_announced_after_a_tree_rows_description`, W1-E's `the_g6_number_control_cases_carry_and_paint_every_facet`) |
+
+### S3.3 Staged-arg number facets (`staged_arg_row`, `🧊️wgpu/🦀️.rs`) — SOURCE WRITTEN, compile pending (peer break)
+
+S3-W1E's helper landed at 12:08 (`semio_framework::ActionArgDef::number_facets(locale) -> Option<ActionArgNumberFacets>`, manifest
+region `🔖️ActionArgFacets`, corpus `🛂️manifest/🧫️fixtures/🧫️number-facets`, 9 cases). `staged_arg_row` (the Actions form and the
+command palette's staged form) now calls it once per row and maps it exactly as relayed:
+
+- **Slider / Dial** → `UiSliderNode` with travel `min`/`max`, `step` (else 1), stored unit, detents, `appearance` (Dial for a dial),
+  `scale` (log), `precision`, `display_unit`, `display_factor` and `limits: Some(facets.limits)` — the hard bounds with their
+  localized refusals, which make the travel soft. The staged value is **no longer clamped** to the travel.
+- **Stepper** → key range from the facets (an excluded bound is no key end), step, precision, detents, shown unit, display factor,
+  limits.
+- **Number field** and **every vector axis** → `UiInputNode` min/max/step/precision/snaps/`display_factor`/`limits`; an axis value is
+  formatted at the precision only when no display factor applies (with a factor the field shows display units itself).
+- Deleted: the row's private `precision` closure and both ad-hoc `snaps_are_valid` filters (the facets already filter detents);
+  one unnecessary `semio_framework::` qualification in the Reference arm.
+- New law `every_staged_number_row_carries_the_shared_corpus_facets` (`🧪️wgpu-time-travel` 🎛️StagedEditors): every corpus case
+  through `staged_action_arg_row` in its locale — dial, log slider, both steppers, number field, vector (every axis), the
+  step/precision edge case — compared field by field with the corpus facets (refusals en/de included); text and colour carry
+  no limits; the log slider keeps a staged 20 beyond its soft travel (10) because the limits admit it. The existing
+  `the_actions_form_renders_every_editor_kind` keeps its expectations.
+- Not mine (W1-E's 🗨️ChromeDialog region): `ChromeDialogFieldKind::Slider` (chrome dialogs' staged sliders) still carries only
+  min/max/step/precision/unit/snaps — the same helper should feed it.
+
+### S3.4 History body N1/N15 on wgpu (coordinator request 12:35) — LAW WRITTEN, run pending (peer break)
+
+New region 📚️HistoryBody in `🧪️wgpu-time-travel`, law `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason`. It
+builds the body with the guest's REAL producer `semio_framework_plugin::app::ui_history_panel` (one transaction row of 120
+operations, 3 projected; the store page past the projection supplied like `history_mutation_pages`), flattens the `BuiltNode`
+into retained records, paints it on the History panel surface and reads the ARIA mirror projection:
+1. a closed row announces `expanded=false` (window total 120, no children materialised);
+2. the mirror's activation opens it; `observe_tree_windows` then files a `TreeWindowRequest` for body `framework.body.history`
+   and node path `framework.history.commands␟framework.history.entry.1` — the guest's own `history_row_window_path(1)`;
+3. the guest's answer for that request renders `m-0…` in op order past the projection;
+4. a window at offset 100 shows exactly `m-100…m-107`; with a running replay every Edit is `button`, disabled, not
+   focusable/actionable, named "Edit: Not possible right now…" / "Bearbeiten: Derzeit nicht möglich…", and activating it or
+   its row dispatches no `historyEditBegin`;
+5. with Begin allowed the Edit button is enabled and dispatches `historyEditBegin{mutationId: m-100}`.
+The paint loop of the focus law is now the shared harness helper `paint_retained_body` (+ `close_retained_body`).
+
+Expected red from reading the code (to be confirmed by the run): step 1–2. `🖱️ui/🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs`
+`UiTree::disclosure_open` (548) and `disclosure_is_interactive` (561) treat a tree item as a disclosure only when it has
+materialised `items`, while the layout (`📌️mounted_layout` `tree_item_has_rows`, 270) and the widget path treat `window.total > 0`
+as expandable-but-not-yet-streamed (React's `TreeDataWindow` rule). A closed history row therefore has no `aria-expanded` and
+cannot be opened through the retained tree on wgpu.

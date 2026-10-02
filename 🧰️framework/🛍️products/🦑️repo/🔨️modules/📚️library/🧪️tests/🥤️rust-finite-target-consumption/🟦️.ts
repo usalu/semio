@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
@@ -7,17 +8,20 @@ import { parse as parseJsonc } from "jsonc-parser";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../🔍️discovery/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../🔍️discovery/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🥤️rust-finite-target-consumption/🔣️.json"), "utf8"));
 const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts");
-const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const sourceInputs = normalizationSourceFiles(sourcePath);
+const source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const discoveryPath = resolve(import.meta.dir, "../../🔍️discovery/🟦️.ts"), discovery = ts.createSourceFile(discoveryPath, readFileSync(discoveryPath, "utf8"), ts.ScriptTarget.Latest, true);
 const marker = "rust-finite-manifest-targets";
 type Token = { start: number; end: number; value: string; structuredLocation: string; adapter: string; physicalTargets?: string[]; physicalInterpretation?: string; rewriteKind?: string; unsupportedReason?: string };
 type Row = { id: string; source: string; targets: string[]; expected: string; affected: string[]; condition: string };
-const functions = new Set(["sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "generatorPathCompare", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "lstatOrNull", "checkCancellation", "ancestorReferenceCoordinateRoot", "lineLocation", "regexTokens", "rustTokens", "rustCodeOnlyTextForMacroTrust", "referenceTokens", "referenceAdapter", "unsupportedReferenceTokens", "addUniqueIndex", "referencePathIndex", "rustContextFiles", "unprovenRustReferenceTargets", "rustReferenceNeedsOwnership", "rustReferenceGraph", "rustFiniteManifestTargets", "rustManifestReferenceTokens", "rustReferenceInterpretationCovers", "referenceTokensIncludingUnsupported", "splitTokenSuffix", "resolveReferencePath", "resolveReferenceTokenPath"]);
+const functions = new Set(["sha256", "generatorPathCompare", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "lstatOrNull", "checkCancellation", "ancestorReferenceCoordinateRoot", "lineLocation", "regexTokens", "rustTokens", "rustCodeOnlyTextForMacroTrust", "referenceTokens", "referenceAdapter", "unsupportedReferenceTokens", "addUniqueIndex", "referencePathIndex", "rustContextFiles", "unprovenRustReferenceTargets", "rustReferenceNeedsOwnership", "rustReferenceGraph", "rustFiniteManifestTargets", "rustManifestReferenceTokens", "rustReferenceInterpretationCovers", "referenceTokensIncludingUnsupported", "splitTokenSuffix", "resolveReferencePath", "resolveReferenceTokenPath"]);
 const constants = new Set(["LEXICAL_OPAQUE_ROOTS", "RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_INVOCATIONS", "RUST_MODULE_STRUCTURE_TRANSPARENT_MACRO_DEFINITIONS", "RUST_MODULE_STRUCTURE_TRANSPARENT_STD_EXPRESSION_MACROS", "RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_NAMES", "RUST_MODULE_STRUCTURE_TRANSPARENT_ATTRIBUTE_PATHS", "RUST_RESERVED_KEYWORDS", "indexedLineContent", "indexedLineStarts", "rustReferenceGraphs", "rustUnprovenReferenceTargets", "rustReferenceContextFiles"]);
 const extracted = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? functions.has(node.name?.text ?? "") : ts.isClassDeclaration(node) ? node.name?.text === "TaxonomyCancellationError" : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");
 const compilers = [
@@ -123,11 +127,11 @@ function implementation(compiler: typeof compilers[number], directory: string) {
     if (["compose", "temp/compose"].some((opaque) => local === opaque || local.startsWith(opaque + "/"))) throw new Error("Opaque filesystem access: " + local);
     if (local === ".." || local.startsWith("..") || isAbsolute(local)) throw new Error("Foreign fixture filesystem access: " + local);
   };
-  const dependencies = { createHash, posix, basename, dirname, join, resolve, relative, isAbsolute, sep,
+  const dependencies = { createHash, canonicalJson, posix, basename, dirname, join, resolve, relative, isAbsolute, sep,
     lstatSync: (path: string) => { observe(path); return lstatSync(path); },
     readFileSync: (...args: Parameters<typeof readFileSync>) => { observe(String(args[0])); return (readFileSync as any)(...args); },
     existsSync: (path: string) => { observe(path); return existsSync(path); },
-    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustNonRepoJoinBaseSpans, rustSyntaxTokens, rustTokenPairs };
+    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustSyntaxTokens, rustTokenPairs };
   const actual = new Function(...Object.keys(dependencies), compiler.compile(extracted) + "\nreturn { index: referencePathIndex, graph: rustReferenceGraph, tokens: rustManifestReferenceTokens, all: referenceTokensIncludingUnsupported, unsupported: unsupportedReferenceTokens, resolve: resolveReferenceTokenPath, finite: typeof rustFiniteManifestTargets === 'undefined' ? undefined : rustFiniteManifestTargets, covers: typeof rustReferenceInterpretationCovers === 'undefined' ? undefined : rustReferenceInterpretationCovers };")(...Object.values(dependencies));
   return { ...actual, accesses };
 }
@@ -154,13 +158,19 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
   const declarations = new Set(["ReferenceToken", "ReferencePathIndex", "RustReferenceGraphView", "rustReferenceNeedsOwnership", "rustFiniteManifestTargets", "rustManifestReferenceTokens", "rustReferenceInterpretationCovers"]);
   const body = syntax.statements.filter((node) => (ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node)) && declarations.has(node.name?.text ?? "")).map((node) => node.getText(syntax)).join("\n");
   expect(body.includes("function rustFiniteManifestTargets")).toBe(true);
+  const graphNames = new Set(["RustStructuralVisibility", "RustModuleMount", "RustModuleContext", "RustModuleGraph", "RustModuleParticipationReason", "RustModuleParticipation"]);
+  const graphContracts = discovery.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && graphNames.has(node.name.text));
+  expect(graphContracts.length).toBe(graphNames.size);
   const contracts = [
+    ...graphContracts.map((node) => node.getText(discovery)),
     'type TaxonomyReferenceAdapter = string;',
     'interface Reference { readonly start: number; readonly end: number; readonly value: string; readonly base: readonly string[] }',
     'interface Candidate { readonly start: number; readonly end: number; readonly value: string; readonly targets: readonly (readonly string[])[] }',
-    'interface RustModuleContext { readonly crateRoot: string; readonly manifestPath: string | null; readonly modulePath: readonly string[]; readonly sourceScope: readonly string[]; readonly moduleBase: string; readonly sourceChain: readonly string[] }',
-    'interface RustModuleGraph { readonly targets: ReadonlyMap<string, string>; readonly contexts: ReadonlyMap<string, readonly RustModuleContext[]> }',
-    'interface ModuleFact { readonly name: string; readonly modulePath: readonly string[]; readonly inline: boolean; readonly pathTarget: string | null }',
+    'type RustModuleMetadataProblem = Readonly<{ code: "unsupported-attribute"; attributes: readonly string[] } | { code: "ambiguous-path"; paths: readonly (string | null)[] }>;',
+    'interface ModuleFact { readonly name: string; readonly modulePath: readonly string[]; readonly inline: boolean; readonly pathTarget: string | null; readonly unresolved?: RustModuleMetadataProblem }',
+    'interface RustModuleScopeFact { readonly kind: "root" | "inline"; readonly modulePath: readonly string[]; readonly bodyStartOffset: number; readonly bodyEndOffset: number; readonly unresolved?: RustModuleMetadataProblem }',
+    'interface RustModuleGraphFacts { readonly modules: readonly ModuleFact[]; readonly uses: readonly { readonly specifier: string }[]; readonly includes: readonly { readonly modulePath: readonly string[]; readonly path: string; readonly conditional?: true }[]; readonly scopes: readonly RustModuleScopeFact[] }',
+    'type RustModuleScopeProof = Readonly<{ state: "resolved"; scopes: readonly RustModuleScopeFact[] } | { state: "unresolved"; modulePath: readonly string[]; problem: RustModuleMetadataProblem | Readonly<{ code: "scope-not-unique"; count: number }> }>;',
     'interface Stat { readonly mode: number; readonly size: number; readonly mtimeMs: number; isFile(): boolean; isDirectory(): boolean; }',
     'interface Bytes { readonly byteLength: number; toString(encoding: "utf8"): string }',
     'declare const posix: { dirname(path: string): string; join(...parts: string[]): string; isAbsolute(path: string): boolean };',
@@ -169,7 +179,8 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
     'declare function inspectRustJoinArgumentSpans(source: string): readonly Pick<Reference, "start" | "end" | "value">[];',
     'declare function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<number>;',
     'declare function inspectRustCargoManifest(source: string, strict: boolean): { readonly valid: boolean; readonly libPath: string | null; readonly dependencies: readonly string[] };',
-    'declare function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly ModuleFact[]; readonly uses: readonly { readonly specifier: string }[] };',
+    'declare function inspectRustModuleGraphFacts(source: string): RustModuleGraphFacts;',
+    'declare function rustModuleScopeProof(facts: RustModuleGraphFacts, sourceScope: readonly string[]): RustModuleScopeProof;',
     'declare function rustCodeOnlyTextForMacroTrust(source: string): string;',
     'declare function sha256(source: string | Bytes): string;',
     'declare function canonicalJson(value: unknown): string;',
@@ -189,7 +200,7 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
     'declare function rustReferenceGraph(path: string, index: ReferencePathIndex): RustReferenceGraphView | null;',
     'declare class TaxonomyCancellationError extends Error {};',
   ].join("\n");
-  const file = join(import.meta.dir, "🧾️strict/🟦️.ts"), input = contracts + "\n" + body, options = { strict: true, noEmit: true, skipLibCheck: true, target: ts.ScriptTarget.ES2022, types: [] as string[] };
+  const file = join(import.meta.dir, "🧾️strict/🟦️.ts"), input = contracts + "\n" + body, options = { strict: true, noEmit: true, skipLibCheck: true, target: ts.ScriptTarget.ES2022, lib: ["lib.es2022.d.ts"], types: [] as string[] };
   const host = ts.createCompilerHost(options), read = host.readFile.bind(host), exists = host.fileExists.bind(host), get = host.getSourceFile.bind(host);
   host.readFile = (path) => path === file ? input : read(path);
   host.fileExists = (path) => path === file || exists(path);
@@ -208,7 +219,7 @@ test("exact finite consumer route and launch registration preserve the canonical
   visit(router);
   expect(branches).toHaveLength(1);
   expect(branches[0]!.thenStatement.getText(router)).toContain(JSON.stringify(registration.testPath));
-  expect(branches[0]!.thenStatement.getText(router)).toContain('runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
+  expect(branches[0]!.thenStatement.getText(router)).toContain('runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot })');
   const launch = parseJsonc(readFileSync(join(root, ".vscode/launch.json"), "utf8")).configurations.filter((item: any) => item.name === registration.launchName);
   expect(launch).toHaveLength(1);
   expect(launch[0]).toEqual({ name: registration.launchName, type: "node-terminal", request: "launch", command: registration.launchCommand, cwd: "$" + "{workspaceFolder}", presentation: { group: "4_gate", order: registration.launchOrder } });
@@ -376,5 +387,6 @@ test("incoming, planning unsupported pass, and terminal verification share one e
   expect(planner).toContain('if (token.unsupportedReason && token.physicalTargets !== undefined');
   expect(planner).toContain('token.physicalTargets.some((target) => destinationBySource.has(target))');
   expect(planner).toContain('unresolved.push(violation("reference-syntax-unsupported"');
-  expect(source).toBe(readFileSync(sourcePath, "utf8"));
+  expect(source).toBe(normalizationSourceDeclarations(sourcePath));
+  expect(normalizationSourceFiles(sourcePath)).toEqual(sourceInputs);
 });

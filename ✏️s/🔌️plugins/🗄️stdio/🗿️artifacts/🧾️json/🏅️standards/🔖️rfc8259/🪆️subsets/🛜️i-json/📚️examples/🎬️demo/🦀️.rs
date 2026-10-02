@@ -3,7 +3,8 @@
 //! string free of noncharacters. The ✳️any subset's own `🎬️demo` is NOT reused: an example belongs
 //! to the subset whose dialect it is published under, and this one exists to be I-JSON clean.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

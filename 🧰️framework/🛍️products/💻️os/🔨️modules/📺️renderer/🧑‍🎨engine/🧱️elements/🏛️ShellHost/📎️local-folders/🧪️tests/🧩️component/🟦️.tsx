@@ -18,7 +18,7 @@ import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import type * as DomAccessibilityApi from "dom-accessibility-api" with { "resolution-mode": "require" };
-import { createMemoryStoragePort, OsShellConfig } from "@semio-tech/framework";
+import { argControl, createMemoryStoragePort, mutationInputDefs, OsShellConfig } from "@semio-tech/framework";
 import { shellLabel, syncAttachDocumentIdV1, syncShellLabelLocale } from "../../../../🛠️ShellHelpers/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, LocalFolderReconnectBand, localFolderNameV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, readLocalFolderEventsV1 } from "../../🟦️.tsx";
 import { LOCAL_FOLDERS_CONFIG_SCHEMA, type LocalFolderBinding, type LocalFoldersConfigMutation } from "../../../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
@@ -97,8 +97,24 @@ describe("local folder reconnect band", () => {
     view.unmount();
   });
 
+  it("fits a phone: the band wraps within 90 % of the viewport and both actions are touch-size targets", () => {
+    syncShellLabelLocale("en");
+    const view = render(band(false, vi.fn(), vi.fn()));
+    const region = view.getByRole("status");
+    expect([region.classList.contains("max-w-[90vw]"), region.classList.contains("flex-wrap"), [...region.querySelectorAll("button")].map((button) => button.classList.contains("min-h-medium"))]).toEqual([true, true, [true, true]]);
+    view.unmount();
+  });
+
   it("names a folder by its last path segment", () => {
     expect([localFolderNameV1("/Users/ada/Documents/puzzles"), localFolderNameV1("C:\\Users\\ada\\drawings\\"), localFolderNameV1("/")]).toEqual(["puzzles", "drawings", "/"]);
+  });
+
+  it("edits a remembered folder in time travel through its path, a text field labelled in both languages, its kind no input", () => {
+    const inputs = mutationInputDefs(readFileSync(join(mutations, "📎️attach-local-folder", "🧬️schema", "🔣️.json"), "utf8"), () => undefined);
+    const folder = inputs.find((input) => input.id === "/folder")!;
+    const fields = folder.schema.kind === "object" ? folder.schema.fields : [];
+    expect(fields.map((field) => [field.id, field.schema.kind, argControl(field).kind])).toEqual([["/path", "string", "text"]]);
+    expect(["Path", "Pfad"].every((text) => JSON.stringify(fields[0]!.label).includes(`"${text}"`))).toBe(true);
   });
 });
 

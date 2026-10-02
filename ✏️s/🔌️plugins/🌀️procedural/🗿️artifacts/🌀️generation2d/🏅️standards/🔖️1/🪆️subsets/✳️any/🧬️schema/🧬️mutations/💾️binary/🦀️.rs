@@ -96,7 +96,7 @@ impl protocol::OpText for Generation2dOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -106,7 +106,7 @@ impl protocol::OpText for Generation2dOperationDsl {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -1478,8 +1478,8 @@ impl Generation2dRetainedMutationOwner {
             "cluster" => semio_framework_artifact_flow_flow::Widget::Cluster {
                 id,
                 name: second,
-                tree: dsl::from_dsl_value(first_dynamic.ok_or("generation2d-mutation.cluster-tree")?).map_err(|_| "generation2d-mutation.cluster-tree-shape")?,
-                flow: dsl::from_dsl_value(second_dynamic.ok_or("generation2d-mutation.cluster-flow")?).map_err(|_| "generation2d-mutation.cluster-flow-shape")?,
+                tree: semio_framework_value::FromValue::from_value(first_dynamic.ok_or("generation2d-mutation.cluster-tree")?).map_err(|_| "generation2d-mutation.cluster-tree-shape")?,
+                flow: semio_framework_value::FromValue::from_value(second_dynamic.ok_or("generation2d-mutation.cluster-flow")?).map_err(|_| "generation2d-mutation.cluster-flow-shape")?,
             },
             _ => return Err("generation2d-mutation.widget-variant"),
         })
@@ -2727,6 +2727,12 @@ fn generation2d_copy_json(source: &dsl::DslValue, depth: usize) -> Result<dsl::D
         dsl::DslValue::Bool(value) => dsl::DslValue::Bool(*value),
         dsl::DslValue::Number(value) => dsl::DslValue::Number(*value),
         dsl::DslValue::String(value) => dsl::DslValue::String(generation2d_copy_string(value)?),
+        dsl::DslValue::Bytes(values) => {
+            let mut target = Vec::new();
+            target.try_reserve_exact(values.len()).map_err(|_| "generation2d-initializer.json-bytes-preflight")?;
+            target.extend_from_slice(values);
+            dsl::DslValue::Bytes(target)
+        }
         dsl::DslValue::Array(values) => {
             let mut target = Vec::new();
             target.try_reserve_exact(values.len()).map_err(|_| "generation2d-initializer.json-array-preflight")?;
@@ -3047,6 +3053,11 @@ fn generation2d_observe_json(digest: &mut store::ArtifactStoreInitializationDige
         dsl::DslValue::String(value) => {
             digest.observe(b"string");
             digest.observe(value.as_bytes());
+        }
+        dsl::DslValue::Bytes(values) => {
+            digest.observe(b"bytes");
+            digest.observe(&values.len().to_be_bytes());
+            digest.observe(values);
         }
         dsl::DslValue::Array(values) => {
             digest.observe(b"array");

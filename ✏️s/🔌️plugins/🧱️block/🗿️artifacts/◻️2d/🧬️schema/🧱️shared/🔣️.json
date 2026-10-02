@@ -1,0 +1,266 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/block/shared/document.json",
+  "$defs": {
+    "Binary64Word": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bits": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      },
+      "required": [
+        "bits"
+      ]
+    },
+    "Binary64Transport": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Binary64Word"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    },
+    "BlockVector3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
+    },
+    "BlockVector4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/Binary64Transport"
+      }
+    },
+    "BlockKindIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "label"
+      ]
+    },
+    "BlockAttribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "BlockAuthor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "BlockCompatibilityRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "bidirectional": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ]
+    },
+    "BlockRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BlockAttribute"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "BlockCamera2d": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "y": {
+          "$ref": "#/$defs/Binary64Transport"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
+    },
+    "BlockCamera3d": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "target": {
+          "$ref": "#/$defs/BlockVector3"
+        },
+        "zoom": {
+          "$ref": "#/$defs/Binary64Transport"
+        }
+      },
+      "required": []
+    },
+    "BlockMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": []
+    }
+  }
+}

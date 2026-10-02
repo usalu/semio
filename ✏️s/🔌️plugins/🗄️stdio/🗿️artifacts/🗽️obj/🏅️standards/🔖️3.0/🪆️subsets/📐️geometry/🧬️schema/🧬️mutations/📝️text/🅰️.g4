@@ -1,15 +1,43 @@
-// 🅰️ `ObjMutation`'s wire text IS its JSON serialization (protocol::OpText::print_op /
-// parse_op — serde_json, tagged on the "mutation" field). Names the real variant tags
-// rather than a placeholder.
 grammar Stdio_obj_mutations;
-
-mutation  : '{' '"mutation"' ':' tag (',' member)* '}' ;
-tag       : '"setSnapshot"'
-          | '"insertVertex"' | '"removeVertex"' | '"setVertex"'
-          | '"insertTexCoord"' | '"removeTexCoord"' | '"setTexCoord"'
-          | '"insertNormal"' | '"removeNormal"' | '"setNormal"'
-          | '"insertFace"' | '"removeFace"' | '"setFace"'
-          | '"setGroup"' | '"removeGroup"' | '"setObject"' | '"removeObject"'
-          | '"setMtllib"' | '"setUsemtl"' | '"setSmoothingGroups"' | '"setUnknownStatements"' ;
-member    : STRING ':' value ;
-STRING    : '"' .*? '"' ;
+document: op EOF;
+op: setSnapshot | insertVertex | removeVertex | setVertex | insertTexcoord | removeTexcoord | setTexcoord | insertNormal | removeNormal | setNormal | insertFace | removeFace | setFace | setGroup | removeGroup | setObject | removeObject | setMtllib | setUsemtl | setSmoothingGroups | setUnknownStatements;
+setSnapshot: 'set-snapshot' 'snapshot' '{' snapshot '}';
+insertVertex: 'insert-vertex' 'index' '=' INT 'vertex' vertex;
+removeVertex: 'remove-vertex' 'index' '=' INT;
+setVertex: 'set-vertex' 'index' '=' INT 'vertex' vertex;
+insertTexcoord: 'insert-texcoord' 'index' '=' INT 'texcoord' texcoord;
+removeTexcoord: 'remove-texcoord' 'index' '=' INT;
+setTexcoord: 'set-texcoord' 'index' '=' INT 'texcoord' texcoord;
+insertNormal: 'insert-normal' 'index' '=' INT 'normal' normal;
+removeNormal: 'remove-normal' 'index' '=' INT;
+setNormal: 'set-normal' 'index' '=' INT 'normal' normal;
+insertFace: 'insert-face' 'index' '=' INT 'face' face;
+removeFace: 'remove-face' 'index' '=' INT;
+setFace: 'set-face' 'index' '=' INT 'face' face;
+setGroup: 'set-group' 'name' '=' text 'faces' '=' '[' INT* ']';
+removeGroup: 'remove-group' 'name' '=' text;
+setObject: 'set-object' 'name' '=' text 'faces' '=' '[' INT* ']';
+removeObject: 'remove-object' 'name' '=' text;
+setMtllib: 'set-mtllib' ('mtllib' '=' text)?;
+setUsemtl: 'set-usemtl' 'usemtl' '=' '[' material* ']';
+setSmoothingGroups: 'set-smoothing-groups' 'smoothing-groups' '=' '[' smoothing* ']';
+setUnknownStatements: 'set-unknown-statements' 'unknown-statements' '=' '[' unknown* ']';
+snapshot: 'schema' '=' text ('mtllib' '=' text)? 'vertices' '=' '[' vertex* ']' 'texcoords' '=' '[' texcoord* ']' 'normals' '=' '[' normal* ']' 'faces' '=' '[' face* ']' 'groups' '=' '[' membership* ']' 'objects' '=' '[' membership* ']' 'usemtl' '=' '[' material* ']' 'smoothing-groups' '=' '[' smoothing* ']' 'unknown-statements' '=' '[' unknown* ']';
+vertex: '{' 'x' '=' number 'y' '=' number 'z' '=' number ('w' '=' number)? '}';
+texcoord: '{' 'u' '=' number 'v' '=' number ('w' '=' number)? '}';
+normal: '{' 'x' '=' number 'y' '=' number 'z' '=' number '}';
+face: '{' 'vertices' '=' '[' corner* ']' '}';
+corner: '{' 'vertex' '=' INT ('texcoord' '=' INT)? ('normal' '=' INT)? '}';
+membership: '{' 'name' '=' text 'faces' '=' '[' INT* ']' '}';
+material: '{' 'face-index-from' '=' INT 'material' '=' text '}';
+smoothing: '{' 'face-index-from' '=' INT ('group' '=' INT)? '}';
+unknown: '{' 'line-index' '=' INT 'raw' '=' text '}';
+number: FLOAT | INT | IEEE;
+text: IDENT | TEXT;
+IEEE: '-inf' | 'inf' | 'NaN' | 'nan64_' HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX HEX;
+fragment HEX: [a-fA-F0-9];
+FLOAT: '-'? [0-9]+ ('.' [0-9]+ (('e'|'E') ('-'|'+')? [0-9]+)? | ('e'|'E') ('-'|'+')? [0-9]+);
+INT: '-'? [0-9]+;
+IDENT: [a-zA-Z_] [a-zA-Z0-9_.-]*;
+TEXT: '"' ('\\' . | ~["\\])* '"';
+WS: [ \t\r\n]+ -> skip;

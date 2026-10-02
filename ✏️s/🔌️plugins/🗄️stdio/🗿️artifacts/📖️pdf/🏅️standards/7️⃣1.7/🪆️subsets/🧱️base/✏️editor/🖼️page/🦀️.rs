@@ -12,7 +12,33 @@ use crate::standards::v1_7::subsets::base::schema::mutations::{
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfBorderStyle, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFileSpecification, PdfFont, PdfLineCap, PdfLineJoin, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageCodec, PdfImageMask, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContent, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
 use crate::PdfSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, Buildable, Canvas2dScene, Fault, FaultCode, FaultOrigin, HasBase, HasChildren, Locale, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_framework_plugin::WindowOptions;
 use serde_json::{json, Value};
 
 pub const WINDOW_KIND_ID: &str = "pdf.page";
@@ -538,11 +564,11 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
         "canvasPointerMove" | "canvasPointerUp" => Ok(semio_framework_plugin::Emit::default()),
         "canvasPointerDown" => {
             let effect = pointer_down_effect(snapshot, payload)?;
-            Ok(semio_framework_plugin::Emit { description: Some("Select".into()), ..semio_framework_plugin::Emit::effect(effect) })
+            Ok(semio_framework_plugin::Emit::effect(effect))
         }
         _ => {
             let mutations = apply_payload(snapshot, action, payload)?;
-            Ok(semio_framework_plugin::Emit { artifact_mutations: mutations, description: Some(action.to_string()), ..Default::default() })
+            Ok(semio_framework_plugin::Emit { artifact_mutations: mutations, ..Default::default() })
         }
     }
 }

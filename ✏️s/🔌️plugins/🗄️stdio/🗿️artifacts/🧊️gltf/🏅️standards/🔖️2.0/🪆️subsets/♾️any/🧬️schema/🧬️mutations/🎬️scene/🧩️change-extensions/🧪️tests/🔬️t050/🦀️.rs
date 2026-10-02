@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeSceneExtensionDataMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-scene-extension-data");
-    super::super::component::fixture_corpus_tests::assert_case("🎬️scene/🧩️change-extensions/🔬️t050");
+    super::super::component::fixture_corpus_tests::assert_case("🎬️scene/🧩️change/🔬️t050");
 }

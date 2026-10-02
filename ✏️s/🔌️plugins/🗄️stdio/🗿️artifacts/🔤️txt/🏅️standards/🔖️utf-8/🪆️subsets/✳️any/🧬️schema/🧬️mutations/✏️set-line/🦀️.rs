@@ -64,8 +64,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
         vec![super::TxtMutation::SetLine(Self { index: self.index, text: base.lines[index].clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Line", "Zeile setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Line", "Zeile setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line".to_string()]

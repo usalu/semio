@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageUserUnit(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Benutzereinheit von Seite {} setzen", self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Benutzereinheit von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

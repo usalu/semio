@@ -6,6 +6,13 @@ use crate::{
 };
 use framework_schema::ArtifactSchema;
 
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 project snapshot.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -46,7 +53,7 @@ pub struct En1998Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1998Snapshot, extension = "en1998", envelope_id = "norm.en1998");
+crate::impl_norm_artifact_record!(En1998Snapshot, extension = "en1998", envelope_id = "norm.en1998", sqlite = sqlite::sqlite_codec);
 
 impl Default for En1998Snapshot {
     fn default() -> Self {

@@ -126,3 +126,5 @@ async fn registered_set_vertex_refuses_duplicate_targets_without_history() {
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", SemioMeshEditor, || semio_framework_plugin::App { definition: create_semio_mesh_editor(), examples: Vec::new() }, "../..");

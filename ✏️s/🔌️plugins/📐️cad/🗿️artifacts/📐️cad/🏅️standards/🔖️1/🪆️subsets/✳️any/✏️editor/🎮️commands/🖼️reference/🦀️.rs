@@ -123,7 +123,7 @@ pub mod set_reference_selection {
     }
 
     pub fn handle(payload: &SetReferenceSelection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut runtime = runtime_of(cfg);
+        let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id)).unwrap_or(CadPaneId::Shape);
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
         runtime.selected_reference_id = payload.reference_id.clone();
@@ -157,8 +157,8 @@ pub mod reference_hover {
         pub reference_id: Option<String>,
     }
 
-    pub fn handle(payload: &ReferenceHover, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut runtime = runtime_of(cfg);
+    pub fn handle(payload: &ReferenceHover, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let mut runtime = runtime_of(cfg, &ctx.window_transient);
         runtime.hovered_reference_id = payload.reference_id.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
     }

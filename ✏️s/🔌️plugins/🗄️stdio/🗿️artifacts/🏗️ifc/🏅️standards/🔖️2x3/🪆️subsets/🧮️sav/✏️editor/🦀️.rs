@@ -8,10 +8,40 @@ use crate::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3Mutation;
 use crate::standards::v2x3::subsets::sav::schema::snapshot::Ifc2x3Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,  ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, EditorApp, InteractiveJobClassification,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactStoreInitializationJob;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 use crate::standards::v2x3::subsets::base::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
 
@@ -97,7 +127,6 @@ fn ifc2x3SavEditor_retained_reduce(
     match command {
         Ifc2x3SavEditCommand::SetActiveExample { example_id } => Ok(Emit {
             effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3SavEditor_example_snapshot(example_id), IFC2X3_SAV_DOCUMENT_SCHEMA)],
-            description: Some(format!("Load example {example_id}")),
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -239,7 +268,6 @@ impl ArtifactEditor for Ifc2x3SavEditor {
             Ifc2x3SavEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             Ifc2x3SavEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3SavEditor_example_snapshot(example_id), IFC2X3_SAV_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
                 ..Default::default()
             }),
         }

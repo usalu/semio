@@ -4,7 +4,7 @@ fn borrowed_slices_match_neutral_values_and_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔪️slices.json")).expect("slice fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let values: Vec<i64> = serde_json::from_value(case.clone()).expect("integer sequence");
-        let actual = crate::to_dsl_value(values.as_slice()).expect("slice encoding");
+        let actual = semio_framework_value::ToValue::to_value(values.as_slice());
         assert_eq!(serde_json::to_string(&actual).unwrap(), serde_json::to_string(values.as_slice()).unwrap());
         assert_eq!(actual, case.clone());
     }

@@ -1036,8 +1036,9 @@ async fn a_refused_command_decode_retires_every_operation_it_decoded() {
 
 //#region 🧪️RetractionLaws
 /// 🔙️ A hub-refused local transition retracts (audit F-m8): the author's refused supersession, its refused
-/// finalize-as-alternative (commit, branch, scoped supersession) and a later checkout depending on that commit all leave
-/// the author's log through `BackboneMessage::Retract` naming only the refused ones, and the author converges with the hub,
+/// finalize-as-alternative (commit, branch, scoped supersession) leave the author's log through `BackboneMessage::Retract`
+/// naming the supersessions and the commit — the branch depends on the commit and retracts with it — and the author
+/// converges with the hub,
 /// which never took them — the same event log, snapshot, supersessions, alternatives and outcomes, and the author's own
 /// content revision from before its refused steps. Retracting again, retracting an unknown name or a transition another
 /// replica authored changes nothing, and a persisted `.spr` retracts exactly the same transitions.
@@ -1066,14 +1067,14 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
     let trunk = author.trunk_alternative_id();
     author.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }).await.expect("back to the trunk");
     let authored: Vec<String> = author.envelope().transitions[known..].iter().map(|transition| transition.mutation_id.0.clone()).collect();
-    assert_eq!(authored.len(), 5, "supersede, commit, branch, scoped supersede, checkout");
-    let refused = authored[..4].to_vec();
+    assert_eq!(authored.len(), 4, "supersede, commit, branch, scoped supersede; switching moves this viewer's head only");
+    let refused = vec![authored[0].clone(), authored[1].clone(), authored[3].clone()];
     let refused_log = print_document_pack(author.envelope()).await.expect("pair prints");
     let _ = drain_channel_for_test(&remote).expect("drain outbound");
     remote.push(BackboneMessage::Retract { mutation_ids: refused.clone() }).await.expect("push retraction");
     author.tick().await.expect("tick");
     let log_ids = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| store.event_log().expect("log").into_iter().map(|event| event.mutation_id.0).collect::<Vec<_>>();
-    assert_eq!(log_ids(&author), log_ids(&hub), "the dependent checkout retracts with the commit it checks out");
+    assert_eq!(log_ids(&author), log_ids(&hub), "the branch retracts with the commit it depends on");
     assert_eq!((author.0.content_revision(), author.snapshot_ref().n, author.envelope().transitions.len()), accepted, "the author is back where the hub took it");
     assert_eq!(author.snapshot_ref().n, hub.snapshot_ref().n);
     assert_eq!(author.supersessions(), hub.supersessions());

@@ -46,7 +46,7 @@ replace-trajectory-op = "replace-trajectory" {"trajectory" "=" trajectory-block}
 replace-tracks-op = "replace-tracks" "tracks" "=" "[" track-record* "]"
 replace-geo-products-op = "replace-geo-products" {"geo" "=" geo-products-block}?
 replace-qc-op = "replace-qc" {"qc" "=" qc-block}?
-append-content-op = "append-content" "content-id" "=" name "kind" "=" content-kind {"mime" "=" name}? "width" "=" INT "height" "=" INT "first" "=" INT "chunks" "=" text-list
+append-content-op = "append-content" "content-id" "=" name "kind" "=" content-kind {"mime" "=" name}? "width" "=" INT "height" "=" INT "first" "=" INT "chunks" "=" octet-list
 remove-content-op = "remove-content" "content-id" "=" name "from" "=" INT
 commit-reconstruction-op = "commit-reconstruction" {"sparse" "=" sparse-block}? {"trajectory" "=" trajectory-block}? {"mesh" "=" mesh-result-block}? {"geo" "=" geo-products-block}? {"qc" "=" qc-block}? "assets" asset-commit-header "{" asset-commit-row* "}"
 
@@ -105,9 +105,9 @@ geo-param-field = "enabled" "=" BOOL | "origin-lon" "=" num | "origin-lat" "=" n
 poses-header = "[" "camera-id" ":" "TEXT" "rotation-wxyz" ":" "TUPLE" "translation" ":" "CRD" "]"
 pose-row = name quad coord3
 sparse-block = "{" sparse-field+ "}"
-sparse-field = "points" "=" name | "colors" "=" name
+sparse-field = "points" float-buffer | "colors" "=" octets
 dense-cloud-block = "{" dense-cloud-field+ "}"
-dense-cloud-field = "positions" "=" name | "colors" "=" name | "confidence" "=" name | "classification" "=" name
+dense-cloud-field = "positions" float-buffer | "colors" "=" octets | "confidence" float-buffer | "classification" "=" octets
 trajectory-block = "{" trajectory-poses-table "}"
 trajectory-poses-table = "poses" poses-header "{" pose-row* "}"
 mesh-result-block = "{" mesh-result-part* "}"
@@ -123,3 +123,8 @@ qc-part = "reprojection-rms-px" "=" num | "gcp-checkpoint-rmse" "=" num | "mean-
 track-record = "id" "=" name "length" "=" INT "class" "=" track-class "mean-speed-m-s" "=" quantity
 asset-commit-header = "[" "id" ":" "TEXT" "content-id" ":" "TEXT" "]"
 asset-commit-row = name {name | cell}
+
+float-buffer = "{" float-buffer-variant "}"
+float-buffer-variant = "inline" "values" "=" "[" num* "]" | "content" "content-id" "=" name "chunk-count" "=" INT
+octets = TEXT
+octet-list = "[" octets* "]"

@@ -19,7 +19,8 @@
 //! by id and the supports carry the model.
 
 use crate::{FemAnalysisSettings, FemAxis, FemCombination, FemDof, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport, Fem3dSnapshot};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::BTreeMap;
 
 pub const ID: &str = "house";

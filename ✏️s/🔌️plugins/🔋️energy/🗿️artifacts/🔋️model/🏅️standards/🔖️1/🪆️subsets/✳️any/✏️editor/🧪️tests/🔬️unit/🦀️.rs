@@ -182,7 +182,7 @@ async fn landed_semantic_kinds_produce_granular_mutations() {
     let snapshot = snapshot_of(&model_with_one_zone());
     let renamed = applied(&snapshot, &EnergyModelEditorCommand::RenameZone { zone: 1, new_name: "Loft".into() });
     assert_eq!(renamed.zones[0].name, "Loft");
-    let sited = applied(&snapshot, &EnergyModelEditorCommand::SetSite { latitude_deg: 39.74, longitude_deg: -105.18, elevation_m: 1609.0, time_zone_hours: -7.0, north_axis_deg: 0.0 });
+    let sited = applied(&snapshot, &EnergyModelEditorCommand::SetSite { latitude_deg: Some(39.74), longitude_deg: Some(-105.18), elevation_m: Some(1609.0), time_zone_hours: Some(-7.0), north_axis_deg: Some(0.0) });
     assert!((sited.site.latitude_deg - 39.74).abs() < 1e-9);
     let period = applied(&snapshot, &EnergyModelEditorCommand::SetRunPeriod { start_month: 2, start_day: 1, end_month: 2, end_day: 28 });
     assert_eq!((period.run_period.start_month, period.run_period.end_day), (2, 28));
@@ -275,7 +275,7 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
     let doc = ArtifactView::new(&snapshot, &history);
     for command in [
         EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: "-1.0".into() },
-        EnergyModelEditorCommand::SetSite { latitude_deg: 120.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
+        EnergyModelEditorCommand::SetSite { latitude_deg: Some(120.0), longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: None },
         EnergyModelEditorCommand::SetRunPeriod { start_month: 13, start_day: 1, end_month: 12, end_day: 31 },
         EnergyModelEditorCommand::CreateZone { name: "Void".into(), volume_m3: 0.0, multiplier: 1, conditioned: true },
     ] {
@@ -293,6 +293,8 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
 pub(crate) fn energy_model_manifest_for_tests() -> semio_framework_plugin::App {
     semio_framework_plugin::App { definition: create_energy_model_editor(), examples: examples().into_iter().map(Into::into).collect() }
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("energy", EnergyModelEditor, energy_model_manifest_for_tests, "../..");
 
 /// 🧵️ A registry-backed app bound to the live runtime instance `meta("local")` addresses. The
 /// registry-LESS `artifact_app_laws::new_app` cannot be used here: it builds an app with no
@@ -352,9 +354,14 @@ async fn renaming_the_model_dispatches_cleanly_through_the_real_action_route() {
 //#region 🎚️ScrubLaws
 /// 🎚️ One dispatch of the site latitude slider as the hosts send it: `{field, value, gesture, commit}`, settled.
 async fn slide_site(app: &mut EnergyEditorApp, extra: Vec<(&str, semio_framework_plugin::DslValue)>) {
+    slide_site_field(app, "latitudeDeg", extra).await;
+}
+
+/// 🎚️ One dispatch of the site control for `field` as the hosts send it, settled unless it is a host cancel.
+async fn slide_site_field(app: &mut EnergyEditorApp, field: &str, extra: Vec<(&str, semio_framework_plugin::DslValue)>) {
     use semio_framework_plugin::{DslValue, PluginApp as _};
     let aborting = extra.iter().any(|(key, _)| *key == "abort");
-    let mut args = vec![("field".to_string(), DslValue::String("latitudeDeg".into()))];
+    let mut args = vec![("field".to_string(), DslValue::String(field.into()))];
     args.extend(extra.into_iter().map(|(key, value)| (key.to_string(), value)));
     app.handle_action(SET_SITE_ACTION_ID, Some(&DslValue::Object(args)), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("the slider dispatch is admitted");
     if !aborting {
@@ -377,7 +384,7 @@ fn latitude(app: &EnergyEditorApp) -> f64 {
 }
 
 /// ⚖️ LAW (W3-T2-CONTROLS): an inspector slider press is ONE tool transaction — the ticks leave the committed model
-/// alone, the release lands one edit whose row carries the press's `TransactionRef` and the absolute `update-site`
+/// alone, the release lands one edit whose row carries the press's `TransactionRef` and the absolute `change-site-latitude`
 /// leaf; a cancelled press leaves zero trace and two presses are two transactions.
 #[semio_framework_async_macros::async_test]
 async fn a_site_slider_press_is_one_transaction_and_a_cancel_leaves_zero_trace() {
@@ -430,7 +437,7 @@ async fn rename(app: &mut EnergyEditorApp, name: &str) {
 }
 
 /// ⚖️ LAW (W3-T2-CONTROLS, design §13.1): time travel edits the slider press's committed VALUE — the absolute
-/// `update-site` leaf superseded with another latitude replays the downstream rename, and the overwrite leaves exactly
+/// `change-site-latitude` leaf superseded with another latitude replays the downstream rename, and the overwrite leaves exactly
 /// the head a fresh run of the edited press and the rename reaches.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_site_press_edited_in_history_replays_downstream() {
@@ -440,7 +447,7 @@ async fn a_committed_site_press_edited_in_history_replays_downstream() {
     let edited = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the press's mutation");
     rename(&mut app, "Edited downstream").await;
     history_edit(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(edited))]).await;
-    history_edit(&mut app, "historyEditInput", vec![("path", DslValue::String("/latitudeDeg".into())), ("value", DslValue::float(15.0))]).await;
+    history_edit(&mut app, "historyEditInput", vec![("path", DslValue::String("/newLatitudeDeg".into())), ("value", DslValue::float(15.0))]).await;
     history_edit(&mut app, "historyEditAccept", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
     let status = app.history_snapshot().await.expect("history").time_travel.expect("a live session");
@@ -457,6 +464,94 @@ async fn a_committed_site_press_edited_in_history_replays_downstream() {
     assert_eq!(edited, fresh.snapshot().expect("fresh head").model, "the edited log equals a fresh run of the edited press");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut fresh);
+}
+/// ⚖️ LAW (design §13.1, field-granular site leaves): time travel edits an EARLIER press while a later press of ANOTHER
+/// site field exists — the edited latitude and the later longitude both survive the replay and the overwrite, because
+/// each press committed only its own field (`change-site-latitude`, `change-site-longitude`), never the whole site.
+#[semio_framework_async_macros::async_test]
+async fn a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_field() {
+    use semio_framework_plugin::{DslValue, PluginApp as _};
+    let mut app = dispatchable_app().await;
+    slide_site_field(&mut app, "latitudeDeg", press(30.0, "site.latitude:6", true)).await;
+    let edited = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the latitude press's mutation");
+    slide_site_field(&mut app, "longitudeDeg", press(50.0, "site.longitude:1", true)).await;
+    let site = app.snapshot().expect("projection").model.site;
+    assert_eq!((site.latitude_deg, site.longitude_deg), (30.0, 50.0));
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(edited))]).await;
+    history_edit(&mut app, "historyEditInput", vec![("path", DslValue::String("/newLatitudeDeg".into())), ("value", DslValue::float(15.0))]).await;
+    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = app.history_snapshot().await.expect("history").time_travel.expect("a live session");
+    assert_eq!((status.stage, status.blocking), (semio_framework::kernel::HistoryTimeTravelStage::Reviewing, false), "{status:?}");
+    history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", DslValue::String("overwrite".into()))]).await;
+    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    let site = app.snapshot().expect("edited head").model.site;
+    assert_eq!((site.latitude_deg, site.longitude_deg), (15.0, 50.0), "the edited latitude and the later longitude both survive the replay");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+/// 🎛️ One settled dispatch of `action` addressed at the 3d model window `window-1`, `extra` merged into `args`; a host
+/// cancel is settled by the runtime itself.
+async fn press_in_window(app: &mut EnergyEditorApp, action: &str, args: Vec<(&str, semio_framework_plugin::DslValue)>) {
+    use semio_framework_plugin::PluginApp as _;
+    let aborting = args.iter().any(|(key, _)| *key == "abort");
+    let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
+    meta.view_state = Some(semio_framework_plugin::ViewModel {
+        window_id: Some("window-1".into()),
+        window_instances: vec![semio_framework::ViewWindowInstance { id: "window-1".into(), window_kind_id: model_window::WINDOW_KIND_ID.into() }],
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+    });
+    let args = semio_framework_plugin::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    app.handle_action(action, Some(&args), &meta).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    if !aborting {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
+    }
+}
+
+fn gesture_args(gesture: &str, commit: Option<bool>) -> Vec<(&'static str, semio_framework_plugin::DslValue)> {
+    use semio_framework_plugin::DslValue;
+    match commit {
+        Some(commit) => vec![("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))],
+        None => vec![("gesture", DslValue::String(gesture.into())), ("abort", DslValue::String("blur".into()))],
+    }
+}
+
+/// ⚖️ LAW (design §20.1): a config control is a press on the config lanes too — its ticks are held as the provisional
+/// config (rendered, never published), the release publishes ONE config edit, a cancelled press publishes nothing, and
+/// no config edit is ever a history row; the same holds for a window-config press (the 3d window's camera).
+#[semio_framework_async_macros::async_test]
+async fn a_config_press_is_one_config_edit_a_cancel_is_none_and_neither_is_a_history_row() {
+    use semio_framework_plugin::DslValue;
+    let mut app = dispatchable_app().await;
+    let rows = transaction_rows(&mut app).await.len();
+    let settings = |warmup: u32| vec![("zoneTimestepMinutes", DslValue::float(60.0)), ("systemTimestepMinutes", DslValue::float(60.0)), ("warmupDays", DslValue::float(f64::from(warmup)))];
+    let (generation, _) = app.config_generations(model_window::WINDOW_KIND_ID, "window-1");
+    for (warmup, commit) in [(10, false), (12, false)] {
+        press_in_window(&mut app, simulation::SET_SETTINGS_ACTION_ID, [settings(warmup), gesture_args("settings.warmup:1", Some(commit))].concat()).await;
+    }
+    assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").0, generation, "ticks publish no config edit");
+    assert_eq!(app.rendered_config().warmup_days, 12, "the provisional config renders the press");
+    press_in_window(&mut app, simulation::SET_SETTINGS_ACTION_ID, [settings(14), gesture_args("settings.warmup:1", Some(true))].concat()).await;
+    assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").0, generation + 1, "the release publishes ONE config edit");
+    assert_eq!(app.rendered_config().warmup_days, 14);
+    press_in_window(&mut app, simulation::SET_SETTINGS_ACTION_ID, [settings(30), gesture_args("settings.warmup:2", Some(false))].concat()).await;
+    assert_eq!(app.rendered_config().warmup_days, 30);
+    press_in_window(&mut app, simulation::SET_SETTINGS_ACTION_ID, gesture_args("settings.warmup:2", None)).await;
+    assert_eq!((app.config_generations(model_window::WINDOW_KIND_ID, "window-1").0, app.rendered_config().warmup_days), (generation + 1, 14), "a cancelled press publishes nothing");
+    let camera = |x: f64| vec![("camera", DslValue::Object(vec![("position".into(), DslValue::Array(vec![DslValue::float(x), DslValue::float(-9.0), DslValue::float(7.5)])), ("target".into(), DslValue::Array(vec![DslValue::float(4.0), DslValue::float(3.0), DslValue::float(1.35)])), ("zoom".into(), DslValue::float(1.0))]))];
+    press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, camera(1.0)).await;
+    let window = app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1.expect("the camera opened the window's config partition");
+    for x in [2.0, 3.0] {
+        press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, [camera(x), gesture_args("camera:1", Some(false))].concat()).await;
+    }
+    assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1, Some(window), "window-config ticks publish nothing");
+    press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, [camera(4.0), gesture_args("camera:1", Some(true))].concat()).await;
+    assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1, Some(window + 1), "the release publishes ONE window-config edit");
+    press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, [camera(5.0), gesture_args("camera:2", Some(false))].concat()).await;
+    press_in_window(&mut app, model_window::SET_CAMERA_ACTION_ID, gesture_args("camera:2", None)).await;
+    assert_eq!(app.config_generations(model_window::WINDOW_KIND_ID, "window-1").1, Some(window + 1), "a cancelled window-config press publishes nothing");
+    assert_eq!(transaction_rows(&mut app).await.len(), rows, "config edits are never history rows");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🎚️ScrubLaws
 
@@ -500,7 +595,7 @@ async fn simulation_app() -> EnergyEditorApp {
 
 async fn render_text(app: &mut EnergyEditorApp, body_key: &str) -> String {
     use semio_framework_plugin::PluginApp as _;
-    let tree = app.render(body_key, None, &semio_framework_plugin::ViewModel::default()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
+    let tree = app.render(body_key, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
 }
 
@@ -1155,10 +1250,10 @@ fn host_merged(authored: &[(&str, &str)], value: &str) -> dsl::DslValue {
     dsl::DslValue::Object(entries)
 }
 
-/// 📍️ THE blocker the review found: the site form authors all five scalars plus `field`, the host
-/// merges the typed number under `value`, and the bridge has to route it into the NAMED slot. Before
-/// the `{field, value}` indirection the bridge read `northAxisDeg` by name, found the key missing and
-/// silently wrote 0.0 — so this law round-trips the real wire payload instead of asserting a shape.
+/// 📍️ THE blocker the review found: the host merges the typed number under `value` and the bridge has to route it into
+/// the slot `field` NAMES — and only that slot: a press sets one site field (`change-site-<field>`), so scalars a render
+/// authored (possibly stale) never ride along. Before the `{field, value}` indirection the bridge read `northAxisDeg` by
+/// name, found the key missing and silently wrote 0.0 — so this law round-trips the real wire payload.
 #[semio_framework_async_macros::async_test]
 async fn a_site_control_writes_the_number_the_host_merged_not_the_bridges_default() {
     let mut model = inspector_model();
@@ -1180,12 +1275,12 @@ async fn a_site_control_writes_the_number_the_host_merged_not_the_bridges_defaul
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
     let args = host_merged(&borrowed, "30");
     let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, Some(&args)).expect("the site payload resolves");
-    assert_eq!(command, EnergyModelEditorCommand::SetSite { latitude_deg: 47.5, longitude_deg: 8.5, elevation_m: 400.0, time_zone_hours: 1.0, north_axis_deg: 30.0 });
+    assert_eq!(command, EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) });
 
     let edited = applied(&snapshot, &command);
     assert!((edited.site.north_axis_deg - 30.0).abs() < 1e-12, "the site kept the typed north axis, not 0.0: {:?}", edited.site);
     assert!((edited.site.latitude_deg - 47.5).abs() < 1e-12, "the untouched scalars survive the edit: {:?}", edited.site);
-    assert_eq!(emitted_kinds(&snapshot, &command), vec!["update-site".to_string()]);
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-site-north-axis".to_string()]);
 }
 
 /// 🌡️ The same law for the thermostat's five-slot payload — a throttle-range edit used to write the

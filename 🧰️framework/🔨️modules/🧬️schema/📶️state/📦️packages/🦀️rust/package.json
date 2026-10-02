@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/schema-state-rs",
+  "private": true,
+  "scripts": {
+    "test": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache",
+    "test-quick": "bun nx run @semio-tech/schema-state-rs:test-quick --skip-nx-cache",
+    "test-long": "bun nx run @semio-tech/schema-state-rs:test-long --skip-nx-cache",
+    "test-exhaustive": "bun nx run @semio-tech/schema-state-rs:test-exhaustive --skip-nx-cache"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

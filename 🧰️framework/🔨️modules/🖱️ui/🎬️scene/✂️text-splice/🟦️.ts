@@ -331,6 +331,10 @@ export const TEXT_EDITOR_TYPING_IDLE_MS = 750;
 /** 🏁️ Why a host ends its typing run. */
 export type TextEditorTypingCommitV1 = "idle" | "selectionJump" | "blur" | "enter" | "hidden" | "apply" | "otherVerb";
 
+/** 🚥️ The reason every text-editor host (React and wgpu) commits its run with when a host signal ends it (the corpus
+ * `hostSignals`): the idle bound, a pure caret move, the editor losing keyboard focus, the page hidden or left. */
+export const TEXT_EDITOR_TYPING_HOST_SIGNALS = { idle: "idle", caretMove: "selectionJump", blur: "blur", hidden: "hidden" } as const satisfies Record<string, TextEditorTypingCommitV1>;
+
 /** ⌨️ One editor's typing run as its host sees it: `typed(verb, before)` after every delivery the window took (`before` = the text
  * the delivery was computed against), `commit(reason)` to end the run (blur, page hidden, Enter in a single-line buffer; the idle
  * bound fires on its own), `closed()` when the window ended it itself (a caret move it was told about), `preview(local)` = the
@@ -365,7 +369,7 @@ export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEdi
       if (run !== null && run.verb !== verb) commit("otherVerb");
       run ??= { verb, base: before };
       disarm();
-      cancel = schedule(() => commit("idle"), TEXT_EDITOR_TYPING_IDLE_MS);
+      cancel = schedule(() => commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.idle), TEXT_EDITOR_TYPING_IDLE_MS);
     },
     commit,
     closed: () => {
@@ -374,7 +378,7 @@ export function createTextEditorTypingRunV1(send: (verb: string, reason: TextEdi
     },
     preview: (local) => (run === null ? null : textSpliceFromEditV1(run.base, local)),
     open: () => run !== null,
-    dispose: () => commit("blur"),
+    dispose: () => commit(TEXT_EDITOR_TYPING_HOST_SIGNALS.blur),
   };
 }
 //#endregion ⏱️TextEditorTypingRun

@@ -4,6 +4,12 @@ use crate::document::{AnnexChoice, DesignSituation};
 use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1996 masonry-building document.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -27,7 +33,7 @@ pub struct En1996Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996");
+crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996", sqlite = sqlite::sqlite_codec);
 
 impl Default for En1996Snapshot {
     fn default() -> Self {

@@ -3,7 +3,7 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSy
 import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import { runBun } from "../📦️dependencies/📜️script.ts";
-import { withResourceLeases } from "../../🔒️leases/🟦️.ts";
+import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 export type NxTooling = { readonly cli: string; readonly modulePath: string };
 const RECIPE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools";

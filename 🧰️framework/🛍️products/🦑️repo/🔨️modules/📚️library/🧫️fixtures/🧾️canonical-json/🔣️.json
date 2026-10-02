@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "contractId": "repository-record-json-v1",
+  "cases": [
+    { "id": "record-key-order", "input": { "z": 1, "a": 2 }, "oracle": { "a": 2, "z": 1 }, "canonical": "{\"a\":2,\"z\":1}" },
+    { "id": "scalar-order", "input": [3, 1, 2], "oracle": [3, 1, 2], "canonical": "[3,1,2]" },
+    { "id": "identified-rows", "input": [{ "path": "b" }, { "path": "a" }], "oracle": [{ "path": "a" }, { "path": "b" }], "canonical": "[{\"path\":\"a\"},{\"path\":\"b\"}]" },
+    { "id": "mixed-array", "input": [{ "path": "b" }, 1, { "path": "a" }], "oracle": [{ "path": "b" }, 1, { "path": "a" }], "canonical": "[{\"path\":\"b\"},1,{\"path\":\"a\"}]" },
+    { "id": "nested-records", "input": { "z": [{ "path": "b", "z": 1 }, { "path": "a", "a": 2 }], "a": { "z": 1, "a": 2 } }, "oracle": { "a": { "a": 2, "z": 1 }, "z": [{ "a": 2, "path": "a" }, { "path": "b", "z": 1 }] }, "canonical": "{\"a\":{\"a\":2,\"z\":1},\"z\":[{\"a\":2,\"path\":\"a\"},{\"path\":\"b\",\"z\":1}]}" },
+    { "id": "identity-fields", "input": [{ "structuredLocation": "a" }, { "relativeRoot": "a" }, { "code": "a" }, { "destinationPath": "a" }, { "id": "a" }, { "path": "a" }, { "sourcePath": "a" }, { "operationId": "a" }], "oracle": [{ "code": "a" }, { "destinationPath": "a" }, { "id": "a" }, { "operationId": "a" }, { "path": "a" }, { "relativeRoot": "a" }, { "sourcePath": "a" }, { "structuredLocation": "a" }], "canonical": "[{\"code\":\"a\"},{\"destinationPath\":\"a\"},{\"id\":\"a\"},{\"operationId\":\"a\"},{\"path\":\"a\"},{\"relativeRoot\":\"a\"},{\"sourcePath\":\"a\"},{\"structuredLocation\":\"a\"}]" },
+    { "id": "identity-priority", "input": [{ "operationId": "b", "path": "a" }, { "path": "z", "operationId": "a" }], "oracle": [{ "operationId": "a", "path": "z" }, { "operationId": "b", "path": "a" }], "canonical": "[{\"operationId\":\"a\",\"path\":\"z\"},{\"operationId\":\"b\",\"path\":\"a\"}]" },
+    { "id": "empty-array", "input": [], "oracle": [], "canonical": "[]" },
+    { "id": "empty-object", "input": {}, "oracle": {}, "canonical": "{}" },
+    { "id": "proto-key", "input": { "__proto__": { "value": 1 }, "z": 2 }, "oracle": { "__proto__": { "value": 1 }, "z": 2 }, "canonical": "{\"__proto__\":{\"value\":1},\"z\":2}" },
+    { "id": "integer-keys", "input": { "10": "ten", "2": "two", "01": "one" }, "oracle": { "2": "two", "10": "ten", "01": "one" }, "canonical": "{\"2\":\"two\",\"10\":\"ten\",\"01\":\"one\"}" },
+    { "id": "utf16-object-keys", "input": { "": 2, "𐀀": 1 }, "oracle": { "𐀀": 1, "": 2 }, "canonical": "{\"𐀀\":1,\"\":2}" },
+    { "id": "utf8-array-keys", "input": [{ "id": "𐀀" }, { "id": "" }], "oracle": [{ "id": "" }, { "id": "𐀀" }], "canonical": "[{\"id\":\"\"},{\"id\":\"𐀀\"}]" },
+    { "id": "nul-identity", "input": [{ "id": "a\u0000z" }, { "id": "a" }], "oracle": [{ "id": "a" }, { "id": "a\u0000z" }], "canonical": "[{\"id\":\"a\"},{\"id\":\"a\\u0000z\"}]" },
+    { "id": "stable-ties", "input": [{ "id": "a", "value": "z" }, { "id": "a", "value": "b" }], "oracle": [{ "id": "a", "value": "z" }, { "id": "a", "value": "b" }], "canonical": "[{\"id\":\"a\",\"value\":\"z\"},{\"id\":\"a\",\"value\":\"b\"}]" },
+    { "id": "json-scalars", "input": [null, true, false, 1.5, "a\nb"], "oracle": [null, true, false, 1.5, "a\nb"], "canonical": "[null,true,false,1.5,\"a\\nb\"]" },
+    { "id": "nested-array-order", "input": [[{ "z": 2, "a": 1 }], [3, 1]], "oracle": [[{ "a": 1, "z": 2 }], [3, 1]], "canonical": "[[{\"a\":1,\"z\":2}],[3,1]]" }
+  ],
+  "runtimeCases": [
+    { "id": "undefined-property", "kind": "object-undefined", "canonical": "{\"a\":1}" },
+    { "id": "undefined-element", "kind": "array-undefined", "canonical": "[null,1]" },
+    { "id": "undefined-root", "kind": "undefined", "error": "Repository JSON requires a serializable top-level value" },
+    { "id": "function-root", "kind": "function", "error": "Repository JSON requires a serializable top-level value" },
+    { "id": "symbol-root", "kind": "symbol", "error": "Repository JSON requires a serializable top-level value" }
+  ]
+}

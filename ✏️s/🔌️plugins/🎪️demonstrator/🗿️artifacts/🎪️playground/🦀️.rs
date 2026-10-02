@@ -26,7 +26,7 @@ pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "playground.document".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Playground Document", "Playground-Dokument"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Playground Document", "Playground-Dokument"),
         source_format: PLAYGROUND_DOCUMENT_SCHEMA.into(),
         component_kind: "playground".into(),
         dimension: "data".into(),
@@ -356,7 +356,7 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️change-schema/🦀️.rs"]
             pub mod change_schema;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
         }
 

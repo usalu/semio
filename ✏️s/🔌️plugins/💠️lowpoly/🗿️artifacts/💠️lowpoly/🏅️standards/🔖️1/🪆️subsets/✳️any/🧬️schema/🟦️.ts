@@ -1,5 +1,6 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import {parseBinary32,type Binary32} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 
 export interface LowpolyArtifact {
   /** @state artifact */
@@ -23,17 +24,17 @@ export interface LowpolySelection {
 }
 
 export interface LowpolyTransform {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
+  position: [Binary32, Binary32, Binary32];
+  rotation: [Binary32, Binary32, Binary32];
+  scale: [Binary32, Binary32, Binary32];
 }
 
 export interface LowpolyPaintLayer {
   name: string;
   visible: boolean;
-  opacity: number;
+  opacity: Binary32;
   blendMode: string;
-  pixels: string;
+  pixels: Uint8Array;
 }
 
 export interface LowpolyObject {
@@ -116,12 +117,16 @@ export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
   };
 }
 
+/** 📐️ Exact three-component native binary32 vector. */
+export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32(row[0]),parseBinary32(row[1]),parseBinary32(row[2])];}
+/** 🎨️ Intrinsic persisted pixel octets, independent of any wire encoding. */
+export function parseLowpolyPixels(value:unknown):Uint8Array{if(!(value instanceof Uint8Array))throw Error("Lowpoly pixels require owned octets");return value.slice();}
 export function parseLowpolyTransform(value: unknown, at = "$"): LowpolyTransform {
   const row = lowpolyLowpolyArtifactGuardObject(value, at);
   return {
-    position: lowpolyLowpolyArtifactGuardArray(row["position"], `${at}.position`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyArtifactGuardNumber(item, `${at}.position[${index}]`)),
-    rotation: lowpolyLowpolyArtifactGuardArray(row["rotation"], `${at}.rotation`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyArtifactGuardNumber(item, `${at}.rotation[${index}]`)),
-    scale: lowpolyLowpolyArtifactGuardArray(row["scale"], `${at}.scale`, {"minItems": 3, "maxItems": 3}).map((item, index) => lowpolyLowpolyArtifactGuardNumber(item, `${at}.scale[${index}]`)),
+    position: parseLowpolyVector(row["position"], `${at}.position`),
+    rotation: parseLowpolyVector(row["rotation"], `${at}.rotation`),
+    scale: parseLowpolyVector(row["scale"], `${at}.scale`),
   };
 }
 
@@ -130,9 +135,9 @@ export function parseLowpolyPaintLayer(value: unknown, at = "$"): LowpolyPaintLa
   return {
     name: lowpolyLowpolyArtifactGuardString(row["name"], `${at}.name`),
     visible: lowpolyLowpolyArtifactGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: lowpolyLowpolyArtifactGuardNumber(row["opacity"], `${at}.opacity`),
+    opacity: parseBinary32(row["opacity"]),
     blendMode: lowpolyLowpolyArtifactGuardString(row["blendMode"], `${at}.blendMode`),
-    pixels: lowpolyLowpolyArtifactGuardString(row["pixels"], `${at}.pixels`),
+    pixels: parseLowpolyPixels(row["pixels"]),
   };
 }
 

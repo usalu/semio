@@ -1,0 +1,13 @@
+{
+  "schema": "semio.stdio.semio.conversion-definition-selection/v1",
+  "cases": [
+    {"id":"empty","packages":[],"exports":[],"accepted":true,"dependencies":[]},
+    {"id":"present","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"},{"package":"neutral-alpha","identity":"foreign.alpha"}],"accepted":true,"dependencies":["foreign.alpha","foreign.bravo"]},
+    {"id":"removed","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"}],"accepted":true,"dependencies":["foreign.bravo"]},
+    {"id":"all-removed","packages":["neutral-alpha","neutral-bravo"],"exports":[],"accepted":true,"dependencies":[]},
+    {"id":"unowned-export","packages":["neutral-alpha"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"}],"accepted":false,"dependencies":[]},
+    {"id":"duplicate-package","packages":["neutral-alpha"],"exports":[{"package":"neutral-alpha","identity":"foreign.alpha"},{"package":"neutral-alpha","identity":"foreign.bravo"}],"accepted":false,"dependencies":[]},
+    {"id":"duplicate-identity","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-alpha","identity":"foreign.alpha"},{"package":"neutral-bravo","identity":"foreign.alpha"}],"accepted":false,"dependencies":[]},
+    {"id":"malformed-identity","packages":["neutral-alpha"],"exports":[{"package":"neutral-alpha","identity":"foreign..alpha"}],"accepted":false,"dependencies":[]}
+  ]
+}

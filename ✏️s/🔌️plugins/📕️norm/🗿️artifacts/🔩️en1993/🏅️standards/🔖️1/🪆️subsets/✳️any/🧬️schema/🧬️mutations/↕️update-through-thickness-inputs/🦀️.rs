@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateThroughThi
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update section {}", self.section.id),
             &format!("Querschnitt {} aktualisieren", self.section.id),
         )

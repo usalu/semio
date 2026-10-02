@@ -9,7 +9,7 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 
 #[test]
 fn brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
+    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let host = puzzle_board_host();
     let group_tag = |measures: &[WindowMeasure], id: &str| {
         measures.iter().find_map(|measure| match measure {

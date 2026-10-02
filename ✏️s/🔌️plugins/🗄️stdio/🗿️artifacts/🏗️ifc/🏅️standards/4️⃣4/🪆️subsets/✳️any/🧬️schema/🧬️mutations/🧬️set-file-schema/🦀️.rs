@@ -21,8 +21,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileSchema {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::SetFileSchema(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set file schema", "Dateischema setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set file schema", "Dateischema setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

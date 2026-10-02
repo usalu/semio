@@ -6,7 +6,8 @@ use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, C
 use crate::source_builders;
 use semio_framework::manifest::kernel;
 use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 
 fn synthetic_capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
     CapabilityDefinition {
@@ -635,8 +636,8 @@ fn an_unrecognised_field_against_the_capabilitys_schema_is_input_invalid() {
 fn an_omitted_optional_argument_runs_with_its_declared_default() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     let definitions = [
-        semio_framework::manifest::ActionArgDef::text("kind", semio_framework_ui::wgpu::LocalizedLabel::native("Kind", "Art")).default_value(&"text".to_string()),
-        semio_framework::manifest::ActionArgDef::text("title", semio_framework_ui::wgpu::LocalizedLabel::native("Title", "Titel")),
+        semio_framework::manifest::ActionArgDef::text("kind", semio_framework_ui_locale::LocalizedLabel::native("Kind", "Art")).default_value(&"text".to_string()),
+        semio_framework::manifest::ActionArgDef::text("title", semio_framework_ui_locale::LocalizedLabel::native("Title", "Titel")),
     ];
     let mut capability = synthetic_capability("forms.addBlock", &[], ApprovalMode::Never, false);
     capability.input_schema = serde_json::json!({ "type": "object", "properties": { "kind": { "type": "string", "default": "text" }, "title": { "type": "string" } }, "additionalProperties": false });

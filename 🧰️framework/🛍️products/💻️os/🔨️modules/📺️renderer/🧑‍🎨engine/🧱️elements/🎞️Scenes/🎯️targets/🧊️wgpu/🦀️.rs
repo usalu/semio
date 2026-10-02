@@ -1540,13 +1540,13 @@ impl PendingRasterAuthorityClose {
 /// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)` each test thread owns its own
 /// (`crate::interpreter::test_worker_cell`), so no law meets another law's scenes.
 #[cfg(not(target_arch = "wasm32"))]
-struct WorkerCell<T>(#[cfg(not(test))] std::sync::OnceLock<std::sync::Mutex<RefCell<T>>>, #[cfg(test)] std::marker::PhantomData<fn() -> T>);
+struct WorkerCell<T>(#[cfg(not(test))] OnceLock<Mutex<RefCell<T>>>, #[cfg(test)] std::marker::PhantomData<fn() -> T>);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T> WorkerCell<T> {
     const fn new() -> Self {
         #[cfg(not(test))]
-        return Self(std::sync::OnceLock::new());
+        return Self(OnceLock::new());
         #[cfg(test)]
         return Self(std::marker::PhantomData);
     }
@@ -1556,7 +1556,7 @@ impl<T> WorkerCell<T> {
 impl<T: Default + 'static> WorkerCell<T> {
     fn with<R>(&self, f: impl FnOnce(&RefCell<T>) -> R) -> R {
         #[cfg(not(test))]
-        let state = self.0.get_or_init(|| std::sync::Mutex::new(RefCell::new(T::default())));
+        let state = self.0.get_or_init(|| Mutex::new(RefCell::new(T::default())));
         #[cfg(test)]
         let state = crate::interpreter::test_worker_cell::<RefCell<T>>(std::ptr::from_ref(self).addr());
         let guard = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -6499,6 +6499,10 @@ struct CanvasStrokeJson {
     width: Option<f64>,
     #[serde(default)]
     dash: Option<Vec<f64>>,
+    #[serde(default)]
+    cap: Option<String>,
+    #[serde(default)]
+    join: Option<String>,
 }
 
 /** 🖼️ A `CanvasLayerRecord["image"]` mirror — the nested per-node image field (as opposed to the
@@ -6577,6 +6581,12 @@ struct CanvasLayer {
     image: Option<CanvasImageFieldJson>,
     #[serde(default)]
     text: Option<CanvasTextFieldJson>,
+    #[serde(default)]
+    segments: Option<Vec<crate::canvas2d_paint::ScenePathSegment>>,
+    #[serde(default)]
+    transform: Option<Vec<f64>>,
+    #[serde(default, rename = "fillRule")]
+    fill_rule: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -7030,6 +7040,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         return render_placeholder("canvas-2d", bounds, ctx);
     };
     let inner = bounds;
+    let mut order = CanvasPaintOrder::open(ctx.draw, inner);
     ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let mut viewport = Viewport { x: canvas.camera_x as f32, y: canvas.camera_y as f32, zoom: canvas.zoom as f32 };
     apply_canvas_framing(scene, inner);
@@ -7037,72 +7048,72 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
     }
-    draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
     if let Some(snapshot) = canvas.snapshot {
+        draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
+        order.vector();
         for page_index in 0..snapshot.page_count {
             let _ = ui_wgpu::wgpu::canvas2d_snapshot_with_page(snapshot, page_index, |page| {
                 for item in serde_json::Deserializer::from_slice(page.bytes()).into_iter::<Canvas2dPacketItem<'_>>().flatten() {
-                    render_canvas2d_packet_item(&item, &viewport, inner, ctx);
+                    if item.kind == "line" {
+                        render_canvas2d_packet_item(&item, &viewport, inner, ctx);
+                        order.vector();
+                    } else {
+                        order.quad(ctx.draw);
+                        render_canvas2d_packet_item(&item, &viewport, inner, ctx);
+                    }
                 }
             });
         }
-        crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.draw);
+        crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+        order.close(ctx.draw);
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
         return;
     }
     let layers: Vec<CanvasLayer> = serde_json::from_str(&canvas.layers_json).unwrap_or_default();
-    let has_polyline = layers.iter().any(|layer| layer.kind == "polyline");
-    if has_polyline {
+    if layers.iter().any(|layer| layer.kind == "polyline") {
         draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
     }
+    draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
+    order.vector();
     for (index, layer) in layers.iter().enumerate() {
         if !canvas_layer_should_render(layer) {
             continue;
         }
+        if canvas_layer_is_scene_node(layer) {
+            render_canvas_scene_node(scene, layer, &viewport, inner, &mut order, ctx);
+            continue;
+        }
         let opacity = layer.opacity.unwrap_or(1.0).clamp(0.0, 1.0);
         let blend = layer.blend_mode.as_deref();
-        if layer.kind == "image" {
-            let source = layer.data_url.clone().or_else(|| layer.image.as_ref().and_then(|image| image.src.clone()));
-            if let Some(data_url) = source.filter(|src| src.starts_with("data:")) {
-                if let Some(key) = queue_canvas_image_upload(&scene.host_id, &layer.id, &data_url) {
+        if layer.kind == "image" && layer.data_url.is_some() {
+            if let Some(data_url) = layer.data_url.as_deref().filter(|src| src.starts_with("data:")) {
+                if let Some(key) = queue_canvas_image_upload(&scene.host_id, &layer.id, data_url) {
                     let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-                    let iw = layer.image.as_ref().and_then(|image| image.width).unwrap_or(layer.width);
-                    let ih = layer.image.as_ref().and_then(|image| image.height).unwrap_or(layer.height);
-                    let w = iw as f32 * viewport.zoom;
-                    let h = ih as f32 * viewport.zoom;
+                    let w = layer.width as f32 * viewport.zoom;
+                    let h = layer.height as f32 * viewport.zoom;
                     ctx.draw.push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], opacity);
                 }
             }
             continue;
         }
-        if layer.kind == "text" {
-            if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
-                let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0) as f32;
-                let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-                let color = layer.fill.as_ref().and_then(|fill| fill.color.as_deref()).map(|channels| canvas_color_channels(channels, opacity)).unwrap_or(theme.text);
-                draw_text(ctx, text, sx, sy + size.max(8.0), size.max(8.0), color);
-            }
-            continue;
-        }
-        if layer.kind == "polyline" {
-            if let Some(points) = &layer.points {
-                let stroke = theme.diagram_stroke.with_alpha(theme.diagram_stroke.a * opacity);
-                let seam_stroke = theme.diagram_seam.with_alpha(theme.diagram_seam.a * opacity);
-                let width = (1.5 * viewport.zoom).max(1.0);
-                for (edge_index, chunk) in points.chunks(2).enumerate() {
-                    if chunk.len() < 2 {
-                        continue;
-                    }
-                    let (x0, y0) = viewport.world_to_screen(chunk[0][0] as f32, chunk[0][1] as f32, inner);
-                    let (x1, y1) = viewport.world_to_screen(chunk[1][0] as f32, chunk[1][1] as f32, inner);
-                    let is_seam = layer.seams.as_ref().and_then(|seams| seams.get(edge_index)).copied().unwrap_or(0) != 0;
-                    if is_seam {
-                        draw_dashed_line(ctx.draw, x0, y0, x1, y1, seam_stroke, width);
-                    } else {
-                        ctx.draw.push_line(x0, y0, x1, y1, stroke, width);
-                    }
+        if let Some(points) = layer.points.as_ref().filter(|points| layer.kind == "polyline" && !points.is_empty()) {
+            let stroke = theme.diagram_stroke.with_alpha(theme.diagram_stroke.a * opacity);
+            let seam_stroke = theme.diagram_seam.with_alpha(theme.diagram_seam.a * opacity);
+            let width = (1.5 * viewport.zoom).max(1.0);
+            for (edge_index, chunk) in points.chunks(2).enumerate() {
+                if chunk.len() < 2 {
+                    continue;
+                }
+                let (x0, y0) = viewport.world_to_screen(chunk[0][0] as f32, chunk[0][1] as f32, inner);
+                let (x1, y1) = viewport.world_to_screen(chunk[1][0] as f32, chunk[1][1] as f32, inner);
+                let is_seam = layer.seams.as_ref().and_then(|seams| seams.get(edge_index)).copied().unwrap_or(0) != 0;
+                if is_seam {
+                    draw_dashed_line(ctx.draw, x0, y0, x1, y1, seam_stroke, width);
+                } else {
+                    ctx.draw.push_line(x0, y0, x1, y1, stroke, width);
                 }
             }
+            order.vector();
             continue;
         }
         let hue = (index * 47 % 360) as f32;
@@ -7121,6 +7132,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
                 .unwrap_or_else(|| Rgba::new(theme.diagram_accent.r + hue / 720.0, theme.diagram_accent.g, theme.diagram_accent.b, theme.diagram_accent.a * opacity));
             let stroke = canvas_apply_blend_mode(blend, theme.canvas_clear, base_stroke);
             ctx.draw.push_line(sx0, sy0, sx1, sy1, stroke, (2.0 * viewport.zoom).max(1.0));
+            order.vector();
             continue;
         }
         let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
@@ -7129,6 +7141,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         let shape_rect = Rect::new(sx, sy, w, h);
         let is_circle = layer.kind == "circle";
         let fallback_fill = Rgba::new(theme.diagram_accent_fill.r + hue / 720.0, theme.diagram_accent_fill.g, theme.diagram_accent_fill.b, theme.diagram_accent_fill.a * opacity);
+        order.quad(ctx.draw);
         render_canvas_shape_fill(ctx.draw, &viewport, inner, shape_rect, layer, opacity, fallback_fill, theme.diagram_shape_outline, theme.canvas_clear, is_circle);
         if layer.selected.unwrap_or(false) {
             if is_circle {
@@ -7142,22 +7155,173 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
                 draw_ink_rect_outline(ctx.draw, sx, sy, w, h, CANVAS2D_SELECTION_RING, 2.5);
             }
         }
-        if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
-            let size = layer.text.as_ref().and_then(|t| t.size).unwrap_or(14.0) as f32;
-            draw_text(ctx, text, sx + 2.0, sy + size.max(8.0), size.max(8.0), theme.text);
-        } else {
-            let label = if layer.name.is_empty() { layer.id.as_str() } else { layer.name.as_str() };
-            if !label.is_empty() {
-                draw_text(ctx, label, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
-            }
+        order.vector();
+        let label = if layer.name.is_empty() { layer.id.as_str() } else { layer.name.as_str() };
+        if !label.is_empty() {
+            order.quad(ctx.draw);
+            draw_text(ctx, label, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
         }
     }
     if !layers.iter().any(|layer| layer.role.as_deref() != Some("meta")) {
+        order.quad(ctx.draw);
         draw_text(ctx, CANVAS_2D_EMPTY_LABEL, inner.x + inner.w * 0.5 - 36.0, inner.y + inner.h * 0.5, theme.font_size_small, theme.text_muted);
     }
-    crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.draw);
+    crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+    order.close(ctx.draw);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
 }
+
+/// 🧅️ Keeps the Canvas2d paint in record order across the draw list's buckets: one draw layer paints its quads (solid
+/// fills, glyphs) before its vector triangles, so a quad that follows vector paint opens a fresh draw layer. Every layer
+/// sits under the canvas scissor, which clips the records to the canvas like React's `<canvas>` element.
+struct CanvasPaintOrder {
+    inner: Rect,
+    vectors: bool,
+}
+
+impl CanvasPaintOrder {
+    fn open(draw: &mut ui_wgpu::wgpu::DrawList, inner: Rect) -> Self {
+        draw.push_scissor(inner);
+        Self { inner, vectors: false }
+    }
+
+    /// 🔺️ Records that vector triangles were pushed into the current draw layer.
+    fn vector(&mut self) {
+        self.vectors = true;
+    }
+
+    /// 🟦️ Readies the draw list for a quad: a fresh draw layer when the current one already holds vector paint.
+    fn quad(&mut self, draw: &mut ui_wgpu::wgpu::DrawList) {
+        if self.vectors {
+            draw.pop_scissor();
+            draw.push_scissor(self.inner);
+            self.vectors = false;
+        }
+    }
+
+    fn close(self, draw: &mut ui_wgpu::wgpu::DrawList) {
+        draw.pop_scissor();
+    }
+}
+
+/// 🧩️ Whether React paints `layer` through `drawSceneNode`: it carries `segments`, a `text` or an `image.src`.
+fn canvas_layer_is_scene_node(layer: &CanvasLayer) -> bool {
+    layer.segments.as_ref().is_some_and(|segments| !segments.is_empty()) || layer.text.is_some() || layer.image.as_ref().and_then(|image| image.src.as_deref()).is_some_and(|src| !src.is_empty())
+}
+
+/// 🎨️ `rgbaToCss`: an `[r, g, b, a?]` channel list with its alpha times `opacity`; the slate fallback below three channels.
+fn scene_rgba(color: Option<&[f64]>, opacity: f32) -> Rgba {
+    canvas_color_channels(color.filter(|channels| channels.len() >= 3).unwrap_or(&[]), opacity)
+}
+
+fn screen_points(points: &[[f64; 2]]) -> Vec<[f32; 2]> {
+    points.iter().map(|point| [point[0] as f32, point[1] as f32]).collect()
+}
+
+/// 🖌️ The wgpu twin of `drawSceneNode` (`📐️Canvas2dHost/🎨️paint`): under the node `transform` and the camera, the path's
+/// fill (`evenodd` unless `nonzero`) and stroke (width, caps, joins, dash in layer units) from `canvas2d_paint`, then the
+/// text lines (`◻️2d` line law, sized with the map) and the `image.src` raster at the node origin. Approximations of this
+/// renderer, not of the geometry: group opacity is applied per piece, a rotated image or text keeps its axis-aligned box,
+/// a stroke is at least one pixel wide.
+fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, viewport: &Viewport, inner: Rect, order: &mut CanvasPaintOrder, ctx: &mut FrameworkWidgetContext<'_>) {
+    use crate::canvas2d_paint::{flatten, stroke_polygons, Affine, FillRule, LineCap, LineJoin, StrokeGeometry};
+    let backdrop = ctx.theme.canvas_clear;
+    let opacity = layer.opacity.unwrap_or(1.0).clamp(0.0, 1.0);
+    let blend = layer.blend_mode.as_deref();
+    let camera = Affine::camera(f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom), f64::from(inner.x), f64::from(inner.y), f64::from(inner.w), f64::from(inner.h));
+    let map = Affine::node(layer.transform.as_deref()).then(camera);
+    let contours = flatten(layer.segments.as_deref().unwrap_or_default(), &map);
+    let stroke = layer.stroke.as_ref().filter(|stroke| stroke.width.unwrap_or(1.0).is_finite() && stroke.width.unwrap_or(1.0) > 0.0);
+    if let Some(fill) = &layer.fill {
+        push_scene_path_fill(ctx.draw, &contours, FillRule::of(layer.fill_rule.as_deref()), (f64::from(inner.y), f64::from(inner.y + inner.h)), fill, &map, opacity, blend, backdrop);
+        order.vector();
+    }
+    if let Some(stroke) = stroke {
+        let scale = map.line_scale();
+        let geometry = StrokeGeometry { width: (stroke.width.unwrap_or(1.0) * scale).max(1.0), cap: LineCap::of(stroke.cap.as_deref()), join: LineJoin::of(stroke.join.as_deref()), dash: stroke.dash.iter().flatten().map(|value| value * scale).collect() };
+        let color = canvas_apply_blend_mode(blend, backdrop, scene_rgba(stroke.color.as_deref(), opacity));
+        for polygon in stroke_polygons(&contours, &geometry) {
+            ctx.draw.push_triangle_fan(&screen_points(&polygon), color);
+        }
+        order.vector();
+    }
+    if let Some(content) = layer.text.as_ref().and_then(|text| text.content.as_deref()).filter(|content| !content.is_empty()) {
+        let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0);
+        let pixels = (size * map.line_scale()) as f32;
+        let paint = match &layer.fill {
+            Some(fill) if matches!(fill.kind.as_deref(), Some("linearGradient" | "radialGradient")) && !fill.stops.is_empty() => Some(canvas_gradient_color_at(&fill.stops, 0.5, opacity)),
+            Some(fill) if fill.color.is_some() => Some(scene_rgba(fill.color.as_deref(), opacity)),
+            _ => stroke.map(|stroke| scene_rgba(stroke.color.as_deref(), opacity)),
+        };
+        if let Some(color) = paint.filter(|_| pixels >= CANVAS_TEXT_MIN_PIXELS) {
+            order.quad(ctx.draw);
+            let color = canvas_apply_blend_mode(blend, backdrop, color);
+            for (index, line) in semio_framework_2d::text::drawing_text_lines(content).enumerate() {
+                if line.is_empty() {
+                    continue;
+                }
+                let [x, y] = map.apply([layer.x, layer.y + size + index as f64 * size * semio_framework_2d::text::DRAWING_TEXT_LINE_HEIGHT]);
+                draw_text(ctx, line, x as f32, y as f32, pixels, color);
+            }
+        }
+    }
+    if let Some(src) = layer.image.as_ref().and_then(|image| image.src.as_deref()).filter(|src| src.starts_with("data:")) {
+        if let Some(key) = queue_canvas_image_upload(&scene.host_id, &layer.id, src) {
+            let image = layer.image.as_ref();
+            let width = image.and_then(|image| image.width).or((layer.width != 0.0).then_some(layer.width)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
+            let height = image.and_then(|image| image.height).or((layer.height != 0.0).then_some(layer.height)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
+            let corners = [[0.0, 0.0], [width, 0.0], [width, height], [0.0, height]].map(|corner| map.apply(corner));
+            let (left, right) = corners.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), corner| (low.min(corner[0]), high.max(corner[0])));
+            let (top, bottom) = corners.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), corner| (low.min(corner[1]), high.max(corner[1])));
+            ctx.draw.push_raster_quad(&key, [left as f32, top as f32, ((right - left) as f32).max(1.0), ((bottom - top) as f32).max(1.0)], [0.0, 0.0, 1.0, 1.0], opacity);
+        }
+    }
+}
+
+/// 🪣️ Pushes a scene node's path fill (`fillStyleToPaint`): a solid colour as one fan per trapezoid; a linear or radial
+/// gradient (layer units) as pieces of at most a tenth of its screen extent, each coloured at its centre. A gradient whose
+/// ends coincide paints nothing, as on the platform canvas.
+#[allow(clippy::too_many_arguments, reason = "one argument per resolved paint/geometry input of the scene node")]
+fn push_scene_path_fill(draw: &mut ui_wgpu::wgpu::DrawList, contours: &[crate::canvas2d_paint::Contour], rule: crate::canvas2d_paint::FillRule, clip: (f64, f64), fill: &CanvasFillJson, map: &crate::canvas2d_paint::Affine, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+    let linear = match fill.kind.as_deref() {
+        Some("linearGradient") if !fill.stops.is_empty() => true,
+        Some("radialGradient") if !fill.stops.is_empty() => false,
+        _ => {
+            if fill.color.is_some() {
+                let color = canvas_apply_blend_mode(blend, backdrop, scene_rgba(fill.color.as_deref(), opacity));
+                for trapezoid in crate::canvas2d_paint::fill_trapezoids(contours, rule, clip) {
+                    draw.push_triangle_fan(&screen_points(&trapezoid.corners()), color);
+                }
+            }
+            return;
+        }
+    };
+    let Some(inverse) = map.inverse() else { return };
+    let (start, end, center) = ([fill.x1, fill.y1], [fill.x2, fill.y2], [fill.cx, fill.cy]);
+    let span = [end[0] - start[0], end[1] - start[1]];
+    let span_squared = span[0] * span[0] + span[1] * span[1];
+    if (linear && span_squared == 0.0) || (!linear && fill.r <= 0.0) {
+        return;
+    }
+    let extent = if linear { (map.apply(end)[0] - map.apply(start)[0]).hypot(map.apply(end)[1] - map.apply(start)[1]) } else { fill.r * map.line_scale() };
+    let trapezoids = crate::canvas2d_paint::fill_trapezoids(contours, rule, clip);
+    let area: f64 = trapezoids.iter().map(|t| ((t.top_right - t.top_left) + (t.bottom_right - t.bottom_left)).abs() * 0.5 * (t.bottom - t.top)).sum();
+    let step = (extent / CANVAS_GRADIENT_BANDS as f64).max(CANVAS_GRADIENT_MIN_PIECE).max((area / CANVAS_GRADIENT_PIECE_LIMIT as f64).sqrt());
+    for piece in trapezoids.iter().flat_map(|trapezoid| trapezoid.pieces(step)) {
+        let local = inverse.apply(piece.center());
+        let t = if linear { ((local[0] - start[0]) * span[0] + (local[1] - start[1]) * span[1]) / span_squared } else { (local[0] - center[0]).hypot(local[1] - center[1]) / fill.r };
+        let color = canvas_apply_blend_mode(blend, backdrop, canvas_gradient_color_at(&fill.stops, t as f32, opacity));
+        draw.push_triangle_fan(&screen_points(&piece.corners()), color);
+    }
+}
+
+/// 🔡️ Scene-node text smaller than this many pixels is not painted (illegible, and it would churn the glyph atlas).
+const CANVAS_TEXT_MIN_PIXELS: f32 = 2.0;
+/// 🖼️ `drawSceneNode`'s image extent when neither the image nor the node names one.
+const CANVAS_SCENE_IMAGE_EXTENT: f64 = 64.0;
+/// 🌈️ The smallest gradient piece in pixels and the most pieces one gradient fill may push.
+const CANVAS_GRADIENT_MIN_PIECE: f64 = 2.0;
+const CANVAS_GRADIENT_PIECE_LIMIT: usize = 4096;
 
 /// 🫙️ The literal `📐️Canvas2dHost` paints in an empty canvas (`🟦️.tsx:634`).
 const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "owners": [
+    {
+      "package": "semio-s-artifact-stdio-tiff-test-oracle",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔮️oracles/🧪️tests/🔬️fixture-derivation/🦀️.rs",
+      "sha256": "c05cc66efcf4285a17d1b004ad3faf598cfd8069bbcb5d443dd27d9e24287da7",
+      "references": [
+        "image",
+        "png"
+      ],
+      "originalManifest": {
+        "source": "[workspace]\n\n[package]\nname = \"semio-s-artifact-stdio-tiff-test-oracle\"\nversion = \"0.1.0\"\nedition = \"2021\"\npublish = false\ndescription = \"🔮️ Owned independent test oracle provider\"\n\n[package.metadata.semio]\nrole = \"test\"\n\n[lib]\nname = \"semio_s_artifact_stdio_tiff_test_oracle\"\npath = \"../../🦀️.rs\"\n\n[features]\noracles = [\"dep:tiff\"]\n\n[dependencies]\n\"semio-repo-test-host\" = { path = \"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust\", default-features = false }\n\"tiff\" = { version = \"0.11\", optional = true }\n",
+        "sha256": "97e4f19d20342f401b348dc30902686e82877b9e8a9c4bb341ac3d2ecaa6a4bc"
+      },
+      "ignored": true
+    },
+    {
+      "package": "semio-s-artifact-stdio-bmp-test-oracle",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🔮️oracles/🧪️tests/🔬️fixture-derivation/🦀️.rs",
+      "sha256": "ea6aec380a075d4b83be21cfdedaf3ac6364f56bc69ce48c2bfd8a7017306f60",
+      "references": [
+        "png"
+      ],
+      "originalManifest": {
+        "source": "[workspace]\n\n[package]\nname = \"semio-s-artifact-stdio-bmp-test-oracle\"\nversion = \"0.1.0\"\nedition = \"2021\"\npublish = false\ndescription = \"🔮️ Owned independent test oracle provider\"\n\n[package.metadata.semio]\nrole = \"test\"\n\n[lib]\nname = \"semio_s_artifact_stdio_bmp_test_oracle\"\npath = \"../../🦀️.rs\"\n\n[features]\noracles = [\"dep:image\", \"semio-s-plugin-stdio-raster-test-oracle/oracles\"]\n\n[dependencies]\n\"image\" = { version = \"0.25\", optional = true, default-features = false, features = [\"bmp\", \"tiff\", \"jpeg\"] }\n\"semio-repo-test-host\" = { path = \"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust\", default-features = false }\n\"semio-s-plugin-stdio-raster-test-oracle\" = { path = \"../../../../../🔮️oracles/🖼️raster/📦️packages/🦀️rust\", default-features = false }\n",
+        "sha256": "61547b687a1d42f633de76d55479d98d9f1e15c749fc10977929afcf03114351"
+      },
+      "ignored": true
+    },
+    {
+      "package": "semio-s-artifact-note-note-test-oracle",
+      "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🧪️tests/🔬️smoke/🦀️.rs",
+      "sha256": "8ab47ca77e40bb71080cfeb19319769f80a1ec09054bd41784ee9ac96b5f1583",
+      "references": [
+        "lopdf"
+      ],
+      "originalManifest": {
+        "source": "[workspace]\n\n[package]\nname = \"semio-s-artifact-note-note-test-oracle\"\nversion = \"0.1.0\"\nedition = \"2021\"\npublish = false\ndescription = \"🔮️ Owned independent test oracle provider\"\n\n[package.metadata.semio]\nrole = \"test\"\n\n[lib]\nname = \"semio_s_artifact_note_note_test_oracle\"\npath = \"../../🦀️.rs\"\n\n[features]\noracles = [\"dep:dxf\", \"semio-s-plugin-stdio-document-test-oracle/oracles\", \"semio-s-plugin-stdio-markup-test-oracle/oracles\"]\n\n[dependencies]\n\"dxf\" = { version = \"0.6\", optional = true }\n\"semio-repo-test-host\" = { path = \"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust\", default-features = false }\n\"semio-s-plugin-stdio-document-test-oracle\" = { path = \"../../../../../../🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust\", default-features = false }\n\"semio-s-plugin-stdio-markup-test-oracle\" = { path = \"../../../../../../🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust\", default-features = false }\n",
+        "sha256": "6c283560027b0f5676a452b9b0899ae62741354a3ceb1662d217b018a87266a0"
+      },
+      "ignored": false
+    }
+  ]
+}

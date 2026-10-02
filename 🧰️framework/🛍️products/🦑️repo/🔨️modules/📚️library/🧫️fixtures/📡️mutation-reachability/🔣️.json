@@ -130,6 +130,45 @@
       ],
       "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::InsertPage) }\n",
       "accepted": false
+    },
+    {
+      "name": "unproven-root-body",
+      "source": "#![cfg_attr(any(), rewrite)]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false,
+      "nativeAccepted": true
+    },
+    {
+      "name": "unproven-leaf-body",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "leafSource": "#![cfg_attr(any(), rewrite)]\npub struct Mutation;\n",
+      "accepted": false,
+      "nativeAccepted": true
+    },
+    {
+      "name": "unproven-child-body",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "#[path = \"🧩️payload/🦀️.rs\"] pub mod payload;\npub use payload::ChildPayload;\n",
+      "extraFiles": [
+        {
+          "path": "🧩️payload/🦀️.rs",
+          "source": "#![cfg_attr(any(), rewrite)]\npub struct ChildPayload;\n"
+        }
+      ],
+      "accepted": false,
+      "nativeAccepted": true
+    },
+    {
+      "name": "unproven-inline-child-body",
+      "source": "#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::ChildPayload) }\n",
+      "leafSource": "pub mod payload { #![cfg_attr(any(), rewrite)]\npub struct ChildPayload; }\npub use payload::ChildPayload;\n",
+      "accepted": false,
+      "nativeAccepted": true
+    },
+    {
+      "name": "known-and-unproven-mount",
+      "source": "#[cfg(any())]\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\n#[path = \"➕️insert-page/🦀️.rs\"] pub mod insert_page;\npub enum ProbeMutation { InsertPage(insert_page::Mutation) }\n",
+      "accepted": false,
+      "nativeAccepted": true
     }
   ]
 }

@@ -14,8 +14,16 @@
 //! `world3d_*` helpers (the same escape hatch the `📐️cad` pilot's own viewer used, for the identical
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
-use crate::{PackedF32, RemodelingSnapshot};
-use semio_framework_plugin::{world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use crate::RemodelingSnapshot;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::WorldSunConfig;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.
@@ -103,8 +111,8 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
         if !sparse.points.is_empty() {
             layers.push(json!({
                 "id": "remodeling-sparse",
-                "positionsB64": PackedF32::from_f32_slice(&sparse.points.to_f32_vec_from(&scene.durable_artifacts)).0,
-                "colorsB64": sparse.colors.as_ref().map(|colors| colors.0.clone()),
+                "positionsB64": base64_codec::base64_standard_encode(sparse.points.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
+                "colorsB64": sparse.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
                 // 📏️ Screen pixels: the reconstruction is normalised to unit RMS radius, where an
                 // attenuated (world-unit) size drew each point larger than the object.
                 "size": 3.0,
@@ -116,8 +124,8 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
         if !dense.positions.is_empty() {
             layers.push(json!({
                 "id": "remodeling-dense",
-                "positionsB64": dense.positions.0,
-                "colorsB64": dense.colors.as_ref().map(|colors| colors.0.clone()),
+                "positionsB64": base64_codec::base64_standard_encode(dense.positions.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
+                "colorsB64": dense.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
                 "size": 2.0,
                 "sizeAttenuation": false,
             }));
@@ -127,7 +135,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
         let positions: Vec<f32> = trajectory.poses.iter().flat_map(|pose| pose.translation).collect();
         layers.push(json!({
             "id": "remodeling-camera-poses",
-            "positionsB64": PackedF32::from_f32_slice(&positions).0,
+            "positionsB64": base64_codec::base64_standard_encode(positions.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
             "colorsB64": Value::Null,
             "size": 9.0,
             "sizeAttenuation": false,
@@ -137,7 +145,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
         let positions: Vec<f32> = scene.gcps.iter().flat_map(|gcp| gcp.world_position.map(|c| c as f32)).collect();
         layers.push(json!({
             "id": "remodeling-gcps",
-            "positionsB64": PackedF32::from_f32_slice(&positions).0,
+            "positionsB64": base64_codec::base64_standard_encode(positions.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
             "colorsB64": Value::Null,
             "size": 10.0,
             "sizeAttenuation": false,

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "positions",
+    "invalid"
+  ],
+  "properties": {
+    "positions": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)$"
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

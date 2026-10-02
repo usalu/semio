@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "variants": [
+    [
+      "perspective",
+      4
+    ],
+    [
+      "orthogonal",
+      4
+    ]
+  ],
+  "maximumBytes": 1048576,
+  "tinyBytes": 1
+}

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.energy.model` persists a typed `Model` document plus two composed child handles regenerated together from it, so every mutation kind below is a real field-granular semantic edit — the whole-model `replace-model` this file used to record is GONE (📓️derivation-rules.md rule 6: whole-document load goes through `ArtifactStore::reset`, outside history). Semio-NATIVE, no third party. The Python second implementation beside `../../../🧪️tests/🏛️mutate-energy-model-1/🥒️.feature` covers every kind with a happy and a refusal vector, so nothing here is UNOBSERVABLE any more.",
   "oracles": [
@@ -194,47 +194,197 @@
           ]
         },
         {
-          "mutationId": "update-site",
-          "sourceMutationDirectoryName": "🌍️update-site",
-          "mutationDirectoryName": "🌍️update-site",
+          "mutationId": "change-site-latitude",
+          "sourceMutationDirectoryName": "🌍️change-site-latitude",
+          "mutationDirectoryName": "🌍️change-site-latitude",
           "scenarios": [
             {
-              "id": "update-site-relocates-to-denver",
-              "directoryName": "✅️relocates-to-denver"
-            },
-            {
-              "id": "update-site-refuses-a-bad-latitude",
-              "directoryName": "⛔️refuses-a-bad-latitude"
-            }
-          ]
-        },
-        {
-          "mutationId": "update-ground-temperature",
-          "sourceMutationDirectoryName": "🌡️update-ground-temperature",
-          "mutationDirectoryName": "🌡️update-ground-temperature",
-          "scenarios": [
-            {
-              "id": "update-ground-temperature-sets-denver-ground",
+              "id": "change-site-latitude-sets",
               "directoryName": "✅️sets"
             },
             {
-              "id": "update-ground-temperature-refuses-a-short-year",
+              "id": "change-site-latitude-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
         },
         {
-          "mutationId": "update-run-period",
-          "sourceMutationDirectoryName": "📅️update-run-period",
-          "mutationDirectoryName": "📅️update-run-period",
+          "mutationId": "change-site-longitude",
+          "sourceMutationDirectoryName": "🌏️change-site-longitude",
+          "mutationDirectoryName": "🌏️change-site-longitude",
           "scenarios": [
             {
-              "id": "update-run-period-shortens-to-january",
-              "directoryName": "✅️shortens"
+              "id": "change-site-longitude-sets",
+              "directoryName": "✅️sets"
             },
             {
-              "id": "update-run-period-refuses-month-13",
-              "directoryName": "⛔️refuses-month-13"
+              "id": "change-site-longitude-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-site-elevation",
+          "sourceMutationDirectoryName": "⛰️change-site-elevation",
+          "mutationDirectoryName": "⛰️change-site-elevation",
+          "scenarios": [
+            {
+              "id": "change-site-elevation-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-site-elevation-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-site-time-zone",
+          "sourceMutationDirectoryName": "🕰️change-site-time-zone",
+          "mutationDirectoryName": "🕰️change-site-time-zone",
+          "scenarios": [
+            {
+              "id": "change-site-time-zone-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-site-time-zone-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-site-north-axis",
+          "sourceMutationDirectoryName": "🔝️change-site-north-axis",
+          "mutationDirectoryName": "🔝️change-site-north-axis",
+          "scenarios": [
+            {
+              "id": "change-site-north-axis-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-site-north-axis-same",
+              "directoryName": "🟰️same"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ground-temperature-building-surface",
+          "sourceMutationDirectoryName": "🌡️change-ground-temperature",
+          "mutationDirectoryName": "🌡️change-ground-temperature",
+          "scenarios": [
+            {
+              "id": "change-ground-temperature-building-surface-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-ground-temperature-building-surface-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ground-temperature-shallow",
+          "sourceMutationDirectoryName": "🌱️change-ground-temperature",
+          "mutationDirectoryName": "🌱️change-ground-temperature",
+          "scenarios": [
+            {
+              "id": "change-ground-temperature-shallow-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-ground-temperature-shallow-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-ground-temperature-deep",
+          "sourceMutationDirectoryName": "⛏️change-ground-temperature",
+          "mutationDirectoryName": "⛏️change-ground-temperature",
+          "scenarios": [
+            {
+              "id": "change-ground-temperature-deep-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-ground-temperature-deep-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-period-start-month",
+          "sourceMutationDirectoryName": "🛫️change-run-period-start",
+          "mutationDirectoryName": "🛫️change-run-period-start",
+          "scenarios": [
+            {
+              "id": "change-run-period-start-month-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-run-period-start-month-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-period-start-day",
+          "sourceMutationDirectoryName": "▶️change-run-period-start",
+          "mutationDirectoryName": "▶️change-run-period-start",
+          "scenarios": [
+            {
+              "id": "change-run-period-start-day-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-run-period-start-day-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-period-end-month",
+          "sourceMutationDirectoryName": "🛬️change-run-period-end",
+          "mutationDirectoryName": "🛬️change-run-period-end",
+          "scenarios": [
+            {
+              "id": "change-run-period-end-month-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-run-period-end-month-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-period-end-day",
+          "sourceMutationDirectoryName": "⏹️change-run-period-end",
+          "mutationDirectoryName": "⏹️change-run-period-end",
+          "scenarios": [
+            {
+              "id": "change-run-period-end-day-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-run-period-end-day-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-run-period-year",
+          "sourceMutationDirectoryName": "📅️change-run-period-year",
+          "mutationDirectoryName": "📅️change-run-period-year",
+          "scenarios": [
+            {
+              "id": "change-run-period-year-sets",
+              "directoryName": "✅️sets"
+            },
+            {
+              "id": "change-run-period-year-refuses",
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -4472,9 +4622,19 @@
       "kinds": [
         "rename-model",
         "change-model-version",
-        "update-site",
-        "update-ground-temperature",
-        "update-run-period",
+        "change-site-latitude",
+        "change-site-longitude",
+        "change-site-elevation",
+        "change-site-time-zone",
+        "change-site-north-axis",
+        "change-ground-temperature-building-surface",
+        "change-ground-temperature-shallow",
+        "change-ground-temperature-deep",
+        "change-run-period-start-month",
+        "change-run-period-start-day",
+        "change-run-period-end-month",
+        "change-run-period-end-day",
+        "change-run-period-year",
         "replace-airflow-network",
         "add-output-variable",
         "remove-output-variable",
@@ -4812,7 +4972,7 @@
           ]
         },
         {
-          "id": "update-site",
+          "id": "change-site-latitude",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -4821,9 +4981,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "update-site",
+            "operation": "change-site-latitude",
             "bridgeVersion": 1,
-            "variant": "UpdateSite"
+            "variant": "ChangeSiteLatitude"
           },
           "oracleRequirements": [
             {
@@ -4833,7 +4993,7 @@
           ]
         },
         {
-          "id": "update-ground-temperature",
+          "id": "change-site-longitude",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -4842,9 +5002,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "update-ground-temperature",
+            "operation": "change-site-longitude",
             "bridgeVersion": 1,
-            "variant": "UpdateGroundTemperature"
+            "variant": "ChangeSiteLongitude"
           },
           "oracleRequirements": [
             {
@@ -4854,7 +5014,7 @@
           ]
         },
         {
-          "id": "update-run-period",
+          "id": "change-site-elevation",
           "capability": "energy-model-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -4863,9 +5023,219 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "update-run-period",
+            "operation": "change-site-elevation",
             "bridgeVersion": 1,
-            "variant": "UpdateRunPeriod"
+            "variant": "ChangeSiteElevation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-site-time-zone",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-site-time-zone",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiteTimeZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-site-north-axis",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-site-north-axis",
+            "bridgeVersion": 1,
+            "variant": "ChangeSiteNorthAxis"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-ground-temperature-building-surface",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-ground-temperature-building-surface",
+            "bridgeVersion": 1,
+            "variant": "ChangeGroundTemperatureBuildingSurface"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-ground-temperature-shallow",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-ground-temperature-shallow",
+            "bridgeVersion": 1,
+            "variant": "ChangeGroundTemperatureShallow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-ground-temperature-deep",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-ground-temperature-deep",
+            "bridgeVersion": 1,
+            "variant": "ChangeGroundTemperatureDeep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-run-period-start-month",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-period-start-month",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunPeriodStartMonth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-run-period-start-day",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-period-start-day",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunPeriodStartDay"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-run-period-end-month",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-period-end-month",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunPeriodEndMonth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-run-period-end-day",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-period-end-day",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunPeriodEndDay"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-run-period-year",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-run-period-year",
+            "bridgeVersion": 1,
+            "variant": "ChangeRunPeriodYear"
           },
           "oracleRequirements": [
             {

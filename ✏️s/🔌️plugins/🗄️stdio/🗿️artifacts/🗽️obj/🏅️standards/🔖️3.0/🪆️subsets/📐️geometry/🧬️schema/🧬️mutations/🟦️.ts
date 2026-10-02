@@ -22,9 +22,9 @@ export type ObjMutation =
   | { mutation: 'insertFace'; index: number; face: Face }
   | { mutation: 'removeFace'; index: number }
   | { mutation: 'setFace'; index: number; face: Face }
-  | { mutation: 'setGroup'; name: string; faces: number[] }
+  | { mutation: 'setGroup'; name: string; faces: bigint[] }
   | { mutation: 'removeGroup'; name: string }
-  | { mutation: 'setObject'; name: string; faces: number[] }
+  | { mutation: 'setObject'; name: string; faces: bigint[] }
   | { mutation: 'removeObject'; name: string }
   | { mutation: 'setMtllib'; mtllib?: string }
   | { mutation: 'setUsemtl'; usemtl: UsemtlRange[] }

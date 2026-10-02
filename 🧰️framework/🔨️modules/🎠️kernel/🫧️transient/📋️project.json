@@ -1,0 +1,35 @@
+{
+  "name": "@semio-tech/framework-transient",
+  "targets": {
+    "test-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/🫧️transient",
+        "command": "bun ./📜️script.ts test contract",
+        "forwardAllArgs": true
+      }
+    },
+    "test-retained": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/🫧️transient",
+        "command": "bun ./📜️script.ts test retained",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

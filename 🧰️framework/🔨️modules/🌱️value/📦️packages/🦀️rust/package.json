@@ -1,0 +1,12 @@
+{
+  "name": "@semio-tech/value-rs",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-portable": "nx run @semio-tech/value-rs:test-portable",
+    "test-type-ownership": "nx run @semio-tech/value-rs:test-type-ownership"
+  }
+}

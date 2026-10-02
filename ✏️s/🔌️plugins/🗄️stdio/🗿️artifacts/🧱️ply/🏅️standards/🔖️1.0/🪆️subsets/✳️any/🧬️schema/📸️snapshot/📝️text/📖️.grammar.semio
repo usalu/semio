@@ -4,11 +4,17 @@ extension ply
 start document
 comment none
 
-document = "stdio.ply" field*
-field = IDENT field-value?
-field-value = "=" value
-value = scalar value-tail? | list | record
-scalar = field | TEXT | INT | FLOAT
-value-tail = "," value
-list = "[" value* "]"
-record = "{" field* "}"
+document = "semio" "stdio.ply.dsl" "v1" snapshot
+snapshot = "schema" "=" text "format" "=" format "comments" "=" "[" text* "]" "elements" "=" "[" element* "]" "values" "=" "[" value* "]"
+format = "ascii" | "binaryLittleEndian" | "binaryBigEndian"
+element = "{" "name" "=" text "count" "=" INT "properties" "=" "[" property* "]" "rows" "=" "[" row* "]" "}"
+property = "{" "name" "=" text "form" "=" form property-field* "}"
+form = "scalar" | "list"
+property-field = "scalar-kind" "=" scalar-kind | "count-kind" "=" scalar-kind | "value-kind" "=" scalar-kind
+scalar-kind = "char" | "uchar" | "short" | "ushort" | "int" | "uint" | "float" | "double"
+row = "{" "values" "=" ids "}"
+value = "{" "kind" "=" value-kind value-field* "list-values" "=" ids "}"
+value-kind = scalar-kind | "list"
+value-field = "integer-value" "=" INT | "float32-ieee754-bits" "=" INT | "float64-ieee754-bits" "=" INT
+ids = "[" INT* "]"
+text = IDENT | TEXT

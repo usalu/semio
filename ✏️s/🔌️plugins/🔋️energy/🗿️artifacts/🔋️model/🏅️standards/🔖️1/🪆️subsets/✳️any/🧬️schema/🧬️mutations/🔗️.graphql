@@ -8,26 +8,58 @@ type ChangeModelVersion {
   newVersion: String!
 }
 
-type UpdateSite {
-  latitudeDeg: Float!
-  longitudeDeg: Float!
-  elevationM: Float!
-  timeZoneHours: Float!
-  northAxisDeg: Float!
+type ChangeSiteLatitude {
+  newLatitudeDeg: Float!
 }
 
-type UpdateGroundTemperature {
-  buildingSurfaceC: [Float!]!
-  shallowC: [Float!]!
-  deepC: Float!
+type ChangeSiteLongitude {
+  newLongitudeDeg: Float!
 }
 
-type UpdateRunPeriod {
-  startMonth: Int!
-  startDay: Int!
-  endMonth: Int!
-  endDay: Int!
-  year: Int!
+type ChangeSiteElevation {
+  newElevationM: Float!
+}
+
+type ChangeSiteTimeZone {
+  newTimeZoneHours: Float!
+}
+
+type ChangeSiteNorthAxis {
+  newNorthAxisDeg: Float!
+}
+
+type ChangeGroundTemperatureBuildingSurface {
+  month: Int!
+  newTemperatureC: Float!
+}
+
+type ChangeGroundTemperatureShallow {
+  month: Int!
+  newTemperatureC: Float!
+}
+
+type ChangeGroundTemperatureDeep {
+  newTemperatureC: Float!
+}
+
+type ChangeRunPeriodStartMonth {
+  newStartMonth: Int!
+}
+
+type ChangeRunPeriodStartDay {
+  newStartDay: Int!
+}
+
+type ChangeRunPeriodEndMonth {
+  newEndMonth: Int!
+}
+
+type ChangeRunPeriodEndDay {
+  newEndDay: Int!
+}
+
+type ChangeRunPeriodYear {
+  newYear: Int!
 }
 
 type ReplaceAirflowNetwork {
@@ -1598,9 +1630,19 @@ type ChangeMaterialRoughness {
 union EnergyModelMutation =
   RenameModel
   | ChangeModelVersion
-  | UpdateSite
-  | UpdateGroundTemperature
-  | UpdateRunPeriod
+  | ChangeSiteLatitude
+  | ChangeSiteLongitude
+  | ChangeSiteElevation
+  | ChangeSiteTimeZone
+  | ChangeSiteNorthAxis
+  | ChangeGroundTemperatureBuildingSurface
+  | ChangeGroundTemperatureShallow
+  | ChangeGroundTemperatureDeep
+  | ChangeRunPeriodStartMonth
+  | ChangeRunPeriodStartDay
+  | ChangeRunPeriodEndMonth
+  | ChangeRunPeriodEndDay
+  | ChangeRunPeriodYear
   | ReplaceAirflowNetwork
   | AddOutputVariable
   | RemoveOutputVariable

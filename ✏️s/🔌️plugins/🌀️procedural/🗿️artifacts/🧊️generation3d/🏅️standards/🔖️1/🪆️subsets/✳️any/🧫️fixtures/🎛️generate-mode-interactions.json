@@ -53,11 +53,12 @@
   "previewParity": ["procedural-preview", "generation3d-generate-preview"],
   "gumballVerbs": ["translateSelection", "rotateSelection", "scaleSelection"],
   "nodeGraphEditOperations": [
-    { "operation": "setHostSnapshot", "dispatchedBy": "flowCanvasCommit", "required": ["hostSnapshotJson"] },
-    { "operation": "deleteSelection", "dispatchedBy": "deleteKey", "required": [] },
     { "operation": "connect", "dispatchedBy": "portDrag", "required": ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"] },
     { "operation": "disconnect", "dispatchedBy": "wireCut", "required": ["synapseId"] },
-    { "operation": "move", "dispatchedBy": "nodeDrag", "required": ["gestureId", "nodeIds", "dx", "dy"] }
+    { "operation": "move", "dispatchedBy": "nodeDrag", "required": ["gestureId", "nodeIds", "dx", "dy"] },
+    { "operation": "setSlider", "dispatchedBy": "inlineSlider", "required": ["widgetId", "value"] },
+    { "operation": "insertPort", "dispatchedBy": "portInsert", "required": ["nodeId", "side", "index"] },
+    { "operation": "delete", "dispatchedBy": "contextMenuDelete", "required": ["nodeIds", "synapseIds"] }
   ],
   "commandTriggers": [
     { "command": "reorganize", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "mod+alt+l" },

@@ -14,7 +14,7 @@
 //! phase runs, and wave 14 ran the full differential comparison against the oracle.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::header::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_dxf_r12};
+use semio_s_artifact_stdio_dxf_test_oracle::standards::v_r12::subsets::header::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip};
 
 
 //#region 🔖️Input
@@ -136,11 +136,11 @@ mod subject {
     use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, DxfMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_dxf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document};
     use semio_s_artifact_stdio_dxf::DxfSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::header::project_dxf_r12;
+    use semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12;
 
     /// 🔀️ The spec's wire payload, decoded by the aggregate's own generic payload constructor.
     fn mutation_of(spec: &Json) -> Result<DxfMutation, String> {

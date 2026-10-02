@@ -27,8 +27,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for RemoveRu
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" entfernen", self.key))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove rule layout point \"{}\"", self.key), &format!("Layoutpunkt der Regel \"{}\" entfernen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

@@ -2,7 +2,8 @@
 //! window kinds the `✏️edit` mode lays out (window kinds are app-scoped in the manifest, so this mode
 //! declares no windows and no layout of its own).
 
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
 
 pub const ARCHITECT_MODE_REVIEW: &str = "review";
 

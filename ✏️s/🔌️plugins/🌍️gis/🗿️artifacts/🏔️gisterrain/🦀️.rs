@@ -40,7 +40,7 @@ pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: GISTERRAIN_DIALECT.artifact_kind.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("3D Terrain", "3D-Gelände"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Terrain", "3D-Gelände"),
         source_format: GIS_3D_TERRAIN_SCHEMA.into(),
         component_kind: "gisterrain".into(),
         dimension: "3d".into(),
@@ -180,13 +180,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.gis.gisterrain's typed runtime declaration.
-#[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(schema::gisterrain_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::gis3d::Gis3dPlayApp>>()
+        .document_codec_bare::<GisTerrainSnapshot, GisTerrainMutation>(GIS_3D_TERRAIN_SCHEMA, GISTERRAIN_DIALECT)
         .try_build()
 }
 //#endregion 🔖️Register

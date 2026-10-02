@@ -22,8 +22,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveShape {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::RemoveShape(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove shape", "Form entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove shape", "Form entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -1,0 +1,11 @@
+{
+  "name": "semio-framework-2d",
+  "private": true,
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-compute": "nx run semio-framework-2d:test-compute",
+    "test-compute-keys": "nx run semio-framework-2d:test-compute-keys"
+  }
+}

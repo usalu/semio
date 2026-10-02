@@ -1,6 +1,8 @@
+import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { matchesFixture, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { contentDigestOf, fixtureManifestProblems, installFixtureFile, loadOracleRegistry, publishFixtureManifest, subsetCoordinate, testCacheDir, verifyFixture } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";
 

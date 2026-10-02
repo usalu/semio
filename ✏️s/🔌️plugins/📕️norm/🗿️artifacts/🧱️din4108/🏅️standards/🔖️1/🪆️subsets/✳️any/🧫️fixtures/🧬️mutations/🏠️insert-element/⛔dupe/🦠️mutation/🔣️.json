@@ -1,0 +1,75 @@
+{
+  "InsertElement": {
+    "index": 3,
+    "element": {
+      "id": "wall-extra",
+      "kind": "wall",
+      "zoneId": "zone-living",
+      "orientationDeg": 90.0,
+      "inclinationDeg": 90.0,
+      "adjacent": "exterior",
+      "areaM2": 10.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": [
+        {
+          "id": "plaster-int",
+          "materialId": "gypsum_plaster",
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "mu": 10.0,
+          "density": 1400.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "masonry",
+          "materialId": "brick",
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "mu": 10.0,
+          "density": 1800.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "eps",
+          "materialId": "eps",
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "mu": 40.0,
+          "density": 20.0,
+          "applicationType": "WAP",
+          "compressiveClass": "dm",
+          "waterClass": "wf",
+          "tensileClass": "tf",
+          "acousticClass": "sm",
+          "segments": []
+        },
+        {
+          "id": "render",
+          "materialId": "mineral_render",
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "mu": 20.0,
+          "density": 1600.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        }
+      ]
+    }
+  }
+}

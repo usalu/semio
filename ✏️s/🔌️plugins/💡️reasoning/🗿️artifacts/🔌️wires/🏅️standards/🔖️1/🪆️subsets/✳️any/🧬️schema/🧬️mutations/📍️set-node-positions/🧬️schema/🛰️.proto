@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.set_node_positions;
+
+message WiresNodePosition {
+  string node_id = 1;
+  double x = 2;
+  double y = 3;
+}
+
+message SetNodePositions {
+  repeated WiresNodePosition positions = 1;
+}

@@ -14,7 +14,7 @@
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an
 //! oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law this
 //! case claims is asserted inside the SUBJECT handlers, through the shared law module
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
+//! `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law/🦀️.rs` that the stdio subsets use. The oracle handlers
 //! below still answer with the committed vector read literally, so the reference side exists the moment a
 //! second producer ever does. The subject half is gated behind the generated host's `sut` feature so the
 //! oracle-only run never compiles the local implementation.
@@ -121,7 +121,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_space_space::standards::v1::subsets::any::schema::mutations::s_space_mutation_report_json;
     use semio_s_artifact_space_space::standards::v1::subsets::any::schema::snapshot::s_space_identity_report_json;
 

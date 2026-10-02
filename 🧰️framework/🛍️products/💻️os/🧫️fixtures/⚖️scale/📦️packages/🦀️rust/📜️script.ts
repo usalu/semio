@@ -9,7 +9,7 @@ import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️libra
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(): void {
@@ -26,7 +26,7 @@ class CheckWasmScript extends BundleScript {
 class BuildWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Scale component build has a fixed output contract");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], this.repoRoot, {
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], this.repoRoot, {
       command: "rustc",
       output: "dist/component",
       validate(files) {

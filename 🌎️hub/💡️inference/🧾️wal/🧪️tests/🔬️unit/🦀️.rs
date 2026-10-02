@@ -222,7 +222,7 @@ pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::M
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(source["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["diff"]["payloadHex"].as_str().unwrap()) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(source["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["inverse"]["payloadHex"].as_str().unwrap()) },
         timestamp: protocol::HybridLogicalTimestamp { actor: source["timestamp"]["actor"].as_u64().unwrap(), physical_ms: source["timestamp"]["physicalMs"].as_u64().unwrap(), logical: source["timestamp"]["logical"].as_u64().unwrap() },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

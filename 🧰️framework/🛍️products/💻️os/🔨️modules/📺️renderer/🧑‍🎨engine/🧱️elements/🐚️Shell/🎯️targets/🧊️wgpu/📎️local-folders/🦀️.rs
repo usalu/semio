@@ -7,12 +7,15 @@
 //! (the id its store stamps on every envelope); a detach records `detachLocalFolder`. When a program boots holding a
 //! document this device once attached, the native shell — which owns a folder transport and needs no gesture to open a
 //! folder — reattaches it directly, once per document, and restores its archive like a fresh load; when that reattach
-//! fails it offers the accessible "Reconnect folder" / "Forget folder" band React's browser shell always offers (the
-//! browser needs the person's gesture). The browser wgpu build serves no folder transport, so it neither attaches nor
-//! remembers nor offers a folder.
+//! fails it offers the accessible "Reconnect folder" / "Forget folder" band. The browser build has no filesystem: like
+//! React's worker it keeps a folder- or file-bound document's archive through the dev host's backbone route
+//! (`GET|PUT /semio-backbone`, asked through the page-owned `semioWgpuHostIo` door because the shell runs in the frame
+//! Worker) — read and restored on attach, written after every history change — and, like React's browser shell, always
+//! offers the band and waits for the person's gesture.
 //!
 //! The event log, the reconnect offer, the folder name and the band's copy are pinned for both shells by
-//! `🧑‍🎨engine/🧫️fixtures/📎️local-folder-bindings/🔣️.json`.
+//! `🧑‍🎨engine/🧫️fixtures/📎️local-folder-bindings/🔣️.json`; the browser folder door by
+//! `🧑‍🎨engine/🧫️fixtures/🧫️wgpu-backbone-folder-door/🔣️.json`.
 
 use super::*;
 use semio_framework_os_config::opening_config::mutations::{apply_local_folders_config_mutation, attach_local_folder, detach_local_folder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef, LocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA};
@@ -134,6 +137,10 @@ pub(crate) fn local_folder_name(path: &str) -> &str {
     path.split(['/', '\\']).filter(|segment| !segment.is_empty()).last().unwrap_or(path)
 }
 
+/// 🚪️ Whether this build reopens a remembered folder by itself: the native shell owns a folder transport; the browser
+/// reaches folders only through the dev host's route and, like React's browser shell, waits for the person's gesture.
+pub(crate) const LOCAL_FOLDER_DIRECT_REATTACH: bool = cfg!(not(target_arch = "wasm32"));
+
 /// 📁️ A binding's folder path.
 pub(crate) fn local_folder_path(binding: &LocalFolderBinding) -> &str {
     match &binding.folder {
@@ -202,17 +209,125 @@ pub(crate) fn folder_reconnect_band_plan(message: String, reconnect: String, for
 }
 //#endregion 🔖️Reconnect
 
+//#region 🔖️HostRouteFolder
+/// 🚪️ The host-io door op the browser folder door rides — the one spelling `🚪️host-io/🟦️.ts` services.
+#[cfg(any(target_arch = "wasm32", test))]
+pub(crate) const BACKBONE_FOLDER_DOOR_OP: &str = "backbone-folder";
+
+/// 🗃️ What one folder-door hop does: read the stored archive, or write the document's archive.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum BackboneFolderVerb {
+    Read,
+    Write,
+}
+
+/// 📨️ One folder-door request as JSON — a write names the artifact schema its archive is stored under.
+#[cfg(any(target_arch = "wasm32", test))]
+pub(crate) fn backbone_folder_request(verb: BackboneFolderVerb, uri: &str, document_id: &str, schema: Option<&str>) -> String {
+    let mut request = serde_json::json!({ "op": BACKBONE_FOLDER_DOOR_OP, "verb": match verb { BackboneFolderVerb::Read => "read", BackboneFolderVerb::Write => "write" }, "uri": uri, "documentId": document_id });
+    if let (BackboneFolderVerb::Write, Some(schema)) = (verb, schema) {
+        request["schema"] = Value::from(schema);
+    }
+    request.to_string()
+}
+
+/// 📬️ A read's answer: the stored archive's bytes, `None` when nothing was written yet (`204`), else the refusal — the
+/// HTTP status as `backbone-folder.status-<n>`, or the page's own transport error.
+#[cfg(any(target_arch = "wasm32", test))]
+pub(crate) fn backbone_folder_read_answer(answer: &str) -> Result<Option<Vec<u8>>, String> {
+    let answer: Value = serde_json::from_str(answer).map_err(|error| error.to_string())?;
+    if let Some(error) = answer.get("error").and_then(Value::as_str) {
+        return Err(error.to_string());
+    }
+    match answer.get("status").and_then(Value::as_u64) {
+        Some(200) => semio_framework_io_base64::base64_standard_decode(answer.get("bodyBase64").and_then(Value::as_str).ok_or("backbone-folder: a stored archive without bytes")?).map(Some).map_err(|error| error.to_string()),
+        Some(204) => Ok(None),
+        Some(status) => Err(format!("backbone-folder.status-{status}")),
+        None => Err("backbone-folder: an answer without a status".into()),
+    }
+}
+
+/// 📬️ A write's answer: acknowledged on a success status, else the refusal as a read tells it.
+#[cfg(any(target_arch = "wasm32", test))]
+pub(crate) fn backbone_folder_write_answer(answer: &str) -> Result<(), String> {
+    let answer: Value = serde_json::from_str(answer).map_err(|error| error.to_string())?;
+    if let Some(error) = answer.get("error").and_then(Value::as_str) {
+        return Err(error.to_string());
+    }
+    match answer.get("status").and_then(Value::as_u64) {
+        Some(status) if (200..300).contains(&status) => Ok(()),
+        Some(status) => Err(format!("backbone-folder.status-{status}")),
+        None => Err("backbone-folder: an answer without a status".into()),
+    }
+}
+
+#[cfg(test)]
+thread_local! {
+    /// 🧪️ The dev host a law's browser folder door reaches: stored archives by `(uri, documentId)`, and every request.
+    pub(crate) static TEST_BACKBONE_FOLDER_HOST: std::cell::RefCell<(BTreeMap<(String, String), Vec<u8>>, Vec<Value>)> = const { std::cell::RefCell::new((BTreeMap::new(), Vec::new())) };
+}
+
+/// 🚪️ One folder-door hop: the page's `semioWgpuHostIo` on the browser build, the law's host under `cfg(test)`.
+#[cfg(any(target_arch = "wasm32", test))]
+async fn backbone_folder_call(request: &str, bytes: Option<&[u8]>) -> Result<String, String> {
+    #[cfg(target_arch = "wasm32")]
+    return host_io_call(request, bytes).await;
+    #[cfg(not(target_arch = "wasm32"))]
+    TEST_BACKBONE_FOLDER_HOST.with(|host| {
+        let request: Value = serde_json::from_str(request).map_err(|error| error.to_string())?;
+        let mut host = host.borrow_mut();
+        host.1.push(request.clone());
+        let key = (request["uri"].as_str().unwrap_or_default().to_string(), request["documentId"].as_str().unwrap_or_default().to_string());
+        Ok(match (request["verb"].as_str(), bytes) {
+            (Some("write"), Some(bytes)) => {
+                host.0.insert(key, bytes.to_vec());
+                serde_json::json!({ "status": 200 })
+            }
+            (Some("read"), _) => match host.0.get(&key) {
+                Some(bytes) => serde_json::json!({ "status": 200, "bodyBase64": semio_framework_io_base64::base64_standard_encode(bytes) }),
+                None => serde_json::json!({ "status": 204 }),
+            },
+            _ => serde_json::json!({ "error": "backbone-folder: a write carries no archive" }),
+        }
+        .to_string())
+    })
+}
+
+/// 🗃️ A document kept through the dev host's backbone route: its uri, identity and artifact schema, the digest of the
+/// archive last written there and the history cursor it was written at.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct HostRouteFolder {
+    pub uri: String,
+    pub document_id: String,
+    pub schema: String,
+    pub written: u64,
+    pub written_cursor: u64,
+}
+
+/// 🔢️ The digest a written archive is compared by, so an unchanged document is never written again.
+#[cfg(any(target_arch = "wasm32", test))]
+fn archive_digest(bytes: &[u8]) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    bytes.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// 🚪️ Whether a sync-card uri names a document the browser keeps through the host route.
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn is_host_route_uri(uri: &str) -> bool {
+    uri.starts_with("folder://") || uri.starts_with("file://")
+}
+//#endregion 🔖️HostRouteFolder
+
 impl ShellState {
     /// 📖️ Loads the remembered bindings once; every commit keeps the cache current.
     pub(crate) fn ensure_local_folder_bindings(&mut self) {
         if self.local_folder_bindings.is_none() {
             self.local_folder_bindings = Some(replay_local_folder_events(&local_folder_events_of_log(local_folders_log_read().as_deref())));
         }
-    }
-
-    /// 📁️ This device's remembered folder bindings, as last loaded.
-    pub(crate) fn local_folder_bindings(&self) -> LocalFolderBindings {
-        self.local_folder_bindings.clone().unwrap_or_default()
     }
 
     /// ✍️ Appends one mutation to the facet's local-only log; a mutation that changes nothing is not recorded.
@@ -242,19 +357,27 @@ impl ShellState {
         Some(LocalFolderIdentity { document_id: document_id.to_string(), plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() })
     }
 
-    /// 📎️ The remembered folder for the session's document, while that document is not attached — never on a build
-    /// without a folder transport. Asked every frame, so a device remembering no folder answers before reading the
-    /// session's identity.
-    pub(crate) fn folder_reconnect_offer(&self) -> Option<LocalFolderBinding> {
-        let bindings = self.local_folder_bindings.as_ref().filter(|bindings| SHELL_DOCUMENT_TRANSPORTS.folder && !bindings.bindings.is_empty())?;
-        let attached = self.sync_channel.as_ref().map(|channel| channel.document_id.as_str());
-        local_folder_reconnect_offer(bindings, self.sync_program_identity().as_ref(), attached)
+    /// 🗂️ The document a folder or file binding holds now: the document actor's on the native build, the host-route
+    /// mirror's on the browser build.
+    fn attached_document_id(&self) -> Option<&str> {
+        #[cfg(any(target_arch = "wasm32", test))]
+        if let Some(folder) = self.host_route_folder.as_ref() {
+            return Some(folder.document_id.as_str());
+        }
+        self.sync_channel.as_ref().map(|channel| channel.document_id.as_str())
     }
 
-    /// 📎️ The offer the band shows: the remembered folder whose direct reattach already ran and left the document
-    /// unattached.
+    /// 📎️ The remembered folder for the session's document, while that document is not attached. Asked every frame, so a
+    /// device remembering no folder answers before reading the session's identity.
+    pub(crate) fn folder_reconnect_offer(&self) -> Option<LocalFolderBinding> {
+        let bindings = self.local_folder_bindings.as_ref().filter(|bindings| !bindings.bindings.is_empty())?;
+        local_folder_reconnect_offer(bindings, self.sync_program_identity().as_ref(), self.attached_document_id())
+    }
+
+    /// 📎️ The offer the band shows: on a build that waits for the person's gesture, the remembered folder itself; on a
+    /// build that reopens folders by itself, one whose direct reattach already ran and left the document unattached.
     pub(crate) fn folder_reconnect_band_offer(&self) -> Option<LocalFolderBinding> {
-        self.folder_reconnect_offer().filter(|offer| self.local_folder_reattach_tried.as_deref() == Some(offer.document_id.as_str()))
+        self.folder_reconnect_offer().filter(|offer| !self.local_folder_direct_reattach || self.local_folder_reattach_tried.as_deref() == Some(offer.document_id.as_str()))
     }
 
     /// 🔗️ Reattaches a remembered folder through the same folder attach a person makes, which re-records it and restores
@@ -263,8 +386,12 @@ impl ShellState {
         self.attach_sync_backbone(format!("folder://{}", local_folder_path(binding))).await
     }
 
-    /// 🔁️ The folder the shell reopens by itself now: the offer for the session's document, once per document.
+    /// 🔁️ The folder the shell reopens by itself now: on a build that does so, the offer for the session's document, once
+    /// per document.
     pub(crate) fn direct_reattach_candidate(&self) -> Option<LocalFolderBinding> {
+        if !self.local_folder_direct_reattach {
+            return None;
+        }
         self.folder_reconnect_offer().filter(|offer| self.local_folder_reattach_tried.as_deref() != Some(offer.document_id.as_str()))
     }
 
@@ -286,13 +413,93 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn restore_folder_archive(&mut self, path: &str, document_id: &str) -> Result<bool, String> {
         let Some(bytes) = store_sync::sync::FolderEventLogStorage::new(std::path::PathBuf::from(path)).read_archive(document_id).await.map_err(|error| error.to_string())? else { return Ok(false) };
-        let archive = protocol::decode_document_archive_bytes(&bytes).await.map_err(|error| error.to_string())?;
+        self.restore_document_archive_bytes(&bytes).await?;
+        Ok(true)
+    }
+
+    /// 🗃️ Loads one encoded document archive into the session's program like a fresh load, then re-reads its history
+    /// (rows, edits, head) and refreshes every surface — React's `restoreDocumentArchiveV1`, on both builds.
+    pub(crate) async fn restore_document_archive_bytes(&mut self, bytes: &[u8]) -> Result<(), String> {
+        let archive = protocol::decode_document_archive_bytes(bytes).await.map_err(|error| error.to_string())?;
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
         plugin.load_app_document_archive(session.instance_id, &archive).await?;
         self.refresh_history_snapshot().await;
-        self.refresh_ui(UiDirtyScope::Full).await?;
-        Ok(true)
+        self.refresh_ui(UiDirtyScope::Full).await
+    }
+
+    /// 🌐️ The browser build's folder or file attach — React's worker folder transport over the dev host's backbone route:
+    /// the stored archive is read and restored like a fresh load, or, when nothing was written yet, the document's own
+    /// archive is written there first; the document then stays bound until detached and every history change writes its
+    /// archive again ([`Self::flush_host_route_folder`]). A folder attach is remembered for this device.
+    #[cfg(any(target_arch = "wasm32", test))]
+    pub(crate) async fn attach_host_route_backbone(&mut self, uri: String, identity: LocalFolderIdentity) -> Result<(), String> {
+        let schema = self.session.as_ref().map(|session| session.app.io.artifact_schema.clone()).ok_or("session missing")?;
+        let stored = backbone_folder_read_answer(&backbone_folder_call(&backbone_folder_request(BackboneFolderVerb::Read, &uri, &identity.document_id, None), None).await?)?;
+        let written = match stored {
+            Some(bytes) => {
+                self.restore_document_archive_bytes(&bytes).await?;
+                archive_digest(&bytes)
+            }
+            None => self.write_host_route_archive(&uri, &identity.document_id, &schema).await?,
+        };
+        self.host_route_folder = Some(HostRouteFolder { uri: uri.clone(), document_id: identity.document_id.clone(), schema, written, written_cursor: self.history_cursor });
+        self.sync_backbone_uri = Some(uri.clone());
+        if let Some(path) = uri.strip_prefix("folder://") {
+            self.ensure_local_folder_bindings();
+            self.remember_local_folder(LocalFolderBinding { document_id: identity.document_id, plugin_id: identity.plugin_id, app_id: identity.app_id, folder: LocalFolderRef::Path { path: path.to_string() } });
+        }
+        Ok(())
+    }
+
+    /// ✍️ Writes the session program's document archive through the host route; answers the written archive's digest.
+    #[cfg(any(target_arch = "wasm32", test))]
+    async fn write_host_route_archive(&self, uri: &str, document_id: &str, schema: &str) -> Result<u64, String> {
+        let session = self.session.as_ref().ok_or("session missing")?;
+        let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).ok_or("plugin missing")?;
+        let archive = plugin.read_app_document_archive(session.instance_id).await?;
+        let bytes = protocol::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
+        backbone_folder_write_answer(&backbone_folder_call(&backbone_folder_request(BackboneFolderVerb::Write, uri, document_id, Some(schema)), Some(&bytes)).await?)?;
+        Ok(archive_digest(&bytes))
+    }
+
+    /// 🔁️ Keeps a host-route document's archive current: once the history moved past the cursor last written, the
+    /// archive is written again unless it is byte-identical — never while a history edit is open, whose preview is not
+    /// the document. A refused write is told once and retried at the next change. `true` when it wrote or was refused.
+    #[cfg(any(target_arch = "wasm32", test))]
+    pub(crate) async fn flush_host_route_folder(&mut self) -> bool {
+        if self.history_time_travel.is_some() || !self.host_route_folder.as_ref().is_some_and(|folder| folder.written_cursor != self.history_cursor) {
+            return false;
+        }
+        let Some(folder) = self.host_route_folder.clone() else { return false };
+        let cursor = self.history_cursor;
+        let written = match self.write_host_route_archive(&folder.uri, &folder.document_id, &folder.schema).await {
+            Ok(digest) => digest,
+            Err(error) => {
+                self.note_dispatch_fault(&error);
+                folder.written
+            }
+        };
+        if let Some(bound) = self.host_route_folder.as_mut().filter(|bound| bound.uri == folder.uri) {
+            bound.written = written;
+            bound.written_cursor = cursor;
+        }
+        true
+    }
+
+    /// ✂️ Detaches a host-route document: its last change is written, the binding dropped and a folder forgotten.
+    /// `false` when no document was bound through the host route.
+    #[cfg(any(target_arch = "wasm32", test))]
+    pub(crate) async fn detach_host_route_folder(&mut self) -> bool {
+        self.flush_host_route_folder().await;
+        let Some(folder) = self.host_route_folder.take() else { return false };
+        self.sync_backbone_uri = None;
+        self.sync_card_kind = None;
+        if folder.uri.starts_with("folder://") {
+            self.ensure_local_folder_bindings();
+            self.forget_local_folder(&folder.document_id);
+        }
+        true
     }
 
     /// 📐️ This frame's band, localized.

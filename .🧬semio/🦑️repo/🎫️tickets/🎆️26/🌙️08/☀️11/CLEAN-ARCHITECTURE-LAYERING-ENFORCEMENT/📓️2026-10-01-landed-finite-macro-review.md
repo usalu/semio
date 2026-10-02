@@ -1,0 +1,32 @@
+# Landed Finite Data Macro Review
+
+Read-only source audit, 2026-10-01. Reviewed `📚️library/🔍️discovery/🟦️.ts:6463–6644`, current thirteen accepted/seventeen refusal rows in the existing rust-source-direction corpus, and target/direction APIs. No tests/compiler/edit actions. Native expectations below are source-semantic predictions requiring the requested closed native law.
+
+The new cut fixes required-parameter gathering, actual identifier/closure/boolean arguments, same-line occurrence identity, nested same-file invocation and generated test registration. Expansion definition/invocation/template UTF16 offsets now survive target JSON dedup and direction edge construction (`🕸️dependencies/🧭️direction/🦀️source/🟦️.ts:6,74–78`). A distinct expanded occurrence therefore remains distinct even when target path/line match. Dynamic finite include! code templates remain refused, consistent with needing emitted module context. Existing trailing-comma native contradiction is corrected by a native-false unmatched-trailing-comma row.
+
+## Concrete gaps requiring closed law
+
+1. **Unused grouped expr is not parsed.** `fragment` unconditionally accepts `pairs.get(start)===end-1`. Example:
+
+```rust
+macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }
+fn main() { let _ = load!("input.txt", (let)); }
+```
+
+The scanner resolves input.txt and accepts the grouped irrelevant argument; native expr fragment matching rejects `(let)` before expansion. A malformed `{ let = ; }` block has the same issue. Current malformed-unused-expression only protects the specific ungrouped shape in its corpus; balanced delimiters are not expression syntax proof. A tt group is allowed to contain arbitrary balanced tokens; an expr group is not. Add grouped unused expr refusal plus valid group/block law. Keep the bounded grammar conservative rather than introducing a full Rust parser claim.
+
+2. **Closure body grammar accepts invalid expressions.** Nonblock closure acceptance only bans `;`, `=>`, `$`. `|x| x x`, `|| true false` and `|x| x +` pass those predicates while native expr matching rejects them. Block closure bodies are likewise only balanced. Add truly-unused closure-argument laws so failure cannot depend on emitted closure type checking. Recognize only explicitly supported expression/body forms, or refuse unsupported bodies; do not treat arbitrary nonempty tokens as syntax-checked.
+
+3. **Matcher commas can be normalized away.** `rustTokenSegments` omits empty segments. A matcher `($path:literal,, $flag:expr)` is therefore projected as two simple parameters and a normal invocation `load!("input.txt", true)` is accepted by the scanner despite native matching requiring two commas. Verify exact separator token consumption, not merely the nonempty fragment list. Add double/leading/trailing matcher separators and mismatched invocation separators. Deliberate optional matcher syntax remains unsupported until implemented.
+
+4. **Literal template sites bypass template-state/provenance.** Visit handles `if (input) add(...)` before looking at supported template bindings. A macro with a constant `include_str!("input.txt")` plus direct recursion, or an exported macro containing that constant site, contributes a single plain input even though dynamic equivalent templates are refused. A supported macro with two invocations and one constant+one variable include site records only one constant occurrence, without expansion metadata. This does not silently remove the constant physical edge, but it fails the declared per-invocation inventory and unsupported-template refusal contract. Resolve template context before literal-vs-bound dispatch: every template input site must follow the same template obligation/support policy, with occurrence metadata for each real invocation. Add mixed constant/dynamic two-site/two-invocation law, exported literal-only and recursive literal-only refusals. Uninvoked constant templates need an explicit all-config-template fact policy, not accidental plain-reference behavior.
+
+5. **Conditional export/unknown template expansion mechanism remains unclosed.** The `simple` check detects direct macro_export but not cfg_attr(...,macro_export). It bans self recursion and nested macro_rules, but does not establish a closed set of other transcriber macro calls. An unknown/helper call can emit additional input expressions. Add cfg_attr export refusal, helper-forwarding and invocation-inside-another-transcriber rows, and enforce real unsupported producer scope rather than treating found data includes as complete expansion evidence. Cross-file/exported support still requires a different provenance mechanism.
+
+## Covered semantics and remaining metadata limit
+
+The required set now collects metavariables from all include argument token ranges and evaluates only referenced parameters; irrelevant literal/ident/tt/expr arguments remain fragment-checked. Every binding is checked before template.supported is used, so one invalid direct invocation poisons the dynamic template instead of granting partial authority from a valid one. Duplicate names, duplicate matcher bindings, direct export/qualified invocation, direct recursion and nested macro definitions are rejected for dynamic includes. Missing physical prefix/leaf checks remain in the existing resolver, not bypassed by substitution.
+
+Expanded include data retains physical source origin; nested module invocation does not rebase text/byte inputs to module directories. UTF16 offsets are appropriate because tokens and source slicing use JS string offsets; schema/docs should state that unit. Offset API validation/coupling remains a required public-contract law: reject wrong kind, negative/noninteger offsets, invocation before definition, inconsistent definition/template offsets and expansion records fabricated on unrelated non-template references when those facts are publicly supplied. Current generated scanner output is internally constructed, but target API still accepts references from direct callers.
+
+Recommendation: land genuine RED grouped-unused/invalid-closure and mixed constant-template occurrence laws first, then exact matcher-separator and conditional-export/helper refusals. Existing thirteen native accepted rows are useful runtime bytes/provenance/test-registration coverage, but cannot establish a full syntax-validated finite grammar until these concrete branches are closed. No pass/fail claim is made here.

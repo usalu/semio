@@ -12,6 +12,7 @@
 //!   subset's own collections (spatial parent pointers, element→spatial containment, relation
 //!   endpoints) is checked by the composer's `SemioModelValidator`.
 
+use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
@@ -228,11 +229,11 @@ fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_f64(v: f64) -> String {
-    format!("{v}")
+    native::NativeF64(v).to_string()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
@@ -368,7 +369,7 @@ fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
 fn enc_pset_value(v: &PsetValue) -> String {
     match v {
         PsetValue::Text { value } => format!("T[{}]", enc_str(value)),
-        PsetValue::Number { value } => format!("N[{value}]"),
+        PsetValue::Number { value } => format!("N[{}]",native::NativeF64(*value)),
         PsetValue::Boolean { value } => format!("B[{}]", if *value { "1" } else { "0" }),
     }
 }
@@ -970,3 +971,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

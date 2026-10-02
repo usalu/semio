@@ -29,8 +29,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReorderTiles {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder tile \"{}\" to position {}", self.id, self.to_index), &format!("Kachel \"{}\" an Position {} verschieben", self.id, self.to_index))
     }
 
     fn target(&self) -> Vec<String> {

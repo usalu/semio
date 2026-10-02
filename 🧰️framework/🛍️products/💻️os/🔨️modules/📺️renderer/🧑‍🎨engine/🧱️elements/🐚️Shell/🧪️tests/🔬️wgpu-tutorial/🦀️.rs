@@ -1,7 +1,7 @@
 use super::*;
 
 fn shell() -> ShellState {
-    ShellState::new(Vec::new(), String::new())
+    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
 }
 
 fn tutorial_runtime(duration_ms: u64, mode: TutorialMode, playhead_ms: f64, rate: f32, last_tick_wall_ms: f64) -> TutorialRuntime {

@@ -59,8 +59,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetEx
         vec![super::GltfMutation::ChangeAssetExtraData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change Asset Extra Data", "Zusatzdaten des Assets ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Asset Extra Data", "Zusatzdaten des Assets ändern")
     }
 
     fn target(&self) -> Vec<String> {

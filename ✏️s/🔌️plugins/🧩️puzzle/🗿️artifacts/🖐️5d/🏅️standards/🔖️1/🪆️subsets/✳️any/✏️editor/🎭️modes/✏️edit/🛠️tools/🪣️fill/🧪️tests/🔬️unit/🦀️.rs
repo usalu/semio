@@ -5,7 +5,7 @@ use crate::editor::puzzle5d::{concrete_forest_example_document, default_document
 use semio_framework_tool_run::ToolRunTraceKind;
 
 fn labels() -> &'static Puzzle5dLabels {
-    puzzle5d_labels(&semio_framework_plugin::ViewModel::default()).expect("the host's own default axes are authored")
+    puzzle5d_labels(&semio_framework_plugin::ViewModel::new(protocol::Locale::En, protocol::Terminology::Native)).expect("the host's own default axes are authored")
 }
 
 fn scene(document: crate::editor::puzzle5d::Puzzle5dDocument, fill_count: u32) -> Puzzle5dScene {

@@ -91,10 +91,10 @@ fn the_inverse_restores_the_stroke_region() {
 #[test]
 fn the_label_names_the_cells_and_the_colour_in_english_and_german() {
     let label = protocol::SemanticMutation::<BitmapSnapshot>::label(&paint_input_stroke(vec![point(0, 0), point(3, 2)], 1));
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Paint stroke of 4 cells in colour 1");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Paint stroke of 4 cells in colour 1");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Strich mit 4 Zellen in Farbe 1 malen");
     let single = protocol::SemanticMutation::<BitmapSnapshot>::label(&paint_input_stroke(vec![point(2, 2)], 0));
-    assert_eq!(single.resolve(protocol::Terminology::Native, protocol::Locale::De), "Strich mit 1 Zelle in Farbe 0 malen");
+    assert_eq!(single.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Strich mit 1 Zelle in Farbe 0 malen");
 }
 
 #[test]

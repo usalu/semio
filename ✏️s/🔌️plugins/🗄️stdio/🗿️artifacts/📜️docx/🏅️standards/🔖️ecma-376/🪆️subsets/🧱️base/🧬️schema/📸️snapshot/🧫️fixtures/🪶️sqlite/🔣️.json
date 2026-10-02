@@ -1,0 +1,148 @@
+{
+  "schema": "Docx owned literal 世界\\u0000",
+  "opc": {
+    "parts": [
+      {
+        "path": "",
+        "contentType": "",
+        "bytes": [
+          0,
+          255,
+          7
+        ]
+      },
+      {
+        "path": "",
+        "contentType": "unknown\u0000",
+        "bytes": []
+      }
+    ],
+    "contentTypes": {
+      "defaults": [
+        [
+          "xml",
+          "a"
+        ],
+        [
+          "XML",
+          "b"
+        ]
+      ],
+      "overrides": [
+        [
+          "/duplicate",
+          "x"
+        ],
+        [
+          "/duplicate",
+          ""
+        ]
+      ]
+    },
+    "relationships": {
+      "": [],
+      "__proto__": [
+        {
+          "id": "",
+          "relType": "type\u0000",
+          "target": "../世界",
+          "targetMode": "external"
+        }
+      ],
+      "world/世界": [
+        {
+          "id": "duplicate",
+          "relType": "",
+          "target": "",
+          "targetMode": "internal"
+        },
+        {
+          "id": "duplicate",
+          "relType": "different",
+          "target": "!@/",
+          "targetMode": "external"
+        }
+      ]
+    },
+    "comment": "literal comment 世界\u0000"
+  },
+  "xmlParts": [
+    {
+      "path": "",
+      "contentType": "application/xml",
+      "document": {
+        "root": {
+          "kind": "element",
+          "name": "book",
+          "attrs": [
+            {
+              "name": "z",
+              "value": "last"
+            },
+            {
+              "name": "z",
+              "value": "duplicate"
+            }
+          ],
+          "children": [
+            {
+              "kind": "text",
+              "text": "shared 世界\u0000"
+            },
+            {
+              "kind": "cData",
+              "text": "raw <>"
+            },
+            {
+              "kind": "comment",
+              "text": "middle"
+            },
+            {
+              "kind": "processingInstruction",
+              "target": "render",
+              "data": "now"
+            }
+          ]
+        },
+        "prolog": [
+          {
+            "kind": "text",
+            "text": "intermediate"
+          }
+        ],
+        "epilog": [],
+        "declaration": {
+          "version": "arbitrary",
+          "encoding": "custom",
+          "standalone": false,
+          "quote": "single"
+        },
+        "doctype": {
+          "prologPosition": "18446744073709551615",
+          "name": "type",
+          "externalId": {
+            "kind": "public",
+            "publicId": "public",
+            "systemId": "system"
+          },
+          "declarations": [
+            {
+              "kind": "entity",
+              "parameter": true,
+              "name": "entity",
+              "value": "literal"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "",
+      "contentType": "",
+      "document": {
+        "prolog": [],
+        "epilog": []
+      }
+    }
+  ]
+}

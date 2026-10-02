@@ -25,8 +25,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_data_fields(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change data fields", "Datenfelder ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change data fields", "Datenfelder ändern")
     }
 }
 //#endregion 🧾ChangeDataFields

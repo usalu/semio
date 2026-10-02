@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for In
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::InsertStyle(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert style", "Stil einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Stil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

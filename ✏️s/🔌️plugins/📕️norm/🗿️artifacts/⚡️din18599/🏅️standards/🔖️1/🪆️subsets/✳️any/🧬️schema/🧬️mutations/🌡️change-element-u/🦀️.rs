@@ -30,7 +30,7 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeElemen
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change U-value of the element", "U-Wert des Bauteils ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change U-value of the element", "U-Wert des Bauteils ändern")
     }
 }

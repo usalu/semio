@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::base::schema::snapshot::sqlite::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,insert_ieee754,insert_key_ieee754};
 use super::{SemioBrepSnapshot,BrepVertex,BrepEdge,BrepLoop,BrepLoopEdge,BrepCoedge,BrepFace,BrepShell,BrepShellFace,BrepSolid,BrepSolidShell,BrepCurve,BrepCurve2,BrepSurface,SemioPoint2,SemioPoint3};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,Reconstruction},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,Reconstruction},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 use std::collections::{BTreeMap,BTreeSet};
 fn number(n:usize)->Result<i64,String>{i64::try_from(n).map_err(|e|e.to_string())}
 fn boolean(n:i64)->Result<bool,String>{match n{0=>Ok(false),1=>Ok(true),_=>Err("invalid BRep boolean".into())}}
@@ -32,6 +32,8 @@ fn surfaces(db:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMa
 fn native_names<'a>(rows:&[SqliteRow<'a>],columns:usize)->Result<BTreeMap<i64,&'a str>,String>{let mut names=BTreeSet::new();let mut result=BTreeMap::new();for row in rows{identity(row,columns)?;if row.integer(1)?!=1||!names.insert(row.text(3)?)||result.insert(row.rowid,row.text(3)?).is_some(){return Err("invalid BRep native identity or document owner".into());}}Ok(result)}
 fn named(names:&BTreeMap<i64,&str>,id:i64,r:&mut Reconstruction<'_,'_>)->Result<String,String>{r.text(names.get(&id).ok_or("dangling BRep native reference")?)}
 impl ArtifactSqliteSnapshot for SemioBrepSnapshot{
+fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,String>{super::native_encoding::encode(self,encoding,control)}
+fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{super::native_decoding::decode(payload,control)}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{let mut b=Bound::new("",control)?;self.native_fields(&mut b)?;b.finish()}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

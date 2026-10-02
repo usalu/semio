@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted, runVitest, runWasmPackWebBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests, runVitest, buildRepositoryWasmWebV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -10,8 +11,8 @@ process.env.RUST_MIN_STACK ??= String(8 * 1024 * 1024);
 
 //#region 🌉️BoardSessionPackage
 class WasmScript extends BundleScript {
-  run(): void {
-    runWasmPackWebBuild({
+  async run(): Promise<void> {
+    await buildRepositoryWasmWebV1({
       rsDir: this.root, logPrefix: "puzzle/board", wasmBaseName: "semio_puzzle", shipProfile: "wasm-release", noDefaultFeatures: true,
       pkg: { name: "@semio-tech/puzzle-wasm", files: ["semio_puzzle_bg.wasm", "semio_puzzle.js", "semio_puzzle.d.ts", "semio_puzzle_bg.wasm.d.ts"], main: "semio_puzzle.js", module: "semio_puzzle.js", types: "semio_puzzle.d.ts" },
     });
@@ -22,7 +23,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-hub-puzzle"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-hub-puzzle"], this.repoRoot, rest);
   }
 }
 

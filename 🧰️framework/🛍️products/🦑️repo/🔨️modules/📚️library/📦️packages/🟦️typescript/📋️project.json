@@ -84,7 +84,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🧫️cases.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧫️fixtures/🚦️test-dispatch/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧬️schema/🚦️test-dispatch/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
@@ -110,7 +110,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🐹️canonical-go-discovery/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-transaction-command-source/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts"
     ],
     "libraryTransactionCommandSources": [
       "sharedGlobals",
@@ -125,12 +125,12 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts"
     ],
     "libraryGoCommandSources": [
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧫️fixtures/🚦️test-dispatch/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧬️schema/🚦️test-dispatch/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
@@ -143,6 +143,15 @@
     ]
   },
   "targets": {
+    "test-locale-law-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test locale-law-ownership"
+      }
+    },
     "lint-dependency-direction": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -301,23 +310,6 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cross-platform-bootstrap"
       }
-    },
-    "test-process-tree-termination": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test process-tree-termination"
-      },
-      "inputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪓️process-tree-termination/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪓️process-tree-termination/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪓️process-tree-termination/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-        "{workspaceRoot}/bun.lock"
-      ]
     },
     "test-windows-command-paths": {
       "executor": "nx:run-commands",
@@ -566,7 +558,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️vitest-configuration-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🎚️vitest-configuration-ownership/🔣️.json",
@@ -606,7 +598,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/{🧪️tests/🎚️config/🟨️.mjs,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️tool-configuration-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json",
@@ -1202,7 +1194,7 @@
     },
     "test-cargo-dependency-direction": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-dependency-direction"
@@ -1219,7 +1211,7 @@
     },
     "lint-cargo-dependency-direction": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint cargo-dependency-direction"
@@ -1248,6 +1240,81 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-source-direction"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/**/*.rs",
+        "{workspaceRoot}/🧰️framework/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*"
+      ]
+    },
+    "test-rust-source-scopes": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-source-direction scopes"
+      }
+    },
+    "test-canonical-json": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test canonical-json"
+      }
+    },
+    "test-mutation-authority-scaffolding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-authority scaffolding"
+      }
+    },
+    "test-mutation-authority-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-authority inventory"
+      }
+    },
+    "test-mutation-authority-reachability": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-authority reachability"
+      }
+    },
+    "test-mutation-authority-type-origin": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test mutation-authority type-origin"
+      }
+    },
+    "test-rust-source-graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-source-direction graph"
+      }
+    },
+    "test-rust-source-attributes": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-source-direction attributes"
       }
     },
     "lint-rust-source-direction": {
@@ -1256,7 +1323,35 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint rust-source-direction"
-      }
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/*.rs",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/**/*.rs",
+        "{workspaceRoot}/🧰️framework/**/Cargo.toml",
+        "{workspaceRoot}/✏️s/**/*.rs",
+        "{workspaceRoot}/✏️s/**/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/**/*.rs",
+        "{workspaceRoot}/🌎️hub/**/Cargo.toml",
+        "{workspaceRoot}/♻️mit-bestand/**/*.rs",
+        "{workspaceRoot}/♻️mit-bestand/**/Cargo.toml",
+        "{workspaceRoot}/🏢️semio-tech/**/*.rs",
+        "{workspaceRoot}/🏢️semio-tech/**/Cargo.toml",
+        "{workspaceRoot}/👴️leutwiler/**/*.rs",
+        "{workspaceRoot}/👴️leutwiler/**/Cargo.toml",
+        "{workspaceRoot}/🎓️teaching/**/*.rs",
+        "{workspaceRoot}/🎓️teaching/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*"
+      ]
     },
     "test-native-dependencies": {
       "executor": "nx:run-commands",
@@ -1276,16 +1371,6 @@
         "command": "bun ./📜️script.ts test owned-script-routes"
       }
     },
-    "test-command-routing": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "dependsOn": [],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test command-routing"
-      }
-    },
     "lint-framework-module-product-direction": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1302,6 +1387,425 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️dependency-direction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+      ]
+    },
+    "lint-styling-pixels": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts lint styling-pixels"
+      }
+    },
+    "lint-styling-colors": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts lint styling-colors"
+      }
+    },
+    "test-native-source-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test native-source-ownership"
+      }
+    },
+    "test-ui-router-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test ui-router-ownership"
+      }
+    },
+    "ui-storybook-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts ui dev",
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*"
+      ]
+    },
+    "ui-storybook-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts ui build",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_OUTPUT_DIR": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/storybook-static"
+        }
+      },
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/storybook-static"
+      ],
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*"
+      ]
+    },
+    "check-ui-primitives": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts ui check-ui-primitives"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/**/*.tsx",
+        "{workspaceRoot}/**/*.jsx"
+      ],
+      "cache": false
+    },
+    "check-chrome-i18n": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts ui check-chrome-i18n"
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
+        "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/**/*",
+        "{workspaceRoot}/🏢️semio-tech/🎡️play/**/*"
+      ],
+      "cache": false
+    },
+    "test-fixture-law-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🧪️tests/🧱️fixture-ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test fixture-law-ownership"
+      }
+    },
+    "test-native-owner-command-policy": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test native-owner-command-policy"
+      },
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/.config/nextest.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      ],
+      "outputs": []
+    },
+    "test-dependency-policy-bootstrap": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test dependency-policy-bootstrap"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/nx.json",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{🧰️framework,✏️s,🌎️hub,♻️mit-bestand}/**/package.json"
+      ]
+    },
+    "test-rust-binding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-binding"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
+      ]
+    },
+    "test-rust-binding-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-binding native"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
+      ]
+    },
+    "test-nx-project-inference": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference"
+      }
+    },
+    "test-nx-project-inference-revision": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔁️graph-revision/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference revision"
+      }
+    },
+    "test-nx-project-inference-imports": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🔁️graph-revision/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": ".",
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test nx-project-inference imports"
+      }
+    },
+    "test-rust-source-participation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-source-direction participation"
+      }
+    },
+    "test-source-services": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test source-services"
+      }
+    },
+    "test-rust-source-roots": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-source-direction roots"
+      }
+    },
+    "test-rust-fixture-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/🧫️fixture-ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️component-unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️raster-residency/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️scene-raster-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-fixture-ownership"
+      }
+    },
+    "test-pool-use-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test pool-use-ownership"
+      }
+    },
+    "test-deferred-wake-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test deferred-wake-ownership"
+      }
+    },
+    "test-rust-family-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-family-ownership"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ]
+    },
+    "test-rust-family-ownership-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test rust-family-ownership native"
+      },
+      "outputs": [],
+      "dependsOn": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️binding-origin/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
       ]
     }
   }

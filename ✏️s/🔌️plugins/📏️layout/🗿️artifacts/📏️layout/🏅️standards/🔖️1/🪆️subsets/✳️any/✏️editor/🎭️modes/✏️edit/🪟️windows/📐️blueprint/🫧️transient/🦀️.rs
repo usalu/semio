@@ -54,12 +54,12 @@ impl protocol::MutationDiff<LayoutWindowTransient> for LayoutWindowTransient {
     fn absorb(&mut self, other: Self) { *self = other; }
 }
 
-impl store::retirement::RetireOwned for LayoutDropPreviewState {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![
-            store::retirement::RetireOwned::retirement(self.kind),
-            store::retirement::RetireOwned::retirement(self.x),
-            store::retirement::RetireOwned::retirement(self.y),
+impl semio_framework_value::retirement::RetireOwned for LayoutDropPreviewState {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![
+            semio_framework_value::retirement::RetireOwned::retirement(self.kind),
+            semio_framework_value::retirement::RetireOwned::retirement(self.x),
+            semio_framework_value::retirement::RetireOwned::retirement(self.y),
         ])
     }
 }
@@ -111,11 +111,11 @@ impl protocol::OpBinary for LayoutWindowTransientMutation {
     }
 }
 
-store::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input, transform_tool });
-impl store::retirement::RetireOwned for LayoutWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+semio_framework_value::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input, transform_tool });
+impl semio_framework_value::retirement::RetireOwned for LayoutWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::Snapshot { transient } => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(transient)]),
+            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
         }
     }
 }
@@ -140,8 +140,8 @@ macro_rules! transient_owner {
             type State = LayoutWindowTransient;
             type Mutation = LayoutWindowTransientMutation;
             fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-                let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-                let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+                let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+                let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
                 semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }

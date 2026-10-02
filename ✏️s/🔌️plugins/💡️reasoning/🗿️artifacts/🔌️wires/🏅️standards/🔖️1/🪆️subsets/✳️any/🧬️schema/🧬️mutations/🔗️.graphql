@@ -9,5 +9,7 @@
 # import SetNodeRoot from "./🚩set-node-root/🧬️schema/🔗️.graphql"
 # import ConnectNodes from "./🤝️connect-nodes/🧬️schema/🔗️.graphql"
 # import MoveNode from "./🧭move-node/🧬️schema/🔗️.graphql"
+# import MoveNodes from "./🚚️move-nodes/🧬️schema/🔗️.graphql"
+# import SetNodePositions from "./📍️set-node-positions/🧬️schema/🔗️.graphql"
 
-union WiresMutation = DisconnectNodes | EditNodeText | CreateNode | ChangeNodeKind | ResizeNode | ChangeNodeShape | DeleteNode | SetNodeRoot | ConnectNodes | MoveNode
+union WiresMutation = DisconnectNodes | EditNodeText | CreateNode | ChangeNodeKind | ResizeNode | ChangeNodeShape | DeleteNode | SetNodeRoot | ConnectNodes | MoveNode | MoveNodes | SetNodePositions

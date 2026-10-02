@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunText {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetRunText(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set run text", "Text des Textlaufs setzen")
     }
     fn target(&self) -> Vec<String> {
         std::iter::once(self.address.part_path.clone()).chain(self.address.node_path.iter().map(usize::to_string)).collect()

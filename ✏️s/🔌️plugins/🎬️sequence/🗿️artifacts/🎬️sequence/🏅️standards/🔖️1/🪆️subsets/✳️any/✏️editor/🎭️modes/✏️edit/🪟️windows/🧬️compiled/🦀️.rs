@@ -2,7 +2,13 @@
 
 use crate::editor::sequence::host_from_host_snapshot;
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TextEditorScene;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";

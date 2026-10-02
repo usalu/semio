@@ -1,7 +1,10 @@
 //! ✏️ Zip editor (2.0/🧱️base) — the `edit` mode: a single window over the archive tree.
 
 use crate::editor::zip::base::modes::edit::windows::main;
-use semio_framework_plugin::{create_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_stack_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const ZIP_ANY_EDIT_MODE_ID: &str = "edit";
 

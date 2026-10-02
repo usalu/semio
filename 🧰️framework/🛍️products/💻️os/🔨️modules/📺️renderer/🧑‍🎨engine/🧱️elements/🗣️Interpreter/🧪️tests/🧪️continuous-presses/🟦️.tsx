@@ -96,6 +96,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const orb = () => container.querySelector('[data-slot="orb"]') as Element;
       await act(async () => {
         fireEvent.pointerDown(orb(), { clientX: 10, clientY: 0 });
+      });
+      await act(async () => {
         fireEvent.pointerMove(window as never, { clientX: 0, clientY: 10 });
         fireEvent.pointerUp(window as never, { clientX: -10, clientY: 0 });
       });
@@ -106,6 +108,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(new Set(press.map(({ gesture }) => gesture)).size).toBe(1);
       await act(async () => {
         fireEvent.pointerDown(orb(), { clientX: 10, clientY: 0 });
+      });
+      await act(async () => {
         fireEvent.pointerMove(window as never, { clientX: 0, clientY: -10 });
         await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
         fireEvent.pointerCancel(window as never);

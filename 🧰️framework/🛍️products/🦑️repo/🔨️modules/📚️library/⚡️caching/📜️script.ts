@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { wasmBuildArguments } from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
@@ -15,12 +16,12 @@ import { DoctorScript } from "./🩺️environment/📋️inspection/🟦️.ts"
 import { CacheVerifyScript } from "./🔁️verification/📋️orchestration/🟦️.ts";
 import { CachePruneScript, CacheReportScript } from "./🧹️pruning/📋️orchestration/🟦️.ts";
 import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.ts";
-import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
-import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
-import { acquireQueuedResourceLease } from "./🔒️leases/🟦️.ts";
+import { stageRepositoryArtifacts } from "./📦️artifacts/🟦️.ts";
+import { acquireQueuedResourceLease } from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "./🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
@@ -47,7 +48,7 @@ const createCachePolicyTestsInstance = createCachePolicyTests(
     rmSync,
     SCRIPT_ROOT,
     spawn,
-    stageArtifacts,
+    stageRepositoryArtifacts,
     utimesSync,
     wasmBindgenVersion,
     wasmBuildArguments,
@@ -70,7 +71,7 @@ class TestScript extends BundleScript {
       if (args.length !== 1) throw Error("Expected test cargo-build-lease");
       const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
       if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
-      await (await import("./📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts")).proveCargoBuildLeasesV1(output);
+      await (await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts")).proveCargoBuildLeasesV1(output);
       return;
     }
     if (args[0] === "graph-revision") {
@@ -84,6 +85,11 @@ class TestScript extends BundleScript {
     if (args[0] === "artifact-source") {
       if (args.length !== 1) throw new Error("Expected test artifact-source");
       runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "🧪️tests", "🗿️artifact-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (args[0] === "native-input-vocabulary") {
+      if (args.length !== 1) throw Error("Expected test native-input-vocabulary");
+      runCmd(process.execPath, ["test", join(SCRIPT_ROOT, "../🧪️tests/⚡️production-cache-input-boundary/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15000 });
       return;
     }
     if (args[0] === "cache-command-source") {

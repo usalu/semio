@@ -5,7 +5,7 @@ import { join, dirname, relative } from "node:path";
 import { spawn } from "node:child_process";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { stageArtifacts } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 export type TectonicDistribution = { readonly platform: string; readonly architecture: string; readonly target: string; readonly archive: string; readonly sha256: string; readonly bytes: number };
 const manifest: { version: string; release: string; platforms: TectonicDistribution[] } = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
@@ -81,7 +81,7 @@ export async function prepareTectonic(workspace = getWorkspaceRoot(), signal?: A
     writeFileSync(receipt, JSON.stringify({ version: manifest.version, target: distribution.target, archiveSha256: distribution.sha256, files: Object.fromEntries([...files].map(([name, file]) => [name, digest(file)])) }) + "\n");
     files.set(".toolchain.json", receipt);
     signal?.throwIfAborted();
-    if (!existsSync(directory)) await stageArtifacts(directory, owner, files);
+    if (!existsSync(directory)) await stageRepositoryArtifacts(directory, owner, files);
     console.log(`[print-toolchain] Ready: ${distribution.target}`);
     return preparedTectonic(workspace);
   } finally { rmSync(temporary, { recursive: true, force: true }); }

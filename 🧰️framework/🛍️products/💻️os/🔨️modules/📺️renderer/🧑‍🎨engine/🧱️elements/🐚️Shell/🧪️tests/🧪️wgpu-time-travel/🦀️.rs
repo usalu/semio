@@ -6,11 +6,14 @@
 //! session and locale — the band's lines, its controls with the refusal that disables one, the dispatch each sends,
 //! the chords and the window indicator. The rest pins the wgpu behaviour around it: the keyboard (remappable chords,
 //! Escape never discards), the reveal of the History tab, the indicator, the history-edit refusals, the finalize
-//! prompt operated by keyboard alone, and every staged editor kind in the Actions form and in a chrome dialog.
+//! prompt operated by keyboard alone, every staged editor kind in the Actions form and in a chrome dialog, and the
+//! history body the guest's REAL producer builds (paged transaction rows, Edit refused with its reason).
 
 use super::*;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, DialogDefinition, DomainSelection};
+use semio_framework_plugin::app::time_travel::history_row_window_path;
+use semio_framework_plugin::app::{ui_history_panel, CommandView, HistoryMutationPage, HistoryMutationPages, HistoryView, MutationView, TimeTravelPanel};
 
 //#region 🧰️Harness
 fn corpus() -> Value {
@@ -71,11 +74,11 @@ fn session_shell() -> ShellState {
         body_key: Some("framework.body.history".into()),
         children: vec![],
     });
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
     shell.dock.active_window_id = Some("main".into());
     shell.active_window_id = Some("main".into());
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell.screen_w = 1280.0;
     shell.screen_h = 720.0;
     shell
@@ -119,6 +122,40 @@ fn record_action(_instance_id: u32, action_json: &str, _view_state: &ViewModel) 
 fn dispatched() -> Vec<String> {
     DISPATCHED.with(|log| log.borrow().clone())
 }
+
+/// 🖌️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
+/// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
+fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
+    let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    let mut world3d_states = std::mem::take(&mut shell.world3d_states);
+    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    crate::interpreter::begin_accessibility_visible_documents();
+    let mut cursor = UiDocumentFrameCursor::default();
+    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+        render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts)
+    });
+    assert!(painted, "{surface} painted within its opportunity ceiling");
+    shell.register_retained_body_hits(surface, body, &mut input);
+    shell.world3d_states = world3d_states;
+    shell.publish_retained_hit_registry(&mut input);
+    input
+}
+
+/// 🧹️ Closes a law's retained surface and retires every document it published there.
+fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
+    if crate::interpreter::request_ui_document_close(surface) {
+        while crate::interpreter::ui_document_close_pending_for(surface) {
+            assert!(crate::interpreter::close_ui_document_one(), "each admitted close opportunity advances");
+        }
+    }
+    for mut document in documents {
+        while !document.close_step() {}
+    }
+}
 //#endregion 🧰️Harness
 
 //#region ⏪️BandLaw
@@ -156,7 +193,7 @@ fn the_shared_band_corpus_holds_on_wgpu() {
 /// runs, politely, and busy while the runtime replays or finalizes; no session announces nothing.
 #[test]
 fn the_band_announces_its_message_politely() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(shell.time_travel_status_accessibility_node(1).is_none(), "no session, nothing announced");
     for (name, role, busy) in [("editing a mutation", "status", false), ("a running replay", "progressbar", true), ("an error downstream", "status", false), ("finalizing offers", "status", true)] {
         let status = session(name);
@@ -164,7 +201,7 @@ fn the_band_announces_its_message_politely() {
         shell.observe_history_time_travel(Some(&status));
         let node = shell.time_travel_status_accessibility_node(1).expect("an open session announces itself");
         assert_eq!((node.role.as_str(), node.busy), (role, busy), "{name}");
-        assert_eq!(node.label, Some(time_travel_band_lines(&status, Terminology::default(), Locale::De).message()), "{name}");
+        assert_eq!(node.label, Some(time_travel_band_lines(&status, Terminology::Native, Locale::De).message()), "{name}");
         assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite));
         if role == "progressbar" {
             assert_eq!((node.value_now, node.value_max), (Some(3.0), Some(8.0)));
@@ -172,7 +209,7 @@ fn the_band_announces_its_message_politely() {
     }
     shell.observe_history_time_travel(None);
     assert!(shell.history_time_travel().is_none(), "an absent status closes the session");
-    assert_eq!(time_travel_band_lines(&session("an error downstream"), Terminology::default(), Locale::En).message(), "Reviewing the edited history · Errors must be fixed or withdrawn before finalizing · Worst outcome: Error · Accepted changes: 2");
+    assert_eq!(time_travel_band_lines(&session("an error downstream"), Terminology::Native, Locale::En).message(), "Reviewing the edited history · Errors must be fixed or withdrawn before finalizing · Worst outcome: Error · Accepted changes: 2");
 }
 
 /// ⚖️ LAW: the captions are React's `ui.timeTravel.<control>` labels in both locales, and every control dispatches its
@@ -300,7 +337,7 @@ fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
     let inside = |outer: Rect, inner: Rect| inner.x >= outer.x - 0.001 && inner.y >= outer.y - 0.001 && inner.x + inner.w <= outer.x + outer.w + 0.001 && inner.y + inner.h <= outer.y + outer.h + 0.001;
     let apart = |a: Rect, b: Rect| a.x + a.w <= b.x + 0.001 || b.x + b.w <= a.x + 0.001 || a.y + a.h <= b.y + 0.001 || b.y + b.h <= a.y + 0.001;
     for (status, width) in [(&reviewing, 375.0_f32), (&replaying, 375.0), (&reviewing, 320.0)] {
-        let message = time_travel_band_lines(status, Terminology::default(), Locale::De).message();
+        let message = time_travel_band_lines(status, Terminology::Native, Locale::De).message();
         let compact = time_travel_band_plan(status, message.clone(), buttons(status), width, 812.0, &theme);
         assert!(compact.band.x >= 0.0 && compact.band.w <= width * 0.9 + 0.001 && compact.band.x + compact.band.w <= width, "{width}: within 90 % of the viewport");
         assert!((compact.band.y + compact.band.h - (812.0 - theme.footer_height - TIME_TRAVEL_BAND_GAP)).abs() < 0.001, "{width}: still just above the footer");
@@ -359,39 +396,39 @@ fn the_band_registers_each_control_with_its_dispatch_name_and_state() {
 //#endregion 📐️Band
 
 //#region 🎯️Focus
-fn focus_corpus() -> Value {
-    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-focus/🔣️.json")).expect("the shared time-travel focus corpus parses")
-}
-
 fn focus_name(focus: Option<TimeTravelFocus>) -> Value {
     match focus {
         None => Value::Null,
         Some(TimeTravelFocus::Editor) => "editor".into(),
-        Some(TimeTravelFocus::NextProblem) => "nextProblem".into(),
+        Some(TimeTravelFocus::Band) => "band".into(),
         Some(TimeTravelFocus::Dialog) => "dialog".into(),
-        Some(TimeTravelFocus::Control(verb)) => verb_name(verb).into(),
     }
 }
 
-/// ⚖️ LAW (shared with React): for every edge of the focus corpus — another session, another stage, another edited
-/// mutation, and the edges that must leave focus alone (a draft edit, replay progress, the commit, a closed session) —
-/// the wgpu shell names exactly the corpus's focus target, and resolves the editor and Next problem through the corpus's
-/// keys, settle time and band fallbacks.
+/// ⚖️ LAW (shared with React's `timeTravelTransitionV1`): for every row of the band corpus's `transitions` — a new
+/// session, another stage, another edited mutation, and the changes that must move nothing (a progress step, a draft
+/// edit, the commit, the close) — the wgpu shell answers exactly the corpus's `reveal` and `focus`; and observing the
+/// change reveals the History panel exactly when the corpus says so.
 #[test]
-fn the_shared_focus_corpus_holds_on_wgpu() {
-    let corpus = focus_corpus();
-    assert_eq!(corpus["settleMs"].as_f64(), Some(TIME_TRAVEL_FOCUS_SETTLE_MS));
-    assert_eq!((corpus["keys"]["editorInputs"].as_str(), corpus["keys"]["editorAccept"].as_str(), corpus["keys"]["nextProblem"].as_str()), (Some(TIME_TRAVEL_EDITOR_INPUTS_KEY), Some(TIME_TRAVEL_EDITOR_ACCEPT_KEY), Some(TIME_TRAVEL_NEXT_PROBLEM_KEY)));
-    for (focus, key) in [(TimeTravelFocus::Editor, "editor"), (TimeTravelFocus::NextProblem, "nextProblem")] {
-        assert_eq!(focus_name(focus.fallback().map(TimeTravelFocus::Control)), corpus["fallbacks"][key], "{key}");
-    }
-    let cases = corpus["cases"].as_array().expect("cases");
-    assert!(cases.len() >= 15, "every stage edge and every edge that keeps focus");
-    for case in cases {
-        let name = case["name"].as_str().expect("name");
-        let status = |key: &str| (!case[key].is_null()).then(|| serde_json::from_value::<HistoryTimeTravel>(case[key].clone()).unwrap_or_else(|error| panic!("{name}: a kernel session: {error}")));
-        let (previous, next) = (status("previous"), status("next"));
-        assert_eq!(focus_name(time_travel_focus_target(previous.as_ref(), next.as_ref())), case["focus"], "{name}");
+fn the_shared_band_transitions_hold_on_wgpu() {
+    let corpus = corpus();
+    let transitions = corpus["transitions"].as_array().expect("the band corpus's transitions");
+    assert!(transitions.len() >= 13, "every edge and every change that moves nothing");
+    for row in transitions {
+        let name = row["name"].as_str().expect("name");
+        let status = |key: &str| (!row[key].is_null()).then(|| serde_json::from_value::<HistoryTimeTravel>(row[key].clone()).unwrap_or_else(|error| panic!("{name}: a kernel session: {error}")));
+        let (from, to) = (status("from"), status("to"));
+        let transition = time_travel_transition(from.as_ref(), to.as_ref());
+        assert_eq!((Value::Bool(transition.reveal), focus_name(transition.focus)), (row["reveal"].clone(), row["focus"].clone()), "{name}");
+        let mut shell = session_shell();
+        shell.sync_dock_tabs();
+        shell.observe_history_time_travel(from.as_ref());
+        let anchor = shell.dock_tabs.locate(FRAMEWORK_PANEL_TAB_HISTORY_ID).map(|(anchor, _)| anchor).expect("the History tab is docked");
+        shell.anchor_state_mut(anchor).visible = false;
+        shell.time_travel_focus = None;
+        shell.observe_history_time_travel(to.as_ref());
+        assert_eq!(shell.anchor_open(anchor), transition.reveal, "{name}: the History panel opens exactly on a reveal");
+        assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), transition.focus, "{name}: the focus waits for the screen");
     }
 }
 
@@ -404,9 +441,9 @@ fn projected(key: &str, role: &str, depth: usize, focusable: bool) -> ui_contrac
     node
 }
 
-/// ⚖️ LAW: in a history body's projection the editor target is the first enabled control under the inputs section — never
-/// its row, never a control outside the section — matched bare or surface-qualified; with no usable input it is the
-/// editor's Accept button; Next problem is its own button; a band control or the prompt is no body node.
+/// ⚖️ LAW (React's `timeTravelFocusElementV1("editor")`): in a history body's projection the editor target is the first
+/// enabled control under the inputs section — never its row, never a control outside the section — matched bare or
+/// surface-qualified; with no usable input it is the editor's Accept button; no editor on screen is no target.
 #[test]
 fn the_editor_target_is_the_first_enabled_input_control_else_accept() {
     let surface = "framework.panel.history";
@@ -414,26 +451,24 @@ fn the_editor_target_is_the_first_enabled_input_control_else_accept() {
         projected("#0", "tree", 0, false),
         projected(&format!("{surface}/framework.history.editor"), "group", 1, false),
         projected(&format!("{surface}/framework.history.editor.accept.row"), "treeitem", 2, true),
-        projected(&format!("{surface}/framework.history.editor.accept"), "button", 3, true),
+        projected(&format!("{surface}/{TIME_TRAVEL_EDITOR_ACCEPT_KEY}"), "button", 3, true),
         projected(&format!("{surface}/{TIME_TRAVEL_EDITOR_INPUTS_KEY}"), "group", 1, false),
         projected(&format!("{surface}/framework.history.editor.input.dx.row"), "treeitem", 2, true),
         projected(&format!("{surface}/framework.history.editor.input.dx"), "spinbutton", 3, true),
         projected(&format!("{surface}/framework.history.editor.input.targets.useSelection"), "button", 3, true),
-        projected(&format!("{surface}/{TIME_TRAVEL_NEXT_PROBLEM_KEY}"), "button", 2, true),
+        projected(&format!("{surface}/framework.history.timeTravel.nextProblem"), "button", 1, true),
     ];
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(6), "the first input control, past its row");
+    assert_eq!(time_travel_editor_focus_node(&nodes), Some(6), "the first input control, past its row");
     nodes[6].disabled = true;
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(7), "a disabled control is passed over");
+    assert_eq!(time_travel_editor_focus_node(&nodes), Some(7), "a disabled control is passed over");
     nodes[7].disabled = true;
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(3), "no usable input: Accept");
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &nodes), Some(8), "the section ends at the next shallower node");
+    assert_eq!(time_travel_editor_focus_node(&nodes), Some(3), "no usable input: Accept, never a control after the section");
     let bare: Vec<_> = nodes.iter().cloned().map(|mut node| {
         node.key = node.key.rsplit_once('/').map_or(node.key.clone(), |(_, key)| key.to_string());
         node
     }).collect();
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &bare), Some(8), "a bare key matches too");
-    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &nodes[..8]), None, "an absent button is no target");
-    assert_eq!((time_travel_focus_node(TimeTravelFocus::Dialog, &nodes), time_travel_focus_node(TimeTravelFocus::Control(TimeTravelVerb::Exit), &nodes)), (None, None));
+    assert_eq!(time_travel_editor_focus_node(&bare), Some(3), "bare keys match too");
+    assert_eq!(time_travel_editor_focus_node(&nodes[..1]), None, "no editor, no target");
 }
 
 /// 🖌️ Publishes the band's hits the way a presented frame does and resolves the waiting focus against them.
@@ -451,46 +486,51 @@ fn focused_chrome(shell: &ShellState, input: &InputState<ActionDescriptor>) -> V
     shell.chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
 }
 
-/// ⚖️ LAW: each edge moves keyboard focus once its target is on screen — Cancel while a replay runs, Finalize on a ready
-/// review, the prompt while choosing — and the chrome projection the ARIA mirror reads marks exactly that control
-/// focused; replay progress leaves it alone; an editor that never shows falls back to the band's Accept after the settle
-/// time; a closed session drops a waiting focus.
+/// ⚖️ LAW: a replay or a review moves keyboard focus onto the band's live status node — the node the ARIA mirror then
+/// focuses, never by Tab — and replay progress leaves it alone; the finalize prompt takes focus once it is open; an
+/// editor that never reaches the screen is given up after the settle time, as React gives up after its frames; a person
+/// typing in a field elsewhere keeps their focus; a closed session drops a waiting focus.
 #[test]
-fn each_session_edge_focuses_its_band_control_or_the_prompt_and_a_missing_editor_falls_back_to_accept() {
+fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewhere_keeps_it() {
     let mut shell = session_shell();
     shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
     shell.observe_history_time_travel(Some(&session("editing a mutation")));
     assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor));
-    let input = present_band(&mut shell);
-    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
-    assert!(focused_chrome(&shell, &input).is_empty());
-    shell.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
     present_band(&mut shell);
-    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Control(TimeTravelVerb::Accept)), "past the settle time the band's Accept stands in");
+    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
+    shell.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
     let input = present_band(&mut shell);
-    assert_eq!((shell.time_travel_focus, focused_chrome(&shell, &input)), (None, vec!["ui.timeTravel.accept".to_string()]));
+    assert_eq!((shell.time_travel_focus, focused_chrome(&shell, &input)), (None, Vec::<String>::new()), "past the settle time the move is given up");
 
     let mut replaying = session("a running replay");
     shell.observe_history_time_travel(Some(&replaying));
     let input = present_band(&mut shell);
-    assert_eq!(focused_chrome(&shell, &input), ["shell.time-travel.cancel-replay"]);
+    assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID]);
+    let band = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID).expect("the band's live node");
+    assert!(band.focusable && !band.tabbable && band.focused, "focused programmatically, never a Tab stop");
+    shell.accessibility_focused_control_id = Some("ui.timeTravel.exit".into());
     replaying.done = Some(4);
     shell.observe_history_time_travel(Some(&replaying));
     assert_eq!(shell.time_travel_focus, None, "progress inside the replay moves nothing");
 
-    shell.observe_history_time_travel(Some(&session("a ready review")));
+    shell.observe_history_time_travel(Some(&session("an error downstream")));
     let input = present_band(&mut shell);
-    assert_eq!(focused_chrome(&shell, &input), ["shell.time-travel.finalize"]);
+    assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID], "the review lands on the band that names what blocks");
 
-    let choosing = session("the finalize prompt can go back");
-    shell.observe_history_time_travel(Some(&choosing));
+    shell.observe_history_time_travel(Some(&session("the finalize prompt can go back")));
     assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Dialog));
     present_band(&mut shell);
     assert!(shell.time_travel_focus.is_some(), "the prompt is not open yet");
     open_finalize_prompt(&mut shell, "Alternative");
     let input = present_band(&mut shell);
-    assert_eq!(shell.time_travel_focus, None, "the open prompt holds focus");
-    assert!(input.hits().is_empty() && shell.chrome_build.dialog_open(), "under the prompt the band registers nothing; the prompt's own first stop is focused (its projection law lives with the prompt)");
+    assert!(shell.time_travel_focus.is_none() && input.hits().is_empty() && shell.chrome_build.dialog_open(), "the open prompt holds focus; under it the band registers nothing");
+
+    let mut typing = session_shell();
+    typing.observe_history_time_travel(Some(&session("a running replay")));
+    let mut input = InputState::<ActionDescriptor>::default();
+    input.focus_input_owned("ui.search.input".to_string(), "dra".to_string());
+    typing.resolve_time_travel_focus(&mut input);
+    assert_eq!((typing.time_travel_focus, typing.accessibility_focused_control_id.clone()), (None, None), "a person typing elsewhere keeps their focus");
 
     shell.observe_history_time_travel(Some(&session("a ready review")));
     shell.observe_history_time_travel(None);
@@ -508,32 +548,16 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
     let records = vec![
         tree_pointer_record(1, "#0", component(serde_json::json!({ "type": "tree" })), &[2, 4], None),
         tree_pointer_record(2, "framework.history.editor", component(serde_json::json!({ "type": "treeSection", "label": "Drag selection", "defaultOpen": true })), &[3], None),
-        tree_pointer_record(3, "framework.history.editor.accept.row", component(serde_json::json!({ "type": "treeItem", "label": "Accept" })), &[5], None),
-        tree_pointer_record(5, TIME_TRAVEL_EDITOR_ACCEPT_KEY, component(serde_json::json!({ "type": "button", "label": "Accept" })), &[], Some("historyEditAccept")),
+        tree_pointer_record(3, "framework.history.editor.accept.row", component(serde_json::json!({ "type": "treeItem", "label": "Accept", "icon": "check" })), &[5], None),
+        tree_pointer_record(5, TIME_TRAVEL_EDITOR_ACCEPT_KEY, component(serde_json::json!({ "type": "button", "label": "Accept", "icon": "check" })), &[], Some("historyEditAccept")),
         tree_pointer_record(4, TIME_TRAVEL_EDITOR_INPUTS_KEY, component(serde_json::json!({ "type": "treeSection", "label": "Inputs", "defaultOpen": true })), &[6], None),
-        tree_pointer_record(6, "framework.history.editor.input.dx.row", component(serde_json::json!({ "type": "treeItem", "label": "Offset x" })), &[7], None),
+        tree_pointer_record(6, "framework.history.editor.input.dx.row", component(serde_json::json!({ "type": "treeItem", "label": "Offset x", "icon": "move" })), &[7], None),
         tree_pointer_record(7, "framework.history.editor.input.dx", component(serde_json::json!({ "type": "numberStepper", "value": 2.0, "step": 1.0, "uniform": false })), &[], None),
     ];
     let mut shell = session_shell();
     let document = shell.publish_surface_records(SURFACE, records).expect("the history body publishes");
     shell.observe_history_time_travel(Some(&session("editing a mutation")));
-    let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
-    let mut input = InputState::<ActionDescriptor>::default();
-    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
-    let mut world3d_states = std::mem::take(&mut shell.world3d_states);
-    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    let body = Rect::new(0.0, 0.0, 420.0, 640.0);
-    crate::interpreter::begin_accessibility_visible_documents();
-    let mut cursor = UiDocumentFrameCursor::default();
-    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: SURFACE };
-        render_ui_document_step(&mut cursor, &document, body, &mut ctx, SURFACE, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts)
-    });
-    assert!(painted, "the history body painted within its opportunity ceiling");
-    shell.register_retained_body_hits(SURFACE, body, &mut input);
-    shell.world3d_states = world3d_states;
-    shell.publish_retained_hit_registry(&mut input);
+    let _ = paint_retained_body(&mut shell, SURFACE, &document, Rect::new(0.0, 0.0, 420.0, 640.0));
     assert_eq!(shell.time_travel_focus, None, "the editor reached the screen and took the focus");
     let nodes = crate::interpreter::published_accessibility_nodes_for_test(SURFACE);
     let focused: Vec<_> = nodes.iter().filter(|node| node.focused).map(|node| (node.key.clone(), node.role.clone())).collect();
@@ -670,12 +694,12 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
                 assert_eq!((message.as_str(), notice_severity, notice_code), (text, severity, Some(code)), "{fault}");
             }
             let status = HistoryTimeTravel { fault: Some(code.to_string()), ..session("editing a mutation") };
-            assert_eq!(time_travel_band_lines(&status, Terminology::default(), locale).fault.as_deref(), Some(text), "{code}: the band's fault line");
+            assert_eq!(time_travel_band_lines(&status, Terminology::Native, locale).fault.as_deref(), Some(text), "{code}: the band's fault line");
         }
     }
     assert!(history_refusal_notice("app.command.rejected: conflicting edit", Locale::En).is_none());
     assert!(history_refusal_of_fault("app.command.rejected: the history.transition-refusedness of it", Locale::En).is_none(), "a code inside a word is no code");
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.locale_id = "de".into();
     shell.note_dispatch_fault("history.unknown-target: edit-9#0");
     let notice = shell.transient_notice().expect("a banner is showing");
@@ -830,7 +854,7 @@ fn the_shared_peer_history_edit_corpus_holds_on_wgpu() {
         let peers: Vec<PresencePeer> = case["peers"].as_array().expect("peers").iter().map(|peer| corpus_peer(peer, "s")).collect();
         for (locale, tongue) in [(Locale::En, "en"), (Locale::De, "de")] {
             let editing = peers.iter().filter_map(|peer| Some((peer.actor.as_str(), peer.label.as_deref().unwrap_or(peer.actor.as_str()), peer.history_edit.as_ref()?.mutation_id.as_str())));
-            let presence = time_travel_peer_presence(editing, &entries, Terminology::default(), locale);
+            let presence = time_travel_peer_presence(editing, &entries, Terminology::Native, locale);
             let expect = &case["expect"][tongue];
             let chips: Vec<(String, String, String)> = expect["chips"].as_array().expect("chips").iter().map(|chip| (chip["actor"].as_str().expect("actor").into(), chip["text"].as_str().expect("text").into(), chip["badge"].as_str().expect("badge").into())).collect();
             let notes: Vec<(String, String)> = expect["notes"].as_array().expect("notes").iter().map(|note| (note["key"].as_str().expect("key").into(), note["text"].as_str().expect("text").into())).collect();
@@ -962,7 +986,7 @@ fn args_of(descriptor: &ActionDescriptor) -> Value {
 #[test]
 fn the_actions_form_renders_every_editor_kind() {
     let defs = editor_defs();
-    let row = |index: usize, value: Option<Value>| staged_action_arg_row("main", "move", &defs[index], value.as_ref(), &selection(), Terminology::default(), Locale::En);
+    let row = |index: usize, value: Option<Value>| staged_action_arg_row("main", "move", &defs[index], value.as_ref(), &selection(), Terminology::Native, Locale::En);
     let Some(UiControlNode::NumberStepper(stepper)) = row(0, Some(serde_json::json!(3.0))).control else { panic!("a stepper") };
     assert_eq!((stepper.value, stepper.step, stepper.min, stepper.max, stepper.on_absolute.action.as_str(), stepper.on_delta.action.is_empty()), (3.0, 1.0, Some(0.0), Some(10.0), "stageActionArg", true));
     let Some(UiControlNode::Slider(slider)) = row(1, None).control else { panic!("a slider") };
@@ -997,7 +1021,7 @@ fn the_actions_form_renders_every_editor_kind() {
         })
         .collect();
     assert_eq!(buttons, [("targets.remove.a".to_string(), "Remove a".to_string(), serde_json::json!([]), false), ("targets.useSelection".to_string(), "Use current selection".to_string(), serde_json::json!(["n1", "n2"]), false)]);
-    let empty = staged_action_arg_row("main", "move", &defs[4], None, &HashMap::new(), Terminology::default(), Locale::De).items.expect("rows");
+    let empty = staged_action_arg_row("main", "move", &defs[4], None, &HashMap::new(), Terminology::Native, Locale::De).items.expect("rows");
     assert_eq!(empty.iter().map(|item| item.label.as_str().to_string()).collect::<Vec<_>>(), ["Nichts ausgewählt", "Aktuelle Auswahl verwenden"]);
     assert!(matches!(&empty[1].control, Some(UiControlNode::Button(button)) if button.presence.state == ui_wgpu::wgpu::component::ui::UiState::Disabled), "nothing selected, nothing to use");
 }
@@ -1018,6 +1042,95 @@ fn staging_splices_axes_and_reads_the_selection_domain() {
     semio_framework_async::block_on(shell.dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 1, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 4.0 })))).expect("stages");
     semio_framework_async::block_on(shell.dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 2, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 5.0 })))).expect("stages");
     assert_eq!(shell.staged_map_for("main", "move").get("offset"), Some(&serde_json::json!([0.0, 4.0, 5.0])), "the second axis keeps the first");
+}
+
+/// 🧾️ One row of the shared `🛂️manifest/🧫️fixtures/🧫️number-facets` corpus as the facets a staged row carries (absent = none
+/// or the default).
+fn corpus_number_facets(value: &Value) -> Option<semio_framework::ActionArgNumberFacets> {
+    let facets = value.as_object()?;
+    let number = |key: &str| facets.get(key).and_then(Value::as_f64);
+    let text = |key: &str| facets.get(key).and_then(Value::as_str).map(ToOwned::to_owned);
+    Some(semio_framework::ActionArgNumberFacets {
+        min: number("min"),
+        max: number("max"),
+        step: number("step"),
+        appearance: serde_json::from_value(facets["appearance"].clone()).expect("corpus appearance"),
+        scale: serde_json::from_value(facets["scale"].clone()).expect("corpus scale"),
+        unit: text("unit"),
+        display_unit: text("displayUnit"),
+        display_factor: number("displayFactor"),
+        precision: facets.get("precision").and_then(Value::as_u64).map(|precision| u16::try_from(precision).expect("corpus precision")),
+        snaps: facets["snaps"].as_array().expect("corpus snaps").iter().map(|snap| snap.as_f64().expect("corpus snap")).collect(),
+        limits: serde_json::from_value(facets["limits"].clone()).expect("corpus limits"),
+    })
+}
+
+/// ⚖️ LAW: every staged number row carries exactly the facets the shared corpus derives (`ActionArgDef::number_facets`, the
+/// mapping the time-travel editor shares) — a slider's or dial's look, axis, travel, step, units, display factor,
+/// precision, detents and hard limits with their localized refusals; a stepper's, a number field's and every vector axis'
+/// key range, step, precision, detents, shown unit, factor and limits — a staged value beyond a soft travel stays as
+/// staged, and an input that is no number carries no limits anywhere.
+#[test]
+fn every_staged_number_row_carries_the_shared_corpus_facets() {
+    let corpus: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🧫️number-facets/🔣️.json")).expect("the shared number-facets corpus parses");
+    let cases = corpus["cases"].as_array().expect("cases");
+    let mut kinds = std::collections::BTreeSet::new();
+    for case in cases {
+        let name = case["name"].as_str().expect("case name");
+        let def: ActionArgDef = serde_json::from_value(case["def"].clone()).unwrap_or_else(|error| panic!("{name}: the descriptor decodes: {error}"));
+        let locale = if case["locale"] == "de" { Locale::De } else { Locale::En };
+        let row = staged_action_arg_row("main", "act", &def, None, &HashMap::new(), Terminology::Native, locale);
+        let Some(expected) = corpus_number_facets(&case["facets"]) else {
+            kinds.insert("none");
+            let controls = row.control.iter().chain(row.items.iter().flatten().filter_map(|item| item.control.as_ref()));
+            assert!(controls.into_iter().all(|control| match control {
+                UiControlNode::Slider(slider) => slider.limits.is_none(),
+                UiControlNode::NumberStepper(stepper) => stepper.limits.is_none(),
+                UiControlNode::Input(field) => field.limits.is_none() && field.display_factor.is_none(),
+                _ => true,
+            }), "{name}: no number facets");
+            continue;
+        };
+        let input = |field: &UiInputNode| (field.min, field.max, field.step, field.precision, field.snaps.clone(), field.display_factor, field.limits.clone());
+        let expected_input = (expected.min, expected.max, expected.step, expected.precision, expected.snaps.clone(), expected.display_factor, Some(expected.limits.clone()));
+        match (def.control(), &row.control) {
+            (control @ (semio_framework::ActionArgControl::Slider { .. } | semio_framework::ActionArgControl::Dial { .. }), Some(UiControlNode::Slider(slider))) => {
+                kinds.insert(if matches!(control, semio_framework::ActionArgControl::Dial { .. }) { "dial" } else { "slider" });
+                assert_eq!(
+                    (slider.min, slider.max, slider.step, slider.appearance, slider.scale, slider.unit.clone(), slider.display_unit.clone(), slider.display_factor, slider.precision, slider.snaps.clone(), slider.limits.clone()),
+                    (expected.min.unwrap_or(0.0), expected.max.unwrap_or(0.0), expected.step.unwrap_or(1.0), expected.appearance, expected.scale, expected.unit.clone(), expected.display_unit.clone(), expected.display_factor, expected.precision, expected.snaps.clone(), Some(expected.limits.clone())),
+                    "{name}"
+                );
+            }
+            (semio_framework::ActionArgControl::Stepper { .. }, Some(UiControlNode::NumberStepper(stepper))) => {
+                kinds.insert("stepper");
+                assert_eq!(
+                    (stepper.min, stepper.max, stepper.step, stepper.precision, stepper.snaps.clone(), stepper.unit.clone(), stepper.display_factor, stepper.limits.clone()),
+                    (expected.min, expected.max, expected.step.unwrap_or(1.0), expected.precision, expected.snaps.clone(), expected.shown_unit().map(ToOwned::to_owned), expected.display_factor, Some(expected.limits.clone())),
+                    "{name}"
+                );
+            }
+            (semio_framework::ActionArgControl::Number { .. }, Some(UiControlNode::Input(field))) => {
+                kinds.insert("number");
+                assert_eq!(input(field), expected_input, "{name}");
+            }
+            (semio_framework::ActionArgControl::Vector { dims, .. }, None) => {
+                kinds.insert("vector");
+                let axes = row.items.as_ref().expect("one row per axis");
+                assert_eq!(axes.len(), dims as usize, "{name}");
+                for axis in axes {
+                    let Some(UiControlNode::Input(field)) = &axis.control else { panic!("{name}: an axis is a number field") };
+                    assert_eq!(input(field), expected_input, "{name}: {}", axis.id);
+                }
+            }
+            (control, node) => panic!("{name}: {control:?} rendered as {node:?}"),
+        }
+    }
+    assert!(["dial", "slider", "stepper", "number", "vector", "none"].iter().all(|kind| kinds.contains(kind)), "the corpus reaches every number control and a non-number: {kinds:?}");
+    let log = cases.iter().find(|case| case["name"] == "log-slider-soft-travel-inside-an-exclusive-floor").expect("the log slider case");
+    let def: ActionArgDef = serde_json::from_value(log["def"].clone()).expect("the log slider decodes");
+    let Some(UiControlNode::Slider(slider)) = staged_action_arg_row("main", "act", &def, Some(&serde_json::json!(20.0)), &HashMap::new(), Terminology::Native, Locale::En).control else { panic!("a slider") };
+    assert_eq!((slider.value, slider.max, slider.limits.as_ref().is_some_and(|limits| limits.crossed(20.0).is_none())), (20.0, 10.0, true), "a value the limits admit beyond the soft travel stays as staged");
 }
 
 fn kinds_dialog() -> DialogDefinition {
@@ -1045,7 +1158,7 @@ fn staged(shell: &ShellState, id: &str) -> Option<Value> {
 fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
     let mut shell = session_shell();
     shell.interaction_selection = selection();
-    let request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::default(), Locale::En);
+    let request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::Native, Locale::En);
     assert_eq!(request.fields.iter().map(|field| field.label.as_str()).collect::<Vec<_>>(), ["Count", "Angle", "Mode", "Offset x", "Offset y", "Offset z", "Targets"]);
     shell.chrome_build.open_dialog(request);
 
@@ -1097,7 +1210,7 @@ fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
 fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
     let mut shell = session_shell();
     shell.interaction_selection = selection();
-    let mut request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::default(), Locale::De);
+    let mut request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::Native, Locale::De);
     request.use_selection(6, &selection());
     let theme = Theme::light();
     let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme);
@@ -1137,3 +1250,162 @@ fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
     assert!(shell.chrome_build.dialog_open(), "editing a field never closes the dialog");
 }
 //#endregion 🎛️StagedEditors
+
+//#region 📚️HistoryBody
+/// 🔢️ Operations of the law's one drag transaction, and how many of them its history row projects.
+const HISTORY_BODY_OPERATIONS: u32 = 120;
+const HISTORY_BODY_PROJECTED: u32 = 3;
+
+/// 🧾️ A guest `BuiltNode` flattened, by ownership, into pre-order retained records (parents before children) — the
+/// records the plugin runtime publishes for it.
+fn built_records(node: ui_contract::BuiltNode, records: &mut Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiNodeId {
+    let ui_contract::BuiltNode { key, component, layout, style, activity, disabled, accessibility, bindings, menu, children, .. } = node;
+    let id = ui_contract::UiNodeId(records.len() as u64 + 1);
+    let slot = records.len();
+    records.push(ui_contract::UiNodeRecord { id, key, component, layout, style, activity, disabled, transition: None, accessibility, bindings, menu, children: ui_contract::UiNodeChildren::default() });
+    for child in children {
+        let child = built_records(child, records);
+        records[slot].children.try_push(child).expect("the history body's children fit one document");
+    }
+    id
+}
+
+/// ✏️ Operation `index` of the drag transaction, editable.
+fn drag_mutation(index: u32) -> MutationView {
+    MutationView { mutation_id: format!("m-{index}"), position: 0, op_index: index, label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"), worst: None, messages: Vec::new(), superseded: false, withdrawn: false, editable: true, store: None }
+}
+
+/// 📚️ The history body the guest publishes, built by its REAL producer `ui_history_panel`: one transaction row of
+/// [`HISTORY_BODY_OPERATIONS`] operations ([`HISTORY_BODY_PROJECTED`] projected), the host's window `(offset, rows)` over that
+/// row with the store's page past the projection, and — `refused` — a running replay, during which `Begin` is refused.
+fn history_body(window: Option<(u32, u32)>, refused: bool, locale: Locale, generation: u64) -> UiDocumentLease {
+    let history = HistoryView {
+        commands: vec![CommandView {
+            seq: 1,
+            action_id: "drag".into(),
+            label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"),
+            kind: semio_framework::ActionKind::Mutation,
+            timestamp: "2026-10-02T10:00:00Z".into(),
+            edit_id: Some("e-1".into()),
+            config_edit_id: None,
+            child_edit_ids: Vec::new(),
+            transition_id: None,
+            author: None,
+            op_lines: Vec::new(),
+            op_count: HISTORY_BODY_OPERATIONS as usize,
+            applied: true,
+            revertible: false,
+            count: 1,
+            inverse: None,
+            transaction: None,
+            mutations: (0..HISTORY_BODY_PROJECTED).map(drag_mutation).collect(),
+        }],
+        ..HistoryView::empty()
+    };
+    let mut pages = HistoryMutationPages::new();
+    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    if let Some((offset, rows)) = window {
+        let start = offset.min(HISTORY_BODY_OPERATIONS.saturating_sub(rows));
+        let paged = start.max(HISTORY_BODY_PROJECTED);
+        pages.insert(1, HistoryMutationPage { from: (paged - HISTORY_BODY_PROJECTED) as usize, rows: (paged..(start + rows).min(HISTORY_BODY_OPERATIONS)).map(drag_mutation).collect() });
+        view.tree_windows = vec![semio_framework::TreeWindowRequest { body_key: ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.into(), node_key: history_row_window_path(1), open: Some(true), offset, rows }];
+    }
+    let panel = refused.then(|| TimeTravelPanel {
+        status: session("a running replay"),
+        store: None,
+        stage: semio_framework_time_travel::TimeTravelStage::Replaying,
+        pending_after: None,
+        finalize_refusal: None,
+        review: None,
+        rerun_refusal: None,
+        begin_refusal: Some(semio_framework_time_travel::TimeTravelRefusal::Illegal),
+        next_problem: None,
+        editor: None,
+        outcomes: Default::default(),
+        edited: Default::default(),
+    });
+    let built = semio_framework_async::block_on(ui_history_panel(&history, panel.as_ref(), None, &pages, "s.test.history", locale, false, &view)).expect("the guest's history body assembles");
+    let mut records = Vec::new();
+    let root = built_records(built, &mut records);
+    let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(generation), root: Some(root), layout_epoch: 0 };
+    UiDocumentLease::try_publish(SurfaceId::try_from(FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("the History panel surface"), identity, records).expect("the guest's history body publishes")
+}
+
+/// ♿️ The History surface's mirror node whose key names `key`.
+fn history_mirror_node(key: &str) -> Option<ui_contract::AccessibilityProjectionNode> {
+    crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID).into_iter().find(|node| projected_key_is(&node.key, key))
+}
+
+/// ♿️ The mutation rows the History surface's mirror shows, in reading order.
+fn history_mirror_mutations() -> Vec<String> {
+    crate::interpreter::published_accessibility_nodes_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID)
+        .into_iter()
+        .filter_map(|node| node.key.rsplit('/').next().and_then(|key| key.strip_prefix("framework.history.mutation.")).filter(|id| !id.contains("::")).map(str::to_owned))
+        .collect()
+}
+
+/// 🖱️ Activates one History mirror node the way the ARIA mirror's click does; answers what it dispatched.
+fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<ActionDescriptor> {
+    let node = history_mirror_node(key).unwrap_or_else(|| panic!("`{key}` is in the mirror"));
+    let target = crate::interpreter::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
+    let mut input = InputState::<ActionDescriptor>::default();
+    semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("the activation is handled");
+    crate::collect_fixture_actions(&mut input)
+}
+
+/// ⚖️ LAW (gaps N1 + N15 on wgpu, through the guest's REAL producer and the ARIA mirror): a closed transaction row of 120
+/// operations announces that it folds open (its window's total) and opens by the mirror's activation; the wgpu tree-window
+/// observer then asks the guest for that row by the SAME window path the guest reads
+/// (`framework.history.commands␟framework.history.entry.1`), and the slice it answers renders past the projected
+/// mutations; a window scrolled to 100 shows exactly operations 100–107. While a replay runs, every Edit is a disabled
+/// button whose name gives the reason ("Edit: Not possible right now" / "Bearbeiten: Derzeit nicht möglich") and activating
+/// it or its row begins nothing; with Begin allowed the same button begins an edit of its mutation.
+#[test]
+fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
+    let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
+    let body = Rect::new(0.0, 0.0, 420.0, 640.0);
+    let row = "framework.history.entry.1";
+    let mut shell = session_shell();
+    let mut documents = vec![history_body(None, false, Locale::En, 1)];
+    let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
+    let closed = history_mirror_node(row).expect("the transaction row is in the mirror");
+    assert_eq!(closed.expanded, Some(false), "a closed row of {HISTORY_BODY_OPERATIONS} operations announces it folds open, never a leaf: {closed:?}");
+    assert!(history_mirror_mutations().is_empty(), "a closed row materialises no mutation");
+
+    let _ = activate_history_mirror_node(&mut shell, row);
+    let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
+    assert_eq!(history_mirror_node(row).and_then(|node| node.expanded), Some(true), "the mirror's activation opens the row");
+    shell.observe_tree_windows(surface);
+    let (requests, _) = shell.tree_windows.view_state_fields();
+    let path = history_row_window_path(1);
+    let asked = requests.iter().find(|request| request.body_key == ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
+    assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
+
+    documents.push(history_body(Some((asked.offset, asked.rows)), false, Locale::En, 2));
+    let _ = paint_retained_body(&mut shell, surface, &documents[1], body);
+    let shown = history_mirror_mutations();
+    assert!(shown.len() > HISTORY_BODY_PROJECTED as usize, "the answered window renders past the projected mutations, paged from the store: {shown:?}");
+    assert_eq!(shown, (0..shown.len() as u32).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "in op order from the first");
+
+    for (generation, locale, reason) in [(3, Locale::En, "Edit: Not possible right now"), (4, Locale::De, "Bearbeiten: Derzeit nicht möglich")] {
+        documents.push(history_body(Some((100, 8)), true, locale, generation));
+        let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+        assert_eq!(history_mirror_mutations(), (100..108).map(|index| format!("m-{index}")).collect::<Vec<_>>(), "{locale:?}: the scrolled window shows exactly the operations it asked for");
+        for index in 100..108 {
+            let edit = history_mirror_node(&format!("framework.history.mutation.m-{index}::row-action::0")).unwrap_or_else(|| panic!("{locale:?}: m-{index}'s Edit is in the mirror"));
+            assert!(edit.role == "button" && edit.disabled && !edit.actionable && !edit.focusable, "{locale:?}: a refused Edit is a disabled button: {edit:?}");
+            assert!(edit.label.as_deref().is_some_and(|label| label.starts_with(reason)), "{locale:?}: its name gives the reason: {:?}", edit.label);
+        }
+        let begun = [activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0"), activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100")].concat();
+        assert!(!begun.iter().any(|action| action.action == semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID), "{locale:?}: neither the refused Edit nor its row begins an edit: {begun:?}");
+    }
+
+    documents.push(history_body(Some((100, 8)), false, Locale::En, 5));
+    let _ = paint_retained_body(&mut shell, surface, documents.last().expect("published"), body);
+    let edit = history_mirror_node("framework.history.mutation.m-100::row-action::0").expect("m-100's Edit is in the mirror");
+    assert!(!edit.disabled && edit.actionable && edit.label.as_deref().is_some_and(|label| label.starts_with("Edit:")), "Begin allowed: Edit is an enabled button: {edit:?}");
+    let begun = activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0");
+    assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
+    close_retained_body(surface, documents);
+}
+//#endregion 📚️HistoryBody

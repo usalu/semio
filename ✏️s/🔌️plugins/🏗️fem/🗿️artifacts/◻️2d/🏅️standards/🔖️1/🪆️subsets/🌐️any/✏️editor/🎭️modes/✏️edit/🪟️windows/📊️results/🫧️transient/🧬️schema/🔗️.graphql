@@ -1,0 +1,17 @@
+type Fem2dResultsWindowTransient {
+  clock: Fem2dPlaybackClock @state(class: EPHEMERAL_LOCAL_WINDOW)
+}
+
+type Fem2dPlaybackClock {
+  phase: Float!
+  reverse: Boolean!
+}
+
+input SetPlaybackClock {
+  clock: Fem2dPlaybackClockInput
+}
+
+input Fem2dPlaybackClockInput {
+  phase: Float!
+  reverse: Boolean!
+}

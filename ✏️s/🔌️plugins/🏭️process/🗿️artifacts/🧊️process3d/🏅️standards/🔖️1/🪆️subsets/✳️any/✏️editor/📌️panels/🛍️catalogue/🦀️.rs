@@ -6,7 +6,15 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::schema::inferences::{validate_capability, validation_reason, ValidationContext};
 use crate::{Capability, MachineCatalog, Process3dSnapshot, WorkingSolid, WorkshopMachine};
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";

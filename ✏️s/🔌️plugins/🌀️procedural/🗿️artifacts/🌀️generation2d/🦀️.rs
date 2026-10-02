@@ -48,7 +48,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.generation".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("2D Generation", "2D-Generierung"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Generation", "2D-Generierung"),
         source_format: "generation.2d".into(),
         component_kind: "generation2d".into(),
         dimension: "2d".into(),
@@ -645,7 +645,7 @@ pub mod editor {
             pub mod enter_generate;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🦀️.rs"]
             pub mod flow_eval_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🦀️.rs"]
             pub mod flow_eval_tick;
@@ -661,7 +661,7 @@ pub mod editor {
             pub mod remove_generation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🦀️.rs"]
             pub mod remove_widget;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-generation/🦀️.rs"]
             pub mod rename_generation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🦀️.rs"]
             pub mod reorganize;
@@ -671,7 +671,7 @@ pub mod editor {
             pub mod set_eval_outputs;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️.rs"]
             pub mod set_show_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs"]
             pub mod update_generation_values;

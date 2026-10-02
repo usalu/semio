@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { resolveTestLevel, runCargoTestBudgeted } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel } from "../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { runRepositoryCargoTests } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { assertConcreteCompositionOwnership } from "./🧪️tests/📇️ownership/🟦️.ts";
@@ -14,7 +15,7 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const names = assertConcreteCompositionOwnership(this.root);
     const { rest } = resolveTestLevel(segments, "quick");
-    await runCargoTestBudgeted(names, this.repoRoot, rest);
+    await runRepositoryCargoTests(names, this.repoRoot, rest);
   }
 }
 

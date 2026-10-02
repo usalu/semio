@@ -21,6 +21,12 @@ fn forms_document_contract_exact_json_and_sparse_edits() {
     for value in cases["invalidDiffs"].as_array().unwrap() {
         assert!(dsl::json::from_json_str::<FormsDiff>(&value.to_string()).is_err(), "{value}");
     }
+    for value in cases["validIndependentChildDocuments"].as_array().unwrap() {
+        dsl::json::from_json_str::<FormsSnapshot>(&value.to_string()).expect("independent child identity");
+    }
+    for value in cases["validIndependentChildDiffs"].as_array().unwrap() {
+        dsl::json::from_json_str::<FormsDiff>(&value.to_string()).expect("independent child edit");
+    }
     for case in cases["patchCases"].as_array().unwrap() {
         let before: FormsSnapshot = dsl::json::from_json_str(&case["before"].to_string()).unwrap();
         let diff: FormsDiff = dsl::json::from_json_str(&case["diff"].to_string()).unwrap();
@@ -48,7 +54,7 @@ fn forms_document_contract_distinct_child_owners_and_typed_refusal() {
     let mut child = before.structure.clone();
     child.child_id = "foreign-child".into();
     let diff = FormsDiff { structure: Some(child), ..Default::default() };
-    assert!(diff.apply(&before).is_err());
+    assert_eq!(diff.apply(&before).unwrap().structure.child_id, "foreign-child");
     assert_eq!(before, FormsSnapshot::default());
 }
 

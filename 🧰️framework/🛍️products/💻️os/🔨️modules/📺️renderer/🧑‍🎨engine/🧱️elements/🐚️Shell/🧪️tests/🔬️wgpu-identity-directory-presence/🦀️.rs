@@ -210,7 +210,7 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
 #[test]
 fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
     let pill_for = |status: Option<ArtifactSyncStatus>, progress: Option<(u64, u64, u32, u32)>| {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.sync_status = status;
         shell.sync_bootstrap_progress = progress;
         shell_sync_pill_text(shell.sync_pill(), false)

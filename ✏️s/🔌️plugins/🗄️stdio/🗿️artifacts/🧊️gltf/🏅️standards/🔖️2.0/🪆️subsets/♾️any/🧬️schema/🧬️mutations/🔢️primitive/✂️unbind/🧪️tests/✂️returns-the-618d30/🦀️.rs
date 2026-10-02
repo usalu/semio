@@ -5,5 +5,5 @@ use super::*;
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<UnbindPrimitiveIndicesMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "unbind-primitive-indices");
-    super::super::component::fixture_corpus_tests::assert_case("🔢️primitive-indices/✂️unbind/✂️returns");
+    super::super::component::fixture_corpus_tests::assert_case("🔢️primitive/✂️unbind/✂️returns");
 }

@@ -21,8 +21,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         agg_inverse(&CsvMutation::SetHasHeader(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

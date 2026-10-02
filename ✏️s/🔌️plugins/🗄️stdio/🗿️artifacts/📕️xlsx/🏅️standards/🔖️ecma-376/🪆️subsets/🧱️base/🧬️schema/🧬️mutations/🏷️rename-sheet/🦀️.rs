@@ -22,8 +22,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RenameSheet {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::RenameSheet(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Rename sheet", "Arbeitsblatt umbenennen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename sheet", "Arbeitsblatt umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

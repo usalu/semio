@@ -15,10 +15,30 @@ use crate::viewer::home::modes::view;
 use crate::viewer::home::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, DslValue, Fault, InteractiveJobClassification, LocalizedLabel, NoPresence, NoPresenceMutation, PluginAssemblyError, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, UiAssemblyResult, ViewEmit, Viewer, ViewerApp,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ComponentTree;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_plugin::ViewerApp;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 🏷️ Every verb the read-only Home is dispatched with: the host's sealed directory page, and nothing a human authors.
@@ -162,7 +182,7 @@ impl ArtifactViewer for HomeViewer {
 
     /// 🪪️ Same app-schema descriptor as the editor (contract requires both surfaces sharing a dialect
     /// to also share a config schema, since it is registered per-document-schema, not per-role).
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
@@ -276,7 +296,7 @@ impl ArtifactViewer for HomeViewer {
 pub fn render_view_body(body_key: &str, config: &HomeConfig, transient: &HomeTransient, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
     let root = match body_key {
         main::S_HOME_VIEW_BODY => main::render(transient.directory().spaces(), &config.retired_local_studio_ids, view_state)?,
-        _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
+        _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
     };
     Ok(ComponentTree { root })
 }

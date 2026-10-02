@@ -415,11 +415,11 @@ snaps: Array<number>,
  * 🔁️ A `InputKind::Number` field's `value` is the stored number; it shows and reads `stored × display_factor`
  * ([`ui_number_display_text`]/[`ui_number_typed_value`]).
  */
-displayFactor: number | null,
+displayFactor?: number | null,
 /**
  * ⛔️ The hard range a typed number must keep (`min`/`max` themselves when absent), see [`UiNumberLimits`].
  */
-limits: UiNumberLimits | null, };"####,
+limits?: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "Justify",
@@ -509,7 +509,7 @@ export type MenuRef = { id: string, args: UiValue | null, };"####,
  * [`ui_number_key_value`]); the display facets and `limits` read as on [`SliderProps`], `limits` refusing a typed
  * value (`min`/`max` themselves when absent).
  */
-export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, precision: number | null, snaps: Array<number>, unit: string | null, displayUnit: string | null, displayFactor: number | null, limits: UiNumberLimits | null, };"####,
+export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, precision: number | null, snaps?: Array<number>, unit?: string | null, displayUnit?: string | null, displayFactor?: number | null, limits?: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "OverlayLayout",
@@ -734,7 +734,7 @@ export type SliderAppearance = "track" | "dial";"####,
  * `display_unit` else `unit`, read back by [`ui_number_typed_value`]). A typed value is refused by `limits` (the
  * travel itself when absent).
  */
-export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, snaps: Array<number>, appearance?: SliderAppearance, scale?: UiNumberScale, precision: number | null, displayUnit: string | null, displayFactor: number | null, limits: UiNumberLimits | null, };"####,
+export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, snaps: Array<number>, appearance?: SliderAppearance, scale?: UiNumberScale, precision?: number | null, displayUnit?: string | null, displayFactor?: number | null, limits?: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "SpaceToken",
@@ -1160,7 +1160,7 @@ key: string, component: Component, layout: LayoutSpec, style: StyleSpec, activit
  * bound in display units (the contract carries no locale). A crossing value is never dispatched: the draft is
  * kept and the refusal shown.
  */
-export type UiNumberBound = { value: number, exclusive?: boolean, refusal: Label | null, };"####,
+export type UiNumberBound = { value: number, exclusive?: boolean, refusal?: Label | null, };"####,
     },
     SchemaMetadata {
         name: "UiNumberLimits",
@@ -1169,7 +1169,7 @@ export type UiNumberBound = { value: number, exclusive?: boolean, refusal: Label
  * 🛤️ The hard range a numeric control's value must keep, each side open when absent. A slider's `min`/`max`
  * are then only its travel (a soft range): a typed value may leave the travel while the limits admit it.
  */
-export type UiNumberLimits = { min: UiNumberBound | null, max: UiNumberBound | null, };"####,
+export type UiNumberLimits = { min?: UiNumberBound | null, max?: UiNumberBound | null, };"####,
     },
     SchemaMetadata {
         name: "UiNumberScale",

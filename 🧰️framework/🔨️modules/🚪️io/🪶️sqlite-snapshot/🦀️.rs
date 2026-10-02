@@ -132,10 +132,10 @@ impl<'a> SqliteSnapshotControl<'a> {
     pub fn check_rows(&self, count: usize) -> std::result::Result<(), String> { limit(count, self.limits.max_rows, "rows").map_err(|error| error.to_string()) }
     pub fn check_value_bytes(&self, count: usize) -> std::result::Result<(), String> { limit(count, self.limits.max_value_bytes, "value bytes").map_err(|error| error.to_string()) }
     pub fn check_database(&mut self, database: &SqliteDatabase, phase: SqliteSnapshotPhase) -> std::result::Result<(), String> {
-        self.checkpoint(phase, 0, 0)?; let mut rows = 0usize; let mut bytes = 0usize; let mut scalar_bytes = 0usize;
-        for table in &database.tables { for row in &table.rows { rows = rows.checked_add(1).ok_or("SQLite row count overflow")?; self.check_rows(rows)?; for value in &row.values { let size = value_size(value); bytes = bytes.checked_add(size).ok_or("SQLite value byte count overflow")?; if matches!(value, SqliteValue::Integer(_) | SqliteValue::Real(_)) { scalar_bytes = scalar_bytes.checked_add(size).ok_or("SQLite scalar byte count overflow")?; } self.check_value_bytes(bytes)?; } if rows % 256 == 0 { self.checkpoint(phase, 0, rows)?; } } }
+        self.checkpoint(phase, 0, 0)?; let total = database.tables.iter().try_fold(0usize, |count, table| count.checked_add(table.rows.len()).ok_or("SQLite row count overflow"))?; self.check_rows(total)?; let mut rows = 0usize; let mut bytes = 0usize; let mut scalar_bytes = 0usize;
+        for table in &database.tables { for row in &table.rows { rows = rows.checked_add(1).ok_or("SQLite row count overflow")?; self.check_rows(rows)?; for value in &row.values { let size = value_size(value); bytes = bytes.checked_add(size).ok_or("SQLite value byte count overflow")?; if matches!(value, SqliteValue::Integer(_) | SqliteValue::Real(_)) { scalar_bytes = scalar_bytes.checked_add(size).ok_or("SQLite scalar byte count overflow")?; } self.check_value_bytes(bytes)?; } if rows % 256 == 0 { self.checkpoint(phase, rows, total)?; } } }
         if phase == SqliteSnapshotPhase::ReconstructSnapshot { self.reconstruction_scalar_bytes = self.reconstruction_scalar_bytes.max(scalar_bytes); }
-        self.checkpoint(phase, 0, rows)
+        self.checkpoint(phase, rows, total)
     }
     pub fn checkpoint(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> std::result::Result<(), String> { if (self.callback)(SqliteSnapshotProgress { phase, completed, total }) { Ok(()) } else { Err(SqliteSnapshotError::Cancelled.to_string()) } }
 }

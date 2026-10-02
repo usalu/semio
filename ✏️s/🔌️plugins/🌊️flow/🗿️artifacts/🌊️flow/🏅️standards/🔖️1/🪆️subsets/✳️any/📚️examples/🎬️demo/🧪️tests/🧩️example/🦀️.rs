@@ -2,7 +2,7 @@ use semio_framework_artifact_flow_flow::{FlowHostSnapshot, WidgetLayout};
 
 /// 🎬️ The published `demo`: the default slider → add → preview graph, laid out left to right. Its
 /// widgets live in the composed `content` child, so the asset carries them in the host grammar that
-/// `FlowSnapshot::parse_dsl` caches as the child's genesis scene — a content REFERENCE alone loads an
+/// the explicit `examples::demo::snapshot_from_text` boundary caches as the child's genesis scene — a content REFERENCE alone loads an
 /// empty canvas (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, `📓️flow.md` §8).
 fn demo_host_snapshot() -> FlowHostSnapshot {
     let mut host = FlowHostSnapshot::default();
@@ -29,7 +29,7 @@ async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() 
     let host = demo_host_snapshot();
     assert_eq!(crate::examples::demo::PRIMARY_TEXT, demo_text(&host), "demo asset drifted from demo_host_snapshot(); re-run `--ignored zzz_write_demo_example_asset`");
     host.retire_cold();
-    let snapshot = <crate::FlowSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
+    let snapshot = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect("demo parses");
     let scene = snapshot.to_host_snapshot();
     let ids: Vec<&str> = scene.widgets.iter().map(crate::schema::widget_id).collect();
     assert_eq!(ids, ["slider", "add", "preview"]);
@@ -56,7 +56,7 @@ async fn zzz_write_demo_example_asset() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::FlowSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = crate::examples::demo::snapshot_from_text(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot);
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot));
 }

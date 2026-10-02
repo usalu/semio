@@ -169,7 +169,7 @@ test("registers leading grapheme through its closed canonical route", async () =
   for (const compiler of compilers) {
     const invocations: { executable: string; args: string[]; options: { cwd: string } }[] = [];
     class FixtureBundle { root = packageRoot; repoRoot = repoRoot; }
-    const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", compiler.compile(`${declarations[0]!.getText(syntax)}\nreturn new TestScript();`))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Leading grapheme fell through to generic routing"); });
+    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", compiler.compile(`${declarations[0]!.getText(syntax)}\nreturn new TestScript();`))(FixtureBundle, join, async (executable: string, args: string[], options: { cwd: string }) => { invocations.push({ executable, args, options }); }, () => { throw new Error("Leading grapheme fell through to generic routing"); });
     await router.run([registration.command]);
     expect(invocations).toEqual([{ executable: process.execPath, args: ["test", join(repoRoot, registration.source)], options: { cwd: repoRoot } }]);
   }
@@ -179,4 +179,12 @@ test("registers leading grapheme through its closed canonical route", async () =
     expect(document.configurations.filter((row: { name: string }) => row.name === registration.launchName)).toEqual([{ name: registration.launchName, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${registration.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: registration.launchGroup, order: registration.launchOrder } }]);
     expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === registration.launchGroup && row.presentation?.order === registration.launchOrder)).toHaveLength(1);
   }
+});
+
+
+test("Repo discovery consumes neutral identity grapheme without a competing implementation", () => {
+  const path = join(library, "🔍️discovery/🟦️.ts");
+  const previous = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+  expect(previous.statements.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity")).toBe(false);
+  expect(previous.statements.some((node) => ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause) && node.exportClause.elements.some((entry) => entry.name.text === "leadingEmojiIdentity"))).toBe(false);
 });

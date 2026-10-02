@@ -59,6 +59,8 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
         RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
         RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
+        crate::mutations::paint_stroke::paint_stroke("l1", "pixels", "brush", crate::mutations::paint_stroke::RasterBrush { size: 4.0, hardness: 0.5, opacity: 1.0, color: vec![1.0, 0.0, 0.0, 1.0] }, vec![crate::mutations::paint_stroke::RasterStrokePoint { x: 2.0, y: 2.0 }, crate::mutations::paint_stroke::RasterStrokePoint { x: 9.5, y: 6.0 }]),
+        crate::mutations::fill_region::fill_region("l1", "pixels", crate::mutations::fill_region::RasterSeed { x: 3, y: 2 }, 24, [0.0, 0.5, 1.0, 1.0]),
     ]
 }
 

@@ -31,8 +31,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for PatchSnapshot {
         editing::inverse_snapshot_patch(base, &self.patch).map(|patch| vec![CsvMutation::PatchSnapshot(Self { patch })]).unwrap_or_default()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Patch snapshot", "Momentaufnahme bearbeiten")
     }
 
     fn target(&self) -> Vec<String> {
@@ -48,34 +48,5 @@ pub(crate) fn test_case() -> CsvMutation {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    use semio_s_artifact_stdio_contract::pack;
-
-    #[test]
-    fn compact_snapshot_patch_matches_neutral_large_field_oracle() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
-        let row = &fixture["nativePilots"]["csv"];
-        let mut original = row["before"].clone();
-        *original.pointer_mut(row["largeValuePath"].as_str().unwrap()).unwrap() = "x".repeat(row["largeValueBytes"].as_u64().unwrap() as usize).into();
-        let base: CsvSnapshot = pack::json::from_json_str(&original.to_string()).unwrap();
-        let event: editing::SnapshotEditEvent = pack::json::from_json_str(&row["event"].to_string()).unwrap();
-        let patch = editing::prepare_snapshot_patch(&base, &event).unwrap();
-        let mutation = CsvMutation::PatchSnapshot(PatchSnapshot { patch });
-        let next = MutationDiff::apply(mutation.diff(&base).diff(), &base).unwrap();
-        let mut expected = original.clone();
-        *expected.pointer_mut(row["event"]["path"].as_str().unwrap()).unwrap() = row["event"]["value"].clone();
-        let actual: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&dsl::ToValue::to_value(&next))).unwrap();
-        assert_eq!(actual, expected);
-        let inverse = mutation.inverse(&base);
-        assert_eq!(inverse.len(), 1);
-        assert_eq!(MutationDiff::apply(inverse[0].diff(&next).diff(), &next).unwrap(), base);
-        let maximum = row["maximumPatchBytes"].as_u64().unwrap() as usize;
-        assert!(mutation.encode_op().unwrap().len() < maximum);
-        assert!(inverse[0].encode_op().unwrap().len() < maximum);
-        assert_eq!(CsvMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-        assert_eq!(CsvMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-        println!("[TRACE] csv compact patch preserves unrelated {} byte field through forward/inverse codecs", row["largeValueBytes"]);
-    }
-}
+#[path = "🧪️tests/🧪️compact-patch/🦀️.rs"]
+mod tests;

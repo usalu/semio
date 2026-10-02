@@ -432,6 +432,7 @@ enum WidgetDsl {
 /// `process_3d::SolidSpec` uses for the identical shape, so those fields stay a bare `WidgetDsl`
 /// rather than a `Box<WidgetDsl>`.
 impl crate::os_dsl::DslField for WidgetDsl {
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{Ok(crate::os_dsl::Shape::Statements(<Self as crate::os_dsl::DslVariants>::variants_controlled(control)?))}
     fn shape() -> crate::os_dsl::Shape {
         crate::os_dsl::Shape::Statements(<WidgetDsl as crate::os_dsl::DslVariants>::variants())
     }
@@ -458,7 +459,7 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: ordered_set_to_vec(expanded) },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: crate::os_dsl::to_dsl_value(flow).expect("Flow GUI has a DSL value representation") },
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: semio_framework_value::ToValue::to_value(flow) },
     }
 }
 
@@ -472,7 +473,7 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
         WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_ordered_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
-        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow)? },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: semio_framework_value::FromValue::from_value(flow).map_err(|error| error.to_string())? },
     })
 }
 
@@ -596,6 +597,7 @@ impl crate::os_store::ArtifactPack for FlowHostSnapshot {
 
 /// 🎛️ Actual widget payloads share the intrinsic widget DSL lowering.
 impl crate::os_dsl::DslField for Widget {
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{<WidgetDsl as crate::os_dsl::DslField>::shape_controlled(control)}
     fn shape() -> crate::os_dsl::Shape { <WidgetDsl as crate::os_dsl::DslField>::shape() }
     fn to_value(&self) -> crate::os_dsl::FieldValue { <WidgetDsl as crate::os_dsl::DslField>::to_value(&widget_to_widget_dsl(self)) }
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
@@ -605,6 +607,7 @@ impl crate::os_dsl::DslField for Widget {
 
 /// 🔌️ Actual synapse payloads reuse the intrinsic wire-literal lowering.
 impl crate::os_dsl::DslField for SynapseSpec {
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{<SynapseDsl as crate::os_dsl::DslField>::shape_controlled(control)}
     fn shape() -> crate::os_dsl::Shape { <SynapseDsl as crate::os_dsl::DslField>::shape() }
     fn to_value(&self) -> crate::os_dsl::FieldValue { <SynapseDsl as crate::os_dsl::DslField>::to_value(&synapse_to_dsl(self)) }
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
@@ -614,7 +617,8 @@ impl crate::os_dsl::DslField for SynapseSpec {
 
 /// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
 impl crate::os_dsl::DslField for FlowHostSnapshot {
-    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec) }
+    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()) }
+    fn shape_controlled<C:crate::os_dsl::NativeSchemaControl>(control:&mut C)->Result<crate::os_dsl::Shape,String>{control.checkpoint()?;Ok(crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()))}
     fn to_value(&self) -> crate::os_dsl::FieldValue { crate::os_dsl::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
@@ -771,21 +775,21 @@ struct FlowOwnedSnapshotCursor {
     retirement: FlowRetirement,
 }
 
-impl crate::os_store::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> crate::os_store::retirement::RetirementStep {
+impl semio_framework_value::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
+    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
         if self.retirement.terminal_is_empty() {
-            return crate::os_store::retirement::RetirementStep::Complete;
+            return semio_framework_value::retirement::RetirementStep::Complete;
         }
         if maximum_bytes == 0 {
-            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+            return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
         }
         let Ok(demand) = self.retirement.next_close_byte_demand() else {
-            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+            return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
         };
         match self.retirement.close_page(1, maximum_bytes.max(demand)) {
-            Ok(SnapshotRetirementStep::Complete) => crate::os_store::retirement::RetirementStep::Complete,
-            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => crate::os_store::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
-            Ok(SnapshotRetirementStep::Blocked) | Err(_) => crate::os_store::retirement::RetirementStep::BudgetExhausted,
+            Ok(SnapshotRetirementStep::Complete) => semio_framework_value::retirement::RetirementStep::Complete,
+            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => semio_framework_value::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
+            Ok(SnapshotRetirementStep::Blocked) | Err(_) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
         }
     }
 
@@ -794,8 +798,8 @@ impl crate::os_store::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
     }
 }
 
-impl crate::os_store::retirement::RetireOwned for FlowHostSnapshot {
-    fn retirement(self) -> Box<dyn crate::os_store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for FlowHostSnapshot {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         Box::new(FlowOwnedSnapshotCursor { retirement: FlowRetirement::from_owner(FlowOwner::HostSnapshot(self)) })
     }
 }

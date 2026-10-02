@@ -66,7 +66,7 @@ pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard:
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.md".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Md", "Md"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Md", "Md"),
         source_format: STDIO_MD_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-site-longitude/schema.json",
+  "title": "ChangeSiteLongitude",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newLongitudeDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteLongitude"
+    },
+    "newLongitudeDeg": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Longitude",
+          "de": "Längengrad"
+        },
+        "description": {
+          "en": "East positive, -180 to 180.",
+          "de": "Ost positiv, -180 bis 180."
+        },
+        "unit": "deg",
+        "step": 0.001,
+        "precision": 3,
+        "softMin": -180,
+        "softMax": 180,
+        "group": "site",
+        "order": 10
+      }
+    }
+  }
+}

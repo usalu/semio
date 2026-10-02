@@ -69,8 +69,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MovePrimitive
         vec![super::GltfMutation::MovePrimitiveAttribute(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Primitive Attribute", "Primitivattribut verschieben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move Primitive Attribute", "Primitivattribut verschieben")
     }
 
     fn target(&self) -> Vec<String> {

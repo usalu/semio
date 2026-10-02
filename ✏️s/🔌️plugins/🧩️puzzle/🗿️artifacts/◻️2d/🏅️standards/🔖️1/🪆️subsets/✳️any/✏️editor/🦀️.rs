@@ -34,12 +34,56 @@ use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindow
 use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
-    Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionVerb, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, WindowEngagement, WindowMeasure,
-    INTERACTION_SELECT_ACTION_ID,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ActionRef;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactPresentation;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DialogDefinition;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTarget;
+use semio_framework_plugin::InteractionVerb;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPortDirection;
+use semio_framework_plugin::MediaPortSpec;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PortMultiplicity;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
@@ -47,7 +91,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
@@ -641,6 +685,32 @@ pub fn puzzle2d_node_display_label(node: &Value, fixture: &Value) -> String {
         .map(|kind| puzzle2d_kind_catalog_label(fixture, kind))
         .filter(|label| !label.is_empty())
         .unwrap_or_else(|| node.get("id").and_then(Value::as_str).unwrap_or("node").to_string())
+}
+
+/// 🏷️ What a reference to the board entity `id` (one of `kinds`: `node`, `targetRegion`, `edge`, `handle`; every kind when
+/// none is declared) reads in `fixture` — a node its display label ([`puzzle2d_node_display_label`]), a target region its
+/// authored label, an edge its two endpoint nodes, a handle its node and handle kind. Authored and catalogued names are
+/// data, the same in every locale; `None` when only the raw id would name the entity.
+pub fn puzzle2d_entity_label(fixture: &Value, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+    let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
+    let by_id = |entities: &[Value]| entities.iter().find(|entity| entity.get("id").and_then(Value::as_str) == Some(id)).cloned();
+    let node_of = |node_id: &str| fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id)).map(|node| puzzle2d_node_display_label(node, fixture)).unwrap_or_else(|| node_id.to_string());
+    let label = if let Some(node) = wants(PUZZLE2D_GRANULARITY_NODE).then(|| by_id(fixture_nodes(fixture))).flatten() {
+        Some(puzzle2d_node_display_label(&node, fixture))
+    } else if let Some(region) = wants(PUZZLE2D_GRANULARITY_TARGET_REGION).then(|| by_id(fixture_target_regions(fixture))).flatten() {
+        region.get("label").and_then(Value::as_str).filter(|label| !label.is_empty()).map(str::to_string)
+    } else if let Some(edge) = wants(PUZZLE2D_GRANULARITY_EDGE).then(|| by_id(fixture_edges(fixture))).flatten() {
+        let endpoint = |key: &str| edge.get(key).and_then(Value::as_str).map(|handle| node_of(handle.split_once(':').map_or(handle, |(node, _)| node)));
+        endpoint("source").zip(endpoint("target")).map(|(source, target)| format!("{source} → {target}"))
+    } else if wants(PUZZLE2D_GRANULARITY_HANDLE) {
+        fixture_nodes(fixture).iter().find_map(|node| {
+            let handle = node.get("handles").and_then(Value::as_array)?.iter().find(|handle| handle.get("id").and_then(Value::as_str) == Some(id))?;
+            Some(format!("{} \u{b7} {}", puzzle2d_node_display_label(node, fixture), handle.get("handleKind").and_then(Value::as_str).unwrap_or(id)))
+        })
+    } else {
+        None
+    };
+    label.filter(|label| label != id).map(|label| LocalizedLabel::data(&label))
 }
 
 fn puzzle2d_label_root(label: &str) -> String {
@@ -2921,7 +2991,7 @@ fn puzzle2d_dispatch_emit(
     // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
     let mut ui_scope = UiDirtyScope::Full;
     {
-        let labels = view_state.map_or_else(|| puzzle2d_labels(&semio_framework_plugin::ViewModel::default()), puzzle2d_labels);
+        let labels = puzzle2d_labels(view_state.ok_or_else(|| Fault::from("puzzle2d action requires the caller's explicit presentation axes"))?);
         let ctx = &mut Puzzle2dActionCtx {
             host: &host,
             scene: &mut scene,
@@ -4792,6 +4862,7 @@ impl ArtifactReservedJob for Puzzle2dImportJob {
 /// artifact edit, and a paste is one insert whose clones the app re-selects.
 struct Puzzle2dClipboardJob {
     tool_id: String,
+    labels: Option<&'static crate::editor::puzzle2d::terminology::Puzzle2dLabels>,
     snapshot: std::sync::Arc<Puzzle2dPlaySnapshot>,
     raw_wire: Vec<u8>,
     input: Option<ArtifactReservedToolInput>,
@@ -4801,17 +4872,18 @@ struct Puzzle2dClipboardJob {
 
 impl Puzzle2dClipboardJob {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Self {
-        Self { tool_id: request.tool_id, snapshot: request.snapshot, raw_wire: request.raw_wire, input: Some(request.input), completion: Some(request.completion), closing: false }
+        let labels = request.ui_axes.map(|(locale, terminology)| puzzle2d_labels(&semio_framework_plugin::ViewModel::new(locale, terminology)));
+        Self { tool_id: request.tool_id, labels, snapshot: request.snapshot, raw_wire: request.raw_wire, input: Some(request.input), completion: Some(request.completion), closing: false }
     }
 
-    fn emit(&mut self) -> Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation> {
+    fn emit(&mut self) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
         let Some(ArtifactReservedToolInput::Action { args, interaction, hover }) = self.input.take() else {
-            return Emit::default();
+            return Ok(Emit::default());
         };
         let fixture = self.snapshot.value();
         let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
         let selected = puzzle2d_selected_node_ids(fixture, marks.selected_ids());
-        match self.tool_id.as_str() {
+        Ok(match self.tool_id.as_str() {
             // 🧾️ An unresolvable selection answers with ZERO effects — the same shape as "the hotkey
             // never reached the guest", exactly as puzzle3d's clipboard route answers it.
             "copy" => match puzzle2d_copy_fragment_from(fixture, &selected) {
@@ -4819,9 +4891,10 @@ impl Puzzle2dClipboardJob {
                 Err(_) => Emit::default(),
             },
             "cut" => {
-                let Ok(fragment) = puzzle2d_copy_fragment_from(fixture, &selected) else { return Emit::default() };
+                let Ok(fragment) = puzzle2d_copy_fragment_from(fixture, &selected) else { return Ok(Emit::default()) };
                 if puzzle2d_selection_is_locked(fixture, &selected) {
-                    return Emit { effects: vec![Effect::Notify { message: puzzle2d_labels(&semio_framework_plugin::ViewModel::default()).cut_locked.as_str().to_string() }], ui_scope: UiDirtyScope::None, ..Default::default() };
+                    let labels = self.labels.ok_or_else(|| Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
+                    return Ok(Emit { effects: vec![Effect::Notify { message: labels.cut_locked.as_str().to_string() }], ui_scope: UiDirtyScope::None, ..Default::default() });
                 }
                 let mutations = puzzle2d_cut_operations_from(fixture, &selected).unwrap_or_default();
                 let clear = puzzle2d_clear_selection_write(fixture, &selected).into_iter().collect();
@@ -4829,7 +4902,7 @@ impl Puzzle2dClipboardJob {
             }
             "paste" => {
                 let Some(fragment) = args.as_ref().and_then(|value| value.get("fragment")).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()) else {
-                    return Emit::default();
+                    return Ok(Emit::default());
                 };
                 let placement = PastePlacement::default();
                 match puzzle2d_paste_operations_on(fixture, &fragment, &placement) {
@@ -4838,7 +4911,7 @@ impl Puzzle2dClipboardJob {
                 }
             }
             _ => Emit::default(),
-        }
+        })
     }
 }
 
@@ -4851,7 +4924,7 @@ impl InteractiveJob for Puzzle2dClipboardJob {
         let Some(completion) = self.completion.as_ref() else {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         };
-        if completion.complete(Ok(emit), EphemeralEmit::default()).is_err() {
+        if completion.complete(emit, EphemeralEmit::default()).is_err() {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
         let output = puzzle2d_job_payload(cx, JobPayloadStream::CommitOutput, &self.raw_wire);
@@ -5042,6 +5115,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(Puzzle2dCommand::TranslateSelection { window_id: Some(event.window_id().to_string()), args: Some(json!({ "phase": "abort", "reason": reason.as_str() })) })
     }
 
+    /// 🪧️ A history-edit reference chip names its board entity as the outliner does ([`puzzle2d_entity_label`]).
+    fn entity_label(snapshot: &Puzzle2dPlaySnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+        puzzle2d_entity_label(snapshot.value(), kinds, id)
+    }
+
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
     }
@@ -5104,7 +5182,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// puzzle's plugin root used to reach `.setup()` for — `register_document_app`/`document_app`
     /// now call this automatically the moment `Puzzle2dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
-    fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::puzzle2d::config::schema::app_schema_descriptor())
     }
 
@@ -5414,7 +5492,7 @@ impl Puzzle2dPlayApp {
         interaction: &Puzzle2dInteractionSnapshot,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
         let mut selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         if selected.is_empty() {
             selected = interaction.selected.clone();
@@ -5453,10 +5531,6 @@ fn puzzle2d_flag_value_action(id: &str, category: &str, identity: ActionArgDef, 
 /// the coordinator, not silently lost; see `📚️examples/🎬️demo-session` for this subset's own example
 /// facet, the likely intended replacement mechanism.
 pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
-    let mut host = puzzle_board_host();
-    let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: select_utility::UTILITY_ID.into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    sync_host_from_envelope(&mut host, &envelope);
-    let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
     Editor::builder(Puzzle2dPlayApp::DIALECT)
             .document(["semio", "puzzle", "2d"])
             .artifact_kind(crate::artifact_kind())
@@ -5465,9 +5539,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
             .mode_def(edit::definition())
             .default_mode_id(edit::PUZZLE2D_PLAY_MODE_EDIT)
-            .window_kind_def(overview::definition(&envelope, &host, labels))
-            .window_kind_def(detail::definition(&envelope, &host, labels))
-            .window_kind_def(selection::definition(&envelope, &host, labels))
+            .window_kind_def(overview::definition())
+            .window_kind_def(detail::definition())
+            .window_kind_def(selection::definition())
             .interaction(puzzle2d_interaction_definition())
             .window_kind_interactions(overview::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
             .window_kind_interactions(detail::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
@@ -5747,4 +5821,14 @@ mod select_tool_transaction_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️select-tool-history/🦀️.rs"]
 mod select_tool_history_tests;
+
+/// ⏪️ The generic history-edit runtime with puzzle 2d as its witness — the `🧫️history-edit-runtime` corpus: drafts from a
+/// review, replay progress and cancel, warnings after finalize and reload, Fatal/Error resolved by withdraw and by "Use
+/// selection", overwrite and new alternative undone and redone, and a long remote history change paused and resumed.
+#[cfg(test)]
+#[path = "🧪️tests/🧪️history-edit-runtime/🦀️.rs"]
+mod history_edit_runtime_tests;
 //#endregion 🧪️UnitTests
+#[cfg(test)]
+#[path = "🧪️tests/🧵️retained-wiring/🦀️.rs"]
+mod retained_wiring_tests;

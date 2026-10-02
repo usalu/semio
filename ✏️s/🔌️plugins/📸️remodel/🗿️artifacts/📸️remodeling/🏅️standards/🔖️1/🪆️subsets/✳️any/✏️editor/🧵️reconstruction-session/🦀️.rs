@@ -12,11 +12,11 @@ use crate::editor::remodeling::engine::reconstruction::{EngineObservation, Engin
 use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, geo as remodeling_geo, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
 use crate::mutations::{append_content, commit_reconstruction, AppendContent, CommitReconstruction, ReconstructionAssetCommit, RemodelingMutation};
 use crate::{
-    mesh_is_within_resolution_envelope, remodeling_content_handle, remodeling_mesh_content_handle, CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, MeshSource, PackedF32, QcReportSnapshot, RemodelingContentDigest, RemodelingContentKind, RemodelingMesh,
+    mesh_is_within_resolution_envelope, remodeling_mesh_content_handle, CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, MeshSource, ByteBuffer, Float32Buffer, QcReportSnapshot, RemodelingContentDigest, RemodelingContentKind, RemodelingMesh,
     RemodelingSnapshot, SparseCloud, WatertightReportSnapshot, REMODELING_DURABLE_CHUNK_RAW_BYTES,
 };
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing,
     ToolRunTickWriter, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT,
@@ -523,7 +523,7 @@ impl ContentLeaves {
             .leaves
             .into_iter()
             .enumerate()
-            .map(|(index, leaf)| append_content(AppendContent { content_id: content_id.clone(), kind: self.kind, mime: mime.clone(), width, height, first: index as u64, chunks: vec![base64_codec::base64_standard_encode(leaf)] }))
+            .map(|(index, leaf)| append_content(AppendContent { content_id: content_id.clone(), kind: self.kind, mime: mime.clone(), width, height, first: index as u64, chunks: vec![ByteBuffer(leaf)] }))
             .collect();
         (content_id, count, ops)
     }
@@ -668,7 +668,7 @@ impl ProductPreparation {
                     let content = std::mem::replace(&mut self.sparse_leaves, ContentLeaves::new(RemodelingContentKind::Sparse));
                     if !content.leaves.is_empty() {
                         let (content_id, count) = self.queue_content(content, None, 0, 0);
-                        self.sparse = Some(SparseCloud { points: PackedF32(remodeling_content_handle(&content_id, count)), colors: None });
+                        self.sparse = Some(SparseCloud { points: Float32Buffer::Content { content_id: content_id.clone(), chunk_count: count }, colors: None });
                     }
                 }
                 ProductYield::Working

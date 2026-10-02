@@ -13,9 +13,16 @@ use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_INTERACTION_DOMA
 use dsl::json;
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase};
-use semio_framework_plugin::{
-    tree_window_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_window_item;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

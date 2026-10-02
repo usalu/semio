@@ -160,7 +160,7 @@ pub fn register_pilot_languages() {
 /// 📌️ Registers schema leaves for `s.stdio.binary`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_schema() {
-    ::framework_schema::register_artifact_schema_descriptor(crate::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor()).expect("schema descriptor publication");
 }
 
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
@@ -168,7 +168,7 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 //#endregion 🔖️Register
 

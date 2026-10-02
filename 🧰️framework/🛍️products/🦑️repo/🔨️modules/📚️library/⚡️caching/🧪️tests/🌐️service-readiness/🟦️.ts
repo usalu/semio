@@ -12,7 +12,7 @@ export async function testServiceReadiness(workspace: string, output: string): P
   const root = mkdtempSync(join(output, "service-readiness-")), sessionRoot = join(root, "sessions");
   try {
     assert.ok(ajv.validate({ $ref: schema.$id + "#/$defs/MutationLease" }, fixture.mutationLease));
-    const { acquireResourceLease } = await import(join(directory, "../../🔒️leases/🟦️.ts"));
+    const { acquireResourceLease } = await import(join(directory, "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts"));
     for (const mutation of fixture.mutations) {
       const mutations = join(root, "mutations", mutation), session = await api.openServiceSession(mutations, fixture.owner, fixture.pids[0]);
       const lease = await acquireResourceLease({ directory: join(mutations, fixture.mutationLease.directory), resource: fixture.mutationLease.resource, mode: "exclusive", signal: new AbortController().signal });

@@ -63,7 +63,7 @@ struct ChromeGeometry {
 fn chrome_geometry(scale_factor: f32) -> ChromeGeometry {
     let metrics = metrics_for(scale_factor);
     let (logical_width, logical_height) = metrics.logical_size();
-    let mut shell = ShellState::new(vec![], "dpi-law".into());
+    let mut shell = ShellState::new(vec![], "dpi-law".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.screen_w = logical_width.max(1.0);
     shell.screen_h = logical_height.max(1.0);
 

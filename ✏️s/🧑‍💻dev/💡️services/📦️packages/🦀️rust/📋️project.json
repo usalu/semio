@@ -106,15 +106,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts live-agent-loop-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-live-agent-loop"
-          ]
-        }
-      }
+      "outputs": []
     },
     "hub-agent-participant-check": {
       "executor": "nx:run-commands",
@@ -131,15 +123,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-agent-participant-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-hub-agent-participant"
-          ]
-        }
-      }
+      "outputs": []
     },
     "plugin-coverage-check": {
       "executor": "nx:run-commands",
@@ -156,15 +140,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts plugin-coverage-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-plugin-coverage"
-          ]
-        }
-      }
+      "outputs": []
     },
     "user-path-check": {
       "executor": "nx:run-commands",
@@ -181,15 +157,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts user-path-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-user-path"
-          ]
-        }
-      }
+      "outputs": []
     },
     "inference-quartet-check": {
       "executor": "nx:run-commands",
@@ -206,15 +174,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-quartet-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-inference-quartet"
-          ]
-        }
-      }
+      "outputs": []
     },
     "security-check": {
       "executor": "nx:run-commands",
@@ -231,15 +191,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts security-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-security"
-          ]
-        }
-      }
+      "outputs": []
     },
     "hub-edit-durability-check": {
       "executor": "nx:run-commands",
@@ -256,15 +208,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts hub-edit-durability-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-hub-edit-durability"
-          ]
-        }
-      }
+      "outputs": []
     },
     "agent-reply-check": {
       "executor": "nx:run-commands",
@@ -281,15 +225,7 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts agent-reply-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-agent-reply"
-          ]
-        }
-      }
+      "outputs": []
     },
     "untrusted-content-check": {
       "executor": "nx:run-commands",
@@ -306,14 +242,6 @@
         "command": "bun ./📜️script.ts untrusted-content-check",
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-untrusted-content"
-          ]
-        }
       }
     },
     "mcp-composition-source-check": {
@@ -323,14 +251,6 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts mcp-composition-source-check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-mcp-composition-source"
-          ]
-        }
       }
     },
     "fixture-ownership-check": {
@@ -340,14 +260,6 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fixture-ownership-check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-fixture-ownership"
-          ]
-        }
       }
     },
     "canonical-pair-composition-check": {
@@ -357,14 +269,6 @@
         "cwd": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-pair-composition-check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "services-canonical-pair"
-          ]
-        }
       }
     }
   }

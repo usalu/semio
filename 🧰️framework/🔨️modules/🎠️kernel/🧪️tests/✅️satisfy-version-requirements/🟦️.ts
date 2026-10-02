@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import semver from "semver";
-import { defineTestAdapter, type AdapterContext } from "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { versionSatisfies } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 

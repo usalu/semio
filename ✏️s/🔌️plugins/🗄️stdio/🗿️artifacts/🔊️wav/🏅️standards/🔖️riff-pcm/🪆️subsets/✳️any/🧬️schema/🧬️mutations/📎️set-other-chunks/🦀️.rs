@@ -21,8 +21,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetOtherChunks {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetOtherChunks(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set other chunks", "Sonstige Chunks setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set other chunks", "Sonstige Chunks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

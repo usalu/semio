@@ -3,7 +3,13 @@
 
 use crate::editor::remodeling::modes::capture::windows::frames::config::{RemodelingFrameCursor, RemodelingFramesWindowConfig};
 use crate::{MediaStream, RemodelingSnapshot};
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UtilityRef;
+use semio_framework_plugin::WindowEngagementSlot;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly.

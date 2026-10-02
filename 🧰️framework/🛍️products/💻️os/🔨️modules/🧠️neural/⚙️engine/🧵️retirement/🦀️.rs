@@ -195,6 +195,33 @@ impl ColdDictionaryBuilder {
         }
         assert!(update.terminal_is_empty());
     }
+    /// 🛬️ Constructs one canonical dictionary entry with admitted metadata and resumable key comparisons.
+    pub fn insert_controlled(&mut self, key: String, value: Value, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), String> {
+        let value = ColdValueOwner::new(value);
+        control.charge(size_of::<String>() + size_of::<Value>() + 4 * size_of::<usize>())?;
+        let dictionary = self.dictionary.as_mut().unwrap();
+        let mut update = dictionary.pairs.begin_set(key, value.into_value());
+        let grant = Grant { maximum_items: 1, maximum_bytes: 4096 };
+        let result = (|| {
+            while !update.is_complete() { update.advance_insert_controlled(grant, control)?; }
+            let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
+            let mut retirement = ValueRetirement::default();
+            retirement.push_map(displaced);
+            retire_value_cold(retirement);
+            Ok(())
+        })();
+        update.begin_close();
+        loop {
+            match update.close_step(grant) {
+                RetirementStep::OwnedValue(value) => retire_value_cold(ValueRetirement::from_value(value)),
+                RetirementStep::Complete => break,
+                RetirementStep::Blocked => unreachable!("positive native dictionary retirement grant"),
+                RetirementStep::Progress { .. } => {}
+            }
+        }
+        assert!(update.terminal_is_empty());
+        result
+    }
     pub fn finish(mut self) -> Dictionary { self.dictionary.take().unwrap() }
 }
 impl Drop for ColdDictionaryBuilder {

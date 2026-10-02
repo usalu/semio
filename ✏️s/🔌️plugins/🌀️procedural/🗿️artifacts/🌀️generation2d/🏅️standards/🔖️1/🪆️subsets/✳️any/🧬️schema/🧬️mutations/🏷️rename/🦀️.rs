@@ -27,8 +27,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for RenameGenerati
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename generation \"{}\" to \"{}\"", self.id, self.name), &format!("Erzeugung \"{}\" in \"{}\" umbenennen", self.id, self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename generation \"{}\" to \"{}\"", self.id, self.name), &format!("Erzeugung \"{}\" in \"{}\" umbenennen", self.id, self.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

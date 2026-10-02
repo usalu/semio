@@ -41,6 +41,7 @@ pub enum TimberProduct {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum MemberRole {
     Beam,
     Column,
@@ -52,6 +53,7 @@ pub enum MemberRole {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub enum SupportType {
     SimplySupported,
     Cantilever,

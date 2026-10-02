@@ -66,8 +66,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMorphTarg
         vec![super::GltfMutation::MoveMorphTarget(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Morph Target", "Morphziel verschieben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move Morph Target", "Morphziel verschieben")
     }
 
     fn target(&self) -> Vec<String> {

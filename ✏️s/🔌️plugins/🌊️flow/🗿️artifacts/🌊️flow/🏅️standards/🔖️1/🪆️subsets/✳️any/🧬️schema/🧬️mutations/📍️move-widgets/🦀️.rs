@@ -27,10 +27,10 @@ impl MutationKind<FlowSnapshot, FlowMutation> for MoveWidgets {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.entries.len() {
-            1 => protocol::LocalizedLabel::native("Move 1 widget", "1 Widget verschieben"),
-            count => protocol::LocalizedLabel::native(&format!("Move {count} widgets"), &format!("{count} Widgets verschieben")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Move 1 widget", "1 Widget verschieben"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {count} widgets"), &format!("{count} Widgets verschieben")),
         }
     }
     fn target(&self) -> Vec<String> {

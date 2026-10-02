@@ -22,8 +22,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::SetEntityName(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

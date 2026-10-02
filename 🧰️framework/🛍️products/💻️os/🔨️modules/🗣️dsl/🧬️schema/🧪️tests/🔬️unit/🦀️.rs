@@ -1,4 +1,8 @@
 use super::*;
+macro_rules! ordinary_fixture_spec {
+    ($spec:path) => { crate::os_dsl::RecordSpecProducer { ordinary: $spec, decoding: |_| Err("ordinary-only test metadata has no controlled construction".into()), encoding: |_| Err("ordinary-only test metadata has no controlled construction".into()) } };
+}
+
 
 #[path = "../🫳️borrowed-object/🦀️.rs"]
 mod borrowed_object_tests;
@@ -250,7 +254,7 @@ fn layer_variant_spec() -> RecordSpec {
 }
 
 fn document_with_layers_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))])
+    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), ordinary_fixture_spec!(layer_variant_spec))]))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -270,7 +274,7 @@ async fn primitive_statements_collection_preserves_order_and_round_trips() {
 /// time (as deep as real input actually nests) ever evaluates it again.
 // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` in `Shape::Statements` above
 fn group_spec() -> RecordSpec {
-    RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional()])
+    RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), ordinary_fixture_spec!(group_spec))])))).optional()])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -429,7 +433,7 @@ fn nested_point_spec() -> RecordSpec {
     RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
 }
 fn marker_spec() -> RecordSpec {
-    RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))])
+    RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(ordinary_fixture_spec!(nested_point_spec)))])
 }
 fn edge_keyed_wire_spec() -> RecordSpec {
     RecordSpec::new(Some("edge2"), RecordLayout::Inline, vec![FieldSpec::new(0, "link", Shape::Wire)])
@@ -504,7 +508,7 @@ fn table_row_spec() -> RecordSpec {
     RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "x", Shape::Float), FieldSpec::new(2, "y", Shape::Float), FieldSpec::new(3, "link", Shape::Wire).optional()])
 }
 fn table_doc_spec() -> RecordSpec {
-    RecordSpec::new(Some("scene"), RecordLayout::Inline, vec![FieldSpec::new(0, "nodes", Shape::Table(table_row_spec))])
+    RecordSpec::new(Some("scene"), RecordLayout::Inline, vec![FieldSpec::new(0, "nodes", Shape::Table(ordinary_fixture_spec!(table_row_spec)))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -558,7 +562,7 @@ async fn table_rejects_non_self_delimiting_column_shapes_at_spec_build_time() {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "vals", Shape::Tuple(Box::new(Shape::Float), None))])
     }
     fn bad_table_doc_spec() -> RecordSpec {
-        RecordSpec::new(Some("bad"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(unbounded_tuple_row_spec))])
+        RecordSpec::new(Some("bad"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(ordinary_fixture_spec!(unbounded_tuple_row_spec)))])
     }
     let spec = bad_table_doc_spec();
     let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default());
@@ -573,10 +577,10 @@ fn nested_inner_row_spec() -> RecordSpec {
 }
 // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
 fn nested_outer_row_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Table(nested_inner_row_spec))])
+    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Table(ordinary_fixture_spec!(nested_inner_row_spec)))])
 }
 fn nested_table_doc_spec() -> RecordSpec {
-    RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "items", Shape::Table(nested_outer_row_spec))])
+    RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "items", Shape::Table(ordinary_fixture_spec!(nested_outer_row_spec)))])
 }
 
 #[semio_framework_async_macros::async_test]
@@ -604,10 +608,10 @@ fn quantity_spec() -> RecordSpec {
 }
 // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
 fn duplicate_type_row_spec() -> RecordSpec {
-    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "area", Shape::Record(quantity_spec)), FieldSpec::new(2, "volume", Shape::Record(quantity_spec))])
+    RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "area", Shape::Record(ordinary_fixture_spec!(quantity_spec))), FieldSpec::new(2, "volume", Shape::Record(ordinary_fixture_spec!(quantity_spec)))])
 }
 fn duplicate_type_table_doc_spec() -> RecordSpec {
-    RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(duplicate_type_row_spec))])
+    RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(ordinary_fixture_spec!(duplicate_type_row_spec)))])
 }
 
 #[semio_framework_async_macros::async_test]

@@ -7,10 +7,22 @@
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_inferred_kind_rows, ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiMapBuilder, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action_draggable;
+use semio_framework_plugin::ActionFactory;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

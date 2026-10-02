@@ -63,8 +63,8 @@ fn boxed_dsl_operation_matches_unboxed_text_and_binary() {
     let (boxed_key, boxed_record) = boxed.to_named_record();
     assert_eq!(boxed_key, inline_key);
     assert_eq!(boxed_record, inline_record);
-    let inline_spec = InlineFieldOperation::variants()[0].1();
-    let boxed_spec = BoxedFieldOperation::variants()[0].1();
+    let inline_spec = (InlineFieldOperation::variants()[0].1.ordinary)();
+    let boxed_spec = (BoxedFieldOperation::variants()[0].1.ordinary)();
     let inline_text = print(&inline_record, &inline_spec, JoinMode::Inline);
     let boxed_text = print(&boxed_record, &boxed_spec, JoinMode::Inline);
     assert_eq!(boxed_text, inline_text);

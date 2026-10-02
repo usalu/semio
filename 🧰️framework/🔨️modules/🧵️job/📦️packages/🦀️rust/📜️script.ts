@@ -1,13 +1,17 @@
 #!/usr/bin/env bun
+import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
-import { runCargoTestBudgeted, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-job"], this.repoRoot, rest);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-job"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -15,7 +19,7 @@ class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
     const { proveJobReconcileContract } = await import("../../🔎️reconcile/🧪️tests/🔬️contract/🟦️.ts");
     proveJobReconcileContract();
-    await runExactCargoLaws({ cwd: this.repoRoot,
+    await runExactCargoLaws({ manifestPaths: { "semio-framework-job": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot,
       groups: [{ package: "semio-framework-job", target: { kind: "lib" }, laws: ["neutral_reconcile_envelopes_match_language_agnostic_vectors"] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: 3_600_000, listBudgetMs: 60_000, lawBudgetMs: 120_000 });
   }

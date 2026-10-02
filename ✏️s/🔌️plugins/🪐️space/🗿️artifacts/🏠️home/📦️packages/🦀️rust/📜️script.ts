@@ -87,4 +87,4 @@ if (segments[0] === "home-host-panel-owner") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-home", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-home", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });

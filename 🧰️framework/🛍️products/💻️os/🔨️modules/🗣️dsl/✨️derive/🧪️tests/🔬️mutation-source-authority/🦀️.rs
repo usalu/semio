@@ -187,7 +187,7 @@ fn validates_exact_domain_mutation_source_authority_fixture() {
             })
             .collect()
     }
-    let domain_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json")).unwrap();
+    let domain_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json")).unwrap();
     for vector in domain_fixture["cases"].as_array().unwrap() {
         let (workspace, _, _) = materialize(vector["name"].as_str().unwrap(), &fixture());
         let mutation_root = workspace.join(domain_fixture["mutationRoot"].as_str().unwrap());

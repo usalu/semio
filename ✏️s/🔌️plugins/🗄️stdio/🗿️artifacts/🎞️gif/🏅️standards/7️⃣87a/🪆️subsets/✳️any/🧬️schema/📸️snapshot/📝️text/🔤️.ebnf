@@ -1,3 +1,10 @@
-(* ebnf stdio.gif snapshot *)
-document = header, body ;
-header = 'schema', space, 'stdio.gif', newline ;
+document = "semio stdio.gif.dsl v1", snapshot ;
+snapshot = "schema=", text, "width=", uint, "height=", uint, "background-color-index=", uint, "pixel-aspect-ratio=", uint, [ global_palette ], "images=[", { image }, "]" ;
+global_palette = "gct{", palette, "}" ;
+local_palette = "lct{", palette, "}" ;
+palette = "sorted=", boolean, "colors=[", { color }, "]" ;
+color = "{r=", uint, "g=", uint, "b=", uint, "}" ;
+image = "{left=", uint, "top=", uint, "width=", uint, "height=", uint, "interlace=", boolean, "indices=", text, [ local_palette ], "}" ;
+uint = digit, { digit } ;
+boolean = "true" | "false" ;
+text = quoted_text | identifier ;

@@ -30,8 +30,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBlendM
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer \"{}\" blend mode to {}", self.layer_id, self.blend_mode), &format!("Füllmethode von Ebene \"{}\" auf {} setzen", self.layer_id, self.blend_mode))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" blend mode to {}", self.layer_id, self.blend_mode), &format!("Füllmethode von Ebene \"{}\" auf {} setzen", self.layer_id, self.blend_mode))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

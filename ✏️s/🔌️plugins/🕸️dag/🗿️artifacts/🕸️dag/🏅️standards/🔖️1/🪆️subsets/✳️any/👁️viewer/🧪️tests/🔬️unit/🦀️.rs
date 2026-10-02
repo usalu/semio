@@ -19,5 +19,5 @@ async fn renders_the_main_body_key_for_the_default_snapshot() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let _node = <DagViewer as ArtifactViewer>::render(main::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default());
+    let _node = <DagViewer as ArtifactViewer>::render(main::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
 }

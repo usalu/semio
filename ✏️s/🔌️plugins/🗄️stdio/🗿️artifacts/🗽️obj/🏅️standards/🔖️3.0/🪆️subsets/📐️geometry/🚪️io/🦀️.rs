@@ -132,7 +132,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
                 if face_vertices.len() < 3 {
                     return Err(format!("face has fewer than 3 vertices: {line}"));
                 }
-                let face_index = faces.len();
+                let face_index = faces.len() as u64;
                 faces.push(ObjFace { vertices: face_vertices });
                 for name in &cur_active_groups {
                     let gi = if let Some(&gi) = group_index.get(name) {
@@ -167,7 +167,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
                 let name = parts.next().map(|s| s.to_string());
                 if name != cur_material {
                     if let Some(m) = &name {
-                        usemtl.push(ObjUsemtlRange { face_index_from: faces.len(), material: m.clone() });
+                        usemtl.push(ObjUsemtlRange { face_index_from: faces.len() as u64, material: m.clone() });
                     }
                     cur_material = name;
                 }
@@ -184,7 +184,7 @@ pub fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
                     Some(v) => v.parse::<u32>().ok(),
                 };
                 if !have_smoothing || next != cur_smoothing {
-                    smoothing_groups.push(ObjSmoothingRange { face_index_from: faces.len(), group: next });
+                    smoothing_groups.push(ObjSmoothingRange { face_index_from: faces.len() as u64, group: next });
                     cur_smoothing = next;
                     have_smoothing = true;
                 }
@@ -233,10 +233,10 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
         out.push_str(&format!("vn {} {} {}\n", vn.x, vn.y, vn.z));
     }
 
-    let object_at = |i: usize| -> Option<&str> { snap.objects.iter().find(|o| o.faces.contains(&i)).map(|o| o.name.as_str()) };
-    let groups_at = |i: usize| -> Vec<&str> { snap.groups.iter().filter(|g| g.faces.contains(&i)).map(|g| g.name.as_str()).collect() };
-    let material_at = |i: usize| -> Option<&str> { snap.usemtl.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.material.as_str()) };
-    let smoothing_at = |i: usize| -> Option<Option<u32>> { snap.smoothing_groups.iter().rev().find(|r| r.face_index_from <= i).map(|r| r.group) };
+    let object_at = |i: usize| -> Option<&str> { snap.objects.iter().find(|o| o.faces.contains(&(i as u64))).map(|o| o.name.as_str()) };
+    let groups_at = |i: usize| -> Vec<&str> { snap.groups.iter().filter(|g| g.faces.contains(&(i as u64))).map(|g| g.name.as_str()).collect() };
+    let material_at = |i: usize| -> Option<&str> { snap.usemtl.iter().rev().find(|r| r.face_index_from <= i as u64).map(|r| r.material.as_str()) };
+    let smoothing_at = |i: usize| -> Option<Option<u32>> { snap.smoothing_groups.iter().rev().find(|r| r.face_index_from <= i as u64).map(|r| r.group) };
 
     let mut prev_object: Option<&str> = None;
     let mut prev_groups: Vec<&str> = Vec::new();

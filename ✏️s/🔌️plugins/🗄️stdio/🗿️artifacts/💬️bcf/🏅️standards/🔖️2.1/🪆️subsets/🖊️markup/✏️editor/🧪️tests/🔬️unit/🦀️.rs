@@ -73,3 +73,5 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
     assert!(bcf_emit(&BcfAnyEditCommand::SetCell { row: u32::MAX, column: 0, revision: revision.clone(), value: "x".into() }, &source).is_err());
     assert!(bcf_emit(&BcfAnyEditCommand::SetCell { row: 0, column: u32::MAX, revision, value: "x".into() }, &source).is_err());
 }
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", BcfAnyEditor, || semio_framework_plugin::App { definition: create_bcf_any_editor(), examples: Vec::new() }, "../..");

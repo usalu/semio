@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ The plugin host owns its replay and mounted-relay lifecycle semantics. AJV independently validates the neutral trace schema, while Rust and TypeScript execute the committed traces through separate state-machine implementations.",
   "oracles": [],

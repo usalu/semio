@@ -69,14 +69,13 @@ async fn a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_e
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("window-1".into()),
         window_instances: vec![semio_framework::ViewWindowInstance { id: "window-1".into(), window_kind_id: model_window::WINDOW_KIND_ID.into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let emit = camera_emit(&command, Some(&view)).expect("the pose is admissible");
     assert_eq!(emit.window_config_mutations.len(), 1, "one addressed window-config write");
     assert!(emit.artifact_mutations.is_empty(), "a viewer NEVER emits a document mutation");
     assert!(emit.config_mutations.is_empty(), "the app config lane stays untouched");
     assert!(emit.effects.is_empty());
-    assert_eq!(emit.coalesce_key.as_deref(), Some("energy.model.3d.viewer.camera:window-1"), "a burst of debounced orbit ticks must collapse per window instance");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,7 +86,7 @@ async fn a_camera_gesture_without_a_concrete_window_is_refused_rather_than_writt
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("window-1".into()),
         window_instances: vec![semio_framework::ViewWindowInstance { id: "window-1".into(), window_kind_id: "energy.structure".into() }],
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     assert!(camera_emit(&command, Some(&view)).is_err(), "a pose addressed at another window kind must not write the 3d pane");
     assert!(camera_emit(&EnergyModelViewCommand::SetCamera { camera: String::new() }, Some(&view)).is_err(), "an empty pose is a refusal, never a silent no-op");

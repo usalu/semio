@@ -1,0 +1,8 @@
+//! 🔢️ Exact binary64 native words shared by explicit Semio geometry fields.
+pub(crate) struct NativeF64(pub f64);
+impl std::fmt::Display for NativeF64{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{if self.0.is_nan(){write!(formatter,"nan64_{:016x}",self.0.to_bits())}else{std::fmt::Display::fmt(&self.0,formatter)}}}
+pub(crate) fn parse(value:&str)->Result<f64,String>{let value=value.trim();if let Some(word)=value.strip_prefix("nan64_"){if word.len()!=16||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid Semio geometry NaN word".into())}let bits=u64::from_str_radix(word,16).map_err(|error|error.to_string())?;if bits&0x7ff0000000000000!=0x7ff0000000000000||bits&0xfffffffffffff==0{return Err("Semio geometry NaN word has non-NaN class".into())}return Ok(f64::from_bits(bits))}value.parse::<f64>().map_err(|error|error.to_string())}
+
+pub(crate) struct NativeF32(pub f32);
+impl std::fmt::Display for NativeF32{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{if self.0.is_nan(){write!(formatter,"nan32_{:08x}",self.0.to_bits())}else{std::fmt::Display::fmt(&self.0,formatter)}}}
+pub(crate) fn parse32(value:&str)->Result<f32,String>{let value=value.trim();if let Some(word)=value.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid Semio geometry binary32 NaN word".into())}let bits=u32::from_str_radix(word,16).map_err(|error|error.to_string())?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err("Semio geometry binary32 NaN word has non-NaN class".into())}return Ok(f32::from_bits(bits))}value.parse::<f32>().map_err(|error|error.to_string())}

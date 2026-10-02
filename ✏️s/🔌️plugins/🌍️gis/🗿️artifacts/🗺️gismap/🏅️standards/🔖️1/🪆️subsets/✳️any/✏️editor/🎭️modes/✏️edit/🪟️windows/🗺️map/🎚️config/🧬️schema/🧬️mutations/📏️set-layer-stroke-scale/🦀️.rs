@@ -31,8 +31,8 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeSc
     fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
         vec![Self { layer_id: self.layer_id.clone(), value: base.layer_stroke_scale.get(&self.layer_id).copied() }.into()]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer stroke scale {}", self.layer_id), &format!("Linienstärkenmaßstab der Ebene {} setzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["layerStrokeScale".into(), self.layer_id.clone()]

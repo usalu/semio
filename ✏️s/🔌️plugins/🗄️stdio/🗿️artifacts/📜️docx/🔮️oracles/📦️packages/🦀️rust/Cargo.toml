@@ -1,0 +1,24 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-docx-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_docx_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:quick-xml", "semio-s-plugin-stdio-document-test-oracle/oracles", "dep:zip"]
+
+[dependencies]
+"quick-xml" = { version = "0.42", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../🔮️oracles/📃️document/📦️packages/🦀️rust", default-features = false }
+"zip" = { version = "6", optional = true, default-features = false, features = ["deflate"] }

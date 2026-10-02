@@ -47,12 +47,14 @@ import {
 } from "@semio-tech/ui-react";
 import {
   GestureRecognizer,
+  continuousPressIdentity,
   createContinuousGestureLane,
   nodeGraphActions,
   pinchZoomNotches,
   parseViewport2d,
   windowElementId,
   type ActionDescriptor,
+  type ContinuousGestureAbortReason,
   type ContinuousGestureLane,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
@@ -121,7 +123,8 @@ type FrameworkGraphSession = GraphWasmSession & {
   setHoverChannel?(widgetId: string | null, port?: string | null): void;
   syncInteraction?(selectedIdsJson: string, hoveredId?: string | null): void;
   alignSelection?(mode: string): void;
-  hostSnapshotJson?(): string;
+  /** 🔗️ Drains what the last gesture (or align) did to the graph as `nodeGraphEdit` arguments (design §13.3). */
+  takeGraphEditsJson?(): string;
   setCanvasThemeJson?(json: string): void;
 };
 //#endregion Types
@@ -344,6 +347,31 @@ export type FlowCatalogueSection = {
   readonly items?: readonly FlowCatalogueItem[];
   readonly groups?: readonly FlowCatalogueGroup[];
 };
+
+/** 🔗️ The `nodeGraphEdit` rows a host journal answered (`{"operations":[…]}`, design §13.3: `connect`, `disconnect`,
+ * `move`, `setSlider`, `insertPort`); none for anything else. */
+export function nodeGraphEditRows(json: string): readonly Record<string, unknown>[] {
+  try {
+    const operations = (JSON.parse(json) as { readonly operations?: unknown } | null)?.operations;
+    return Array.isArray(operations) ? operations.filter((row): row is Record<string, unknown> => typeof row === "object" && row !== null && typeof (row as { operation?: unknown }).operation === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** ➕️ The `addWidget` add-node record of a catalogue descriptor JSON dropped or committed at world `(x, y)` — the
+ * same arguments the wgpu renderer dispatches for a catalogue drop; the owner mints the widget id. */
+export function flowAddWidgetArgs(descriptorJson: string, x: number, y: number): Record<string, unknown> {
+  let descriptor: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(descriptorJson) as unknown;
+    if (typeof parsed === "object" && parsed !== null) descriptor = parsed as Record<string, unknown>;
+  } catch {
+    descriptor = {};
+  }
+  const text = (key: string) => (typeof descriptor[key] === "string" ? { [key]: descriptor[key] } : {});
+  return { kind: typeof descriptor.kind === "string" ? descriptor.kind : "inputSlider", ...text("neuronKind"), ...text("label"), ...text("action"), ...text("format"), x, y };
+}
 
 /** 🧩️ Builds an addWidget/setGhostWidget descriptor JSON from a catalogue row. */
 export function flowCatalogueItemDescriptor(item: FlowCatalogueItem): string {
@@ -798,7 +826,7 @@ function WasmGraphSurface({
   const dispatch = useCallback((action: string, args?: Record<string, unknown>) => onAction({ controllerId, action, args: { surfaceId, ...args } }), [controllerId, onAction, surfaceId]);
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
-  const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
+  const { sliderLane } = useGraphSliderLanes(surfaceId, dispatchRef);
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pinchLogScaleRef = useRef(0);
 
@@ -922,7 +950,7 @@ function WasmGraphSurface({
       setHover: () => {},
       setHoverChannel: () => {},
       alignSelection: () => {},
-      hostSnapshotJson: () => "{}",
+      takeGraphEditsJson: () => '{"operations":[]}',
       takePendingOpenInstanceId: () => null,
     } satisfies FrameworkGraphSession;
   }, [scene.viewport, wasmSession]);
@@ -969,51 +997,15 @@ function WasmGraphSurface({
     };
   }, [emitInteractionState, keyboardPort, paintOverlays]);
 
-  const commitGraphFixture = useCallback(() => {
+  /** 🔗️ Dispatches what the last gesture (or align) did to the graph — the rows the shared DAG journal narrates
+   * (`connect`, `disconnect`, `move`, `setSlider`, `insertPort`; design §13.3), the very rows the wgpu renderer writes
+   * from the same journal — and nothing when it did nothing. The whole fixture is never published. */
+  const dispatchGraphEdits = useCallback(() => {
     const session = sessionRef.current;
-    if (!session?.hostSnapshotJson) return;
-    try {
-      const hostSnapshotJson = session.hostSnapshotJson();
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostSnapshot", hostSnapshotJson }] });
-    } catch {
-      /* session not ready */
-    }
+    if (!session?.takeGraphEditsJson) return;
+    const operations = nodeGraphEditRows(session.takeGraphEditsJson());
+    if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
   }, [dispatch]);
-
-  /** 🕹️ The graph's own EDITED shape — node ids/positions and wire endpoints, and deliberately not the
-   * camera, the selection or the hover. A gesture that only panned, zoomed or picked leaves this
-   * string identical, which is what lets a pointer-up commit be sent ONLY when the user really changed
-   * the graph (ticket 26/09/18/EXTRACT-WFC-PLUGIN: until this existed, dragging a node or drawing a
-   * wire on the wasm node-graph surface reached no plugin at all — `commitGraphFixture` was called
-   * from the align chrome and nowhere else, so every drag was silently discarded on pointer-up). */
-  const graphEditSignature = useCallback((): string | null => {
-    const session = sessionRef.current;
-    if (!session?.hostSnapshotJson) return null;
-    try {
-      const snapshot = JSON.parse(session.hostSnapshotJson()) as {
-        readonly nodes?: readonly { readonly id?: string; readonly x?: number; readonly y?: number }[];
-        readonly edges?: readonly { readonly id?: string; readonly source?: string; readonly target?: string }[];
-      };
-      const nodes = (snapshot.nodes ?? []).map((entry) => [entry.id, entry.x, entry.y]);
-      const edges = (snapshot.edges ?? []).map((entry) => [entry.id, entry.source, entry.target]);
-      return JSON.stringify([nodes, edges]);
-    } catch {
-      return null;
-    }
-  }, []);
-
-  /** 🕹️ The signature captured at pointer-DOWN, so a commit is decided against the graph as it was
-   * before THIS gesture rather than against whatever the session laid out at load. */
-  const gestureSignatureRef = useRef<string | null>(null);
-
-  const commitGraphFixtureIfEdited = useCallback(() => {
-    const before = gestureSignatureRef.current;
-    gestureSignatureRef.current = null;
-    if (before === null) return;
-    const after = graphEditSignature();
-    if (after === null || after === before) return;
-    commitGraphFixture();
-  }, [commitGraphFixture, graphEditSignature]);
 
   const pickInteraction = useCanvasPickInteraction({
     resolveTargetsAtClient: (client) => {
@@ -1119,7 +1111,6 @@ function WasmGraphSurface({
           const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
           if (verdict.kind === "pinchBegin") {
             const session = sessionRef.current;
-            gestureSignatureRef.current = null;
             pinchLogScaleRef.current = 0;
             pickInteraction.onCanvasPointerLeave();
             for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
@@ -1135,7 +1126,6 @@ function WasmGraphSurface({
           if (!session?.pointerDownScreen) return;
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerDown(client);
-          gestureSignatureRef.current = graphEditSignature();
           session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
           session.renderFrame();
           paintOverlays();
@@ -1177,7 +1167,7 @@ function WasmGraphSurface({
           session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
           session.renderFrame();
           emitInteractionState();
-          commitGraphFixtureIfEdited();
+          dispatchGraphEdits();
         }}
         onPointerCancel={(event) => {
           const session = sessionRef.current;
@@ -1187,7 +1177,6 @@ function WasmGraphSurface({
             emitInteractionState();
           }
           if (verdict.kind !== "single") return;
-          gestureSignatureRef.current = null;
           pickInteraction.onCanvasPointerLeave();
           if (!session?.pointerCancelScreen) return;
           session.pointerCancelScreen();
@@ -1213,7 +1202,7 @@ function WasmGraphSurface({
             const session = sessionRef.current;
             if (!session?.alignSelection) return;
             session.alignSelection(alignModeToDag(mode));
-            commitGraphFixture();
+            dispatchGraphEdits();
             session.renderFrame();
             emitInteractionState();
           }}
@@ -1227,7 +1216,7 @@ function WasmGraphSurface({
         editable={editable}
         onSliderChange={(widgetId, value) => sliderLane(widgetId).offer(value)}
         onSliderCommit={(widgetId, value) => sliderLane(widgetId).commit(value)}
-        onSliderPointerDown={beginSliderGesture}
+        onSliderAbort={(widgetId, reason) => sliderLane(widgetId).abort(reason)}
       />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
@@ -2245,10 +2234,11 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
  * mesh arriving three seconds behind the thumb. The lane keeps only the value the user is on now and
  * sends it when the previous round trip has landed (`📓️slider-preview-update-2026-09-15.md`).
  *
- * The press id is minted on press and travels as the dispatch's own top-level `gesture` (the release adds
- * `commit: true`, a cancel `abort: <reason>` with no value), so the framework scrub machine (design §13.1) keeps
- * every tick provisional and commits the whole drag as ONE edit while the guest only maps the value to its
- * absolute leaf. Unmounting a surface mid-press retires it with zero trace.
+ * The press id (`continuousPressIdentity`) is minted by the press's first send, closed by its release, and travels
+ * as the dispatch's own top-level `gesture` (the release adds `commit: true`, a cancel `abort: <reason>` with no
+ * value), so the framework scrub machine (design §13.1) keeps every tick provisional and commits the whole drag as
+ * ONE edit while the guest only maps the value to its absolute leaf. A lost pointer capture or a blur mid-press
+ * cancels it (`captureLost`, `blur`) and unmounting a surface mid-press retires it, each with zero trace.
  *
  * 🩸️ Before this, the overlay dispatched `setGraphParameter` — an action NO app declares. The shell
  * dropped every tick (`dropped action "setGraphParameter" … no window kind declares it`), so the knob
@@ -2258,17 +2248,22 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
 function useGraphSliderLanes(surfaceId: string, dispatchRef: React.RefObject<(action: string, args?: Record<string, unknown>) => void | Promise<void>>) {
   const gestureIdsRef = useRef(new Map<string, string>());
   const lanesRef = useRef(new Map<string, ContinuousGestureLane<number>>());
-  const beginSliderGesture = useCallback((widgetId: string) => {
-    gestureIdsRef.current.set(widgetId, `${surfaceId}:${widgetId}:${Date.now()}`);
-  }, [surfaceId]);
   const sliderLane = useCallback(
     (widgetId: string) => {
       const existing = lanesRef.current.get(widgetId);
       if (existing) return existing;
-      const gesture = () => gestureIdsRef.current.get(widgetId) ?? `${surfaceId}:${widgetId}`;
       const lane = createContinuousGestureLane<number>({
-        send: (value, phase) => dispatchRef.current?.(nodeGraphActions.edit, { operations: [{ operation: "setSlider", widgetId, value }], gesture: gesture(), commit: phase === "commit" }),
-        abort: (reason) => dispatchRef.current?.(nodeGraphActions.edit, { operations: [], gesture: gesture(), abort: reason }),
+        send: (value, phase) => {
+          const gesture = gestureIdsRef.current.get(widgetId) ?? continuousPressIdentity(`${surfaceId}:${widgetId}`);
+          if (phase === "commit") gestureIdsRef.current.delete(widgetId);
+          else gestureIdsRef.current.set(widgetId, gesture);
+          return dispatchRef.current?.(nodeGraphActions.edit, { operations: [{ operation: "setSlider", widgetId, value }], gesture, commit: phase === "commit" });
+        },
+        abort: (reason) => {
+          const gesture = gestureIdsRef.current.get(widgetId);
+          gestureIdsRef.current.delete(widgetId);
+          return gesture === undefined ? undefined : dispatchRef.current?.(nodeGraphActions.edit, { operations: [], gesture, abort: reason });
+        },
         onFault: (error) => undefined,
       });
       lanesRef.current.set(widgetId, lane);
@@ -2282,7 +2277,7 @@ function useGraphSliderLanes(surfaceId: string, dispatchRef: React.RefObject<(ac
     },
     [],
   );
-  return { sliderLane, beginSliderGesture };
+  return { sliderLane };
 }
 //#endregion 🎚️SliderGestureLanes
 
@@ -2297,6 +2292,7 @@ export function GraphSliderOverlays({
   onSliderCommit,
   onSliderPointerDown,
   onSliderPointerUp,
+  onSliderAbort,
   occluderRect = null,
 }: {
   readonly scopeId: string;
@@ -2308,6 +2304,7 @@ export function GraphSliderOverlays({
   readonly onSliderCommit?: (widgetId: string, value: number) => void;
   readonly onSliderPointerDown?: (widgetId: string) => void;
   readonly onSliderPointerUp?: (widgetId: string) => void;
+  readonly onSliderAbort?: (widgetId: string, reason: ContinuousGestureAbortReason) => void;
   readonly occluderRect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 }) {
   const camera = parseDagOverlayCamera(stateJson);
@@ -2355,7 +2352,11 @@ export function GraphSliderOverlays({
               onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)}
               onPointerDown={() => onSliderPointerDown?.(slider.widgetId)}
               onPointerUp={() => onSliderPointerUp?.(slider.widgetId)}
-              onPointerCancel={() => onSliderPointerUp?.(slider.widgetId)}
+              onPointerCancel={() => {
+                onSliderAbort?.(slider.widgetId, "captureLost");
+                onSliderPointerUp?.(slider.widgetId);
+              }}
+              onBlur={() => onSliderAbort?.(slider.widgetId, "blur")}
               onValueCommit={(values) => onSliderCommit?.(slider.widgetId, values[0] ?? slider.value)}
             />
           </div>
@@ -3030,35 +3031,6 @@ export function FlowGraphCanvasHost({
     [dispatch, scene.hostSnapshotJson],
   );
 
-  // 🧵️ Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
-  // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
-  // resync applies its `evalJson`/`computingJson` back onto this session (`syncFlowSessionFromScene`).
-  const commitFixture = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    observeFlowTask(session, "snapshotJson:commit", session.snapshotJson(), (value) => {
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostSnapshot", hostSnapshotJson: flowJsonText(value) }] });
-    });
-  }, [dispatch]);
-
-  /** 🔗️ What a released gesture did, read out of `pointerUpScreen`'s own result — the gesture answers
-   * for itself, so there is no second round trip and no window in which a later read could drain the
-   * journal first. Shape: `{operations:[…],hostSnapshotChanged:boolean}` — `operations` in the guest's own
-   * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
-   * id, `move` — the node-graph gesture record `{gestureId, nodeIds, dx, dy}` of a node drag), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
-   * `write_graph_edit_action`); `hostSnapshotChanged` the host's own content predicate
-   * (`🌊️flow/🖥️host/🦀️.rs`'s `commit_gesture_history`), which is the ONLY thing that may authorise the
-   * whole-fixture commit. A gesture with neither changed nothing and is owed no dispatch at all. */
-  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly hostSnapshotChanged: boolean } => {
-    try {
-      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly hostSnapshotChanged?: unknown } | null;
-      const operations = parsed?.operations;
-      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], hostSnapshotChanged: parsed?.hostSnapshotChanged === true };
-    } catch {
-      return { operations: [], hostSnapshotChanged: false };
-    }
-  }, []);
-
   /** 🤹 The gesture reasons holding this surface open right now. A surface can be under two at once
    * (a wheel gesture arriving mid-drag), so "is a gesture active" is a set membership rather than a
    * boolean that the second `end` would clear while the first still runs. */
@@ -3137,7 +3109,7 @@ export function FlowGraphCanvasHost({
     beginGesture("gesture");
   }, [beginGesture]);
 
-  const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
+  const { sliderLane } = useGraphSliderLanes(surfaceId, dispatchRef);
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pinchLogScaleRef = useRef(0);
 
@@ -3629,14 +3601,11 @@ export function FlowGraphCanvasHost({
       const session = sessionRef.current;
       const open = spotlight;
       if (!session || !open) return;
-      observeFlowTask(session, "addWidget", session.addWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y), () => {
-        commitFixture();
-        emitInteractionState();
-      });
+      dispatch("addWidget", flowAddWidgetArgs(flowCatalogueItemDescriptor(item), open.world.x, open.world.y));
       setSpotlight(null);
       clearGhostPreview();
     },
-    [clearGhostPreview, commitFixture, emitInteractionState, spotlight],
+    [clearGhostPreview, dispatch, spotlight],
   );
 
   const openSpotlightAtClient = useCallback(
@@ -3720,14 +3689,10 @@ export function FlowGraphCanvasHost({
           dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, x: world.x, y: world.y });
           return;
         }
-        const descriptor = raw.startsWith("{") ? raw : JSON.stringify({ kind: raw });
-        observeFlowTask(session, "addWidget", session.addWidget(descriptor, world.x, world.y), () => {
-          commitFixture();
-          emitInteractionState();
-        });
+        dispatch("addWidget", flowAddWidgetArgs(raw.startsWith("{") ? raw : JSON.stringify({ kind: raw }), world.x, world.y));
       });
     },
-    [clearGhostPreview, commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
+    [clearGhostPreview, dispatch, editable, labelStateJson],
   );
 
   const onCanvasDoubleClick = useCallback(
@@ -3872,10 +3837,8 @@ export function FlowGraphCanvasHost({
           paintOverlays();
         }}
         onSliderCommit={(widgetId, value) => sliderLane(widgetId).commit(value)}
-        onSliderPointerDown={(widgetId) => {
-          beginSliderGesture(widgetId);
-          handleGesturePointerDown();
-        }}
+        onSliderAbort={(widgetId, reason) => sliderLane(widgetId).abort(reason)}
+        onSliderPointerDown={() => handleGesturePointerDown()}
         onSliderPointerUp={() => handleGesturePointerUp()}
       />
       {selectionBounds ? (
@@ -3886,8 +3849,11 @@ export function FlowGraphCanvasHost({
               bounds={selectionBounds}
               onAlign={(mode) => {
                 const session = sessionRef.current;
-                if (session) observeFlowTask(session, "alignSelection", session.alignSelection(mode));
-                commitFixture();
+                if (session)
+                  observeFlowTask(session, "alignSelection", session.alignSelection(mode), (value) => {
+                    const operations = nodeGraphEditRows(flowJsonText(value));
+                    if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
+                  });
                 paintOverlays();
               }}
             />
@@ -3979,19 +3945,8 @@ export function FlowGraphCanvasHost({
           cameraPanRef.current = false;
           cameraOnlyGestureEndRef.current = wasCameraPan;
           issueFlowGestureStep(session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
-            // 🔗️ A gesture that wired, cut or dragged nodes dispatches THAT — four ids, one synapse id, or
-            // the node-graph gesture record (the moved node ids and their ONE relative offset, design
-            // §13.3) — and never the whole fixture on top of it: the guest replays the narrow intent and
-            // re-publishes the graph itself, so a second `setFixture` would only race its own result.
-            //
-            // 🪶 A gesture the narrow vocabulary does not carry dispatches the whole fixture only when the
-            // HOST says its content changed (an inline slider, a port insert). A plain click, a marquee, a
-            // pan and a press that grabbed nothing change nothing, and used to dispatch a whole-fixture
-            // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
-            // evaluation on a shell nobody touched.
-            const { operations, hostSnapshotChanged } = graphGestureAnswer(value);
+            const operations = nodeGraphEditRows(flowJsonText(value));
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
-            else if (hostSnapshotChanged) commitFixture();
           });
           handleGesturePointerUp();
           // 🎥️ A pan moved the camera and nothing else, so its settle owes the plugin the viewport and

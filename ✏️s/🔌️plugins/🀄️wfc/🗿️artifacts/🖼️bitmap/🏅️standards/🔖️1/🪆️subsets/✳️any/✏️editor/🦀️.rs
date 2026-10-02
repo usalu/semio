@@ -38,13 +38,40 @@ use crate::schema::snapshot::BitmapColor;
 use crate::{BitmapMutation, BitmapSnapshot, WFC_BITMAP_DIALECT, WFC_BITMAP_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PresenceView,
-    ToolRef, TransientView, WindowConfigMutation,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::PresenceView;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::TransientView;
+use semio_framework_plugin::WindowConfigMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 /// 🪪️ This editor's controller id — the address every retained tool key is qualified under.
 pub const BITMAP_EDITOR_CONTROLLER_ID: &str = "s.wfc.bitmap@1/*#editor";
@@ -423,7 +450,6 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         match input.command {
             BitmapEditorCommand::Solve => Ok(ArtifactCommandWorkStep::Complete(Emit {
                 effects: vec![fill_tool::start_fill_effect()],
-                description: Some("Solve".to_string()),
                 ui_scope: semio_framework::kernel::UiDirtyScope::Full,
                 ..Default::default()
             })),
@@ -973,20 +999,20 @@ impl BitmapEditor {
     /// so with the default scope the collapse landed in the store and the output window kept
     /// rendering the buffer it already had (measured: a black square after a successful solve).
     pub fn dispatch(command: &BitmapEditorCommand, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<BitmapMutation>, Fault> {
-        let Some((mutation, description)) = Self::command_mutation(command) else {
+        let Some(mutation) = Self::command_mutation(command) else {
             return match command {
                 BitmapEditorCommand::SetActiveColor { index } => Self::set_active_color(doc, cfg, view_state, *index),
                 BitmapEditorCommand::PaintStroke { phase, .. } if phase.as_deref() == BitmapStrokePhase::Stream.as_str() => Err(Fault::from("wfc-bitmap-stroke-stream-requires-window-transient")),
                 BitmapEditorCommand::PaintStroke { .. } => Self::paint_stroke(command, doc, cfg, &BitmapInputWindowTransient::default()).map(|(emit, _)| emit),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
                 BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
-                BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], description: Some("Solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
-                BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { description: Some("Commit fill solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
+                BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
+                BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 BitmapEditorCommand::CanvasPointerDown { .. } | BitmapEditorCommand::CanvasPointerMove { .. } | BitmapEditorCommand::CanvasPointerUp { .. } | BitmapEditorCommand::CanvasDoubleClick | BitmapEditorCommand::SyncCamera => Ok(Emit::default()),
                 _ => Err(Fault::from("wfc-bitmap-command-unmapped")),
             };
         };
-        Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
+        Ok(Emit::mutations(vec![mutation]))
     }
 
     /// 🫧️ Runs the artifact's own headless inference adapter and packages the answer as the one
@@ -1008,18 +1034,18 @@ impl BitmapEditor {
     /// 🗺️ The command→mutation map, lifted out of `dispatch` so it is a pure, testable function: a
     /// command that answers `None` is one of the non-document verbs this file's own doc comment
     /// accounts for, and nothing else.
-    pub fn command_mutation(command: &BitmapEditorCommand) -> Option<(BitmapMutation, String)> {
+    pub fn command_mutation(command: &BitmapEditorCommand) -> Option<BitmapMutation> {
         Some(match command {
-            BitmapEditorCommand::ChangeSeed { seed } => (change_seed(*seed), format!("Change seed to {seed}")),
-            BitmapEditorCommand::ResizeInput { width, height } => (resize_input(*width, *height), format!("Resize input to {width}×{height}")),
-            BitmapEditorCommand::SetInputPixels { x, y, width, height, pixels } => (set_input_pixels(*x, *y, *width, *height, pixels.clone()), format!("Paint {width}×{height} at ({x}, {y})")),
-            BitmapEditorCommand::AddPaletteColor { index, r, g, b, a } => (add_palette_color(*index, BitmapColor { r: *r, g: *g, b: *b, a: *a }), format!("Add palette colour at {index}")),
-            BitmapEditorCommand::ChangePaletteColor { index, r, g, b, a } => (change_palette_color(*index, BitmapColor { r: *r, g: *g, b: *b, a: *a }), format!("Change palette colour {index}")),
-            BitmapEditorCommand::RemovePaletteColor { index } => (remove_palette_color(*index), format!("Remove palette colour {index}")),
-            BitmapEditorCommand::ResizeOutput { width, height, periodic } => (resize_output(*width, *height, *periodic), format!("Resize output to {width}×{height}")),
-            BitmapEditorCommand::ChangeModel { pattern_size, symmetry, periodic_input, ground } => (change_model(*pattern_size, *symmetry, *periodic_input, *ground), "Change model".to_string()),
-            BitmapEditorCommand::PinPixel { x, y, color } => (pin_pixel(*x, *y, *color), format!("Pin ({x}, {y})")),
-            BitmapEditorCommand::UnpinPixel { x, y } => (unpin_pixel(*x, *y), format!("Unpin ({x}, {y})")),
+            BitmapEditorCommand::ChangeSeed { seed } => change_seed(*seed),
+            BitmapEditorCommand::ResizeInput { width, height } => resize_input(*width, *height),
+            BitmapEditorCommand::SetInputPixels { x, y, width, height, pixels } => set_input_pixels(*x, *y, *width, *height, pixels.clone()),
+            BitmapEditorCommand::AddPaletteColor { index, r, g, b, a } => add_palette_color(*index, BitmapColor { r: *r, g: *g, b: *b, a: *a }),
+            BitmapEditorCommand::ChangePaletteColor { index, r, g, b, a } => change_palette_color(*index, BitmapColor { r: *r, g: *g, b: *b, a: *a }),
+            BitmapEditorCommand::RemovePaletteColor { index } => remove_palette_color(*index),
+            BitmapEditorCommand::ResizeOutput { width, height, periodic } => resize_output(*width, *height, *periodic),
+            BitmapEditorCommand::ChangeModel { pattern_size, symmetry, periodic_input, ground } => change_model(*pattern_size, *symmetry, *periodic_input, *ground),
+            BitmapEditorCommand::PinPixel { x, y, color } => pin_pixel(*x, *y, *color),
+            BitmapEditorCommand::UnpinPixel { x, y } => unpin_pixel(*x, *y),
             BitmapEditorCommand::SetActiveColor { .. }
             | BitmapEditorCommand::PaintStroke { .. }
             | BitmapEditorCommand::Solve
@@ -1098,7 +1124,7 @@ impl BitmapEditor {
         let mut config = input::config::current(cfg);
         config.active_color = index;
         let mutation: WindowConfigMutation = input::config::addressed(view, config)?;
-        Ok(Emit { window_config_mutations: vec![mutation], description: Some(format!("Set active colour {index}")), ..Default::default() })
+        Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }
 }
 //#endregion 🔖️Editor

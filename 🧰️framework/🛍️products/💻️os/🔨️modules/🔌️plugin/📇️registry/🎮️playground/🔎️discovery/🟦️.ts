@@ -1,5 +1,5 @@
 import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
-import { parseTileProxyAssetSpecV1 } from "../🗂️assets/🟦️.ts";
+import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
 import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { declaredLaunchNamePrefix } from "../../🚀️launch/🏷️name-prefix/🧬️schema/🟦️.ts";
@@ -14,7 +14,7 @@ import { generatePluginRegistry, parseTomlStringArray, readDescriptorJson, tomlB
 /** 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
  * plugin crate. `app` optionally scopes the row to one playground variant of a multi-app crate (unset
  * ⇒ every variant of the crate). Mirrors the TS discriminated union emitted for consumers as
- * `PlaygroundAssetSpec` (see `emitPlaygroundsTypeScript`). */
+ * `AssetDeliveryDeclarationV1` (see `emitPlaygroundsTypeScript`). */
 export type AssetSpecRow = {
   readonly kind: "tile-proxy" | "static-dir" | "mesh-collection";
   readonly route: string;

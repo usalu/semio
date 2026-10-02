@@ -1,5 +1,5 @@
 /** 🔀️ `ChangePartKindVariant` mutation payload — mirrors `🦀️.rs`. */
 
 export interface ChangePartKindVariant {
-  newVariant?: string;
+  newVariant: string|null;
 }

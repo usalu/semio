@@ -1037,7 +1037,7 @@ impl StructuralMutationCopy<SemioBrepSnapshot, SemioBrepMutation> for BrepStruct
             return Ok(step);
         }
         if let Some(inverse) = self.orphan_inverse.take() {
-            self.retirement = Some(app_store::retirement::owned_retirement(inverse));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(inverse));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         let has_snapshot =
@@ -1059,7 +1059,7 @@ impl StructuralMutationCopy<SemioBrepSnapshot, SemioBrepMutation> for BrepStruct
                     next_label: 0,
                 }
             };
-            self.retirement = Some(app_store::retirement::owned_retirement(snapshot));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(snapshot));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(app_store::SnapshotRetirementStep::Complete)

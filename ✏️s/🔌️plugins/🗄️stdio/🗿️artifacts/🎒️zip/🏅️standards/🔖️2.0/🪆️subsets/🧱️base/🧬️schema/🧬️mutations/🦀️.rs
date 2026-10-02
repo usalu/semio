@@ -75,7 +75,7 @@ impl protocol::OpText for ZipMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -86,7 +86,7 @@ impl protocol::OpText for ZipMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
-        dsl::print(&record, &spec(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 

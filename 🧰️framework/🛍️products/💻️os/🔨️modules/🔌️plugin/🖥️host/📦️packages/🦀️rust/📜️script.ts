@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runExactCargoLaws } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runRepositoryExactCargoLaws } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -52,7 +52,7 @@ class ServiceOperationConversionCheckScript extends BundleScript {
     assert.throws(() => assertServiceOperationConversionSource(wit, synchronous, asynchronous.replace("E::RequestServiceOperation(inner) => K::RequestServiceOperation", "E::MissingServiceOperation(inner) => K::RequestServiceOperation")));
     console.log(`plugin-host-service-operation-source: ajv=1 effects=${fixture.effects.length} wit=1 sync=1 async=1 mutation=1 passed`);
     if (!segments.includes("--native")) return;
-    const laws = await runExactCargoLaws({
+    const laws = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       env: { ...process.env, CARGO_BUILD_JOBS: "1", RUST_MIN_STACK: "33554432" },
       nativeEnv: { RUST_MIN_STACK: "268435456" },
@@ -248,7 +248,7 @@ class GuestFaultCheckScript extends BundleScript {
     );
     console.log(`guest-fault-oracle cases=${guestFaultOracle()} retries=${retainedLifecycleOracle()} activations=${activationOwnershipOracle()} reservations=${kernelReservationOracle()}`);
     if (!segments.includes("--native")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       groups: [
@@ -346,7 +346,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     assert(artifactRoot, "SEMIO_TEST_ARTIFACT_DIR is required");
     const scaleWasm = join(this.repoRoot, SCALE_COMPONENT_ARTIFACT);
     assert(existsSync(scaleWasm), "registered scale component was not materialized");
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456" },
@@ -377,7 +377,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
 class SqliteObservationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("sqlite-observation-check has a fixed native observation contract");
-    await runExactCargoLaws({
+    await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }],
       progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`),

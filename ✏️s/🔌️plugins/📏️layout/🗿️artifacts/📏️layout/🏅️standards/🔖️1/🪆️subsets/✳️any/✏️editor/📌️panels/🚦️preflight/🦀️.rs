@@ -12,7 +12,18 @@
 use crate::editor::layout::terminology::{preflight_msg, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use crate::{Frame, LayoutSnapshot};
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, UiValue};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants

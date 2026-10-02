@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to one subset of one standard of one artifact, so its oracle registrations and catalog live here. The Python implementation remains supplemental algebra evidence; the production ZIP register carrier now gives all 266 mutations a qualifying third-party reader.",
   "oracles": [
@@ -44,11 +44,11 @@
           "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
-        "plan": "The same reach the `zip` oracle records in ✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+        "plan": "The same reach the `zip` oracle records in 🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🔣️.json: the OS host declares an optional `zip` dependency for container handling. This oracle's subject does not link it; the stdio and architect crates keep `zip` as a dev-dependency. The debt retires when the host routes containers through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
       },
       "homepage": "https://github.com/zip-rs/zip2",
       "rationale": "The production architect program exporter maps all 66 registers plus the program, meta, project and governance singleton blocks to seventy JSON members in a real ZIP archive. Each mutation subject first proves its typed result against the committed vector and proves that every non-guard mutation changes this carrier projection; the oracle then receives those exact subject bytes and independently decompresses every member with zip 6 before parsing and comparing its JSON. The reader never links architect, applies a mutation, predicts a row or trusts the repository ZIP decoder, so a silent empty archive, a missing register, corrupt compression or dropped content diverges externally.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "third-party-library",
       "engine": {
         "family": "zip",
@@ -73,7 +73,7 @@
       "testOnly": true,
       "homepage": "https://github.com/tafia/calamine",
       "rationale": "The architect subject emits the production ECMA-376 workbook for a populated committed program and the oracle receives those exact bytes. Calamine 0.36 independently opens every worksheet and resolves every non-empty cell into the same row, column and typed-value projection prepared from the logical XlsxSnapshot before encoding. It never imports architect or stdio's XLSX decoder, so an empty workbook, missing register sheet, dropped field, malformed package or incorrect cell encoding is an external divergence.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "third-party-library",
       "engine": {
         "family": "calamine",
@@ -5812,16 +5812,7 @@
     }
   ],
   "noOracleDecisions": [],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
-    }
-  ],
+  "oracleHostPackages": [],
   "mutationCatalogs": [
     {
       "id": "program-1-any",

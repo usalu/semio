@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-dsl-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-ownership": "bun nx run @semio-tech/framework-dsl-rs:test-ownership"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

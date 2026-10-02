@@ -1,0 +1,27 @@
+# Physical Deletion Projection Plan
+
+The authored closed plan is retained in native-source-capture/🧫️fixtures/🚮️projection/🔣️.json, exact schema const in the sibling schema owner, and three owned portable laws under its test owner. Current actual PNG host is test-s-plugins-stdio-artifacts-png-standards-12-subsets-any-8d6c3a-🎨️create-and-round-trip-png:test-oracle; current IFC host is test-s-plugins-stdio-artifacts-ifc-standards-2x3-subsets-base-1f441c-🧱️mutate-ifc-2x3:test-oracle. Both effective current targets call original Repo test 📜script.ts oracle --owner and --case, not provider unit tests or replacement hosts. PNG retains its three exact original scenarios with PDF physically absent; IFC retains four mutation examples, four inverse examples and identity, with STEP physically absent. Lower Stdio's actual project is @semio-tech/stdio-assembly-rs, and its original requested Cargo targets are lib and authored_assembly, with the full concrete artifact directory absent.
+
+The plan retains exhaustive level and existing oracles features for the original scenario hosts, long for lower unit targets, exact source inputs, and mandatory physical absence/current source/normal Cargo materialization/locked metadata/fresh compiler dependency closure/all-original-runtime evidence. Framework products/S/Hub absence and Norm artifacts absence are explicitly later projections. No count, scenario, compiler profile or feature weakening is allowed.
+
+Actual TDD: after two invocation/setup failures (missing explicit path and a Node newline escaping error), deletion-projection-plan-red-4.log records2pass/1fail: independent strict AJV closed-roster/substitution checks and Node physical source/feature reads passed; the owned projection-plan command did not exist. The existing helper now admits the exact five physical source inputs with no-follow ancestors, same-read/content identity checks and SHA256 witnesses. deletion-projection-plan-green-1.log records3pass/13 assertions in311ms. The receipt explicitly says materialized=false and nativeExecuted=false.
+
+This is completed input admission and closed projection design only. Actual regular-file projected workspace materialization, selected normal Cargo/member generators, dependency closure capture, absence proof and native scenarios remain pending. No historical refused capture1–5 or retained compiler output is authority for these future projections. The whole coherent capture helper admission gates remain unchanged; the new mode exits before any capture mutation or compiler.
+
+## Authored Materializer Admission
+
+The existing ticket helper now also owns projection-materialize <current-source-root> <authored-projection-id>. It accepts only the three exact closed first projections, requires current physical removed-owner input and actual Cargo workspace, admits retained adapter/feature or manifest bytes before any destination mutation, and creates a unique fresh caller-owned regular-file workspace under goal-stdio/deletion-projections. It retains the original whole Framework/Hub/S scope and every file/directory/optional-input/content/containment/no-follow/absence final witness. Selected original inputs are additionally compared at final source and destination against their pre-copy hashes. Compiler storage is fresh for a projection; no historic compiled outcomes or source captures are reused. Projection-only root project/toolchain/rustfmt/bunfig authorities are explicitly copied. AVI capture behavior, scope and every final gate remain unchanged.
+
+Unknown authored-scope TDD was genuinely RED3pass/1fail/16 assertions; after implementation the four portable admission laws passed4/16 in448ms. This proves closed input and refusal paths, not a positive whole materialization. No projection capture/native compiler was launched. Unique completedAt/captureId/targetRoot and terminal successful process status are mandatory before normal private workspace/member materialization, locked metadata and actual original runtime targets. Those pipeline stages remain pending.
+
+Current original input receipt:
+
+| Input | Bytes | SHA-256 |
+| --- | --- | --- |
+| ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs | 2278 | da8199481268f967b8123e6d48a116625ed6c34c1d21c771624955f2e578283e |
+| ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🥒️.feature | 1467 | 2da293f5c467d398aa0604ea3d9eb176bb490fbea1c9d09fe07de5fa74f45a36 |
+| ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🦀️.rs | 14389 | d1168dd478c46c4d01ebb1d51e7286e46a930158bdebcd9ecc917c97fda2476c |
+| ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature | 18777 | 814772a346e0376547a77ef956ec0de57b679484e6bdff9f4bbb882e8888aae4 |
+| ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml | 570 | d1447f04b78cf4ab1562936eb2681554e612f33d2278a15d760e1b127039fc23 |
+
+Final cross-platform path refinement normalizes the closed slash-addressed deleted-owner scope and selected-input map keys through native path.join before exclusion/final witness lookup. Latest unchanged four portable laws passed4/16 in317ms; positive whole projected capture remains pending. This is a source-only control correction, not a Windows/Linux runtime receipt.

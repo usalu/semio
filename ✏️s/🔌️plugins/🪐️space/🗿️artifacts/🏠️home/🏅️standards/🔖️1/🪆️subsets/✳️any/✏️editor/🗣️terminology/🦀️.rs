@@ -6,7 +6,7 @@
 //! only editor-exclusive strings: the window title and the actions-summary words (the viewer never
 //! renders row actions, contract §2.2).
 
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 
 //#region 🔖️Terminology
 app_labels! {

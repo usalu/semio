@@ -16,7 +16,8 @@
 //#region 🔌️Adapters
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { type AdapterOutcome, type ResultArtifact, type TestAdapter, type TestCasePlan, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type ResultArtifact, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎛️Arguments

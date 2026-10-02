@@ -24,8 +24,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeEditionP
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change edition profile for sheet {} to {:?}", self.sheet, self.new_choice), &format!("Ausgabeprofil für Blatt {} auf {:?} ändern", self.sheet, self.new_choice))
     }
     fn target(&self) -> Vec<String> {
         vec![self.sheet.clone()]

@@ -24,8 +24,8 @@ impl protocol::MutationKind<SemioAnimationSnapshot, SemioAnimationMutation> for 
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
         agg_inverse(&SemioAnimationMutation::RemoveKeyframe(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove keyframe", "Schlüsselbild entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove keyframe", "Schlüsselbild entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

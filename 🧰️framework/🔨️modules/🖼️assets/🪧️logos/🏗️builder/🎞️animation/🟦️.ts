@@ -1,10 +1,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { exportAnimatedSvgToMp4, repoToolCacheEnv } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { exportSvgVideoV1, type SvgVideoExportControlV1 } from "../../../../🖌️raster/🎥️video/🖋️svg-export/🟦️.ts";
 
 type OwnedSvgElement = { getAttribute(name: string): string | null; querySelector(selector: string): OwnedSvgElement | null };
-type OwnedSvgDocument = { querySelectorAll(selector: string): Iterable<OwnedSvgElement> };
+type OwnedSvgDocument = { querySelector(selector: string): OwnedSvgElement | null; querySelectorAll(selector: string): Iterable<OwnedSvgElement> };
 type OwnedJsDomConstructor = new (markup: string, options: { contentType: string }) => { window: { document: OwnedSvgDocument } };
 const { JSDOM } = createRequire(import.meta.url)("jsdom") as { JSDOM: OwnedJsDomConstructor };
 const assetsRoot = (): string => join(import.meta.dir, "..", "..", "..");
@@ -214,13 +214,19 @@ export function generateLogoAnimation(): void {
   createLogoAnimatedSVG(keyframes, join(logoDir, "🎞️animation/⚡️animated.svg"));
 }
 
-export async function exportLogoAnimation(repoRoot: string): Promise<void> {
-  process.env.PLAYWRIGHT_BROWSERS_PATH ??= repoToolCacheEnv(repoRoot).PLAYWRIGHT_BROWSERS_PATH;
+export async function exportLogoAnimation(control: SvgVideoExportControlV1 & { readonly artifactRoot: string }): Promise<void> {
   const logoDir = join(assetsRoot(), "🪧️logos");
   const inputPath = join(logoDir, "🎞️animation/⚡️animated.svg");
   const outputPath = join(logoDir, "🎞️animation/🎬️animation.mp4");
   console.log(`Exporting ${inputPath} to ${outputPath}...`);
-  await exportAnimatedSvgToMp4(inputPath, outputPath, { progress: ({ completed, total }) => {
+  const markup = readFileSync(inputPath, "utf8");
+  const svg = new JSDOM(markup, { contentType: "image/svg+xml" }).window.document.querySelector("svg");
+  const viewBox = svg?.getAttribute("viewBox")?.trim().split(/[\s,]+/u).map(Number);
+  const width = Number(svg?.getAttribute("width")) || viewBox?.[2] || 1920;
+  const height = Number(svg?.getAttribute("height")) || viewBox?.[3] || 1080;
+  const durationSeconds = Number(markup.match(/dur="([\d.]+)s"/u)?.[1] ?? 10);
+  await exportSvgVideoV1({ inputSvgPath: inputPath, outputMp4Path: outputPath, artifactRoot: control.artifactRoot, width, height, fps: 60, durationSeconds }, { ...control, progress: ({ completed, total }) => {
+    control.progress?.({ completed, total });
     if (completed % 60 === 0 || completed === total) console.log(`[logo] encoded ${completed}/${total} frames`);
   } });
   console.log(`Successfully exported logo to MP4: ${outputPath}`);

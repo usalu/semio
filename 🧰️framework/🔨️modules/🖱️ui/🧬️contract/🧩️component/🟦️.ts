@@ -105,11 +105,27 @@ export function sliderAdjacentSnap(current: number, snaps: readonly number[], fo
   return candidates.length === 0 ? null : forward ? Math.min(...candidates) : Math.max(...candidates);
 }
 
-/** 📄️ How many ladder rungs a large arrow or a page key moves a slider — the twin of `SLIDER_PAGE_STEPS`. */
+/** 📄️ How many steps a large arrow or a page key with no detent ahead moves a numeric control — the twin of `SLIDER_PAGE_STEPS`. */
 export const SLIDER_PAGE_STEPS = 10;
 
 /** ⌨️ The keys a slider takes on its value axis — the twin of `SliderKey`. */
 export type SliderKey = "decrement" | "increment" | "pageDown" | "pageUp" | "home" | "end";
+
+/** 🎹️ The {@link SliderKey} a key press on a number field names (design §18): ArrowUp/ArrowDown one step (Shift: `large`),
+ * PageUp/PageDown the adjacent detent, Home/End the hard bound — only when the field has that bound, so the caret keeps them
+ * otherwise (the WAI-ARIA spinbutton pattern) — and `null` for every other key, ArrowLeft/ArrowRight included; the field half
+ * of the wgpu shell's `slider_key_value_from` key names. */
+export function uiNumberFieldKey(key: string, shiftKey: boolean, min: number | null | undefined, max: number | null | undefined): { readonly key: SliderKey; readonly large: boolean } | null {
+  switch (key) {
+    case "ArrowUp": return { key: "increment", large: shiftKey };
+    case "ArrowDown": return { key: "decrement", large: shiftKey };
+    case "PageUp": return { key: "pageUp", large: false };
+    case "PageDown": return { key: "pageDown", large: false };
+    case "Home": return min != null && Number.isFinite(min) ? { key: "home", large: false } : null;
+    case "End": return max != null && Number.isFinite(max) ? { key: "end", large: false } : null;
+    default: return null;
+  }
+}
 
 /** 🔟️ The fraction digits `value` prints with in the twelve-digit format (an `e-n` exponent adds `n`). */
 function decimalDigits(value: number): number {
@@ -118,34 +134,39 @@ function decimalDigits(value: number): number {
 }
 
 /** 🪜️ The keyboard law of a bounded slider — {@link uiNumberKeyValue} with both bounds; the twin of `slider_key_value`. */
-export function sliderKeyValue(current: number, min: number, max: number, step: number, snaps: readonly number[], key: SliderKey, large: boolean): number {
-  return uiNumberKeyValue(current, min, max, step, snaps, key, large);
+export function sliderKeyValue(current: number, min: number, max: number, step: number, precision: number | null | undefined, displayFactor: number | null | undefined, snaps: readonly number[], key: SliderKey, large: boolean): number {
+  return uiNumberKeyValue(current, min, max, step, precision, displayFactor, snaps, key, large);
 }
 
-/** ⌨️ The keyboard law of every numeric control: arrows walk one rung of the step ladder from `min` (from 0 without one; `large` walks {@link SLIDER_PAGE_STEPS} rungs) and never stop on a detent off their path, page keys walk ten rungs and stop on the first detent they reach, a key landing within ladder tolerance of a detent lands on it exactly, Home/End go to the bounds (keeping the value without one), results clamp to the bounds; the twin of `ui_number_key_value`. */
-export function uiNumberKeyValue(current: number, min: number | null, max: number | null, step: number, snaps: readonly number[], key: SliderKey, large: boolean): number {
+/** ⌨️ The keyboard law of every numeric control: the step is `step`, else `10^-precision` display units divided back by the display factor, else 1; arrows walk one step of the ladder from `min` (from 0 without one; `large` walks {@link SLIDER_PAGE_STEPS}) and never stop on a detent off their path; page keys jump to the next/previous detent, else walk ten steps; Home/End go to the bounds (keeping the value without one); a walked value is cleaned to the ladder decimals, rounded half away from zero at `precision` in display units and divided back, clamped, and lands exactly on a detent within ladder tolerance; the twin of `ui_number_key_value`. */
+export function uiNumberKeyValue(current: number, min: number | null | undefined, max: number | null | undefined, step: number, precision: number | null | undefined, displayFactor: number | null | undefined, snaps: readonly number[], key: SliderKey, large: boolean): number {
   const lower = min != null && Number.isFinite(min) ? min : null;
   const upper = max != null && Number.isFinite(max) ? (lower == null ? max : Math.max(lower, max)) : null;
   const clamp = (value: number): number => Math.min(upper ?? Number.POSITIVE_INFINITY, Math.max(lower ?? Number.NEGATIVE_INFINITY, value));
+  const factor = displayFactor != null && Number.isFinite(displayFactor) && displayFactor > 0 ? displayFactor : null;
   const origin = lower ?? 0;
-  const rung = Number.isFinite(step) && step > 0 ? step : 1;
+  const rung = Number.isFinite(step) && step > 0 ? step : precision == null ? 1 : roundUiNumber(10 ** -Math.min(precision, UI_NUMBER_PRECISION_MAX), precision) / (factor ?? 1);
   const digits = Math.min(12, Math.max(decimalDigits(origin), decimalDigits(rung)));
-  const walk = (rungs: number, forward: boolean): number => {
+  const finite = snaps.filter((snap) => Number.isFinite(snap));
+  const settle = (value: number): number => finite.find((snap) => Math.abs(value - snap) <= 1e-9 * rung * Math.max(1, Math.abs((snap - origin) / rung))) ?? value;
+  const shown = (value: number): number => {
+    if (precision == null) return value;
+    const rounded = roundUiNumber(uiNumberDisplay(value, factor), precision);
+    return factor == null ? rounded : rounded / factor;
+  };
+  const walk = (steps: number, forward: boolean): number => {
     const position = (current - origin) / rung;
     const nearest = Math.round(position);
     const base = Math.abs(position - nearest) <= 1e-9 * Math.max(1, Math.abs(nearest)) ? nearest : forward ? Math.floor(position) : Math.ceil(position);
-    return clamp(roundUiNumber(origin + (forward ? base + rungs : base - rungs) * rung, digits));
+    return settle(clamp(shown(roundUiNumber(origin + (forward ? base + steps : base - steps) * rung, digits))));
   };
-  const finite = snaps.filter((snap) => Number.isFinite(snap));
-  const settle = (value: number): number => finite.find((snap) => Math.abs(value - snap) <= 1e-9 * rung * Math.max(1, Math.abs((snap - origin) / rung))) ?? value;
   const page = (forward: boolean): number => {
-    const target = walk(SLIDER_PAGE_STEPS, forward);
-    const reached = finite.filter((snap) => (forward ? snap > current && snap <= target : snap < current && snap >= target));
-    return reached.length === 0 ? settle(target) : forward ? Math.min(...reached) : Math.max(...reached);
+    const detent = sliderAdjacentSnap(current, finite, forward);
+    return detent === null ? walk(SLIDER_PAGE_STEPS, forward) : clamp(detent);
   };
   switch (key) {
-    case "increment": return settle(walk(large ? SLIDER_PAGE_STEPS : 1, true));
-    case "decrement": return settle(walk(large ? SLIDER_PAGE_STEPS : 1, false));
+    case "increment": return walk(large ? SLIDER_PAGE_STEPS : 1, true);
+    case "decrement": return walk(large ? SLIDER_PAGE_STEPS : 1, false);
     case "pageUp": return page(true);
     case "pageDown": return page(false);
     case "home": return lower ?? current;

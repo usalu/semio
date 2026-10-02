@@ -14,7 +14,7 @@
 //!      axis list this whole case derives from.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::a::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_conformance};
+use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_4::subsets::a::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_conformance};
 
 
 //#region 🔖️Input
@@ -117,10 +117,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::{apply_a_conformance_mutation, PdfA1Mutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_4::subsets::a::project_conformance;
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_4::subsets::a::project_conformance;
 
     /// 📨️ The scenario's `{kind, params}` row: `params` is the leaf wire payload, decoded generically.
     fn mutation_from_spec(spec: &Json) -> Result<PdfA1Mutation, String> {

@@ -66,6 +66,6 @@ fn samples_apply_and_invert_on_a_real_document() {
         for inverse in crate::mutation_inverse(&mutation, &base) {
             apply_pdf_mutation(&mut restored, &inverse);
         }
-        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::En));
+        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));
     }
 }

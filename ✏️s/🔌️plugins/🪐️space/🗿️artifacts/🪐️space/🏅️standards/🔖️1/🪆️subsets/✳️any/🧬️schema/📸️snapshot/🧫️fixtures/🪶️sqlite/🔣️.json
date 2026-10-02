@@ -1,0 +1,16 @@
+{
+  "dialect": {"artifactKind":"s.space.space","standard":"1","subset":"*"},
+  "snapshot": {
+    "schema":"independent Space schema 🪐\u0000",
+    "spaceId":"",
+    "artifacts":[
+      {"id":"duplicate","name":"世界","kindId":"","schema":"","dialect":{"artifactKind":"","standard":"","subset":""},"createdAtMs":"18446744073709551615","createdBy":"","updatedAtMs":"9007199254740993","updatedBy":"user 🧱"},
+      {"id":"duplicate","name":"","kindId":"unregistered native kind","schema":"nondefault","dialect":{"artifactKind":"s.stdio.obj","standard":"3.0","subset":"*"},"createdAtMs":"0","createdBy":"owner","updatedAtMs":"18446744073709551615","updatedBy":""}
+    ]
+  },
+  "invalidTimes":["-1","18446744073709551616"],
+  "renumberSql":["PRAGMA defer_foreign_keys=ON","UPDATE space_artifact_dialect SET id=-id-100","UPDATE space_artifact SET id=-id-100,document_id=-17","UPDATE space_document SET id=-17"],
+  "editedName":"SQL edited 🪐","editedCreatedHigh":2147483648,"editedCreatedLow":17,
+  "invalidDialects":[{"artifactKind":"s.space.home","standard":"1","subset":"*"},{"artifactKind":"s.space.space","standard":"2","subset":"*"},{"artifactKind":"s.space.space","standard":"1","subset":"named"}],
+  "deepRepeat":1024
+}

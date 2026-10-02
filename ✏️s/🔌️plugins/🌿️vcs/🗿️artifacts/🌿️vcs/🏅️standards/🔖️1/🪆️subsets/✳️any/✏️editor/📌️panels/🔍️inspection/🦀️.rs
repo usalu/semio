@@ -4,10 +4,23 @@ use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_node_list, ui_value_map, ui_value_text, vcs_action};
 use crate::VcsSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::{
-    tree_item_desc, Buildable, BuiltNode, HasBase, HasChildren, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_BODY_INSPECTION: &str = "vcs.play.inspection";

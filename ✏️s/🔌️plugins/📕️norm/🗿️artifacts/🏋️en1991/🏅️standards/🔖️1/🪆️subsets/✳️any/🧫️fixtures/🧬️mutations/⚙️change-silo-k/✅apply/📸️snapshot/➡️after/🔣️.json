@@ -1,126 +1,126 @@
 {
-  "accidentalCases": [
-    {
-      "explosion": [],
-      "id": "impact-1",
-      "impact": [
-        {
-          "assumedForce": 50000.0,
-          "vehicleMass": 15000.0,
-          "vehicleSpeed": 13.9
-        }
-      ]
-    }
-  ],
-  "airDensity": 1.25,
-  "altitude": 150.0,
   "annex": "De",
-  "assumedBridgeFootway": 0.0,
-  "assumedBridgeLm2": 0.0,
-  "assumedBridgeLm3": 0.0,
-  "assumedBridgeLm4": 0.0,
+  "snowZone": "2",
+  "altitude": 150.0,
+  "enSk": 850.0,
+  "northGermanLowlandSnow": false,
+  "windZone": 2,
+  "enVb": 25.0,
+  "terrainCategory": 2,
+  "mixedTerrainUpwind": 2,
+  "mixedTerrainDistance": 0.0,
+  "orographyFactor": 1.0,
+  "coastOrIsland": false,
+  "airDensity": 1.25,
+  "height": 20.0,
+  "width": 15.0,
+  "depth": 25.0,
+  "assumedDeltaT": 10.0,
+  "constructionActivity": "scaffolding",
+  "assumedConstructionQk": 1500.0,
+  "structureKind": "building",
+  "bridgeLane": 1,
+  "bridgeSpan": 20.0,
+  "bridgeLaneWidth": 3.0,
   "assumedBridgeTandem": 0.0,
   "assumedBridgeUdl": 0.0,
-  "assumedConstructionQk": 1500.0,
-  "assumedCraneHorizontal": 5000.0,
-  "assumedCraneWheel": 50000.0,
-  "assumedDeltaT": 10.0,
-  "assumedGasTemperature": 1200.0,
-  "assumedHNet": 25000.0,
-  "assumedQfD": 420000000.0,
-  "assumedSiloPatch": 1000.0,
-  "assumedSiloPressure": 5000.0,
-  "assumedSiloWallFriction": 1000.0,
-  "bridgeLane": 1,
-  "bridgeLaneWidth": 3.0,
-  "bridgeLoadGroup": "gr1a",
-  "bridgeSpan": 20.0,
-  "coastOrIsland": false,
-  "constructionActivity": "scaffolding",
+  "assumedBridgeLm2": 0.0,
+  "assumedBridgeFootway": 0.0,
   "craneClaimed": true,
   "craneClass": "HC2",
-  "deltaTM": 0.0,
-  "depth": 25.0,
-  "enSk": 850.0,
-  "enVb": 25.0,
-  "northGermanLowlandSnow": false,
-  "fireCompartmentArea": 100.0,
-  "fireCompartmentHeight": 3.0,
-  "fireCurve": "standard",
-  "fireDuration": 3600.0,
-  "fireLoadDensityQf": 420000000.0,
-  "fireMode": "none",
-  "fireOccupancy": "office",
-  "fireOpeningFactor": 0.04,
-  "fireThermalInertia": 1160.0,
-  "floors": [
-    {
-      "area": 240.0,
-      "assumedPartitions": 200.0,
-      "assumedQk": 1000.0,
-      "assumedQkConcentrated": 5000.0,
-      "category": "B1",
-      "id": "office-l1"
-    }
-  ],
-  "height": 20.0,
   "hoistClass": "HC2",
   "hoistingSpeed": 0.5,
-  "mixedTerrainDistance": 0.0,
-  "mixedTerrainUpwind": 2,
-  "orographyFactor": 1.0,
-  "roofs": [
+  "assumedCraneWheel": 50000.0,
+  "assumedCraneHorizontal": 5000.0,
+  "siloClaimed": true,
+  "siloKind": "silo",
+  "siloBulkDensity": 8000.0,
+  "siloHeight": 12.0,
+  "siloHydraulicRadius": 1.5,
+  "siloMu": 0.4,
+  "siloK": 0.55,
+  "assumedSiloPressure": 5000.0,
+  "assumedSiloPatch": 1000.0,
+  "assumedSiloWallFriction": 1000.0,
+  "floors": [
     {
-      "assumedSk": 200.0,
-      "cE": 1.0,
-      "cT": 1.0,
-      "driftObstructionHeight": 0.0,
-      "hasParapet": false,
-      "id": "roof-main",
-      "multiSpan": false,
-      "parapetHeight": 0.0,
-      "pitchDeg": 15.0,
-      "roofType": "duopitch"
+      "id": "office-l1",
+      "category": "B1",
+      "area": 240.0,
+      "assumedQk": 1000.0,
+      "assumedQkConcentrated": 5000.0,
+      "assumedPartitions": 200.0
     }
   ],
   "selfWeightElements": [
     {
-      "assumedGk": 2000.0,
       "id": "slab-rc",
       "material": "reinforced_concrete",
-      "thickness": 0.2
+      "thickness": 0.2,
+      "assumedGk": 2000.0
     }
   ],
-  "siloBulkDensity": 8000.0,
-  "siloClaimed": true,
-  "siloHeight": 12.0,
-  "siloHydraulicRadius": 1.5,
-  "siloK": 0.55,
-  "siloKind": "silo",
-  "siloMu": 0.4,
-  "snowZone": "2",
-  "storeyCount": 3,
-  "structureKind": "building",
-  "t0": 10.0,
-  "tMax": 37.0,
-  "tMin": -24.0,
-  "terrainCategory": 2,
-  "thermalBridgeType": 1,
-  "thermalElementType": "building",
-  "width": 15.0,
+  "roofs": [
+    {
+      "id": "roof-main",
+      "roofType": "duopitch",
+      "pitchDeg": 15.0,
+      "cE": 1.0,
+      "cT": 1.0,
+      "hasParapet": false,
+      "parapetHeight": 0.0,
+      "driftObstructionHeight": 0.0,
+      "multiSpan": false,
+      "assumedSk": 200.0
+    }
+  ],
   "windFaces": [
     {
-      "assumedWp": 100.0,
-      "cD": 1.0,
-      "cPe1": 1.0,
+      "id": "facade-d",
+      "zone": "D",
+      "z": 8.0,
       "cPe10": 0.8,
+      "cPe1": 1.0,
       "cPi": 0.2,
       "cS": 1.0,
-      "id": "facade-d",
+      "cD": 1.0,
       "loadedArea": 10.0,
-      "z": 8.0,
-      "zone": "D"
+      "assumedWp": 100.0
     }
   ],
-  "windZone": 2
+  "accidentalCases": [
+    {
+      "id": "impact-1",
+      "impact": [
+        {
+          "vehicleMass": 15000.0,
+          "vehicleSpeed": 13.9,
+          "assumedForce": 50000.0
+        }
+      ],
+      "explosion": []
+    }
+  ],
+  "tMax": 37.0,
+  "tMin": -24.0,
+  "t0": 10.0,
+  "thermalElementType": "building",
+  "thermalBridgeType": 1,
+  "deltaTM": 0.0,
+  "storeyCount": 3,
+  "fireMode": "none",
+  "fireCurve": "standard",
+  "fireDuration": 3600.0,
+  "assumedGasTemperature": 1200.0,
+  "assumedHNet": 25000.0,
+  "fireCompartmentArea": 100.0,
+  "fireCompartmentHeight": 3.0,
+  "fireOpeningFactor": 0.04,
+  "fireThermalInertia": 1160.0,
+  "fireOccupancy": "office",
+  "fireLoadDensityQf": 420000000.0,
+  "assumedQfD": 420000000.0,
+  "assumedBridgeLm3": 0.0,
+  "assumedBridgeLm4": 0.0,
+  "bridgeLoadGroup": "gr1a"
 }

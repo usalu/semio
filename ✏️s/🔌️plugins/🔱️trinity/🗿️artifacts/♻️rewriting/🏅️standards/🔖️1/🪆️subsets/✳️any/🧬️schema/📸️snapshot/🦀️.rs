@@ -76,15 +76,14 @@ impl store::ArtifactPack for RewritingSnapshot {
 /// so the projection is JSON containing JSON — which is exactly the shape a transcribed Rust
 /// literal gets wrong silently.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin wrapper over the framework's own `pack` JSON codec (no external library at runtime).
 pub fn encode_rewriting_snapshot_json(snapshot: &RewritingSnapshot) -> String {
     pack::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_rewriting_snapshot_json`] — decodes those committed specification
 /// vectors into real [`RewritingSnapshot`] values, so `mutate-rewriting-1`'s adapter reads the committed
-/// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
+/// fixture rather than re-declaring it as a Rust literal beside it. Reaching a JSON library from that
 /// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_rewriting_snapshot_json(text: &str) -> Result<RewritingSnapshot, String> {
     pack::from_json_str(text).map_err(|error| error.to_string())

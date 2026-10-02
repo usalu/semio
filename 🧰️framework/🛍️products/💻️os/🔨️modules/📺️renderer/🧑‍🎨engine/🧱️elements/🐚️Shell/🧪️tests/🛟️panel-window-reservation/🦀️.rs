@@ -3,7 +3,7 @@
 use super::*;
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).expect("panel reservation fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).expect("panel reservation fixture")
 }
 
 fn fixture_shell(row: &Value) -> ShellState {

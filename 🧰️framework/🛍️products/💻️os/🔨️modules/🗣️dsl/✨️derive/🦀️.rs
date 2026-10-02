@@ -564,6 +564,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let descriptor_path = match mutation_authority_relative(&authority.workspace_root, &authority.descriptor_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let taxonomy_path = match mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let payload_schema_path = match mutation_leaf_payload_schema_path(&authority, &descriptor.payload_schema) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf payload schema failed: {error}")).to_compile_error().into() };
+    let referenced_documents = match mutation_leaf_referenced_documents(&payload_schema_path).and_then(|paths| paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>()) { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf referenced schema documents failed: {error}")).to_compile_error().into() };
     let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone(), payload_schema_path];
     let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
     let dependency_paths = match dependency_paths { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
@@ -598,6 +599,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             const DESCRIPTOR: #contract::MutationLeafDescriptor = #descriptor;
             const PROVENANCE: #contract::MutationSourceProvenance = #contract::MutationSourceProvenance { workspace_token: [#(#workspace_token),*], mutation_root: #mutation_root, owner: #owner, source_path: #source_path, descriptor_path: #descriptor_path, taxonomy_path: #taxonomy_path };
             const PAYLOAD_SCHEMA: &'static str = ::core::include_str!(#payload_schema_dependency);
+            const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_documents)),*];
             #editable
         }
     }.into()
@@ -616,6 +618,92 @@ fn mutation_leaf_payload_schema_path(authority: &MutationSourceAuthority, payloa
     mutation_authority_no_follow(&authority.workspace_root, &path, false)?;
     Ok(path)
 }
+
+/// 🔗️ Every schema document the payload schema at `payload_schema` references by an absolute `$id` (fragment stripped),
+/// transitively, among the `🧬️schema` JSON documents of its search tree ([`mutation_schema_search_root`]) — what the runtime
+/// publishes beside the leaf (`MutationLeaf::PAYLOAD_SCHEMA_DOCUMENTS`), so an input that `$ref`s another facet of its scope
+/// resolves. A reference the tree does not hold is left to the OS-wide registry, which framework scopes publish themselves.
+/// Sorted, never the payload schema itself.
+fn mutation_leaf_referenced_documents(payload_schema: &Path) -> Result<Vec<PathBuf>, String> {
+    let index = mutation_schema_document_index(&mutation_schema_search_root(payload_schema));
+    let (own, mut pending) = mutation_schema_document_references(payload_schema)?;
+    let mut seen: HashSet<String> = own.into_iter().collect();
+    let mut found = Vec::new();
+    while let Some(id) = pending.pop() {
+        if !seen.insert(id.clone()) {
+            continue;
+        }
+        let Some(path) = index.get(&id) else { continue };
+        pending.extend(mutation_schema_document_references(path)?.1);
+        found.push(path.clone());
+    }
+    found.sort();
+    Ok(found)
+}
+
+/// 🧭️ The tree a leaf's referenced documents are looked up in: its plugin (the directory under `🔌️plugins`, which bundles every
+/// artifact a leaf may reference across), else its framework module (the nearest directory under `🔨️modules`), else the module
+/// owning its `🧬️schema/🧬️mutations` root.
+fn mutation_schema_search_root(payload_schema: &Path) -> PathBuf {
+    let under = |parent: &str| payload_schema.ancestors().find(|ancestor| ancestor.parent().and_then(Path::file_name).is_some_and(|name| name == parent));
+    let owner = payload_schema.ancestors().find(|ancestor| ancestor.file_name().is_some_and(|name| name == "🧬️schema") && ancestor.join("🧬️mutations").is_dir()).and_then(Path::parent);
+    under("🔌️plugins").or_else(|| under("🔨️modules")).or(owner).or_else(|| payload_schema.parent()).unwrap_or(payload_schema).to_path_buf()
+}
+
+/// 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (tests and build output skipped; a fixture
+/// aggregate's schemas count), built once per root per compiler process.
+fn mutation_schema_document_index(root: &Path) -> std::rc::Rc<BTreeMap<String, PathBuf>> {
+    thread_local! {
+        static INDEX: std::cell::RefCell<BTreeMap<PathBuf, std::rc::Rc<BTreeMap<String, PathBuf>>>> = const { std::cell::RefCell::new(BTreeMap::new()) };
+    }
+    fn walk(directory: &Path, schema: bool, index: &mut BTreeMap<String, PathBuf>) {
+        let Ok(entries) = fs::read_dir(directory) else { return };
+        for entry in entries.flatten() {
+            let (path, name) = (entry.path(), entry.file_name().to_string_lossy().into_owned());
+            let Ok(kind) = entry.file_type() else { continue };
+            if kind.is_dir() && !name.starts_with('.') && !["🧪️tests", "target", "node_modules", "dist", "🗑️generated", "📦️packages"].contains(&name.as_str()) {
+                walk(&path, schema || name == "🧬️schema", index);
+            } else if schema && kind.is_file() && name.ends_with(".json") {
+                let id = fs::read(&path).ok().and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok()).and_then(|value| value.get("$id").and_then(serde_json::Value::as_str).map(str::to_string));
+                if let Some(id) = id {
+                    index.entry(id).or_insert(path);
+                }
+            }
+        }
+    }
+    if let Some(index) = INDEX.with(|cache| cache.borrow().get(root).cloned()) {
+        return index;
+    }
+    let mut index = BTreeMap::new();
+    walk(root, root.components().any(|component| component.as_os_str() == "🧬️schema"), &mut index);
+    let index = std::rc::Rc::new(index);
+    INDEX.with(|cache| cache.borrow_mut().insert(root.to_path_buf(), index.clone()));
+    index
+}
+
+/// 🔗️ A schema document's own `$id` and every absolute document id its `$ref`s name (fragments stripped).
+fn mutation_schema_document_references(path: &Path) -> Result<(Option<String>, Vec<String>), String> {
+    fn collect(value: &serde_json::Value, into: &mut Vec<String>) {
+        match value {
+            serde_json::Value::Object(entries) => {
+                for (key, value) in entries {
+                    match (key.as_str(), value) {
+                        ("$ref", serde_json::Value::String(reference)) if !reference.starts_with('#') => into.push(reference.split('#').next().unwrap_or_default().to_string()),
+                        _ => collect(value, into),
+                    }
+                }
+            }
+            serde_json::Value::Array(items) => items.iter().for_each(|item| collect(item, into)),
+            _ => {}
+        }
+    }
+    let raw = fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
+    let document: serde_json::Value = serde_json::from_slice(&raw).map_err(|error| format!("{}: {error}", path.display()))?;
+    let mut references = Vec::new();
+    collect(&document, &mut references);
+    references.retain(|reference| !reference.is_empty());
+    Ok((document.get("$id").and_then(serde_json::Value::as_str).map(str::to_string), references))
+}
 //#endregion 🪪️MutationLeaf
 
 #[cfg(test)]
@@ -629,6 +717,7 @@ struct ContainerAttrs {
     id: Option<String>,
     keyword: Option<String>,
     lines_layout: bool,
+    retire_with: Option<syn::Path>,
 }
 
 #[derive(Default, Clone)]
@@ -686,6 +775,9 @@ fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
             } else if meta.path.is_ident("layout") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.lines_layout = value.value() == "lines";
+            } else if meta.path.is_ident("retire_with") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.retire_with = Some(value.parse()?);
             }
             Ok(())
         });
@@ -1059,7 +1151,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             // — only the `Shape` differs (`Table` vs `List(Record)`), which is what makes the
             // printer emit compact SoA instead of verbose AoS for this field.
             FieldKind::VecTable(inner) => (
-                quote! { ::dsl::Shape::Table(<#inner>::__dsl_spec as fn() -> ::dsl::RecordSpec) },
+                quote! { ::dsl::Shape::Table(<#inner>::__dsl_spec_producer()) },
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
@@ -1231,8 +1323,9 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         to_value_stmts.push(quote! {
             record.fields.insert(#id, #to_value_expr);
         });
+        let local = field_local(ident);
         from_value_stmts.push(quote! {
-            let #ident = {
+            let #local = {
                 let value = record.get(#id).ok_or_else(|| ::dsl::__rt::field_error(format!("missing field '{}'", #key)))?;
                 #from_value_expr
             };
@@ -1241,7 +1334,103 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
 
     (spec_exprs, to_value_stmts, from_value_stmts, field_idents)
 }
+
+/// 🏭️ Emits declared field metadata without borrowing an ordinary allocating shape factory.
+fn schema_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
+    let plans=plan_fields(fields);
+    plans.iter().map(|plan|{
+        let FieldPlan{id,key,positional,optional,kind,elem_ty,block,unit,angle,refs,defines,lang,lang_from,coord,dir,..}=plan;
+        let refinement=if let Some(symbol)=unit{Some(quote!{::dsl::Shape::Quantity(::dsl::__rt::unit_for_derive(#symbol))})}else if let Some(symbol)=angle{Some(quote!{::dsl::Shape::Angle(::dsl::__rt::unit_for_derive(#symbol))})}else if let Some(kind)=refs{Some(quote!{::dsl::Shape::Ref(#kind)})}else if let Some(from)=lang_from{let key=plans.iter().find(|plan|plan.ident==from.as_str()).map_or_else(||to_kebab(from),|plan|plan.key.clone());Some(quote!{::dsl::Shape::EmbedFrom(#key)})}else if let Some(language)=lang{Some(quote!{::dsl::Shape::Embed(#language)})}else if *coord{Some(quote!{::dsl::Shape::Coord(3)})}else if *dir{Some(quote!{::dsl::Shape::Dir})}else{None};
+        let shape=match kind{
+            FieldKind::Scalar=>refinement.unwrap_or_else(||quote!{<#elem_ty as ::dsl::DslField>::shape_controlled(control)?}),
+            FieldKind::OptionScalar(inner)=>refinement.unwrap_or_else(||quote!{<#inner as ::dsl::DslField>::shape_controlled(control)?}),
+            FieldKind::Bytes64=>quote!{::dsl::Shape::Bytes64},
+            FieldKind::VecList(inner)=>quote!{::dsl::Shape::List(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?)},
+            FieldKind::VecTuple(inner)=>quote!{::dsl::Shape::Tuple(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?,None)},
+            FieldKind::VecTable(inner)=>quote!{::dsl::Shape::Table(<#inner>::__dsl_spec_producer())},
+            FieldKind::MapField(inner)=>quote!{::dsl::Shape::Map(::dsl::schema::producer::boxed(<#inner as ::dsl::DslField>::shape_controlled(control)?,control)?)},
+            FieldKind::VecStatements(inner)|FieldKind::OptionStatements(inner)|FieldKind::RequiredStatements(inner)=>quote!{::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants_controlled(control)?)},
+            FieldKind::VecBlockStatements(inner)=>quote!{::dsl::Shape::Block(::dsl::schema::producer::boxed(::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants_controlled(control)?),control)?)},
+        };
+        let shape=if *block{quote!{::dsl::Shape::Block(::dsl::schema::producer::boxed(#shape,control)? )}}else{shape};
+        let position=positional.map(|position|quote!{.positional(#position as u8)});let optional=if *optional{quote!{.optional()}}else{quote!{}};let defines=defines.as_ref().map(|kind|quote!{.defines(#kind)});
+        quote!{let field=::dsl::schema::producer::field(#id,#key,#shape,control)? #position #optional #defines;fields.push(field);control.step()?;}
+    }).collect()
+}
 //#endregion 🔖️RecordCodegen
+
+/// 🛬️ Generates explicit controlled bindings from the same authored field plans.
+fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
+    plan_fields(fields).iter().map(|plan|{
+        let FieldPlan{ident,id,key,kind,elem_ty,block,..}=plan;
+        let expression=match kind {
+            FieldKind::Scalar=>quote!{control.scoped_stage(|control|<#elem_ty as ::dsl::DslField>::from_value_controlled(value,control)).map_err(::dsl::__rt::field_error)?},
+            FieldKind::Bytes64=>quote!{match value{::dsl::FieldValue::Bytes64(bytes)=>{control.step().map_err(::dsl::__rt::field_error)?;control.copy_bytes(bytes).map_err(::dsl::__rt::field_error)?},_=>return Err(::dsl::__rt::field_error("expected Bytes64"))}},
+            FieldKind::OptionScalar(inner)=>quote!{match value{::dsl::FieldValue::Absent=>{control.step().map_err(::dsl::__rt::field_error)?;None},other=>Some(control.scoped_stage(|control|<#inner as ::dsl::DslField>::from_value_controlled(other,control)).map_err(::dsl::__rt::field_error)?)}},
+            FieldKind::VecList(inner)|FieldKind::VecTable(inner)=>quote!{match value{::dsl::FieldValue::List(items)=>::dsl::__rt::decode_list_controlled::<#inner>(items,control).map_err(::dsl::__rt::field_error)?,_=>return Err(::dsl::__rt::field_error("expected List"))}},
+            FieldKind::VecTuple(inner)=>quote!{match value{::dsl::FieldValue::Tuple(items)=>::dsl::__rt::decode_list_controlled::<#inner>(items,control).map_err(::dsl::__rt::field_error)?,_=>return Err(::dsl::__rt::field_error("expected Tuple"))}},
+            FieldKind::MapField(inner)=>quote!{control.scoped_stage(|control|<::std::collections::BTreeMap<String,#inner> as ::dsl::DslField>::from_value_controlled(value,control)).map_err(::dsl::__rt::field_error)?},
+            FieldKind::VecStatements(inner)=>controlled_statements(inner),
+            FieldKind::VecBlockStatements(inner)=>{let expression=controlled_statements(inner);quote!{match value{::dsl::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},_=>return Err(::dsl::__rt::field_error("expected Block"))}}},
+            FieldKind::OptionStatements(inner)=>quote!{match value{::dsl::FieldValue::Absent=>None,::dsl::FieldValue::Statements(items) if items.is_empty()=>None,::dsl::FieldValue::Statements(items) if items.len()==1=>Some(control.scoped_stage(|control|<#inner as ::dsl::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?),_=>return Err(::dsl::__rt::field_error("expected0or1 tagged values"))}},
+            FieldKind::RequiredStatements(inner)=>quote!{match value{::dsl::FieldValue::Statements(items) if items.len()==1=>{control.charge(::std::mem::size_of::<#inner>()).map_err(::dsl::__rt::field_error)?;Box::new(control.scoped_stage(|control|<#inner as ::dsl::DslVariants>::from_named_record_controlled(&items[0].0,&items[0].1,control))?)},_=>return Err(::dsl::__rt::field_error("expected exactly1 tagged value"))}},
+        };
+        let expression=if *block {quote!{match value{::dsl::FieldValue::Block(inner)=>{let value=inner.as_ref();#expression},::dsl::FieldValue::Absent=>{let value=&::dsl::FieldValue::Absent;#expression},_=>return Err(::dsl::__rt::field_error("expected Block"))}}}else{expression};
+        let retire=retire_field_codegen(plan,quote!{value});
+        let ident=field_local(ident);
+        quote!{let #ident=::dsl::__rt::DecodedFieldOwner::new(control.scoped_stage(|control|{let value=record.get(#id).ok_or_else(||::dsl::__rt::field_error(format!("missing field '{}'",#key)))?;Ok::<_,::dsl::TextError>(#expression)})?,|value|{#retire});}
+    }).collect()
+}
+
+/// 🛫️ Projects explicit declared fields with cumulative ownership and known workloads.
+fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_macro2::TokenStream>{
+    plan_fields(fields).iter().map(|plan|{
+        let FieldPlan{ident,id,kind,elem_ty,block,..}=plan;
+        let source=if bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
+        let projection=match kind{
+            FieldKind::Scalar=>quote!{<#elem_ty as ::dsl::DslField>::to_value_controlled(value,control)?},
+            FieldKind::Bytes64=>quote!{::dsl::FieldValue::Bytes64(control.copy_bytes(value)?)},
+            FieldKind::OptionScalar(inner)=>quote!{match value{Some(value)=><#inner as ::dsl::DslField>::to_value_controlled(value,control)?,None=>::dsl::FieldValue::Absent}},
+            FieldKind::VecList(_)|FieldKind::VecTable(_)=>quote!{::dsl::FieldValue::List(::dsl::native_encoding::project_list(value,control)?)},
+            FieldKind::VecTuple(_)=>quote!{::dsl::FieldValue::Tuple(::dsl::native_encoding::project_list(value,control)?)},
+            FieldKind::MapField(_)=>quote!{::dsl::native_encoding::project_map(value,control)?},
+            FieldKind::VecStatements(_)=>quote!{::dsl::native_encoding::project_statements(value,control)?},
+            FieldKind::VecBlockStatements(_)=>quote!{{control.charge(::std::mem::size_of::<::dsl::FieldValue>())?;::dsl::FieldValue::Block(Box::new(::dsl::native_encoding::project_statements(value,control)?))}},
+            FieldKind::OptionStatements(_)=>quote!{match value{Some(value)=>::dsl::native_encoding::project_statements(::std::slice::from_ref(value),control)?,None=>::dsl::FieldValue::Statements(Vec::new())}},
+            FieldKind::RequiredStatements(_)=>quote!{::dsl::native_encoding::project_statements(::std::slice::from_ref(value.as_ref()),control)?},
+        };
+        let projection=if *block{quote!{match #projection{::dsl::FieldValue::Absent=>::dsl::FieldValue::Absent,value=>{let value=::dsl::__rt::DecodedFieldOwner::new(value,::dsl::native_encoding::retire_field);control.charge(::std::mem::size_of::<::dsl::FieldValue>())?;::dsl::FieldValue::Block(Box::new(value.take()))}}}}else{projection};
+        quote!{let field=control.scoped_stage(|control|{control.begin_stage(0)?;let value=#source;Ok::<_,String>(#projection)}).map_err(::dsl::__rt::field_error)?;record.insert(#id,field);control.step().map_err(::dsl::__rt::field_error)?;}
+    }).collect()
+}
+
+/// 🧹️ Delegates each completed field to its declared field or variant retirement.
+fn retire_field_codegen(plan:&FieldPlan,value:proc_macro2::TokenStream)->proc_macro2::TokenStream{
+    let FieldPlan{kind,elem_ty,..}=plan;
+    match kind {
+        FieldKind::Scalar=>quote!{<#elem_ty as ::dsl::DslField>::retire_decoded(#value);},
+        FieldKind::Bytes64=>quote!{drop(#value);},
+        FieldKind::OptionScalar(inner)=>quote!{if let Some(value)=#value{<#inner as ::dsl::DslField>::retire_decoded(value);}},
+        FieldKind::VecList(inner)|FieldKind::VecTable(inner)|FieldKind::VecTuple(inner)=>quote!{for value in #value{<#inner as ::dsl::DslField>::retire_decoded(value);}},
+        FieldKind::MapField(inner)=>quote!{<::std::collections::BTreeMap<String,#inner> as ::dsl::DslField>::retire_decoded(#value);},
+        FieldKind::VecStatements(inner)|FieldKind::VecBlockStatements(inner)=>quote!{for value in #value{<#inner as ::dsl::DslVariants>::retire_decoded_variant(value);}},
+        FieldKind::OptionStatements(inner)=>quote!{if let Some(value)=#value{<#inner as ::dsl::DslVariants>::retire_decoded_variant(value);}},
+        FieldKind::RequiredStatements(inner)=>quote!{<#inner as ::dsl::DslVariants>::retire_decoded_variant(*#value);},
+    }
+}
+
+/// 🌲️ Builds record retirement from explicit field plans or an authored domain lifecycle.
+fn record_retirement_codegen(fields:&Fields,retire_with:Option<&syn::Path>)->proc_macro2::TokenStream{
+    if let Some(owner)=retire_with{return quote!{#owner(self);};}
+    let plans=plan_fields(fields);let idents=field_inits(&plans.iter().map(|plan|plan.ident.clone()).collect::<Vec<_>>());
+    let retirements=plans.iter().map(|plan|{let ident=field_local(&plan.ident);retire_field_codegen(plan,quote!{#ident})});
+    quote!{let Self{#(#idents),*}=self;#(#retirements)*}
+}
+
+/// 🌿️ Builds a controlled tagged-list binding without borrowing an unchecked constructor.
+fn controlled_statements(inner:&Type)->proc_macro2::TokenStream{
+    quote!{match value{::dsl::FieldValue::Statements(items)=>::dsl::__rt::decode_statements_controlled::<#inner>(items,control)?,_=>return Err(::dsl::__rt::field_error("expected Statements"))}}
+}
 
 //#region 🔖️DslRecord
 pub fn expand_dsl_record(input: TokenStream) -> TokenStream {
@@ -1252,6 +1441,14 @@ pub fn expand_dsl_record(input: TokenStream) -> TokenStream {
         return syn::Error::new_spanned(&input, "DslRecord only supports structs").to_compile_error().into();
     };
     let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
+    let field_initializers = field_inits(&field_idents);
+    let controlled_stmts=controlled_record_codegen(&data.fields);
+    let schema_stmts=schema_record_codegen(&data.fields);let schema_count=schema_stmts.len();
+    let encoding_stmts=encoding_record_codegen(&data.fields,false);
+    let encoding_count=encoding_stmts.len();
+    let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
+    let retirement=record_retirement_codegen(&data.fields,container.retire_with.as_ref());
+    let schema_keyword_expr=match &container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
     let keyword_expr = match &container.keyword {
         Some(k) => quote! { Some(#k.to_string()) },
         None => quote! { None },
@@ -1270,22 +1467,40 @@ pub fn expand_dsl_record(input: TokenStream) -> TokenStream {
             pub fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
+            /// 🏭️ Owns exactly the declared metadata fields under either native control.
+            pub fn __dsl_spec_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{
+                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(#schema_keyword_expr,#layout_expr,fields,control)}))
+            }
+            /// 🪆️ Retains lazy owner factories without constructing their metadata.
+            pub fn __dsl_spec_producer()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::__dsl_spec,decoding:|control|Self::__dsl_spec_controlled(control),encoding:|control|Self::__dsl_spec_controlled(control)}}
             pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
+            /// 🛫️ Projects complete named fields under caller-owned output admission.
+            pub fn __dsl_to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,::dsl::TextError>{
+                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*Ok::<_,::dsl::TextError>(record.take())}).map_err(|error|error.message)).map_err(::dsl::__rt::field_error)
+            }
             pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
-                Ok(Self { #(#field_idents),* })
+                Ok(Self { #(#field_initializers),* })
+            }
+            /// 🛬️ Binds owned typed fields with cumulative allocation and interior cancellation.
+            pub fn __dsl_from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
+                control.checkpoint().map_err(::dsl::__rt::field_error)?;
+                #(#controlled_stmts)*
+                Ok(Self{#(#controlled_fields),*})
             }
         }
 
         impl ::dsl::DslField for #name {
+            fn retire_decoded(self){#retirement}
             // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
             fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Self::__dsl_spec)
+                ::dsl::Shape::Record(Self::__dsl_spec_producer())
             }
+            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.checkpoint()?;Ok(::dsl::Shape::Record(Self::__dsl_spec_producer()))}
             fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
@@ -1295,6 +1510,12 @@ pub fn expand_dsl_record(input: TokenStream) -> TokenStream {
                     other => Err(format!("expected Record, found {other:?}")),
                 }
             }
+            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+                match value{::dsl::FieldValue::Record(record)=>Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message),_=>Err("expected Record".into())}
+            }
+            fn from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message)}
+            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{Self::__dsl_to_record_controlled(self,control).map(::dsl::FieldValue::Record).map_err(|error|error.message)}
+            fn to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,String>{Self::__dsl_to_record_controlled(self,control).map_err(|error|error.message)}
         }
     };
     expanded.into()
@@ -1319,6 +1540,14 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
         return syn::Error::new_spanned(&input, "DslArtifact only supports structs").to_compile_error().into();
     };
     let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
+    let field_initializers = field_inits(&field_idents);
+    let controlled_stmts=controlled_record_codegen(&data.fields);
+    let schema_stmts=schema_record_codegen(&data.fields);let schema_count=schema_stmts.len();
+    let encoding_stmts=encoding_record_codegen(&data.fields,false);
+    let encoding_count=encoding_stmts.len();
+    let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
+    let retirement=record_retirement_codegen(&data.fields,container.retire_with.as_ref());
+    let schema_keyword_expr=match &container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
     let keyword_expr = match &container.keyword {
         Some(k) => quote! { Some(#k.to_string()) },
         None => quote! { None },
@@ -1335,14 +1564,30 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
             pub fn __dsl_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
+            /// 🏭️ Owns exactly the declared metadata fields under either native control.
+            pub fn __dsl_spec_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{
+                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(#schema_keyword_expr,#layout_expr,fields,control)}))
+            }
+            /// 🪆️ Retains lazy owner factories without constructing their metadata.
+            pub fn __dsl_spec_producer()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::__dsl_spec,decoding:|control|Self::__dsl_spec_controlled(control),encoding:|control|Self::__dsl_spec_controlled(control)}}
             pub fn __dsl_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
+            /// 🛫️ Projects complete named fields under caller-owned output admission.
+            pub fn __dsl_to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,::dsl::TextError>{
+                control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*Ok::<_,::dsl::TextError>(record.take())}).map_err(|error|error.message)).map_err(::dsl::__rt::field_error)
+            }
             pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
                 #(#from_value_stmts)*
-                Ok(Self { #(#field_idents),* })
+                Ok(Self { #(#field_initializers),* })
+            }
+            /// 🛬️ Binds owned typed fields with cumulative allocation and interior cancellation.
+            pub fn __dsl_from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
+                control.checkpoint().map_err(::dsl::__rt::field_error)?;
+                #(#controlled_stmts)*
+                Ok(Self{#(#controlled_fields),*})
             }
             /// ✉️ Envelope constants for handcrafted ArtifactDsl/ArtifactPack wiring (P6: derive no longer emits those traits).
             pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id_lit;
@@ -1352,10 +1597,12 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
         // A document type can also be nested as an ordinary field (e.g. a "whole document
         // snapshot" operation variant), so it needs `DslField` too, not just `store::ArtifactDsl`.
         impl ::dsl::DslField for #name {
+            fn retire_decoded(self){#retirement}
             // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
             fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Self::__dsl_spec)
+                ::dsl::Shape::Record(Self::__dsl_spec_producer())
             }
+            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.checkpoint()?;Ok(::dsl::Shape::Record(Self::__dsl_spec_producer()))}
             fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())
             }
@@ -1365,6 +1612,12 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
                     other => Err(format!("expected Record, found {other:?}")),
                 }
             }
+            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{
+                match value{::dsl::FieldValue::Record(record)=>Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message),_=>Err("expected Record".into())}
+            }
+            fn from_record_controlled(record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{Self::__dsl_from_record_controlled(record,control).map_err(|error|error.message)}
+            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{Self::__dsl_to_record_controlled(self,control).map(::dsl::FieldValue::Record).map_err(|error|error.message)}
+            fn to_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::RecordValue,String>{Self::__dsl_to_record_controlled(self,control).map_err(|error|error.message)}
         }
 
     };
@@ -1381,6 +1634,7 @@ pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
         return syn::Error::new_spanned(&input, "DslDiff only supports structs").to_compile_error().into();
     };
     let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
+    let field_initializers = field_inits(&field_idents);
     let keyword_expr = match &container.keyword {
         Some(k) => quote! { Some(#k.to_string()) },
         None => quote! { None },
@@ -1405,7 +1659,7 @@ pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
             }
             pub fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
-                Ok(Self { #(#field_idents),* })
+                Ok(Self { #(#field_initializers),* })
             }
         }
 
@@ -1438,6 +1692,7 @@ pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
         return syn::Error::new_spanned(&input, "DslScalar only supports unit-variant enums").to_compile_error().into();
     };
     let mut variant_tags = Vec::new();
+    let mut schema_tags=Vec::new();
     let mut match_to_ordinal = Vec::new();
     let mut match_from_ordinal = Vec::new();
     for (ordinal, variant) in data.variants.iter().enumerate() {
@@ -1449,16 +1704,19 @@ pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
         let tag = attrs.key.unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
         let ordinal = ordinal as u32;
         variant_tags.push(quote! { (#tag.to_string(), #ordinal) });
+        schema_tags.push(quote!{variants.push((control.copy_text(#tag)?,#ordinal));control.step()?;});
         match_to_ordinal.push(quote! { #name::#variant_ident => #ordinal });
         match_from_ordinal.push(quote! { #ordinal => Ok(#name::#variant_ident) });
     }
 
+    let schema_count=schema_tags.len();
     let expanded = quote! {
         impl ::dsl::DslField for #name {
             // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Enum(vec![ #(#variant_tags),* ])
             }
+            fn shape_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::Shape,String>{control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut variants=control.allocate_vec(#schema_count)?;#(#schema_tags)*Ok(::dsl::Shape::Enum(variants))})}
             fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Enum(match self { #(#match_to_ordinal),* })
             }
@@ -1471,6 +1729,8 @@ pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
                     other => Err(format!("expected Enum, found {other:?}")),
                 }
             }
+            fn from_value_controlled(value:&::dsl::FieldValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,String>{control.step()?;if matches!(value,::dsl::FieldValue::Enum(_)){<Self as ::dsl::DslField>::from_value(value)}else{Err("expected declared Enum".into())}}
+            fn to_value_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<::dsl::FieldValue,String>{control.step()?;Ok(::dsl::FieldValue::Enum(match self{#(#match_to_ordinal),*}))}
         }
     };
     expanded.into()
@@ -1482,12 +1742,17 @@ pub fn expand_dsl_scalar(input: TokenStream) -> TokenStream {
 /// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
 /// `store::OpText` on top of this same `DslVariants` foundation).
 // 🚫️async: E1 pure accessor consumed by external-trait/E3 proc-macro entry points — see R9
-fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2::TokenStream {
+fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Option<&syn::Path>) -> proc_macro2::TokenStream {
     let mut variants_exprs = Vec::new();
+    let mut schema_variant_stmts=Vec::new();
+    let mut schema_methods=Vec::new();
     let mut to_named_arms = Vec::new();
+    let mut encoding_arms=Vec::new();
     let mut from_named_arms = Vec::new();
+    let mut controlled_arms=Vec::new();
+    let mut retirement_arms=Vec::new();
 
-    for variant in &data.variants {
+    for (variant_index,variant) in data.variants.iter().enumerate() {
         let attrs = parse_field_attrs(&variant.attrs);
         let variant_ident = variant.ident.clone();
         let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
@@ -1501,30 +1766,40 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
         if let Fields::Unnamed(unnamed) = fields {
             if unnamed.unnamed.len() == 1 {
                 let inner_ty = &unnamed.unnamed[0].ty;
-                variants_exprs.push(quote! {
-                    (#keyword.to_string(), ::dsl::__rt::newtype_variant_spec::<#inner_ty> as fn() -> ::dsl::RecordSpec)
-                });
+                variants_exprs.push(quote!{(#keyword.to_string(),::dsl::__rt::newtype_variant_producer::<#inner_ty>())});
+                schema_variant_stmts.push(quote!{variants.push((control.copy_text(#keyword)?,::dsl::__rt::newtype_variant_producer::<#inner_ty>()));control.step()?;});
                 to_named_arms.push(quote! {
                     #name::#variant_ident(inner) => (#keyword.to_string(), ::dsl::__rt::newtype_variant_to_record(inner))
                 });
                 from_named_arms.push(quote! {
                     #keyword => Ok(#name::#variant_ident(::dsl::__rt::newtype_variant_from_record::<#inner_ty>(record)?))
                 });
+                encoding_arms.push(quote!{#name::#variant_ident(inner)=>{let keyword=control.copy_text(#keyword).map_err(::dsl::__rt::field_error)?;let record=<#inner_ty as ::dsl::DslField>::to_record_controlled(inner,control).map_err(::dsl::__rt::field_error)?;Ok((keyword,record))}});
+                controlled_arms.push(quote!{#keyword=>Ok(#name::#variant_ident(control.scoped_stage(|control|<#inner_ty as ::dsl::DslField>::from_record_controlled(record,control)).map_err(::dsl::__rt::field_error)?))});
+                retirement_arms.push(quote!{#name::#variant_ident(inner)=><#inner_ty as ::dsl::DslField>::retire_decoded(inner)});
                 continue;
             }
         }
 
         let (spec_exprs, _to_value_stmts, from_value_stmts, field_idents) = record_codegen(fields);
+        let controlled_stmts=controlled_record_codegen(fields);
+        let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
 
-        variants_exprs.push(quote! {
-            (#keyword.to_string(), (|| ::dsl::RecordSpec::new_owned(Some(#keyword.to_string()), ::dsl::RecordLayout::Inline, vec![ #(#spec_exprs),* ])) as fn() -> ::dsl::RecordSpec)
+        let schema_name=quote::format_ident!("__dsl_variant_spec_{}",variant_index);let controlled_name=quote::format_ident!("__dsl_variant_spec_{}_controlled",variant_index);let producer_name=quote::format_ident!("__dsl_variant_spec_{}_producer",variant_index);
+        let schema_stmts=schema_record_codegen(fields);let schema_count=schema_stmts.len();
+        schema_methods.push(quote!{
+            fn #schema_name()->::dsl::RecordSpec{::dsl::RecordSpec::new_owned(Some(#keyword.to_string()),::dsl::RecordLayout::Inline,vec![#(#spec_exprs),*])}
+            fn #controlled_name<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<::dsl::RecordSpec,String>{control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut fields=control.allocate_vec(#schema_count)?;#(#schema_stmts)*::dsl::schema::producer::record(Some(#keyword),::dsl::RecordLayout::Inline,fields,control)}))}
+            fn #producer_name()->::dsl::RecordSpecProducer{::dsl::RecordSpecProducer{ordinary:Self::#schema_name,decoding:|control|Self::#controlled_name(control),encoding:|control|Self::#controlled_name(control)}}
         });
+        variants_exprs.push(quote!{(#keyword.to_string(),Self::#producer_name())});
+        schema_variant_stmts.push(quote!{variants.push((control.copy_text(#keyword)?,Self::#producer_name()));control.step()?;});
 
         // Build a per-variant to-record conversion using the field bindings from a `match` on
         // `self`, since (unlike `DslRecord`) the fields live inside an enum variant, not `self.field`.
         // A true unit variant (`Variant`, no braces at all) needs a bare match pattern — `Variant {}`
         // is only valid Rust for a variant that was itself declared with (empty) braces.
-        let field_binds: Vec<proc_macro2::TokenStream> = field_idents.iter().map(|f| quote! { #f }).collect();
+        let field_binds: Vec<proc_macro2::TokenStream> = field_idents.iter().map(|f| { let local = field_local(f); quote! { #f: #local } }).collect();
         let to_value_stmts_for_variant: Vec<proc_macro2::TokenStream> = record_codegen_to_value_from_bindings(fields);
         let is_unit = matches!(fields, Fields::Unit);
         let match_pattern = if is_unit {
@@ -1535,7 +1810,8 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
         let construct_expr = if is_unit {
             quote! { #name::#variant_ident }
         } else {
-            quote! { #name::#variant_ident { #(#field_idents),* } }
+            let inits = field_inits(&field_idents);
+            quote! { #name::#variant_ident { #(#inits),* } }
         };
         to_named_arms.push(quote! {
             #match_pattern => {
@@ -1550,22 +1826,41 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
                 Ok(#construct_expr)
             }
         });
+        let encoding_stmts=encoding_record_codegen(fields,true);let encoding_count=encoding_stmts.len();
+        encoding_arms.push(quote!{#match_pattern=>{control.begin_stage(#encoding_count).map_err(::dsl::__rt::field_error)?;let mut record=::dsl::native_encoding::EncodedRecord::new(#encoding_count,control).map_err(::dsl::__rt::field_error)?;#(#encoding_stmts)*let keyword=control.copy_text(#keyword).map_err(::dsl::__rt::field_error)?;Ok((keyword,record.take()))}});
+        let controlled_construct=if is_unit{quote!{#name::#variant_ident}}else{quote!{#name::#variant_ident{#(#controlled_fields),*}}};
+        controlled_arms.push(quote!{#keyword=>{#(#controlled_stmts)* Ok(#controlled_construct)}});
+        let plans=plan_fields(fields);let retirements=plans.iter().map(|plan|{let ident=field_local(&plan.ident);retire_field_codegen(plan,quote!{#ident})});
+        retirement_arms.push(quote!{#match_pattern=>{#(#retirements)*}});
     }
 
+    let retirement=if let Some(owner)=retire_with{quote!{#owner(self);}}else{quote!{match self{#(#retirement_arms),*}}};
+
+    let schema_variant_count=schema_variant_stmts.len();
     quote! {
+        impl #name{#(#schema_methods)*}
         impl ::dsl::DslVariants for #name {
+            fn retire_decoded_variant(self){#retirement}
             // 🚫️async: E4 — see `DslVariants::variants`'s tag on the trait.
-            fn variants() -> Vec<(String, fn() -> ::dsl::RecordSpec)> {
+            fn variants() -> Vec<(String, ::dsl::RecordSpecProducer)> {
                 vec![ #(#variants_exprs),* ]
             }
+            fn variants_controlled<C: ::dsl::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,::dsl::RecordSpecProducer)>,String>{control.scoped_stage(|control|{control.begin_stage(#schema_variant_count)?;let mut variants=control.allocate_vec(#schema_variant_count)?;#(#schema_variant_stmts)*Ok(variants)})}
             fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
                 match self { #(#to_named_arms),* }
+            }
+            fn to_named_record_controlled(&self,control:&mut ::dsl::NativeEncodeControl<'_>)->Result<(String,::dsl::RecordValue),String>{
+                control.scoped_depth(64,|control|control.scoped_stage(|control|{let result=(||->Result<_,::dsl::TextError>{match self{#(#encoding_arms),*}})();result.map_err(|error|error.message)}))
             }
             fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 match keyword {
                     #(#from_named_arms,)*
                     other => Err(::dsl::__rt::field_error(format!("unknown keyword '{other}'"))),
                 }
+            }
+            fn from_named_record_controlled(keyword:&str,record:&::dsl::RecordValue,control:&mut ::dsl::NativeDecodeControl<'_>)->Result<Self,::dsl::TextError>{
+                control.step().map_err(::dsl::__rt::field_error)?;
+                match keyword{#(#controlled_arms,)*_=>Err(::dsl::__rt::field_error("unknown declared keyword"))}
             }
         }
     }
@@ -1577,7 +1872,8 @@ pub fn expand_dsl_ops(input: TokenStream) -> TokenStream {
     let Data::Enum(data) = &input.data else {
         return syn::Error::new_spanned(&input, "DslOps only supports enums").to_compile_error().into();
     };
-    let variants_impl = dsl_variants_codegen(&name, data);
+    let container=parse_container_attrs(&input);
+    let variants_impl = dsl_variants_codegen(&name, data,container.retire_with.as_ref());
 
     // P6: DslOps emits DslVariants only — OpText/OpBinary must be handcrafted per artifact.
     variants_impl.into()
@@ -1591,7 +1887,8 @@ pub fn expand_dsl_enum(input: TokenStream) -> TokenStream {
     let Data::Enum(data) = &input.data else {
         return syn::Error::new_spanned(&input, "DslEnum only supports enums").to_compile_error().into();
     };
-    dsl_variants_codegen(&name, data).into()
+    let container=parse_container_attrs(&input);
+    dsl_variants_codegen(&name, data,container.retire_with.as_ref()).into()
 }
 //#endregion 🔖️DslEnum
 
@@ -1739,6 +2036,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let mut with_payload_value_arms = Vec::new();
     let mut from_payload_value_arms = Vec::new();
     let mut input_schemas = Vec::new();
+    let mut input_schema_documents = Vec::new();
     let mut kind_consts = Vec::new();
     let mut leaf_descriptors = Vec::new();
     let mut leaf_checks = Vec::new();
@@ -1778,6 +2076,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         with_payload_value_arms.push(quote! { Self::#variant_ident(payload) => #leaf::with_input_value(payload, value).map(Self::#variant_ident) });
         from_payload_value_arms.push(quote! { if kind == #kind::SEMANTICS.kind { return #leaf::from_input_value(value).map(Self::#variant_ident); } });
         input_schemas.push(quote! { #leaf::PAYLOAD_SCHEMA });
+        input_schema_documents.push(quote! { #leaf::PAYLOAD_SCHEMA_DOCUMENTS });
         kind_consts.push(quote! { #kind::SEMANTICS });
         leaf_descriptors.push(quote! { #leaf::DESCRIPTOR });
         leaf_checks.push(quote! { const {
@@ -1862,6 +2161,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 match self { #(#foreign_steps_arms),* }
             }
             const INPUT_SCHEMAS: &'static [&'static str] = &[#(#input_schemas),*];
+            const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[#(#input_schema_documents),*];
             fn input_schema(&self) -> ::core::option::Option<&'static str> {
                 match self { #(#input_schema_arms),* }
             }
@@ -1887,7 +2187,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#semantics_arms),* }
             }
-            fn label(&self) -> ::semio_framework_os_kernel::LocalizedLabel {
+            fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#label_arms),* }
             }
@@ -2035,7 +2335,7 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
             fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
                 ::semio_framework_os_kernel::fold_plan_inverse(self, base)
             }
-            fn label(&self) -> ::semio_framework_os_kernel::LocalizedLabel {
+            fn label(&self) -> ::semio_framework_ui_locale::LocalizedLabel {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
             fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {
@@ -2102,6 +2402,18 @@ fn to_kebab(name: &str) -> String {
     out
 }
 
+/// 🔒️ Reserved local for one authored field: generated statements bind authored fields only under
+/// `__semio_field_<name>`, so no authored name (`field`, `record`, `control`, `value`, …) can shadow a
+/// generated local or be captured by one. Law: `🗣️dsl/🧪️tests/🧪️hygienic-bindings`.
+fn field_local(ident: &syn::Ident) -> syn::Ident {
+    quote::format_ident!("__semio_field_{}", ident)
+}
+
+/// 🧷️ Struct/variant initializers `name: __semio_field_name` over the reserved locals.
+fn field_inits(idents: &[syn::Ident]) -> Vec<proc_macro2::TokenStream> {
+    idents.iter().map(|ident| { let local = field_local(ident); quote! { #ident: #local } }).collect()
+}
+
 /// 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
 /// (`ident`) instead of `self.ident` — what a `match self { Variant { fields... } => ... }` arm
 /// needs, since enum variant fields aren't reached through `self.field` syntax.
@@ -2112,6 +2424,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
         .iter()
         .map(|plan| {
             let FieldPlan { ident, id, kind, block, .. } = plan;
+            let ident = &field_local(ident);
             let to_value_expr: proc_macro2::TokenStream = match kind {
                 FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident) },
                 FieldKind::Bytes64 => quote! { ::dsl::FieldValue::Bytes64(#ident.clone()) },

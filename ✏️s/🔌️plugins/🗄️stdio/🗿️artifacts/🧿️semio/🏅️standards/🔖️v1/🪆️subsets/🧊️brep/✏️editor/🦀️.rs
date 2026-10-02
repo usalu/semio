@@ -10,13 +10,35 @@ use crate::standards::v1::subsets::brep::schema::mutations::{set_snapshot, Semio
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{
-    retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep},
-    ActionArgDef, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
-    NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
-};
+use semio_framework_plugin::retained_command::ArtifactCommandInputs;
+use semio_framework_plugin::retained_command::ArtifactCommandWork;
+use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
 use semio_s_artifact_stdio_contract::editing;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 #[path = "📬️preparation/🦀️.rs"]
 mod preparation;

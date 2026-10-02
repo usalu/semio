@@ -7,9 +7,9 @@ document = schema id3v2? audio-frames id3v1?
 schema = "schema" "=" text
 id3v2 = "id3v2" "=" id3v2-tag
 id3v2-tag = "major-version" "=" INT "minor-version" "=" INT "flags" "=" INT "frames" "=" "[" id3-frame* "]"
-id3-frame = "id" "=" text "flags" "=" INT "data" "=" STRING
+id3-frame = "{" "id" "=" text "flags" "=" INT "data" "=" STRING "}"
 audio-frames = "frames" "=" "[" audio-frame* "]"
-audio-frame = "payload" "=" STRING "header" "=" audio-header
+audio-frame = "{" "payload" "=" STRING "header" "=" audio-header "}"
 audio-header = "mpeg-version-id" "=" INT "layer" "=" INT "protection-bit" "=" boolean "bitrate-index" "=" INT "sample-rate-index" "=" INT "padding" "=" boolean "private-bit" "=" boolean "channel-mode" "=" INT "mode-extension" "=" INT "copyright" "=" boolean "original" "=" boolean "emphasis" "=" INT
 id3v1 = "id3v1" "=" "raw" "=" STRING
 boolean = "true" / "false"

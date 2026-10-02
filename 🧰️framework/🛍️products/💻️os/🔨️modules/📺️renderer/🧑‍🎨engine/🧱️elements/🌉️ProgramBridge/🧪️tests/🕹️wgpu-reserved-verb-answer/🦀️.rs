@@ -16,7 +16,7 @@ mod reserved_verb_answer_tests {
     fn invocation_frame(half: &serde_json::Value) -> AppFrame {
         let output = match &half["output"] {
             serde_json::Value::Null => Vec::new(),
-            value => encode_wire(&dsl::json::from_json_str::<DslValue>(&value.to_string()).expect("fixture output is a dsl value")).expect("fixture output encodes"),
+            value => encode_wire(&dsl::json::from_json_str::<DslValue>(&value.to_string()).expect("fixture output is a dsl value")),
         };
         let scope = half["uiScope"].clone();
         let ui_scope = match scope["kind"].as_str().expect("fixture scope kind") {
@@ -36,7 +36,7 @@ mod reserved_verb_answer_tests {
             in_reply_to: half["replySequence"].as_u64().expect("fixture reply sequence"),
             output,
             diagnostics: Vec::new(),
-            ui_scope: encode_wire(&ui_scope).expect("fixture scope encodes"),
+            ui_scope: encode_wire(&ui_scope),
             history_patch: Vec::new(),
             messages: Vec::new(),
             mutations: Vec::new(),

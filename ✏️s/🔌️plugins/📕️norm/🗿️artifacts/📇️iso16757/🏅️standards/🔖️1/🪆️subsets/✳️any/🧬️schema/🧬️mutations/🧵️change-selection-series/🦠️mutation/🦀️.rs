@@ -21,8 +21,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeSelect
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_series_id {
             Some(id) => format!("Change selection series to \"{id}\""),
             None => "Clear selection series".to_string(),

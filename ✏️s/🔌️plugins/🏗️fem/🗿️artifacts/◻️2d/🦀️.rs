@@ -308,7 +308,7 @@ pub use crate::standards::v1::subsets::any::schema::Fem2dArtifact;
 pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.fem".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("FEM 2D Model", "FEM-2D-Modell"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 2D Model", "FEM-2D-Modell"),
         source_format: FEM_2D_SCHEMA.into(),
         component_kind: "fem2d".into(),
         dimension: "2d".into(),
@@ -331,7 +331,7 @@ pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "computation.fem2d".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("FEM 2D Results", "FEM-2D-Ergebnisse"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 2D Results", "FEM-2D-Ergebnisse"),
         source_format: "computation.fem2d".into(),
         component_kind: "fem2d-results".into(),
         dimension: "computation".into(),

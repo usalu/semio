@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { compileGisScopeExport } from "../../🧬️schema/🟦️.ts";
 
@@ -84,7 +84,7 @@ export class MapCreateRegionGroupCheckScript extends BundleScript {
 export class MapCreateRegionGroupNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisMapCreateRegionGroup(this.repoRoot);
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.root,
       groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined,

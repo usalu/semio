@@ -2,7 +2,7 @@ mod window_kits_tests {
     use super::*;
 
     async fn label_en_de(label: &LocalizedLabel) -> (String, String) {
-        (label.resolve(Terminology::default(), Locale::En).to_string(), label.resolve(Terminology::default(), Locale::De).to_string())
+        (label.resolve(Terminology::Native, Locale::En).to_string(), label.resolve(Terminology::Native, Locale::De).to_string())
     }
 
     #[semio_framework_async_macros::async_test]
@@ -242,7 +242,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_render_rows_serves_exactly_the_hosts_window_on_the_shared_ledger() {
-        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }], ..Default::default() };
+        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 20 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let node = table_fixture(&windows, 500);
         let Component::Table(props) = &node.component else { panic!("expected Table") };
@@ -254,7 +254,7 @@ mod window_kits_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn table_kit_windowed_editable_rows_materialize_only_the_requested_slice() {
-        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 3 }], locale: Locale::En, ..Default::default() };
+        let view = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 200, rows: 3 }], locale: Locale::En, ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let windows = TreeWindows::for_body(&view, "body");
         let node = TableWindowKit::render_indexed_rows(&windows, "Values", &["Value"], None, 500, |row| {
             let mut args = UiMapBuilder::try_new().expect("arguments");
@@ -306,7 +306,7 @@ mod window_kits_tests {
                 TreeWindowRequest { body_key: "body".into(), node_key: table_column_window_key(TableWindowKit::KIND_ID), open: Some(true), offset: column_offset, rows: column_count },
             ],
             locale: Locale::En,
-            ..Default::default()
+            ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let windows = TreeWindows::for_body(&view, "body");
         let node = TableWindowKit::render_indexed_matrix_with_id(
@@ -376,7 +376,7 @@ mod window_kits_tests {
     }
 
     fn requested(rows: u32) -> ViewModel {
-        ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }], ..Default::default() }
+        ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".to_string(), node_key: TableWindowKit::KIND_ID.to_string(), open: Some(true), offset: 0, rows }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -612,7 +612,7 @@ mod window_kits_tests {
         let case = &fixture["cases"][2];
         let source = case["text"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap() as usize);
         let view = DocumentView { pages: (0..500).map(|index| DocumentPage { text: index.to_string() }).collect() };
-        let state = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }], ..Default::default() };
+        let state = ViewModel { tree_windows: vec![TreeWindowRequest { body_key: "body".into(), node_key: DocumentWindowKit::KIND_ID.into(), open: Some(true), offset: 400, rows: 10 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let node = DocumentWindowKit::render_windowed(&view, &TreeWindows::for_body(&state, "body")).expect("large document page range");
         let Component::TreeSection(props) = &node.component else { panic!("windowed pages") };
         assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((500, 400)));

@@ -34,7 +34,7 @@ asset-entry = name "=" child-handle
 child-handle = "child_id" "=" name "target" "=" TEXT
 durable-artifacts-map = "durable-artifacts" "=" "{" durable-entry* "}"
 durable-entry = name "=" durable-field+
-durable-field = "kind" "=" name | "mime" "=" name | "width" "=" INT | "height" "=" INT | "chunks" "=" text-list
+durable-field = "kind" "=" name | "mime" "=" name | "width" "=" INT | "height" "=" INT | "chunks" "=" octet-list
 
 calibration-block = "calibration" "{" cameras-table rig-table "}"
 cameras-table = "cameras" cameras-header "{" camera-row* "}"
@@ -91,9 +91,9 @@ pose-row = name quad coord3
 results-block = "results" "{" results-part* "}"
 results-part = sparse-block | dense-result-block | mesh-result-block | trajectory-block | geo-products-block | qc-block | tracks-table
 sparse-block = "sparse" "{" sparse-field+ "}"
-sparse-field = "points" "=" name | "colors" "=" name
+sparse-field = "points" float-buffer | "colors" "=" octets
 dense-result-block = "dense" "{" dense-result-field+ "}"
-dense-result-field = "positions" "=" name | "colors" "=" name | "confidence" "=" name | "classification" "=" name
+dense-result-field = "positions" float-buffer | "colors" "=" octets | "confidence" float-buffer | "classification" "=" octets
 mesh-result-block = "mesh" "{" mesh-result-part* "}"
 mesh-result-part = "source" "=" mesh-source | "texture-asset-id" "=" name | mesh-child-block | watertight-block
 mesh-source = "placeholder" | "reconstructed" | "imported"
@@ -110,3 +110,8 @@ tracks-table = "tracks" tracks-header "{" track-row* "}"
 tracks-header = "[" "id" ":" "TEXT" "length" ":" "UINT" "class" ":" "ENUM" "mean-speed-m-s" ":" "QTY" "]"
 track-row = name INT track-class quantity
 track-class = "static" | "moving"
+
+float-buffer = "{" float-buffer-variant "}"
+float-buffer-variant = "inline" "values" "=" "[" num* "]" | "content" "content-id" "=" name "chunk-count" "=" INT
+octets = TEXT
+octet-list = "[" octets* "]"

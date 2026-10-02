@@ -1,0 +1,905 @@
+{
+  "dialect": "s.norm.iso16757@1/*",
+  "controlledAdmission": {
+    "wideListItems": 20000,
+    "cancelAfter": 256,
+    "maximumOwnedBytes": 131072,
+    "maximumFrontierBytes": 65536,
+    "unknownKeyBytes": 100000,
+    "maximumErrorBytes": 256,
+    "rangeListItems": 23
+  },
+  "capabilityExports": [
+    "ISO16757_SQLITE_SCHEMA",
+    "iso16757SnapshotToSqliteDatabase",
+    "iso16757SnapshotFromSqliteDatabase"
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000042",
+    "0000000000000001",
+    "8000000000000001"
+  ],
+  "integerWords": [
+    "-9223372036854775808",
+    "9223372036854775807"
+  ],
+  "unsignedWords": [
+    "0",
+    "18446744073709551615"
+  ],
+  "editionChoices": [
+    "Part1_2015",
+    "Part2_2016",
+    "Part4_2025",
+    "Part5_2025",
+    "FullPublished"
+  ],
+  "exchangeChoices": [
+    "CreateFromDictionary",
+    "ProvideCatalogue",
+    "DetermineProduct",
+    "IntegrateIntoSystem",
+    "ExchangeSystemModel"
+  ],
+  "propertyChoices": [
+    "Static",
+    "Dynamic",
+    "Selection",
+    "External"
+  ],
+  "subjectChoices": [
+    "ProductGroup",
+    "ProductClass",
+    "ProductSpecialization",
+    "CatalogueMetadata",
+    "ManufacturerMetadata",
+    "PropertyBlock",
+    "Port",
+    "Inlet",
+    "Outlet",
+    "InOutlet"
+  ],
+  "relationshipChoices": [
+    "IsSubtypeOf",
+    "HasPart",
+    "HasBlock",
+    "IsDependentOn",
+    "IsSubkindOf"
+  ],
+  "spaceChoices": [
+    "Overall",
+    "Operation",
+    "Access",
+    "PlacementTransportation",
+    "Installation"
+  ],
+  "operatorChoices": [
+    "Equal",
+    "NotEqual",
+    "LessThan",
+    "GreaterThan",
+    "InRange"
+  ],
+  "nullChoices": [
+    "Unavailable",
+    "Unknown",
+    "NotApplicable"
+  ],
+  "snapshot": {
+    "catalogue": {
+      "id": "cat.fixture",
+      "metadata": {
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Fixture Radiator Catalogue"
+          },
+          "shortName": "Fixture",
+          "alternatives": [
+            {
+              "locale": "de",
+              "text": "Muster"
+            },
+            {
+              "locale": "",
+              "text": "\u0000文字"
+            }
+          ]
+        },
+        "lifecycle": {
+          "revision": "\u0000rev日本",
+          "status": "unknown",
+          "validFrom": "",
+          "validTo": null
+        },
+        "editionProfile": "FullPublished"
+      },
+      "manufacturer": {
+        "id": "mfg.fixture",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Fixture Heating Works"
+          },
+          "shortName": null,
+          "alternatives": []
+        }
+      },
+      "dictionary": {
+        "id": "bsdd.fixture",
+        "version": "2026-01"
+      },
+      "productGroups": [
+        {
+          "id": "group.radiators",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Radiators"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "dictionarySubjectId": "unknown"
+        }
+      ],
+      "productClasses": [
+        {
+          "id": "class.panel-radiator",
+          "groupId": "group.radiators",
+          "parentId": "",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Panel radiator"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "requiredPropertyIds": [
+            "p",
+            "p"
+          ],
+          "optionalPropertyIds": [
+            ""
+          ]
+        }
+      ],
+      "productSeries": [
+        {
+          "id": "series-pr",
+          "classId": "class.panel-radiator",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "PR series"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "sharedPropertyValues": {
+            "list": {
+              "kind": "list",
+              "items": [
+                {
+                  "kind": "boolean",
+                  "value": false
+                },
+                {
+                  "kind": "integer",
+                  "value": 0
+                },
+                {
+                  "kind": "decimal",
+                  "value": 0.5
+                },
+                {
+                  "kind": "text",
+                  "value": "\u0000日本"
+                },
+                {
+                  "kind": "identifier",
+                  "value": ""
+                },
+                {
+                  "kind": "enumeration",
+                  "value": "unknown"
+                },
+                {
+                  "kind": "controlled",
+                  "value": "x",
+                  "listId": "unknown"
+                },
+                {
+                  "kind": "quantity",
+                  "value": 0.5,
+                  "unit": {
+                    "symbol": "unit\u0000",
+                    "dimension": {
+                      "length": -128,
+                      "mass": 127,
+                      "time": -1,
+                      "temperature": 0
+                    },
+                    "siFactor": 0.5
+                  }
+                },
+                {
+                  "kind": "range",
+                  "min": 0.5,
+                  "max": 0.5,
+                  "unit": {
+                    "symbol": "unit\u0000",
+                    "dimension": {
+                      "length": -128,
+                      "mass": 127,
+                      "time": -1,
+                      "temperature": 0
+                    },
+                    "siFactor": 0.5
+                  }
+                },
+                {
+                  "kind": "null",
+                  "state": "Unavailable"
+                },
+                {
+                  "kind": "reference",
+                  "targetId": "unknown"
+                },
+                {
+                  "kind": "list",
+                  "items": [
+                    {
+                      "kind": "list",
+                      "items": []
+                    },
+                    {
+                      "kind": "null",
+                      "state": "NotApplicable"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "geometryId": "unknown"
+        }
+      ],
+      "products": [
+        {
+          "id": "product.pr600",
+          "seriesId": "series-pr",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "PR-600"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "parameterDomains": [
+            {
+              "parameterId": "p",
+              "allowedValues": [
+                {
+                  "kind": "boolean",
+                  "value": false
+                },
+                {
+                  "kind": "integer",
+                  "value": 0
+                },
+                {
+                  "kind": "decimal",
+                  "value": 0.5
+                },
+                {
+                  "kind": "text",
+                  "value": "\u0000日本"
+                },
+                {
+                  "kind": "identifier",
+                  "value": ""
+                },
+                {
+                  "kind": "enumeration",
+                  "value": "unknown"
+                },
+                {
+                  "kind": "controlled",
+                  "value": "x",
+                  "listId": "unknown"
+                },
+                {
+                  "kind": "quantity",
+                  "value": 0.5,
+                  "unit": {
+                    "symbol": "unit\u0000",
+                    "dimension": {
+                      "length": -128,
+                      "mass": 127,
+                      "time": -1,
+                      "temperature": 0
+                    },
+                    "siFactor": 0.5
+                  }
+                },
+                {
+                  "kind": "range",
+                  "min": 0.5,
+                  "max": 0.5,
+                  "unit": {
+                    "symbol": "unit\u0000",
+                    "dimension": {
+                      "length": -128,
+                      "mass": 127,
+                      "time": -1,
+                      "temperature": 0
+                    },
+                    "siFactor": 0.5
+                  }
+                },
+                {
+                  "kind": "null",
+                  "state": "Unavailable"
+                },
+                {
+                  "kind": "reference",
+                  "targetId": "unknown"
+                },
+                {
+                  "kind": "list",
+                  "items": [
+                    {
+                      "kind": "list",
+                      "items": []
+                    },
+                    {
+                      "kind": "null",
+                      "state": "NotApplicable"
+                    }
+                  ]
+                }
+              ],
+              "defaultValue": {
+                "kind": "null",
+                "state": "Unknown"
+              }
+            }
+          ],
+          "variants": [
+            {
+              "id": "duplicate",
+              "parameterValues": {
+                "": {
+                  "kind": "range",
+                  "min": 0.5,
+                  "max": 0.5,
+                  "unit": null
+                }
+              },
+              "propertyValues": [
+                {
+                  "definitionId": "p",
+                  "value": {
+                    "kind": "decimal",
+                    "value": 0.5
+                  },
+                  "functionId": ""
+                }
+              ],
+              "articleNumber": "",
+              "geometryId": null
+            }
+          ],
+          "staticProperties": [
+            {
+              "definitionId": "p",
+              "value": {
+                "kind": "list",
+                "items": []
+              },
+              "functionId": null
+            }
+          ]
+        }
+      ],
+      "productIndexes": [
+        {
+          "id": "index",
+          "productId": "unknown",
+          "variantId": "",
+          "searchTags": [
+            "",
+            "日本",
+            "duplicate",
+            "duplicate"
+          ]
+        },
+        {
+          "id": "index",
+          "productId": "unknown",
+          "variantId": null,
+          "searchTags": []
+        }
+      ],
+      "propertyDefinitions": [
+        {
+          "id": "p",
+          "names": {
+            "preferred": {
+              "locale": "",
+              "text": "Property"
+            },
+            "shortName": "",
+            "alternatives": []
+          },
+          "dataType": "any",
+          "unit": {
+            "symbol": "unit\u0000",
+            "dimension": {
+              "length": -128,
+              "mass": 127,
+              "time": -1,
+              "temperature": 0
+            },
+            "siFactor": 0.5
+          },
+          "cardinality": {
+            "min": 4294967295,
+            "max": 0
+          },
+          "kind": "External",
+          "dictionaryPropertyId": ""
+        }
+      ],
+      "accessories": {
+        "": [],
+        "owner": [
+          {
+            "accessoryProductId": "unknown",
+            "required": false,
+            "quantity": {
+              "min": 4294967295,
+              "max": null
+            },
+            "compatibilityCondition": ""
+          }
+        ]
+      },
+      "compositions": {
+        "": [],
+        "owner": [
+          {
+            "componentProductId": "unknown",
+            "quantity": 4294967295
+          }
+        ]
+      },
+      "descriptiveObjects": [
+        {
+          "id": "d",
+          "mediaType": "",
+          "uri": "\u0000uri",
+          "language": "",
+          "checksum": null
+        }
+      ],
+      "extensions": {
+        "fields": {
+          "seed": "\u0000日本"
+        }
+      }
+    },
+    "dictionary": {
+      "reference": {
+        "id": "bsdd.fixture",
+        "version": "2026-01"
+      },
+      "subjects": [
+        {
+          "id": "subject.radiator",
+          "kind": "ProductClass",
+          "names": {
+            "preferred": {
+              "locale": "en",
+              "text": "Radiator"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "definition": {
+            "locale": "en",
+            "text": "Space heating emitter"
+          },
+          "parentId": null
+        }
+      ],
+      "relationships": [
+        {
+          "id": "r",
+          "kind": "IsSubkindOf",
+          "sourceId": "unknown",
+          "targetId": "unknown",
+          "cardinality": {
+            "min": 4294967295,
+            "max": 0
+          }
+        }
+      ],
+      "properties": [
+        {
+          "id": "p",
+          "names": {
+            "preferred": {
+              "locale": "de",
+              "text": "Eigenschaft"
+            },
+            "shortName": null,
+            "alternatives": []
+          },
+          "kind": "Selection",
+          "dataType": "any",
+          "unit": {
+            "symbol": "unit\u0000",
+            "dimension": {
+              "length": -128,
+              "mass": 127,
+              "time": -1,
+              "temperature": 0
+            },
+            "siFactor": 0.5
+          },
+          "applicableSubjectIds": [
+            "unknown",
+            "unknown"
+          ],
+          "valueConstraints": [
+            {
+              "min": 0.5,
+              "max": null,
+              "allowedValues": [
+                "",
+                "same",
+                "same"
+              ]
+            },
+            {
+              "min": null,
+              "max": 0.5,
+              "allowedValues": []
+            }
+          ]
+        }
+      ],
+      "controlledLists": [
+        {
+          "id": "c",
+          "values": [
+            "x",
+            "x",
+            ""
+          ],
+          "contextSubjectIds": [
+            "unknown"
+          ]
+        }
+      ],
+      "metaSubjects": [
+        {
+          "id": "duplicate",
+          "kind": "InOutlet",
+          "names": {
+            "preferred": {
+              "locale": "",
+              "text": ""
+            },
+            "shortName": "",
+            "alternatives": []
+          },
+          "definition": {
+            "locale": "de",
+            "text": "Definition"
+          },
+          "parentId": ""
+        }
+      ]
+    },
+    "geometry": {
+      "objects": {
+        "map key\u0000": {
+          "id": "different logical id",
+          "shape": {
+            "node": "boolean",
+            "operator": "Difference",
+            "children": [
+              {
+                "node": "transform",
+                "translation": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "rotationDeg": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "child": {
+                  "node": "primitive",
+                  "kind": "unknown",
+                  "parameters": {
+                    "z": 0.5,
+                    "": 0.5
+                  }
+                }
+              },
+              {
+                "node": "reference",
+                "geometryId": "unknown"
+              }
+            ]
+          },
+          "symbolic": {
+            "node": "boolean",
+            "operator": "Union",
+            "children": []
+          },
+          "spaces": [
+            {
+              "id": "s",
+              "kind": "PlacementTransportation",
+              "bounds": {
+                "min": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "max": [
+                  0.5,
+                  0.5,
+                  0.5
+                ]
+              }
+            }
+          ],
+          "surfaces": [
+            {
+              "id": "s",
+              "purpose": "",
+              "bounds": {
+                "min": [
+                  0.5,
+                  0.5,
+                  0.5
+                ],
+                "max": [
+                  0.5,
+                  0.5,
+                  0.5
+                ]
+              }
+            }
+          ],
+          "ports": [
+            {
+              "id": "p",
+              "medium": "",
+              "position": [
+                0.5,
+                0.5,
+                0.5
+              ],
+              "direction": [
+                0.5,
+                0.5,
+                0.5
+              ],
+              "portType": ""
+            }
+          ],
+          "parameterBindings": {
+            "": "unknown",
+            "same": "unknown"
+          }
+        }
+      },
+      "primitiveRegistry": [
+        {
+          "id": "unknown",
+          "parameters": [
+            "",
+            "p",
+            "p"
+          ]
+        },
+        {
+          "id": "empty",
+          "parameters": []
+        }
+      ]
+    },
+    "selection": {
+      "classId": "class.panel-radiator",
+      "constraints": [
+        {
+          "id": "",
+          "propertyId": "unknown",
+          "operator": "InRange",
+          "value": {
+            "kind": "range",
+            "min": 0.5,
+            "max": 0.5,
+            "unit": null
+          }
+        }
+      ],
+      "seriesId": "series-pr"
+    },
+    "partNumberRule": {
+      "kind": "table",
+      "rows": [
+        {},
+        {
+          "": "",
+          "a": "\u0000value"
+        }
+      ],
+      "outputColumn": ""
+    },
+    "partNumberInputs": {
+      "list": {
+        "kind": "list",
+        "items": [
+          {
+            "kind": "boolean",
+            "value": false
+          },
+          {
+            "kind": "integer",
+            "value": 0
+          },
+          {
+            "kind": "decimal",
+            "value": 0.5
+          },
+          {
+            "kind": "text",
+            "value": "\u0000日本"
+          },
+          {
+            "kind": "identifier",
+            "value": ""
+          },
+          {
+            "kind": "enumeration",
+            "value": "unknown"
+          },
+          {
+            "kind": "controlled",
+            "value": "x",
+            "listId": "unknown"
+          },
+          {
+            "kind": "quantity",
+            "value": 0.5,
+            "unit": {
+              "symbol": "unit\u0000",
+              "dimension": {
+                "length": -128,
+                "mass": 127,
+                "time": -1,
+                "temperature": 0
+              },
+              "siFactor": 0.5
+            }
+          },
+          {
+            "kind": "range",
+            "min": 0.5,
+            "max": 0.5,
+            "unit": {
+              "symbol": "unit\u0000",
+              "dimension": {
+                "length": -128,
+                "mass": 127,
+                "time": -1,
+                "temperature": 0
+              },
+              "siFactor": 0.5
+            }
+          },
+          {
+            "kind": "null",
+            "state": "Unavailable"
+          },
+          {
+            "kind": "reference",
+            "targetId": "unknown"
+          },
+          {
+            "kind": "list",
+            "items": [
+              {
+                "kind": "list",
+                "items": []
+              },
+              {
+                "kind": "null",
+                "state": "NotApplicable"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "scriptLimits": {
+      "maxSteps": 4294967295,
+      "maxRecursion": 0,
+      "timeoutMs": 0
+    },
+    "exchangeProcess": "ExchangeSystemModel"
+  },
+  "extensionCases": {
+    "kind": "Object",
+    "members": [
+      {
+        "key": "same",
+        "value": {
+          "kind": "Bytes",
+          "hex": "00ff807f"
+        }
+      },
+      {
+        "key": "same",
+        "value": {
+          "kind": "Array",
+          "items": [
+            {
+              "kind": "Null"
+            },
+            {
+              "kind": "Boolean",
+              "value": false
+            },
+            {
+              "kind": "Integer",
+              "value": "-9223372036854775808"
+            },
+            {
+              "kind": "Unsigned",
+              "value": "18446744073709551615"
+            },
+            {
+              "kind": "Float",
+              "bits": "3fe0000000000000"
+            },
+            {
+              "kind": "Text",
+              "value": "\u0000日本"
+            },
+            {
+              "kind": "Object",
+              "members": []
+            },
+            {
+              "kind": "Array",
+              "items": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "controlledOutput": {
+    "textBytes": 100000,
+    "cancelAfter": 65536,
+    "tinyBytes": 16
+  }
+}

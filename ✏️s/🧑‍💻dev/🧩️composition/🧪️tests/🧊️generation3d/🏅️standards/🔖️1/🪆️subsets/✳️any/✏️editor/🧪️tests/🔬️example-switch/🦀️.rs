@@ -182,7 +182,7 @@ fn example_switch_views(fixture: &ExampleSwitchFixture, attached: &[ExampleSwitc
             window_kind_id: fixture.window_kinds.get(&window.kind).unwrap_or_else(|| panic!("fixture window kind {}", window.kind)).clone(),
         });
     }
-    let view = semio_framework_plugin::ViewModel { window_instances: roster, ..Default::default() };
+    let view = semio_framework_plugin::ViewModel { window_instances: roster, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let flow = view.for_window_instance(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN).expect("flow window instance");
     let first_preview = attached.first().map(|window| view.for_window_instance(&window.id).expect("preview window instance")).unwrap_or_else(|| flow.clone());
     (flow, first_preview)

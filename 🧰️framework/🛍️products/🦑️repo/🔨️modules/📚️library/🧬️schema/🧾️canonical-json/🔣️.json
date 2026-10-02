@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "cases", "runtimeCases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "repository-record-json-v1" },
+    "cases": {
+      "type": "array", "minItems": 17, "maxItems": 17,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "input", "oracle", "canonical"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "input": { "$ref": "#/$defs/json" },
+          "oracle": { "$ref": "#/$defs/json" },
+          "canonical": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "runtimeCases": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["object-undefined", "array-undefined", "undefined", "function", "symbol"] },
+          "canonical": { "type": "string", "minLength": 1 },
+          "error": { "const": "Repository JSON requires a serializable top-level value" }
+        },
+        "oneOf": [
+          { "properties": { "kind": { "enum": ["object-undefined", "array-undefined"] }, "canonical": { "type": "string" }, "error": false }, "required": ["canonical"] },
+          { "properties": { "kind": { "enum": ["undefined", "function", "symbol"] }, "error": { "type": "string" }, "canonical": false }, "required": ["error"] }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "json": {
+      "anyOf": [
+        { "type": "null" }, { "type": "boolean" }, { "type": "number" }, { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/json" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/json" } }
+      ]
+    }
+  }
+}

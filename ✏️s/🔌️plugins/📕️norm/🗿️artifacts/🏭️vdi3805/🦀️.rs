@@ -177,13 +177,13 @@ impl dsl::DslField for VdiValue {
         dsl::Shape::Value
     }
     fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("VdiValue always serializes to DslValue"))
+        dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
                 let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
-                dsl::from_dsl_value(normalized)
+                semio_framework_value::FromValue::from_value(normalized).map_err(|error|error.to_string())
             }
             other => Err(format!("expected Value, found {other:?}")),
         }
@@ -334,6 +334,12 @@ impl SheetId {
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::UInt` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for SheetId {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<u16 as dsl::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<u16 as dsl::DslField>::to_value_controlled(&self.0,control)}
+
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+        <u16 as dsl::DslField>::from_value_controlled(value, control).map(Self)
+    }
     fn shape() -> dsl::Shape {
         dsl::Shape::UInt
     }
@@ -342,7 +348,7 @@ impl dsl::DslField for SheetId {
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::UInt(v) => Ok(SheetId(*v as u16)),
+            dsl::FieldValue::UInt(v) => u16::try_from(*v).map(Self).map_err(|_| format!("sheet id {v} out of range for u16")),
             other => Err(format!("expected UInt, found {other:?}")),
         }
     }
@@ -690,6 +696,12 @@ pub struct RecordFamilyId(pub String);
 /// for `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for RecordFamilyId {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{<String as dsl::DslField>::shape_controlled(control)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<String as dsl::DslField>::to_value_controlled(&self.0,control)}
+
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+        <String as dsl::DslField>::from_value_controlled(value, control).map(Self)
+    }
     fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
@@ -1062,20 +1074,112 @@ impl SheetAttributes {
 }
 
 impl dsl::DslField for SheetAttributes {
+    fn shape_controlled<C:dsl::NativeSchemaControl>(control:&mut C)->Result<dsl::Shape,String>{control.checkpoint()?;Ok(dsl::Shape::Value)}
+    fn to_value_controlled(&self,control:&mut dsl::NativeEncodeControl<'_>)->Result<dsl::FieldValue,String>{<Self as semio_framework_value::ToValue>::to_value_controlled(self,control).map(dsl::FieldValue::Value).map_err(|error|error.to_string())}
+
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(value) => sheet_attributes_controlled(value, control),
+            _ => Err("expected VDI3805 sheet attribute value".into()),
+        }
+    }
     fn shape() -> dsl::Shape {
         dsl::Shape::Value
     }
     fn to_value(&self) -> dsl::FieldValue {
-        dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("SheetAttributes always serializes to DslValue"))
+        dsl::FieldValue::Value(semio_framework_value::ToValue::to_value(self))
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
-                let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
-                dsl::from_dsl_value(normalized)
+                semio_framework_value::FromValue::from_value(dsl_value.clone()).map_err(|error|error.to_string())
             }
             other => Err(format!("expected Value, found {other:?}")),
         }
+    }
+}
+
+fn sheet_attribute_object<'a>(value: &'a semio_framework_value::DslValue, allowed: &[&str], control: &mut dsl::NativeDecodeControl<'_>) -> Result<&'a [(String, semio_framework_value::DslValue)], String> {
+    let semio_framework_value::DslValue::Object(fields) = value else { return Err("expected VDI3805 attribute object".into()); };
+    if fields.len() > allowed.len() { return Err("VDI3805 attribute object has excess fields".into()); }
+    for (position, (key, _)) in fields.iter().enumerate() {
+        control.step()?;
+        if !allowed.contains(&key.as_str()) || fields[..position].iter().any(|(prior, _)| prior == key) { return Err("VDI3805 attribute object has unknown or duplicate fields".into()); }
+    }
+    Ok(fields)
+}
+fn sheet_attribute_field<'a>(fields: &'a [(String, semio_framework_value::DslValue)], key: &str) -> Result<&'a semio_framework_value::DslValue, String> {
+    fields.iter().find(|(name, _)| name == key).map(|(_, value)| value).ok_or_else(|| format!("VDI3805 attribute requires {key}"))
+}
+fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut dsl::NativeDecodeControl<'_>) -> Result<String, String> {
+    control.copy_text(sheet_attribute_field(fields, key)?.as_str().ok_or("expected VDI3805 attribute text")?)
+}
+fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Option<String>, String> {
+    match fields.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
+        None | Some(semio_framework_value::DslValue::Null) => Ok(None),
+        Some(semio_framework_value::DslValue::String(text)) => control.copy_text(text).map(Some),
+        _ => Err("expected optional VDI3805 attribute text".into()),
+    }
+}
+fn sheet_attribute_real(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<f64, String> {
+    sheet_attribute_field(fields, key)?.as_f64().ok_or_else(|| format!("VDI3805 attribute {key} requires a number"))
+}
+fn sheet_attribute_u16(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<u16, String> {
+    let word = sheet_attribute_field(fields, key)?.as_u64().ok_or("expected unsigned VDI3805 attribute")?;
+    u16::try_from(word).map_err(|_| "VDI3805 attribute exceeds u16".into())
+}
+fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<SheetAttributes, String> {
+    control.step()?;
+    let semio_framework_value::DslValue::Object(fields) = value else { return Err("expected VDI3805 sheet attribute object".into()); };
+    if fields.len() > 8 { return Err("VDI3805 sheet attribute object has excess fields".into()); }
+    let kind = sheet_attribute_field(fields, "kind")?.as_str().ok_or("expected VDI3805 attribute kind")?;
+    match kind {
+        "valveHeating" => {
+            let fields = sheet_attribute_object(value, &["kind", "dn", "kvsM3S", "pressureClass", "connectionType", "authorityMin", "authorityMax"], control)?;
+            Ok(SheetAttributes::ValveHeating(ValveHeatingAttributes {
+                dn: sheet_attribute_u16(fields, "dn")?, kvs_m3_s: sheet_attribute_real(fields, "kvsM3S")?,
+                pressure_class: sheet_attribute_text(fields, "pressureClass", control)?, connection_type: sheet_attribute_text(fields, "connectionType", control)?,
+                authority_min: sheet_attribute_real(fields, "authorityMin")?, authority_max: sheet_attribute_real(fields, "authorityMax")?,
+            }))
+        }
+        "radiator" => {
+            let fields = sheet_attribute_object(value, &["kind", "standardOutputW", "heatExponentN", "lengthM", "heightM", "depthM", "connectionType"], control)?;
+            Ok(SheetAttributes::Radiator(RadiatorAttributes {
+                standard_output_w: sheet_attribute_real(fields, "standardOutputW")?, heat_exponent_n: sheet_attribute_real(fields, "heatExponentN")?,
+                length_m: sheet_attribute_real(fields, "lengthM")?, height_m: sheet_attribute_real(fields, "heightM")?, depth_m: sheet_attribute_real(fields, "depthM")?,
+                connection_type: sheet_attribute_text(fields, "connectionType", control)?,
+            }))
+        }
+        "pumpHeating" => {
+            let fields = sheet_attribute_object(value, &["kind", "dnSuction", "dnDischarge", "nominalFlowM3S", "nominalHeadM", "motorPowerW", "hydraulicEfficiency", "qhCurveRef"], control)?;
+            Ok(SheetAttributes::PumpHeating(PumpHeatingAttributes {
+                dn_suction: sheet_attribute_u16(fields, "dnSuction")?, dn_discharge: sheet_attribute_u16(fields, "dnDischarge")?,
+                nominal_flow_m3_s: sheet_attribute_real(fields, "nominalFlowM3S")?, nominal_head_m: sheet_attribute_real(fields, "nominalHeadM")?,
+                motor_power_w: sheet_attribute_real(fields, "motorPowerW")?, hydraulic_efficiency: sheet_attribute_real(fields, "hydraulicEfficiency")?,
+                qh_curve_ref: sheet_attribute_optional_text(fields, "qhCurveRef", control)?,
+            }))
+        }
+        "heatGenerator" => {
+            let fields = sheet_attribute_object(value, &["kind", "nominalHeatOutputW", "fuelType", "flowTempMaxC", "returnTempMinC"], control)?;
+            Ok(SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
+                nominal_heat_output_w: sheet_attribute_real(fields, "nominalHeatOutputW")?, fuel_type: sheet_attribute_text(fields, "fuelType", control)?,
+                flow_temp_max_c: sheet_attribute_real(fields, "flowTempMaxC")?, return_temp_min_c: sheet_attribute_real(fields, "returnTempMinC")?,
+            }))
+        }
+        "generic" => {
+            let fields = sheet_attribute_object(value, &["kind", "entries"], control)?;
+            let values = match fields.iter().find(|(key, _)| key == "entries").map(|(_, value)| value) {
+                None => &[][..], Some(semio_framework_value::DslValue::Array(values)) => values.as_slice(),
+                _ => return Err("expected VDI3805 generic attribute list".into()),
+            };
+            let mut entries = control.allocate_vec::<GenericAttribute>(values.len())?;
+            for value in values {
+                let fields = sheet_attribute_object(value, &["key", "value", "unit"], control)?;
+                entries.push(GenericAttribute { key: sheet_attribute_text(fields, "key", control)?, value: sheet_attribute_text(fields, "value", control)?, unit: sheet_attribute_optional_text(fields, "unit", control)? });
+            }
+            Ok(SheetAttributes::Generic(GenericAttributes { entries }))
+        }
+        _ => Err("unknown VDI3805 sheet attribute kind".into()),
     }
 }
 
@@ -2128,7 +2232,6 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
-#[path = "."]
                         #[path = "."]
                         pub mod rename_product {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦀️.rs"]

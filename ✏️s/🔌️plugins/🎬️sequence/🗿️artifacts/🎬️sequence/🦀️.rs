@@ -48,7 +48,7 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 /// block"). Genuine ENGINE GAP (`Shape::Embed` inside a `Shape::Table` column), out of scope here —
 /// verified empirically, not worked around.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[value(transparent)]
+#[value(transparent, retire_with="std::mem::drop")]
 pub struct StepParams(pub Dictionary);
 
 /// 🧊️ The same fail-closed boundary `imperative_engine::Step` declares for its own `params`
@@ -343,7 +343,7 @@ pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) 
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.sequence".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Sequence", "Sequenz"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Sequence", "Sequenz"),
         source_format: "sequence.sequence".into(),
         component_kind: "sequence".into(),
         dimension: "graph".into(),

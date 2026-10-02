@@ -178,3 +178,248 @@ Laws added or updated in puzzle 2d:
 
 ### 5.4 Coordination notes
 - W2-A's typed host events now reach the select tool as `translateSelection{phase:"abort", reason}` through `ArtifactEditor::host_event`, which builds the variant directly; that edit is kept. The production path no longer calls the test-only `Puzzle2dCommand::from_action`.
+
+## Session 2 — 2026-10-01
+
+Successor S2-W2D (coordinator `⚪552b484a…`). ED = `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`,
+R = `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements`, P = `🧰️framework/🛍️products/💻️os/🔨️modules`.
+Status: SOURCE COMPLETE; verification in progress (see S2.6, updated at every milestone).
+
+### S2.1 Repair (rule 21)
+- No half-finished W2-D edit: every W2-D file was last touched ≤ 03:40; the 06:22–06:28 edits in `ED/🦀️.rs`, the board-host
+  tests and the board `➕️normal/🦀️.rs` are the peer graph-manifest rework (committed in `4e36b2b5012`).
+- The predecessor's 08:01 lib run (`🗑️generated/w2d-test-all.txt`): 1071 listed, 1056 ok, 9 FAILED, then SIGABRT in
+  `fill_run_start_complete_finalize_is_one_undo_entry` (a `BoardFillJob` Drop assertion panicking during unwinding).
+  - **Roster law** `every_declared_action_resolves_to_a_command` (`ED/🧪️tests/🔬️unit/🦀️.rs`): `hostEvent`
+    (`semio_framework::HOST_EVENT_ACTION_ID`) joins the framework-owned verbs.
+  - **H3 root cause (Nakagin manifest).** The peer's graph-catalog ownership change (`📓️2026-10-01-goal-framework-execution.md`,
+    CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT) gave every owner a one-manifest profile; `nakagin` went to trinity jack, so the puzzle
+    crate's `crate::graph_manifest::manifest_by_id("nakagin")` was `None`. The Nakagin example (`manifest-id=nakagin`) lost its
+    engine kind catalogs, which explains the fill and brush reds. The producer excludes foreign owners, so the fix is ownership.
+    Following the draw demo precedent (`🖍️drawing/…/📚️examples/🎬️demo/🖼️assets/🛂️manifest.json`), the puzzle 2d Nakagin example now
+    owns its manifest at `◻️2d/…/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🛂️manifest.json`. It is a byte copy of jack's
+    `nakagin` source, the vocabulary the central registry compiled before. It is registered in `◻️2d/🛂️manifest/📇️outputs.json`
+    and regenerated with the owner task: `bun ./📜️script.ts graph-generate` in `◻️2d/📦️packages/🦀️rust` printed "wrote 2
+    manifests", and the generated `🏢️nakagin/🦀️.rs` is identical to jack's except its header.
+    - Note for the coordinator: two owners now hold the same vocabulary, jack and the puzzle 2d example. Jack's source file
+      still carries a mangled name, `🛂️manifest.jsonnakagin.manifest.json`, which is not mine to fix.
+    - `bun ./📜️script.ts graph-wire-check` for the puzzle 2d package fails in its own runner: `cargo test --manifest-path
+      Cargo.toml -p semio-s-artifact-puzzle-2d` reports "did not match any packages". That is the peer's script; the crate now
+      lives in the `✏️s/Cargo.toml` workspace.
+  - **Drop asserts survivable.** The five fill owners in `P/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs` (placement,
+    checkpoint, capture, ingress, job) now assert `… || std::thread::panicking()`. That is the file's own `BoardFillSnapshot`
+    convention: production keeps the law, and a failing test reports instead of aborting the whole binary.
+  - A peer's `DslValue::Bytes` (11:09) left a non-exhaustive match in
+    `P/♾️infinite/🗿️artifacts/🕸️dag/🧵️retained/🦀️.rs`. I added the exact retirement arm `DslValue::Bytes(value) =>
+    self.push(DagOwner::Bytes(value))` so the build could proceed (the coordinator reports this arm as fixed).
+
+### S2.2 (b) wgpu replay of the shortest-decimal offsets
+- The 07:49 run (`🗑️generated/w2d-test-wgpu.txt`) already shows `the_engine_offset_form_replays_the_shared_f32_decimal_corpus`
+  green (board2d filter 6/6).
+- The wgpu host now also maps pointers the way React does. New `board_local_pointer(inner, x, y)` in
+  `R/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` takes the shortest decimal of the f32 position and of the surface origin, then
+  subtracts them (React: `board2dFloat32Decimal(clientX) - rect.left`). The four puzzle board pointer paths use it: down, move,
+  up and wheel. `map_local_pointer` stays for the map surfaces.
+- New law `the_wgpu_board_pointer_replays_the_shared_f32_decimal_corpus` in `R/⚙️EngineCanvas/🧪️tests/🔬️wgpu-board2d-engine/🦀️.rs`
+  covers both the origin and a fractional origin.
+
+### S2.3 (c) + G3/G4/G12 acceptance, schema-first
+- Language-agnostic corpus `ED/🧫️fixtures/🧫️select-tool-history/🔣️.json` with its schema
+  `ED/🧬️schema/🔣️select-tool-history/🔣️.json`. One board (left, mid, locked pin), which is also the e2e content (import it with
+  `importFixture`). Four scenarios, each with steps, expectations, `log`, `drafts` and `head`:
+  1. `drag-offset-and-targets` is the dev's example:
+     - a board drag of a two-node selection gives ONE row from `drag-selection` with en/de label and `TransactionRef`;
+     - a nudge follows;
+     - time travel exposes `/targets` as a reference (vortex, node, many) and `/dx` and `/dy` as steppers that snap to the
+       window `gridFactor` (rendered step 5);
+     - the preview is the state before the drag plus the draft, downstream not applied;
+     - the board highlights the referenced nodes;
+     - editing `/dx`, then a board pick and "Use selection", replaces the targets;
+     - accept gives a ready review, and the overwrite equals the fresh fold.
+  2. `rotate-and-scale-replay`: rotate and scale rows labelled from their leaves; `/angle` is a dial; `/factor` is a log slider
+     with snaps 0.25 to 4; two sessions edit the angle and then the factor; the downstream transforms replay about the
+     recorded pivots.
+  3. `fatal-loop-by-editing-targets` (G3): withdrawing the upstream `create-node` makes the downstream drag an Error
+     `mutation.target-missing`, so the review is blocked. Next problem, then select, then "Use selection" on `/targets`, then
+     accept gives ready, and finalize overwrite reaches the fresh fold.
+  4. `warning-from-an-upstream-edit` (G4): withdrawing the upstream unlock makes the downstream drag a Warning `mutation.partial`
+     on `pin`. The review is ready, not blocked, and the warning is still on the row after the overwrite. E2E content: this
+     scenario on the corpus board.
+- Rust laws `ED/🧪️tests/🧪️select-tool-history/🦀️.rs`, mounted in `ED/🦀️.rs`:
+  - `every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_fold` drives the real verbs:
+    - the engine drag and pick, interaction select, the translate, rotate and scale verbs, ingested leaves;
+    - all of `historyEdit*`: Begin, Input, UseSelection, Withdraw, Accept, Finalize, Commit overwrite;
+    - every expectation is checked: rows, leaf, label, tool, stage, review, blocking, worst, outcomes, next problem, inputs
+      (control kind, reference domain, snap source, scale, snaps, rendered step), preview, absent, highlighted, draft;
+    - the head is compared with the corpus and with a fresh app folding the edited log.
+  - `every_corpus_edit_previews_and_replays_through_the_store` is G12, the siblings' store law. For every scenario it checks
+    `state_before` equals the log prefix, runs `begin_report_replay` to finish, requires the report to be non-blocking and to
+    match the corpus report, requires the replayed state to equal the fresh fold, then commits an overwrite and checks that
+    the head equals the fold.
+- The select-tool transaction laws reuse the corpus board and export their board helpers (`painted_host_of`, `press`/`move_to`/`release`,
+  `flush`, `dispatched_rows`, `english`/`german`).
+- Python oracle `ED/🧪️tests/🧪️select-tool-history/🐍️.py`. It validates the corpus schema and every leaf against its puzzle 2d
+  payload schema with `jsonschema`, then re-folds the edited log with shapely `affinity`. It already caught one corpus fault:
+  `createNode.node.anchor` is required. `python3 …/🐍️.py` → "4 scenarios, 12 head nodes agree".
+- The "keyboard nudge / HUD move / inspector delta / translateSelection reuse the same leaves", "cancel = zero trace" and "two drags
+  = two transactions" laws are already in `🧪️select-tool-transactions` (session 1); they are re-run below.
+
+### S2.4 G3 board side: `InteractionView::draft_references` seam (coordinator-approved, generic)
+- Runtime (S2-W2A's files, region-scoped edits):
+  - `TimeTravelLedger::draft_references()` in `P/🔌️plugin/⏪️time-travel/🦀️.rs` returns the ids every `Reference` input of the
+    open draft holds, keyed by the domain the input declares, in draft order with each id once. It is empty while no editor is
+    open.
+  - `InteractionView.draft_references` and `InteractionView::draft_references(domain)` in `P/🔌️plugin/🦀️.rs`. The field is
+    filled at the four render seams (render, window engagements, window measures, context menu). Dispatch, presence stamping
+    and the viewer laws use `empty_draft_references()`.
+  - Toy-app law `the_open_draft_references_its_reference_inputs_per_domain` in `P/🔌️plugin/🧪️tests/🧪️time-travel/🦀️.rs`.
+    The builder-contract test literal gained the field.
+- UI scene (S2-W1E's files, additive): `Board2dScene.highlighted_ids_json` (JSON id array, default `[]`, skipped on the wire while
+  `[]` so existing goldens are unchanged) in `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs` (struct, pack wire, `base`,
+  ToValue/FromValue) and TS twin `🎬️scene/🟦️.ts` (`highlightedIdsJson?`). **S2-W1E: please note.** Puzzle 5d's two struct literals
+  (S2-PUZZLE) gained `highlighted_ids_json: "[]"`.
+- Puzzle 2d: `Puzzle2dInteractionSnapshot.referenced` reads `draft_references("vortex")`, and the board scene carries
+  `referenced_json()`. The wasm `BoardSession.setHighlightedIdsJson` (`ED/🌉️wasm/🦀️.rs`) calls the engine's
+  `set_highlighted_ids`.
+- Hosts:
+  - React `R/🖥️Board2dHost/🟦️.tsx` applies `setHighlightedIdsJson` in an effect and adds `data-board-highlighted-ids-json`
+    for probes. The type is `R/🪪️WasmSessionLoader/🟦️.tsx` (`setHighlightedIdsJson?`). Engine-contract test "projects the
+    ids a time-travel draft references onto the puzzle 2d board host".
+  - wgpu: the EngineCanvas board sync (S2-FLOWCAD's file, region-scoped) adds the `BoardSyncCache.highlighted_ids_json`
+    field, its close and terminal rules, and `host.set_highlighted_ids`.
+
+- **Chip labels (G3, coordinator 17:40).** The runtime hook `ArtifactEditor::entity_label` already existed (S2-W2A), so
+  puzzle 2d implements it in `ED/🦀️.rs` through the new `puzzle2d_entity_label(fixture, kinds, id)`:
+  - a node is named by its display label (authored label or text, else the kind catalogue name);
+  - a target region by its label;
+  - an edge by its endpoint nodes;
+  - a handle by its node and handle kind;
+  - only the declared kinds are looked up, the label is data in every locale, and `None` (show the id) applies when only
+    the id would name the entity.
+  - Laws: `reference_chips_name_board_entities_like_the_outliner` (unit), and corpus `chips` expectations: the corpus board
+    nodes carry texts Left, Middle and Pin, and the Use-selection chips must read them; a node absent from the preview
+    shows its id.
+- **wgpu `dumpBoard2d.highlighted` (coordinator 17:40).** `DumpBoard2dSurface.highlighted` holds the ids of
+  `Board2dScene.highlighted_ids_json`, the same content as React's `data-board-highlighted-ids-json`. It lives in
+  `R/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`, and the law is updated in `R/🗣️Interpreter/🧪️tests/🔬️wgpu-introspection/🦀️.rs`.
+  **S2-W2C: please note this probe field.**
+
+### S2.5 (d) `[DEBUG]`
+- `/usr/bin/grep -rn '\[DEBUG\]'` over ED, `♾️infinite/🎲️board`, `🖥️Board2dHost` and `⚙️EngineCanvas`: 0 hits.
+
+### S2.6 Verification (gated, one cargo at a time, private `target-nde-s2-w2d`)
+- `python3 ED/🧪️tests/🧪️select-tool-history/🐍️.py`: PASS (4 scenarios, 12 head nodes).
+- `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --no-run`
+  (12:52–13:30) was blocked first by the dag `DslValue::Bytes` arm, then by a peer break in `semio-s-artifact-stdio-gltf`: 210
+  errors of "MutationLeaf source authority failed: source owner is not an exact registered domain operation" (a taxonomy or
+  derive rule in flux). No error appeared in any file of mine. After the cut, nine orphan cargos sat deadlocked in
+  `prebuild_lock_exclusive` for 3 h with 0 rustc; I killed that set per pid (mine included). RERUN PENDING.
+- React `bun ./📜️script.ts test long board-event-coalescing float32-decimal` (React pkg) at 13:07 failed at import:
+  `🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts` `inventory.filter` was undefined while the registry was being
+  regenerated. Environment, not the tests.
+- Milestone 17:20, after the reset. Each run below was a single gated foreground command with the private target dir.
+  - `python3 ED/🧪️tests/🧪️select-tool-history/🐍️.py`: PASS (4 scenarios, 12 head nodes).
+  - Oracle negative controls (`🐍️.py <corpus>`, copies in `🗑️generated/s2-w2d/neg-*.json`): a wrong head, a non-number
+    leaf input and an unknown step key each FAIL, as they must (3 of 3).
+  - `cargo test -p semio-framework-os-infinite --lib -- directed_normal`: **53 passed, 0 failed**.
+  - `cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d`: **7 passed, 0 failed**. This includes the new
+    `the_wgpu_board_pointer_replays_the_shared_f32_decimal_corpus`, the shared coalescer corpus and the engine f32 corpus. The
+    run compiles the EngineCanvas highlight sync and the scene field.
+  - `cargo test -p semio-framework-plugin --lib -- time_travel`: **31 passed, 0 failed**. This includes the new
+    `the_open_draft_references_its_reference_inputs_per_domain` and compiles the builder-contract literal.
+  - React `bun ./📜️script.ts test long board-event-coalescing float32-decimal`: **29 passed** (2 files).
+  - React `bun ./📜️script.ts test long engine-contract -t "puzzle 2d|board 2d|live mirror|hover out of the board"`: **40
+    passed**. This includes the new highlight projection test; the session-1 baseline was 39.
+  - React `bun ./📜️script.ts typecheck`: 4 errors, all in peers' files, none in mine. Three are TS2741 `line` missing in
+    `🏪️store/👷️worker/🟦️.ts` and the backbone-parity test; one is `idleInstalledServiceStatusV1` in `🐚️Shell/🟦️.tsx`.
+  - Puzzle 2d lib tests: BLOCKED by peers. `semio-s-artifact-stdio-gltf`, which puzzle 2d depends on transitively, has 16
+    errors in `🧬️schema/📸️snapshot/📦️pack/🦀️.rs` and is being edited, AM at 16:45. `semio-framework-ui` (`🧊️wgpu/🧩️component`
+    cannot find `wgpu::layout` / `wgpu::stepper`) also broke at 17:15. In the same build, `semio-framework-plugin`,
+    `semio-framework-os-infinite`, the dag crate and the scene crate compiled with no error or warning in my edits.
+  - `bun ./📜️script.ts verify taxonomy report --scope …` for the new dirs is blocked: the taxonomy is invalid again
+    (`generatorContracts["graph-catalog"].inputPatterns` unsorted, `repo-entity-kinds` invocation; peers).
+
+- Milestone 22:35, after the second reset. Puzzle 2d lib build attempts:
+  - `build-p2d-5` stopped on a peer's in-flight `HistoryPatch.remote_replay` initializer, which was fixed 5 minutes later.
+  - `build-p2d-6` ran when load was about 150. gltf now compiles, but the build fails with **disk full**: "No space left on
+    device (os error 28)" while writing the rlibs of stdio-pdf, stdio-gltf and puzzle-3d, with 415 MiB free. Reported to
+    the coordinator.
+  - Waiting on disk space to rerun the build, then run the lib suite, the 5d laws and the wasm32 check.
+- Milestone 23:23, after the coordinator's disk prune.
+  - `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --no-run`:
+    **Finished** in 7m27s. Every new source compiled at first build: the runtime seam, the scene field, the entity label, the
+    corpus laws and the wasm binding. The only new warning was one unnecessary qualification in my transactions edit, now
+    fixed.
+  - `… --lib -- select_tool`: **23 passed, 1 failed**.
+    - Passing includes `every_corpus_edit_previews_and_replays_through_the_store` (G12, all four scenarios),
+      `reference_chips_name_board_entities_like_the_outliner`, and every session-1 select-tool and select-tool-transaction law.
+    - The red `every_corpus_scenario_…` stopped at step 1 ("translateSelection is one edit", 0 edits). It was a harness gap:
+      the drag step painted the selection into the engine only, so the app held no selection for the following nudge.
+      Fixed: the drag step selects in the app first (`interactionSelect`), then paints it into the engine as hosts do.
+      RERUN PENDING (cargo hold, rule 26).
+- Milestone 03:10, after the hold lifted.
+  - The full lib suite ran from the 23:23 binary (`RUST_MIN_STACK=67108864`, which is what `.cargo/config.toml` sets): **1079
+    tests, 1009 passed, 70 failed**, with no abort, so the Drop fix holds.
+  - **All but two reds share one peer cause.** The examples' DSL no longer parses ("expected LBrace, found Ident 'id'" at
+    concrete-forest 28:160 and nakagin 25:125, which are the `handles` record lists). The peer's in-flight dsl grammar and
+    record refactor (`🗣️dsl/📖️grammar`, `🧬️schema/🛫️encoding|🛬️decoding`, uncommitted) has not migrated the assets. Every law
+    that loads an example then fails with a poisoned `LazyLock`, or with `job-session.terminal-fault` on the example load. The
+    nine predecessor reds therefore cannot be re-judged until that lands.
+  - The other two:
+    - the corpus harness gap, already fixed in source;
+    - `board_fill_job_large_host_has_no_step_at_or_above_eight_ms`, the known 8 ms timing law under load.
+  - os-kernel is red from the peer `RecordSpecProducer` refactor (coordinator 03:06), so any rebuild is peer-blocked.
+- G4 `introduced` (design §16.5, the field now exists in the kernel) is added to the corpus outcomes:
+  - `true` for the downstream error (C) and the warning (D) while reviewing;
+  - `false` on D's warning after the overwrite, where no session holds a report.
+
+### S2.7 Coordinator actions
+- None of my changes needs a channel bump.
+- The puzzle plugin needs re-describe and re-activation for the e2e: new wasm binding `setHighlightedIdsJson`, the
+  Nakagin manifest registration, and the wgpu pointer mapping.
+- Central `schema generate` is needed for the new scope `editor/select-tool-history`.
+
+## Session 3 — 2026-10-02
+
+Successor S3-W2D (coordinator `⚪b7db773a…`). Aliases as in Session 2 (ED, R, P). Status: IN PROGRESS (updated at every milestone).
+
+### S3.1 Repair (rule 28)
+- Since the last session-2 milestone (03:10) only two owned files changed, both by peers and compile-consistent: `ED/🦀️.rs`
+  (`store::EngineHandles` → `semio_framework_2d::compute::EngineHandles`) and `ED/👥️presence/🦀️.rs` (dsl `spec_fn.ordinary`).
+  No half-finished W2-D edit; the session-2 harness fix and the G4 `introduced` corpus edits are on disk (02:40–02:48).
+
+### S3.2 G3 laws on both hosts (source)
+- Engine law `draft_referenced_ids_paint_highlighted_without_publishing` (new region `🔗️DraftReferences` in
+  `P/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧪️tests/🔬️board-host-standalone/🦀️.rs`): a referenced id styles
+  `Highlighted` (locked too, never dimmed), the selection keeps `Selected`, no event is published, the overlay pass carries it,
+  a fixture re-parse (each draft edit repaints the preview) keeps it, `[]` clears it.
+- wgpu law `a_draft_reference_highlight_reaches_the_wgpu_board_engine` (`R/⚙️EngineCanvas/🧪️tests/🔬️wgpu-board2d-engine/🦀️.rs`):
+  `sync_board_engine` projects `Board2dScene.highlighted_ids_json` onto the engine exactly as React's `setHighlightedIdsJson`
+  effect does; unchanged scene = no re-apply; new preview fixture keeps it; `[]` clears.
+- Puzzle 2d corpus law: the `useSelection` step now clicks the rendered button — it finds the `historyEditUseSelection` binding
+  inside `framework.history.editor.input/targets` of the Rust-produced history body (the body both hosts render), asserts it is
+  enabled and bound to the step's path, and dispatches the binding's own args (`ED/🧪️tests/🧪️select-tool-history/🦀️.rs`,
+  helper `find_binding`).
+
+### S3.3 Verification (gated `pgrep -x rustc` < 14, one cargo at a time, private `target-nde-s3-w2d`, outputs `🗑️generated/s3-w2d/`)
+- Milestone 11:26.
+  - `python3 ED/🧪️tests/🧪️select-tool-history/🐍️.py`: PASS (4 scenarios, 12 head nodes agree).
+  - `cargo test -p semio-framework-os-infinite --lib -- directed_normal`: **54 passed, 0 failed** (53 + the new highlight law).
+  - `cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d`: **8 passed, 0 failed** — shared coalescer corpus
+    (`the_wgpu_coalescer_replays_the_shared_corpus`), S2.2 shortest-decimal proofs over the shared f32 corpus
+    (`the_engine_offset_form_replays_the_shared_f32_decimal_corpus`, `the_wgpu_board_pointer_replays_the_shared_f32_decimal_corpus`),
+    the new `a_draft_reference_highlight_reaches_the_wgpu_board_engine`, and `board2d_dump_reads_the_published_board_like_reacts_vitals`
+    (`dumpBoard2d.highlighted`).
+  - React (`⚛️react/📦️packages/🟦️typescript`) `bun ./📜️script.ts test long board-event-coalescing float32-decimal`: **29 passed** (2 files).
+  - React `bun ./📜️script.ts test long engine-contract -t "puzzle 2d|board 2d|live mirror|hover out of the board"`: **40 passed**
+    (incl. "projects the ids a time-travel draft references onto the puzzle 2d board host").
+- Milestone 12:35: puzzle 2d lib build (`cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features
+  component-app-assembly --lib --no-run`) is PEER-BLOCKED by an in-flight schema crate split (`🧬️schema/📶️state`,
+  `🧬️schema/🧩️composition`, `🧬️schema/📇️registry`): first `semio-framework-os-kernel` (29 errors, unresolved
+  `semio_framework_schema_state`/`_composition` in `📡️spr/🦀️.rs:56`, `🏪️store/🦀️.rs:3353`, edited 12:24–12:32), then
+  `semio-framework-schema-registry` (28 errors, `🧬️schema/🦀️.rs:349` `ArtifactSchemaRegistry` defined twice). None in W2-D files.
+  Retrying when the peer's files settle.
+- Milestone 12:46: the registry duplicate was fixed by the peer (12:40). The rebuild then stops on
+  `semio-framework-artifact-infinite-dag`: `♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs:48` E0433
+  `semio_framework_schema_state` is not a dependency. The peer's uncommitted derive (`🧬️schema/✨️derive/⚙️expansion/🦀️.rs:223,262`)
+  now emits `::semio_framework_schema_state::StateClass`. Reported to the coordinator (SendMessage `main`).

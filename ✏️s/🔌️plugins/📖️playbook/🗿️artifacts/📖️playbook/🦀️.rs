@@ -412,7 +412,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Playbook", "Playbook"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Playbook", "Playbook"),
         source_format: PLAYBOOK_DOCUMENT_SCHEMA.into(),
         component_kind: "playbook".into(),
         dimension: "text".into(),
@@ -784,7 +784,7 @@ pub mod editor {
             pub mod remove_step;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️update-playbook/🦀️.rs"]
             pub mod update_playbook;

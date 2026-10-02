@@ -1,6 +1,6 @@
 {
   "schema": "semio.framework.plugin.input-commit-lint.v1",
-  "rule": "A document-bound text field commits on blur or Enter (Trigger::Commit with commit 'blur'); a field bound through 'change' without that policy publishes one document edit per keystroke. Number fields are continuous controls (the framework scrub) and file fields commit a pick; neither is a finding. Bindings to non-document verbs are not findings.",
+  "rule": "A document-bound text field commits on blur or Enter (Trigger::Commit with commit 'blur'); a field bound through 'change' without that policy publishes one document edit per keystroke. Number and colour fields are continuous controls (the framework scrub, in both hosts) and file fields commit a pick; none is a finding. Bindings to non-document verbs are not findings.",
   "documentVerbs": ["setName", "setWidth", "setNote"],
   "cases": [
     {
@@ -31,6 +31,11 @@
     {
       "name": "a search field bound to a view verb is not a document field",
       "tree": { "key": "panel.search", "component": { "type": "input", "value": "" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "filterRows", "version": 1 } }], "children": [] },
+      "findings": []
+    },
+    {
+      "name": "a colour field is a continuous control, never a finding",
+      "tree": { "key": "panel.tint", "component": { "type": "input", "kind": "color", "value": "#336699" }, "bindings": [{ "trigger": "change", "action": { "scope": "app", "name": "setNote", "version": 1 } }], "children": [] },
       "findings": []
     },
     {

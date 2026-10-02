@@ -398,7 +398,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 
 //#region Register
 /// 🗂️ Registers under `s.stdio.gif.89a`/`stdio.gif.89a` — deliberately DISTINCT ids from 87a's
-/// `s.stdio.gif`/`stdio.gif`. `store::register_document_codec`/`::framework_schema::register_artifact_schema_descriptor`
+/// `s.stdio.gif`/`stdio.gif`. `store::register_document_codec`/`::semio_framework_schema_registry::register_artifact_schema_descriptor`
 /// are both flat last-write-wins string-keyed registries pre-D4 (the plan's dialect-aware
 /// two-level registry is future work); reusing 87a's ids here would silently overwrite its
 /// registration instead of coexisting. Not currently wired into plugin bootstrap (out of this
@@ -409,7 +409,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 /// second registration attempt).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    ::framework_schema::register_artifact_schema_descriptor(crate::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
@@ -421,7 +421,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::framework_schema::register_artifact_inference_descriptor(crate::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) — same shape as

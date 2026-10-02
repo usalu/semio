@@ -5,7 +5,10 @@
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::{LabelText, LocalizedLabel, UtilityDefinition, WindowMeasure};
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
 use dsl::json;
 
 pub const UTILITY_ID: &str = "volumeBrush";

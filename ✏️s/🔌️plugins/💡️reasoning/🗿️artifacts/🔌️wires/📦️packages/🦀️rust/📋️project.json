@@ -8,6 +8,54 @@
     "family:reasoning"
   ],
   "targets": {
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -101,15 +149,7 @@
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
-      ],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "generate",
-            "reasoning-wires-graph"
-          ]
-        }
-      }
+      ]
     },
     "graph-wire-check": {
       "executor": "nx:run-commands",
@@ -121,15 +161,7 @@
         "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "reasoning-wires-graph-wire"
-          ]
-        }
-      }
+      "outputs": []
     }
   }
 }

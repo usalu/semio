@@ -72,7 +72,7 @@ const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 pub const SURFACE_RENDER_FAULT_CODE: &str = "ui.surface-render";
 
 fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> Effect {
-    let fault = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(fault).expect("shell diagnostic must serialize"));
+    let fault = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault));
     let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
     Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: semio_framework::io::resolve_ready(protocol::encode_app_frame(&frame)) }
 }
@@ -1412,7 +1412,7 @@ mod wit_bridge {
     }
 
     fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
-        store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
+        store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()).unwrap_or_default()
     }
 
     /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
@@ -1640,7 +1640,7 @@ mod wit_bridge {
 
     /// 🔀️ kernel `Effect` → WIT `effect`. Field-for-field per `📓️design-abi.md` §2's table; complex
     /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
-    /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
+    /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`semio_framework_value::ToValue::to_value` idiom
     /// every existing host boundary in this crate already uses.
     ///
     /// 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn`

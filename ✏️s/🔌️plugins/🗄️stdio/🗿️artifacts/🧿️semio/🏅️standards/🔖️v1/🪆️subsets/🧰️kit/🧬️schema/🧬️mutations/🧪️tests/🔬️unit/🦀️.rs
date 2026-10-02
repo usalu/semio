@@ -113,18 +113,15 @@ async fn create_delete_properties_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn child_creates_reject_every_identity_and_dialect_mismatch_without_an_inverse() {
+async fn child_creates_reject_every_foreign_dialect_without_an_inverse() {
     let base = SemioKitSnapshot::default();
     for mutation in [
-        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("object", "other") }),
         SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("other", "v1", "object", "object-1") }),
         SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("s.stdio.semio", "v2", "object", "object-1") }),
         SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("model", "object-1") }),
-        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("model", "other") }),
         SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("other", "v1", "model", "model-1") }),
         SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("s.stdio.semio", "v2", "model", "model-1") }),
         SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("object", "model-1") }),
-        SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_of("value", "other") }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("other", "v1", "value", "value-1") }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("s.stdio.semio", "v2", "value", "value-1") }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_of("object", "value-1") }),
@@ -217,4 +214,14 @@ async fn kinds_match_the_enum_and_the_catalog() {
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn child_creates_preserve_distinct_local_alias_and_target_identity() {
+ let base=SemioKitSnapshot::default();
+ for mutation in [
+  SemioKitMutation::CreateObject(create_object::CreateObject{child_id:"local-object".into(),target:ref_of("object","remote-object")}),
+  SemioKitMutation::CreateModel(create_model::CreateModel{child_id:"local-model".into(),target:ref_of("model","remote-model")}),
+  SemioKitMutation::CreateProperties(create_properties::CreateProperties{child_id:"local-value".into(),target:ref_of("value","remote-value")}),
+ ] { let after=round_trip(&base,&mutation);let child=match mutation{SemioKitMutation::CreateObject(_)=>(&after.objects[0].child_id,&after.objects[0].target.artifact_id),SemioKitMutation::CreateModel(_)=>(&after.models[0].child_id,&after.models[0].target.artifact_id),SemioKitMutation::CreateProperties(_)=>{let value=after.properties.as_ref().unwrap();(&value.child_id,&value.target.artifact_id)},_=>unreachable!()};assert_ne!(child.0,child.1); }
 }

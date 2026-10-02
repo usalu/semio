@@ -1,7 +1,7 @@
 //! 🔄️ Transform utility options — gumball handle toggles for the fem2d canvas windows.
 
 use crate::editor::fem2d::interaction::canvas_gesture::{fem2d_gesture_window_id_for_render, FEM2D_UTILITY_TRANSFORM};
-use crate::editor::fem2d::interaction::gumball::{gumball_config_for_window, set_gumball_flag};
+use crate::editor::fem2d::interaction::gumball::gumball_config_for_window;
 use crate::editor::fem2d::modes::edit::windows::model;
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_measure_action, FEM2D_PLAY_CONTROLLER_ID};

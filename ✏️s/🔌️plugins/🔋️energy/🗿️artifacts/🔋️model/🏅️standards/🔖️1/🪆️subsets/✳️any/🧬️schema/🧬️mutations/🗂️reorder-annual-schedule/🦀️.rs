@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Reorde
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder annual schedule {} rule {} to {}", self.id.0, self.from, self.to), &format!("Jahreszeitplan {}: Regel {} an Position {} verschieben", self.id.0, self.from, self.to))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder annual schedule {} rule {} to {}", self.id.0, self.from, self.to), &format!("Jahreszeitplan {}: Regel {} an Position {} verschieben", self.id.0, self.from, self.to))
     }
 
     fn target(&self) -> Vec<String> {

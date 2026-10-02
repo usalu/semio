@@ -1,0 +1,81 @@
+# Remaining Block, Puzzle And Playbook Source Ownership
+
+Read the actual Block, Puzzle and Playbook AGENTS, persisted snapshots and their native entity definitions. This is a source inventory, not executed provider evidence.
+
+| Owner | Actual persisted parent | Current Source mismatch |
+| --- | --- | --- |
+| Block2d | Ten fields: schema, nodeKind, presentation, handleKinds, handles, compatibility, attributes, authors, camera2d, meta | Native camera/presentation/handle floats are binary64; Source uses number. |
+| Block3d | Eleven fields: schema, objectKind, representations, catalog child, vortexKindExtra, vortices, compatibility, attributes, authors, camera3d, meta | Binary64 positions/camera scalars are number; exact independent catalog handle is actual parent state. |
+| Block5d | Thirteen fields: schema, partKind, part2d, part3d, representations, gripKinds, grips, compatibility, attributes, authors, camera2d, camera3d, meta | Combined exact binary64 fields are number; shared arrays/optional defaults need one canonical representation. |
+| Puzzle3d | Seven fields: schema, domain, meta, objects, attractions, targetVolumes, references | Source repeats artifact/snapshot interfaces, types actual typed cable/attraction catalogs as unknown arrays and actual target/reference records as arbitrary unknown objects; doubles use number. |
+| Puzzle5d | Ten fields: schema, domain, optional label, meta, optional catalog child, optional catalog extra, kindCompatibility, parts, fasteners, targetVolumes | Artifact kindCatalogs incorrectly names the inline mutation payload while Snapshot names the actual child handle. Source 2d/3d/grip records are object passthroughs and doubles are number. Snapshot lacks a whole canonical parser. |
+| Playbook | Six fields: schema, id, version, optional title, document child, flow child | Source persisted parent is already the literal handle model. Steps/default/params belong the separately composed flow domain. Historical native PackRecord carries working steps as JSON text and must not be mistaken for persisted parent authority. |
+
+BlockMeta is one actual persisted description String, not intrinsic Value. Puzzle5dMeta is also one description String. Puzzle3dMeta is explicitly typed kind catalogs and compatibility. Their Source unknown placeholders do not authorize generic intrinsic-node projection.
+
+Puzzle5d is the largest uncovered canonical Source parent because it combines exact 2D/3D presentation, four ordered catalog-extra families, representations/tags/grip templates/attributes/authors, compatibility, grips, fasteners, target volumes and an independent child handle. Its native Uniform/Vec3 scale alternatives are real domain variants. It should have one canonical actual Source model and literal parsers, with binary64 words and native Option absence represented consistently, before its semantic SQLite projection. No private SQLite snapshot DTO will be introduced.
+
+Focused neutral baselines should first prove whole-parent artifact/snapshot identity, child identity preservation, full binary64 words through every typed branch, exact native integer ranges and rejection of undeclared arbitrary fields. Actual independent SQLite tables and files must follow handcrafted complete DDL. Provider presence or a missing reflection lookup is not full behavior proof.
+
+## Executed Puzzle5d canonical baseline
+
+The registered uncached Source route executed four laws: one independent Ajv/DataView oracle passed and three actual owner laws failed, with 12 assertions (188ms Bun, 15.7s Nx). The artifact parser transformed the actual independent catalog child into the wrong inline payload, the canonical part parser accepted raw numeric/object passthrough fields, and the whole snapshot parser was absent. The first attempt had not reached assertions because its authored target was absent; that exact Source command is now registered, with launch order408.669 in both catalogs.
+
+Eleven owning test contexts now explicitly select En/Native axes. Production manifest metadata preserves full LocalizedLabel matrices; declaration options no longer freeze a resolved first frame through an implicit locale. Actual existing window_measures/window_engagements continue to use the caller view axes. No native result is claimed for these compile-only consumer ports.
+
+## Puzzle5d complete scalar baseline and declaration prerequisites
+
+The uncached registered Puzzle5d source gate executed six laws: one passed and five failed (11 assertions, 51ms Bun, 15.2s Nx). The added native-width word and signed32 cases genuinely failed before the canonical model was replaced. This establishes the separate scalar baseline beyond the earlier four-law identity/parser baseline.
+
+Puzzle2d's production manifest constructor and its three window definitions now preserve all authored LocalizedLabel matrices and leave resolved option frames to existing caller-axis runtime hooks (window_engagements/window_measures). Three explicit definition tests were updated to the zero-argument manifest factories. The independent dispatch/clipboard default-context repairs remain root-owned. This narrow prerequisite has no native runtime claim yet.
+
+## Puzzle5d canonical model verification
+
+The complete literal canonical model replaced both conflicting Source copies. The artifact facade now reexports the actual snapshot model; 2D/3D/grip records are typed, every native double owns Binary64, both scale variants remain explicit, native i32 rank/order bounds are enforced, and all ten native fields have one absence representation. The registered canonical six-law gate passed all six laws, 35 assertions, 52ms Bun and 12.3s uncached Nx. The complete owning Source consumer check then exposed eight diagnostics (one authored fixture annotation plus seven pre-existing derived inference parser errors); all were narrowly repaired. Its fresh registered strict gate passed in 8.1s uncached Nx, including every published owning Source file. Mutation grip/scale fields now reuse the canonical records; diff catalog child and other placeholders now use the actual persisted types.
+
+Twenty-five handwritten relational tables are authored for every persisted Puzzle5d entity. Native numbers expose independently named REAL/query, signed IEEE word INTEGER, and class TEXT columns. Ordered owned occurrences have explicit parent FKs and ordinals, while unresolved native semantic identifiers remain literal text. The independent SQLite schema/oracle and missing-provider behavioral baseline are now running. This is not a claim of provider/native completion.
+
+## Puzzle5d relational baseline
+
+The nine-law owning Source baseline executed eight passes and one failure (47 assertions, 66ms Bun, 13.4s uncached Nx). The real SQLite oracle accepted the 25 literal DDL tables, their foreign keys and integrity check; the actual semantic round trip failed specifically because the facade provider was absent. The complete typed provider is now authored and mounted under that baseline: every field has a literal typed mapping, each optional scale is an owned entity, and the reader enforces all relation ownership/cardinalities, ordinal sequences and named IEEE companions. Its current registered combined Source/public gate is running; no native claim is inferred.
+
+The Source provider follow-up now includes independently reserialized files with all 25 tables populated, all eight neutral IEEE words, real semantic SQL edits, consistent surrogate renumbering, partial-value/ordinal/cardinality/integer negatives, exact row admission and interior 1024-occurrence cancellation. These newly added laws are awaiting the current owning gate; merely authoring them is not execution evidence.
+
+## Puzzle5d complete Source relational GREEN
+
+The actual combined registered gate passed thirteen laws, zero failures, 108 assertions (4.48s Bun; 42.7s uncached Nx). Its strict public route checked every published owning Source file and also passed. All 25 handcrafted tables were populated in the full IEEE oracle case. The independent engine reserialized every retained word, accepted semantic edits and consistent surrogate renumbering, and the provider rejected six malformed SQL cases. Exact row bounds, pre-cancellation and interior 1024-occurrence projection/reconstruction cancellation all executed. This proves the Source semantic provider only; native erased registration and the separately declared JSON/Text boundaries remain outstanding.
+
+## Puzzle5d declared JSON boundary baseline
+
+The first JSON schema attempt stopped at an omitted canonical I/O schema registration in its independent Ajv setup; that prerequisite was repaired without a production change. The meaningful retry executed fifteen laws: thirteen passed and two failed, 110 assertions, 25.0s uncached Nx. Ajv genuinely rejected the word-backed complete native parent, and the declared Source JSON facade was absent. The literal native-field JSON writer/reader and authored JSON schemas are now mounted under those two measured failures. Finite numeric input is admitted only by the declared file boundary; canonical Source parsers still require Binary64. Both scalar scale and Vec3 remain exact. A separately named native JSON exact-word law is staged at the actual Native import leaf, using serde_json solely as an independent test oracle. It is authored and unexecuted; Native JSON production remains unchanged until its actual failure is measured.
+ 
+
+## Puzzle5d declared Source JSON GREEN
+
+The fresh combined registered owning source/public route passed all fifteen laws, zero failures and 129 assertions (3.80s Bun; 43.2s uncached Nx). Four generator prerequisites and the strict check of every published owning Source file also passed. Independent Ajv now accepts the exact closed word representation, while the actual declared JSON facade retains all eight native double words and rejects raw numeric alternatives in the canonical parser. This is separate Source boundary evidence: the staged native exact-word law has not executed and Native JSON production remains unchanged.
+
+## Puzzle5d bounded admission and SQL identifier repair
+
+The expanded registered source/public gate genuinely exposed schema admission after borrowed part traversal and rejection of valid independently quoted/upper-case SQLite table names. The first attempted case-only SQLite rename was a fixture precondition failure; its corrected temporary-then-upper-case rename produced integrity_check=ok and foreign_key_check=[] before the actual missing-table refusal. The meaningful retry ran eighteen passes and two behavioral failures, 142 assertions, 2.09s Bun, 12.7s uncached Nx; the strict consumer check also identified the remaining duplicated number payloads and incorrectly typed native integer positions. Long known Unicode cancellation and signed SQLite INTEGER refusal already passed; their proof is distinct from the two repairs.
+
+The repaired fresh combined gate passed all twenty laws, zero failures, 143 assertions (2.61s Bun; 15.3s uncached Nx), including all owning Source consumer types and four prerequisite tasks. Schema parsing/admission now precedes borrowed row forecasting. Reconstruction binds each validated table's own rows under its ASCII-equivalent name and also handles independently reordered table arrays. Four standalone selection payloads reexport the actual canonical word types; Option<usize> mutation positions now own bigint, retaining the native 64-bit maximum instead of misclassifying indices as IEEE values. The native model remains unchanged.
+
+## Puzzle5d complete owning Source and neutral asset verification
+
+The expanded current registered route reached twenty passes and two failures (311 assertions, 7.56s Bun; 18.2s uncached Nx): the missing ten authored artifact-state annotations genuinely failed, while the single 138-fixture law exceeded the existing five-second per-test timeout after partial execution. The schema metadata was restored from the actual ten native #[state(artifact)] declarations. Fixture verification was partitioned into six deterministic 23-case laws without increasing its timeout or omitting cases.
+
+The final fresh registered source/public gate passed all twenty-seven laws, zero failures, 580 assertions (19.40s Bun; 52.5s uncached Nx). Every one of the 138 existing language-neutral before/after snapshots passed independent Ajv admission, declared JSON decoding, full relational projection/reconstruction and canonical word-backed JSON roundtrip. All ten persisted state annotations passed. The strict public route again checked every published owning Source consumer. Case-equivalent quoted table identities and reversed physical table arrays passed the real independently rewritten SQLite law. No direct unregistered test route was used.
+
+Native baseline wiring is now authored but unexecuted: four named laws verify actual typed and Play capability presence, exact part/scale words through real Text/Pack, and exact Play Text fidelity; the earlier declared Native JSON exact-word law remains staged. Current Native Play Text still uses a JSON projection and default recovery, and cannot be assumed to retain the typed IEEE authority. The complete native relational owner, genuine controlled Scale bindings, both strict native hooks, actual declarations and erased runtime proofs remain outstanding. Native and combined commands are registered at launch orders408.681 and408.682; existing source/public408.669/670 and concurrent FEM671–679 remain intact. No additional Cargo lane has started.
+
+## Executed Puzzle5d native baseline and scoped repairs
+
+The actual registered native baseline executed five selected laws: one passed and four failed (24 ms; Nextest a13362b3-cdb8-4ee1-8d36-026ad10a6277; 501 ordinary laws excluded). Ordinary typed Text/Pack retained the part and exact Scale words. The real failures were absent typed capability, absent Play capability, declared JSON returning numeric zero instead of a closed word object, and Play Text dropping its Infinity-valued part. The JSON leaf now maps literal native fields to the declared word representation, and Play Text plus ToValue/FromValue now delegate the complete typed Snapshot without default recovery. Their runtime follow-up is pending. A sixth selected law stages controlled Scale metadata, both variants, exact words, pre-cancellation and cumulative admission; production controlled Scale bindings remain unmounted until this law measures their refusal. The sibling Rust executor owns the 25-table native provider and capability hooks, while this lane owns JSON, Play Text and Scale.
+
+## Current Puzzle5d Source follow-up
+
+The fresh registered quick Source/public route passed thirty-three laws, zero failures, 792 assertions (14.55 seconds Bun; combined P3/P5 uncached Nx 35.7 seconds). The independent SQLite every-entity law now checks the Rust worker's twenty-five neutral tableRowCounts directly with SELECT count(*). All 138 retained snapshot assets again passed independent Ajv and complete owning JSON/relational roundtrips, partitioned into twelve smaller laws without increasing the five-second per-law ceiling. Strict owning Source consumers and all four generator prerequisites passed. This result is separate from the pending new native controlled Scale/provider run.
+
+## Actual Puzzle5d controlled Scale RED and binding
+
+Root executed twelve selected native laws: nine passed and three failed (Nextest 2ad1bb3c-8a1c-4cda-bd25-194ceadcde80, 232 ms). The sixth Scale law genuinely failed at shape_controlled with strict missing-owner refusal; typed/Play erased I/O and tight native row admission failed downstream of the same schema gap. The declared JSON word and full relational/independent SQLite laws passed. Scale now constructs its real List(Float) metadata through the admitted primitive schema producer, admits the actual output list before allocating it, and reconstructs exactly the one- or three-element variants under known scoped work plus explicit owned Scale size admission. Every primitive passes through its genuine controlled f64 binder; no ordinary fallback or temporary unadmitted collection is used. Runtime follow-up is pending in root’s sole warm native lane.

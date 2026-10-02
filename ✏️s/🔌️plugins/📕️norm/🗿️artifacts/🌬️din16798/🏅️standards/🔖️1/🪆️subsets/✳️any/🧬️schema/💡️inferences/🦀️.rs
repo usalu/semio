@@ -49,10 +49,10 @@ pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
     crate::artifact_schema::check_full_environment(document)
 }
 
-pub fn din16798_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
-    framework_schema::ArtifactInferenceDescriptor {
+pub fn din16798_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.din16798.inference",
-        inference: framework_schema::FacetLeaves {
+        inference: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

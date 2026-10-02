@@ -91,7 +91,6 @@ console.log(JSON.stringify(results));`;
   const child = spawnSync("node", ["--input-type=module", "-e", result.outputFiles[0]!.text], { encoding: "utf8" });
   expect(child.status, child.stderr).toBe(0);
   expect(JSON.parse(child.stdout)).toEqual([...corpus.cases, ...corpus.mainCases].map(row => ({ id: row.id, actual: row.expected })));
-  console.log("[DEBUG] neutral routing native Node: 16 owned dispatch traces verified");
 });
 
 for (const row of corpus.mainCases) test(row.id, async () => {

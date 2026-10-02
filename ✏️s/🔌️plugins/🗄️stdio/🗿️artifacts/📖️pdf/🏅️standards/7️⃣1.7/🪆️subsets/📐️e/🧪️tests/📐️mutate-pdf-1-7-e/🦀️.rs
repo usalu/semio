@@ -14,7 +14,7 @@
 //!      axis list this whole case derives from.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::e::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_conformance};
+use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::e::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_conformance};
 
 
 //#region 🔖️Input
@@ -134,11 +134,11 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::schema::mutations::{apply_e_conformance_mutation, PdfEMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::e::{oracle_inverse_spec, project_conformance};
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::e::{oracle_inverse_spec, project_conformance};
 
     fn decode(bytes: &[u8]) -> Result<PdfSnapshot, String> {
         decode_pdf(bytes).map_err(|error| error.to_string())

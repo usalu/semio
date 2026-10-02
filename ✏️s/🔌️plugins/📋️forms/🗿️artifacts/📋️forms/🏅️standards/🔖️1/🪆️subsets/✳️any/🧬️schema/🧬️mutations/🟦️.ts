@@ -19,7 +19,8 @@ import type { ReplaceBlock } from "./🔁replace-block/🦠️mutation/🟦️.t
 import type { ChangeBlockField } from "./🎛️change-block-field/🦠️mutation/🟦️.ts";
 
 
-export type DslValue = null | boolean | number | string | DslValue[] | { [key: string]: DslValue };
+export type{IntrinsicValue as DslValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import type{IntrinsicValue as DslValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 
 export interface FormQuestionOption {
   value: string;

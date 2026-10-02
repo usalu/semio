@@ -23,7 +23,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for RemovePile {
     fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove pile", "Pfahl entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove pile", "Pfahl entfernen")
     }
 }

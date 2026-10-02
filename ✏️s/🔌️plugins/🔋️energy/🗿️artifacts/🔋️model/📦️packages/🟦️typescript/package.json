@@ -1,0 +1,16 @@
+{
+  "name":"@semio-tech/energy-model",
+  "version":"0.1.0",
+  "description":"Energy model typed snapshot and exact semantic SQLite ownership.",
+  "type":"module",
+  "private":true,
+  "sideEffects":false,
+  "files":["dist"],
+  "types":"./dist/🟦️.d.ts",
+  "exports":{".":{"types":"./dist/🟦️.d.ts","import":"./dist/🟦️.js"}},
+  "scripts":{"build":"bun nx run @semio-tech/energy-model:build","check":"bun nx run @semio-tech/energy-model:check","test":"bun nx run @semio-tech/energy-model:test"},
+  "dependencies":{},
+  "license":"LGPL-3.0-or-later",
+  "bundleKind":"library",
+  "nx":{"includedScripts":[]}
+}

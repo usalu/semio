@@ -1,5 +1,5 @@
 {
-  "$schema": "../../🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "📡️ Contribution of the repo events owner. Every entry is resolved from the repository's own node_modules or from the Node standard library, imported only from 🧪️tests/**/🟦️.ts, and never reachable from any implementation. `@oracle-<id>` and `@no-oracle-<id>` tags in the Gherkin features name these ids. Both ids are owner-scoped: the registry keys trust by id and an oracle is trusted only for the capability set it was surveyed against, so reusing print's `ajv` or mcp's `node-crypto-sha256` would mean editing another owner's survey.",
   "oracles": [

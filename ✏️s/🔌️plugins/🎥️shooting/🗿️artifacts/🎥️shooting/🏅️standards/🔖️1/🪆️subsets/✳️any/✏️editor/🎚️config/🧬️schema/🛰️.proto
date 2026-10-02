@@ -14,8 +14,6 @@ message ShootingConfig {
   // @state config
   uint32 fit_revision = 9;
   // @state config
-  string camera_draft_label = 10;
-  // @state config
   ShootingCamera camera = 11;
 }
 

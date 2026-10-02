@@ -1,0 +1,1627 @@
+{
+  "margin": 1.0,
+  "cases": [
+    {
+      "name": "layout-selected-frame",
+      "story": "A layout frame as the Blueprint paints it (`host_layer`: rect segments, solid fill, the 2.5 selection stroke) at zoom 2: the centre is fill, the middle of every edge is stroke, the paper beside it is empty.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "frame-rect",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              10,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              110,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              110,
+              80
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              80
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.85,
+            0.88,
+            0.92,
+            1
+          ]
+        },
+        "stroke": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ],
+          "width": 2.5
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            40
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            20,
+            90
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            220,
+            90
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            120,
+            140
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            30
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "layout-rotated-frame",
+      "story": "`rotated_rect_segments` of a frame turned by half a radian, fill only: the turned body is fill, the bounding-box corners it no longer covers are empty.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "frame-turned",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              36.882335989490166,
+              3.8834144085725626
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              107.08894094072,
+              42.23745749690881
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              83.11766401050983,
+              86.11658559142745
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              12.911059059280014,
+              47.7625425030912
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.85,
+            0.85,
+            0.85,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            150,
+            110
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            90,
+            60
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            45,
+            45
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            195,
+            135
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            195,
+            45
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            60,
+            120
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "layout-margin-guide",
+      "story": "An open margin guide (`line_segments`, stroke width 1, no fill) at zoom 3: three pixels on the line are stroke, beside it nothing.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 30,
+        "zoom": 3
+      },
+      "layer": {
+        "id": "layout.guide.margin",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              120,
+              30
+            ]
+          }
+        ],
+        "stroke": {
+          "color": [
+            0.75,
+            0.2,
+            0.2,
+            0.35
+          ],
+          "width": 1
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            120,
+            84
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            120,
+            96
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            60,
+            90
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        }
+      ]
+    },
+    {
+      "name": "layout-inherited-dash",
+      "story": "An inherited frame's outline dashed `[4, 3]` at zoom 2 (dash 8 px, gap 6 px): the dash is stroke, the gap on the centreline and the unfilled interior are empty.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "frame-inherited",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              10,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              110,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              110,
+              80
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              10,
+              80
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "stroke": {
+          "color": [
+            0.3,
+            0.3,
+            0.3,
+            1
+          ],
+          "width": 1,
+          "dash": [
+            4,
+            3
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            66,
+            40
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            60,
+            40
+          ],
+          "paint": "none",
+          "reason": "dash-gap"
+        },
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            20,
+            80
+          ],
+          "paint": "none",
+          "reason": "dash-gap"
+        }
+      ]
+    },
+    {
+      "name": "evenodd-hole",
+      "story": "Two nested squares wound the same way under the default `evenodd` rule: the ring is fill, the inner square is a hole.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "ring-evenodd",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              20,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              85
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              85
+            ]
+          },
+          {
+            "kind": "close"
+          },
+          {
+            "kind": "move",
+            "to": [
+              45,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              60
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              45,
+              60
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.97,
+            0.97,
+            0.98,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "none",
+          "reason": "hole"
+        },
+        {
+          "at": [
+            60,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            170,
+            50
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "nonzero-same-winding",
+      "story": "The same nested squares under `nonzero`: both wind the same way, so the inner square is fill too.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "ring-nonzero",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              20,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              85
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              85
+            ]
+          },
+          {
+            "kind": "close"
+          },
+          {
+            "kind": "move",
+            "to": [
+              45,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              60
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              45,
+              60
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.97,
+            0.97,
+            0.98,
+            1
+          ]
+        },
+        "fillRule": "nonzero"
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            60,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "nonzero-opposite-winding",
+      "story": "Under `nonzero` an inner square wound the other way cancels the outer one: a hole again.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "ring-opposite",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              20,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              5
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              85
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              85
+            ]
+          },
+          {
+            "kind": "close"
+          },
+          {
+            "kind": "move",
+            "to": [
+              45,
+              60
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              60
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              75,
+              30
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              45,
+              30
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.97,
+            0.97,
+            0.98,
+            1
+          ]
+        },
+        "fillRule": "nonzero"
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "none",
+          "reason": "hole"
+        },
+        {
+          "at": [
+            60,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "star-evenodd",
+      "story": "A self-intersecting pentagram under `evenodd`: the points are fill, the pentagon in the middle winds twice and is empty.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "star-evenodd",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              60.0,
+              5.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              83.51141,
+              77.36068
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              21.957739,
+              32.63932
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              98.042261,
+              32.63932
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              36.48859,
+              77.36068
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "none",
+          "reason": "hole"
+        },
+        {
+          "at": [
+            120,
+            20
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "star-nonzero",
+      "story": "The same pentagram under `nonzero`: the middle pentagon is fill.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "star-nonzero",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              60.0,
+              5.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              83.51141,
+              77.36068
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              21.957739,
+              32.63932
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              98.042261,
+              32.63932
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              36.48859,
+              77.36068
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ]
+        },
+        "fillRule": "nonzero"
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            20
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "quarter-pie-arc",
+      "story": "A quarter pie (`arc` of radius 40): a probe between the chord and the arc is fill — the arc is never flattened to its chord — and beyond the arc nothing.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "pie",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              40,
+              25
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              80,
+              25
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 40,
+            "ry": 40,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              40,
+              65
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            100,
+            80
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            129.5,
+            99.5
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            165,
+            135
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            60,
+            140
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "rotated-large-arc-stroke",
+      "story": "A large counter-clockwise arc of a rotated ellipse (radii 30/15, 35°), stroked 3 wide at zoom 2: points on the far side of the arc are stroke, the centre of the ellipse is empty.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "arc-stroke",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              45,
+              40
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 30,
+            "ry": 15,
+            "rotation": 35,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              75,
+              50
+            ]
+          }
+        ],
+        "stroke": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ],
+          "width": 3
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            134.914,
+            158.676
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            89.529,
+            126.18
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            178.181,
+            134.556
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            130.6,
+            169.874
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "quad-and-cubic-bulges",
+      "story": "A closed outline with a quadratic and a cubic bulge: probes inside each bulge, past the chords, are fill.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "curves",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              20
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              130,
+              45
+            ],
+            "to": [
+              100,
+              70
+            ]
+          },
+          {
+            "kind": "cubic",
+            "ctrl1": [
+              80,
+              95
+            ],
+            "ctrl2": [
+              40,
+              95
+            ],
+            "to": [
+              20,
+              70
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.97,
+            0.97,
+            0.98,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            215,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            160
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            235,
+            90
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            60,
+            175
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "transformed-frame",
+      "story": "A frame with a local transform (turned 30° and scaled 1.5 about a shifted origin) stroked 2 wide: the transform moves the fill and widens the stroke to 6 px.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "frame-transformed",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              40,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              40,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "transform": [
+          1.299038105676658,
+          0.75,
+          -0.75,
+          1.299038105676658,
+          40,
+          20
+        ],
+        "fill": {
+          "color": [
+            0.85,
+            0.88,
+            0.92,
+            1
+          ]
+        },
+        "stroke": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ],
+          "width": 2
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            117,
+            96
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            131.96,
+            70.0
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            10,
+            10
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            230,
+            170
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "subpath-after-close",
+      "story": "A segment after `close` starts a new subpath at the closed subpath's start: both triangles are fill.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "after-close",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              60,
+              45
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              45
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              85
+            ]
+          },
+          {
+            "kind": "close"
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              45
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              5
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            180,
+            110
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            60,
+            70
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            160
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            100,
+            30
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "open-subpath-fill",
+      "story": "An open subpath is filled as if closed: the triangle is fill although no `close` ends it.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "open",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              30,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              90,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              60,
+              70
+            ]
+          }
+        ],
+        "fill": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ]
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            70
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            160
+          ],
+          "paint": "none",
+          "reason": "outside"
+        },
+        {
+          "at": [
+            40,
+            90
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    },
+    {
+      "name": "thick-stroke-over-fill",
+      "story": "A 10 wide stroke paints over the fill it borders: a probe inside the shape but within half the width of an edge is stroke.",
+      "viewport": {
+        "width": 240,
+        "height": 180
+      },
+      "camera": {
+        "x": 60,
+        "y": 45,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "thick",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              20
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              100,
+              70
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              20,
+              70
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "fill": {
+          "color": [
+            0.97,
+            0.97,
+            0.98,
+            1
+          ]
+        },
+        "stroke": {
+          "color": [
+            0.1,
+            0.45,
+            0.95,
+            1
+          ],
+          "width": 10,
+          "join": "miter"
+        }
+      },
+      "probes": [
+        {
+          "at": [
+            120,
+            90
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            52
+          ],
+          "paint": "fill",
+          "reason": "inside"
+        },
+        {
+          "at": [
+            120,
+            46
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            120,
+            42
+          ],
+          "paint": "stroke",
+          "reason": "on-stroke"
+        },
+        {
+          "at": [
+            235,
+            175
+          ],
+          "paint": "none",
+          "reason": "outside"
+        }
+      ]
+    }
+  ]
+}

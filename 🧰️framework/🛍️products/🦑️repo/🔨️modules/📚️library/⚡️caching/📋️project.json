@@ -160,14 +160,6 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test graph-revision"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "graph-revision"
-          ]
-        }
       }
     },
     "test-cargo-build-lease": {
@@ -195,6 +187,22 @@
       "options": {
         "command": "bun ./📜️script.ts test cache-policy"
       }
+    },
+    "test-native-input-vocabulary": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/nx.json",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️production-cache-input-boundary/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/⚡️production-cache-input-boundary/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test native-input-vocabulary"
+      }
     }
   },
   "namedInputs": {
@@ -220,7 +228,7 @@
       "{projectRoot}/📦️artifacts/🧭️package-inventory/🟦️.ts",
       "{projectRoot}/📦️artifacts/🏃️contract-capture/🟦️.ts",
       "{projectRoot}/📦️artifacts/📋️package-orchestration/🟦️.ts",
-      "{projectRoot}/🔒️leases/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/**/*",
       "{projectRoot}/🟦️.ts",
       "{projectRoot}/🦀️cargo/🟦️.ts",
       "{projectRoot}/🧪️tests/⚡️cache-contracts/🟦️.ts",

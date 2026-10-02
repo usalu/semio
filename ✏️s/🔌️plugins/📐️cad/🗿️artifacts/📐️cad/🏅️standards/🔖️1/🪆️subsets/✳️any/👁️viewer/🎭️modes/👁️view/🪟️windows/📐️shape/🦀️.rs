@@ -8,7 +8,16 @@
 use crate::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
 use crate::{CadCamera, CadPaneId, CadSnapshot};
 use semio_framework_plugin::app::WindowKit;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_projection_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::world3d_camera_projection_json;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeshView;
+use semio_framework_plugin::MeshWindowKit;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 use ui_wgpu::wgpu::SurfaceKind;
 
 //#region 🔖️Constants

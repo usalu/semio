@@ -22,8 +22,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RenameNode {
     fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         base.graph.nodes.iter().find(|node| node.id == self.node_id).map(|node| vec![WorkflowMutation::RenameNode(RenameNode { node_id: self.node_id.clone(), label: node.label.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} umbenennen", self.node_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} umbenennen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

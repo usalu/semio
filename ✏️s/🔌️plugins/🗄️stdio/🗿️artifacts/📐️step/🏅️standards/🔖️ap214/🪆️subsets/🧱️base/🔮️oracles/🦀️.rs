@@ -76,8 +76,9 @@ mod oracles {
     /// the six `✳️ccN` conformance-class subsets do, and a second copy in this file would be the
     /// duplication the family-module rule exists to prevent. What stays here is what is genuinely
     /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
-    use crate::artifacts::step::standards::v_ap214::reference::part21::{
-        args, args_mut, decode_string_literal, entity_from_wire, entity_id, file_description_record, file_name_record, file_schema_record, header_record, primary_record, primary_record_mut, replace_with_snapshot, set_header_record, snapshot_payload as document_snapshot_payload, str_field, u64_field, value_from_wire, write as write_exchange_bytes,
+    use semio_s_plugin_stdio_part21_test_oracle::decode_string_literal;
+    use crate::standards::v_ap214::reference::part21::{
+        args, args_mut, entity_from_wire, entity_id, file_description_record, file_name_record, file_schema_record, header_record, primary_record, primary_record_mut, replace_with_snapshot, set_header_record, snapshot_payload as document_snapshot_payload, str_field, u64_field, value_from_wire, write as write_exchange_bytes,
     };
 
     fn write_exchange(exchange: &Exchange) -> String {

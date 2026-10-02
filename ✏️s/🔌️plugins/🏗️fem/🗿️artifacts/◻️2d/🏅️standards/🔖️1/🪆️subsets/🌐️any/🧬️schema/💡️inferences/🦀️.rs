@@ -52,10 +52,10 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Fem2dBuild
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.fem.fem2d.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `fem2d_artifact_schema_descriptor`'s registration.
-pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema::ArtifactInferenceDescriptor {
-    ::semio_framework_schema::ArtifactInferenceDescriptor {
+pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.fem.fem2d.inference",
-        inference: ::semio_framework_schema::FacetLeaves {
+        inference: ::semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }

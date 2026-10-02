@@ -12,7 +12,7 @@
 //! ruststep is not a second PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_step_ap214_any};
+use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_step_ap214_any};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp";
@@ -152,8 +152,8 @@ mod subject {
     use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
     use semio_s_artifact_stdio_step::StepSnapshot;
     use semio_s_artifact_stdio_step::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
-    use semio_s_plugin_stdio_test_oracle::artifacts::step::standards::v_ap214::subsets::base::project_step_ap214_any;
+    use semio_repo_test_host::law::wire_operation;
+    use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::project_step_ap214_any;
 
     /// 🦠️ The row's `params` IS the leaf wire payload, decoded by the derive-generated constructor.
     fn operation_of(spec: &Json) -> Result<StepMutation, String> {

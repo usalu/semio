@@ -1,14 +1,15 @@
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { afterAll, expect, test } from "bun:test";
 import { createHash, randomUUID } from "node:crypto";
-import { chmodSync, closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
 import Ajv from "ajv";
 import stableStringify from "fast-json-stable-stringify";
 import { findNodeAtLocation, getNodeValue, parse as parseJson, parseTree, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
+import { noFollowDirectoryChain, verifyNoFollowDirectoryChain } from "../../🧹️normalization/📁️input/🟦️.ts";
 
 /** 👀️ The reviewed-fixture-input manifest these contracts read: its catalog anchor, the revision it belongs to and
  * the per-role inputs with the preimage each one must still hash to. */
@@ -82,6 +83,7 @@ function reviewedInput(role: "source" | "expectation") {
 const ownerRow = catalogDocument.cases[vector.catalogCaseIndex], currentInput = reviewedInput("source"), expectationInput = reviewedInput("expectation");
 const taxonomyInput = capture(vector.taxonomyPath), originalTaxonomy = JSON.parse(taxonomyInput.bytes.toString("utf8"));
 const normalizerInput = capture(relative(root, join(library, "🧹️normalization/🟦️.ts")).replaceAll("\\", "/"));
+const parserPath = join(library, "🧹️normalization/🔣️taxonomy/🟦️.ts"), parserInput = capture(relative(root, parserPath).replaceAll("\\", "/"));
 capture(relative(root, join(library, "🔍️discovery/🟦️.ts")).replaceAll("\\", "/"));
 let baselineBytes: Buffer | undefined;
 
@@ -124,7 +126,10 @@ function directories(repoRoot: string, path: string): string {
 function runOwner(): string {
   if (retainedOwner) return retainedOwner;
   if (vector.runDirectory !== "semio-readme-activation") throw new Error("Unregistered isolated output directory");
-  const parent = directories(realpathSync(tmpdir()), vector.runDirectory);
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("Activation fixtures require caller-owned test output");
+  noFollowDirectoryChain(artifactRoot);
+  const parent = directories(artifactRoot, vector.runDirectory);
   retainedOwner = join(parent, "🔖️" + randomUUID());
   mkdirSync(retainedOwner);
   writeFileSync(join(retainedOwner, "📝️.md"), "# Reviewed README Activation Fixture\n\nThis fresh owner retains loader/planner inputs and failures. No producer, apply or cleanup runs. Fixture Git commits are isolated and distinct from the independently verified original baseline lineage.\n", { flag: "wx" });
@@ -304,7 +309,7 @@ for (const row of vector.cases) test("real reviewed README loader and planner: "
   } catch (caught) { error = caught; }
   const result = { id: row.id, expected: row.expected, milliseconds: performance.now() - started, error: error instanceof Error ? error.message : error, violations: inventory?.violations, moves: plan?.moves.length, edits: plan?.edits.length, regenerations: plan?.regenerations.length, unresolved: plan?.unresolved, progress };
   put(setup.holder, "📊️outcome/🔣️.json", JSON.stringify(result, null, 2) + "\n");
-  if (plan) put(setup.holder, "🧾️plan/🔣️.json", normalization.canonicalJson(plan) + "\n");
+  if (plan) put(setup.holder, "🧾️plan/🔣️.json", canonicalJson(plan) + "\n");
   outcomes.push(result);
   expect(error, row.id).toBeUndefined();
   expect(plan!.regenerations, row.id).toEqual([]);
@@ -326,8 +331,8 @@ for (const row of vector.cases) test("real reviewed README loader and planner: "
     const input = readInput(setup.repo, path);
     return { role, path, preimage: { nodeKind: "file", contentHash: input.sha256, mode: input.mode, size: input.size } };
   });
-  expect(normalization.canonicalJson(move.sourceAuthority)).toBe(normalization.canonicalJson({ kind: "exact-owner-current-source-revision-v1", revisionId: vector.revisionId, revisionDigest: revisionDigest(), inputs }));
-  expect(normalization.parseTaxonomyPlan(JSON.parse(normalization.canonicalJson(plan))).moves[0]!.sourceAuthority).toEqual(move.sourceAuthority);
+  expect(canonicalJson(move.sourceAuthority)).toBe(canonicalJson({ kind: "exact-owner-current-source-revision-v1", revisionId: vector.revisionId, revisionDigest: revisionDigest(), inputs }));
+  expect(normalization.parseTaxonomyPlan(JSON.parse(canonicalJson(plan))).moves[0]!.sourceAuthority).toEqual(move.sourceAuthority);
   const expectationEdits = plan!.edits.filter((edit) => edit.path === revision.expectationsPath && edit.oldValue === ownerRow.sourcePath && edit.newValue === ownerRow.destinationPath);
   expect(expectationEdits).toHaveLength(1);
   expect(plan!.edits.filter((edit) => edit.path === vector.catalogPath)).toEqual([]);
@@ -343,7 +348,7 @@ for (const row of vector.driftCases) test("fresh reviewed README planning: " + r
     if (row.target === "inventory") {
       const entries = inventory.entries.map((entry) => entry.sourcePath === ownerRow.sourcePath ? { ...entry, contentHash: "0".repeat(64) } : entry);
       const tuples = entries.map((entry) => ({ sourcePath: entry.sourcePath, nodeKind: entry.nodeKind, contentHash: entry.contentHash, mode: entry.mode, size: entry.size, symlinkTarget: entry.symlinkTarget }));
-      inventory = { ...inventory, entries, sourceTreeDigest: sha(normalization.canonicalJson(tuples)) };
+      inventory = { ...inventory, entries, sourceTreeDigest: sha(canonicalJson(tuples)) };
     } else {
       const path = row.target === "catalog" ? vector.catalogPath : row.target === "expectation" ? revision.expectationsPath : row.target === "source" ? ownerRow.sourcePath : vector.taxonomyPath;
       const before = readInput(setup.repo, path);
@@ -375,12 +380,12 @@ for (const row of vector.driftCases) test("fresh reviewed README planning: " + r
 
 test("schema raw-coordinate freezing binds exact parsed bytes catalog owner and baseline only", () => {
   const setup = fixture({ id: "frozen-binding-authority", layout: "raw", source: "current", expectation: "missing", sourceMode: 0o644, destination: "absent" });
-  const source = normalizerInput.bytes.toString("utf8"), tree = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
+  const source = normalizerInput.bytes.toString("utf8"), tree = ts.createSourceFile(join(library, "🧹️normalization/🟦️.ts"), source, ts.ScriptTarget.Latest, true);
   const functions = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && ["isFrozenSourceCoordinateToken", "jsonStringCoordinates"].includes(node.name?.text ?? ""));
   expect(functions).toHaveLength(2);
   const compiled = ts.transpileModule(functions.map((node) => node.getText(tree)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
   const names = ["frozenEvidenceCoordinateAuthority", "frozenPlanCoordinateAuthority", "sourceRelative", "relative", "sha256", "canonicalJson", "exactOwnedFileCatalog", "semanticPackageProjectionCatalog", "parseSemanticOwnedCurrentSourceRevisions", "frozenCoordinateCache"];
-  const predicate = new Function(...names, compiled + ";return isFrozenSourceCoordinateToken;")(() => null, () => ({ coordinates: new Set() }), (path: string) => path.replaceAll("\\", "/"), relative, sha, normalization.canonicalJson, (repo: string, taxonomy: any) => discovery.semanticExactOwnedFileCatalog(repo, taxonomy.discoverySchema), () => null, discovery.parseSemanticOwnedCurrentSourceRevisions, new WeakMap());
+  const predicate = new Function(...names, compiled + ";return isFrozenSourceCoordinateToken;")(() => null, () => ({ coordinates: new Set() }), (path: string) => path.replaceAll("\\", "/"), relative, sha, canonicalJson, (repo: string, taxonomy: any) => discovery.semanticExactOwnedFileCatalog(repo, taxonomy.discoverySchema), () => null, discovery.parseSemanticOwnedCurrentSourceRevisions, new WeakMap());
   for (const row of vector.frozenBindingCases) {
     const candidate = candidateTaxonomy(), binding = candidate.semanticOwnedFileProjectionContracts[vector.contractId].currentSourceRevisions[vector.revisionId];
     if (row.change === "owner") binding.sourcePath = vector.unregisteredPath.replace("📝️.md", "README.md");
@@ -396,14 +401,14 @@ test("schema raw-coordinate freezing binds exact parsed bytes catalog owner and 
 });
 
 test("actual schema loader parses and binds one captured input without a second byte read", () => {
-  const source = normalizerInput.bytes.toString("utf8"), tree = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
+  const source = parserInput.bytes.toString("utf8"), tree = ts.createSourceFile(parserPath, source, ts.ScriptTarget.Latest, true);
   const declaration = tree.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "loadTaxonomy")!;
-  const compiled = ts.transpileModule(declaration.getText(tree), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+  const compiled = ts.transpileModule(declaration.getText(tree).replace(/^export /u, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
   for (const row of vector.schemaSnapshotCases) {
     const bytes = row.state === "lossy" ? Buffer.from([0xff]) : Buffer.from('{"schemaVersion":7,"captured":"first"}');
     const input = row.state === "missing" ? null : { path: vector.taxonomyPath, nodeKind: "file", contentHash: sha(bytes), mode: 0o644, size: bytes.length, ancestorNodeKinds: vector.taxonomyPath.split("/").slice(1).map(() => "directory"), bytes };
     let captures = 0, parses = 0;
-    const load = new Function("assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "relative", "resolve", "parseTaxonomy", "TAXONOMY_RELATIVE_PATH", compiled + ";return loadTaxonomy;")((repo: string, path: string) => join(repo, path), () => { if (++captures !== 1) throw new Error("Second input capture is forbidden"); return input; }, relative, resolve, (parsed: unknown, path: string) => { parses++; expect(parsed).toEqual(getNodeValue(parseTree(bytes.toString("utf8"))!)); return { path, schema: parsed }; }, vector.taxonomyPath);
+    const load = new Function("assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "relative", "resolve", "parseTaxonomy", "TAXONOMY_RELATIVE_PATH", "PARSED_TAXONOMIES", "PARSED_TAXONOMY_CAPACITY", "createTaxonomyPathMatcher", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain", compiled + ";return loadTaxonomy;")((repo: string, path: string) => join(repo, path), () => { if (++captures !== 1) throw new Error("Second input capture is forbidden"); return input; }, relative, resolve, (parsed: unknown) => { parses++; expect(parsed).toEqual(getNodeValue(parseTree(bytes.toString("utf8"))!)); return { schema: parsed, discoverySchema: parsed, exclusions: [], fileKinds: [], directoryKinds: [] }; }, vector.taxonomyPath, new Map(), 8, discovery.createTaxonomyPathMatcher, noFollowDirectoryChain, verifyNoFollowDirectoryChain);
     if (!row.accepted) expect(() => load({ repoRoot: root })).toThrow(/Taxonomy schema (?:is absent|has lossy UTF-8)/u);
     else {
       const loaded = load({ repoRoot: root });
@@ -424,6 +429,7 @@ test("activation preparation invokes no producer or apply and preserves producti
   visit(tree);
   expect(forbidden).toEqual([]);
   expect(sha(readFileSync(join(library, "🧹️normalization/🟦️.ts")))).toBe(normalizerInput.sha256);
+  expect(sha(readFileSync(parserPath))).toBe(parserInput.sha256);
 });
 
 test("activation gate registration matches the package router and both launch catalogs", () => {
@@ -447,7 +453,7 @@ test("activation gate registration matches the package router and both launch ca
   });
   expect({ packageName: manifest.name, packageCommand: manifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length, launches }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } }, branches: 1, launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })) });
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
-  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
+  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "readme-current-source-activation") });');
 });
 
 afterAll(() => {

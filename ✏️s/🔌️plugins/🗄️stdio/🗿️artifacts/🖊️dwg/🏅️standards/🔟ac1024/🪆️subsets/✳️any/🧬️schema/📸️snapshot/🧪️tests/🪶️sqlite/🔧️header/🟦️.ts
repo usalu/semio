@@ -13,9 +13,8 @@ import { dwgHeaderFixture as header } from "../../../🧫️fixtures/🪶️sqli
 async function project(value:DwgHeaderVariables){const p=await DwgProjection.create(DWG_SQLITE_SCHEMA);await p.insert("dwg_document",["owned","AC1024",2n,1252n]);await dwgProjectHeader(p,value);return p.finish();}
 async function reconstruct(database:SqliteDatabase){const r=await DwgReader.create(database,DWG_SQLITE_SCHEMA);await r.one("dwg_document");const result=await dwgReconstructHeader(r);await r.finish();return result;}
 
-test("DWG full header native fields and exact IEEE classes survive independent SQLite",async()=>{
-  const words=[binary64(1.25).bits,0x8000000000000000n,0x7ff0000000000000n,0xfff0000000000000n,...fixture.float64Bits.map(word=>BigInt("0x"+word))];
-  for(const word of words){
+const words=[binary64(1.25).bits,0x8000000000000000n,0x7ff0000000000000n,0xfff0000000000000n,...fixture.float64Bits.map(word=>BigInt("0x"+word))];
+for(const word of words)test("DWG full header preserves independent SQLite IEEE word "+word.toString(16),async()=>{
     const input=header(word),oracle=Database.deserialize(await exportSqliteDatabase(await project(input)));
     try{
       expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("PRAGMA foreign_key_check").all()).toEqual([]);
@@ -24,7 +23,6 @@ test("DWG full header native fields and exact IEEE classes survive independent S
       oracle.run("UPDATE dwg_header_units SET unit2_conversion_class='negative_zero',unit2_conversion_ieee754_bits=-9223372036854775808,unit2_conversion=NULL");const expected=structuredClone(input);expected.units.unit2Conversion={bits:0x8000000000000000n};
       expect(await reconstruct(await importSqliteDatabase(oracle.serialize()))).toEqual(expected);
     }finally{oracle.close();}
-  }
   console.log("[DEBUG] DWG TypeScript full typed header preserved exact words, signed widths, ordered spaces and optional unsigned64 references");
 },60000);
 

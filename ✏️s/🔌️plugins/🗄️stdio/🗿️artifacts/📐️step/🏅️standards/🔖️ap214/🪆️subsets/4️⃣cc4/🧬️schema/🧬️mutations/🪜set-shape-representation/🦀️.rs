@@ -25,8 +25,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc4Mutation> for SetShapeRepresent
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc4Mutation> {
         class_inverse(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]

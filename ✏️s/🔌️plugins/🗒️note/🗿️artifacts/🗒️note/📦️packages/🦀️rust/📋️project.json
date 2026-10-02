@@ -114,6 +114,23 @@
           "target": "component-dev"
         }
       ]
+    },
+    "verify-sqlite-snapshot-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify sqlite-snapshot-native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "sqlite-snapshot-native"
+          ]
+        }
+      }
     }
   }
 }

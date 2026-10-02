@@ -5,7 +5,7 @@ use protocol::MutationDiff;
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
     let snapshot: CurationSnapshot = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
     let artifact: CurationArtifact = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);
@@ -19,6 +19,17 @@ fn curation_document_contract_exact_children_and_native_transports() {
         let actual: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&snapshot)).unwrap();
         assert!(store::pack_rt::json_values_equal(&actual, document), "{actual} != {document}");
     }
+    for child in vectors["validChildren"].as_array().unwrap() {
+        let mut document = vectors["document"].clone();
+        document["catalog"] = child.clone();
+        let restored: CurationSnapshot = dsl::json::from_json_str(&document.to_string()).unwrap();
+        let artifact: CurationArtifact = dsl::json::from_json_str(&document.to_string()).unwrap();
+        assert_eq!(artifact.to_snapshot(), restored);
+        assert_eq!(CurationSnapshot::parse_dsl(&restored.print_dsl()).unwrap(), restored);
+        assert_eq!(CurationSnapshot::decode_pack(&restored.encode_pack()).unwrap(), restored);
+        let actual: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&restored)).unwrap();
+        assert_eq!(actual, document);
+    }
     for child in vectors["invalidChildren"].as_array().unwrap() {
         let mut document = vectors["document"].clone();
         document["catalog"] = child.clone();
@@ -29,6 +40,9 @@ fn curation_document_contract_exact_children_and_native_transports() {
     for diff in vectors["validDiffs"].as_array().unwrap() { dsl::json::from_json_str::<CurationDiff>(&diff.to_string()).unwrap(); }
     let mut catalog = snapshot.catalog.clone();
     catalog.child_id = "foreign-child".into();
+    let expected = catalog.clone();
+    assert_eq!(CurationDiff { catalog: Some(catalog.clone()), ..Default::default() }.apply(&snapshot).unwrap().catalog, expected);
+    catalog.target.dialect.subset = "mesh".into();
     assert!(CurationDiff { catalog: Some(catalog), ..Default::default() }.apply(&snapshot).is_err());
     let text = snapshot.print_dsl();
     let (_, body) = text.split_once('\n').unwrap();

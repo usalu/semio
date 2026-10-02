@@ -412,19 +412,9 @@ fn diagnostic(code: &'static str, severity: dsl::Severity, message: String) -> d
 /// GJ2008 `crs` member (removed by §4) and rings against the right-hand rule (a §3.1.6 SHOULD) are soft.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn check_geojson_conformance(snapshot: &JsonSnapshot) -> Vec<dsl::Diagnostic> {
-    match read_geojson(&snapshot.value) {
-        Err(error) => vec![diagnostic(CODE_NOT_GEOJSON, dsl::Severity::Error, error.to_string())],
-        Ok(read) => {
-            let mut out = Vec::new();
-            if read.source_crs != GeoJsonSourceCrs::Rfc7946 {
-                out.push(diagnostic(CODE_LEGACY_CRS, dsl::Severity::Warning, "the GJ2008 `crs` member was removed by RFC 7946 §4; coordinates are WGS 84 by definition".into()));
-            }
-            if read.left_handed_rings > 0 {
-                out.push(diagnostic(CODE_LEFT_HANDED_RING, dsl::Severity::Warning, format!("{} linear ring(s) do not follow the right-hand rule (RFC 7946 §3.1.6)", read.left_handed_rings)));
-            }
-            out
-        }
-    }
+    let mut proceed=|_|true;
+    let mut control=semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
+    check_geojson_conformance_controlled(snapshot,&mut control).expect("borrowed GeoJSON conformance without cancellation")
 }
 //#endregion 🔖️Conformance
 

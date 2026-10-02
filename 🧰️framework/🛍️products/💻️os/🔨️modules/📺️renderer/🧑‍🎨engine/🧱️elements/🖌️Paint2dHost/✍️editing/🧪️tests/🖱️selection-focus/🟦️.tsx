@@ -330,3 +330,18 @@ test("incoming shared coverage cancels an in-flight brush stroke",async()=>{
   await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20));});
   expect(editCalls(dispatch)).toEqual([]);
 });
+
+test("the bucket dispatches ONE parametric fillRegion click and never floods or fills on the host",async()=>{
+  vi.stubGlobal("ResizeObserver",class {observe(){} disconnect(){}});
+  vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(null);
+  const host=document.createElement("div"),dispatch=vi.fn();
+  host.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100} as DOMRect);
+  const view=render(<PixelEditingOverlay documentJson={JSON.stringify({layers:[{kind:"pixel",id:"p",width:3,height:1,transform:{x:0,y:0,a:1,b:0,c:0,d:1}}]})} assetsJson="{}" assetExtentsJson="{}" selectionJson='["p"]' activeUtility="select" brushSize={1} brushOpacity={1} brushColor="#ff0000" brushHardness={1} camera={{current:{x:0,y:0,zoom:1}}} container={{current:host}} dispatch={dispatch} onWheel={()=>{}} onCameraChange={()=>{}}/>);
+  fireEvent.click(view.getByRole("button",{name:"Fill",exact:true}));
+  const canvas=view.getByRole("application",{name:"Image tools"});
+  canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
+  act(()=>{canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));});
+  await waitFor(()=>expect(dispatch.mock.calls.some(call=>call[0]==="fillRegion")).toBe(true),10_000);
+  expect(dispatch.mock.calls.filter(call=>call[0]==="fillRegion")).toEqual([["fillRegion",{layerId:"p",x:1.5,y:0.5,tolerance:24}]]);
+  expect(editCalls(dispatch)).toEqual([]);
+});

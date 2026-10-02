@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution. The ✳️any sibling registers `image` 0.25 for the DOCUMENT vocabulary, composed with its own hand-rolled IFD-chain reader; this conformance-class vocabulary registers no oracle of its own — see noOracleDecisions for why a class verdict is not a thing any package can adjudicate, and why four of its six kinds could not be measured at the byte level regardless.",
   "oracles": [
@@ -580,5 +580,6 @@
       "family": "tiff-baseline-carrier",
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetBitsPerSample{bits:[16]} overwrites BitsPerSample (tag 258) from 8-bit to 16-bit."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -1,3 +1,4 @@
+import{parseFormsJsonArtifact,formsArtifactJson}from"../../🌱️value/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/💾️persistence/🔣️.json";
@@ -14,8 +15,8 @@ export function testFormsPersistence(): void {
   assert.equal(ajv.compile(definition)(blank), true);
   assert.deepEqual(blankFormsDefinition(), blank);
   for (const item of fixture.responses) assert.equal(ajv.compile(response)(item), true);
-  const decoded = parseFormsArtifact(JSON.parse(JSON.stringify(fixture)));
-  assert.deepEqual(decoded, fixture);
+  const decoded = parseFormsJsonArtifact(JSON.parse(JSON.stringify(fixture)));
+  assert.deepEqual(formsArtifactJson(decoded), fixture);
   assert.equal(decoded.definition.steps[0].blocks[0].required, true);
-  assert.equal(decoded.responses[0].answers[0].value, "Ada");
+  assert.deepEqual(decoded.responses[0].answers[0].value, {kind:"text",value:"Ada"});
 }

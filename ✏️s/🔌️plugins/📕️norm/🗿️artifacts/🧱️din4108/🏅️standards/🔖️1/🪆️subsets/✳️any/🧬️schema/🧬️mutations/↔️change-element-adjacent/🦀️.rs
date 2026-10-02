@@ -25,7 +25,7 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeElementA
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change adjacent space of the element", "Angrenzenden Bereich des Bauteils ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change adjacent space of the element", "Angrenzenden Bereich des Bauteils ändern")
     }
 }

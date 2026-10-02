@@ -3,7 +3,11 @@
 use crate::editor::procedure::engine::ImperativeHost;
 use crate::ProcedureSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";

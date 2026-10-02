@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:schema-validator-ownership:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "validatorPackage",
+    "httpModule",
+    "retiredHttpModule",
+    "httpFixture",
+    "genericFacade",
+    "neutralDependencies"
+  ],
+  "properties": {
+    "validatorPackage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "httpModule": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retiredHttpModule": {
+      "type": "string",
+      "minLength": 1
+    },
+    "httpFixture": {
+      "type": "string",
+      "minLength": 1
+    },
+    "genericFacade": {
+      "type": "string",
+      "minLength": 1
+    },
+    "neutralDependencies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

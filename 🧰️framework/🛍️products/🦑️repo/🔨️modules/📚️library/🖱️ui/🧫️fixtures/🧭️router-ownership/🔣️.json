@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "generalScript": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+  "generalProject": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+  "repoScript": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/📜️script.ts",
+  "repoProject": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "retainedRoutes": [
+    "lint",
+    "test",
+    "typecheck",
+    "canonical-architecture"
+  ],
+  "movedRoutes": [
+    {
+      "command": "dev",
+      "target": "ui-storybook-dev"
+    },
+    {
+      "command": "build",
+      "target": "ui-storybook-build"
+    },
+    {
+      "command": "check-ui-primitives",
+      "target": "check-ui-primitives"
+    },
+    {
+      "command": "check-chrome-i18n",
+      "target": "check-chrome-i18n"
+    }
+  ],
+  "censusDeclarations": [
+    {
+      "name": "UI_PRIMITIVES_SKIP_DIRS",
+      "sha256": "6d87ef13b944dcbf7664ef64cc973be9af856b7fb0c8cd1b979d46ddfb0ece86"
+    },
+    {
+      "name": "UI_PRIMITIVES_FRAMEWORK_PREFIX",
+      "sha256": "69480804fee978c90d2bb314b348b80c5c649745efc8e134df402cd3f3b1bbc9"
+    },
+    {
+      "name": "UI_PRIMITIVES_STORYBOOK_PREFIX",
+      "sha256": "6e15081c44772ff284d870776242a0399cb9ab58a73f9ee6c8fb48270a34aaac"
+    },
+    {
+      "name": "UI_PRIMITIVES_VITEST_START_RE",
+      "sha256": "0612c3ba7d4e4c2da5ffcb69f370fb92f663dee3e080a54770d98635b9dcf19a"
+    },
+    {
+      "name": "RAW_DOM_PRIMITIVE_RE",
+      "sha256": "0a47582fbff9b6d100be29888b8c5d83a493dc1b9231615160c6d8615698e0fc"
+    },
+    {
+      "name": "RAW_SVG_ICON_RE",
+      "sha256": "4472db6cbd724d39493f5c7730cfd073c669c2012ec193ee4f6c96e0b9076b7d"
+    },
+    {
+      "name": "COMPONENT_ESCAPE_HATCH_RE",
+      "sha256": "8f37a03ebab65512d35664869952026c24fd41f059675969abcd171cb51c94c4"
+    },
+    {
+      "name": "UiPrimitiveHit",
+      "sha256": "a6c9e4e34e04079b902e0b11e8edbffa4ea7dd641006d6ebf48a37927fccc6a1"
+    },
+    {
+      "name": "collectUiPrimitivesHits",
+      "sha256": "8f6a65a440970c32deacc01bbab6c3e03898b1ee0a3e666682dbe5980a2c6324"
+    },
+    {
+      "name": "CheckUiPrimitivesScript",
+      "sha256": "75b8246dc4a7d094018cab572b6641ffb8db2bda6a86dd143b482972895af034"
+    },
+    {
+      "name": "CHROME_I18N_ALLOWLIST",
+      "sha256": "cdfd08cae3b6dcdda1571150a855e0fd4e9d76dde87741108072f4000fee8873"
+    },
+    {
+      "name": "CHROME_I18N_SCANNED_ROOTS",
+      "sha256": "42bc4feeba13c89eace709f570120856c68d827c937e69b700fc3be0b0bd6f38"
+    },
+    {
+      "name": "CHROME_I18N_SKIP_DIRS",
+      "sha256": "7376e68ba79f0a9efdd0cb80983ad06fa79c66a687fe00a1b8e357180af7034b"
+    },
+    {
+      "name": "CHROME_I18N_FALLBACK_RE",
+      "sha256": "7b8478a831194c8287d60fb557452d748db452bfb85f7c628b961248380811c5"
+    },
+    {
+      "name": "CHROME_I18N_JSX_TEXT_RE",
+      "sha256": "8cce339405084a3a3308d84808d6cd6cd38925ac0dc3fb8b89c840d2cc8ae25b"
+    },
+    {
+      "name": "CHROME_I18N_VITEST_START_RE",
+      "sha256": "db8214924f7246a6babb06488f9393b4917afadf9a4ba34848d6c48a50190e14"
+    },
+    {
+      "name": "CHROME_I18N_LOCALE_INVARIANT_VALUES",
+      "sha256": "a90e2316d834882056b1e4e8e2a239c6f3c70fc934031f5b90e50d92766803fc"
+    },
+    {
+      "name": "CHROME_I18N_IGNORE_MARKER",
+      "sha256": "292308f825dce4444675b044454df31c6ec908e51dec287038bb53e470c139cf"
+    },
+    {
+      "name": "CHROME_I18N_BOUNDARY_FN_RE",
+      "sha256": "bffdbe461785099923bfe153f109bbb63fb7f8562988da2fb60c105eef57d9c9"
+    },
+    {
+      "name": "CHROME_I18N_UI_DATA_LABEL_LITERAL_RE",
+      "sha256": "d53589291604793190a737bb73b36d6015f55683169e5dcca73b3762ab4f9b64"
+    },
+    {
+      "name": "CHROME_I18N_AS_UI_LABEL_RE",
+      "sha256": "37c44bcf29d5f38b40beb39370d543e56aca7f094644758a5744393467efc988"
+    },
+    {
+      "name": "findChromeI18nBoundaryRanges",
+      "sha256": "054b7136b1fdb2133e2e7596f39f81eef0acd0b1b3e4d1ccd9b0cf44bfc37dbe"
+    },
+    {
+      "name": "ChromeI18nHit",
+      "sha256": "fedb5e252487cad462fbc791d61bfd2f1cfe1ec0ff44f1ef643719d287da23cd"
+    },
+    {
+      "name": "collectChromeI18nHits",
+      "sha256": "f2a73f544d56ffea09d2069d1cecf5fc3981324300b0fc81fcaffbb6ad7ac741"
+    },
+    {
+      "name": "CheckChromeI18nScript",
+      "sha256": "f8ebcaace8c8bb5a982f175104518d53400bcae008d1b5e6be7ba1980cf31b5e"
+    }
+  ],
+  "productRoots": [
+    "🧰️framework/🛍️products",
+    "✏️s",
+    "🌎️hub",
+    "🏢️semio-tech",
+    "♻️mit-bestand"
+  ],
+  "parentKind": "repo-server-library",
+  "directoryKind": "repo-library-ui",
+  "storybookCases": [
+    {
+      "declaration": "DevScript",
+      "arguments": [
+        "./📜️script.ts",
+        "dev",
+        "storybook",
+        "ui",
+        "--owner-proof"
+      ],
+      "scope": null
+    },
+    {
+      "declaration": "BuildScript",
+      "arguments": [
+        "./📜️script.ts",
+        "build",
+        "storybook",
+        "--owner-proof"
+      ],
+      "scope": "ui"
+    }
+  ]
+}

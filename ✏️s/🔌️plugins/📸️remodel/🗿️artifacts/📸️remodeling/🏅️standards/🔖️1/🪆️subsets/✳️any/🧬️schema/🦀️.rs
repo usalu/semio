@@ -6,16 +6,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Ids
-/// 🔢️ Replaces every former `RemodelingPlayRuntime` id counter (`stream_counter`/`job_counter`/
-/// `gcp_counter`/`import_counter`) — mirrors `shooting_engine::next_shooting_id`'s precedent (a plain
-/// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
-/// the generated id itself becomes real, undoable document content the moment an operation stores it).
-/// Relocated from `⚙️engine/🦀️.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
-/// #2553): a pure document-side id generator, not app or engine behaviour.
-pub fn next_remodeling_id(prefix: &str) -> String {
-    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-    let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    format!("{prefix}-{next}")
+/// 🆔️ The id one admitted command mints for its new `prefix` entity (a stream, a GCP): content-addressed over the
+/// command's [`semio_framework_plugin::AppOperationContext::authoring_seed`] — unique per writer and admission — so two
+/// writers, two sessions or a reload never mint one id twice (a process counter restarted at `stream-1` after every
+/// reload), and the import transaction minted from a stream id is unique with it. A view without an admission mints from
+/// the empty seed. See [`store::content_id`].
+pub fn mint_remodeling_id(operation: Option<&semio_framework_plugin::AppOperationContext>, prefix: &str) -> String {
+    store::content_id(prefix, format!("{}\u{1f}{prefix}", operation.map_or("", |operation| operation.authoring_seed.as_str())).as_bytes())
 }
 //#endregion 🔖️Ids
 
@@ -116,25 +113,25 @@ impl RemodelingArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.remodel.remodeling` — twenty handcrafted schema leaves.
-pub fn remodeling_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn remodeling_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.remodel.remodeling",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/delete-working-nodes/schema.json",
+  "title": "DeleteWorkingNodes",
+  "description": "Nodes of the working (before) graph removed together with every edge that has an endpoint on one of them (a `node@port` endpoint names its node before the `@`); a removed root node clears `rootNodeId` to `null`. Nodes the graph lacks are skipped (`mutation.partial`); none present is `mutation.target-missing`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteWorkingNodes"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Working-graph nodes to delete with every edge touching them; ones the graph lacks are skipped.",
+          "de": "Zu löschende Knoten des Arbeitsgraphen samt jeder Kante, die sie berührt; im Graphen fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

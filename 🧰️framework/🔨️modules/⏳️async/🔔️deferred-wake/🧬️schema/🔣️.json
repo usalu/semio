@@ -10,8 +10,6 @@
         "schema",
         "capacity",
         "dispatch",
-        "refusal",
-        "retryEpoch",
         "shutdown",
         "cases",
         "runtimeMarkers"
@@ -25,31 +23,19 @@
           "additionalProperties": false,
           "required": [
             "maintenanceHooks",
-            "backendControls",
-            "writersPerBackend",
             "partitions",
             "slotsPerPartition",
-            "waitersPerWriter",
             "totalWaiters"
           ],
           "properties": {
             "maintenanceHooks": {
               "const": 64
             },
-            "backendControls": {
-              "const": 64
-            },
-            "writersPerBackend": {
-              "const": 32
-            },
             "partitions": {
               "const": 64
             },
             "slotsPerPartition": {
               "const": 32
-            },
-            "waitersPerWriter": {
-              "const": 1
             },
             "totalWaiters": {
               "const": 2048
@@ -112,81 +98,10 @@
                 "waker-callback",
                 "job-allocation",
                 "user-closure",
-                "db-task",
+                "external-task",
                 "lost-owner",
                 "io"
               ]
-            }
-          }
-        },
-        "refusal": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "controllerCopy",
-            "faultPredicate",
-            "transferPredicate",
-            "queueFailure"
-          ],
-          "properties": {
-            "controllerCopy": {
-              "const": [
-                "pool",
-                "maintenance-ticket",
-                "deferred-wake-ticket"
-              ]
-            },
-            "faultPredicate": {
-              "const": [
-                "exact-backend",
-                "active",
-                "requested",
-                "not-faulted"
-              ]
-            },
-            "transferPredicate": {
-              "const": [
-                "exact-backend",
-                "active",
-                "requested",
-                "faulted",
-                "waiter-present"
-              ]
-            },
-            "queueFailure": {
-              "const": "restore-exact-waiter-to-writer-signal-cell"
-            }
-          }
-        },
-        "retryEpoch": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "hostileTrace",
-            "readyBeforeOldSlotDrains",
-            "maximumQueuedOwnersPerSignal",
-            "admission"
-          ],
-          "properties": {
-            "hostileTrace": {
-              "const": [
-                "fault",
-                "manual-poll",
-                "pending",
-                "drain-old-slot",
-                "fault-ready",
-                "retry",
-                "park-new-waiter"
-              ]
-            },
-            "readyBeforeOldSlotDrains": {
-              "const": false
-            },
-            "maximumQueuedOwnersPerSignal": {
-              "const": 1
-            },
-            "admission": {
-              "const": "fault-ready-after-exact-slot-drain"
             }
           }
         },
@@ -249,7 +164,6 @@
             "additionalProperties": false,
             "required": [
               "id",
-              "activeRequested",
               "parkedWaiters",
               "supersededWaiters",
               "transferredWaiters",
@@ -267,11 +181,6 @@
                   "shutdown-drains-accepted",
                   "terminal-shutdown-restores-owner"
                 ]
-              },
-              "activeRequested": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 2048
               },
               "parkedWaiters": {
                 "type": "integer",
@@ -310,11 +219,8 @@
                 "required": [
                   "inlineWakes",
                   "drainedWakes",
-                  "retainedFaults",
-                  "retainedGuards",
-                  "terminalEpochs",
                   "jobs",
-                  "dbTasks",
+                  "externalTasks",
                   "lostOwners",
                   "io"
                 ],
@@ -327,29 +233,16 @@
                     "minimum": 0,
                     "maximum": 2048
                   },
-                  "retainedFaults": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 2048
-                  },
-                  "retainedGuards": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 2048
-                  },
-                  "terminalEpochs": {
-                    "const": 0
-                  },
                   "jobs": {
-                    "const": 0
-                  },
-                  "dbTasks": {
                     "const": 0
                   },
                   "lostOwners": {
                     "const": 0
                   },
                   "io": {
+                    "const": 0
+                  },
+                  "externalTasks": {
                     "const": 0
                   }
                 }
@@ -361,8 +254,7 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "async",
-            "writer"
+            "async"
           ],
           "properties": {
             "async": {
@@ -372,14 +264,6 @@
                 "PoolWork::DeferredWake",
                 "WORKER_DEFERRED_WAKE_PARTITIONS",
                 "WORKER_DEFERRED_WAKES_PER_PARTITION"
-              ]
-            },
-            "writer": {
-              "const": [
-                "deferred_wake_ticket",
-                "defer_wake",
-                "restore_fault_waiter",
-                "defer_fault_notifications"
               ]
             }
           }

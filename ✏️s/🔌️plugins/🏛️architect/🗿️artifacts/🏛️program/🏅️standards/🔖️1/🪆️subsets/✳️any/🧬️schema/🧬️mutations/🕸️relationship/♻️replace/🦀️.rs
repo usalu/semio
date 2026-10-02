@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceRelationship {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Replace relationship \"{}\"", self.relationship.header.name), &format!("Beziehung \"{}\" ersetzen", self.relationship.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace relationship \"{}\"", self.relationship.header.name), &format!("Beziehung \"{}\" ersetzen", self.relationship.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.relationship.header.id.0.clone()]

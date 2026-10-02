@@ -206,7 +206,7 @@ impl crate::os_spr::OpBinary for DerivedMutation {
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_store::PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -224,7 +224,7 @@ impl crate::os_spr::OpBinary for DerivedMutation {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let record_offset = reader.position() as u64;
         let body = &bytes[record_offset as usize..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &crate::os_store::PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
@@ -660,7 +660,7 @@ impl crate::os_spr::OpText for PaintOp {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = parse(line, &spec_fn(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
+                let record = parse(line, &(spec_fn.ordinary)(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
                 return <Self as DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -670,7 +670,7 @@ impl crate::os_spr::OpText for PaintOp {
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        print(&record, &spec_fn(), JoinMode::Inline)
+        print(&record, &(spec_fn.ordinary)(), JoinMode::Inline)
     }
 }
 
@@ -681,7 +681,7 @@ impl crate::os_spr::OpBinary for PaintOp {
         let (keyword, record) = <Self as DslVariants>::to_named_record(self);
         let variants = <Self as DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_store::PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -699,7 +699,7 @@ impl crate::os_spr::OpBinary for PaintOp {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let record_offset = reader.position() as u64;
         let body = &bytes[record_offset as usize..];
         let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &crate::os_store::PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;

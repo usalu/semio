@@ -21,8 +21,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetText {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetText(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set text", "Text setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

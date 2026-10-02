@@ -306,3 +306,9 @@ pub mod sqlite;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

@@ -142,7 +142,7 @@ enum ValueFrame {
     Record { kind: store::mounted_pack_rt::RetainedValueContainer, spec: Option<store::mounted_pack_rt::RecordSpec>, fields: HashMap<u16, store::mounted_pack_rt::FieldValue>, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
     Map { dsl: bool, element: ExpectedValue, values: Vec<(String, BuiltValue)>, key: Option<String> },
-    Statements { variants: Vec<(String, fn() -> store::mounted_pack_rt::RecordSpec)>, values: Vec<(String, store::mounted_pack_rt::RecordValue)>, keyword: Option<String> },
+    Statements { variants: Vec<(String, store::mounted_pack_rt::RecordSpecProducer)>, values: Vec<(String, store::mounted_pack_rt::RecordValue)>, keyword: Option<String> },
     Bytes { values: Vec<u8>, remaining: usize },
 }
 
@@ -206,7 +206,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
 
     fn parent_expected(&self) -> Result<ExpectedValue, WindowConfigPackLoadDiagnostic> {
         match self.stack.last() {
-            None if self.root.is_none() => Ok(ExpectedValue::field(Some(store::mounted_pack_rt::Shape::Record(Self::root_spec)))),
+            None if self.root.is_none() => Ok(ExpectedValue::field(Some(store::mounted_pack_rt::Shape::Record(Self::root_spec_producer())))),
             Some(ValueFrame::Record { spec, field: Some(field), .. }) => Ok(ExpectedValue::field(spec.as_ref().and_then(|spec| spec.fields.iter().find(|candidate| candidate.id == *field)).map(|field| field.shape.clone()))),
             Some(ValueFrame::Sequence { element, .. }) => Ok(element.clone()),
             Some(ValueFrame::Map { element, key: Some(_), .. }) => Ok(element.clone()),
@@ -219,9 +219,11 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         <O::State as store::ArtifactPack>::record_spec().expect("retained window config owner was preflighted with a record spec")
     }
 
+    fn root_spec_producer()->store::mounted_pack_rt::RecordSpecProducer{store::mounted_pack_rt::RecordSpecProducer{ordinary:Self::root_spec,decoding:|_|Err("window config owner has no controlled root metadata producer".into()),encoding:|_|Err("window config owner has no controlled root metadata producer".into())}}
+
     fn child_record_spec(expected: &ExpectedValue) -> Option<store::mounted_pack_rt::RecordSpec> {
         match expected.shape.as_ref() {
-            Some(store::mounted_pack_rt::Shape::Record(spec)) | Some(store::mounted_pack_rt::Shape::Table(spec)) => Some(spec()),
+            Some(store::mounted_pack_rt::Shape::Record(spec)) | Some(store::mounted_pack_rt::Shape::Table(spec)) => Some((spec.ordinary)()),
             _ => None,
         }
     }
@@ -1151,7 +1153,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                 }
                 self.history_decode.take();
                 *self.history = Some(history);
-                *self.active = Some(store::retirement::owned_retirement(auxiliary));
+                *self.active = Some(semio_framework_value::retirement::owned_retirement(auxiliary));
                 self.phase = WindowConfigPackLoadPhase::InputRetirement;
                 self.pending()
             }
@@ -1355,7 +1357,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                 return Err("retained window config history decoder retained untransferred owners".into());
             }
             self.history_decode.take();
-            *self.active = Some(store::retirement::owned_retirement((history, auxiliary)));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement((history, auxiliary)));
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(hydration) = self.hydration.as_mut() {
@@ -1406,7 +1408,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(history) = self.history.take() {
-            *self.active = Some(store::retirement::owned_retirement(history));
+            *self.active = Some(semio_framework_value::retirement::owned_retirement(history));
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some((released_items, released_bytes)) = self.retire_files(grant) {

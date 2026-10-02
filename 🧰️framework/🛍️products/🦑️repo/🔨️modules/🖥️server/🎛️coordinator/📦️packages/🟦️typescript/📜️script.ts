@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
 import { join } from "node:path";
 import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { defineLint, dependencyBoundaryBreachesForBundleDir, devToolingEnv, getWorkspaceRoot, goLevelTestArgs, resolveTestLevel, runBunx, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { defineLint, dependencyBoundaryBreachesForBundleDir, devToolingEnv, getWorkspaceRoot, goLevelTestArgs, runBunx, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

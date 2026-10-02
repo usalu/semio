@@ -1,0 +1,11 @@
+# Final Nested Macro Source Receipt
+
+Read-only final bounded review; no test/native execution. Ownership helper SHA256: `eaf9b8bb9fb784b17d4729c66260b02c4b41cbdb48e43fe007bb563543d04c65`. This records a source epoch for Root's concurrent typecheck31462; a typecheck starting before this edit cannot be assumed to cover this exact hash.
+
+Current ownedExpressionMacro184 refuses a nested identifier-bang-delimiter invocation only when its preceding identifier starts strictly after the outer macro identifier offset and its bang lies within the outer argument span. This excludes the actual outer assert_eq invocation and rejects foreign!(EngineKey), including bracket/brace delimiters and qualified macro tails. Tokenization keeps comment/string exclamation marks outside this invocation classification. The initial guard mistakenly included the outer bang; High corrected it before the reported final receipt. Finding history is preserved here.
+
+Every reserved family occurrence in accepted standard arguments still reconstructs its preceding identifier path and uses shared familyRoute. Foreign prefix cannot borrow a canonical basename; local/direct binding is occurrence-specific, underscore imports do not bind names, and local shadows/competing foreign globs are refused. JSON/unknown macros remain opaque. Lexical enclosing macro/import checks retain the standard-provider barrier; this receipt is bounded to the communicated holes, not a claim of complete Rust expansion modeling.
+
+Closed fixture/schema now match52 binding/17 activation rows. The added canonical-nested-opaque-macro row explicitly expects unproven-family-binding while nativeCompiles=true. Native harness iterates every binding and activation source with its current alias flags; permanent Repo script105–110 selects portable/native source under the same45-second owner budget. Original positive rows remain in the cohort. High reports genuine nested RED72pass1fail followed by direct GREEN73/162; those are coordination receipts, not auditor executions. Native/registered routes are pending graph, so no current native pass is claimed.
+
+No remaining concrete defect from the known route/nested-macro specimens is identified in this final source hash. Root and High were notified with scope and pending execution distinction.

@@ -170,9 +170,9 @@ async fn every_node_graph_sub_operation_the_table_names_changes_the_fixture() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
     let named: std::collections::BTreeSet<&str> = fixture.node_graph_edit_operations.iter().map(|row| row.operation.as_str()).collect();
-    assert_eq!(named, ["connect", "deleteSelection", "disconnect", "move", "setHostSnapshot"].into_iter().collect::<std::collections::BTreeSet<_>>());
+    assert_eq!(named, ["connect", "delete", "disconnect", "insertPort", "move", "setSlider"].into_iter().collect::<std::collections::BTreeSet<_>>(), "exactly the shared row vocabulary (design §13.3)");
     for row in &fixture.node_graph_edit_operations {
-        assert!(!row.required.is_empty() || row.operation == "deleteSelection", "{} must name the arguments it reads", row.operation);
+        assert!(!row.required.is_empty(), "{} must name the arguments it reads", row.operation);
     }
     let mut app = crate::editor_domain::editor_laws::context::app().await;
     let (node_id, base) = {

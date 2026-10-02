@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { resolveTestLevel, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -352,10 +353,10 @@ function retainedUiNativeStripOnly(): void {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     retainedUiNativeStripOnly();
-    runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

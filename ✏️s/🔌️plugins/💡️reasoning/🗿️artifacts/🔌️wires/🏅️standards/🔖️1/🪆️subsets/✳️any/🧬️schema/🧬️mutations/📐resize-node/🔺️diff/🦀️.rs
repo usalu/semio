@@ -24,13 +24,13 @@ pub fn diff(payload: &super::ResizeNode, base: &WiresSnapshot) -> protocol::Muta
     }
     let mut board = crate::wires_working_board(base);
     if let Some(radius) = payload.new_radius {
-        set_node_field(&mut board, &payload.node_id, "radius", dsl::to_dsl_value(&radius).unwrap_or(DslValue::Null));
+        set_node_field(&mut board, &payload.node_id, "radius", semio_framework_value::ToValue::to_value(&radius));
     }
     if let Some(width) = payload.new_width {
-        set_node_field(&mut board, &payload.node_id, "width", dsl::to_dsl_value(&width).unwrap_or(DslValue::Null));
+        set_node_field(&mut board, &payload.node_id, "width", semio_framework_value::ToValue::to_value(&width));
     }
     if let Some(height) = payload.new_height {
-        set_node_field(&mut board, &payload.node_id, "height", dsl::to_dsl_value(&height).unwrap_or(DslValue::Null));
+        set_node_field(&mut board, &payload.node_id, "height", semio_framework_value::ToValue::to_value(&height));
     }
     protocol::MutationOutcome::new(diff_board_fixture(&board))
 }

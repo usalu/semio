@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "keyed-box",
+      "expected": {
+        "same": true,
+        "current": 2
+      }
+    },
+    {
+      "id": "function-init",
+      "expected": {
+        "same": true,
+        "before": 0,
+        "after": 1,
+        "result": "ui.nav.back"
+      }
+    },
+    {
+      "id": "collection-keyspaces",
+      "expected": {
+        "box": 1,
+        "map": 2,
+        "set": true,
+        "weak": 4,
+        "reused": [
+          true,
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "id": "reset",
+      "expected": {
+        "replaced": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "old": [
+          1,
+          2,
+          true,
+          4
+        ],
+        "fresh": [
+          9,
+          0,
+          0,
+          false
+        ]
+      }
+    },
+    {
+      "id": "isolation",
+      "expected": {
+        "left": 11,
+        "right": 2,
+        "same": false,
+        "maps": [
+          1,
+          0
+        ],
+        "sets": [
+          1,
+          0
+        ],
+        "weak": [
+          true,
+          false
+        ]
+      }
+    },
+    {
+      "id": "default-helpers",
+      "expected": {
+        "shared": [
+          true,
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "id": "key-identities",
+      "expected": {
+        "values": [
+          1,
+          2,
+          3
+        ],
+        "distinct": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "id": "retained-function-init",
+      "expected": {
+        "type": "function",
+        "value": "ui.nav.back"
+      }
+    },
+    {
+      "id": "retained-noop-init",
+      "expected": {
+        "type": "function",
+        "before": 0,
+        "after": 1
+      }
+    },
+    {
+      "id": "retained-isolation-reset",
+      "expected": {
+        "same": true,
+        "rightValue": 3,
+        "replaced": true,
+        "freshSize": 0,
+        "retainedWidth": 42
+      }
+    }
+  ]
+}

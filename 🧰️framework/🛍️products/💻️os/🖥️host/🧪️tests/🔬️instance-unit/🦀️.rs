@@ -24,12 +24,28 @@ mod tests {
     }
 
     #[test]
-    fn resolves_fixture_json_by_slug() {
-        register_os_fixture_json("🖍️semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
-        let json = os_fixture_json("🖍️semio.draw.json").expect("registered fixture");
+    fn resolves_fixture_document_by_slug() {
+        register_os_fixture_documents(vec![("🖍️semio.draw.json".into(), r#"{"schema":"draw.document","id":"semio"}"#.into())]).expect("admit fixture document");
+        let json = os_fixture_document("🖍️semio.draw.json").expect("registered fixture");
         let parsed: Value = serde_json::from_str(&json).expect("json");
         assert_eq!(parsed["schema"], "draw.document");
         assert_eq!(parsed["id"], "semio");
+    }
+
+    #[test]
+    fn refuses_invalid_fixture_batches_before_mutating_the_registry() {
+        assert!(register_os_fixture_documents(Vec::new()).is_err());
+        for (index, invalid) in ["{", "{}", "[]", "null"].iter().enumerate() {
+            let first = format!("fixture:os-atomic-{index}");
+            let second = format!("fixture:os-invalid-{index}");
+            assert!(register_os_fixture_documents(vec![(first.clone(), "{\"schema\":\"owned.v1\"}".into()), (second.clone(), (*invalid).into())]).is_err());
+            assert!(os_fixture_document(&first).is_none());
+            assert!(os_fixture_document(&second).is_none());
+        }
+        assert!(register_os_fixture_documents(vec![(" ".into(), "{\"schema\":\"owned.v1\"}".into())]).is_err());
+        let duplicate = "fixture:os-duplicate";
+        assert!(register_os_fixture_documents(vec![(duplicate.into(), "{\"schema\":\"owned.v1\"}".into()), (duplicate.into(), "{\"schema\":\"owned.v2\"}".into())]).is_err());
+        assert!(os_fixture_document(duplicate).is_none());
     }
 
     #[test]
@@ -43,10 +59,10 @@ mod tests {
     fn sample_config_spec() -> ConfigSpec {
         ConfigSpec {
             fields: vec![
-                semio_framework::ActionArgDef::number("zoom", semio_framework::LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
-                semio_framework::ActionArgDef::select("mode", semio_framework::LocalizedLabel::native("Mode", "Modus"), vec![semio_framework::ActionArgOption::new("A", semio_framework::LocalizedLabel::data("A")), semio_framework::ActionArgOption::new("B", semio_framework::LocalizedLabel::data("B"))]).default_value(&"A"),
-                semio_framework::ActionArgDef::toggle("flag", semio_framework::LocalizedLabel::native("Flag", "Markierung")),
-                semio_framework::ActionArgDef::text("label", semio_framework::LocalizedLabel::native("Label", "Beschriftung")),
+                semio_framework::ActionArgDef::number("zoom", semio_framework_ui_locale::LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
+                semio_framework::ActionArgDef::select("mode", semio_framework_ui_locale::LocalizedLabel::native("Mode", "Modus"), vec![semio_framework::ActionArgOption::new("A", semio_framework_ui_locale::LocalizedLabel::data("A")), semio_framework::ActionArgOption::new("B", semio_framework_ui_locale::LocalizedLabel::data("B"))]).default_value(&"A"),
+                semio_framework::ActionArgDef::toggle("flag", semio_framework_ui_locale::LocalizedLabel::native("Flag", "Markierung")),
+                semio_framework::ActionArgDef::text("label", semio_framework_ui_locale::LocalizedLabel::native("Label", "Beschriftung")),
             ],
         }
     }

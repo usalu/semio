@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
         agg_inverse(&SemioPresentationMutation::RemoveMaster(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove master", "Master entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove master", "Master entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

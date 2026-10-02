@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 1024,
+    "maximumDepth": 64
+  },
+  "vectors": [
+    {
+      "id": "explicit-null",
+      "input": {
+        "label": "ä",
+        "count": 7,
+        "choice": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "present-option",
+      "input": {
+        "label": "Hello",
+        "count": 9,
+        "choice": "de"
+      },
+      "accepted": true
+    },
+    {
+      "id": "missing-required",
+      "input": {
+        "count": 7,
+        "choice": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-number",
+      "input": {
+        "label": "x",
+        "count": "7",
+        "choice": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-field",
+      "input": {
+        "label": "x",
+        "count": 7,
+        "choice": null,
+        "extra": true
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-option",
+      "input": {
+        "label": "x",
+        "count": 7,
+        "choice": 2
+      },
+      "accepted": false
+    }
+  ],
+  "compilerStorage": [
+    {
+      "id": "directory",
+      "kind": "directory",
+      "accepted": true
+    },
+    {
+      "id": "missing",
+      "kind": "missing",
+      "accepted": true
+    },
+    {
+      "id": "relative",
+      "kind": "relative",
+      "accepted": false
+    },
+    {
+      "id": "file",
+      "kind": "file",
+      "accepted": false
+    },
+    {
+      "id": "link",
+      "kind": "link",
+      "accepted": false
+    },
+    {
+      "id": "linked-ancestor",
+      "kind": "linked-ancestor",
+      "accepted": false
+    }
+  ]
+}

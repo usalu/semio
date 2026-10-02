@@ -258,4 +258,36 @@ mod change_zone_window_inclination_deg;
 mod change_layer_application_type;
 #[path = "../../🏷️change-layer-compressive-class/🧪️tests/✅apply/🦀️.rs"]
 mod change_layer_compressive_class;
+#[path = "../../✅️change-bb2-details-conform/🧪️tests/🟰noop/🦀️.rs"]
+mod change_bb2_details_conform_noop;
+#[path = "../../➕️insert-zone/🧪️tests/⛔dupe/🦀️.rs"]
+mod insert_zone_dupe;
+#[path = "../../➕️insert-zone/🧪️tests/📏clamp/🦀️.rs"]
+mod insert_zone_clamp;
+#[path = "../../🌉️insert-thermal-bridge/🧪️tests/⛔dupe/🦀️.rs"]
+mod insert_thermal_bridge_dupe;
+#[path = "../../🌉️insert-thermal-bridge/🧪️tests/📏clamp/🦀️.rs"]
+mod insert_thermal_bridge_clamp;
+#[path = "../../🌡️change-t-int-c/🧪️tests/🚫rule/🦀️.rs"]
+mod change_t_int_c_rule;
+#[path = "../../🌡️change-t-int-c/🧪️tests/🟰noop/🦀️.rs"]
+mod change_t_int_c_noop;
+#[path = "../../🌦️change-climate-zone/🧪️tests/🟰noop/🦀️.rs"]
+mod change_climate_zone_noop;
+#[path = "../../🏠️insert-element/🧪️tests/⛔dupe/🦀️.rs"]
+mod insert_element_dupe;
+#[path = "../../🏠️insert-element/🧪️tests/📏clamp/🦀️.rs"]
+mod insert_element_clamp;
+#[path = "../../💧️change-rh-int/🧪️tests/🚫rule/🦀️.rs"]
+mod change_rh_int_rule;
+#[path = "../../💧️change-rh-int/🧪️tests/🟰noop/🦀️.rs"]
+mod change_rh_int_noop;
+#[path = "../../💨change-has-mechanical-ventilation/🧪️tests/🟰noop/🦀️.rs"]
+mod change_has_mechanical_ventilation_noop;
+#[path = "../../💨️change-airtightness-n50/🧪️tests/🚫rule/🦀️.rs"]
+mod change_airtightness_n50_rule;
+#[path = "../../💨️change-airtightness-n50/🧪️tests/🟰noop/🦀️.rs"]
+mod change_airtightness_n50_noop;
+#[path = "../../🗂️change-usage/🧪️tests/🟰noop/🦀️.rs"]
+mod change_usage_noop;
 //#endregion 🧫️CanonicalVectorTests

@@ -1,7 +1,11 @@
 use super::*;
 use crate::editor::fem2d::terminology::fem2d_labels;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::{ComponentTree, Locale, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::ComponentTree;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::TreeWindowRequest;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
 
 //#region 🔖️Fixtures
@@ -10,11 +14,11 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn english() -> &'static Fem2dLabels {
-    fem2d_labels(&ViewModel::default())
+    fem2d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 fn german() -> &'static Fem2dLabels {
-    fem2d_labels(&ViewModel { locale: Locale::De, ..Default::default() })
+    fem2d_labels(&ViewModel { locale: Locale::De, ..ViewModel::new(Locale::De, semio_framework_ui_locale::Terminology::Native) })
 }
 
 /// 🪟️ A host viewport tall enough to hold the demo whole, with the three sections the author leaves
@@ -35,7 +39,7 @@ const OPENED_ROWS: u32 = 8;
 
 fn wide_view() -> ViewModel {
     let opened = ["materials", "sections", "analysis"].into_iter().map(|suffix| request(&format!("{TREE_NAMESPACE}.{suffix}"), Some(true), 0, OPENED_ROWS)).collect();
-    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..Default::default() }
+    ViewModel { tree_windows: opened, tree_viewport_rows: Some(512), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 fn build_for(document: &Fem2dSnapshot, labels: &Fem2dLabels, view: &ViewModel) -> BuiltNode {
@@ -102,7 +106,7 @@ fn load_case_path(case_id: &str) -> String {
 }
 
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.

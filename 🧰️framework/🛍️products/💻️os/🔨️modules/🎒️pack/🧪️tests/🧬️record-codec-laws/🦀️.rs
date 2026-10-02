@@ -172,7 +172,7 @@ impl RecordValueGen {
                 }
                 FieldValue::List(items)
             }
-            Shape::Record(spec_fn) => FieldValue::Record(self.generate_record(&spec_fn(), depth + 1, max_depth)),
+            Shape::Record(spec_fn) => FieldValue::Record(self.generate_record(&(spec_fn.ordinary)(), depth + 1, max_depth)),
             Shape::Block(inner) => FieldValue::Block(Box::new(self.generate_value(inner, depth + 1, max_depth))),
             Shape::Statements(variants) => {
                 if variants.is_empty() {
@@ -184,7 +184,7 @@ impl RecordValueGen {
                         let idx = self.next_range(variants.len() as u64) as usize;
                         let (keyword, spec_fn) = &variants[idx];
                         let keyword = keyword.clone();
-                        let record = self.generate_record(&spec_fn(), depth + 1, max_depth);
+                        let record = self.generate_record(&(spec_fn.ordinary)(), depth + 1, max_depth);
                         items.push((keyword, record));
                     }
                     FieldValue::Statements(items)
@@ -202,7 +202,7 @@ impl RecordValueGen {
             }
             Shape::Value => FieldValue::Value(self.generate_dsl_value(depth + 1, max_depth)),
             Shape::Table(spec_fn) => {
-                let row_spec = spec_fn();
+                let row_spec = (spec_fn.ordinary)();
                 let n = self.next_range(3) as usize;
                 let mut rows = Vec::with_capacity(n);
                 for _ in 0..n {

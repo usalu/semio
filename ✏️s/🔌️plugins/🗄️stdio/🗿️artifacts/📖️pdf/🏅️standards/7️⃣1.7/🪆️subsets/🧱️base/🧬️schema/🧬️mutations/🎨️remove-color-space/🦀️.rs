@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveColorSpace {
         base.color_spaces.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetColorSpace(super::set_color_space::SetColorSpace { color_space: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove color-space {}", self.name), &format!("Farbraum {} entfernen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

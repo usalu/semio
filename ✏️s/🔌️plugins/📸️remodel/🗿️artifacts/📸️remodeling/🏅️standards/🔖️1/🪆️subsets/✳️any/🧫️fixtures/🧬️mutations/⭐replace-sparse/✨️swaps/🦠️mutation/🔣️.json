@@ -1,7 +1,204 @@
 {
   "mutation": "replaceSparse",
   "sparse": {
-    "points": "AAAAAAAAAAAAAAAAAAAAPgAAgL0AAIA+AACAPgAAAL4AAAA/AADAPgAAQL4AAEA/AAAAPwAAgL4AAIA/AAAgPwAAoL4AAKA/AABAPwAAwL4AAMA/AABgPwAA4L4AAOA/AACAPwAAAL8AAABAAACQPwAAEL8AABBAAACgPwAAIL8AACBAAACwPwAAML8AADBAAADAPwAAQL8AAEBAAADQPwAAUL8AAFBAAADgPwAAYL8AAGBAAADwPwAAcL8AAHBA",
-    "colors": "AAsWISw3Qk1YY255hI+apbC7xtHc5/L9CBMeKTQ/SlVga3aBjJeirbjDztnk7/oF"
+    "points": {
+      "kind": "inline",
+      "values": [
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "00000000"
+        },
+        {
+          "bits": "3e000000"
+        },
+        {
+          "bits": "bd800000"
+        },
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "3e800000"
+        },
+        {
+          "bits": "be000000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "3ec00000"
+        },
+        {
+          "bits": "be400000"
+        },
+        {
+          "bits": "3f400000"
+        },
+        {
+          "bits": "3f000000"
+        },
+        {
+          "bits": "be800000"
+        },
+        {
+          "bits": "3f800000"
+        },
+        {
+          "bits": "3f200000"
+        },
+        {
+          "bits": "bea00000"
+        },
+        {
+          "bits": "3fa00000"
+        },
+        {
+          "bits": "3f400000"
+        },
+        {
+          "bits": "bec00000"
+        },
+        {
+          "bits": "3fc00000"
+        },
+        {
+          "bits": "3f600000"
+        },
+        {
+          "bits": "bee00000"
+        },
+        {
+          "bits": "3fe00000"
+        },
+        {
+          "bits": "3f800000"
+        },
+        {
+          "bits": "bf000000"
+        },
+        {
+          "bits": "40000000"
+        },
+        {
+          "bits": "3f900000"
+        },
+        {
+          "bits": "bf100000"
+        },
+        {
+          "bits": "40100000"
+        },
+        {
+          "bits": "3fa00000"
+        },
+        {
+          "bits": "bf200000"
+        },
+        {
+          "bits": "40200000"
+        },
+        {
+          "bits": "3fb00000"
+        },
+        {
+          "bits": "bf300000"
+        },
+        {
+          "bits": "40300000"
+        },
+        {
+          "bits": "3fc00000"
+        },
+        {
+          "bits": "bf400000"
+        },
+        {
+          "bits": "40400000"
+        },
+        {
+          "bits": "3fd00000"
+        },
+        {
+          "bits": "bf500000"
+        },
+        {
+          "bits": "40500000"
+        },
+        {
+          "bits": "3fe00000"
+        },
+        {
+          "bits": "bf600000"
+        },
+        {
+          "bits": "40600000"
+        },
+        {
+          "bits": "3ff00000"
+        },
+        {
+          "bits": "bf700000"
+        },
+        {
+          "bits": "40700000"
+        }
+      ]
+    },
+    "colors": [
+      0,
+      11,
+      22,
+      33,
+      44,
+      55,
+      66,
+      77,
+      88,
+      99,
+      110,
+      121,
+      132,
+      143,
+      154,
+      165,
+      176,
+      187,
+      198,
+      209,
+      220,
+      231,
+      242,
+      253,
+      8,
+      19,
+      30,
+      41,
+      52,
+      63,
+      74,
+      85,
+      96,
+      107,
+      118,
+      129,
+      140,
+      151,
+      162,
+      173,
+      184,
+      195,
+      206,
+      217,
+      228,
+      239,
+      250,
+      5
+    ]
   }
 }

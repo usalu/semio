@@ -166,7 +166,7 @@ fn sheet_of(sheet: &Json) -> Result<GridSheet, String> {
 /// relationships. The lineage `revision` is the subject's own staleness guard and plays no part in a reference edit.
 #[cfg(feature = "oracles")]
 mod cell_address {
-    use crate::document::ooxml::{main_part, part_bytes, read_parts, relationships_part_path};
+    use semio_s_plugin_stdio_document_test_oracle::ooxml::{main_part, part_bytes, read_parts, relationships_part_path};
     use quick_xml::events::{BytesStart, Event};
     use quick_xml::reader::Reader;
     use quick_xml::XmlVersion;
@@ -324,7 +324,7 @@ mod cell_address {
 /// reports as a passing test.
 ///
 /// `set-snapshot` writes the package its snapshot describes with the shared OPC engine
-/// (`crate::document::ooxml::write_snapshot_package`) — "the document becomes this snapshot", read back by `calamine`.
+/// (`semio_s_plugin_stdio_document_test_oracle::ooxml::write_snapshot_package`) — "the document becomes this snapshot", read back by `calamine`.
 /// `insert-shared-string`/`remove-shared-string`/`set-shared-string` do NOT go through
 /// `calamine`/`rust_xlsxwriter`: the raw pool those three address is invisible to the first's read
 /// model and unreachable by index through the second's write API. They go through the `zip` +
@@ -335,7 +335,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => crate::document::ooxml::write_snapshot_package(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?),
+        "set-snapshot" => semio_s_plugin_stdio_document_test_oracle::ooxml::write_snapshot_package(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?),
         "insert-sheet" => {
             let mut sheets = read_workbook_grid(input)?;
             sheets.push(sheet_of(params.get("sheet").ok_or("insert-sheet: missing `sheet`")?)?);
@@ -513,7 +513,7 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 //#region 🔖️SharedStringPool
 /// 📑️ The raw `xl/sharedStrings.xml` pool, read and written through the `zip` + `quick-xml` pairing
 /// this owner already registers and the six OOXML conformance subsets already run on
-/// (`crate::document::ooxml`), NOT through `calamine`/`rust_xlsxwriter`.
+/// (`semio_s_plugin_stdio_document_test_oracle::ooxml`), NOT through `calamine`/`rust_xlsxwriter`.
 ///
 /// 🪞️ This replaces a documented gap rather than papering over one. `calamine`'s `Xlsx<RS>::strings`
 /// and `read_shared_strings` are both private, and `rust_xlsxwriter` populates its own table only as
@@ -532,7 +532,7 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 /// declaration, and the same one every writer that rebuilds a pool from scratch emits.
 #[cfg(feature = "oracles")]
 pub mod shared_strings {
-    use crate::document::ooxml::{part_bytes, read_parts, set_part, write_parts};
+    use semio_s_plugin_stdio_document_test_oracle::ooxml::{part_bytes, read_parts, set_part, write_parts};
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
     use quick_xml::XmlVersion;

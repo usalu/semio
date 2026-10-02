@@ -45,6 +45,16 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/JsonMember"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Members",
+                  "de": "Eigenschaften"
+                },
+                "description": {
+                  "en": "The object members, in insertion order.",
+                  "de": "Die Objekteigenschaften in Einfügereihenfolge."
+                }
               }
             }
           }
@@ -63,7 +73,17 @@
             "items": {
               "type": "array",
               "items": {
-                "description": "any JSON value"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Items",
+                  "de": "Elemente"
+                },
+                "description": {
+                  "en": "The array elements, in order.",
+                  "de": "Die Array-Elemente in ihrer Reihenfolge."
+                }
               }
             }
           }
@@ -82,7 +102,13 @@
           "type": "string"
         },
         "value": {
-          "description": "any JSON value"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue",
+          "x-semio-ui": {
+            "description": {
+              "en": "A JSON value: null, boolean, number, string, array or object.",
+              "de": "Ein JSON-Wert: null, Wahrheitswert, Zahl, Zeichenkette, Array oder Objekt."
+            }
+          }
         }
       }
     }

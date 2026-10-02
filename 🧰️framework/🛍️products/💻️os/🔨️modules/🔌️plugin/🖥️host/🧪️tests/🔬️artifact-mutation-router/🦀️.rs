@@ -107,7 +107,7 @@ async fn plan_fails_with_a_named_error_when_the_owner_is_not_loaded() {
 #[semio_framework_async_macros::async_test]
 async fn a_roster_row_carries_its_input_descriptors_across_the_guest_wire() {
     use semio_framework_os_kernel::{FromValue, ToValue};
-    let inputs = vec![semio_framework::ActionArgDef::number("dx", semio_framework::LocalizedLabel::native("Move X", "Verschiebung X"))];
+    let inputs = vec![semio_framework::ActionArgDef::number("dx", semio_framework_ui_locale::LocalizedLabel::native("Move X", "Verschiebung X"))];
     let row = HostMutationRosterEntry { inputs: HostMutationInputs::Declared { inputs: inputs.clone() }, ..owner_entry("widget.doc#move").await };
     let wire = row.to_value();
     assert_eq!(wire.get("inputs").and_then(|inputs| inputs.get("status")).and_then(semio_framework::DslValue::as_str), Some("declared"));

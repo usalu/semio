@@ -733,6 +733,327 @@
         }
       },
       "title": "NativeTextCodecs"
+    },
+    "NativeCatalogReceiptPairs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "identityCounts",
+        "pairs",
+        "kinds",
+        "cases"
+      ],
+      "properties": {
+        "identityCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["codecIdentities", "artifactKinds"],
+          "properties": {
+            "codecIdentities": { "type": "integer", "minimum": 1, "maximum": 64 },
+            "artifactKinds": { "type": "integer", "minimum": 1, "maximum": 64 }
+          }
+        },
+        "schema": {
+          "const": "semio.stdio.native-catalog-receipt-pairs/v1"
+        },
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "const": [
+            { "id": "exact-multiple-schemas", "mutation": "none", "accepted": true },
+            { "id": "order-independent", "mutation": "reverse", "accepted": true },
+            { "id": "missing-pdf17-schema", "mutation": "missing-schema", "accepted": false },
+            { "id": "missing-json-kind", "mutation": "missing-kind", "accepted": false },
+            { "id": "duplicate-pdf14-pair", "mutation": "duplicate", "accepted": false },
+            { "id": "foreign-pdf-schema", "mutation": "foreign-schema", "accepted": false },
+            { "id": "foreign-artifact-kind", "mutation": "foreign-kind", "accepted": false },
+            { "id": "extra-kind-schema-pair", "mutation": "extra", "accepted": false }
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mutation",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutation": {
+                "enum": [
+                  "none",
+                  "reverse",
+                  "missing-schema",
+                  "missing-kind",
+                  "duplicate",
+                  "foreign-schema",
+                  "foreign-kind",
+                  "extra"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeCatalogReceiptPairs"
+    },
+    "NativeCatalogFullRoster": {
+      "type": "object",
+      "const": {
+        "schema": "semio.stdio.native-catalog-full-roster/v1",
+        "artifactAssemblies": 36,
+        "artifactKinds": 29,
+        "identities": [
+          [
+            "s.stdio.avi",
+            "stdio.avi",
+            "stdio.native.avi.v1"
+          ],
+          [
+            "s.stdio.bcf",
+            "stdio.bcf",
+            "stdio.native.bcf.v1"
+          ],
+          [
+            "s.stdio.csv",
+            "stdio.csv",
+            "stdio.native.csv.v1"
+          ],
+          [
+            "s.stdio.deflate",
+            "stdio.deflate",
+            "stdio.native.deflate.v1"
+          ],
+          [
+            "s.stdio.docx",
+            "stdio.docx",
+            "stdio.native.docx.v1"
+          ],
+          [
+            "s.stdio.dwg",
+            "stdio.dwg",
+            "stdio.native.dwg.v1"
+          ],
+          [
+            "s.stdio.dxf",
+            "stdio.dxf",
+            "stdio.native.dxf.v1"
+          ],
+          [
+            "s.stdio.gltf",
+            "stdio.gltf",
+            "stdio.native.gltf.v1"
+          ],
+          [
+            "s.stdio.html",
+            "stdio.html",
+            "stdio.native.html.v1"
+          ],
+          [
+            "s.stdio.jpg",
+            "stdio.jpg",
+            "stdio.native.jpg.v1"
+          ],
+          [
+            "s.stdio.json",
+            "stdio.json",
+            "stdio.native.json.v1"
+          ],
+          [
+            "s.stdio.las",
+            "stdio.las",
+            "stdio.native.las.v1"
+          ],
+          [
+            "s.stdio.md",
+            "stdio.md",
+            "stdio.native.md.v1"
+          ],
+          [
+            "s.stdio.mp3",
+            "stdio.mp3",
+            "stdio.native.mp3.v1"
+          ],
+          [
+            "s.stdio.mp4",
+            "stdio.mp4",
+            "stdio.native.mp4.v1"
+          ],
+          [
+            "s.stdio.obj",
+            "stdio.obj",
+            "stdio.native.obj.v1"
+          ],
+          [
+            "s.stdio.pdf",
+            "stdio.pdf",
+            "stdio.native.pdf.v1"
+          ],
+          [
+            "s.stdio.pdf",
+            "stdio.pdf.1.7",
+            "stdio.native.pdf17.v1"
+          ],
+          [
+            "s.stdio.ply",
+            "stdio.ply",
+            "stdio.native.ply.v1"
+          ],
+          [
+            "s.stdio.png",
+            "stdio.png",
+            "stdio.native.png.v1"
+          ],
+          [
+            "s.stdio.pptx",
+            "stdio.pptx",
+            "stdio.native.pptx.v1"
+          ],
+          [
+            "s.stdio.step",
+            "stdio.step",
+            "stdio.native.step.v1"
+          ],
+          [
+            "s.stdio.stl",
+            "stdio.stl",
+            "stdio.native.stl.v1"
+          ],
+          [
+            "s.stdio.svg",
+            "stdio.svg",
+            "stdio.native.svg.v1"
+          ],
+          [
+            "s.stdio.tiff",
+            "stdio.tiff",
+            "stdio.native.tiff.v1"
+          ],
+          [
+            "s.stdio.tsv",
+            "stdio.tsv",
+            "stdio.native.tsv.v1"
+          ],
+          [
+            "s.stdio.txt",
+            "stdio.txt",
+            "stdio.native.txt.v1"
+          ],
+          [
+            "s.stdio.xlsx",
+            "stdio.xlsx",
+            "stdio.native.xlsx.v1"
+          ],
+          [
+            "s.stdio.xml",
+            "stdio.xml",
+            "stdio.native.xml.v1"
+          ],
+          [
+            "s.stdio.zip",
+            "stdio.zip",
+            "stdio.native.zip.v1"
+          ]
+        ],
+        "ledger": {
+          "declared": {
+            "codecs": 36,
+            "mutations": 3,
+            "inferences": 67
+          },
+          "registered": {
+            "codecs": 30,
+            "mutations": 3,
+            "inferences": 67
+          },
+          "implemented": {
+            "codecs": 30,
+            "mutations": 0,
+            "inferences": 0
+          },
+          "verified": {
+            "codecs": 0,
+            "mutations": 0,
+            "inferences": 0
+          }
+        },
+        "cases": [
+          {
+            "id": "exact-complete",
+            "mutation": "none",
+            "accepted": true
+          },
+          {
+            "id": "order-independent",
+            "mutation": "reverse",
+            "accepted": true
+          },
+          {
+            "id": "missing-pdf17-schema",
+            "mutation": "missing",
+            "accepted": false
+          },
+          {
+            "id": "duplicate-pdf14-identity",
+            "mutation": "duplicate",
+            "accepted": false
+          },
+          {
+            "id": "extra-pdf-schema",
+            "mutation": "extra",
+            "accepted": false
+          },
+          {
+            "id": "foreign-schema",
+            "mutation": "schema",
+            "accepted": false
+          },
+          {
+            "id": "foreign-factory",
+            "mutation": "factory",
+            "accepted": false
+          },
+          {
+            "id": "duplicate-case-substitution",
+            "mutation": "case",
+            "accepted": false
+          }
+        ]
+      },
+      "title": "NativeCatalogFullRoster"
     }
   }
 }

@@ -1,17 +1,8 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own Protocol v2 contribution. `6️⃣cc6` is ISO 10303-214 conformance class 6 — advanced B-Rep — and it is the BREP PILOT owner: a real, smallest-semantic subset that already existed, rather than a new artifact invented for the pilot. It carries two oracles on DIFFERENT engine families (`ruststep` for Part-21 structure, `brepjs`/OpenCASCADE for exact geometry), six qualified external probes, one registered-but-unqualified one whose stage therefore gates nothing, and a 24-bundle third-party-generated corpus spanning the spatial-relationship, shape-complexity, robustness, mechanical and failure families.",
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
-    }
-  ],
+  "oracleHostPackages": [],
   "oracles": [
     {
       "id": "ruststep-step-ap214-cc6-mutate",
@@ -29,7 +20,7 @@
       "testOnly": true,
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "ruststep 0.4 is the real, independent ISO 10303-21 READER for this subset: `ast::Exchange::from_str` parses the real committed `📐️hexagonal-cut-concrete-forest-left-ap214.stp` (a genuine Rhino 8.31 / ST-Developer v19.2 export, 1,396 real entities) with zero errors, and it is what reads back every result this subset's oracle produces before `semantic-step-conformance-class-v1` compares it. It has NO writer at all (`ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct; no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`), so per the fleet brief's §6 nothing in this case is typed `@mode-differential` — ruststep cannot be a second PRODUCER of mutated bytes. The re-serializer is this standard's own from-scratch Part-21 writer in ../../../🦀️oracle.rs, deliberately independent of this repository's production `step::engine::part21` writer. What the evidence therefore is, stated plainly: a real third-party parse of the conformance-relevant STRUCTURE of every result — the ladder census, the declared schema and the product identity chain — plus the inverse and identity laws asserted in role, not a byte-level differential claim. PROTOCOL V2 ADDS `brep.step.import` TO THIS LIST, and the addition is a claim about what ruststep does and NOT about what it measures: it is a pure-Rust EXPRESS/Part-21 reader with no geometry kernel behind it, so it can confirm that a file PARSES and what entities it declares, and it cannot compute a volume, an area or a Hausdorff distance. That is exactly the independence `set-shape-representation` needs and could not otherwise get: `distinctEngineFamilies: 2` for `brep.step.import` is satisfied by ruststep's `stepcode-independent` family beside brepjs's `opencascade`, so a file that only one of the two can read is a reported disagreement rather than a passing comparison. The exact-geometry requirements (`brep.measure.volume`) stay on brepjs alone, because claiming ruststep for those would be claiming a measurement it cannot make.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "third-party-library",
       "engine": {
         "family": "stepcode-independent",
@@ -672,10 +663,10 @@
             "actual-step"
           ],
           "assertions": {
-            "relativeVolumeErrorMax": 1e-08,
-            "relativeAreaErrorMax": 1e-07,
-            "normalizedCentroidDistanceMax": 1e-08,
-            "normalizedBoundingBoxDiagonalErrorMax": 1e-08,
+            "relativeVolumeErrorMax": 1e-8,
+            "relativeAreaErrorMax": 1e-7,
+            "normalizedCentroidDistanceMax": 1e-8,
+            "normalizedBoundingBoxDiagonalErrorMax": 1e-8,
             "connectedComponentsEqual": true
           }
         },

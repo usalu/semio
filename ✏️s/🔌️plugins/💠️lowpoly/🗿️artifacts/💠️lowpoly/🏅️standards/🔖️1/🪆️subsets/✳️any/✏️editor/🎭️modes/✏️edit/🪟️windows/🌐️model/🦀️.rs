@@ -57,19 +57,15 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::schema::default_snapshot();
-    let config = LowpolyConfig::default();
-    let labels = semio_framework_plugin::resolve_labels::<LowpolyLabels>(&semio_framework_plugin::ViewModel::default());
-    let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_MAIN.into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Model", "Modell"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"),
         body_key: LOWPOLY_PLAY_BODY_MAIN.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "lowpoly-model".into(),
         // 🎚️ `measures` stays empty here: measures are config-derived per frame by
         // `ArtifactApp::window_measures`, never frozen into the manifest.
-        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
+        options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
@@ -274,7 +270,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
             scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
             scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
         }
-        None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
+        None => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Failed to load lowpoly document")).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly main window failed-load text admission failed")),
     }
 }
 //#endregion 🔖️Scene

@@ -7,7 +7,7 @@
 //! Every field here is plain wasm-safe data (`String`/`f64`/`bool`/`Option`/`Vec`/nested plain
 //! records) — this crate depends on nothing beyond `ui_contract` and `serde`. Two fields could not
 //! move byte-identical for that reason: [`TableScene::drop_action_json`] (was
-//! `Option<ActionDescriptor>`, a `ui_wgpu`-only type pulling `dsl::DslValue`/`Label`/`IconName`) and
+//! `Option<ActionDescriptor>`, a `ui_wgpu`-only type pulling `semio_framework_value::DslValue`/`Label`/`IconName`) and
 //! [`NodeGraphOperatorChannelRecord::default_json`] (was `Option<serde_json::Value>`, which would
 //! have been this crate's first dependency beyond `ui_contract`/`serde`). Every sibling field on
 //! these 15 structs already uses the `_json: String` opaque-payload convention for exactly this

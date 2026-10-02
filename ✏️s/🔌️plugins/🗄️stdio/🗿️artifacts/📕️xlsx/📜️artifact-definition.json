@@ -65,7 +65,7 @@
         "artifact_kind": "s.stdio.xlsx",
         "artifact_schema": "stdio.xlsx",
         "extension": "xlsx",
-        "pack_schema_hash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
+        "pack_schema_hash": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",
         "runtime_capability_id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1"
       }
     }

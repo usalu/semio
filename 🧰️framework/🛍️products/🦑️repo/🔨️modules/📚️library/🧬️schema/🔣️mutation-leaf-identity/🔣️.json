@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "MutationLeafIdentityVectors",
-  "description": "Language-agnostic vectors for structural mutation leaf identity: a directory is a mutation leaf when its own canonical descriptor names it as owner; a `🧫️fixtures/🧬️mutations/<leaf>` mirror and a `🧫️fixtures/<leaf>` vector directory inherit that proof from their schema-side owner.",
+  "description": "Language-agnostic vectors for structural mutation leaf identity: a directory is a mutation leaf when its own canonical descriptor names it as owner; a `🧫️fixtures/🧬️mutations/<leaf>` mirror and a `🧫️fixtures/<leaf>` or `🧫️fixtures/<leaf>-<scenario>` vector directory (leaf names compared without U+FE0F) inherit that proof from their schema-side owner, as does a vector's scenario child that holds a fixture bundle.",
   "type": "object",
   "required": ["contract", "descriptor", "leafKindId", "vectorKindId", "retiredRegistries", "cases"],
   "additionalProperties": false,
@@ -37,7 +37,7 @@
           "scope": { "$ref": "#/definitions/relativePath" },
           "path": { "$ref": "#/definitions/relativePath" },
           "owner": { "anyOf": [{ "$ref": "#/definitions/relativePath" }, { "type": "null" }] },
-          "form": { "type": "string", "enum": ["descriptor", "fixture-mirror", "fixture-vector", "none"] },
+          "form": { "type": "string", "enum": ["descriptor", "fixture-mirror", "fixture-vector", "fixture-scenario-vector", "fixture-vector-scenario", "none"] },
           "expectedKindId": { "anyOf": [{ "$ref": "#/definitions/kindId" }, { "type": "null" }] }
         }
       }

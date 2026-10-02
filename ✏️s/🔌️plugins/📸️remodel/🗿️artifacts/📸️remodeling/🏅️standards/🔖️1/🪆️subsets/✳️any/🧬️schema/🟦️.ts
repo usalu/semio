@@ -1,121 +1,17 @@
-/** 🧬️ Remodeling artifact schema — TypeScript twin of `🧬️schema/🦀️.rs`.
- *
- *  The nine artifact-lane fields are the snapshot's own; the seven presence/config fields are
- *  declared here. Every domain type is imported from `📸️snapshot/🟦️.ts` rather than restated, so
- *  the artifact and the snapshot cannot drift apart. Field order below is Rust declaration order,
- *  which is the order `serde` emits.
- *
- *  Drift against the committed `🔣️.json` JSON Schema leaf is recorded in
- *  `📓️w3-ts-codec-oracle.md`: that leaf declares `MediaStream`/`ImageAsset`/`CalibrationState`/
- *  `ReconstructionParams`/`GroundControlPoint`/`ReconstructionResults` as bare
- *  `{ "type": "object" }` with no properties and omits `durableArtifacts` entirely, so it is NOT
- *  authoritative for those six types — Rust is, and Rust is what this file mirrors.
- */
-
-import {
-  ARTIFACT_CHILD_SPEC,
-  CALIBRATION_STATE_SPEC,
-  DURABLE_ARTIFACT_SPEC,
-  GROUND_CONTROL_POINT_SPEC,
-  MEDIA_STREAM_SPEC,
-  RECONSTRUCTION_PARAMS_SPEC,
-  RECONSTRUCTION_RESULTS_SPEC,
-  decodeRecord,
-  defaultsOf,
-  type CalibrationState,
-  type GroundControlPoint,
-  type MediaStream,
-  type ReconstructionParams,
-  type ReconstructionResults,
-  type RecordSpec,
-  type RemodelingAssetChild,
-  type RemodelingDurableArtifactStore,
-  type RemodelingSnapshot,
-  type ValueSpec,
-  type Vec3,
-} from "./📸️snapshot/🟦️.ts";
-
+/** 🧬️ Canonical persisted Remodeling model and its declared JSON boundary. */
+import * as snapshot from "./📸️snapshot/🟦️.ts";
 export * from "./📸️snapshot/🟦️.ts";
-
-//#region 🔖️UiHelpers
-//#endregion 🔖️UiHelpers
-
-//#region 🔖️Artifact
-/** 🧬️ Full remodeling artifact state across the artifact, presence and config lanes. */
-export interface RemodelingArtifact {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  id: string;
-  /** @state artifact */
-  streams: MediaStream[];
-  /** @state artifact */
-  assets: Record<string, RemodelingAssetChild>;
-  /** @state artifact */
-  durableArtifacts: RemodelingDurableArtifactStore;
-  /** @state artifact */
-  calibration: CalibrationState;
-  /** @state artifact */
-  params: ReconstructionParams;
-  /** @state artifact */
-  gcps: GroundControlPoint[];
-  /** @state artifact */
-  results: ReconstructionResults;
-}
-//#endregion 🔖️Artifact
-
-//#region 🔖️Spec
-const f = (name: string, spec: ValueSpec, dflt: () => unknown): { name: string; spec: ValueSpec; dflt: () => unknown } => ({ name, spec, dflt });
-const text = { k: "text" } as const;
-const bool = { k: "bool" } as const;
-const uint = { k: "uint" } as const;
-const f64 = { k: "f64" } as const;
-const opt = (of: ValueSpec): ValueSpec => ({ k: "opt", of });
-const list = (of: ValueSpec): ValueSpec => ({ k: "list", of });
-const map = (of: ValueSpec): ValueSpec => ({ k: "map", of });
-const rec = (of: () => RecordSpec): ValueSpec => ({ k: "rec", of });
-const tuple3 = { k: "tuple", len: 3, w: 64 } as const;
-
-export const REMODELING_ARTIFACT_SPEC: RecordSpec = {
-  title: "RemodelingArtifact",
-  serdeDefault: false,
-  fields: [
-    f("schema", text, () => "remodeling.scene"),
-    f("id", text, () => "remodeling"),
-    f("streams", list(rec(() => MEDIA_STREAM_SPEC)), () => []),
-    f("assets", map(rec(() => ARTIFACT_CHILD_SPEC)), () => ({})),
-    f("durable_artifacts", map(rec(() => DURABLE_ARTIFACT_SPEC)), () => ({})),
-    f("calibration", rec(() => CALIBRATION_STATE_SPEC), () => defaultsOf(CALIBRATION_STATE_SPEC)),
-    f("params", rec(() => RECONSTRUCTION_PARAMS_SPEC), () => defaultsOf(RECONSTRUCTION_PARAMS_SPEC)),
-    f("gcps", list(rec(() => GROUND_CONTROL_POINT_SPEC)), () => []),
-    f("results", rec(() => RECONSTRUCTION_RESULTS_SPEC), () => defaultsOf(RECONSTRUCTION_RESULTS_SPEC)),
-  ],
-};
-
-/** 🔑 The nine artifact-lane field names shared by the artifact, the snapshot and the diff. */
-export const REMODELING_SNAPSHOT_FIELDS: readonly string[] = ["schema", "id", "streams", "assets", "durableArtifacts", "calibration", "params", "gcps", "results"];
-//#endregion 🔖️Spec
-
-//#region 🔖️Conversions
-/** 🧬️ `RemodelingArtifact::from_snapshot` — UI fields land on their declared defaults. */
-export function remodelingArtifactFromSnapshot(snapshot: RemodelingSnapshot): RemodelingArtifact {
-  const artifact = defaultsOf(REMODELING_ARTIFACT_SPEC) as unknown as RemodelingArtifact;
-  for (const field of REMODELING_SNAPSHOT_FIELDS) (artifact as unknown as Record<string, unknown>)[field] = (snapshot as unknown as Record<string, unknown>)[field];
-  return artifact;
-}
-
-/** 📸️ `RemodelingArtifact::to_snapshot` — the persisted subset. */
-export function remodelingArtifactToSnapshot(artifact: RemodelingArtifact): RemodelingSnapshot {
-  const snapshot: Record<string, unknown> = {};
-  for (const field of REMODELING_SNAPSHOT_FIELDS) snapshot[field] = (artifact as unknown as Record<string, unknown>)[field];
-  return snapshot as unknown as RemodelingSnapshot;
-}
-
-/** 🧬️ Decodes a parsed RFC 8259 value into a validated `RemodelingArtifact`. */
-export const decodeRemodelingArtifact = (json: unknown): RemodelingArtifact => decodeRecord(json, REMODELING_ARTIFACT_SPEC, "") as unknown as RemodelingArtifact;
-
-//#endregion 🔖️Conversions
-
+export interface RemodelingArtifact extends snapshot.RemodelingSnapshot {}
+export const REMODELING_ARTIFACT_SPEC=snapshot.REMODELING_SNAPSHOT_SPEC;
+export const REMODELING_SNAPSHOT_FIELDS=["schema","id","streams","assets","durableArtifacts","calibration","params","gcps","results"] as const;
+/** 📸️ Persist the nine actual native artifact fields. */
+export const remodelingArtifactToSnapshot=(v:RemodelingArtifact):snapshot.RemodelingSnapshot=>({schema:v.schema,id:v.id,streams:v.streams,assets:v.assets,durableArtifacts:v.durableArtifacts,calibration:v.calibration,params:v.params,gcps:v.gcps,results:v.results});
+/** 🧩️ Restore the artifact's actual persisted state. */
+export const remodelingArtifactFromSnapshot=(v:snapshot.RemodelingSnapshot):RemodelingArtifact=>remodelingArtifactToSnapshot(v);
+/** 🔣️ Admit only the explicitly declared file transport scalars. */
+export const decodeRemodelingArtifact=(v:unknown):RemodelingArtifact=>snapshot.decodeRemodelingSnapshot(v);
+/** 🛂️ Validate the canonical artifact without transport coercion. */
+export const parseRemodelingArtifact=(v:unknown,at="$"):RemodelingArtifact=>snapshot.parseRemodelingSnapshot(v,at);
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class remodelRemodelingArtifactGuardRefusal extends Error {
@@ -163,426 +59,65 @@ export const remodelRemodelingArtifactGuardConstant = <T extends string | number
   value === expected ? expected : remodelRemodelingArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseRemodelingArtifact(value: unknown, at = "$"): RemodelingArtifact {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    schema: remodelRemodelingArtifactGuardString(row["schema"], `${at}.schema`),
-    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
-    streams: remodelRemodelingArtifactGuardArray(row["streams"], `${at}.streams`).map((item, index) => parseMediaStream(item, `${at}.streams[${index}]`)),
-    assets: remodelRemodelingArtifactGuardObject(row["assets"], `${at}.assets`),
-    durableArtifacts: remodelRemodelingArtifactGuardObject(row["durableArtifacts"], `${at}.durableArtifacts`),
-    calibration: parseCalibrationState(row["calibration"], `${at}.calibration`),
-    params: parseReconstructionParams(row["params"], `${at}.params`),
-    gcps: remodelRemodelingArtifactGuardArray(row["gcps"], `${at}.gcps`).map((item, index) => parseGroundControlPoint(item, `${at}.gcps[${index}]`)),
-    results: parseReconstructionResults(row["results"], `${at}.results`),
-  };
-}
-
-export interface ArtifactDialect {
-  readonly artifactKind: string;
-  readonly standard: string;
-  readonly subset: string;
-}
-
-export function parseArtifactDialect(value: unknown, at = "$"): ArtifactDialect {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    artifactKind: remodelRemodelingArtifactGuardString(row["artifactKind"], `${at}.artifactKind`),
-    standard: remodelRemodelingArtifactGuardString(row["standard"], `${at}.standard`),
-    subset: remodelRemodelingArtifactGuardString(row["subset"], `${at}.subset`),
-  };
-}
-
-export interface ArtifactRef {
-  readonly artifactId: string;
-  readonly dialect: ArtifactDialect;
-}
-
-export function parseArtifactRef(value: unknown, at = "$"): ArtifactRef {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    artifactId: remodelRemodelingArtifactGuardString(row["artifactId"], `${at}.artifactId`),
-    dialect: parseArtifactDialect(row["dialect"], `${at}.dialect`),
-  };
-}
-
-export interface CalibrationState {
-  readonly cameras: readonly CameraCalibration[];
-  readonly rig: readonly RigExtrinsic[];
-}
-
-export function parseCalibrationState(value: unknown, at = "$"): CalibrationState {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    cameras: remodelRemodelingArtifactGuardArray(row["cameras"], `${at}.cameras`).map((item, index) => parseCameraCalibration(item, `${at}.cameras[${index}]`)),
-    rig: remodelRemodelingArtifactGuardArray(row["rig"], `${at}.rig`).map((item, index) => parseRigExtrinsic(item, `${at}.rig[${index}]`)),
-  };
-}
-
-export interface CameraPosePreview {
-  readonly cameraId: string;
-  readonly rotationWxyz: readonly number[];
-  readonly translation: readonly number[];
-}
-
-export function parseCameraPosePreview(value: unknown, at = "$"): CameraPosePreview {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    cameraId: remodelRemodelingArtifactGuardString(row["cameraId"], `${at}.cameraId`),
-    rotationWxyz: remodelRemodelingArtifactGuardArray(row["rotationWxyz"], `${at}.rotationWxyz`, {"minItems": 4, "maxItems": 4}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.rotationWxyz[${index}]`)),
-    translation: remodelRemodelingArtifactGuardArray(row["translation"], `${at}.translation`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.translation[${index}]`)),
-  };
-}
-
-export interface CameraTrajectory {
-  readonly poses: readonly CameraPosePreview[];
-}
-
-export function parseCameraTrajectory(value: unknown, at = "$"): CameraTrajectory {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    poses: remodelRemodelingArtifactGuardArray(row["poses"], `${at}.poses`).map((item, index) => parseCameraPosePreview(item, `${at}.poses[${index}]`)),
-  };
-}
-
-export interface DenseParams {
-  readonly resolution: DenseResolution;
-  readonly windowRadiusPx: number;
-  readonly minViewConsistency: number;
-  readonly confidenceThreshold: number;
-  readonly maxPoints: number;
-}
-
-export function parseDenseParams(value: unknown, at = "$"): DenseParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    resolution: parseDenseResolution(row["resolution"], `${at}.resolution`),
-    windowRadiusPx: remodelRemodelingArtifactGuardInteger(row["windowRadiusPx"], `${at}.windowRadiusPx`, {"minimum": 0}),
-    minViewConsistency: remodelRemodelingArtifactGuardInteger(row["minViewConsistency"], `${at}.minViewConsistency`, {"minimum": 0}),
-    confidenceThreshold: remodelRemodelingArtifactGuardNumber(row["confidenceThreshold"], `${at}.confidenceThreshold`),
-    maxPoints: remodelRemodelingArtifactGuardInteger(row["maxPoints"], `${at}.maxPoints`, {"minimum": 0}),
-  };
-}
-
-export type DenseResolution = "low" | "medium" | "high";
-
-export function parseDenseResolution(value: unknown, at = "$"): DenseResolution {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["low", "medium", "high"] as const);
-}
-
-export type FeatureDetector = "orb" | "akaze" | "harris";
-
-export function parseFeatureDetector(value: unknown, at = "$"): FeatureDetector {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["orb", "akaze", "harris"] as const);
-}
-
-export interface FeatureParams {
-  readonly detector: FeatureDetector;
-  readonly targetCount: number;
-  readonly octaves: number;
-  readonly edgeThreshold: number;
-}
-
-export function parseFeatureParams(value: unknown, at = "$"): FeatureParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    detector: parseFeatureDetector(row["detector"], `${at}.detector`),
-    targetCount: remodelRemodelingArtifactGuardInteger(row["targetCount"], `${at}.targetCount`, {"minimum": 0}),
-    octaves: remodelRemodelingArtifactGuardInteger(row["octaves"], `${at}.octaves`, {"minimum": 0}),
-    edgeThreshold: remodelRemodelingArtifactGuardNumber(row["edgeThreshold"], `${at}.edgeThreshold`),
-  };
-}
-
-export interface FrameRef {
-  readonly index: number;
-  readonly timestampMs: number;
-  readonly assetId: string;
-}
-
-export function parseFrameRef(value: unknown, at = "$"): FrameRef {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    index: remodelRemodelingArtifactGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    timestampMs: remodelRemodelingArtifactGuardNumber(row["timestampMs"], `${at}.timestampMs`),
-    assetId: remodelRemodelingArtifactGuardString(row["assetId"], `${at}.assetId`),
-  };
-}
-
-export interface GcpObservation {
-  readonly streamId: string;
-  readonly frameIndex: number;
-  readonly pixel: readonly number[];
-}
-
-export function parseGcpObservation(value: unknown, at = "$"): GcpObservation {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    streamId: remodelRemodelingArtifactGuardString(row["streamId"], `${at}.streamId`),
-    frameIndex: remodelRemodelingArtifactGuardInteger(row["frameIndex"], `${at}.frameIndex`, {"minimum": 0}),
-    pixel: remodelRemodelingArtifactGuardArray(row["pixel"], `${at}.pixel`, {"minItems": 2, "maxItems": 2}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.pixel[${index}]`)),
-  };
-}
-
-export interface GroundControlPoint {
-  readonly id: string;
-  readonly name: string;
-  readonly worldPosition: readonly number[];
-  readonly observations: readonly GcpObservation[];
-}
-
-export function parseGroundControlPoint(value: unknown, at = "$"): GroundControlPoint {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
-    name: remodelRemodelingArtifactGuardString(row["name"], `${at}.name`),
-    worldPosition: remodelRemodelingArtifactGuardArray(row["worldPosition"], `${at}.worldPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.worldPosition[${index}]`)),
-    observations: remodelRemodelingArtifactGuardArray(row["observations"], `${at}.observations`).map((item, index) => parseGcpObservation(item, `${at}.observations[${index}]`)),
-  };
-}
-
-export interface IngestParams {
-  readonly frameSampleStride: number;
-  readonly maxFrames: number;
-  readonly downscaleLongEdgePx: number;
-  readonly minSharpness: number;
-}
-
-export function parseIngestParams(value: unknown, at = "$"): IngestParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    frameSampleStride: remodelRemodelingArtifactGuardInteger(row["frameSampleStride"], `${at}.frameSampleStride`, {"minimum": 0}),
-    maxFrames: remodelRemodelingArtifactGuardInteger(row["maxFrames"], `${at}.maxFrames`, {"minimum": 0}),
-    downscaleLongEdgePx: remodelRemodelingArtifactGuardInteger(row["downscaleLongEdgePx"], `${at}.downscaleLongEdgePx`, {"minimum": 0}),
-    minSharpness: remodelRemodelingArtifactGuardNumber(row["minSharpness"], `${at}.minSharpness`),
-  };
-}
-
-export interface MatchParams {
-  readonly matcher: MatcherKind;
-  readonly ratioTest: number;
-  readonly crossCheck: boolean;
-  readonly sequentialWindow: number;
-  readonly maxPairsPerFrame: number;
-  readonly loopClosure: boolean;
-}
-
-export function parseMatchParams(value: unknown, at = "$"): MatchParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    matcher: parseMatcherKind(row["matcher"], `${at}.matcher`),
-    ratioTest: remodelRemodelingArtifactGuardNumber(row["ratioTest"], `${at}.ratioTest`),
-    crossCheck: remodelRemodelingArtifactGuardBoolean(row["crossCheck"], `${at}.crossCheck`),
-    sequentialWindow: remodelRemodelingArtifactGuardInteger(row["sequentialWindow"], `${at}.sequentialWindow`, {"minimum": 0}),
-    maxPairsPerFrame: remodelRemodelingArtifactGuardInteger(row["maxPairsPerFrame"], `${at}.maxPairsPerFrame`, {"minimum": 0}),
-    loopClosure: remodelRemodelingArtifactGuardBoolean(row["loopClosure"], `${at}.loopClosure`),
-  };
-}
-
-export type MatcherKind = "brute-force" | "kd-tree";
-
-export function parseMatcherKind(value: unknown, at = "$"): MatcherKind {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["brute-force", "kd-tree"] as const);
-}
-
-export type MediaKind = "image-sequence" | "video";
-
-export function parseMediaKind(value: unknown, at = "$"): MediaKind {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["image-sequence", "video"] as const);
-}
-
-export interface MeshParams {
-  readonly tsdfVoxelSizeMm: number;
-  readonly tsdfTruncationMm: number;
-  readonly decimateTargetTriangles: number;
-  readonly smoothingIterations: number;
-  readonly textureEnabled: boolean;
-  readonly textureSize: number;
-  readonly guaranteeWatertight: boolean;
-  readonly holeFillMaxBoundaryVerts: number;
-  readonly selfIntersectionCheck: boolean;
-}
-
-export function parseMeshParams(value: unknown, at = "$"): MeshParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    tsdfVoxelSizeMm: remodelRemodelingArtifactGuardNumber(row["tsdfVoxelSizeMm"], `${at}.tsdfVoxelSizeMm`),
-    tsdfTruncationMm: remodelRemodelingArtifactGuardNumber(row["tsdfTruncationMm"], `${at}.tsdfTruncationMm`),
-    decimateTargetTriangles: remodelRemodelingArtifactGuardInteger(row["decimateTargetTriangles"], `${at}.decimateTargetTriangles`, {"minimum": 0}),
-    smoothingIterations: remodelRemodelingArtifactGuardInteger(row["smoothingIterations"], `${at}.smoothingIterations`, {"minimum": 0}),
-    textureEnabled: remodelRemodelingArtifactGuardBoolean(row["textureEnabled"], `${at}.textureEnabled`),
-    textureSize: remodelRemodelingArtifactGuardInteger(row["textureSize"], `${at}.textureSize`, {"minimum": 0}),
-    guaranteeWatertight: remodelRemodelingArtifactGuardBoolean(row["guaranteeWatertight"], `${at}.guaranteeWatertight`),
-    holeFillMaxBoundaryVerts: remodelRemodelingArtifactGuardInteger(row["holeFillMaxBoundaryVerts"], `${at}.holeFillMaxBoundaryVerts`, {"minimum": 0}),
-    selfIntersectionCheck: remodelRemodelingArtifactGuardBoolean(row["selfIntersectionCheck"], `${at}.selfIntersectionCheck`),
-  };
-}
-
-export type MeshSource = "placeholder" | "reconstructed" | "imported";
-
-export function parseMeshSource(value: unknown, at = "$"): MeshSource {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["placeholder", "reconstructed", "imported"] as const);
-}
-
-export interface MotionParams {
-  readonly enabled: boolean;
-  readonly maxTracks: number;
-  readonly trackWindowPx: number;
-  readonly minTrackQuality: number;
-  readonly minTrackLengthFrames: number;
-}
-
-export function parseMotionParams(value: unknown, at = "$"): MotionParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    enabled: remodelRemodelingArtifactGuardBoolean(row["enabled"], `${at}.enabled`),
-    maxTracks: remodelRemodelingArtifactGuardInteger(row["maxTracks"], `${at}.maxTracks`, {"minimum": 0}),
-    trackWindowPx: remodelRemodelingArtifactGuardInteger(row["trackWindowPx"], `${at}.trackWindowPx`, {"minimum": 0}),
-    minTrackQuality: remodelRemodelingArtifactGuardNumber(row["minTrackQuality"], `${at}.minTrackQuality`),
-    minTrackLengthFrames: remodelRemodelingArtifactGuardInteger(row["minTrackLengthFrames"], `${at}.minTrackLengthFrames`, {"minimum": 0}),
-  };
-}
-
-export interface MotionTrackSummary {
-  readonly id: string;
-  readonly length: number;
-  readonly class: TrackClass;
-  readonly meanSpeedMS: number;
-}
-
-export function parseMotionTrackSummary(value: unknown, at = "$"): MotionTrackSummary {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
-    length: remodelRemodelingArtifactGuardInteger(row["length"], `${at}.length`, {"minimum": 0}),
-    class: parseTrackClass(row["class"], `${at}.class`),
-    meanSpeedMS: remodelRemodelingArtifactGuardNumber(row["meanSpeedMS"], `${at}.meanSpeedMS`),
-  };
-}
-
-export interface ReconstructionParams {
-  readonly ingest: IngestParams;
-  readonly feature: FeatureParams;
-  readonly matching: MatchParams;
-  readonly sfm: SfmParams;
-  readonly dense: DenseParams;
-  readonly mesh: MeshParams;
-  readonly motion: MotionParams;
-  readonly geo: GeoParams;
-}
-
-export function parseReconstructionParams(value: unknown, at = "$"): ReconstructionParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    ingest: parseIngestParams(row["ingest"], `${at}.ingest`),
-    feature: parseFeatureParams(row["feature"], `${at}.feature`),
-    matching: parseMatchParams(row["matching"], `${at}.matching`),
-    sfm: parseSfmParams(row["sfm"], `${at}.sfm`),
-    dense: parseDenseParams(row["dense"], `${at}.dense`),
-    mesh: parseMeshParams(row["mesh"], `${at}.mesh`),
-    motion: parseMotionParams(row["motion"], `${at}.motion`),
-    geo: parseGeoParams(row["geo"], `${at}.geo`),
-  };
-}
-
-export interface RemodelingAssetChild {
-  readonly childId: string;
-  readonly target: ArtifactRef;
-}
-
-export function parseRemodelingAssetChild(value: unknown, at = "$"): RemodelingAssetChild {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    childId: remodelRemodelingArtifactGuardString(row["childId"], `${at}.childId`),
-    target: parseArtifactRef(row["target"], `${at}.target`),
-  };
-}
-
-export interface RemodelingMeshChild {
-  readonly childId: string;
-  readonly target: ArtifactRef;
-}
-
-export function parseRemodelingMeshChild(value: unknown, at = "$"): RemodelingMeshChild {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    childId: remodelRemodelingArtifactGuardString(row["childId"], `${at}.childId`),
-    target: parseArtifactRef(row["target"], `${at}.target`),
-  };
-}
-
-export interface RigExtrinsic {
-  readonly cameraId: string;
-  readonly rotationWxyz: readonly number[];
-  readonly translationM: readonly number[];
-}
-
-export function parseRigExtrinsic(value: unknown, at = "$"): RigExtrinsic {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    cameraId: remodelRemodelingArtifactGuardString(row["cameraId"], `${at}.cameraId`),
-    rotationWxyz: remodelRemodelingArtifactGuardArray(row["rotationWxyz"], `${at}.rotationWxyz`, {"minItems": 4, "maxItems": 4}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.rotationWxyz[${index}]`)),
-    translationM: remodelRemodelingArtifactGuardArray(row["translationM"], `${at}.translationM`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.translationM[${index}]`)),
-  };
-}
-
-export type RobustLossKind = "l2" | "huber" | "cauchy";
-
-export function parseRobustLossKind(value: unknown, at = "$"): RobustLossKind {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["l2", "huber", "cauchy"] as const);
-}
-
-export interface SfmParams {
-  readonly ransacIterations: number;
-  readonly ransacThresholdPx: number;
-  readonly minTrackLength: number;
-  readonly baMaxIterations: number;
-  readonly robustLoss: RobustLossKind;
-  readonly huberDeltaPx: number;
-}
-
-export function parseSfmParams(value: unknown, at = "$"): SfmParams {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    ransacIterations: remodelRemodelingArtifactGuardInteger(row["ransacIterations"], `${at}.ransacIterations`, {"minimum": 0}),
-    ransacThresholdPx: remodelRemodelingArtifactGuardNumber(row["ransacThresholdPx"], `${at}.ransacThresholdPx`),
-    minTrackLength: remodelRemodelingArtifactGuardInteger(row["minTrackLength"], `${at}.minTrackLength`, {"minimum": 0}),
-    baMaxIterations: remodelRemodelingArtifactGuardInteger(row["baMaxIterations"], `${at}.baMaxIterations`, {"minimum": 0}),
-    robustLoss: parseRobustLossKind(row["robustLoss"], `${at}.robustLoss`),
-    huberDeltaPx: remodelRemodelingArtifactGuardNumber(row["huberDeltaPx"], `${at}.huberDeltaPx`),
-  };
-}
-
-export type TrackClass = "static" | "moving";
-
-export function parseTrackClass(value: unknown, at = "$"): TrackClass {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["static", "moving"] as const);
-}
-
-export type VideoCodec = "avc" | "hevc" | "vp9" | "av1" | "mjpeg" | "unknown";
-
-export function parseVideoCodec(value: unknown, at = "$"): VideoCodec {
-  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["avc", "hevc", "vp9", "av1", "mjpeg", "unknown"] as const);
-}
-
-export interface VideoSource {
-  readonly name: string;
-  readonly container: string;
-  readonly codec: VideoCodec;
-  readonly durationMs: number;
-  readonly frameCount: number;
-  readonly width: number;
-  readonly height: number;
-}
-
-export function parseVideoSource(value: unknown, at = "$"): VideoSource {
-  const row = remodelRemodelingArtifactGuardObject(value, at);
-  return {
-    name: remodelRemodelingArtifactGuardString(row["name"], `${at}.name`),
-    container: remodelRemodelingArtifactGuardString(row["container"], `${at}.container`),
-    codec: parseVideoCodec(row["codec"], `${at}.codec`),
-    durationMs: remodelRemodelingArtifactGuardNumber(row["durationMs"], `${at}.durationMs`),
-    frameCount: remodelRemodelingArtifactGuardInteger(row["frameCount"], `${at}.frameCount`, {"minimum": 0}),
-    width: remodelRemodelingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
-    height: remodelRemodelingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
-  };
-}
+/** 🧾️ Validate the owned ArtifactDialect record. */
+export const parseArtifactDialect=(value:unknown,at="$"):snapshot.ArtifactDialect=>snapshot.decodeRecord(value,snapshot.ARTIFACT_DIALECT_SPEC,at,false) as unknown as snapshot.ArtifactDialect;
+/** 🧾️ Validate the owned ArtifactRef record. */
+export const parseArtifactRef=(value:unknown,at="$"):snapshot.ArtifactRef=>snapshot.decodeRecord(value,snapshot.ARTIFACT_REF_SPEC,at,false) as unknown as snapshot.ArtifactRef;
+/** 🧾️ Validate the owned CalibrationState record. */
+export const parseCalibrationState=(value:unknown,at="$"):snapshot.CalibrationState=>snapshot.decodeRecord(value,snapshot.CALIBRATION_STATE_SPEC,at,false) as unknown as snapshot.CalibrationState;
+/** 🧾️ Validate the owned CameraPosePreview record. */
+export const parseCameraPosePreview=(value:unknown,at="$"):snapshot.CameraPosePreview=>snapshot.decodeRecord(value,snapshot.CAMERA_POSE_PREVIEW_SPEC,at,false) as unknown as snapshot.CameraPosePreview;
+/** 🧾️ Validate the owned CameraTrajectory record. */
+export const parseCameraTrajectory=(value:unknown,at="$"):snapshot.CameraTrajectory=>snapshot.decodeRecord(value,snapshot.CAMERA_TRAJECTORY_SPEC,at,false) as unknown as snapshot.CameraTrajectory;
+/** 🧾️ Validate the owned DenseCloud record. */
+export const parseDenseCloud=(value:unknown,at="$"):snapshot.DenseCloud=>snapshot.decodeRecord(value,snapshot.DENSE_CLOUD_SPEC,at,false) as unknown as snapshot.DenseCloud;
+/** 🧾️ Validate the owned DenseParams record. */
+export const parseDenseParams=(value:unknown,at="$"):snapshot.DenseParams=>snapshot.decodeRecord(value,snapshot.DENSE_PARAMS_SPEC,at,false) as unknown as snapshot.DenseParams;
+/** 🧾️ Validate the owned FeatureParams record. */
+export const parseFeatureParams=(value:unknown,at="$"):snapshot.FeatureParams=>snapshot.decodeRecord(value,snapshot.FEATURE_PARAMS_SPEC,at,false) as unknown as snapshot.FeatureParams;
+/** 🧾️ Validate the owned FrameRef record. */
+export const parseFrameRef=(value:unknown,at="$"):snapshot.FrameRef=>snapshot.decodeRecord(value,snapshot.FRAME_REF_SPEC,at,false) as unknown as snapshot.FrameRef;
+/** 🧾️ Validate the owned GcpObservation record. */
+export const parseGcpObservation=(value:unknown,at="$"):snapshot.GcpObservation=>snapshot.decodeRecord(value,snapshot.GCP_OBSERVATION_SPEC,at,false) as unknown as snapshot.GcpObservation;
+/** 🧾️ Validate the owned GeoParams record. */
+export const parseGeoParams=(value:unknown,at="$"):snapshot.GeoParams=>snapshot.decodeRecord(value,snapshot.GEO_PARAMS_SPEC,at,false) as unknown as snapshot.GeoParams;
+/** 🧾️ Validate the owned GeoProducts record. */
+export const parseGeoProducts=(value:unknown,at="$"):snapshot.GeoProducts=>snapshot.decodeRecord(value,snapshot.GEO_PRODUCTS_SPEC,at,false) as unknown as snapshot.GeoProducts;
+/** 🧾️ Validate the owned GroundControlPoint record. */
+export const parseGroundControlPoint=(value:unknown,at="$"):snapshot.GroundControlPoint=>snapshot.decodeRecord(value,snapshot.GROUND_CONTROL_POINT_SPEC,at,false) as unknown as snapshot.GroundControlPoint;
+/** 🧾️ Validate the owned ImageAsset record. */
+export const parseImageAsset=(value:unknown,at="$"):snapshot.ImageAsset=>snapshot.decodeRecord(value,snapshot.IMAGE_ASSET_SPEC,at,false) as unknown as snapshot.ImageAsset;
+/** 🧾️ Validate the owned IngestParams record. */
+export const parseIngestParams=(value:unknown,at="$"):snapshot.IngestParams=>snapshot.decodeRecord(value,snapshot.INGEST_PARAMS_SPEC,at,false) as unknown as snapshot.IngestParams;
+/** 🧾️ Validate the owned MatchParams record. */
+export const parseMatchParams=(value:unknown,at="$"):snapshot.MatchParams=>snapshot.decodeRecord(value,snapshot.MATCH_PARAMS_SPEC,at,false) as unknown as snapshot.MatchParams;
+/** 🧾️ Validate the owned MediaStream record. */
+export const parseMediaStream=(value:unknown,at="$"):snapshot.MediaStream=>snapshot.decodeRecord(value,snapshot.MEDIA_STREAM_SPEC,at,false) as unknown as snapshot.MediaStream;
+/** 🧾️ Validate the owned MeshParams record. */
+export const parseMeshParams=(value:unknown,at="$"):snapshot.MeshParams=>snapshot.decodeRecord(value,snapshot.MESH_PARAMS_SPEC,at,false) as unknown as snapshot.MeshParams;
+/** 🧾️ Validate the owned MotionParams record. */
+export const parseMotionParams=(value:unknown,at="$"):snapshot.MotionParams=>snapshot.decodeRecord(value,snapshot.MOTION_PARAMS_SPEC,at,false) as unknown as snapshot.MotionParams;
+/** 🧾️ Validate the owned MotionTrackSummary record. */
+export const parseMotionTrackSummary=(value:unknown,at="$"):snapshot.MotionTrackSummary=>snapshot.decodeRecord(value,snapshot.MOTION_TRACK_SUMMARY_SPEC,at,false) as unknown as snapshot.MotionTrackSummary;
+/** 🧾️ Validate the owned QcReportSnapshot record. */
+export const parseQcReportSnapshot=(value:unknown,at="$"):snapshot.QcReportSnapshot=>snapshot.decodeRecord(value,snapshot.QC_REPORT_SPEC,at,false) as unknown as snapshot.QcReportSnapshot;
+/** 🧾️ Validate the owned ReconstructionParams record. */
+export const parseReconstructionParams=(value:unknown,at="$"):snapshot.ReconstructionParams=>snapshot.decodeRecord(value,snapshot.RECONSTRUCTION_PARAMS_SPEC,at,false) as unknown as snapshot.ReconstructionParams;
+/** 🧾️ Validate the owned ReconstructionResults record. */
+export const parseReconstructionResults=(value:unknown,at="$"):snapshot.ReconstructionResults=>snapshot.decodeRecord(value,snapshot.RECONSTRUCTION_RESULTS_SPEC,at,false) as unknown as snapshot.ReconstructionResults;
+/** 🧾️ Validate the owned RemodelingDurableArtifact record. */
+export const parseRemodelingDurableArtifact=(value:unknown,at="$"):snapshot.RemodelingDurableArtifact=>snapshot.decodeRecord(value,snapshot.DURABLE_ARTIFACT_SPEC,at,false) as unknown as snapshot.RemodelingDurableArtifact;
+/** 🧾️ Validate the owned RemodelingMesh record. */
+export const parseRemodelingMesh=(value:unknown,at="$"):snapshot.RemodelingMesh=>snapshot.decodeRecord(value,snapshot.REMODELING_MESH_SPEC,at,false) as unknown as snapshot.RemodelingMesh;
+/** 🧾️ Validate the owned RigExtrinsic record. */
+export const parseRigExtrinsic=(value:unknown,at="$"):snapshot.RigExtrinsic=>snapshot.decodeRecord(value,snapshot.RIG_EXTRINSIC_SPEC,at,false) as unknown as snapshot.RigExtrinsic;
+/** 🧾️ Validate the owned SfmParams record. */
+export const parseSfmParams=(value:unknown,at="$"):snapshot.SfmParams=>snapshot.decodeRecord(value,snapshot.SFM_PARAMS_SPEC,at,false) as unknown as snapshot.SfmParams;
+/** 🧾️ Validate the owned SparseCloud record. */
+export const parseSparseCloud=(value:unknown,at="$"):snapshot.SparseCloud=>snapshot.decodeRecord(value,snapshot.SPARSE_CLOUD_SPEC,at,false) as unknown as snapshot.SparseCloud;
+/** 🧾️ Validate the owned VideoSource record. */
+export const parseVideoSource=(value:unknown,at="$"):snapshot.VideoSource=>snapshot.decodeRecord(value,snapshot.VIDEO_SOURCE_SPEC,at,false) as unknown as snapshot.VideoSource;
+/** 🧾️ Validate the owned WatertightReportSnapshot record. */
+export const parseWatertightReportSnapshot=(value:unknown,at="$"):snapshot.WatertightReportSnapshot=>snapshot.decodeRecord(value,snapshot.WATERTIGHT_REPORT_SPEC,at,false) as unknown as snapshot.WatertightReportSnapshot;
+/** 🧾️ Validate the owned CameraCalibration record. */
+export const parseCameraCalibration=(value:unknown,at="$"):snapshot.CameraCalibration=>snapshot.decodeRecord(value,snapshot.CAMERA_CALIBRATION_SPEC,at,false) as unknown as snapshot.CameraCalibration;

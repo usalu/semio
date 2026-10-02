@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 2_400_000;
 
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   let current = start;
   for (let depth = 0; depth < 32; depth++) {
     if (readdirSync(current).some((n) => n.endsWith("hub") && existsSync(join(current, n, "📦️packages")))) return current;
@@ -37,7 +37,7 @@ function pick(parent: string, pred: (n: string) => boolean): string {
   return join(parent, name);
 }
 
-const repoRoot = findRepoRoot(dirname(fileURLToPath(import.meta.url)));
+const repoRoot = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
 const hubRoot = pick(repoRoot, (n) => n.endsWith("hub") && !n.startsWith("."));
 
 describe("two-client document collaboration fixture", () => {

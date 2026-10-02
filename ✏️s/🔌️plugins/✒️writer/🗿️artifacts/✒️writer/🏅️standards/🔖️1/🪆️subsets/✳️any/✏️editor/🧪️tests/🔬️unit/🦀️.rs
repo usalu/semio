@@ -6,7 +6,7 @@ pub(crate) mod context {
     pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
     
     pub fn main_window_view() -> ViewModel {
-        ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..Default::default() }
+        ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
     
     /// WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
@@ -54,6 +54,8 @@ pub(crate) mod context {
     fn writer_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_writer_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("writer", WriterPlayApp, writer_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> WriterApp {
@@ -171,7 +173,7 @@ use semio_framework_plugin::PluginApp;
 
 async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or(Value::Null)
+    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
 
 /// 🧾️ The live-load wire exactly as the host streams it: `vcs.initialSnapshot` is the snapshot's
@@ -716,7 +718,7 @@ async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
         window_instance_id: None,
         point: None,
     };
-    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &semio_framework_plugin::ViewModel::default(), &registry);
+    let items = WriterPlayApp::context_menu(&request, &doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &registry);
     assert!(items.len() <= 9, "top-level writer context menu should stay progressively disclosed: {items:?}");
     assert_eq!(items.last().map(|item| item.id.as_str()), Some("writer-cut"), "cut must stay the trailing destructive item: {items:?}");
     assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
@@ -774,7 +776,7 @@ async fn window_engagements_include_format_and_lint_possible_engagements() {
 #[semio_framework_async_macros::async_test]
 async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
     let mut app = context::new_app().await;
-    let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let inspection_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(inspection).expect("render JSON");
     // 🗣️ The inspection body renders ONE section, labelled with this app's own `artifact` term —
     // native English "Artifact" (never the German "Artefakt", which is what "by default" means here).
@@ -783,7 +785,7 @@ async fn writer_labels_resolve_native_english_by_default_across_every_surface() 
     // its own vocabulary rather than on a locale regression.
     assert!(inspection_json.contains("\"Artifact\""), "{inspection_json}");
     assert!(!inspection_json.contains("Artefakt"), "{inspection_json}");
-    let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let catalogue_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(catalogue).expect("render JSON");
     assert!(catalogue_json.contains("\"Language\""));
     assert!(catalogue_json.contains("Cypher-inspired"));

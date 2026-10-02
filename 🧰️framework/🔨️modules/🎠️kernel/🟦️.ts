@@ -24,89 +24,7 @@ import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from ".
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
 export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type KernelReturnUiFieldName } from "./📤️return/📦️content/🟦️.ts";
 
-//#region EphemeralLane
-/** 🫧 Process-local box for module ephemeral values. */
-export type EphemeralBox<T> = { current: T };
-
-/** 🫧️ OS-owned authority for ephemeral local-only state. It deliberately has no storage,
- * serialization, history, sync, or undo surface; a shell/runtime may own an isolated instance while
- * module-level helpers share {@link defaultOsTransient}. */
-export class OsTransient {
-  private readonly boxes = new Map<string, EphemeralBox<unknown>>();
-  private readonly maps = new Map<string, Map<unknown, unknown>>();
-  private readonly sets = new Map<string, Set<unknown>>();
-  private readonly weakMaps = new Map<string, WeakMap<object, unknown>>();
-
-  box<T>(key: string, init: T): EphemeralBox<T> {
-    let box = this.boxes.get(key) as EphemeralBox<T> | undefined;
-    if (!box) {
-      box = { current: init };
-      this.boxes.set(key, box as EphemeralBox<unknown>);
-    }
-    return box;
-  }
-
-  map<K, V>(key: string): Map<K, V> {
-    let map = this.maps.get(key) as Map<K, V> | undefined;
-    if (!map) {
-      map = new Map();
-      this.maps.set(key, map as Map<unknown, unknown>);
-    }
-    return map;
-  }
-
-  set<T>(key: string): Set<T> {
-    let set = this.sets.get(key) as Set<T> | undefined;
-    if (!set) {
-      set = new Set();
-      this.sets.set(key, set as Set<unknown>);
-    }
-    return set;
-  }
-
-  weakMap<K extends object, V>(key: string): WeakMap<K, V> {
-    let map = this.weakMaps.get(key) as WeakMap<K, V> | undefined;
-    if (!map) {
-      map = new WeakMap();
-      this.weakMaps.set(key, map as WeakMap<object, unknown>);
-    }
-    return map;
-  }
-
-  /** 🧹️ Drops every local transient allocation owned by this runtime. Existing references remain
-   * valid but are no longer returned by subsequent lookups, matching a shell/session teardown. */
-  reset(): void {
-    this.boxes.clear();
-    this.maps.clear();
-    this.sets.clear();
-    this.weakMaps.clear();
-  }
-}
-
-export const defaultOsTransient = new OsTransient();
-
-/** 🫧 Get-or-create a mutable box keyed for OS draft snapshot.
- * Init is stored as-is — never treat a function-typed `T` as a lazy factory (that would
- * invoke identity/no-op resolvers and leave `.current` undefined). */
-export function ephemeralBox<T>(key: string, init: T): EphemeralBox<T> {
-  return defaultOsTransient.box(key, init);
-}
-
-/** 🫧 Get-or-create a process-local Map owned by the ephemeral lane. */
-export function ephemeralMap<K, V>(key: string): Map<K, V> {
-  return defaultOsTransient.map(key);
-}
-
-/** 🫧 Get-or-create a process-local Set owned by the ephemeral lane. */
-export function ephemeralSet<T>(key: string): Set<T> {
-  return defaultOsTransient.set(key);
-}
-
-/** 🫧 Get-or-create a process-local WeakMap owned by the ephemeral lane. */
-export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V> {
-  return defaultOsTransient.weakMap(key);
-}
-//#endregion EphemeralLane
+export { TransientStore, defaultTransientStore, ephemeralBox, ephemeralMap, ephemeralSet, ephemeralWeakMap, type EphemeralBox } from "./🫧️transient/🟦️.ts";
 
 //#region 📇️DescriptorAdmission
 /** 📇️ Requires a published descriptor with the requested owner before any actor runtime is started. */
@@ -2045,6 +1963,29 @@ export function historyEntryLabelText(label: LocalizedLabel, terminology: string
   return row?.[locale] ?? "";
 }
 
+/** 📢️ Framework-owned EN/DE notices of the store refusals a history-lane dispatch answers outside a history-edit session,
+ * mirrored from Rust `HISTORY_NOTICE_LABELS`; `{n}` is the edit count a refusal names. */
+export const HISTORY_NOTICE_LABELS = [
+  { code: "toolTransaction.open", en: "A tool is still recording — finish or cancel it first.", de: "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen." },
+  { code: "toolTransaction.unknown", en: "The tool's recording has already ended.", de: "Die Aufzeichnung des Werkzeugs ist bereits beendet." },
+  { code: "history.full", en: "This document's history is full ({n} edits).", de: "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen)." },
+] as const;
+
+/** 🔔️ The `{en, de}` notice of a history-lane refusal `code`; `undefined` for any other code. */
+export function historyNotice(code: string): Readonly<{ en: string; de: string }> | undefined {
+  const row = HISTORY_NOTICE_LABELS.find((notice) => notice.code === code);
+  return row === undefined ? undefined : { en: row.en, de: row.de };
+}
+
+/** 📡️ The replay a remote history change needs before this replica adopts it, mirrored from Rust `HistoryRemoteReplay`:
+ * replayed operations of the total, whether the user paused it, and the code of a refused adoption. */
+export type HistoryRemoteReplay = {
+  readonly done: number;
+  readonly total: number;
+  readonly paused?: boolean;
+  readonly fault?: string;
+};
+
 /** 🧾️ Ordered history delta carried with an accepted invocation response. */
 export type HistoryPatch = {
   readonly cursor: number;
@@ -2056,6 +1997,8 @@ export type HistoryPatch = {
   readonly commandFilter?: string;
   /** ⏪️ The live history-edit session in full; absent while none is open. */
   readonly timeTravel?: HistoryTimeTravel;
+  /** 📡️ The remote history change waiting for its replay; absent while none waits. */
+  readonly remoteReplay?: HistoryRemoteReplay;
 };
 
 /**

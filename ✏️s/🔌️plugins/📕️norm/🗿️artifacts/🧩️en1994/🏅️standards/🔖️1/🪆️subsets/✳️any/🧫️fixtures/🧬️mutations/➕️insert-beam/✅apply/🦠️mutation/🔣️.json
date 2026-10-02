@@ -5,6 +5,7 @@
       "id": "beam-new",
       "spanM": 8.0,
       "spacingM": 3.0,
+      "support": "simply_supported",
       "construction": "propped",
       "steel": {
         "designation": "HEB300",
@@ -37,11 +38,10 @@
       },
       "transverseAsM2PerM": 0.00025,
       "ltbLengthM": 4.0,
-      "nCycles": 2000000.0,
-      "support": "simply_supported",
       "asHoggingM2PerM": 0.0005,
       "barSpacingM": 0.15,
       "wkLimitM": 0.0003,
+      "nCycles": 2000000.0,
       "actions": [
         {
           "id": "G-steel",

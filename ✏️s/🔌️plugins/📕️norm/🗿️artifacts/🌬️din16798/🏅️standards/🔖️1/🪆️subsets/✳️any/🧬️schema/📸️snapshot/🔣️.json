@@ -16,7 +16,11 @@
   ],
   "properties": {
     "annex": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ]
     },
     "thetaRmC": {
       "type": "number"
@@ -27,173 +31,13 @@
     "zones": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "usageType",
-          "floorAreaM2",
-          "occupants",
-          "comfortCategory",
-          "pollutionClass",
-          "comfortModel",
-          "tOpWinterC",
-          "tOpSummerC",
-          "airSpeedMS",
-          "clothingClo",
-          "metabolicRateMet",
-          "rhPercent",
-          "outdoorAirSuppliedM3H",
-          "co2Ppm",
-          "illuminanceLx",
-          "noiseDb",
-          "ventSystemId",
-          "turbulenceIntensityPercent",
-          "ventMethod"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "usageType": {
-            "type": "string"
-          },
-          "floorAreaM2": {
-            "type": "number"
-          },
-          "occupants": {
-            "type": "integer"
-          },
-          "comfortCategory": {
-            "type": "string"
-          },
-          "pollutionClass": {
-            "type": "string"
-          },
-          "comfortModel": {
-            "type": "string"
-          },
-          "tOpWinterC": {
-            "type": "number"
-          },
-          "tOpSummerC": {
-            "type": "number"
-          },
-          "airSpeedMS": {
-            "type": "number"
-          },
-          "clothingClo": {
-            "type": "number"
-          },
-          "metabolicRateMet": {
-            "type": "number"
-          },
-          "rhPercent": {
-            "type": "number"
-          },
-          "outdoorAirSuppliedM3H": {
-            "type": "number"
-          },
-          "co2Ppm": {
-            "type": "number"
-          },
-          "illuminanceLx": {
-            "type": "number"
-          },
-          "noiseDb": {
-            "type": "number"
-          },
-          "ventSystemId": {
-            "type": "string"
-          },
-          "turbulenceIntensityPercent": {
-            "type": "number"
-          },
-          "ventMethod": {
-            "type": "string"
-          }
-        }
+        "$ref": "#/$defs/ZoneDocument"
       }
     },
     "ventSystems": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "systemType",
-          "sfpWM3S",
-          "sfpRequiredClass",
-          "heatRecoveryEta",
-          "odaClass",
-          "filterSupClass",
-          "yearsSinceInspection",
-          "humidificationRequiredKgH",
-          "humidificationProvidedKgH",
-          "fanQVM3S",
-          "fanTRunH",
-          "ductClass",
-          "ductTestPressurePa",
-          "ductLeakageM3SM2",
-          "designAirflowM3H"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "systemType": {
-            "type": "string"
-          },
-          "sfpWM3S": {
-            "type": "number"
-          },
-          "sfpRequiredClass": {
-            "type": "integer"
-          },
-          "heatRecoveryEta": {
-            "type": "number"
-          },
-          "odaClass": {
-            "type": "string"
-          },
-          "filterSupClass": {
-            "type": "string"
-          },
-          "yearsSinceInspection": {
-            "type": "integer"
-          },
-          "humidificationRequiredKgH": {
-            "type": "number"
-          },
-          "humidificationProvidedKgH": {
-            "type": "number"
-          },
-          "fanQVM3S": {
-            "type": "number"
-          },
-          "fanTRunH": {
-            "type": "number"
-          },
-          "ductClass": {
-            "type": "string"
-          },
-          "ductTestPressurePa": {
-            "type": "number"
-          },
-          "ductLeakageM3SM2": {
-            "type": "number"
-          },
-          "designAirflowM3H": {
-            "type": "number"
-          }
-        }
+        "$ref": "#/$defs/VentSystemDocument"
       }
     },
     "envelopeN50HInv": {
@@ -285,7 +129,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "comfortCategory": {
           "type": "string",
@@ -581,7 +426,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 255
         },
         "heatRecoveryEta": {
           "type": "number",
@@ -638,7 +484,8 @@
             "unit": "a",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "humidificationRequiredKgH": {
           "type": "number",
@@ -768,5 +615,6 @@
         "🔣️jsonschema"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

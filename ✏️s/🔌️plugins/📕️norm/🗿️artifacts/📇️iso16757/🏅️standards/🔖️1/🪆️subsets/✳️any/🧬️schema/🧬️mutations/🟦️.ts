@@ -1,333 +1,36 @@
-/** 🧬️ Iso16757Mutation — mirrors `Iso16757Mutation` in `🦀️.rs` (29 variants over
- * document-root scalars, catalogue/manufacturer naming, and full create/delete(+rename) coverage
- * of `productGroups`/`products`/`propertyDefinitions`/dictionary `subjects`). `Iso16757Mutation`
- * is EXTERNALLY TAGGED on the wire: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }` (e.g.
- * `{"ChangeExchangeProcess": {"newExchangeProcess": "DetermineProduct"}}`). Every leaf struct and every
- * catalogue record carries `rename_all = "camelCase"` on its value wire and its test serde twin alike, so
- * field names are camelCase. */
-
-export interface LocalizedText {
-  locale: string;
-  text: string;
-}
-
-export interface Names {
-  preferred: LocalizedText;
-  shortName?: string;
-  alternatives: LocalizedText[];
-}
-
-export interface DimensionSignature {
-  length: number;
-  mass: number;
-  time: number;
-  temperature: number;
-}
-
-export interface CatalogueUnit {
-  symbol: string;
-  dimension: DimensionSignature;
-  siFactor: number;
-}
-
-export type NullState = "unavailable" | "unknown" | "notApplicable";
-
-export type CatalogueValue =
-  | { kind: "boolean"; value: boolean }
-  | { kind: "integer"; value: number }
-  | { kind: "decimal"; value: number }
-  | { kind: "text"; value: string }
-  | { kind: "identifier"; value: string }
-  | { kind: "enumeration"; value: string }
-  | { kind: "controlled"; value: string; listId: string }
-  | { kind: "quantity"; value: number; unit: CatalogueUnit }
-  | { kind: "range"; min: number; max: number; unit?: CatalogueUnit }
-  | { kind: "null"; state: NullState }
-  | { kind: "reference"; targetId: string }
-  | { kind: "list"; items: CatalogueValue[] };
-
-export interface Cardinality {
-  min: number;
-  max?: number;
-}
-
-export type PropertyKind = "static" | "dynamic" | "selection" | "external";
-
-export type SubjectKind =
-  | "productGroup"
-  | "productClass"
-  | "productSpecialization"
-  | "catalogueMetadata"
-  | "manufacturerMetadata"
-  | "propertyBlock"
-  | "port"
-  | "inlet"
-  | "outlet"
-  | "inOutlet";
-
-export interface Subject {
-  id: string;
-  kind: SubjectKind;
-  names: Names;
-  definition: LocalizedText;
-  parentId?: string;
-}
-
-export interface ProductGroup {
-  id: string;
-  names: Names;
-  dictionarySubjectId?: string;
-}
-
-export interface ProductClass {
-  id: string;
-  groupId: string;
-  parentId?: string;
-  names: Names;
-  requiredPropertyIds: string[];
-  optionalPropertyIds: string[];
-}
-
-export interface ProductSeries {
-  id: string;
-  classId: string;
-  names: Names;
-  sharedPropertyValues: Record<string, CatalogueValue>;
-  geometryId?: string;
-}
-
-export interface ProductIndex {
-  id: string;
-  productId: string;
-  variantId?: string;
-  searchTags: string[];
-}
-
-export type BoundingBox = {
-  min: [number, number, number];
-  max: [number, number, number];
-};
-
-/** 📦️ Part 2 space envelope. */
-export type Space = {
-  id: string;
-  kind: string;
-  bounds: BoundingBox;
-};
-
-/** 🎨️ Part 2 semantic surface. */
-export type Surface = {
-  id: string;
-  purpose: string;
-  bounds: BoundingBox;
-};
-
-/** 🔌️ Part 2 port definition. */
-export type Port = {
-  id: string;
-  medium: string;
-  position: [number, number, number];
-  direction: [number, number, number];
-  portType: string;
-};
-
-export type GeometryNode =
-  | { node: "primitive"; kind: string; parameters: Record<string, number> }
-  | { node: "transform"; translation: number[]; rotationDeg: number[]; child: GeometryNode }
-  | { node: "boolean"; operator: string; children: GeometryNode[] }
-  | { node: "reference"; geometryId: string };
-
-export interface GeometryObject {
-  id: string;
-  shape?: GeometryNode;
-  symbolic?: GeometryNode;
-  spaces: Space[];
-  surfaces: Surface[];
-  ports: Port[];
-  parameterBindings: Record<string, string>;
-}
-
-export interface PropertyDefinition {
-  id: string;
-  names: Names;
-  dataType: string;
-  unit?: CatalogueUnit;
-  cardinality: Cardinality;
-  kind: PropertyKind;
-  dictionaryPropertyId?: string;
-}
-
-export interface ParameterDomain {
-  parameterId: string;
-  allowedValues: CatalogueValue[];
-  defaultValue?: CatalogueValue;
-}
-
-export interface PropertyValue {
-  definitionId: string;
-  value: CatalogueValue;
-  functionId?: string;
-}
-
-export interface ProductVariant {
-  id: string;
-  parameterValues: Record<string, CatalogueValue>;
-  propertyValues: PropertyValue[];
-  articleNumber?: string;
-  geometryId?: string;
-}
-
-export interface Product {
-  id: string;
-  seriesId: string;
-  names: Names;
-  parameterDomains: ParameterDomain[];
-  variants: ProductVariant[];
-  staticProperties: PropertyValue[];
-}
-
-export type ExchangeProcess = "createFromDictionary" | "provideCatalogue" | "determineProduct" | "integrateIntoSystem" | "exchangeSystemModel";
-
-export type PartNumberRule =
-  | { kind: "literal"; value: string }
-  | { kind: "table"; rows: Record<string, string>[]; outputColumn: string }
-  | { kind: "script"; functionId: string; source: string };
-
-export type ConstraintOperator = "equal" | "notEqual" | "lessThan" | "greaterThan" | "inRange";
-
-export interface SelectionConstraint {
-  propertyId: string;
-  operator: ConstraintOperator;
-  value: CatalogueValue;
-}
-
-export interface ChangeExchangeProcess {
-  newExchangeProcess: ExchangeProcess;
-}
-
-export interface ChangeScriptLimits {
-  newMaxSteps: number;
-  newMaxRecursion: number;
-  newTimeoutMs: number;
-}
-
-export interface ReplacePartNumberRule {
-  newRule: PartNumberRule;
-}
-
-export interface ChangePartNumberInput {
-  key: string;
-  newValue: CatalogueValue;
-}
-
-export interface RemovePartNumberInput {
-  key: string;
-}
-
-export interface ChangeSelectionClass {
-  newClassId: string;
-}
-
-export interface ChangeSelectionSeries {
-  newSeriesId?: string;
-}
-
-export interface AddSelectionConstraint {
-  constraint: SelectionConstraint;
-}
-
-export interface RemoveSelectionConstraint {
-  index: number;
-}
-
-export interface RenameCatalogue {
-  newName: string;
-}
-
-export interface RenameManufacturer {
-  newName: string;
-}
-
-export interface IntroduceProductGroup {
-  productGroup: ProductGroup;
-  index?: number;
-}
-
-export interface RetireProductGroup {
-  id: string;
-}
-
-export interface RenameProductGroup {
-  id: string;
-  newName: string;
-}
-
-export interface IntroduceProduct {
-  product: Product;
-  index?: number;
-}
-
-export interface RetireProduct {
-  id: string;
-}
-
-export interface RenameProduct {
-  id: string;
-  newName: string;
-}
-
-export interface IntroducePropertyDefinition {
-  propertyDefinition: PropertyDefinition;
-  index?: number;
-}
-
-export interface RetirePropertyDefinition {
-  id: string;
-}
-
-export interface IntroduceSubject {
-  subject: Subject;
-  index?: number;
-}
-
-export interface RetireSubject {
-  id: string;
-}
-
-export interface IntroduceProductClass {
-  productClass: ProductClass;
-  index?: number;
-}
-
-export interface RetireProductClass {
-  id: string;
-}
-
-export interface IntroduceProductSeries {
-  productSeries: ProductSeries;
-  index?: number;
-}
-
-export interface RetireProductSeries {
-  id: string;
-}
-
-export interface IntroduceProductIndex {
-  productIndex: ProductIndex;
-  index?: number;
-}
-
-export interface RetireProductIndex {
-  id: string;
-}
-
-export interface IntroduceGeometryObject {
-  geometryObject: GeometryObject;
-}
-
-export interface RetireGeometryObject {
-  id: string;
-}
+/** 🧺️ `Iso16757Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireExternal, type NormWireReader } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { parseRetireSubject, type RetireSubject } from "./✂️retire-subject/🧬️schema/🟦️.ts";
+import { type IntroduceSubject, parseIntroduceSubject } from "./🌳️introduce-subject/🧬️schema/🟦️.ts";
+import { type ChangePartNumberInput, parseChangePartNumberInput } from "./🎛️change-part-number-input/🧬️schema/🟦️.ts";
+import { type ChangeSelectionClass, parseChangeSelectionClass } from "./🎯️change-selection-class/🧬️schema/🟦️.ts";
+import { parseRenameManufacturer, type RenameManufacturer } from "./🏭️rename-manufacturer/🧬️schema/🟦️.ts";
+import { type IntroduceProductClass, parseIntroduceProductClass } from "./🏷️introduce-product-class/🧬️schema/🟦️.ts";
+import { parseRenameProduct, type RenameProduct } from "./🏷️rename-product/🧬️schema/🟦️.ts";
+import { parseRenameCatalogue, type RenameCatalogue } from "./📇️rename-catalogue/🧬️schema/🟦️.ts";
+import { type IntroduceGeometryObject, parseIntroduceGeometryObject } from "./📐introduce-geometry-object/🧬️schema/🟦️.ts";
+import { type IntroducePropertyDefinition, parseIntroducePropertyDefinition } from "./📐️introduce-property-definition/🧬️schema/🟦️.ts";
+import { type IntroduceProductSeries, parseIntroduceProductSeries } from "./📚introduce-product-series/🧬️schema/🟦️.ts";
+import { type IntroduceProduct, parseIntroduceProduct } from "./📦️introduce-product/🧬️schema/🟦️.ts";
+import { type ChangeExchangeProcess, parseChangeExchangeProcess } from "./🔄️change-exchange-process/🧬️schema/🟦️.ts";
+import { parseRemovePartNumberInput, type RemovePartNumberInput } from "./🔌️remove-part-number-input/🧬️schema/🟦️.ts";
+import { type IntroduceProductIndex, parseIntroduceProductIndex } from "./🔎introduce-product-index/🧬️schema/🟦️.ts";
+import { type AddSelectionConstraint, parseAddSelectionConstraint } from "./🔒️add-selection-constraint/🧬️schema/🟦️.ts";
+import { parseRemoveSelectionConstraint, type RemoveSelectionConstraint } from "./🔓️remove-selection-constraint/🧬️schema/🟦️.ts";
+import { parseRenameProductGroup, type RenameProductGroup } from "./🗂️rename-product-group/🧬️schema/🟦️.ts";
+import { parseRetireGeometryObject, type RetireGeometryObject } from "./🗑️retire-geometry-object/🧬️schema/🟦️.ts";
+import { parseRetireProductClass, type RetireProductClass } from "./🗑️retire-product-class/🧬️schema/🟦️.ts";
+import { parseRetireProductIndex, type RetireProductIndex } from "./🗑️retire-product-index/🧬️schema/🟦️.ts";
+import { parseRetireProductSeries, type RetireProductSeries } from "./🗑️retire-product-series/🧬️schema/🟦️.ts";
+import { parseReplacePartNumberRule, type ReplacePartNumberRule } from "./🧮️replace-part-number-rule/🧬️schema/🟦️.ts";
+import { type ChangeSelectionSeries, parseChangeSelectionSeries } from "./🧵️change-selection-series/🧬️schema/🟦️.ts";
+import { parseRetireProductGroup, type RetireProductGroup } from "./🧹️retire-product-group/🧬️schema/🟦️.ts";
+import { type IntroduceProductGroup, parseIntroduceProductGroup } from "./🧺️introduce-product-group/🧬️schema/🟦️.ts";
+import { parseRetirePropertyDefinition, type RetirePropertyDefinition } from "./🧽️retire-property-definition/🧬️schema/🟦️.ts";
+import { type ChangeScriptLimits, parseChangeScriptLimits } from "./🚦️change-script-limits/🧬️schema/🟦️.ts";
+import { parseRetireProduct, type RetireProduct } from "./🚫️retire-product/🧬️schema/🟦️.ts";
 
 export type Iso16757Mutation =
   | { ChangeExchangeProcess: ChangeExchangeProcess }
@@ -359,3 +62,35 @@ export type Iso16757Mutation =
   | { RetireProductIndex: RetireProductIndex }
   | { IntroduceGeometryObject: IntroduceGeometryObject }
   | { RetireGeometryObject: RetireGeometryObject };
+
+export const parseIso16757Mutation: NormWireReader<Iso16757Mutation> = normWireExternal<Iso16757Mutation>({
+  ChangeExchangeProcess: parseChangeExchangeProcess,
+  ChangeScriptLimits: parseChangeScriptLimits,
+  ReplacePartNumberRule: parseReplacePartNumberRule,
+  ChangePartNumberInput: parseChangePartNumberInput,
+  RemovePartNumberInput: parseRemovePartNumberInput,
+  ChangeSelectionClass: parseChangeSelectionClass,
+  ChangeSelectionSeries: parseChangeSelectionSeries,
+  AddSelectionConstraint: parseAddSelectionConstraint,
+  RemoveSelectionConstraint: parseRemoveSelectionConstraint,
+  RenameCatalogue: parseRenameCatalogue,
+  RenameManufacturer: parseRenameManufacturer,
+  IntroduceProductGroup: parseIntroduceProductGroup,
+  RetireProductGroup: parseRetireProductGroup,
+  RenameProductGroup: parseRenameProductGroup,
+  IntroduceProduct: parseIntroduceProduct,
+  RetireProduct: parseRetireProduct,
+  RenameProduct: parseRenameProduct,
+  IntroducePropertyDefinition: parseIntroducePropertyDefinition,
+  RetirePropertyDefinition: parseRetirePropertyDefinition,
+  IntroduceSubject: parseIntroduceSubject,
+  RetireSubject: parseRetireSubject,
+  IntroduceProductClass: parseIntroduceProductClass,
+  RetireProductClass: parseRetireProductClass,
+  IntroduceProductSeries: parseIntroduceProductSeries,
+  RetireProductSeries: parseRetireProductSeries,
+  IntroduceProductIndex: parseIntroduceProductIndex,
+  RetireProductIndex: parseRetireProductIndex,
+  IntroduceGeometryObject: parseIntroduceGeometryObject,
+  RetireGeometryObject: parseRetireGeometryObject,
+});

@@ -21,8 +21,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeStrictMo
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change strict mode to {}", self.new_strict_mode), &format!("Strikten Modus auf {} ändern", self.new_strict_mode))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change strict mode to {}", self.new_strict_mode), &format!("Strikten Modus auf {} ändern", self.new_strict_mode))
     }
 }
 //#endregion 🔖️Payload

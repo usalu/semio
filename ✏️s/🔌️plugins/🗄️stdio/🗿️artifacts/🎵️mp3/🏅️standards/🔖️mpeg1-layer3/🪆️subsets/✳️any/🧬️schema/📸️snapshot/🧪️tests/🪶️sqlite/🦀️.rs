@@ -3,6 +3,21 @@ use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_
 
 fn fixture()->Mp3Snapshot{pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
 #[test]
+fn sqlite_snapshot_mp3_owned_controlled_native_decoder_admits_and_cancels_physical_bytes(){
+ use semio_framework_os_kernel::{io::IoPayload,sqlite_snapshot::SqliteSnapshotPhase};
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🎛️control.json")).unwrap();
+ let limits=SqliteDatabaseLimits::default();let snapshot=fixture();
+ for payload in[IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))]{
+  assert_eq!(Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+  assert!(Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+  for limits in[SqliteDatabaseLimits{max_file_bytes:1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}
+ }
+ let mut snapshot=snapshot;snapshot.frames[0].payload=vec![255;neutral["largeOctetBytes"].as_u64().unwrap()as usize];
+ for payload in[IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))]{
+  let mut reached=false;assert!(Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>=neutral["cancelAt"].as_u64().unwrap()as usize{reached=true;false}else{true}},limits)).is_err());assert!(reached);
+ }
+}
+#[test]
 fn sqlite_snapshot_mp3_authored_grammar_and_protocol_admit_complete_logical_records(){let grammar=dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();let recognizer=dsl::Recognizer::compile(&grammar);for snapshot in[fixture(),Mp3Snapshot::default(),crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🔊️.mp3")).unwrap()]{let text=<Mp3Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);let (_,body)=store::semio_format::split_text_preamble(&text).unwrap();assert!(recognizer.recognize(body).unwrap(),"{body}");}let protocol=dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();assert_eq!(protocol.schema,"stdio.mp3");assert_eq!(protocol.version,1);}
 #[test]
 fn sqlite_snapshot_mp3_native_factory_declares_actual_structural_hash(){let value:serde_json::Value=serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();let codec=(crate::native_codecs()[0].codec)();assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),value["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap());}
@@ -16,9 +31,15 @@ fn sqlite_snapshot_mp3_actual_erased_capability_preserves_binary_and_text(){
 }
 
 #[test]
-fn sqlite_snapshot_mp3_owned_encoding_bounds_precede_printers_and_check_cancellation(){
+fn sqlite_snapshot_mp3_owned_encoding_admits_exact_physical_bounds_and_controls_owned_copies(){
  use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
- let snapshot=fixture();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let mut phases=Vec::new();let error=snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |event|{phases.push(event.phase);true},SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err();assert!(error.contains("native encoding exceeds file byte limit"),"{error}");assert!(phases.contains(&SqliteSnapshotPhase::EncodeNative));let mut large=snapshot.clone();large.frames[0].payload=vec![255;131073];let mut reached=false;assert!(large.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}
+ let snapshot=fixture();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let output=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let physical=match &output{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};
+  assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:physical,..SqliteDatabaseLimits::default()})).unwrap(),output);
+  if encoding==SnapshotEncoding::Binary{assert!(physical<1024);assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).is_ok());}
+  let mut phases=Vec::new();let error=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{phases.push(event.phase);true},SqliteDatabaseLimits{max_file_bytes:physical-1,..SqliteDatabaseLimits::default()})).unwrap_err();assert!(error.contains("limit")||error.contains("bound"),"{error}");assert!(phases.contains(&SqliteSnapshotPhase::EncodeNative));
+  let mut large=snapshot.clone();large.frames[0].payload=vec![255;131073];let mut reached=false;assert!(large.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);
+ }
 }
 fn roundtrip(snapshot:&Mp3Snapshot)->Mp3Snapshot{let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();Mp3Snapshot::from_sqlite_database(&import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
 
@@ -49,4 +70,22 @@ fn sqlite_snapshot_mp3_refuses_malformed_ownership_widths_and_bounds_work(){
 async fn sqlite_snapshot_mp3_actual_declaration_preserves_non_wire_owned_fields(){
  use semio_framework_os_kernel::{io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}},sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase}};
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("MP3 SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();let snapshot=fixture();let dialect:ArtifactDialect=crate::MP3_DIALECT.into();let mut phases=Vec::new();let output=io_export_sqlite_snapshot(&dialect,&snapshot,SnapshotEncoding::Binary,SqliteDatabaseLimits::default(),&mut |event|{phases.push(event.phase);true}).await.unwrap();assert_eq!(io_import_sqlite_snapshot::<Mp3Snapshot>(&dialect,&output.value,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));
+}
+
+#[test]
+fn sqlite_snapshot_mp3_genuine_output_admits_exact_row_and_file_frontiers(){
+ use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
+ use std::{io::Write,process::{Command,Stdio}};
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let rows=expected.tables.iter().map(|table|table.rows.len()).sum::<usize>();assert!(rows>0);
+ let bytes=export_sqlite_database(&expected,limits,&mut |_|true).unwrap();
+ let script=r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const tables=db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all();const rows=tables.reduce((n,t)=>n+Number(db.query('SELECT COUNT(*) AS count FROM "'+t.name.replaceAll('"','""')+'"').get().count),0);await Bun.write(Bun.stdout,String(rows));db.close();"#;
+ let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap().parse::<usize>().unwrap(),rows);
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:rows,..limits})).unwrap();
+  let physical=match &payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};assert!(physical>0);
+  let repeated=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:rows,max_file_bytes:physical,..limits})).unwrap();assert_eq!(repeated,payload);
+  let restored=Mp3Snapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);
+  for restricted in[SqliteDatabaseLimits{max_rows:rows-1,..limits},SqliteDatabaseLimits{max_file_bytes:physical-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted)).is_err(),"{encoding:?}: {restricted:?}");}
+  assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+ }
 }

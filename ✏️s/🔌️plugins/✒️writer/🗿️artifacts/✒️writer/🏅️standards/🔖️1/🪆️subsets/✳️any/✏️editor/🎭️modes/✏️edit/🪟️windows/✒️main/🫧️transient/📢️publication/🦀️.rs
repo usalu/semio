@@ -3,20 +3,21 @@
 use super::{WriterEditorSelection, WriterMainWindowTransient, WriterMainWindowTransientMutation};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint,
-    ArtifactStoreOneItemGrant, SnapshotRetirementStep, retirement::RetireOwned};
+    ArtifactStoreOneItemGrant, SnapshotRetirementStep};
+use semio_framework_value::retirement::RetireOwned;
 
 impl RetireOwned for WriterEditorSelection {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> { store::retirement::leaf((self.start, self.end, self.splice)) }
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf((self.start, self.end, self.splice)) }
 }
 
 impl RetireOwned for WriterMainWindowTransient {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![self.editor_selection.retirement(), self.lint_generation.retirement(), self.engagement_input.retirement()])
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![self.editor_selection.retirement(), self.lint_generation.retirement(), self.engagement_input.retirement()])
     }
 }
 
 impl RetireOwned for WriterMainWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
             Self::SetEditorSelection(value) => value.selection.retirement(),
             Self::SetLintGeneration(value) => value.value.retirement(),
@@ -32,8 +33,8 @@ fn footprint(mutation: &WriterMainWindowTransientMutation) -> Result<ArtifactSto
 }
 
 pub(super) fn owners() -> semio_framework_plugin::WindowTransientOwnerBundle<WriterMainWindowTransient, WriterMainWindowTransientMutation> {
-    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransient>> = Arc::new(store::retirement::OwnedValueRetirementFactory::default());
-    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransientMutation>> = Arc::new(store::retirement::OwnedValueRetirementFactory::default());
+    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransient>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
+    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<WriterMainWindowTransientMutation>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
     let preparation = Arc::new(store::ArtifactEphemeralTaskPreparationFactory::new(footprint, create_task, state.clone(), mutation.clone()));
     semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
 }

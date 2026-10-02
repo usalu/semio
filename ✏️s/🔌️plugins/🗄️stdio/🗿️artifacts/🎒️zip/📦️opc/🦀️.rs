@@ -683,3 +683,9 @@ pub fn sniff_opc_bytes(data: &[u8]) -> bool {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[path="🧩️native/🦀️.rs"]
+pub mod native;

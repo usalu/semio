@@ -30,7 +30,7 @@ use serde::Deserialize;
 
 //#region 🔖️Fixture
 const FIXTURE_JSON: &str = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🔁️incremental-eval.json");
-const HEX_COLUMN_DSL: &str = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
+const HEX_COLUMN_DSL: &str = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

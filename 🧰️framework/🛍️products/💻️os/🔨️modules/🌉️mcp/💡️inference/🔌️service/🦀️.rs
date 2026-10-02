@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_os_kernel::DslValue;
 use semio_framework_os_kernel::os_directory::client::{DocumentHttpPortDeclarationV1,DocumentHttpPortCodeV1,HttpMethod};
-use semio_framework_schema::CompiledDocumentHttpPortV1;
+use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 
 /// 📦 The executable installs owner behavior; transport authority remains with the gateway.
 #[derive(Clone)]

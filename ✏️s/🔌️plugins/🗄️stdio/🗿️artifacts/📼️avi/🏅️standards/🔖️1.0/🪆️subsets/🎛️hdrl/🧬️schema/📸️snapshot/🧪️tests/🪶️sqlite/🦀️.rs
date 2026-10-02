@@ -1,5 +1,23 @@
 use super::*;
 #[test]
+fn sqlite_snapshot_avi_manual_variant_metadata_retains_neutral_choices_under_both_controls(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let mut admitted=|_|true;let mut encoding=dsl::NativeEncodeControl::new(maximum,&mut admitted);let dsl::Shape::Statements(encoded)=<AviStreamFormat as dsl::DslField>::shape_controlled(&mut encoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &encoded{let record=producer.encode(&mut encoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);let exact=encoding.owned_bytes();assert!(exact>0);
+ let mut admitted=|_|true;let mut decoding=dsl::NativeDecodeControl::new(maximum,&mut admitted);let dsl::Shape::Statements(decoded)=<AviStreamFormat as dsl::DslField>::shape_controlled(&mut decoding).unwrap()else{panic!("declared choices")};let mut output=Vec::new();for(keyword,producer)in &decoded{let record=producer.decode(&mut decoding).unwrap();output.push(serde_json::json!([keyword,record.fields.len()]));}assert_eq!(serde_json::json!(output),fixture["variants"]);
+ let mut admitted=|_|true;let mut control=dsl::NativeEncodeControl::new(tiny,&mut admitted);assert!(<AviStreamFormat as dsl::DslField>::shape_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(<AviStreamFormat as dsl::DslField>::shape_controlled(&mut dsl::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(<AviStreamFormat as dsl::DslField>::shape_controlled(&mut dsl::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(<AviStreamFormat as dsl::DslField>::shape_controlled(&mut dsl::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+}
+#[test]
+fn sqlite_snapshot_avi_controlled_native_owner_preserves_full_fixture_and_enforces_caller_limits(){
+ use semio_framework_os_kernel::{io::IoPayload,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl},ArtifactSqliteSnapshot};
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();
+ for payload in[IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))]{
+  assert_eq!(AviSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+  assert!(AviSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+  assert!(AviSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1,..limits})).is_err());
+  assert!(AviSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1,..limits})).is_err());
+ }
+}
+#[test]
 fn sqlite_snapshot_avi_authored_grammar_and_protocol_admit_complete_records() {
     let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
     let recognizer = dsl::Recognizer::compile(&grammar);
@@ -39,9 +57,27 @@ fn sqlite_snapshot_avi_large_intrinsic_copy_and_entities_remain_cancellable(){le
 async fn sqlite_snapshot_avi_actual_declaration_preserves_full_owned_intermediate_state(){use semio_framework_os_kernel::{io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}},sqlite_snapshot::SnapshotEncoding};semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("AVI SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();let snapshot=fixture();let dialect=ArtifactDialect{artifact_kind:"s.stdio.avi".into(),standard:"1.0".into(),subset:"*".into()};let mut phases=Vec::new();let output=io_export_sqlite_snapshot(&dialect,&snapshot,SnapshotEncoding::Binary,SqliteDatabaseLimits::default(),&mut |event|{phases.push(event.phase);true}).await.unwrap();assert_eq!(io_import_sqlite_snapshot::<AviSnapshot>(&dialect,&output.value,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));}
 
 #[test]
-fn sqlite_snapshot_avi_owned_encoding_preflight_checks_bounds_before_allocation(){use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut snapshot=fixture();snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().contains("native encoding exceeds file byte limit"));snapshot.streams[0].chunks[0].data=vec![255;131073];let mut reached=false;assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}}
+fn sqlite_snapshot_avi_owned_encoding_preflight_checks_bounds_before_allocation(){use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut snapshot=fixture();snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().contains("native encoding exceeds file byte limit"));snapshot.streams[0].chunks[0].data=vec![255;131073];let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}}
 
 #[test]
 fn sqlite_snapshot_avi_native_factory_declares_actual_structural_hash(){let value:serde_json::Value=serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();let codec=(crate::native_codecs()[0].codec)();let actual=store::ArtifactCodec::bare::<AviSnapshot,crate::AviMutation>(crate::STDIO_AVI_DOCUMENT_SCHEMA);
 
 assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),semio_framework_hash::hex_lower(&actual.pack_schema_hash));assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),value["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap());}
+
+#[test]
+fn sqlite_snapshot_avi_genuine_output_admits_exact_row_and_file_frontiers(){
+ use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
+ use std::{io::Write,process::{Command,Stdio}};
+ let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let rows=expected.tables.iter().map(|table|table.rows.len()).sum::<usize>();assert!(rows>0);
+ let bytes=export_sqlite_database(&expected,limits,&mut |_|true).unwrap();
+ let script=r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const tables=db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all();const rows=tables.reduce((n,t)=>n+Number(db.query('SELECT COUNT(*) AS count FROM "'+t.name.replaceAll('"','""')+'"').get().count),0);await Bun.write(Bun.stdout,String(rows));db.close();"#;
+ let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap().parse::<usize>().unwrap(),rows);
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+  let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:rows,..limits})).unwrap();
+  let physical=match &payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};assert!(physical>0);
+  let repeated=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:rows,max_file_bytes:physical,..limits})).unwrap();assert_eq!(repeated,payload);
+  let restored=AviSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);
+  for restricted in[SqliteDatabaseLimits{max_rows:rows-1,..limits},SqliteDatabaseLimits{max_file_bytes:physical-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted)).is_err(),"{encoding:?}: {restricted:?}");}
+  assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+ }
+}

@@ -24,8 +24,8 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetC
     fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
         vec![ImperativeConfigMutation::SetContributions(Self { json: base.contributions_json.clone() })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["contributions_json".into()]

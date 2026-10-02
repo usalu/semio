@@ -43,8 +43,8 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), self.dialect.to_coordinate()))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set default {} for \"{}\"", role_name(self.role), self.dialect.to_coordinate()), &format!("Standard-{} für \"{}\" festlegen", role_name_de(self.role), self.dialect.to_coordinate()))
     }
 
     fn target(&self) -> Vec<String> {

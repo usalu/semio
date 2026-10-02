@@ -1,0 +1,257 @@
+{
+  "entries": [
+    {
+      "label": "🧬️\u0000native",
+      "samples": [
+        0,
+        -1,
+        2147483647
+      ],
+      "optional": true
+    },
+    {
+      "label": "",
+      "samples": [],
+      "optional": null
+    }
+  ],
+  "collectionItems": 1024,
+  "cancelAfter": 256,
+  "largeTextBytes": 100000,
+  "tinyBudgetBytes": 32,
+  "integerWords": [
+    "-9223372036854775808",
+    "9223372036854775807"
+  ],
+  "representations": [
+    {
+      "id": "flattened",
+      "output": {
+        "title": "title",
+        "label": "label",
+        "samples": [
+          1,
+          2
+        ],
+        "optional": null
+      }
+    },
+    {
+      "id": "adjacent-empty",
+      "output": {
+        "kind": "empty"
+      }
+    },
+    {
+      "id": "adjacent-item",
+      "output": {
+        "kind": "item",
+        "payload": {
+          "label": "item",
+          "samples": [],
+          "optional": true
+        }
+      }
+    },
+    {
+      "id": "adjacent-named",
+      "output": {
+        "kind": "named",
+        "payload": {
+          "value": "named"
+        }
+      }
+    },
+    {
+      "id": "internal-empty",
+      "output": {
+        "kind": "empty"
+      }
+    },
+    {
+      "id": "internal-item",
+      "output": {
+        "kind": "item",
+        "label": "item",
+        "samples": [],
+        "optional": null
+      }
+    },
+    {
+      "id": "internal-named",
+      "output": {
+        "kind": "named",
+        "value": "named"
+      }
+    },
+    {
+      "id": "external-empty",
+      "output": "Empty"
+    },
+    {
+      "id": "external-item",
+      "output": {
+        "Item": {
+          "label": "item",
+          "samples": [],
+          "optional": null
+        }
+      }
+    },
+    {
+      "id": "external-named",
+      "output": {
+        "Named": {
+          "value": "named"
+        }
+      }
+    },
+    {
+      "id": "transparent",
+      "output": [
+        "one",
+        "two"
+      ]
+    },
+    {
+      "id": "skipped-empty",
+      "output": {}
+    },
+    {
+      "id": "reserved-identifiers",
+      "output": {
+        "Reserved": {
+          "__output": "first",
+          "__wrapper": "second",
+          "entries": "third"
+        }
+      }
+    }
+  ],
+  "frontier": {
+    "nullableSlots": 20000,
+    "intrinsicDepth": 2048,
+    "typedDepth": 128,
+    "typedLimit": 64
+  },
+  "path": {
+    "utf8": "relative/🧬️/native",
+    "octets": [
+      97,
+      237,
+      160,
+      128,
+      98,
+      240,
+      144
+    ],
+    "lossy": "a���b�"
+  },
+  "bindingHygiene": [
+    {
+      "id": "external",
+      "fields": {
+        "control": "controller-field",
+        "__output": "output-field",
+        "__wrapper": "wrapper-field",
+        "__payload": "payload-field",
+        "__tag": "tag-field",
+        "__semio_field_control": "former-alias-field",
+        "__semio_encoding_field_0": "indexed-field",
+        "__source_field_0": "source-alias-field"
+      },
+      "output": {
+        "Named": {
+          "control": "controller-field",
+          "__output": "output-field",
+          "__wrapper": "wrapper-field",
+          "__payload": "payload-field",
+          "__tag": "tag-field",
+          "__semio_field_control": "former-alias-field",
+          "__semio_encoding_field_0": "indexed-field",
+          "__source_field_0": "source-alias-field"
+        }
+      }
+    },
+    {
+      "id": "internal",
+      "fields": {
+        "control": "controller-field",
+        "__output": "output-field",
+        "__wrapper": "wrapper-field",
+        "__payload": "payload-field",
+        "__tag": "tag-field",
+        "__semio_field_control": "former-alias-field",
+        "__semio_encoding_field_0": "indexed-field",
+        "__source_field_0": "source-alias-field"
+      },
+      "output": {
+        "kind": "Named",
+        "control": "controller-field",
+        "__output": "output-field",
+        "__wrapper": "wrapper-field",
+        "__payload": "payload-field",
+        "__tag": "tag-field",
+        "__semio_field_control": "former-alias-field",
+        "__semio_encoding_field_0": "indexed-field",
+        "__source_field_0": "source-alias-field"
+      }
+    },
+    {
+      "id": "adjacent",
+      "fields": {
+        "control": "controller-field",
+        "__output": "output-field",
+        "__wrapper": "wrapper-field",
+        "__payload": "payload-field",
+        "__tag": "tag-field",
+        "__semio_field_control": "former-alias-field",
+        "__semio_encoding_field_0": "indexed-field",
+        "__source_field_0": "source-alias-field"
+      },
+      "output": {
+        "kind": "Named",
+        "payload": {
+          "control": "controller-field",
+          "__output": "output-field",
+          "__wrapper": "wrapper-field",
+          "__payload": "payload-field",
+          "__tag": "tag-field",
+          "__semio_field_control": "former-alias-field",
+          "__semio_encoding_field_0": "indexed-field",
+          "__source_field_0": "source-alias-field"
+        }
+      }
+    }
+  ],
+  "fieldOrder": [
+    "label",
+    "samples",
+    "optional"
+  ],
+  "callerTypeNames": [
+    "Result"
+  ],
+  "emptyEnums": [
+    {
+      "id": "external-empty",
+      "inputs": [
+        null,
+        {},
+        "impossible"
+      ],
+      "inhabited": false
+    },
+    {
+      "id": "tagged-empty",
+      "inputs": [
+        null,
+        {
+          "kind": "impossible"
+        },
+        "impossible"
+      ],
+      "inhabited": false
+    }
+  ]
+}

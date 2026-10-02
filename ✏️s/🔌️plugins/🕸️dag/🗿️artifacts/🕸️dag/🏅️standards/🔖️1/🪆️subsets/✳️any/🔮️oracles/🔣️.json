@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `dag.dag` is a semio-NATIVE port-directed computation graph whose nodes and edges live in a composed `s.stdio.semio.graph` child, so no oracle is registered and the evidence rests on the committed per-kind rejection vectors plus the inverse law over the real committed example document (see noOracleDecisions).",
   "oracles": [
@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library reads or writes dag.dag's .dag.dsl.semio carrier — a port-directed computation graph whose edge endpoints are node@port strings no generic graph format has an opinion about. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-dag-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/move/resize/replace/connect/disconnect/reorder verb entries. It imports nothing from the Rust it judges and transliterates none of it. DagSnapshot persists neither nodes nor edges (one content-addressed child handle only), so no committed fixture carries a decodable graph; all fourteen committed vectors are rejections and this reference reproduces exactly that closed table (thirteen target-missing, one duplicate-id, reorder-nodes self-contained from its own order list) rather than claiming to model a graph it cannot see. All fourteen kinds' forward and inverse scenarios were executed standalone via the repository's own 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐍️python/🐍️.py host against a hand-built plan — all twenty-eight passed on the first run.",
+      "rationale": "🐍️ No third-party library reads or writes dag.dag's .dag.dsl.semio carrier — a port-directed computation graph whose edge endpoints are node@port strings no generic graph format has an opinion about. The reference is therefore a SECOND IMPLEMENTATION rather than a third-party distribution. The implementation is ../../../🧪️tests/mutate-dag-1/🐍️component.py, written from this subset's own committed ../🧬️schema/📸️snapshot/🔣️.json and each mutation's 🧬️.schema.json, and from .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md's create/delete/rename/change/move/resize/replace/connect/disconnect/reorder verb entries. It imports nothing from the Rust it judges and transliterates none of it. DagSnapshot persists neither nodes nor edges (one content-addressed child handle only), so no committed fixture carries a decodable graph; all seventeen committed vectors are rejections and this reference reproduces exactly that closed table (fifteen target-missing — move-nodes naming every dragged id —, one duplicate-id, reorder-nodes self-contained from its own order list) rather than claiming to model a graph it cannot see.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -42,7 +42,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 14,
+          "vectors": 17,
           "capabilitiesCovered": [
             "dag-1-mutate"
           ]
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-node-id",
-              "directoryName": "🧪️rejects"
+              "directoryName": "🧪️rejects-a-duplicate-node-id"
             }
           ]
         },
@@ -154,6 +154,17 @@
             {
               "id": "rejects-moving-a-missing-node",
               "directoryName": "🧪️rejects-moving-a-missing-node"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-nodes",
+          "sourceMutationDirectoryName": "🚚️move-nodes",
+          "mutationDirectoryName": "🚚️move-nodes",
+          "scenarios": [
+            {
+              "id": "rejects-dragging-missing-nodes",
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -211,6 +222,28 @@
               "directoryName": "🧪️rejects"
             }
           ]
+        },
+        {
+          "mutationId": "set-node-positions",
+          "sourceMutationDirectoryName": "📍️set-node-positions",
+          "mutationDirectoryName": "📍️set-node-positions",
+          "scenarios": [
+            {
+              "id": "rejects-placing-a-missing-node",
+              "directoryName": "🧪️rejects"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-slider",
+          "sourceMutationDirectoryName": "🎚️set-slider",
+          "mutationDirectoryName": "🎚️set-slider",
+          "scenarios": [
+            {
+              "id": "rejects-scrubbing-a-missing-slider",
+              "directoryName": "🧪️rejects"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -228,11 +261,6 @@
         "reorder-nodes",
         "connect-nodes",
         "disconnect-nodes",
-        "move-nodes",
-        "set-node-positions",
-        "set-slider"
-      ],
-      "deferredKinds": [
         "move-nodes",
         "set-node-positions",
         "set-slider"
@@ -605,11 +633,5 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    }
-  ]
+  "oracleHostPackages": []
 }

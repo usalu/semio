@@ -3,7 +3,7 @@ use crate::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsAni
 use crate::editor::fem2d::terminology::Fem2dLabels;
 
 fn labels() -> &'static Fem2dLabels {
-    semio_framework_plugin::resolve_labels::<Fem2dLabels>(&semio_framework_plugin::ViewModel::default())
+    semio_framework_plugin::resolve_labels::<Fem2dLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
@@ -72,7 +72,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
             semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
         ],
         focused_window_id: Some("results-left".into()),
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let tag = crate::editor::fem2d::results_window_instance_id(&split).expect("a panel projection resolves a results window");
     assert_eq!(tag, "results-left", "the panel tags the focused results pane");

@@ -8,7 +8,8 @@
 //! `🗣️.dsl.semio` asset is the PRINT of this builder and never a second authority.
 
 use crate::schema::snapshot::{encode_base64, BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "rooms-16";
 pub const ICON: &str = "layout-grid";

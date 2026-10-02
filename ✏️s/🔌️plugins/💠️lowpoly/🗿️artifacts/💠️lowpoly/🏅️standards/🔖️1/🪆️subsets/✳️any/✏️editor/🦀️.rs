@@ -25,14 +25,48 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, DraftView, Editor, EditorApp, EphemeralEmit,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
-};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionRef;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementOption;
+use semio_framework_plugin::WindowEngagementPossible;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use store::ArtifactPack;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -56,8 +90,8 @@ pub fn lowpoly_window_action(action: &str, args: Option<semio_framework::DslValu
 }
 
 /// 🏷️ Admits resolved Lowpoly text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly UI label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -1634,13 +1668,13 @@ fn lowpoly_render(
         LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
         LOWPOLY_PLAY_BODY_ARTIFACT => match &loaded {
             Some(loaded) => document_panel::render(view, loaded, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_ARTIFACT)),
-            None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document"))
+            None => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Failed to load lowpoly document"))
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
         },
         LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_CATALOGUE)),
         LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_INSPECTION)),
         LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_LAYERS)),
-        _ => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}")))
+        _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}")))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1674,6 +1708,17 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     const DIALECT: semio_framework_plugin::app::Dialect = crate::LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
+
+    /// 🖱️ "Use selection" over the mesh domain: a row `lowpoly-document.<object>` names that object for an `object`
+    /// reference, and a row `lowpoly-document.<object>.<granularity>.<n>` names the component number `n` for a reference of
+    /// that granularity (`vertex`, `edge`, `face`); any other row names nothing.
+    fn selection_reference_id(kinds: &[String], row: &str) -> Option<String> {
+        let (object_id, component) = crate::editor::lowpoly::view::parse_mesh_target_id(row)?;
+        match component {
+            None => kinds.iter().any(|kind| kind == "object").then_some(object_id),
+            Some((granularity, number)) => kinds.iter().any(|kind| *kind == granularity).then(|| number.to_string()),
+        }
+    }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(LowpolyArtifactStorePreparationFactory))
@@ -1869,7 +1914,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::lowpoly::config::schema::app_schema_descriptor())
     }
 

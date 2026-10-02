@@ -17,6 +17,7 @@
 //! vocabulary (never redefined locally) — see `engine::geometry::SemioPoint2` and
 //! `subsets::value::schema::snapshot::SemioValueEntry`.
 
+use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value_bin, dec_semio_value_entry, enc_semio_value_bin, enc_semio_value_entry};
@@ -203,17 +204,17 @@ pub(crate) fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
     Ok(GraphEdgeId::new(dec_str(s)?))
 }
 
-/// 🔢 `SemioPoint2`'s `x`/`y` are `f64`; encoded as `hex(x.to_string())`/`hex(y.to_string())`
+/// 🔢 `SemioPoint2`'s `x`/`y` are `f64`; encoded as exact numeric words wrapped in hex
 /// (text-lexeme style — never round-tripped through a binary float type in the TEXT codec), parsed
-/// back with `.parse::<f64>()`. Two flat comma-separated tokens, no wrapping brackets, so they slot
+/// back with the explicit numeric-word parser. Two flat comma-separated tokens, no wrapping brackets, so they slot
 /// directly into an outer bracketed field list (matches this facet's committed grammar).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_point2_fields(p: &SemioPoint2) -> String {
-    format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
+    format!("{},{}", enc_str(&native::NativeF64(p.x).to_string()), enc_str(&native::NativeF64(p.y).to_string()))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_f64_hex(s: &str) -> Result<f64, String> {
-    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
+    native::parse(&dec_str(s)?)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -634,3 +635,9 @@ mod sqlite_tests;
 
 #[path="🪶️sqlite/🦀️.rs"]
 mod sqlite;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

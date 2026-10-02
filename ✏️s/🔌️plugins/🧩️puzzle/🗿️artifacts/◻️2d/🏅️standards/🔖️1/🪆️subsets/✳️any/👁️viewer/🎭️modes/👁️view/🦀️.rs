@@ -5,7 +5,12 @@
 //! are a follow-up, not a purity or completeness requirement.
 
 use crate::viewer::puzzle2d::modes::view::windows::board;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const PUZZLE2D_VIEW_MODE_VIEW: &str = "view";
 

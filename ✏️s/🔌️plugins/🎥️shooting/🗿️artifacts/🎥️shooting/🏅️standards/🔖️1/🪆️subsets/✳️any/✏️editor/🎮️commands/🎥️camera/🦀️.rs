@@ -1,8 +1,8 @@
 //! 🎥️ Shooting play app commands — the saved-camera catalogue and the free/live viewport camera.
 //!
-//! `SetCamera`/`SetCameraDraftLabel`/`LoadSavedCamera` are config-only: the free/live viewport camera is
-//! session-only runtime state, never a document field (see `ShootingConfig::camera`). `SetShotCamera` and
-//! `SaveCamera` ARE real document mutations.
+//! `SetCamera`/`LoadSavedCamera` are config-only: the free/live viewport camera is session-only runtime state, never a
+//! document field (see `ShootingConfig::camera`). `SetShotCamera` and `SaveCamera` ARE real document mutations; the
+//! label `SaveCamera` stores is the text the scene window's camera field submits — typing it publishes nothing.
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
@@ -39,21 +39,19 @@ pub mod save_camera {
     use super::*;
     use crate::standards::v1::subsets::any::schema::next_shooting_id;
 
+    /// 💾️ Saves the live viewport camera under `label` (the submitted camera field; `Camera N` when blank).
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-camera")]
-    pub struct SaveCamera {}
+    pub struct SaveCamera {
+        pub label: String,
+    }
 
-    pub fn handle(_payload: &SaveCamera, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &SaveCamera, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
-        let config = cfg.snapshot;
-        let draft = config.camera_draft_label.trim().to_string();
-        let label = if draft.is_empty() { format!("Camera {}", snapshot.saved_cameras.len() + 1) } else { draft };
-        let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
-        Ok(Emit {
-            artifact_mutations: vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) })],
-            config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: String::new() })],
-            ..Default::default()
-        })
+        let typed = payload.label.trim();
+        let label = if typed.is_empty() { format!("Camera {}", snapshot.saved_cameras.len() + 1) } else { typed.to_string() };
+        let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: cfg.snapshot.camera.clone() };
+        Ok(Emit::mutations(vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) })]))
     }
 }
 //#endregion 🔖️SaveCamera
@@ -77,24 +75,6 @@ pub mod load_saved_camera {
 }
 //#endregion 🔖️LoadSavedCamera
 
-//#region 🔖️SetCameraDraftLabel
-pub mod set_camera_draft_label {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-    #[dsl(keyword = "camera-draft-label")]
-    pub struct SetCameraDraftLabel {
-        pub value: String,
-    }
-
-    /// ⌨️ Every keystroke folds into one config edit (`Emit::amend_config`): the config ledger holds 64
-    /// applied edits and nothing compacts it, so per-keystroke edits would kill the session in minutes.
-    pub fn handle(payload: &SetCameraDraftLabel, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::amend_config(vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: payload.value.clone() })], "camera-draft-label"))
-    }
-}
-//#endregion 🔖️SetCameraDraftLabel
-
 //#region 🔖️SetCamera
 pub mod set_camera {
     use super::*;
@@ -106,10 +86,11 @@ pub mod set_camera {
         pub camera: ShootingCamera,
     }
 
-    /// 🎥️ Every viewport tick folds into one config edit (`Emit::amend_config`) — same 64-edit ledger
-    /// budget as `set_camera_draft_label`; a camera orbit is one gesture, not one edit per pointer move.
+    /// 🎥️ ONE config edit per dispatch: both World3d hosts dispatch `setCamera` once, when a navigation gesture
+    /// settles (React debounced at its end, wgpu on camera settle), so a camera orbit is one edit, never one per
+    /// pointer move (design §20.1: no amend on any lane).
     pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::amend_config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: payload.camera.clone() })], "camera"))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: payload.camera.clone() })]))
     }
 }
 //#endregion 🔖️SetCamera

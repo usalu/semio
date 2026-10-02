@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -7,7 +9,7 @@ import { dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { startAssetServer } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
 import { nativeRuntimeDirectory } from "./📦️modules/🟦️.ts";
 
@@ -83,7 +85,7 @@ class RunScript extends BundleScript {
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
-      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => startAssetServer(repo, 0, row.assets) : undefined);
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev", SEMIO_PLUGIN_MODULES: runtime }, repo, controller.signal, row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

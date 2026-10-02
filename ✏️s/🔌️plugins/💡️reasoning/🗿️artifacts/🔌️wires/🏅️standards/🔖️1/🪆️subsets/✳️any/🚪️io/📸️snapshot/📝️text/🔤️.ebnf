@@ -1,3 +1,12 @@
-(* ebnf reasoning.wires.snapshot *)
-document = header, body ;
-header = 'schema', space, 'reasoning.wires.snapshot', newline ;
+document = "semio", "reasoning.wires.dsl", "v1", snapshot ;
+snapshot = snapshot-field, { snapshot-field } ;
+snapshot-field = "fixture-root", "=", integer | "meta-root", "=", integer | "content", "=", child | "nodes", "=", "[", { node }, "]" ;
+child = "child_id", "=", text, "target", "=", target ;
+target = "artifact-id", "=", text, "artifact-kind", "=", text, "standard", "=", text, "subset", "=", text ;
+node = "{", "kind", "=", kind, { node-field }, "}" ;
+kind = "null" | "boolean" | "unsigned" | "signed" | "float" | "text" | "bytes" | "array" | "object" ;
+node-field = "boolean", "=", boolean | "unsigned", "=", integer | "signed", "=", integer | "float", "=", number | "text", "=", text | "bytes", "=", quoted-base64 | "items", "=", "[", { integer }, "]" | "members", "=", "[", { member }, "]" ;
+member = "{", "name", "=", text, "value", "=", integer, "}" ;
+boolean = "true" | "false" ;
+number = integer | real | exact-ieee-word | infinity ;
+text = quoted-text | identifier ;

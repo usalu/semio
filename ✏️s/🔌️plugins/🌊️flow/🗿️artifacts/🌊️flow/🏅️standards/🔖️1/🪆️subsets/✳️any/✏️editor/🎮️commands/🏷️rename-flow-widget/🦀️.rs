@@ -75,5 +75,5 @@ pub fn rename_edit(payload: &RenameFlowWidget, composed: &FlowSnapshot) -> Resul
     }
     let next = renamed_fixture(composed, &payload.old_id, &payload.value).ok_or_else(|| refuse("flow.widget-id-unavailable", format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim())))?;
     let scene = crate::flow_working_scene(&next);
-    Ok(crate::editor::flow::flow_scene_publication(composed, &scene.widgets, &scene.synapses, &scene.layout))
+    crate::editor::flow::flow_scene_publication(composed, &scene.widgets, &scene.synapses, &scene.layout)
 }

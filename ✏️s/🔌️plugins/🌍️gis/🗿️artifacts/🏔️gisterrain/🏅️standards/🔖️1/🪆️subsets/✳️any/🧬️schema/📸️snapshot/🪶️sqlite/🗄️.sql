@@ -1,0 +1,3 @@
+CREATE TABLE gis_terrain_document (id INTEGER PRIMARY KEY);
+CREATE TABLE gis_terrain_parameters (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), exaggeration REAL, imported_features_json TEXT NOT NULL, exaggeration_ieee754_bits INTEGER NOT NULL, exaggeration_numeric_class TEXT NOT NULL CHECK(exaggeration_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')));
+CREATE TABLE gis_terrain_mesh_child (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), child_id TEXT NOT NULL, artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);

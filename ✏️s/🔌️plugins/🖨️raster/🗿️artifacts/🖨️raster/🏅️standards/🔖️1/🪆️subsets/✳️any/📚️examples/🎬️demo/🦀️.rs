@@ -1,7 +1,8 @@
 //! 📚️ Example `demo`.
 
 use crate::RasterImageAsset;
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "demo";
 pub fn label() -> LocalizedLabel {

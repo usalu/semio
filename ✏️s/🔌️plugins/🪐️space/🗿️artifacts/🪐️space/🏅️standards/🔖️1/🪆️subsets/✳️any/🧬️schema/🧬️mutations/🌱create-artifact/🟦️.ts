@@ -1,16 +1,3 @@
-/** 🌱 Direct `create-artifact` payload. */
-export interface SpaceArtifactRow {
-  id: string;
-  name: string;
-  kindId: string;
-  schema: string;
-  dialect: { artifactKind: string; standard: string; subset: string };
-  createdAtMs: number;
-  createdBy: string;
-  updatedAtMs: number;
-  updatedBy: string;
-}
-
-export interface CreateArtifact {
-  artifact: SpaceArtifactRow;
-}
+/** 🌱️ The direct mutation carries the same full persisted occurrence type. */
+import type{SpaceArtifactRow}from"../../📸️snapshot/🟦️.ts";
+export interface CreateArtifact{artifact:SpaceArtifactRow}

@@ -43,7 +43,7 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.actions.len(), 1);
     assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
     assert!(
-        semio_framework::Terminology::ALL.iter().all(|&terminology| def.label.resolve(terminology, semio_framework::Locale::En) != def.label.resolve(terminology, semio_framework::Locale::De)),
+        semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| def.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != def.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
         "the window label is really translated"
     );
 }
@@ -177,7 +177,7 @@ async fn the_window_declares_the_camera_verb_the_world3d_host_dispatches() {
     let camera = action.args.iter().find(|arg| arg.id == "camera").expect("the camera argument is declared");
     assert!(camera.required, "the pose is the whole payload");
     assert!(
-        semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)),
+        semio_framework_ui_locale::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework_ui_locale::Locale::En) != action.label.resolve(terminology, semio_framework_ui_locale::Locale::De)),
         "the camera verb is really translated"
     );
 }

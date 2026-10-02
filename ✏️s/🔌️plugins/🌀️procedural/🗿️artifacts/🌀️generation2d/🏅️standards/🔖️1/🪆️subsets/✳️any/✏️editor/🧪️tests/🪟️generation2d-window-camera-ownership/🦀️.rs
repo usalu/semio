@@ -176,7 +176,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                         id: row["id"].as_str().expect("window id").into(),
                         window_kind_id: row["windowKindId"].as_str().expect("window kind").into(),
                     }).collect(),
-                    ..Default::default()
+                    ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
                 };
                 let main_left = all.for_window_instance("main-left").expect("main-left");
                 let main_right = all.for_window_instance("main-right").expect("main-right");
@@ -283,8 +283,8 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     if !reopened_terminal_empty { return Err("reopened Generation2d app was not terminal-empty after close".into()); }
 
                     let exact_rejections = [
-                        (flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()), "generation2d-main-window-required"),
-                        (flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }, Default::default()), "generation2d-main-window-stale"),
+                        (flow::config::addressed(&ViewModel { window_id: None, window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, Default::default()), "generation2d-main-window-required"),
+                        (flow::config::addressed(&ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, Default::default()), "generation2d-main-window-stale"),
                         (flow::config::addressed(&foreign, Default::default()), "generation2d-main-window-kind-required"),
                     ];
                     for (observed, expected) in exact_rejections {
@@ -293,7 +293,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let mut rejection_faults = Vec::with_capacity(6);
                     for (view, case, public_fault) in [
                         (None, "generation2d-main-window-view-required", "registered fixture typed operation fault: retained command reducer rejected operation"),
-                        (Some(ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..Default::default() }), "generation2d-main-window-stale", "window-config.window-context"),
+                        (Some(ViewModel { window_id: Some("missing".into()), window_instances: all.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), "generation2d-main-window-stale", "window-config.window-context"),
                         (Some(foreign.clone()), "generation2d-main-window-kind-required", "registered fixture typed operation fault: retained command reducer rejected operation"),
                     ] {
                         let (mut rejected, observed) = Box::pin(retained_rejection(view)).await;

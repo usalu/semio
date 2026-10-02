@@ -1,9 +1,11 @@
+import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { FONT_ASSET } from "../../../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { playgroundAssetVitePlugins, type AssetServeMode, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, type PlaygroundAssetSpec } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
@@ -19,8 +21,8 @@ export type WgpuBrowserConfiguration = {
   readonly libraryRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
-  readonly assets: readonly PlaygroundAssetSpec[];
-  readonly assetServeMode: AssetServeMode;
+  readonly assets: readonly AssetDeliveryDeclarationV1[];
+  readonly assetServeMode: AssetDeliveryModeV1;
 };
 
 /** ♻️ Reloads browsers only after Nx activation publishes its completion marker. */
@@ -104,7 +106,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
       ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }).filter(plugin => plugin.apply !== "build")),
-      ...playgroundAssetVitePlugins(options.workspace, options.assets, options.assetServeMode),
+      ...createAssetBuildPluginsV1(options.workspace, options.assets, PLAYGROUND_ASSET_PROVIDERS_V1, options.assetServeMode),
       {
         name: "wgpu-artifact-route-boundary",
         enforce: "pre",

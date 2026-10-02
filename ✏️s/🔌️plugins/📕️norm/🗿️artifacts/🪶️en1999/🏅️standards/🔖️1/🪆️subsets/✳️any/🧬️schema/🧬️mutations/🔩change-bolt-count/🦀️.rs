@@ -32,7 +32,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeBoltCount 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change number of bolts", "Schraubenanzahl ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change number of bolts", "Schraubenanzahl ändern")
     }
 }

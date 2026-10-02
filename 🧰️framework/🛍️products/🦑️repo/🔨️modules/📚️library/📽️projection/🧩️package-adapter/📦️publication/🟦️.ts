@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { semanticPackageAdapterPreview } from "../../../🔍️discovery/🟦️.ts";
-import { canonicalJson } from "../../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 
 /** 🧩️ Emits or verifies exactly the schema-owned JCO Cargo library adapter. */
 export function runNestedCargoPackageAdapter(repoRoot: string, mode: string): void {

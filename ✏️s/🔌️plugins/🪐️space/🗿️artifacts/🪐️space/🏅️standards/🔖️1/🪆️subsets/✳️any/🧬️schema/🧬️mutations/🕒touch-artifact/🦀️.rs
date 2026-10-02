@@ -29,8 +29,8 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Touch artifact \"{}\"", self.id), &format!("Artefakt \"{}\" als geändert markieren", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Touch artifact \"{}\"", self.id), &format!("Artefakt \"{}\" als geändert markieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution to the repository test platform: the `mp4` 0.14 reference reader/writer registered specifically for ISO-BMFF `any`-subset mutation coverage, the exhaustive Mp4Mutation vocabulary it is measured against (10 kinds), and the lossless structural comparison profile a real H.264 mux/demux round trip through two independently written muxers needs. No shared entry in ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json references the `mp4` package at all, so this id/capability pair is wholly this subset's own.",
   "oracles": [
@@ -18,7 +18,7 @@
       "testOnly": true,
       "homepage": "https://github.com/alfg/mp4-rust",
       "rationale": "The reference ISO-BMFF reader/writer of the Rust ecosystem. Unlike several of this wave's other reference crates it genuinely both reads AND writes: `Mp4Reader::read_header`/`read_sample` parse a real `moov`/`mdat` into typed tracks and samples, and `Mp4Writer::write_start`/`add_track`/`write_sample`/`write_end` re-mux a fresh, real, spec-valid file from them (confirmed against the real derived fixture before this manifest was written — a round trip through `mp4` alone reproduces every sample's payload bytes exactly). Every declared mutation kind is therefore performed for real through `mp4`'s own writer, not synthesized, and scenarios are typed `@mode-differential` per the fleet brief. `mp4`'s public surface only covers a single AVC (h264) `avc1` sample entry per track with a single SPS/single PPS and a hardcoded 4-byte NAL length size — the exact shape of the real fixture's own H.264 stream, so this is not a narrowing the oracle imposes, it is the format the real input already is.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+      "hostPath": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
       "kind": "third-party-library",
       "engine": {
         "family": "mp4-rust",
@@ -669,5 +669,6 @@
       "family": "mp4-carrier",
       "notes": "Handcrafted Mp4Snapshot before/after pair on the same committed single-track AVC/H.264 base as set-sample-sync. PatchSnapshot{edits:[set /tracks/0/width = 32]} is the editor's compact path-addressed patch: the tkhd width changes in place and every sample, the codec and the movie header stay untouched."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -228,3 +228,44 @@ fn the_in_place_painter_equals_the_whole_image_job() {
     assert_eq!(paint_stroke_in_place(&mut untouched, &PixelOperation::Stroke(PixelBrush { points: vec![[90.0, 90.0]], size: 2.0, opacity: 1.0, hardness: 1.0, color: [1, 2, 3, 255], erase: false }), None).unwrap(), None);
     assert_eq!(untouched, source, "a stroke out of reach changes nothing");
 }
+
+/// 🪣️ The flood region agrees with the shared contract — the Python BFS oracle that wrote it and the TypeScript twin — and
+/// refuses a seed outside the image or a selection of another extent.
+#[test]
+fn flood_selection_language_neutral_cases() {
+    let fixture = fixture();
+    for row in fixture["floodSelections"].as_array().unwrap() {
+        let image = RasterImage { width: row["image"]["width"].as_u64().unwrap() as u32, height: row["image"]["height"].as_u64().unwrap() as u32, pixels: bytes(&row["image"]["pixels"]) };
+        let selection = row.get("selection").map(bytes);
+        let seed = (row["seed"][0].as_u64().unwrap() as u32, row["seed"][1].as_u64().unwrap() as u32);
+        let mask = flood_selection(&image, seed.0, seed.1, row["tolerance"].as_u64().unwrap() as u8, selection.as_deref()).unwrap();
+        assert_eq!(mask, bytes(&row["expected"]), "{}", row["name"]);
+    }
+    let image = RasterImage { width: 2, height: 1, pixels: vec![0; 8] };
+    assert!(flood_selection(&image, 2, 0, 0, None).is_err(), "a seed outside the image");
+    assert!(flood_selection(&image, 0, 0, 0, Some(&[255])).is_err(), "a selection of another extent");
+}
+
+/// 🪣️ The in-place region filler is byte-identical to the whole-image job under the same coverage: a colour fill and an
+/// alpha fill over a flood region and over a graded coverage; a coverage of another extent and a non-fill are refused.
+#[test]
+fn the_in_place_filler_equals_the_whole_image_job() {
+    let (width, height) = (19_u32, 13_u32);
+    let source = RasterImage { width, height, pixels: (0..width * height * 4).map(|index| ((index * 53 + index / 5) % 256) as u8).collect() };
+    let flood = flood_selection(&source, 4, 6, 120, None).unwrap();
+    let graded: Vec<u8> = (0..width * height).map(|index| [0, 64, 255, 128, 255, 0, 17][(index % 7) as usize]).collect();
+    for operation in [PixelOperation::Fill([200, 30, 90, 180]), PixelOperation::Fill([0, 0, 0, 255]), PixelOperation::AlphaFill { alpha: 40, opacity: 0.6 }] {
+        for coverage in [&flood, &graded] {
+            let mut job = PixelEditJob::new(source.clone(), operation.clone(), Some(coverage.clone())).unwrap();
+            while !job.advance(4096).unwrap().done {}
+            let mut filled = source.clone();
+            assert!(fill_in_place(&mut filled, &operation, coverage).unwrap());
+            assert_eq!(filled, job.into_result().unwrap(), "{operation:?}");
+        }
+    }
+    assert!(fill_in_place(&mut source.clone(), &PixelOperation::Invert, &graded).is_err(), "only a fill fills in place");
+    assert!(fill_in_place(&mut source.clone(), &PixelOperation::Fill([1, 2, 3, 255]), &[255; 3]).is_err(), "a coverage covers the image exactly");
+    let mut untouched = source.clone();
+    assert!(!fill_in_place(&mut untouched, &PixelOperation::Fill([1, 2, 3, 255]), &vec![0; (width * height) as usize]).unwrap());
+    assert_eq!(untouched, source, "an empty region changes nothing");
+}

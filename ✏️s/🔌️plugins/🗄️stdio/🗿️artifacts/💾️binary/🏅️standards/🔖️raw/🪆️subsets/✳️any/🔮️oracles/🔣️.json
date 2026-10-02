@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform: the exhaustive BinaryMutation vocabulary for stdio.binary raw/✳️any, and the recorded no-oracle decision that backs it. A raw byte buffer has no format, so there is nothing for a third-party library to be authoritative about — no crate was hunted for and none is registered. See the decision's own rationale below.",
   "oracles": [],
@@ -287,5 +287,6 @@
       "family": "binary-carrier",
       "notes": "TruncateAt{offset:4} drops everything from offset 4 onward."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

@@ -1,26 +1,42 @@
+import { requireRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import "../🧬️mutation-authority/🟦️.ts";
+import "../🧾️canonical-json/🟦️.ts";
+import { mutationRoot, prepareMutationFixtureRoot, mutationFixtureRoot } from "../🧬️mutation-authority/🧫️fixture/🟦️.ts";
+import { wasmOutputDirectory } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelAtLeast, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, daemonBudgetMs, orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import toml from "@iarna/toml";
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
 import fastGlob from "fast-glob";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, closeSync, constants, copyFileSync, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { parseArgs } from "node:util";
 import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
-import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, loadNormalizationTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, artifactProjectionTail, generatorInputPaths, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan } from "../../🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { loadTaxonomy as loadSourceTaxonomy } from "../../🧹️normalization/🔣️taxonomy/🟦️.ts";
+import { taxonomyScopedGitPathspec } from "../../🧹️normalization/🚪️source-admission/🟦️.ts";
+import { type TaxonomyProgress } from "../../🧹️normalization/🏃️operation/🟦️.ts";
 import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";
 import "../../🧹️normalization/🧪️tests/🚪️source-admission/🟦️";
 import { mutationTaxonomySourceIndex } from "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";
-import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, policyMutationStructuralBreaches, policyMutationStructuralBreachesView } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
+import { MUTATION_STRUCTURAL_POLICY_KINDS, policyMutationStructuralBreaches, policyMutationStructuralBreachesView } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
 import { mutationTaxonomyStructuralView } from "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
 import { planMutationTaxonomy, runMutationTaxonomyCli } from "../../🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
 import { inventoryMutationTaxonomy } from "../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
@@ -348,8 +364,8 @@ describe("Flow compiler output boundaries", () => {
     const text = readFileSync(join(flow, "🫀️core/🧪️bindings.json"), "utf8"), vector = JSON.parse(text);
     expect(parseJsonc(text)).toEqual(vector);
     const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    expect(library.wasmOutputDirectory(flow, vector.outputDirectory)).toBe(join(flow, vector.outputDirectory));
-    for (const outputDirectory of vector.invalidDirectories) expect(() => library.wasmOutputDirectory(flow, outputDirectory)).toThrow();
+    expect(wasmOutputDirectory(flow, vector.outputDirectory)).toBe(join(flow, vector.outputDirectory));
+    for (const outputDirectory of vector.invalidDirectories) expect(() => wasmOutputDirectory(flow, outputDirectory)).toThrow();
     const taxonomy = loadTaxonomy();
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     for (const parent of vector.owners) {
@@ -396,7 +412,7 @@ describe("package language semantic handoff", () => {
     expect(parseJsonc(readFileSync(join(inputRoot, "🔣️.json"), "utf8"))).toEqual(vector);
     const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "mutationDomainOwnerLocation", "canonicalDirectory"]);
+    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "mutationDomainOwnerLocation", "mutationFixtureMirrorOwnerPath", "canonicalDirectory"]);
     const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
     expect(declarations).toHaveLength(names.size);
     const code = declarations.map((node) => node.getText(syntax)).join("\n") + "\nreturn canonicalDirectory;";
@@ -543,11 +559,8 @@ describe("package language semantic handoff", () => {
     const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
     const imports = syntax.statements.filter(ts.isImportDeclaration);
-    expect(imports).toHaveLength(1);
-    expect((imports[0]!.moduleSpecifier as import("typescript").StringLiteral).text).toBe("@semio-tech/repo-lib");
-    const named = imports[0]!.importClause?.namedBindings;
-    expect(named && ts.isNamedImports(named)).toBe(true);
-    expect(named && ts.isNamedImports(named) ? named.elements.map(node => node.name.text).sort() : []).toEqual([...expected.imports].sort());
+    expect(imports.map(row => ({ module: (row.moduleSpecifier as import("typescript").StringLiteral).text, names: row.importClause?.namedBindings && ts.isNamedImports(row.importClause.namedBindings) ? row.importClause.namedBindings.elements.map(node => node.name.text).sort() : [] }))).toEqual(expected.moduleImports);
+    expect(expected.moduleImports.flatMap((row: { names: string[] }) => row.names).sort()).toEqual(expected.imports);
     expect(syntax.statements.every(node => ts.isImportDeclaration(node) || ts.isClassDeclaration(node) || ts.isVariableStatement(node) || ts.isIfStatement(node))).toBe(true);
     expect(syntax.statements.filter(ts.isClassDeclaration).map(node => node.name?.text)).toEqual(["TestScript", "CheckWasmScript"]);
     const transformed = ts.transform(syntax, [(context) => {
@@ -570,10 +583,10 @@ describe("package language semantic handoff", () => {
       let router: ScriptRouter | undefined, active = 0, refuse = false;
       const calls: unknown[][] = [], events: string[] = [];
       const dependencies = {
-        BundleScript, ScriptRouter, buildBudgetMs: library.buildBudgetMs,
-        runBundleScriptMain: async (value: ScriptRouter, url: string, ...rest: unknown[]) => { expect(url).toBe("resident-source-only"); expect(rest).toEqual([]); router = value; },
-        runCargoTestBudgeted: async (...args: unknown[]) => { calls.push(args); },
-        runTestBudgeted: async (command: string, args: string[], options: { cwd: string; budgetMs: number; env?: NodeJS.ProcessEnv }) => {
+        BundleScript, ScriptRouter, resolve, readCargoTestPolicyV1: (environment:unknown) => {expect(environment).toBe(process.env);return {version:1};}, buildBudgetMs: buildBudgetMs,
+        runScriptMain: async (value: ScriptRouter, ...rest: unknown[]) => { expect(rest).toEqual([]); router = value; },
+        runCargoTestsV1: async (...args: unknown[]) => { calls.push(args); },
+        runBudgetedTestCommand: async (command: string, args: string[], options: { cwd: string; budgetMs: number; env?: NodeJS.ProcessEnv }) => {
           expect(++active).toBe(1); calls.push([command, args, options]); events.push("start:" + args.at(-1));
           await Promise.resolve(); active--; events.push("end:" + args.at(-1));
           if (refuse) throw new Error("command refused");
@@ -585,16 +598,15 @@ describe("package language semantic handoff", () => {
       expect(router).toBeInstanceOf(ScriptRouter);
       expect(router!.usage()).toBe("bun ./📜️script.ts <test|check-wasm> [args…]");
       await router!.run(["test"]);
-      expect(calls).toEqual([[[expected.cargo.package.name], root, ["--lib"]]]);
+      expect(calls).toEqual([[{manifestPath:join(packageRoot,"Cargo.toml"),packages:[expected.cargo.package.name],cwd:packageRoot,extraArgs:["--lib"]},{version:1}]]);
       calls.length = 0;
       await router!.run(["check-wasm"]);
-      expect(calls).toEqual(expected.wasmTargets.map((target: string) => ["cargo", ["check", "-p", expected.cargo.package.name, "--lib", "--target", target], { cwd: root, budgetMs: library.buildBudgetMs() }]));
+      expect(calls).toEqual(expected.wasmTargets.map((target: string) => ["cargo", ["check", "--manifest-path", "Cargo.toml", "--lib", "--target", target], { cwd: packageRoot, budgetMs: buildBudgetMs() }]));
       expect(events).toEqual(expected.wasmTargets.flatMap((target: string) => ["start:" + target, "end:" + target]));
       calls.length = 0;
       for (const command of ["test", "check-wasm"]) await expect(router!.run([command, "unexpected"])).rejects.toThrow("accepts no arguments");
       expect(calls).toEqual([]);
-      const exit = spyOn(process, "exit").mockImplementation((() => { throw new Error("rejected command"); }) as never);
-      try { await expect(router!.run(["unknown"])).rejects.toThrow("rejected command"); } finally { exit.mockRestore(); }
+      await expect(router!.run(["unknown"])).rejects.toThrow('unknown command "unknown"');
       expect(calls).toEqual([]);
       refuse = true;
       await expect(router!.run(["check-wasm"])).rejects.toThrow("command refused");
@@ -698,10 +710,8 @@ describe("package language semantic handoff", () => {
     }));
     expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
     const imports = syntax.statements.filter(ts.isImportDeclaration);
-    expect(imports).toHaveLength(1);
-    expect((imports[0]!.moduleSpecifier as import("typescript").StringLiteral).text).toBe("@semio-tech/repo-lib");
-    const named = imports[0]!.importClause?.namedBindings;
-    expect(named && ts.isNamedImports(named) ? named.elements.map((node) => node.name.text).sort() : []).toEqual([...expected.imports].sort());
+    expect(imports.map(row => ({ module: (row.moduleSpecifier as import("typescript").StringLiteral).text, names: row.importClause?.namedBindings && ts.isNamedImports(row.importClause.namedBindings) ? row.importClause.namedBindings.elements.map(node => node.name.text).sort() : [] }))).toEqual(expected.moduleImports);
+    expect(expected.moduleImports.flatMap((row: { names: string[] }) => row.names).sort()).toEqual(expected.imports);
     expect(syntax.statements.filter(ts.isClassDeclaration).map((node) => node.name?.text)).toEqual(["TestScript", "CheckScript", "CheckWasmScript"]);
     const originalLevel = process.env.SEMIO_TEST_LEVEL, originalCoverage = process.env.SEMIO_COVERAGE;
     let dynamicImports = 0;
@@ -735,10 +745,10 @@ describe("package language semantic handoff", () => {
         const imported: string[] = [], called: string[] = [];
         const calls: unknown[][] = [];
         const dependencies = {
-          BundleScript, ScriptRouter, buildBudgetMs: library.buildBudgetMs, resolveTestLevel: library.resolveTestLevel,
-          runBundleScriptMain: async (value: ScriptRouter, url: string, ...rest: unknown[]) => { expect(url).toBe("ui-host-source-only"); expect(rest).toEqual([]); router = value; },
-          runCargoTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
-          runTestBudgeted: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
+          BundleScript, ScriptRouter, resolve, readCargoTestPolicyV1: (environment:unknown) => {expect(environment).toBe(process.env);return {version:1};}, buildBudgetMs: buildBudgetMs, resolveTestLevel: resolveTestLevel,
+          runScriptMain: async (value: ScriptRouter, ...rest: unknown[]) => { expect(rest).toEqual([]); router = value; },
+          runCargoTestsV1: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
+          runBudgetedTestCommand: async (...args: unknown[]) => { calls.push(args); if (refuse) throw new Error("native delegation refused"); },
           loadInputFixture: async (specifier: string) => {
             const oracle = oracles.find((row) => row.importSpecifier === specifier);
             expect(oracle, specifier).toBeDefined();
@@ -759,7 +769,7 @@ describe("package language semantic handoff", () => {
           calls.length = 0;
           await router!.run(row.segments);
           const args = ["--no-fail-fast", ...row.rest];
-          expect(calls).toEqual([[process.execPath, [expected.browserHost.script], { cwd: packageRoot, budgetMs: library.buildBudgetMs() }], [[expected.cargo.name], root, args]]);
+          expect(calls).toEqual([[process.execPath, [expected.browserHost.script], { cwd: packageRoot, budgetMs: buildBudgetMs() }], [{manifestPath:join(packageRoot,"Cargo.toml"),packages:[expected.cargo.name],cwd:packageRoot,extraArgs:args},{version:1}]]);
           expect(process.env.SEMIO_TEST_LEVEL).toBe(row.level);
           expect(partitionNextestExecutionFilters(args)).toEqual(row.partition);
           expect(imported).toEqual([]);
@@ -767,7 +777,7 @@ describe("package language semantic handoff", () => {
         for (const row of expected.checks) {
           calls.length = 0;
           await router!.run([row.command]);
-          expect(calls).toEqual([["cargo", row.args, { cwd: root, budgetMs: library.buildBudgetMs() }]]);
+          expect(calls).toEqual([["cargo", row.args, { cwd: packageRoot, budgetMs: buildBudgetMs() }]]);
           expect(imported).toEqual([]);
         }
         for (const row of expected.sourceCases as { segments: string[]; scopes: string[] }[]) {
@@ -781,8 +791,7 @@ describe("package language semantic handoff", () => {
         for (const args of expected.rejectedSegments) await expect(router!.run(args)).rejects.toThrow();
         expect([imported, called]).toEqual([[], []]);
         expect(calls).toEqual([]);
-        const exit = spyOn(process, "exit").mockImplementation((() => { throw new Error("UI-host command rejected"); }) as never);
-        try { await expect(router!.run(["unknown"])).rejects.toThrow("UI-host command rejected"); } finally { exit.mockRestore(); }
+        await expect(router!.run(["unknown"])).rejects.toThrow('unknown command "unknown"');
         expect(calls).toEqual([]);
         refuse = true;
         await expect(router!.run(["test"])).rejects.toThrow("native delegation refused");
@@ -1598,7 +1607,7 @@ describe("bundle-script", () => {
     expect(existsSync(join(top, "nx.json"))).toBe(true);
   });
 
-  test("findRepoRoot reaches monorepo from repo/lib/js", () => {
+  test("findWorkspaceRoot reaches monorepo from repo/lib/js", () => {
     const root = findWorkspaceRoot(import.meta.dir);
     expect(existsSync(join(root, "nx.json"))).toBe(true);
   });
@@ -2698,7 +2707,7 @@ describe("command budgets", () => {
   });
 
   test("testLevelBudgetMs maps levels and honors SEMIO_TEST_BUDGET_MS", async () => {
-    const { TEST_LEVEL_BUDGET_MS } = await import("../../📦️packages/🟦️typescript/🟦️.ts");
+    const { TEST_LEVEL_BUDGET_MS } = await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts");
     expect(testLevelBudgetMs("fundamental")).toBe(TEST_LEVEL_BUDGET_MS.fundamental);
     expect(testLevelBudgetMs("exhaustive")).toBe(TEST_LEVEL_BUDGET_MS.exhaustive);
     const prev = process.env.SEMIO_TEST_BUDGET_MS;
@@ -3021,7 +3030,7 @@ describe("loadTaxonomy", () => {
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       let command = "bun ./📜️script.ts browser preview";
       const invocations: unknown[] = [];
-      const invoke = new Function("nxTargetRecord", "record", "generatorPreviewScriptArguments", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd: "compiler", command } }), (value: unknown) => value, discovery.generatorPreviewScriptArguments, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
+      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewScriptArguments", "generatorPreviewResourceLimits", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd: "compiler", command } }), requireRecord, discovery.generatorPreviewScriptArguments, discovery.generatorPreviewResourceLimits, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = "bun ./📜️script.ts preview-generated";
@@ -3050,7 +3059,7 @@ describe("loadTaxonomy", () => {
     mkdirSync(join(sandbox, "📤️output"), { recursive: true });
     writeFileSync(join(sandbox, "🌱️source/🟦️.ts"), "neutral input\n");
     const contract = { ownership: "owned" as const, ownerPath: "owner", target: "owner:generate", previewTarget: "owner:preview-generated", inputPatterns: ["authority.json"], outputRoots: [{ path: "📤️output", inclusion: "ignored" as const }], compilerInputManifest: { kind: "compiler-input-manifest-v1" as const, manifestOutputPath: manifestPath, manifestSchemaPath: "authority.json", staticAuthorityPath: "authority.json", maxFiles: 2 }, reason: "neutral" };
-    const taxonomy = loadNormalizationTaxonomy({ repoRoot: findWorkspaceRoot(import.meta.dir) });
+    const taxonomy = loadSourceTaxonomy({ repoRoot: findWorkspaceRoot(import.meta.dir) });
     writeFileSync(join(sandbox, "authority.json"), "{}\n");
     writeFileSync(join(sandbox, manifestPath), JSON.stringify(fixture.compilerManifest));
     expect(generatorInputPaths({ repoRoot: sandbox }, contract, taxonomy)).toEqual(["authority.json", "🌱️source/🟦️.ts"]);
@@ -5243,7 +5252,7 @@ async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ comman
   for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
     const invocations: { command: string; args: string[]; options: { cwd: string; budgetMs: number } }[] = [];
     class FixtureBundle { root = packageRoot; repoRoot = getWorkspaceRoot(); }
-    const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", javascript)(FixtureBundle, join, async (command: string, args: string[], options: { cwd: string; budgetMs: number }) => { invocations.push({ command, args, options }); }, () => { throw new Error("Dedicated case fell through to generic test routing"); });
+    const router = new Function("BundleScript", "join", "runRepositoryTestCommand", "resolveTestLevel", javascript)(FixtureBundle, join, async (command: string, args: string[], options: { cwd: string; budgetMs: number }) => { invocations.push({ command, args, options }); }, () => { throw new Error("Dedicated case fell through to generic test routing"); });
     await router.run([vector.command]);
     expect(invocations.map(({ command, args, options }) => ({ command, args, cwd: options.cwd, budgetMs: options.budgetMs }))).toEqual([{ command: process.execPath, args: expectedArgs, cwd: getWorkspaceRoot(), budgetMs: vector.budgetMs }]);
     await expect(router.run([vector.command, "--test-name-pattern=other"])).rejects.toThrow();
@@ -6670,7 +6679,7 @@ describe("generator preview protocol", () => {
             '',
           ].join("\n"),
           "📜️script.ts": [
-            'import { BundleScript, ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";',
+            'import { BundleScript, ScriptRouter, runScriptMain } from "@semio-tech/repo-lib";',
             'import { checkGenerated, generate, previewGenerated } from "./🟦️.ts";',
             '',
             'class GenerateScript extends BundleScript {',
@@ -6693,7 +6702,7 @@ describe("generator preview protocol", () => {
             '',
             'const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript);',
             '',
-            'await runBundleScriptMain(router, import.meta.url);',
+            'await runScriptMain(router, import.meta.url);',
             '',
           ].join("\n"),
         });
@@ -6981,22 +6990,6 @@ describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", ()
 
 //#region 🧬️DirectMutationOwnership
 describe("direct mutation ownership", () => {
-  const mutationRoot = (root: string, area = "✏️s") => join(root, area, "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema", "🧬️mutations");
-  const prepareMutationFixtureRoot = (root: string): string => {
-    expect(spawnSync("git", ["init", "--quiet", "--template="], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
-    for (const path of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json"]) {
-      mkdirSync(join(root, dirname(path)), { recursive: true });
-      copyFileSync(join(getWorkspaceRoot(), path), join(root, path));
-    }
-    return root;
-  };
-  const mutationFixtureRoot = (prefix: string): string => {
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for mutation fixture output.");
-    mkdirSync(artifactRoot, { recursive: true });
-    return prepareMutationFixtureRoot(mkdtempSync(join(artifactRoot, prefix)));
-  };
-
   //#region 🔍️MutationRootDiscovery
   test("mutation root discovery projects only admitted authored facets", async () => {
     const ts = await import("typescript");
@@ -7407,95 +7400,7 @@ describe("direct mutation ownership", () => {
     }
   }, 30_000);
 
-  test("prepares AST-safe direct mutation scaffolds before one guarded publication", () => {
-    const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🏗️mutation-scaffolding/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string };
-    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🏗️mutation-scaffolding/🔣️.json"), "utf8"));
-    const root = mutationFixtureRoot("semio-mutation-scaffold-transaction-");
-    const snapshot = (): string => fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false }).sort().map((path) => `${path}\0${readFileSync(join(root, path), "utf8")}`).join("\0");
-    const mutationRoot = join(root, golden.mutationRoot);
-    const aggregate = join(mutationRoot, "🦀️.rs");
-    const scaffold = (source: string, options: Record<string, unknown> = {}, dryRun = false, name = golden.name) => {
-      mkdirSync(mutationRoot, { recursive: true });
-      writeFileSync(aggregate, source);
-      return newScaffoldMutationTree(root, golden.mutationRoot, name, options as never, dryRun);
-    };
-    try {
-      expect(new Ajv({ allErrors: true, strict: true }).compile(schema)(golden)).toBe(true);
-      expect(inspectRustMutationAggregateSpan(golden.attributedAggregate)).toMatchObject({ enumName: "ProbeMutation" });
-      expect(inspectRustMutationAggregateSpan(golden.scopedAggregate)).toMatchObject({ declarationStart: 0, enumName: "ProbeMutation" });
-      expect(inspectRustMutationAggregateSpan(golden.unrelatedDocAggregate)).toMatchObject({ declarationStart: golden.unrelatedDocAggregate.indexOf("#[derive") });
-      expect(inspectRustMutationAggregateSpan(golden.nestedAggregateScopes)).toBeNull();
-      for (const source of [golden.malformedAggregate, golden.ambiguousAggregate, golden.nestedAggregateDecoy, golden.nestedAggregateScopes, golden.unmatchedAggregate]) {
-        mkdirSync(mutationRoot, { recursive: true });
-        writeFileSync(aggregate, source);
-        const before = snapshot();
-        expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/aggregate/i);
-        expect(snapshot()).toBe(before);
-      }
-      for (const source of [golden.wrongMountAggregate, golden.privateMountAggregate, golden.wrongVariantAggregate]) {
-        writeFileSync(aggregate, source);
-        const before = snapshot();
-        expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/existing (mount|variant)/i);
-        expect(snapshot()).toBe(before);
-      }
-      writeFileSync(aggregate, golden.attributedAggregate);
-      const beforeDryRun = snapshot();
-      const preview = newScaffoldMutationTree(root, golden.mutationRoot, golden.name, {}, true);
-      expect(preview.created).toContain(`${golden.mutationRoot}/${golden.name}/🦀️.rs`);
-      expect(snapshot()).toBe(beforeDryRun);
-      mkdirSync(join(mutationRoot, golden.name, "🦀️.rs"), { recursive: true });
-      const beforeBlockedTarget = snapshot();
-      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/target is not a regular file/i);
-      expect(snapshot()).toBe(beforeBlockedTarget);
-      rmSync(join(mutationRoot, golden.name), { recursive: true, force: true });
-      newScaffoldMutationTree(root, golden.mutationRoot, golden.name);
-      const mounted = readFileSync(aggregate, "utf8");
-      expect(mounted.indexOf("pub mod insert_page;")).toBeLessThan(mounted.indexOf("#[derive(Clone, Debug)]"));
-      expect(mounted).toContain("InsertPage(insert_page::Mutation)");
-      const parser = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "mutation_scaffold_probe", "--edition", "2021", "-"], { encoding: "utf8", input: mounted });
-      expect(parser.status).toBe(0);
-      writeFileSync(join(mutationRoot, golden.name, "🦀️.rs"), "pub struct Handwritten;\n");
-      newScaffoldMutationTree(root, golden.mutationRoot, golden.name, {}, false);
-      expect(readFileSync(join(mutationRoot, golden.name, "🦀️.rs"), "utf8")).toBe("pub struct Handwritten;\n");
-      const unrelated = join(root, "unrelated.txt");
-      expect(() => scaffold(golden.attributedAggregate, { cancelled: () => { writeFileSync(unrelated, "kept\n"); return true; } }, false, "➖️remove-page")).toThrow(/cancel/i);
-      expect(readFileSync(unrelated, "utf8")).toBe("kept\n");
-      expect(existsSync(join(mutationRoot, "➖️remove-page"))).toBe(false);
-      writeFileSync(aggregate, golden.attributedAggregate);
-      const beforeFailure = snapshot();
-      let checks = 0;
-      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, "✏️edit-page", { cancelled: () => {
-        checks += 1;
-        if (checks === 5) writeFileSync(aggregate, "pub enum ConcurrentMutation {}\n");
-        return false;
-      } }, false)).toThrow(/changed during publication/i);
-      expect(readFileSync(aggregate, "utf8")).toBe("pub enum ConcurrentMutation {}\n");
-      expect(existsSync(join(mutationRoot, "✏️edit-page"))).toBe(false);
-      expect(snapshot()).not.toBe(beforeFailure);
-      expect(snapshot()).toContain("🦀️.rs\u0000pub enum ConcurrentMutation {}\n");
-      writeFileSync(aggregate, golden.attributedAggregate);
-      rmSync(join(mutationRoot, golden.name), { recursive: true, force: true });
-      symlinkSync(join(root, "missing-leaf"), join(mutationRoot, golden.name), process.platform === "win32" ? "junction" : "file");
-      const beforeDanglingLink = snapshot();
-      expect(() => newScaffoldMutationTree(root, golden.mutationRoot, golden.name)).toThrow(/symlink/i);
-      expect(snapshot()).toBe(beforeDanglingLink);
-      rmSync(join(mutationRoot, golden.name));
-      const linkedRoot = `${root}-linked`;
-      symlinkSync(root, linkedRoot, process.platform === "win32" ? "junction" : "dir");
-      expect(() => newScaffoldMutationTree(linkedRoot, golden.mutationRoot, golden.name)).toThrow(/repository root.*regular directory/i);
-      rmSync(linkedRoot);
-      expect(() => newScaffoldMutationTree(root, "../../📦️packages/escape/🧬️mutations", golden.name)).toThrow(/scope/i);
-      expect(() => newScaffoldMutationTree(root, `compose/${golden.mutationRoot}`, golden.name)).toThrow(/scope.*excluded/i);
-      expect(() => newScaffoldMutationTree(root, "✏️s/🧪️scaffold/not-a-mutation-owner", golden.name)).toThrow(/scope/i);
-      const linked = join(root, "✏️s", "🧪️linked");
-      mkdirSync(dirname(linked), { recursive: true });
-      symlinkSync(mutationRoot, linked, process.platform === "win32" ? "junction" : "dir");
-      expect(() => newScaffoldMutationTree(root, "✏️s/🧪️linked/🧬️mutations", golden.name)).toThrow(/scope/i);
-    } finally {
-      try { chmodSync(mutationRoot, 0o755); } catch {}
-      rmSync(root, { recursive: true, force: true });
-    }
-  }, 30_000);
+  
 
   test("inventories direct and legacy records as stable language-neutral JSON validated by Ajv", () => {
     const root = mutationFixtureRoot("semio-direct-mutation-inventory-");
@@ -7518,158 +7423,11 @@ describe("direct mutation ownership", () => {
     }
   }, 30_000);
 
-  test("resolves mutation consumers and schema-validated assignment evidence from a stable source index", () => {
-    const root = mutationFixtureRoot("semio-mutation-inventory-consumers-");
-    expect(spawnSync("git", ["init", "--quiet"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
-    for (const relative of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json"]) {
-      mkdirSync(join(root, dirname(relative)), { recursive: true });
-      copyFileSync(join(getWorkspaceRoot(), relative), join(root, relative));
-    }
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🧪️consumers/🔣️.json");
-    const inventorySchemaPath = join(import.meta.dir, "../../🧬️schema/📋️mutation-inventory/🔣️.json");
-    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: number; assignmentLedger: unknown; files: readonly { path: string; content: string }[] };
-    const fixtureSchema = { type: "object", required: ["schemaVersion", "assignmentLedger", "files"], properties: { schemaVersion: { const: 1 }, assignmentLedger: { type: "object" }, files: { type: "array", minItems: 2, items: { type: "object", required: ["path", "content"], properties: { path: { type: "string" }, content: { type: "string" } }, additionalProperties: false } } }, additionalProperties: false };
-    const taxonomy = loadTaxonomy();
-    const rustFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
-    const typescriptFilename = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🟦️typescript"]!, taxonomy);
-    const jsonFilename = canonicalPrimaryFilenameForKind("json", taxonomy);
-    const taxonomyPath = (path: string) => path.replaceAll("🦀️.rs", rustFilename).replaceAll("🟦️.ts", typescriptFilename).replaceAll("🔣️.json", jsonFilename);
-    try {
-      expect(new Ajv({ strict: true }).compile(fixtureSchema)(fixture)).toBe(true);
-      for (const { path, content } of fixture.files) {
-        const target = join(root, taxonomyPath(path));
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target, content.replaceAll("🦀️.rs", rustFilename).replaceAll("🟦️.ts", typescriptFilename).replaceAll("🔣️.json", jsonFilename));
-      }
-      const inventory = inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" });
-      const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
-      expect(new Ajv({ strict: true }).compile(inventorySchema)(JSON.parse(JSON.stringify(inventory)))).toBe(true);
-      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith(".git/") && !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
-      expect(inventory.sourceRoster.filter(({ role }) => role === "source").map(({ path }) => path)).toEqual(sourceRoster);
-      expect(inventory.sourceRoster.some(({ path }) => path.startsWith("compose/"))).toBe(false);
-      const alpha = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➕️insert-page")!;
-      const beta = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "✏️change-page")!;
-      const remove = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➖️remove-page")!;
-      expect(alpha.structuralState).toBe("direct");
-      expect(alpha.executionState).toBe("assigned");
-      expect(beta.executionState).toBe("conflicting");
-      expect(remove.executionState).toBe("unassigned");
-      expect(alpha.assignmentEvidence).toMatchObject({ status: "resolved", ledgerPath: null, rows: [{ terraExecutor: "TERRA-ALPHA-INSERT" }] });
-      expect(beta.assignmentEvidence).toMatchObject({ status: "conflicting" });
-      expect(remove.assignmentEvidence).toMatchObject({ status: "missing" });
-      expect(alpha.consumerEdges).toEqual(expect.arrayContaining([
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🎮️command/🦀️.rs"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "command", relation: "import" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/✏️editor/🟦️.ts"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts"), kind: "editor", relation: "import" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/👁️viewer/🟦️.ts"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts"), kind: "viewer", relation: "import" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📚️catalog/🦀️.rs"), kind: "catalog", relation: "reexport" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📋️registry/🦀️.rs"), kind: "registry", relation: "reexport" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️operations/🦀️.rs"), kind: "sibling-operation" }),
-        expect.objectContaining({ sourcePath: "✏️s/🔌️plugins/🅰️alpha/🧪️tests/two-file/command.rs", targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "test", relation: "import" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📦️crate/command.rs"), targetPath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), kind: "leaf", relation: "import" }),
-        expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🦀️.rs"), targetPath: taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🦀️.rs"), kind: "cross-owner", relation: "import" }),
-      ]));
-      expect(alpha.consumerEdges.some(({ sourcePath }) => sourcePath.endsWith("🧪️identity-controls.rs"))).toBe(false);
-      expect(alpha.schemaAndLanguageSurfaces).toEqual([taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➕️insert-page/🟦️.ts")]);
-      expect(beta.schemaAndLanguageSurfaces).toEqual([taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🔣️.json")]);
-      expect(alpha.sharedHelpers).toEqual(["✏️s/🔌️plugins/🅰️alpha/🧰️helpers/🦀️page.rs"]);
-      expect(alpha.crossOwnerDependencies).toEqual([taxonomyPath("🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page/🦀️.rs")]);
-      expect(beta.consumerEdges).toEqual(expect.arrayContaining([expect.objectContaining({ sourcePath: taxonomyPath("✏️s/🔌️plugins/🅰️alpha/📦️crate/🎮️command/🦀️.rs"), kind: "command", relation: "import" })]));
-      expect(inventory.unresolved).toEqual(expect.arrayContaining([
-        expect.objectContaining({ path: "✏️s/🔌️plugins/🅰️alpha/🧬️mutations/➖️remove-page", reason: expect.stringMatching(/assignment/i) }),
-        expect.objectContaining({ path: "🧰️framework/🔨️modules/🅱️beta/🧬️mutations/✏️change-page", reason: expect.stringMatching(/conflicting/i) }),
-      ]));
-      const digest = inventory.sourceTreeDigest;
-      writeFileSync(join(root, taxonomyPath("✏️s/🔌️plugins/🅰️alpha/🎮️command/🦀️.rs")), `#[path = "../../📦️packages/🧬️mutations/➕️insert-page/${rustFilename}"] mod insert_page;\nuse insert_page::Mutation;\n// byte-only external consumer edit\n`);
-      expect(inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" }).sourceTreeDigest).not.toBe(digest);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  }, 30_000);
+  
 
-  test("proves direct leaf reachability through exact public canonical mounts and wrapped types", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/📡️mutation-reachability/🔣️.json");
-    const schemaPath = join(import.meta.dir, "../../🧫️fixtures/📡️mutation-reachability/🛂️schema/🔣️.json");
-    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { cases: readonly { name: string; source: string; leafSource?: string; extraFiles?: readonly { path: string; source: string }[]; accepted: boolean }[] };
-    expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (artifactRoot) mkdirSync(artifactRoot, { recursive: true });
-    const root = mkdtempSync(join(artifactRoot ?? tmpdir(), "semio-mutation-reachability-"));
-    const taxonomy = loadTaxonomy();
-    const rust = canonicalPrimaryFilenameForKind(taxonomy.componentFileKinds["🦀️rust"]!, taxonomy);
-    try {
-      for (const vector of fixture.cases) {
-        const caseRoot = join(root, vector.name);
-        mkdirSync(caseRoot, { recursive: true });
-        prepareMutationFixtureRoot(caseRoot);
-        const mutations = mutationRoot(caseRoot);
-        mkdirSync(join(mutations, "➕️insert-page"), { recursive: true });
-        writeFileSync(join(mutations, "➕️insert-page", rust), (vector.leafSource ?? "pub struct Mutation;\n").replaceAll("🦀️.rs", rust));
-        for (const file of vector.extraFiles ?? []) { const target = join(mutations, "➕️insert-page", file.path.replaceAll("🦀️.rs", rust)); mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, file.source); }
-        writeFileSync(join(mutations, rust), vector.source.replaceAll("🦀️.rs", rust));
-        if (["public-canonical", "semantic-type-alias", "child-facet-reexport"].includes(vector.name)) {
-          const out = join(caseRoot, "🧪️compiler-artifacts");
-          mkdirSync(out, { recursive: true });
-          const compiled = spawnSync("rustc", ["--edition=2021", "--crate-name", "reachability_probe", "--crate-type", "lib", "--out-dir", out, join(mutations, rust)], { encoding: "utf8", timeout: 30_000 });
-          writeFileSync(join(out, "compiler.log"), `${compiled.stdout}\n${compiled.stderr}`);
-          if (compiled.status !== 0) throw new Error(`${vector.name}: ${compiled.stderr || compiled.error}`);
-        }
-        const relativeRoot = relative(caseRoot, mutations).replaceAll("\\", "/");
-        const reaches = policyMutationStructuralBreaches(caseRoot, [relativeRoot]).some(({ kind, scope }) => (kind === "mutation/reachability" && scope === `${relativeRoot}/➕️insert-page/${rust}`) || kind === "mutation/folder-variant-bijection");
-        expect(reaches).toBe(!vector.accepted);
-      }
-    } finally { if (!artifactRoot) rmSync(root, { recursive: true, force: true }); }  }, 60000);
+  
 
-  test("projects the actual wrapped mutation declaration origin through public aliases only", () => {
-    const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🧬️mutation-type-origin/🔣️.json");
-    const schemaPath = join(import.meta.dir, "../../🧫️fixtures/🧬️mutation-type-origin/🛂️schema/🔣️.json");
-    const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; rustFilename: "🦀️.rs"; cases: readonly { id: string; mutationRoot?: string; leaf?: string; rustFilename?: string; virtualFilesystem?: true; repoRoot?: string; repositoryRootSymlink?: true; repositoryAncestorSymlink?: true; rootSource: string; leafSource: string; extraFiles?: readonly { path: string; source: string }[]; links?: readonly { path: string; target: string }[]; compileAccepted: boolean; expected: { sourcePath: string; declarationName: string; modulePath: string[] } | null }[] };
-    expect(new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (artifactRoot) mkdirSync(artifactRoot, { recursive: true });
-    const root = mkdtempSync(join(artifactRoot ?? tmpdir(), "semio-mutation-type-origin-"));
-    try {
-      for (const vector of fixture.cases) {
-        const rust = vector.rustFilename ?? fixture.rustFilename, mutationRoot = vector.mutationRoot ?? fixture.mutationRoot, leafName = vector.leaf ?? fixture.leaf, caseDirectory = join(root, vector.id);
-        const sourceRoot = vector.repositoryRootSymlink ? join(caseDirectory, "source") : vector.repositoryAncestorSymlink ? join(caseDirectory, "source", "workspace") : vector.repoRoot ?? caseDirectory;
-        const caseRoot = vector.repositoryRootSymlink ? join(caseDirectory, "repo") : vector.repositoryAncestorSymlink ? join(caseDirectory, "alias", "workspace") : sourceRoot;
-        const mutations = join(sourceRoot, mutationRoot), leaf = join(mutations, leafName);
-        if (!vector.virtualFilesystem) {
-          mkdirSync(leaf, { recursive: true });
-          prepareMutationFixtureRoot(sourceRoot);
-          writeFileSync(join(mutations, rust), vector.rootSource.replaceAll("🦀️.rs", rust));
-          writeFileSync(join(leaf, rust), vector.leafSource.replaceAll("🦀️.rs", rust));
-          for (const file of vector.extraFiles ?? []) {
-            const target = join(leaf, file.path.replaceAll("🦀️.rs", rust));
-            mkdirSync(dirname(target), { recursive: true });
-            writeFileSync(target, file.source.replaceAll("🦀️.rs", rust));
-          }
-          for (const link of vector.links ?? []) {
-            const path = join(leaf, link.path.replaceAll("🦀️.rs", rust));
-            mkdirSync(dirname(path), { recursive: true });
-            symlinkSync(process.platform === "win32" ? join(dirname(path), link.target.replaceAll("🦀️.rs", rust)) : link.target.replaceAll("🦀️.rs", rust), path, "file");
-          }
-          if (vector.repositoryRootSymlink) symlinkSync(process.platform === "win32" ? sourceRoot : "source", caseRoot, process.platform === "win32" ? "junction" : "dir");
-          if (vector.repositoryAncestorSymlink) symlinkSync(process.platform === "win32" ? join(caseDirectory, "source") : "source", join(caseDirectory, "alias"), process.platform === "win32" ? "junction" : "dir");
-        }
-        const graph = inspectRustModuleGraphFacts(vector.rootSource.replaceAll("🦀️.rs", rust));
-        expect(graph.modules.find((module) => module.name === "insert_page")?.conditional === true, vector.id).toBe(["conditional-mount", "inner-conditional-mount", "cfg-attr-conditional-mount", "root-inner-cfg"].includes(vector.id));
-        const structure = inspectRustStructure(vector.rootSource.replaceAll("🦀️.rs", rust)), aggregate = structure.enums.filter((item) => item.name === "ProbeMutation"), variant = aggregate.flatMap((item) => item.variants).filter((item) => item.name === "InsertPage");
-        expect(aggregate.some((item) => item.conditional === true), vector.id).toBe(["inner-conditional-mount", "disabled-aggregate-cfg", "conditional-aggregate-cfg-attr", "root-inner-cfg", "conditional-ancestor-inline-enum"].includes(vector.id));
-        expect(variant.some((item) => item.conditional === true), vector.id).toBe(["inner-conditional-mount", "disabled-aggregate-cfg", "conditional-aggregate-cfg-attr", "root-inner-cfg", "disabled-variant-cfg", "conditional-variant-cfg-attr", "conditional-ancestor-inline-enum"].includes(vector.id));
-        if (vector.compileAccepted) {
-          const out = join(caseRoot, "🧪️rustc");
-          mkdirSync(out, { recursive: true });
-          const compiled = spawnSync("rustc", ["--edition=2021", "--crate-name", "wrapped_type_origin_probe", "--crate-type", "lib", "--out-dir", out, join(mutations, rust)], { encoding: "utf8", timeout: 30_000 });
-          writeFileSync(join(out, "📓️compiler.md"), `# Rustc ${vector.id}\n\n\`\`\`text\n${compiled.stdout}${compiled.stderr}\n\`\`\`\n`);
-          expect(compiled.status, vector.id).toBe(0);
-        }
-        const relativeMutations = mutationRoot;
-        const proof = inspectMutationRootReachability(caseRoot, relativeMutations, vector.rootSource.replaceAll("🦀️.rs", rust), [leafName], rust);
-        expect(proof).toHaveLength(1);
-        expect(proof[0]!.origin, vector.id).toEqual(vector.expected === null ? null : { ...vector.expected, sourcePath: vector.expected.sourcePath.replaceAll("🦀️.rs", rust) });
-        expect(proof[0]!.wrapped, vector.id).toBe(vector.expected !== null);
-      }
-    } finally { if (!artifactRoot) rmSync(root, { recursive: true, force: true }); }  }, 60000);
+  
 
   test("requires a fresh clean terminal verification before mutation apply can commit", () => {
     const goldenPath = join(import.meta.dir, "../../🧫️fixtures/📋️mutation-inventory/🔣️.json");

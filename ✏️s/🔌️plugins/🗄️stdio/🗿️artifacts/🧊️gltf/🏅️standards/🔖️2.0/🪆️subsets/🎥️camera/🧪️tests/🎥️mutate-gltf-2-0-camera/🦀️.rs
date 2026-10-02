@@ -12,8 +12,8 @@
 //! `semantic-gltf-v1` profile compares them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within};
+use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf};
+use semio_repo_test_host::law::{inverse_restores_within, mutation_is_observable_within};
 
 
 //#region 🔖️Input
@@ -112,7 +112,7 @@ mod subject {
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_camera, delete_camera, gltf_inverse_restored_document, move_camera, reorder_cameras};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfCameraProjection, GltfOrthographic, GltfPerspective};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::project_gltf;
+    use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params
     fn num(params: &Json, key: &str) -> Result<usize, String> {

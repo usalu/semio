@@ -5,7 +5,7 @@ import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
-import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
 import { cleanCollectEmptyFolderRemovals } from "../🔍️empty-folders/🟦️.ts";
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";

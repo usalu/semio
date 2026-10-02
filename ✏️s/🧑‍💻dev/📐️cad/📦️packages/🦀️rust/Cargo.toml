@@ -17,6 +17,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-s-artifact-stdio-step.workspace = true
 semio-framework-3d.workspace = true

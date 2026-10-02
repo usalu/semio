@@ -107,8 +107,7 @@
         "ref": {
           "kind": "ruleNode",
           "domain": "graph",
-          "granularity": "node",
-          "many": true
+          "granularity": "node"
         },
         "group": "layout",
         "order": 20

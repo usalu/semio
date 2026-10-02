@@ -28,10 +28,10 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for DragSelectio
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (offset_en, offset_de) = puzzle3d_selection_triple(self.offset);
         let (en, de) = puzzle3d_selection_items(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Drag {en} by {offset_en}"), &format!("{de} um {offset_de} ziehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Drag {en} by {offset_en}"), &format!("{de} um {offset_de} ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DisconnectTrace {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Disconnect trace \"{}\"", self.id.0), &format!("Nachverfolgung \"{}\" aufheben", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect trace \"{}\"", self.id.0), &format!("Nachverfolgung \"{}\" aufheben", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

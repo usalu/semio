@@ -78,7 +78,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.ifc".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Ifc", "Ifc"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Ifc", "Ifc"),
         source_format: STDIO_IFC_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

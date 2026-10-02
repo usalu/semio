@@ -33,7 +33,7 @@ test("JSON native lexemes and ordered duplicate members expose independent relat
 });
 
 test("JSON typed intermediate number strings and duplicate members retain independent numeric query cells",async()=>{
- const cases=fixture.typedNumberCases.map(c=>({lexeme:c.lexeme.repeat("repeat"in c?c.repeat:1),numeric:c.numeric}));
+ const cases=fixture.typedNumberCases.map(c=>({lexeme:c.lexeme.repeat(c.repeat??1),numeric:c.numeric}));
  const snapshot:JsonSnapshot={schema:fixture.logicalNative.schema,value:{kind:"object",members:cases.map(c=>({key:fixture.logicalNative.duplicateKey,value:{kind:"number",lexeme:c.lexeme}}))}};
  expect(parseJsonSnapshot(snapshot)).toEqual(snapshot);
  const database=await jsonSnapshotToSqliteDatabase(snapshot);const db=Database.deserialize(await exportSqliteDatabase(database));

@@ -33,10 +33,10 @@ function referenceIntegrity(value: any): boolean {
 function childIdentity(value: any): boolean {
   const lists = [["objects", "object"], ["models", "model"]] as const;
   for (const [field, subset] of lists) for (const child of value[field] ?? []) {
-    if (child.childId !== child.target.artifactId || child.target.dialect.artifactKind !== "s.stdio.semio" || child.target.dialect.standard !== "v1" || child.target.dialect.subset !== subset) return false;
+    if (child.target.dialect.artifactKind !== "s.stdio.semio" || child.target.dialect.standard !== "v1" || child.target.dialect.subset !== subset) return false;
   }
   const child = value.properties;
-  return !child || child.childId === child.target.artifactId && child.target.dialect.artifactKind === "s.stdio.semio" && child.target.dialect.standard === "v1" && child.target.dialect.subset === "value";
+  return !child || child.target.dialect.artifactKind === "s.stdio.semio" && child.target.dialect.standard === "v1" && child.target.dialect.subset === "value";
 }
 
 function mutationChildIdentity(value: any): boolean {
@@ -44,7 +44,7 @@ function mutationChildIdentity(value: any): boolean {
   const variant = Object.keys(value)[0];
   if (!Object.hasOwn(subsets, variant)) return true;
   const payload = value[variant];
-  return payload.child_id === payload.target.artifactId
+  return typeof payload.child_id === "string"
     && payload.target.dialect.artifactKind === "s.stdio.semio"
     && payload.target.dialect.standard === "v1"
     && payload.target.dialect.subset === subsets[variant];
@@ -61,7 +61,7 @@ export function testSemioKitDocumentContract(): void {
     "../../../../✉️base/🧬️schema/🪆️child/🔣️.json",
     "../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json",
   ]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document/🔣️.json");
+  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
   const snapshotSchema = ajv.compile(read("../../📸️snapshot/🔣️.json"));
   const artifactSchema = ajv.compile(read("../../🔣️.json"));
   const diffSchema = ajv.compile(read("../../🔺️diff/🔣️.json"));
@@ -115,8 +115,10 @@ export function testSemioKitDocumentContract(): void {
       const subset = ({ CreateObject: "object", CreateModel: "model", CreateProperties: "value" } as Record<string, string>)[variant];
       if (subset) {
         const payload = mutationValue[variant];
+        const alias = { ...mutationValue, [variant]: { ...payload, child_id: "local-alias" } };
+        assert(mutationSchema(alias) && mutationChildIdentity(alias), file + ": independent local alias oracle");
+        assert.deepEqual(parseMutation(mutationFixture(alias)), mutationFixture(alias), file + ": local alias parser");
         for (const invalid of [
-          { ...mutationValue, [variant]: { ...payload, child_id: "wrong-id" } },
           { ...mutationValue, [variant]: { ...payload, target: { ...payload.target, dialect: { ...payload.target.dialect, artifactKind: "other" } } } },
           { ...mutationValue, [variant]: { ...payload, target: { ...payload.target, dialect: { ...payload.target.dialect, standard: "v2" } } } },
           { ...mutationValue, [variant]: { ...payload, target: { ...payload.target, dialect: { ...payload.target.dialect, subset: subset === "object" ? "model" : "object" } } } },

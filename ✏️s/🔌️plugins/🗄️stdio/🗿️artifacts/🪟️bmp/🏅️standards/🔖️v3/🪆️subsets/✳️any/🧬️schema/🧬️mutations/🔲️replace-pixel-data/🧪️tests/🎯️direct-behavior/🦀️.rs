@@ -17,11 +17,11 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/🎯️outcome/🔣️.json");
 
 fn before() -> BmpSnapshot {
     dsl::json::from_json_str(BEFORE).expect("committed before-snapshot decodes")

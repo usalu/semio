@@ -4,7 +4,7 @@
 //! derives on those records directly, for one measured reason: `Wfc2dTile::media` is a
 //! data-carrying enum (`Wfc2dTileMedia`), which the record grammar has no field shape for. The twin
 //! carries it as `dsl::DslValue` — the engine's own schema-less literal — and bridges at the
-//! boundary through `dsl::to_dsl_value`/`dsl::from_dsl_value`, which are defined for every
+//! boundary through `semio_framework_value::ToValue::to_value`/`semio_framework_value::FromValue::from_value`, which are defined for every
 //! `ToValue`/`FromValue` type. The remaining records are twinned for symmetry, so ONE file states
 //! this subset's whole text grammar instead of scattering `#[dsl]` attributes across a schema file
 //! that must stay representation-free (assembly's `params: SemioValue` precedent).
@@ -80,13 +80,13 @@ pub fn edge_from_dsl(edge: Wfc2dSlotEdgeDsl) -> Wfc2dSlotEdge {
 /// refuses to project is `Null`, never a silent drop — `Wfc2dTileMedia::Empty` IS this field's
 /// default, so the twin says exactly what the record says.
 pub fn tile_to_dsl(tile: &Wfc2dTile) -> Wfc2dTileDsl {
-    Wfc2dTileDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: dsl::to_dsl_value(&tile.media).unwrap_or(dsl::DslValue::Null) }
+    Wfc2dTileDsl { id: tile.id.clone(), label: tile.label.clone(), weight: tile.weight, media: semio_framework_value::ToValue::to_value(&tile.media) }
 }
 
 pub fn tile_from_dsl(tile: Wfc2dTileDsl) -> Result<Wfc2dTile, store::TextError> {
     let media: Wfc2dTileMedia = match tile.media {
         dsl::DslValue::Null => Wfc2dTileMedia::default(),
-        other => dsl::from_dsl_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
+        other => semio_framework_value::FromValue::from_value(other).map_err(|error| store::TextError::new(format!("invalid tile media: {error}"), store::TextSpan::at(1, 1)))?,
     };
     Ok(Wfc2dTile { id: tile.id, label: tile.label, weight: tile.weight, media })
 }
@@ -237,3 +237,7 @@ pub fn print_dsl(document: &Wfc2dSnapshot) -> String {
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Wfc2dSnapshotText = String;
 //#endregion 🚚️Carrier
+
+#[path="🛬️native/🦀️.rs"]
+mod controlled_native;
+pub(crate)use controlled_native::{decode_sqlite_snapshot_native,encode_sqlite_snapshot_native};

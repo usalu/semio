@@ -4,7 +4,7 @@ use super::*;
 fn home_view() -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
         session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() }),
-        ..Default::default()
+        ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

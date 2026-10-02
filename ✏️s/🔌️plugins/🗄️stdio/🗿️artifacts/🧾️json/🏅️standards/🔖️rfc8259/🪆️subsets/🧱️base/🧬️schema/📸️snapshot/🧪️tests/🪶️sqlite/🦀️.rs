@@ -93,9 +93,10 @@ fn sqlite_snapshot_json_native_encoding_preflight_bounds_escaping_indentation_an
     assert!(large.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |p| p.phase != SqliteSnapshotPhase::EncodeNative, SqliteDatabaseLimits::default())).is_err());
     let mut nested = JsonValue::Null; for _ in 0..256 { nested = JsonValue::Array { items: vec![nested] }; }
     let deep = JsonSnapshot { schema: "stdio.json".into(), value: nested };
-    let limits = SqliteDatabaseLimits { max_value_bytes: 50000, ..SqliteDatabaseLimits::default() };
+    let limits = SqliteDatabaseLimits { max_value_bytes: 250000, ..SqliteDatabaseLimits::default() };
     deep.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-    assert!(deep.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+    deep.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    assert!(deep.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_value_bytes:4096, ..limits })).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -122,9 +123,9 @@ fn sqlite_snapshot_json_erased_native_deep_tree_has_no_wire_depth_or_indentation
 
 #[test]
 fn sqlite_snapshot_json_handwritten_logical_records_validate_owned_topology_and_identity(){
- let valid=r#"schema="owned" nodes=[kind=object members=[key="dup" value=1 key="dup" value=2] items=[] kind=number number_lexeme="-0.00e-2" items=[] members=[] kind=null items=[] members=[]]"#;
+ let valid=r#"schema="owned" nodes=[{kind=object members=[{key="dup" value=1} {key="dup" value=2}] items=[]} {kind=number number-lexeme="-0.00e-2" items=[] members=[]} {kind=null items=[] members=[]}]"#;
  let parsed=<JsonSnapshot as store::ArtifactDsl>::parse_dsl(valid).unwrap();assert_eq!(parsed.schema,"owned");assert_eq!(parsed.value,JsonValue::Object{members:vec![JsonMember{key:"dup".into(),value:JsonValue::Number{lexeme:"-0.00e-2".into()}},JsonMember{key:"dup".into(),value:JsonValue::Null}]});
- for invalid in [valid.replace("value=1","value=0"),valid.replace("value=2","value=1"),valid.replace("value=2","value=999"),valid.replace("kind=null","kind=null string_value=\"unused\""),String::from("schema=\"owned\" nodes=[kind=null items=[] members=[] kind=null items=[] members=[]]"),format!("semio stdio.md.dsl v1\n{valid}")]{assert!(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(&invalid).is_err(),"{invalid}");}
+ for invalid in [valid.replace("value=1","value=0"),valid.replace("value=2","value=1"),valid.replace("value=2","value=999"),valid.replace("kind=null","kind=null string-value=\"unused\""),String::from("schema=\"owned\" nodes=[{kind=null items=[] members=[]} {kind=null items=[] members=[]}]"),format!("semio stdio.md.dsl v1\n{valid}"),format!("{valid} unexpected-field=1")]{assert!(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(&invalid).is_err(),"{invalid}");}
 }
 
 #[test]
@@ -133,4 +134,63 @@ fn sqlite_snapshot_json_typed_intermediate_number_strings_independent_numeric_qu
  let bytes=export_sqlite_database(&database,limits,&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');for(const row of db.query('SELECT m.key,v.number_lexeme,v.number_value FROM json_object_member m JOIN json_value v ON v.id=m.value_id ORDER BY m.ordinal').all()){let expected=null;try{const value=JSON.parse(row.number_lexeme);if(typeof value==='number'&&Number.isFinite(value))expected=value===0?0:value;}catch{}if(row.key!=='z'||row.number_value!==expected)throw Error('numeric cell');}db.query('UPDATE json_value SET number_lexeme=?,number_value=NULL WHERE id=2').run('arbitrary intermediate lexeme');await Bun.write(Bun.stdout,db.serialize());db.close();";let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let restored=JsonSnapshot::from_sqlite_database(&import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let JsonValue::Object{members}=&restored.value else{panic!("object")};assert_eq!(members[0].value,JsonValue::Number{lexeme:"arbitrary intermediate lexeme".into()});
  let codec=<JsonSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_os_kernel::io_schema::ArtifactDialect{artifact_kind:"s.stdio.json".into(),standard:"rfc8259".into(),subset:"*".into()};for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=(codec.import)(&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;assert_eq!((codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value,database);}
  for(column,value)in[(5,SqliteValue::Real(1.0)),(3,SqliteValue::Text("1".into()))]{let mut changed=database.clone();changed.table_mut("json_value").unwrap().rows[1].values[column]=value;assert!(JsonSnapshot::from_sqlite_database(&changed,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}
+}
+
+
+#[test]
+fn sqlite_snapshot_json_typed_number_meaning_is_owned_by_named_profile_guards(){
+ let many=JsonSnapshot{schema:"owned".into(),value:JsonValue::Array{items:(0..600).map(|_|JsonValue::Number{lexeme:"1".into()}).collect()}};
+ assert!(crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance_controlled(&many,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:10,..SqliteDatabaseLimits::default()})).is_err());
+ let mut visited=0;let mut proceed=|progress:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{visited=progress.completed;visited<256};assert!(crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance_controlled(&many,&mut SqliteSnapshotControl::new(&mut proceed,SqliteDatabaseLimits::default())).is_err());assert_eq!(visited,256);
+ let(fixture,_)=fixture();let geo:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌍️geojson/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let limits=SqliteDatabaseLimits::default();
+ for case in fixture["iJsonTypedNumberCases"].as_array().unwrap(){let snapshot=JsonSnapshot{schema:"owned".into(),value:JsonValue::Object{members:vec![JsonMember{key:"number".into(),value:JsonValue::Number{lexeme:case["lexeme"].as_str().unwrap().into()}}]}};let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(JsonSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);let actual=crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance_controlled(&snapshot,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(actual.iter().any(|d|matches!(d.severity,dsl::Severity::Error|dsl::Severity::Fatal)),case["hard"].as_bool().unwrap(),"{}",case["lexeme"]);}
+ for property in [false,true]{let cases=if property{&geo["foreignNumberCases"]}else{&geo["typedNumberCases"]};for case in cases.as_array().unwrap(){let number=JsonValue::Number{lexeme:case["lexeme"].as_str().unwrap().into()};let value=if property{JsonValue::Object{members:vec![JsonMember{key:"type".into(),value:JsonValue::String{value:"Feature".into()}},JsonMember{key:"geometry".into(),value:JsonValue::Null},JsonMember{key:"properties".into(),value:JsonValue::Object{members:vec![JsonMember{key:"number".into(),value:number}]}}]}}else{JsonValue::Object{members:vec![JsonMember{key:"type".into(),value:JsonValue::String{value:"Point".into()}},JsonMember{key:"coordinates".into(),value:JsonValue::Array{items:vec![number,JsonValue::Number{lexeme:"0".into()}]}}]}};let snapshot=JsonSnapshot{schema:"owned".into(),value};let actual=crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance_controlled(&snapshot,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(actual.iter().any(|d|matches!(d.severity,dsl::Severity::Error|dsl::Severity::Fatal)),case["hard"].as_bool().unwrap(),"{}",case["lexeme"]);}}
+}
+
+#[test]
+fn sqlite_snapshot_json_owned_record_identity_matches_handwritten_definition() {
+    let graph = store::os_pack::PackSchemaGraph::of(&<JsonSnapshot as store::ArtifactPack>::record_spec().unwrap());
+    let bytes = graph.canonical_bytes();
+    let independent = blake3::hash(&bytes);
+    let factory = crate::native_codecs().pop().unwrap();
+    let codec = (factory.codec)();
+    assert_eq!(codec.pack_schema_hash, *independent.as_bytes());
+    let definition: serde_json::Value = serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();
+    let binding = &definition["codecs"][0]["native_factory"];
+    assert_eq!(binding["pack_schema_hash"].as_str().unwrap(), independent.to_hex().as_str());
+    assert_eq!(binding["artifact_schema"].as_str().unwrap(), codec.schema);
+    assert_eq!(binding["extension"].as_str().unwrap(), codec.extension);
+    crate::definition().unwrap();
+}
+
+#[test]
+fn sqlite_snapshot_json_native_decode_owner_restores_typed_state_with_interior_control(){
+ let(fixture,_)=fixture();let limits=SqliteDatabaseLimits::default();let scalar=JsonValue::Number{lexeme:"NaN".into()};let snapshot=JsonSnapshot{schema:fixture["logicalNative"]["schema"].as_str().unwrap().into(),value:JsonValue::Array{items:(0..fixture["controlledNative"]["nodes"].as_u64().unwrap()).map(|_|scalar.clone()).collect()}};
+ for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=match encoding{SnapshotEncoding::Text=>semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)),SnapshotEncoding::Binary=>semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))};let restored=JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored,snapshot);assert!(JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:fixture["controlledNative"]["maxRows"].as_u64().unwrap()as usize,..limits})).is_err());}
+ let snapshot=JsonSnapshot{schema:"owned".into(),value:JsonValue::String{value:"x".repeat(fixture["controlledNative"]["stringRepeat"].as_u64().unwrap()as usize)}};
+ for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=match encoding{SnapshotEncoding::Text=>semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)),SnapshotEncoding::Binary=>semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))};assert!(JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:fixture["controlledNative"]["maxValueBytes"].as_u64().unwrap()as usize,..limits})).is_err());let mut interior=false;let threshold=fixture["controlledNative"]["cancelCompleted"].as_u64().unwrap()as usize;let mut proceed=|progress:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{if progress.phase==SqliteSnapshotPhase::DecodeNative&&progress.completed>=threshold&&progress.completed<progress.total{interior=true;false}else{true}};assert!(JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut proceed,limits)).is_err());assert!(interior,"{encoding:?}: controlled native primitive decoding must admit cancellation during its actual work");}
+}
+
+#[test]
+fn sqlite_snapshot_json_controlled_flat_binding_admits_storage_and_topology_before_copy(){
+ let(fixture,_)=fixture();let count=fixture["controlledNative"]["nodes"].as_u64().unwrap()as usize;
+ let source=JsonSnapshot{schema:fixture["logicalNative"]["schema"].as_str().unwrap().into(),value:JsonValue::Array{items:(0..count).map(|_|JsonValue::Number{lexeme:"NaN".into()}).collect()}};
+ let payload=store::ArtifactDsl::print_dsl(&source);let(_,body)=store::semio_format::split_text_preamble(&payload).unwrap();let record=dsl::parse(body,&<JsonSnapshot as store::ArtifactPack>::record_spec().unwrap(),&dsl::ParseOptions::default()).unwrap();
+ let mut proceed=|_:protocol::native_decoding::NativeDecodeProgress|true;
+ assert_eq!(owned_pack::reconstruct_record(&record,&mut protocol::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).unwrap(),source);
+ assert!(owned_pack::reconstruct_record(&record,&mut protocol::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10).is_err());
+ assert!(owned_pack::reconstruct_record(&record,&mut protocol::native_decoding::NativeDecodeControl::new(4096,&mut proceed),10_000).is_err());
+ let mut observed=0;let mut cancel=|event:protocol::native_decoding::NativeDecodeProgress|{observed=event.completed;event.completed<256};assert!(owned_pack::reconstruct_record(&record,&mut protocol::native_decoding::NativeDecodeControl::new(1_000_000,&mut cancel),10_000).is_err());assert_eq!(observed,256);
+ let payload="schema=owned nodes=[{kind=array items=[0] members=[]}]";let record=dsl::parse(payload,&<JsonSnapshot as store::ArtifactPack>::record_spec().unwrap(),&dsl::ParseOptions::default()).unwrap();assert!(owned_pack::reconstruct_record(&record,&mut protocol::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).is_err());
+}
+
+#[test]
+fn sqlite_snapshot_json_authored_grammar_recognizes_its_own_full_state_logical_frame(){
+ let grammar=dsl::grammar::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();let recognizer=dsl::grammar::Recognizer::compile(&grammar);let(fixture,mut snapshot)=fixture();assert!(recognizer.recognize(&store::ArtifactDsl::print_dsl(&snapshot)).unwrap());for case in fixture["typedNumberCases"].as_array().unwrap(){snapshot.value=JsonValue::Number{lexeme:case["lexeme"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap_or(1)as usize)};assert!(recognizer.recognize(&store::ArtifactDsl::print_dsl(&snapshot)).unwrap());}
+}
+
+#[test]
+fn sqlite_snapshot_json_controlled_flat_output_preserves_full_tree_and_cancels_during_unicode(){
+ let(neutral,_)=fixture();let mut value=JsonValue::Object{members:neutral["typedNumberCases"].as_array().unwrap().iter().map(|case|JsonMember{key:neutral["logicalNative"]["duplicateKey"].as_str().unwrap().into(),value:JsonValue::Number{lexeme:case["lexeme"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap_or(1)as usize)}}).collect()};for _ in 0..neutral["logicalNative"]["depth"].as_u64().unwrap(){value=JsonValue::Array{items:vec![value]};}let mut source=dsl::__rt::DecodedFieldOwner::new(JsonSnapshot{schema:neutral["logicalNative"]["schema"].as_str().unwrap().repeat(neutral["controlledNative"]["stringRepeat"].as_u64().unwrap()as usize),value},owned_pack::retire);let length=source.as_mut().schema.len();let limits=SqliteDatabaseLimits::default();let expected=source.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=source.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).expect("JSON actual controlled logical output owner");let mut restored=dsl::__rt::DecodedFieldOwner::new(JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),owned_pack::retire);assert_eq!(restored.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);let mut interior=false;assert!(source.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==length&&event.completed>=neutral["controlledNative"]["cancelCompleted"].as_u64().unwrap()as usize&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:neutral["controlledNative"]["maxRows"].as_u64().unwrap()as usize,..limits},SqliteDatabaseLimits{max_value_bytes:neutral["controlledNative"]["maxValueBytes"].as_u64().unwrap()as usize,..limits}]{assert!(source.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}}
 }

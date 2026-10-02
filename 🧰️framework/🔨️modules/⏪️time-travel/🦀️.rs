@@ -68,6 +68,9 @@ pub const TIME_TRAVEL_REPLAY_FAULTED_CODE: &str = "timeTravel.replay-faulted";
 /// 🧨️ Driver fault: the finalize commit failed for a reason other than a stale base or a blocking report.
 pub const TIME_TRAVEL_COMMIT_FAILED_CODE: &str = "timeTravel.commit-failed";
 
+/// 🧩️ Driver fault: the composed member store the session edits was closed mid-session.
+pub const TIME_TRAVEL_MEMBER_GONE_CODE: &str = "timeTravel.member-gone";
+
 /// 🔣️ A fault code is non-empty, whitespace-free and at most [`TIME_TRAVEL_TEXT_MAX_BYTES`].
 pub fn is_time_travel_fault_code(code: &str) -> bool {
     !code.is_empty() && code.len() <= TIME_TRAVEL_TEXT_MAX_BYTES && !code.chars().any(char::is_whitespace)
@@ -654,6 +657,18 @@ impl TimeTravelSession {
         }
     }
 
+    /// ✏️ Why `Begin` would be refused, `None` when it would open (or switch) the draft editor: it is legal from `Inactive`
+    /// and `Reviewing`, from `Editing` only while the pending draft still equals its start (`Blocked` otherwise), and
+    /// `Illegal` while replaying, choosing or finalizing — what a host disables an Edit control by.
+    pub fn begin_refusal(&self) -> Option<TimeTravelRefusal> {
+        match (self.stage, self.pending.as_ref()) {
+            (TimeTravelStage::Inactive | TimeTravelStage::Reviewing, _) => None,
+            (TimeTravelStage::Editing, Some(pending)) if self.unchanged(pending) => None,
+            (TimeTravelStage::Editing, Some(_)) => Some(TimeTravelRefusal::Blocked),
+            _ => Some(TimeTravelRefusal::Illegal),
+        }
+    }
+
     /// 🔁️ Why `Rerun` would be refused, `None` when it would start a replay: it needs `Reviewing`,
     /// accepted drafts, and either no report or a fault.
     pub fn rerun_refusal(&self) -> Option<TimeTravelRefusal> {
@@ -798,7 +813,7 @@ impl TimeTravelSession {
 
 //#region 🔖️Labels
 /// 🗂️ Every `timeTravel.*` code a history-edit verb or driver answers, with the label a host shows for it.
-pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 17] = [
+pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 18] = [
     (TIME_TRAVEL_FROZEN_CODE, TimeTravelLabel::Frozen),
     ("timeTravel.illegal", TimeTravelLabel::RefusalIllegal),
     ("timeTravel.stale", TimeTravelLabel::RefusalStale),
@@ -816,6 +831,7 @@ pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 17] = [
     (TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, TimeTravelLabel::RefusalSchemaUnavailable),
     (TIME_TRAVEL_REPLAY_FAULTED_CODE, TimeTravelLabel::ReplayFaulted),
     (TIME_TRAVEL_COMMIT_FAILED_CODE, TimeTravelLabel::CommitFailed),
+    (TIME_TRAVEL_MEMBER_GONE_CODE, TimeTravelLabel::RefusalMemberGone),
 ];
 
 /// 💬️ Framework-owned EN/DE text of history editing, no default locale.
@@ -856,10 +872,11 @@ pub enum TimeTravelLabel {
     ReplayFaulted,
     CommitFailed,
     OutcomeIntroduced,
+    RefusalMemberGone,
 }
 
 impl TimeTravelLabel {
-    pub const ALL: [Self; 35] = [
+    pub const ALL: [Self; 36] = [
         Self::StageInactive,
         Self::StageEditing,
         Self::StageReplaying,
@@ -895,6 +912,7 @@ impl TimeTravelLabel {
         Self::ReplayFaulted,
         Self::CommitFailed,
         Self::OutcomeIntroduced,
+        Self::RefusalMemberGone,
     ];
 
     /// 🔑️ `(key, en, de)` row of this label.
@@ -935,6 +953,7 @@ impl TimeTravelLabel {
             Self::ReplayFaulted => ("replayFaulted", "Replay failed: later mutations could not be checked", "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"),
             Self::CommitFailed => ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
             Self::OutcomeIntroduced => ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
+            Self::RefusalMemberGone => ("refusalMemberGone", "The part this history edit targets was closed", "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"),
         }
     }
 

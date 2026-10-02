@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/trinity-jack-lsp` router: `bun ./📜️script.ts wasm`. */
-import { resolveTestLevel, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class WasmScript extends BundleScript {
-  run(): void {
-    runWasmPackWebBuild({
+  async run(): Promise<void> {
+    await buildRepositoryWasmWebV1({
       rsDir: this.root,
       logPrefix: "trinity/jack/lsp",
       wasmBaseName: "trinity_jack_lsp",
@@ -22,9 +23,9 @@ class WasmScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, rest);
   }
 }
 

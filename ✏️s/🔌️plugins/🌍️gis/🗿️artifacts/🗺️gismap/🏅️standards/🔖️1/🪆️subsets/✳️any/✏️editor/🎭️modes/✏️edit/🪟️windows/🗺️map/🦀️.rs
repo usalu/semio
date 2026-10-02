@@ -6,7 +6,15 @@ use crate::editor::gis2d::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
 use crate::schema::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
-use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TiledMapScene;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
 use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 use std::collections::HashMap;
 

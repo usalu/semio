@@ -8,8 +8,21 @@ use crate::viewer::fem3d::modes::view;
 use crate::viewer::fem3d::modes::view::windows::model;
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -111,9 +124,9 @@ pub fn create_fem3d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(crate::FEM3D_DIALECT)
         .document(["semio", "fem", "fem3d"])
         .icon_id("fem-app")
-        .mode(view::FEM3D_VIEW_MODE_VIEW, semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
+        .mode(view::FEM3D_VIEW_MODE_VIEW, semio_framework_ui_locale::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id(view::FEM3D_VIEW_MODE_VIEW)
-        .window_kind(model::WINDOW_KIND_ID, semio_framework_plugin::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_ui_contract::SurfaceKind::World3d, "fem-model")
+        .window_kind(model::WINDOW_KIND_ID, semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_ui_contract::SurfaceKind::World3d, "fem-model")
         .default_layout(semio_framework_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
         .build_definition()
 }

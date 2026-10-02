@@ -540,7 +540,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     apply(&mut edited, edit_from_action("move", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(vector.id.clone())), ("field", dsl::DslValue::String("x".into())), ("y", dsl::DslValue::float(20.0)), ("value", dsl::DslValue::float(44.0))]))).unwrap());
     let moved = objects(&edited).into_iter().find(|object| object.id == vector.id).expect("vector");
     assert!((moved.x - 44.0).abs() < 0.01);
-    let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::En).expect("inspector");
+    let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_framework_ui_locale::Locale::En).expect("inspector");
     let mut names = Vec::new();
     let mut shown = Vec::new();
     collect_inspector(&node, &mut names, &mut shown);
@@ -552,7 +552,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     apply(&mut edited, edit_from_action("set-font", Some(&args(vec![("page", dsl::DslValue::float(0.0)), ("object", dsl::DslValue::String(text.id.clone())), ("field", dsl::DslValue::String("text".into())), ("value", dsl::DslValue::String("Times-Roman".into()))]))).unwrap());
     assert!(edited.fonts.iter().any(|font| font.base_font() == "Times-Roman"));
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
-    let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::En).expect("image inspector");
+    let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_framework_ui_locale::Locale::En).expect("image inspector");
     let mut image_names = Vec::new();
     let mut image_shown = Vec::new();
     collect_inspector(&image_panel, &mut image_names, &mut image_shown);
@@ -560,7 +560,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     assert!(image_shown.iter().any(|value| value == "0"));
     apply(&mut edited, edit_from_action("set-resource-detail", Some(&args(vec![("object", dsl::DslValue::String(image.text.clone())), ("text", dsl::DslValue::String("image.interpolate".into())), ("field", dsl::DslValue::String("x".into())), ("value", dsl::DslValue::float(1.0))]))).unwrap());
     assert!(edited.images[0].interpolate);
-    let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_framework_plugin::Locale::De).expect("empty inspector");
+    let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_framework_ui_locale::Locale::De).expect("empty inspector");
     let mut empty_names = Vec::new();
     let mut empty_shown = Vec::new();
     collect_inspector(&empty, &mut empty_names, &mut empty_shown);

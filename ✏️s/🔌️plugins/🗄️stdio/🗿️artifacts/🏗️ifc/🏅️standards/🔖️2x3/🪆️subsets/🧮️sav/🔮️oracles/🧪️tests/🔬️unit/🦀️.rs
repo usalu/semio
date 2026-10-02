@@ -54,7 +54,7 @@ fn the_round_trip_through_our_own_writer_does_not_pass_bytes_through() {
 /// model read back as a `set-snapshot` payload restores it exactly.
 #[test]
 fn set_snapshot_replaces_the_model_and_the_read_back_snapshot_restores_it() {
-    let (_, row) = crate::law::feature_rows(include_str!("../../../🧪️tests/🧮️mutate-ifc-2x3-sav/🥒️.feature")).into_iter().find(|(kind, _)| kind == "set-snapshot").expect("set-snapshot row");
+    let (_, row) = semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🧮️mutate-ifc-2x3-sav/🥒️.feature")).into_iter().find(|(kind, _)| kind == "set-snapshot").expect("set-snapshot row");
     let mutated = oracle_apply_mutation(FIXTURE, &spec("set-snapshot", row)).expect("set-snapshot");
     assert_eq!(field(&project_ifc_2x3_sav(&mutated).unwrap(), "entityCount"), &num(1.0));
     let restored = oracle_apply_mutation(&mutated, &spec("set-snapshot", oracle_snapshot_payload(FIXTURE).unwrap())).expect("inverse");

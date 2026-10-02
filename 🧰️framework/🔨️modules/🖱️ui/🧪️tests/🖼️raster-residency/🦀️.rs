@@ -11,7 +11,7 @@ fn capacity_law() -> serde_json::Value {
 }
 
 fn scene_raster_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json")).expect("scene raster ownership fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🖼️scene-raster-ownership/🔣️.json")).expect("scene raster ownership fixture")
 }
 
 fn witness(operation: u64) -> RasterTextureWitness {

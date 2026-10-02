@@ -267,7 +267,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(description) = self.description.take() {
-            self.external_retirement = Some(app_store::retirement::owned_retirement(description));
+            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -396,7 +396,7 @@ impl ZipInverseCopy {
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(value) = self.first_value.take() {
-            self.retirement = Some(app_store::retirement::owned_retirement(value));
+            self.retirement = Some(semio_framework_value::retirement::owned_retirement(value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         self.complete = false;
@@ -762,12 +762,12 @@ struct ZipSnapshotRetirementFactory;
 
 impl app_store::ArtifactOwnedValueRetirementFactory<ZipMutation> for ZipMutationRetirementFactory {
     fn retire_owned(&self, value: ZipMutation) -> Box<dyn app_store::ErasedSnapshotRetirement> {
-        app_store::retirement::owned_retirement(value)
+        semio_framework_value::retirement::owned_retirement(value)
     }
 }
 impl app_store::SnapshotRetirementFactory<ZipSnapshot> for ZipSnapshotRetirementFactory {
     fn retire(&self, value: Arc<ZipSnapshot>) -> Box<dyn app_store::ErasedSnapshotRetirement> {
-        app_store::retirement::shared_retirement(value)
+        semio_framework_value::retirement::shared_retirement(value)
     }
 }
 
@@ -793,9 +793,9 @@ impl ZipRetirementCursor {
     }
 }
 
-impl app_store::retirement::RetirementCursor for ZipRetirementCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> app_store::retirement::RetirementStep {
-        use app_store::retirement::RetirementStep;
+impl semio_framework_value::retirement::RetirementCursor for ZipRetirementCursor {
+    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::RetirementStep;
         let Some(owner) = self.0.pop() else { return RetirementStep::Complete };
         match owner {
             RetiredOwner::String(value) => {
@@ -910,13 +910,13 @@ fn retire_mutation(stack: &mut Vec<RetiredOwner>, mutation: ZipMutation) {
     }
 }
 
-impl app_store::retirement::RetireOwned for ZipSnapshot {
-    fn retirement(self) -> Box<dyn app_store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for ZipSnapshot {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         Box::new(ZipRetirementCursor(ManuallyDrop::new(vec![RetiredOwner::Snapshot(self)])))
     }
 }
-impl app_store::retirement::RetireOwned for ZipMutation {
-    fn retirement(self) -> Box<dyn app_store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for ZipMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         Box::new(ZipRetirementCursor(ManuallyDrop::new(vec![RetiredOwner::Mutation(self)])))
     }
 }
@@ -1082,7 +1082,7 @@ mod tests {
         let fixture = fixture();
         let bytes = fixture["largeEntryBytes"].as_u64().expect("largeEntryBytes") as usize;
         let page_bytes = fixture["pageBytes"].as_u64().expect("pageBytes") as usize;
-        let mut retirement = app_store::retirement::owned_retirement(large_snapshot(bytes));
+        let mut retirement = semio_framework_value::retirement::owned_retirement(large_snapshot(bytes));
         let mut turns = 0;
         loop {
             match retirement.close_step(1, page_bytes).expect("ZIP retirement advances") {

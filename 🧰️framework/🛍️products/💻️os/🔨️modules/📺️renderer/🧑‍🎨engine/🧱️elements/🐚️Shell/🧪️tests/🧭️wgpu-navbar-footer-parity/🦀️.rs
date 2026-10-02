@@ -689,7 +689,7 @@ fn example_control_root_rem_bounds_feed_reservation_and_painted_hit_geometry() {
     }
 
     for (root_rem, short_expected, long_expected) in [(16.0, 192.0, 448.0), (20.0, 240.0, 560.0)] {
-        let mut shell = ShellState::new(Vec::new(), "chrome-width-law".into());
+        let mut shell = ShellState::new(Vec::new(), "chrome-width-law".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let mut theme = Theme::light();
         theme.root_rem_pixels = root_rem;
         let mut atlas = FontAtlas::builtin();
@@ -710,9 +710,9 @@ fn task_manager_footer_identity_order_icon_and_localized_label_match_react() {
     let fixture = chrome_metrics_fixture();
     let expected = &fixture["taskManagerFooter"];
     for label in expected["labels"].as_array().expect("task manager labels") {
-        let mut shell = ShellState::new(Vec::new(), "task-manager-footer-law".into());
+        let mut shell = ShellState::new(Vec::new(), "task-manager-footer-law".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.locale_id = label["locale"].as_str().expect("locale").to_string();
-        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         let dock = shell.default_dock();
         let rows = dock.tabs(PanelAnchor::BottomRight);
         let index = rows.iter().position(|row| row.id == expected["id"].as_str().expect("task manager id")).expect("task manager footer row");

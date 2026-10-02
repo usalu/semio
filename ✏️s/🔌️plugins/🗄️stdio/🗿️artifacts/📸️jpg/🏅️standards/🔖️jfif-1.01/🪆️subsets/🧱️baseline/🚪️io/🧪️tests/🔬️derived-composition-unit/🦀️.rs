@@ -21,14 +21,9 @@ mod tests {
     async fn engine_encoded_jpeg_composes_and_stamps_baseline() {
         let (w, h) = (32u32, 32u32);
         let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        // 🩹 `AnalyzeSource::Binary` for DIALECT_ANY expects an ALREADY pack-encoded (semio
-        // envelope-wrapped) snapshot -- `store::ArtifactPack::encode_pack`, not raw
-        // `engine::encode_jpg` bytes (which lack the envelope header the decode step expects).
-        let bytes = <JpgSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-        // 🌱 Route through the 🧾️document composer first to get a real, engine-decoded snapshot (with
-        // frame/sof_marker/huffman-table-count populated) the way `JpgBaselineComposerComposition::compose`
-        // itself would internally.
+        let decoded=crate::engine::decode_jpg(&crate::engine::encode_jpg(&snap).unwrap()).unwrap();
+        let bytes=<JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
+        let sources=vec![ComposeSource{dialect:DIALECT_ANY,payload:AnalyzeSource::Binary(&bytes)}];
         let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         assert!(composed.snapshot.frame.is_some());

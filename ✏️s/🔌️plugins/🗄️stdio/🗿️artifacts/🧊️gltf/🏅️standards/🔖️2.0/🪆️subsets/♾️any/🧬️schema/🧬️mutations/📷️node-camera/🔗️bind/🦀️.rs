@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeCamer
         vec![super::GltfMutation::BindNodeCamera(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Bind Node Camera", "Knotenkamera binden")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Bind Node Camera", "Knotenkamera binden")
     }
 
     fn target(&self) -> Vec<String> {

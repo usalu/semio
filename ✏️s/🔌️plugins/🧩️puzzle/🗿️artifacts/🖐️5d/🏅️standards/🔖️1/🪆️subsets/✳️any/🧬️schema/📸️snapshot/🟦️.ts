@@ -1,407 +1,189 @@
-/** 🧬️ Puzzle5d snapshot schema — artifact-lane fields only. */
-import {
-  parsePuzzle5dAttribute,
-  parsePuzzle5dAuthor,
-  parsePuzzle5dGripTemplate,
-  parsePuzzle5dRepresentation,
-} from "../🟦️.ts";
+/** 🧩️ Exact persisted Puzzle5d fields shared by its artifact facade and SQLite provider. */
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 
-/** 🪪️ Composed-child handle — mirrors stdio's `s.stdio.semio.kit` cross-language convention. */
-export interface ArtifactDialect {
-  artifactKind: string;
-  standard: string;
-  subset: string;
-}
-
-export interface ArtifactRef {
-  artifactId: string;
-  dialect: ArtifactDialect;
-}
-/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only; `local_owner` and
- *  `PhantomData<S>` are `#[serde(skip)]`. */
-export interface ArtifactChildHandle {
-  childId: string;
-  target: ArtifactRef;
-}
-
-export interface Puzzle5dSnapshot {
-  /** @state artifact */
-  schema: string;
-  /** @state artifact */
-  domain: string;
-  /** @state artifact */
-  label?: string;
-  /** @state artifact */
-  meta: Puzzle5dMeta;
-  /** @state artifact @child kind=s.stdio.semio */
-  kindCatalogs?: ArtifactChildHandle;
-  /** @state artifact */
-  kindCatalogsExtra?: Puzzle5dKindCatalogsExtra;
-  /** @state artifact */
-  kindCompatibility: Puzzle5dKindCompatibility[];
-  /** @state artifact */
-  parts: Puzzle5dPart[];
-  /** @state artifact */
-  fasteners: Puzzle5dFastener[];
-  /** @state artifact */
-  targetVolumes: Puzzle5dTargetVolume[];
-}
-
-
-
-/** ⚓️ Part root plane policy. */
+export interface ArtifactDialect { artifactKind: string; standard: string; subset: string }
+export interface ArtifactRef { artifactId: string; dialect: ArtifactDialect }
+export interface ArtifactChildHandle { childId: string; target: ArtifactRef }
 export type Puzzle5dPartAnchor = "fixed" | "derived";
-
-/** 🔗️ Compat row specificity. */
 export type Puzzle5dCompatSpecificity = "general" | "part" | "fastener" | "grip" | "rope";
+export type Puzzle5dVector3 = [Binary64, Binary64, Binary64];
+export type Puzzle5dVector4 = [Binary64, Binary64, Binary64, Binary64];
+export type Puzzle5dScale = Binary64 | Puzzle5dVector3;
+export interface Puzzle5dMeta { description: string }
+export interface Puzzle5dPart2d { x: Binary64; y: Binary64; shape: string | null; radius: Binary64 | null; width: Binary64 | null; height: Binary64 | null; text: string | null; iconKind: string | null; hidden: boolean | null; locked: boolean | null }
+export interface Puzzle5dPart3d { origin: Puzzle5dVector3; meshUrl: string | null; orientation: Puzzle5dVector4 | null; scale: Puzzle5dScale | null; label: string | null }
+export interface Puzzle5dGrip2d { angle: Binary64; gripKind: string | null; radius: Binary64 | null }
+export interface Puzzle5dGrip3d { position: Puzzle5dVector3; direction: Puzzle5dVector3 | null; radius: Binary64 | null; label: string | null }
+export interface Puzzle5dGrip { id: string; gripKind: string | null; "2d": Puzzle5dGrip2d; "3d": Puzzle5dGrip3d }
+export interface Puzzle5dPart { id: string; partKind: string | null; anchor: Puzzle5dPartAnchor; "2d": Puzzle5dPart2d; "3d": Puzzle5dPart3d; grips: Puzzle5dGrip[] }
+export interface Puzzle5dFastener { id: string; source: string; target: string; fastenerKind: string | null; gap: Binary64; shift: Binary64; rise: Binary64; rotation: Binary64; turn: Binary64; tilt: Binary64; x: Binary64; y: Binary64 }
+export interface Puzzle5dTargetVolume { id: string; origin: Puzzle5dVector3; orientation: Puzzle5dVector4 | null; scale: Puzzle5dScale | null; hidden: boolean; locked: boolean }
+export interface Puzzle5dKindCompatibility { source: string; target: string; bidirectional: boolean; important: boolean; specificity: Puzzle5dCompatSpecificity }
+export interface Puzzle5dAttribute { id: string; key: string; value: string; definition: string | null }
+export interface Puzzle5dAuthor { id: string; name: string; email: string; role: string | null; rank: number | null }
+export interface Puzzle5dRepresentation { id: string; name: string; url: string; mime: string; tags: string[]; lod: string | null; description: string }
+export interface Puzzle5dGripTemplate { id: string; name: string; label: string; description: string; icon: string; gripKind: string | null; point: Puzzle5dVector3; direction: Puzzle5dVector3; t: Binary64 | null; mandatory: boolean | null; radius: Binary64 | null }
+export interface Puzzle5dCatalogPartKind { id: string; name: string; label: string; description: string; icon: string; image: string; unit: string; abstract: boolean; baseKinds: string[]; representations: Puzzle5dRepresentation[]; grips: Puzzle5dGripTemplate[]; attributes: Puzzle5dAttribute[]; authors: Puzzle5dAuthor[] }
+export interface Puzzle5dCatalogGripKind { id: string; code: string | null; label: string | null; order: number | null; compatibleWith: string[]; description: string; icon: string; color: string; defaultRopeKind: string }
+export interface Puzzle5dCatalogFastenerKind { id: string; name: string; label: string | null }
+export interface Puzzle5dCatalogRopeKind { id: string; name: string; label: string; defaultFastenerKind: string }
+export interface Puzzle5dKindCatalogs { parts: Puzzle5dCatalogPartKind[]; grips: Puzzle5dCatalogGripKind[]; fasteners: Puzzle5dCatalogFastenerKind[]; ropes: Puzzle5dCatalogRopeKind[] }
+export interface Puzzle5dCatalogPartKindExtra extends Puzzle5dCatalogPartKind {}
+export interface Puzzle5dCatalogGripKindExtra extends Puzzle5dCatalogGripKind {}
+export interface Puzzle5dCatalogFastenerKindExtra extends Puzzle5dCatalogFastenerKind {}
+export interface Puzzle5dCatalogRopeKindExtra extends Puzzle5dCatalogRopeKind {}
+export interface Puzzle5dKindCatalogsExtra { parts: Puzzle5dCatalogPartKindExtra[]; grips: Puzzle5dCatalogGripKindExtra[]; fasteners: Puzzle5dCatalogFastenerKindExtra[]; ropes: Puzzle5dCatalogRopeKindExtra[] }
+export interface Puzzle5dSnapshot { schema: string; domain: string; label: string | null; meta: Puzzle5dMeta; kindCatalogs: ArtifactChildHandle | null; kindCatalogsExtra: Puzzle5dKindCatalogsExtra | null; kindCompatibility: Puzzle5dKindCompatibility[]; parts: Puzzle5dPart[]; fasteners: Puzzle5dFastener[]; targetVolumes: Puzzle5dTargetVolume[] }
 
-/** 🏷️ Part-kind attribute. */
-export interface Puzzle5dAttribute {
-  id?: string;
-  key?: string;
-  value?: string;
-  definition?: string;
+/** 🛂️ Report the literal persisted field that failed admission. */
+export class Puzzle5dGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) { super(at + ": " + why); }
 }
-
-/** ✍️ Part-kind author. */
-export interface Puzzle5dAuthor {
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: string;
-  rank?: number;
+const fail = (at: string, why: string): never => { throw new Puzzle5dGuardRefusal(at, why); };
+const object = (value: unknown, at: string): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : fail(at, "requires an object");
+const text = (value: unknown, at: string): string => typeof value === "string" ? value : fail(at, "requires text");
+const bool = (value: unknown, at: string): boolean => typeof value === "boolean" ? value : fail(at, "requires a boolean");
+const int32 = (value: unknown, at: string): number => typeof value === "number" && Number.isInteger(value) && value >= -2147483648 && value <= 2147483647 ? value : fail(at, "requires a signed32 integer");
+const word = (value: unknown, at: string): Binary64 => { try { return parseBinary64(value); } catch { return fail(at, "requires an owned binary64 word"); } };
+const optional = <T>(value: unknown, at: string, parse: (value: unknown, at: string) => T): T | null => value === null ? null : parse(value, at);
+const list = <T>(value: unknown, at: string, parse: (value: unknown, at: string) => T): T[] => Array.isArray(value) ? value.map((item, i) => parse(item, at + "[" + i + "]")) : fail(at, "requires an array");
+const member = <T extends string>(value: unknown, at: string, values: readonly T[]): T => values.includes(value as T) ? value as T : fail(at, "requires one of " + values.join(", "));
+function vector3(value: unknown, at: string): Puzzle5dVector3 {
+  if (!Array.isArray(value) || value.length !== 3) return fail(at, "requires three binary64 words");
+  return [word(value[0], at + "[0]"), word(value[1], at + "[1]"), word(value[2], at + "[2]")];
 }
-
-/** 🖼️ Part-kind representation. */
-export interface Puzzle5dRepresentation {
-  id?: string;
-  name?: string;
-  url?: string;
-  mime?: string;
-  tags?: string[];
-  lod?: string;
-  description?: string;
+function vector4(value: unknown, at: string): Puzzle5dVector4 {
+  if (!Array.isArray(value) || value.length !== 4) return fail(at, "requires four binary64 words");
+  return [word(value[0], at + "[0]"), word(value[1], at + "[1]"), word(value[2], at + "[2]"), word(value[3], at + "[3]")];
 }
-
-/** 🌱️ Grip template on a part-kind. */
-export interface Puzzle5dGripTemplate {
-  id?: string;
-  name?: string;
-  label?: string;
-  description?: string;
-  icon?: string;
-  gripKind?: string;
-  point?: [number, number, number];
-  direction?: [number, number, number];
-  t?: number;
-  mandatory?: boolean;
-  radius?: number;
-}
-
-/** 🧱️ Part-kind catalog row. */
-export interface Puzzle5dCatalogPartKind {
-  id: string;
-  name?: string;
-  label?: string;
-  description?: string;
-  icon?: string;
-  image?: string;
-  unit?: string;
-  abstract?: boolean;
-  baseKinds?: string[];
-  representations?: Puzzle5dRepresentation[];
-  grips?: Puzzle5dGripTemplate[];
-  attributes?: Puzzle5dAttribute[];
-  authors?: Puzzle5dAuthor[];
-}
-
-/** 🔘️ Grip-kind catalog row. */
-export interface Puzzle5dCatalogGripKind {
-  id: string;
-  code?: string;
-  label?: string;
-  order?: number;
-  compatibleWith?: string[];
-  description?: string;
-  icon?: string;
-  color?: string;
-  defaultRopeKind?: string;
-}
-
-/** 🔗️ Fastener-kind catalog row. */
-export interface Puzzle5dCatalogFastenerKind {
-  id: string;
-  name?: string;
-  label?: string;
-}
-
-/** 🧵️ Rope-kind catalog row. */
-export interface Puzzle5dCatalogRopeKind {
-  id: string;
-  name?: string;
-  label?: string;
-  defaultFastenerKind?: string;
-}
-
-/** 🗂️ Kind catalogs bundle — still the `replace-kind-catalogs` mutation payload shape; the snapshot
- * itself now carries the composed `kindCatalogs`/`kindCatalogsExtra` pair below instead. */
-export interface Puzzle5dKindCatalogs {
-  parts?: Puzzle5dCatalogPartKind[];
-  grips?: Puzzle5dCatalogGripKind[];
-  fasteners?: Puzzle5dCatalogFastenerKind[];
-  ropes?: Puzzle5dCatalogRopeKind[];
-}
-
-/** 🧩️ Puzzle5d-owned overflow for one part-kind row — everything the composed `SemioKitType`
- * (`id`/`name`/`category`) cannot represent. */
-export interface Puzzle5dCatalogPartKindExtra {
-  id: string;
-  name?: string;
-  label?: string;
-  description?: string;
-  icon?: string;
-  image?: string;
-  unit?: string;
-  abstract?: boolean;
-  baseKinds?: string[];
-  representations?: Puzzle5dRepresentation[];
-  grips?: Puzzle5dGripTemplate[];
-  attributes?: Puzzle5dAttribute[];
-  authors?: Puzzle5dAuthor[];
-}
-
-/** 🧩️ Puzzle5d-owned overflow for one grip-kind row. */
-export interface Puzzle5dCatalogGripKindExtra {
-  id: string;
-  code?: string;
-  label?: string;
-  order?: number;
-  compatibleWith?: string[];
-  description?: string;
-  icon?: string;
-  color?: string;
-  defaultRopeKind?: string;
-}
-
-/** 🧩️ Puzzle5d-owned overflow for one fastener-kind row. */
-export interface Puzzle5dCatalogFastenerKindExtra {
-  id: string;
-  name?: string;
-  label?: string;
-}
-
-/** 🧩️ Puzzle5d-owned overflow for one rope-kind row. */
-export interface Puzzle5dCatalogRopeKindExtra {
-  id: string;
-  name?: string;
-  label?: string;
-  defaultFastenerKind?: string;
-}
-
-/** 🗂️ Puzzle5d-owned overflow half of the kind-catalogs bundle, sibling to the composed
- * `kindCatalogs` child. */
-export interface Puzzle5dKindCatalogsExtra {
-  parts?: Puzzle5dCatalogPartKindExtra[];
-  grips?: Puzzle5dCatalogGripKindExtra[];
-  fasteners?: Puzzle5dCatalogFastenerKindExtra[];
-  ropes?: Puzzle5dCatalogRopeKindExtra[];
-}
-
-/** 🔗️ Kind compatibility row. */
-export interface Puzzle5dKindCompatibility {
-  source: string;
-  target: string;
-  bidirectional?: boolean;
-  important?: boolean;
-  specificity?: Puzzle5dCompatSpecificity;
-}
-
-/** 📝️ Meta. */
-export interface Puzzle5dMeta {
-  description?: string;
-}
-
-/** 🧱️ Part. */
-export interface Puzzle5dPart {
-  id: string;
-  partKind?: string;
-  anchor?: Puzzle5dPartAnchor;
-  "2d"?: Record<string, unknown>;
-  "3d"?: Record<string, unknown>;
-  grips?: Record<string, unknown>[];
-}
-
-/** 🔗️ Fastener with eight transform params. */
-export interface Puzzle5dFastener {
-  id: string;
-  source: string;
-  target: string;
-  fastenerKind?: string;
-  gap?: number;
-  shift?: number;
-  rise?: number;
-  rotation?: number;
-  turn?: number;
-  tilt?: number;
-  x?: number;
-  y?: number;
-}
-
-/** 🧊️ Oriented box constraining fill placement in the 3D projection. */
-export interface Puzzle5dTargetVolume {
-  id: string;
-  origin?: [number, number, number];
-  orientation?: [number, number, number, number];
-  scale?: number | [number, number, number];
-  hidden?: boolean;
-  locked?: boolean;
-}
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class puzzlePuzzle5dSnapshotGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const puzzlePuzzle5dSnapshotGuardReject = (at: string, why: string): never => {
-  throw new puzzlePuzzle5dSnapshotGuardRefusal(at, why);
-};
-
-type puzzlePuzzle5dSnapshotGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type puzzlePuzzle5dSnapshotGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type puzzlePuzzle5dSnapshotGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const puzzlePuzzle5dSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle5dSnapshotGuardReject(at, "value is not an object");
-export const puzzlePuzzle5dSnapshotGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle5dSnapshotGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return puzzlePuzzle5dSnapshotGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle5dSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) puzzlePuzzle5dSnapshotGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const puzzlePuzzle5dSnapshotGuardString = (value: unknown, at: string, bounds: puzzlePuzzle5dSnapshotGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return puzzlePuzzle5dSnapshotGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) puzzlePuzzle5dSnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) puzzlePuzzle5dSnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) puzzlePuzzle5dSnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const puzzlePuzzle5dSnapshotGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : puzzlePuzzle5dSnapshotGuardReject(at, "value is not a boolean"));
-export const puzzlePuzzle5dSnapshotGuardNumber = (value: unknown, at: string, bounds: puzzlePuzzle5dSnapshotGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return puzzlePuzzle5dSnapshotGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) puzzlePuzzle5dSnapshotGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) puzzlePuzzle5dSnapshotGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const puzzlePuzzle5dSnapshotGuardInteger = (value: unknown, at: string, bounds: puzzlePuzzle5dSnapshotGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? puzzlePuzzle5dSnapshotGuardNumber(value, at, bounds) : puzzlePuzzle5dSnapshotGuardReject(at, "value is not an integer");
-export const puzzlePuzzle5dSnapshotGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : puzzlePuzzle5dSnapshotGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const puzzlePuzzle5dSnapshotGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : puzzlePuzzle5dSnapshotGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parsePuzzle5dTargetVolume(value: unknown, at = "$"): Puzzle5dTargetVolume {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  const axes = (key: string, count: number): number[] | undefined =>
-    row[key] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row[key], `${at}.${key}`, { minItems: count, maxItems: count }).map((item, index) => puzzlePuzzle5dSnapshotGuardNumber(item, `${at}.${key}[${index}]`));
-  return {
-    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
-    origin: axes("origin", 3) as [number, number, number] | undefined,
-    orientation: axes("orientation", 4) as [number, number, number, number] | undefined,
-    scale: row["scale"] === undefined ? undefined : typeof row["scale"] === "number" ? puzzlePuzzle5dSnapshotGuardNumber(row["scale"], `${at}.scale`) : (axes("scale", 3) as [number, number, number]),
-    hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["hidden"], `${at}.hidden`),
-    locked: row["locked"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["locked"], `${at}.locked`),
-  };
-}
-
-export function parseArtifactChildHandle(value: unknown, at = "$"): ArtifactChildHandle {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    childId: puzzlePuzzle5dSnapshotGuardString(row["childId"], `${at}.childId`),
-    target: parseArtifactRef(row["target"], `${at}.target`),
-  };
-}
-
-export function parsePuzzle5dKindCatalogsExtra(value: unknown, at = "$"): Puzzle5dKindCatalogsExtra {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    parts: row["parts"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["parts"], `${at}.parts`).map((item, index) => parsePuzzle5dCatalogPartKindExtra(item, `${at}.parts[${index}]`)),
-    grips: row["grips"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["grips"], `${at}.grips`).map((item, index) => parsePuzzle5dCatalogGripKindExtra(item, `${at}.grips[${index}]`)),
-    fasteners: row["fasteners"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["fasteners"], `${at}.fasteners`).map((item, index) => parsePuzzle5dCatalogFastenerKindExtra(item, `${at}.fasteners[${index}]`)),
-    ropes: row["ropes"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["ropes"], `${at}.ropes`).map((item, index) => parsePuzzle5dCatalogRopeKindExtra(item, `${at}.ropes[${index}]`)),
-  };
-}
-
-export function parsePuzzle5dCatalogGripKindExtra(value: unknown, at = "$"): Puzzle5dCatalogGripKindExtra {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
-    code: row["code"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["code"], `${at}.code`),
-    label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
-    order: row["order"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardInteger(row["order"], `${at}.order`),
-    compatibleWith: row["compatibleWith"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["compatibleWith"], `${at}.compatibleWith`).map((item, index) => puzzlePuzzle5dSnapshotGuardString(item, `${at}.compatibleWith[${index}]`)),
-    description: row["description"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["description"], `${at}.description`),
-    icon: row["icon"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["icon"], `${at}.icon`),
-    color: row["color"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["color"], `${at}.color`),
-    defaultRopeKind: row["defaultRopeKind"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["defaultRopeKind"], `${at}.defaultRopeKind`),
-  };
-}
-
-export function parsePuzzle5dCatalogFastenerKindExtra(value: unknown, at = "$"): Puzzle5dCatalogFastenerKindExtra {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
-    name: row["name"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["name"], `${at}.name`),
-    label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
-  };
-}
-
-export function parsePuzzle5dCatalogRopeKindExtra(value: unknown, at = "$"): Puzzle5dCatalogRopeKindExtra {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
-    name: row["name"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["name"], `${at}.name`),
-    label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
-    defaultFastenerKind: row["defaultFastenerKind"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["defaultFastenerKind"], `${at}.defaultFastenerKind`),
-  };
-}
-
+/** 📐️ Preserve the native scalar and vector scale branches. */
+export function parsePuzzle5dScale(value: unknown, at = "$"): Puzzle5dScale { return Array.isArray(value) ? vector3(value, at) : word(value, at); }
+/** 🧭️ Admit the independently persisted three dialect strings. */
 export function parseArtifactDialect(value: unknown, at = "$"): ArtifactDialect {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    artifactKind: puzzlePuzzle5dSnapshotGuardString(row["artifactKind"], `${at}.artifactKind`),
-    standard: puzzlePuzzle5dSnapshotGuardString(row["standard"], `${at}.standard`),
-    subset: puzzlePuzzle5dSnapshotGuardString(row["subset"], `${at}.subset`),
-  };
+  const r = object(value, at);
+  return { artifactKind: text(r.artifactKind, at + ".artifactKind"), standard: text(r.standard, at + ".standard"), subset: text(r.subset, at + ".subset") };
 }
-
+/** 🪪️ Admit a literal target identity without URI normalization. */
 export function parseArtifactRef(value: unknown, at = "$"): ArtifactRef {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    artifactId: puzzlePuzzle5dSnapshotGuardString(row["artifactId"], `${at}.artifactId`),
-    dialect: parseArtifactDialect(row["dialect"], `${at}.dialect`),
-  };
+  const r = object(value, at);
+  return { artifactId: text(r.artifactId, at + ".artifactId"), dialect: parseArtifactDialect(r.dialect, at + ".dialect") };
 }
-
-export function parsePuzzle5dCatalogPartKindExtra(value: unknown, at = "$"): Puzzle5dCatalogPartKindExtra {
-  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
-  return {
-    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
-    name: row["name"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["name"], `${at}.name`),
-    label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
-    description: row["description"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["description"], `${at}.description`),
-    icon: row["icon"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["icon"], `${at}.icon`),
-    image: row["image"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["image"], `${at}.image`),
-    unit: row["unit"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["unit"], `${at}.unit`),
-    abstract: row["abstract"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["abstract"], `${at}.abstract`),
-    baseKinds: row["baseKinds"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["baseKinds"], `${at}.baseKinds`).map((item, index) => puzzlePuzzle5dSnapshotGuardString(item, `${at}.baseKinds[${index}]`)),
-    representations: row["representations"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["representations"], `${at}.representations`).map((item, index) => parsePuzzle5dRepresentation(item, `${at}.representations[${index}]`)),
-    grips: row["grips"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["grips"], `${at}.grips`).map((item, index) => parsePuzzle5dGripTemplate(item, `${at}.grips[${index}]`)),
-    attributes: row["attributes"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parsePuzzle5dAttribute(item, `${at}.attributes[${index}]`)),
-    authors: row["authors"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["authors"], `${at}.authors`).map((item, index) => parsePuzzle5dAuthor(item, `${at}.authors[${index}]`)),
-  };
+/** 🌉️ Keep local child identity independent from its persisted target. */
+export function parseArtifactChildHandle(value: unknown, at = "$"): ArtifactChildHandle {
+  const r = object(value, at);
+  return { childId: text(r.childId, at + ".childId"), target: parseArtifactRef(r.target, at + ".target") };
+}
+/** 📝️ Admit the native description string. */
+export function parsePuzzle5dMeta(value: unknown, at = "$"): Puzzle5dMeta { const r = object(value, at); return { description: text(r.description, at + ".description") }; }
+/** ◻️ Admit the complete native board placement. */
+export function parsePuzzle5dPart2d(value: unknown, at = "$"): Puzzle5dPart2d {
+  const r = object(value, at);
+  return { x: word(r.x, at + ".x"), y: word(r.y, at + ".y"), shape: optional(r.shape, at + ".shape", text), radius: optional(r.radius, at + ".radius", word), width: optional(r.width, at + ".width", word), height: optional(r.height, at + ".height", word), text: optional(r.text, at + ".text", text), iconKind: optional(r.iconKind, at + ".iconKind", text), hidden: optional(r.hidden, at + ".hidden", bool), locked: optional(r.locked, at + ".locked", bool) };
+}
+/** 🧊️ Admit the complete native world placement. */
+export function parsePuzzle5dPart3d(value: unknown, at = "$"): Puzzle5dPart3d {
+  const r = object(value, at);
+  return { origin: vector3(r.origin, at + ".origin"), meshUrl: optional(r.meshUrl, at + ".meshUrl", text), orientation: optional(r.orientation, at + ".orientation", vector4), scale: optional(r.scale, at + ".scale", parsePuzzle5dScale), label: optional(r.label, at + ".label", text) };
+}
+/** 🔘️ Admit the native grip board fields. */
+export function parsePuzzle5dGrip2d(value: unknown, at = "$"): Puzzle5dGrip2d {
+  const r = object(value, at);
+  return { angle: word(r.angle, at + ".angle"), gripKind: optional(r.gripKind, at + ".gripKind", text), radius: optional(r.radius, at + ".radius", word) };
+}
+/** 📍️ Admit the native grip world fields. */
+export function parsePuzzle5dGrip3d(value: unknown, at = "$"): Puzzle5dGrip3d {
+  const r = object(value, at);
+  return { position: vector3(r.position, at + ".position"), direction: optional(r.direction, at + ".direction", vector3), radius: optional(r.radius, at + ".radius", word), label: optional(r.label, at + ".label", text) };
+}
+/** 🧲️ Admit an independently ordered grip occurrence. */
+export function parsePuzzle5dGrip(value: unknown, at = "$"): Puzzle5dGrip {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), gripKind: optional(r.gripKind, at + ".gripKind", text), "2d": parsePuzzle5dGrip2d(r["2d"], at + ".2d"), "3d": parsePuzzle5dGrip3d(r["3d"], at + ".3d") };
+}
+/** ⚓️ Admit the native anchor branch. */
+export function parsePuzzle5dPartAnchor(value: unknown, at = "$"): Puzzle5dPartAnchor { return member(value, at, ["fixed", "derived"]); }
+/** 🧱️ Admit the complete part and its ordered owned grips. */
+export function parsePuzzle5dPart(value: unknown, at = "$"): Puzzle5dPart {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), partKind: optional(r.partKind, at + ".partKind", text), anchor: parsePuzzle5dPartAnchor(r.anchor, at + ".anchor"), "2d": parsePuzzle5dPart2d(r["2d"], at + ".2d"), "3d": parsePuzzle5dPart3d(r["3d"], at + ".3d"), grips: list(r.grips, at + ".grips", parsePuzzle5dGrip) };
+}
+/** 🔗️ Admit all eight exact native transform fields. */
+export function parsePuzzle5dFastener(value: unknown, at = "$"): Puzzle5dFastener {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), source: text(r.source, at + ".source"), target: text(r.target, at + ".target"), fastenerKind: optional(r.fastenerKind, at + ".fastenerKind", text), gap: word(r.gap, at + ".gap"), shift: word(r.shift, at + ".shift"), rise: word(r.rise, at + ".rise"), rotation: word(r.rotation, at + ".rotation"), turn: word(r.turn, at + ".turn"), tilt: word(r.tilt, at + ".tilt"), x: word(r.x, at + ".x"), y: word(r.y, at + ".y") };
+}
+/** 🧊️ Admit the actual target-volume value without spatial restrictions. */
+export function parsePuzzle5dTargetVolume(value: unknown, at = "$"): Puzzle5dTargetVolume {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), origin: vector3(r.origin, at + ".origin"), orientation: optional(r.orientation, at + ".orientation", vector4), scale: optional(r.scale, at + ".scale", parsePuzzle5dScale), hidden: bool(r.hidden, at + ".hidden"), locked: bool(r.locked, at + ".locked") };
+}
+/** 🔖️ Admit the native compatibility specificity branch. */
+export function parsePuzzle5dCompatSpecificity(value: unknown, at = "$"): Puzzle5dCompatSpecificity { return member(value, at, ["general", "part", "fastener", "grip", "rope"]); }
+/** 🔁️ Admit an ordered native compatibility row. */
+export function parsePuzzle5dKindCompatibility(value: unknown, at = "$"): Puzzle5dKindCompatibility {
+  const r = object(value, at);
+  return { source: text(r.source, at + ".source"), target: text(r.target, at + ".target"), bidirectional: bool(r.bidirectional, at + ".bidirectional"), important: bool(r.important, at + ".important"), specificity: parsePuzzle5dCompatSpecificity(r.specificity, at + ".specificity") };
+}
+/** 🏷️ Admit the actual attribute fields. */
+export function parsePuzzle5dAttribute(value: unknown, at = "$"): Puzzle5dAttribute {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), key: text(r.key, at + ".key"), value: text(r.value, at + ".value"), definition: optional(r.definition, at + ".definition", text) };
+}
+/** ✍️ Admit native author fields and optional signed32 rank. */
+export function parsePuzzle5dAuthor(value: unknown, at = "$"): Puzzle5dAuthor {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), email: text(r.email, at + ".email"), role: optional(r.role, at + ".role", text), rank: optional(r.rank, at + ".rank", int32) };
+}
+/** 🖼️ Admit ordered representations and literal tags. */
+export function parsePuzzle5dRepresentation(value: unknown, at = "$"): Puzzle5dRepresentation {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), url: text(r.url, at + ".url"), mime: text(r.mime, at + ".mime"), tags: list(r.tags, at + ".tags", text), lod: optional(r.lod, at + ".lod", text), description: text(r.description, at + ".description") };
+}
+/** 🌱️ Admit the complete native grip template. */
+export function parsePuzzle5dGripTemplate(value: unknown, at = "$"): Puzzle5dGripTemplate {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), label: text(r.label, at + ".label"), description: text(r.description, at + ".description"), icon: text(r.icon, at + ".icon"), gripKind: optional(r.gripKind, at + ".gripKind", text), point: vector3(r.point, at + ".point"), direction: vector3(r.direction, at + ".direction"), t: optional(r.t, at + ".t", word), mandatory: optional(r.mandatory, at + ".mandatory", bool), radius: optional(r.radius, at + ".radius", word) };
+}
+/** 🧱️ Admit every explicitly owned part-kind field and ordered collection. */
+export function parsePuzzle5dCatalogPartKind(value: unknown, at = "$"): Puzzle5dCatalogPartKind {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), label: text(r.label, at + ".label"), description: text(r.description, at + ".description"), icon: text(r.icon, at + ".icon"), image: text(r.image, at + ".image"), unit: text(r.unit, at + ".unit"), abstract: bool(r.abstract, at + ".abstract"), baseKinds: list(r.baseKinds, at + ".baseKinds", text), representations: list(r.representations, at + ".representations", parsePuzzle5dRepresentation), grips: list(r.grips, at + ".grips", parsePuzzle5dGripTemplate), attributes: list(r.attributes, at + ".attributes", parsePuzzle5dAttribute), authors: list(r.authors, at + ".authors", parsePuzzle5dAuthor) };
+}
+/** 🔘️ Admit every explicitly owned grip-kind field. */
+export function parsePuzzle5dCatalogGripKind(value: unknown, at = "$"): Puzzle5dCatalogGripKind {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), code: optional(r.code, at + ".code", text), label: optional(r.label, at + ".label", text), order: optional(r.order, at + ".order", int32), compatibleWith: list(r.compatibleWith, at + ".compatibleWith", text), description: text(r.description, at + ".description"), icon: text(r.icon, at + ".icon"), color: text(r.color, at + ".color"), defaultRopeKind: text(r.defaultRopeKind, at + ".defaultRopeKind") };
+}
+/** 🔗️ Admit the native fastener-kind fields. */
+export function parsePuzzle5dCatalogFastenerKind(value: unknown, at = "$"): Puzzle5dCatalogFastenerKind {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), label: optional(r.label, at + ".label", text) };
+}
+/** 🧵️ Admit the native rope-kind fields. */
+export function parsePuzzle5dCatalogRopeKind(value: unknown, at = "$"): Puzzle5dCatalogRopeKind {
+  const r = object(value, at);
+  return { id: text(r.id, at + ".id"), name: text(r.name, at + ".name"), label: text(r.label, at + ".label"), defaultFastenerKind: text(r.defaultFastenerKind, at + ".defaultFastenerKind") };
+}
+/** 🗂️ Admit the actual mutation catalog payload, distinct from the persisted child. */
+export function parsePuzzle5dKindCatalogs(value: unknown, at = "$"): Puzzle5dKindCatalogs {
+  const r = object(value, at);
+  return { parts: list(r.parts, at + ".parts", parsePuzzle5dCatalogPartKind), grips: list(r.grips, at + ".grips", parsePuzzle5dCatalogGripKind), fasteners: list(r.fasteners, at + ".fasteners", parsePuzzle5dCatalogFastenerKind), ropes: list(r.ropes, at + ".ropes", parsePuzzle5dCatalogRopeKind) };
+}
+/** 🧩️ Admit the puzzle-owned part-kind overflow with the same actual native fields. */
+export function parsePuzzle5dCatalogPartKindExtra(value: unknown, at = "$"): Puzzle5dCatalogPartKindExtra { return parsePuzzle5dCatalogPartKind(value, at); }
+/** 🧩️ Admit the puzzle-owned grip-kind overflow. */
+export function parsePuzzle5dCatalogGripKindExtra(value: unknown, at = "$"): Puzzle5dCatalogGripKindExtra { return parsePuzzle5dCatalogGripKind(value, at); }
+/** 🧩️ Admit the puzzle-owned fastener-kind overflow. */
+export function parsePuzzle5dCatalogFastenerKindExtra(value: unknown, at = "$"): Puzzle5dCatalogFastenerKindExtra { return parsePuzzle5dCatalogFastenerKind(value, at); }
+/** 🧩️ Admit the puzzle-owned rope-kind overflow. */
+export function parsePuzzle5dCatalogRopeKindExtra(value: unknown, at = "$"): Puzzle5dCatalogRopeKindExtra { return parsePuzzle5dCatalogRopeKind(value, at); }
+/** 🗃️ Admit the independent native catalog overflow collections. */
+export function parsePuzzle5dKindCatalogsExtra(value: unknown, at = "$"): Puzzle5dKindCatalogsExtra {
+  const r = object(value, at);
+  return { parts: list(r.parts, at + ".parts", parsePuzzle5dCatalogPartKindExtra), grips: list(r.grips, at + ".grips", parsePuzzle5dCatalogGripKindExtra), fasteners: list(r.fasteners, at + ".fasteners", parsePuzzle5dCatalogFastenerKindExtra), ropes: list(r.ropes, at + ".ropes", parsePuzzle5dCatalogRopeKindExtra) };
+}
+/** 📸️ Admit all ten persisted fields without native file defaults or normalization. */
+export function parsePuzzle5dSnapshot(value: unknown, at = "$"): Puzzle5dSnapshot {
+  const r = object(value, at);
+  return { schema: text(r.schema, at + ".schema"), domain: text(r.domain, at + ".domain"), label: optional(r.label, at + ".label", text), meta: parsePuzzle5dMeta(r.meta, at + ".meta"), kindCatalogs: optional(r.kindCatalogs, at + ".kindCatalogs", parseArtifactChildHandle), kindCatalogsExtra: optional(r.kindCatalogsExtra, at + ".kindCatalogsExtra", parsePuzzle5dKindCatalogsExtra), kindCompatibility: list(r.kindCompatibility, at + ".kindCompatibility", parsePuzzle5dKindCompatibility), parts: list(r.parts, at + ".parts", parsePuzzle5dPart), fasteners: list(r.fasteners, at + ".fasteners", parsePuzzle5dFastener), targetVolumes: list(r.targetVolumes, at + ".targetVolumes", parsePuzzle5dTargetVolume) };
 }

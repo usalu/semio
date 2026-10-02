@@ -53,14 +53,23 @@ impl dsl::DslField for EntityId {
     fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
+    fn shape_controlled<C: dsl::NativeSchemaControl>(control: &mut C) -> Result<dsl::Shape, String> {
+        <String as dsl::DslField>::shape_controlled(control)
+    }
     fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
+    }
+    fn to_value_controlled(&self, control: &mut dsl::NativeEncodeControl<'_>) -> Result<dsl::FieldValue, String> {
+        <String as dsl::DslField>::to_value_controlled(&self.0, control)
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
         }
+    }
+    fn from_value_controlled(value: &dsl::FieldValue, control: &mut dsl::NativeDecodeControl<'_>) -> Result<Self, String> {
+        <String as dsl::DslField>::from_value_controlled(value, control).map(Self)
     }
 }
 // #endregion

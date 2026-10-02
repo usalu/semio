@@ -32,7 +32,7 @@ pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
             }
         }
     }
-    let mut emit=Emit::commit(vec![crate::mutations::update_path_geometry(payload.layer_id.clone(), segments)],"Edit path");
+    let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(payload.layer_id.clone(), segments)]);
     if rebind && !session.interaction.points.is_empty() {emit.effects.push(point_selection_effect(&selected));}
     Ok(emit)
 }

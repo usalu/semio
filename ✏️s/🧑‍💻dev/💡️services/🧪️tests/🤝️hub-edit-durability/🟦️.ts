@@ -40,7 +40,7 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../.
 import { createSpaceCommandV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
-function findRepoRoot(start: string): string {
+function findWorkspaceRoot(start: string): string {
   let current = start;
   for (let depth = 0; depth < 32; depth += 1) {
     if (existsSync(join(current, ".mcp.json"))) return current;
@@ -50,7 +50,7 @@ function findRepoRoot(start: string): string {
   }
   throw new Error(`the hub-edit-durability gate could not locate the repository root above ${start}`);
 }
-const repoRoot = findRepoRoot(here);
+const repoRoot = findWorkspaceRoot(here);
 const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🤝️hub-edit-durability/🔣️.json"), "utf8"));
 const hubRoot = join(repoRoot, readdirSync(repoRoot).find((name) => existsSync(join(repoRoot, name, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts")))!);
 const { startLocalHub, waitForReadiness, finishLocalHub, freeLoopbackPort, hubDevBinaryPath } = await import(join(hubRoot, "🚀️local-bootstrap", "🏃️execution", "🟦️.ts"));

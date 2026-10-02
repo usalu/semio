@@ -62,5 +62,45 @@
     }
   ],
   "editCoordinateLexeme": "181",
-  "cancelNodes": 600
+  "cancelNodes": 600,
+  "typedNumberCases": [
+    {
+      "lexeme": "01",
+      "hard": true
+    },
+    {
+      "lexeme": "NaN",
+      "hard": true
+    },
+    {
+      "lexeme": "",
+      "hard": true
+    },
+    {
+      "lexeme": ".1",
+      "hard": true
+    },
+    {
+      "lexeme": "1e400",
+      "hard": true
+    },
+    {
+      "lexeme": "12",
+      "hard": false
+    },
+    {
+      "lexeme": "-0",
+      "hard": false
+    }
+  ],
+  "foreignNumberCases": [
+    {
+      "lexeme": "NaN",
+      "hard": true
+    },
+    {
+      "lexeme": "1e400",
+      "hard": false
+    }
+  ]
 }

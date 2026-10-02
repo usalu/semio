@@ -33,5 +33,5 @@ fn the_sample_is_a_real_three_colour_plan() {
 #[test]
 fn the_seed_and_the_label_are_persisted_and_authored() {
     assert_eq!(snapshot().seed, SEED);
-    assert_eq!(label(), semio_framework_plugin::LocalizedLabel::native("Rooms 16", "Räume 16"));
+    assert_eq!(label(), semio_framework_ui_locale::LocalizedLabel::native("Rooms 16", "Räume 16"));
 }

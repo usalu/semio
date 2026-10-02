@@ -1,12 +1,17 @@
 #!/usr/bin/env bun
+import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { BROWSER_CANVAS_HOT_CRATES } from "../../../🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
+import { resolve } from "node:path";
+import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
-import { BROWSER_CANVAS_HOT_CRATES, resolveTestLevel, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class WasmScript extends BundleScript {
-  run(): void {
-    runWasmPackWebBuild({
+  async run(): Promise<void> {
+    await buildWasmWebV1({
       rsDir: this.root,
       logPrefix: "framework/editor/rs",
       wasmBaseName: "framework_editor",
@@ -19,14 +24,14 @@ class WasmScript extends BundleScript {
         module: "framework_editor.js",
         types: "framework_editor.d.ts",
       },
-    });
+    }, readWasmBuildPolicyV1(process.env,this.root));
   }
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCargoTestBudgeted(["framework_editor"], this.repoRoot, rest);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-editor"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 

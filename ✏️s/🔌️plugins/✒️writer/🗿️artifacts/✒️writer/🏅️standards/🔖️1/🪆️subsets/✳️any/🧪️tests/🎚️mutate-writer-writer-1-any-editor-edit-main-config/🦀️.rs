@@ -1,13 +1,13 @@
 //! 🎚️ `s.writer.writer` ✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config state-lane mutation case — Rust adapter.
 //!
 //! Recorded no-oracle decision `writer-writer-1-any-editor-edit-main-config-state-lane-semantics`: the runner dispatches no oracle role, so every law is asserted inside
-//! the subject handlers through `semio_s_plugin_stdio_test_oracle::law::vector` over the report of this crate's
+//! the subject handlers through `semio_repo_test_host::law::vector` over the report of this crate's
 //! production bridge `writer_main_window_config_mutation_report_json`. The oracle handlers answer with the committed after- and before-snapshots read
 //! literally, so the reference side exists the moment a second producer does. Handlers are registered by Scenario
 //! Outline base id and read their kind from the row.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
+use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures`.
@@ -22,11 +22,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
             observable: true,
         },
         "set-camera" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧫️fixtures/📷️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -52,7 +52,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_plugin_stdio_test_oracle::law::vector;
+    use semio_repo_test_host::law::vector;
     use semio_s_artifact_writer_writer::editor::writer::modes::edit::windows::main::config::writer_main_window_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {

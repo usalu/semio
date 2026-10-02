@@ -1,7 +1,8 @@
+import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import assert from "node:assert/strict";
 
 export function createBrowserBundleTests(dependencies: import("../../🌐️browser-bundle/📜️script.ts").BrowserBundleTestDependencies, source: { directory: string; url: string }) {
-  const { browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
+  const { browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
   type BrowserActorBuildControl = import("../../🌐️browser-bundle/📜️script.ts").BrowserActorBuildControl;
   async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
     await testBrowserActorCodegenManifest();
@@ -20,7 +21,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"), "browser factory law requires ticket-generated evidence root");
     mkdirSync(artifactBase, { recursive: true });
     const evidence = mkdtempSync(join(artifactBase, "browser-component-factory-"));
-    const probe = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const probe = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import { parse, transpile } from "@bytecodealliance/jco";
       import { readFileSync } from "node:fs";
       const fixture = JSON.parse(readFileSync(process.argv[1], "utf8"));
@@ -34,7 +35,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const explicitAsync = await closedBrowserComponentFactory(input.source.replace("export function instantiate(getCoreModule, imports, instantiateCore = WebAssembly.instantiate) {", "export async function instantiate(getCoreModule, imports, instantiateCore = WebAssembly.instantiate) { await Promise.resolve();"), cores);
     assert(explicitAsync.startsWith("async function __semioInstantiate"));
     writeFileSync(join(evidence, "factory.json"), JSON.stringify({ factory, explicitAsync, fixture, core: input.cores[0].hex }));
-    const runtime = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const runtime = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
       const { factory, explicitAsync, fixture, core } = JSON.parse(readFileSync(process.argv[1], "utf8"));
@@ -119,7 +120,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     for (const denied of hostile) assert.throws(denied, /compiler capsule/);
     const evidence = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "browser-compiler-capsule-"));
     writeFileSync(join(evidence, "fixture.json"), JSON.stringify({ fixture, closed }), { mode: 0o600 });
-    const runtime = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const runtime = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
       const { fixture, closed } = JSON.parse(readFileSync(process.argv[1], "utf8"));
@@ -157,7 +158,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     });
     assert.equal(replaced, fixture.inputs.length);
     assert.deepEqual(changed, baseline);
-    const oracle = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const oracle = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
       const { source, fixture } = JSON.parse(readFileSync(process.argv[1], "utf8"));
@@ -266,7 +267,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
     mkdirSync(artifactBase, { recursive: true });
     const evidence = mkdtempSync(join(artifactBase, "browser-actor-factory-"));
-    const probe = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const probe = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import { parse, transpile } from "@bytecodealliance/jco";
       import { readFileSync } from "node:fs";
       const fixture = JSON.parse(readFileSync(process.argv[1], "utf8"));
@@ -400,7 +401,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     }
     const bundle = new TextDecoder("utf-8", { fatal: true }).decode(artifact.bytes);
     writeFileSync(join(evidence, "bundle.json"), JSON.stringify({ bundle, fixture, core: input.cores[0].hex }));
-    const runtime = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
+    const runtime = await captureOwnedProcess("node", ["--input-type=module", "-e", `
       import assert from "node:assert/strict";
       import { readFileSync } from "node:fs";
       const { bundle, fixture, core } = JSON.parse(readFileSync(process.argv[1], "utf8"));

@@ -15,7 +15,7 @@ async fn definition_declares_a_structurally_editable_table_window() {
 #[semio_framework_async_macros::async_test]
 async fn render_keeps_every_record_as_windowed_editable_data() {
     let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["name".into(), "role".into()], vec!["ada".into(), "engineer".into()]], trailing_newline: false, line_ending: Default::default() };
-    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::De, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render_revisioned(&document, "store-revision", semio_framework_ui_locale::Locale::De, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     assert!(matches!(node.component, Component::Container(_)));
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("declarative table json");
     for witness in ["name", "role", "ada", "engineer", "Spalte 1", "Spalte 2", "store-revision", "set-cell", "Zeile hinzufügen", "Spalte hinzufügen", "Zeile entfernen"] {
@@ -27,7 +27,7 @@ async fn render_keeps_every_record_as_windowed_editable_data() {
 #[semio_framework_async_macros::async_test]
 async fn render_keeps_a_single_record_editable_instead_of_hiding_it_as_a_header() {
     let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["only-row".into()]], trailing_newline: false, line_ending: Default::default() };
-    let node = render_revisioned(&document, "store-revision", semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
+    let node = render_revisioned(&document, "store-revision", semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("declarative table json");
     assert!(json.contains("only-row"));
     assert!(json.contains("Column 1"));

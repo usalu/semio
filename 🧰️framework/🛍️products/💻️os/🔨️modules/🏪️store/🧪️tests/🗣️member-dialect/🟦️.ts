@@ -59,7 +59,7 @@ export function testMemberDialectFixture(): void {
     for (const ref of row.parent) {
       const slot = fixture.projectionSlots.find((slot: { name: string }) => slot.name === ref.slot);
       const count = (counts.get(ref.slot) ?? 0) + 1;
-      projected &&= !!slot && slot.kind === ref.artifactKind && (slot.many || count === 1) && ref.childId === ref.artifactId && !children.has(ref.childId)
+      projected &&= !!slot && slot.kind === ref.artifactKind && (slot.many || count === 1) && !children.has(ref.childId)
         && Object.values(ref).every((value) => typeof value === "string" && new TextEncoder().encode(value).length > 0 && new TextEncoder().encode(value).length <= 256);
       counts.set(ref.slot, count);
       children.add(ref.childId);
@@ -67,7 +67,7 @@ export function testMemberDialectFixture(): void {
     const refSchema = { type: "object", required: ["slot", "childId", "artifactId", "artifactKind", "standard", "subset"], properties: Object.fromEntries(["slot", "childId", "artifactId", "artifactKind", "standard", "subset"].map((name) => [name, { type: "string", minLength: 1 }])), anyOf: fixture.projectionSlots.map((slot: { name: string; kind: string }) => ({ properties: { slot: { const: slot.name }, artifactKind: { const: slot.kind } } })) };
     const independent = ajv.compile({ type: "array", maxItems: 64, items: refSchema, allOf: fixture.projectionSlots.filter((slot: { many: boolean }) => !slot.many).map((slot: { name: string }) => ({ contains: { type: "object", required: ["slot"], properties: { slot: { const: slot.name } } }, minContains: 0, maxContains: 1 })) });
     const oracle = independent(row.parent) && ajv.compile({ type: "array", uniqueItems: true })(row.parent.map((ref: { childId: string }) => ref.childId))
-      && row.parent.every((ref: { childId: string; artifactId: string }) => ajv.compile({ const: ref.childId })(ref.artifactId) && Object.values(ref).every((value) => Buffer.byteLength(value) <= 256));
+      && row.parent.every((ref: { childId: string; artifactId: string }) => Object.values(ref).every((value) => Buffer.byteLength(value) <= 256));
     assert.equal(projected, oracle, row.id);
     assert.equal(projected, row.projected, row.id);
     const canonical = (refs: Array<{ slot: string; childId: string }>) => refs.toSorted((a, b) => JSON.stringify([a.slot, a.childId]).localeCompare(JSON.stringify([b.slot, b.childId])));

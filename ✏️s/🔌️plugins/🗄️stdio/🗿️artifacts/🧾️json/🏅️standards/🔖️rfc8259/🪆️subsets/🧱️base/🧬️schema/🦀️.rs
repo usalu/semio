@@ -50,25 +50,25 @@ impl JsonArtifact {
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.stdio.json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn json_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn json_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.json",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -145,43 +145,14 @@ pub mod derived_analysis {
     /// 🧐️ Analyzes `stdio.json` (rfc8259/✳️any) sources.
     pub struct JsonAnalyzerAnalysis;
 
-    /// 🔍 JSON has no magic bytes — a real parse attempt with our own rfc8259 recursive-descent
-    /// parser is the strongest available signal (cheap for realistic file sizes); fall back to a
-    /// first-non-whitespace-character heuristic when the bytes aren't valid UTF-8 text at all.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn looks_like_json(text: &str) -> IoConfidence {
-        if crate::schema::snapshot::parse_json_text(text.trim()).is_ok() {
-            return IoConfidence::High;
-        }
-        match text.trim_start().chars().next() {
-            Some('{') | Some('[') | Some('"') => IoConfidence::Medium,
-            _ => IoConfidence::Low,
-        }
-    }
-
     impl ArtifactAnalysis for JsonAnalyzerAnalysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Text(text) => {
-                    let body = match store::semio_format::split_text_preamble(text) {
-                        Ok((_, rest)) => rest,
-                        Err(_) => text,
-                    };
-                    looks_like_json(body)
-                }
-                AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
-                    Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_json(&text),
-                        Err(_) => IoConfidence::Low,
-                    },
-                    Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_json(text),
-                        Err(_) => IoConfidence::Low,
-                    },
-                },
+                AnalyzeSource::Text(text) => if <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).is_ok() { IoConfidence::High } else { IoConfidence::Low },
+                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).is_ok() { IoConfidence::High } else { IoConfidence::Low },
             }
         }
 

@@ -17,5 +17,5 @@ pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, DrawingSnapshot>,
     if payload.layer_id.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit::commit(crate::editor::drawing::commands::edit_selection::plan(doc.snapshot, &[payload.layer_id.clone()], "duplicate")?, "Duplicate layer"))
+    Ok(Emit::mutations(crate::editor::drawing::commands::edit_selection::plan(doc.snapshot, &[payload.layer_id.clone()], "duplicate")?))
 }

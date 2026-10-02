@@ -38,6 +38,7 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-async = { workspace = true }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

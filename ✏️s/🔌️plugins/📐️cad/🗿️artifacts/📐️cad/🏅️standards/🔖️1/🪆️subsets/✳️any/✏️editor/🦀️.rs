@@ -16,10 +16,11 @@ use crate::editor::cad::commands::reference::{patch_cad_play_reference, referenc
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::set_dislocate_option;
-use crate::editor::cad::config::{cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
+use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::tools::transform::{CadToolEntry, CadTransformRecord};
+use crate::editor::cad::modes::edit::windows::transient::{self as window_transient, CadWorldWindowTransient};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
@@ -33,13 +34,52 @@ use crate::{artifact_kind, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, C
 use dsl::json;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
-    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, TreeWindows, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure,
-    WorldSunConfig,
-};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::tree_item as framework_tree_item;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::world3d_camera_projection_json;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use semio_framework_plugin::ContextMenuRequest;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::Menu;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WorldSunConfig;
 use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
@@ -55,7 +95,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use protocol::os_pack::json::Value;
 use std::collections::HashMap;
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_APP_ID: &str = "cad-play";
@@ -172,10 +212,6 @@ pub struct CadPlayRuntime {
     #[value(default)]
     pub engagement_session: Option<CadEngagementScratch>,
     #[value(default)]
-    pub engagement_preview_operation_json: Option<String>,
-    #[value(default, deserialize_with = "deserialize_cad_preview_generation")]
-    pub engagement_preview_generation: i32,
-    #[value(default)]
     pub last_finalized_interaction_id: Option<String>,
     #[value(default)]
     pub sun: WorldSunConfig,
@@ -205,8 +241,6 @@ impl Default for CadPlayRuntime {
             selected_reference_id: None,
             engagement_pane: None,
             engagement_session: None,
-            engagement_preview_operation_json: None,
-            engagement_preview_generation: 0,
             last_finalized_interaction_id: None,
             sun: WorldSunConfig::default(),
             camera: CadCamera::default(),
@@ -225,9 +259,8 @@ impl CadPlayRuntime {
     }
 }
 
-/// 🔁️ Encodes any `ToValue` type to its JSON-text wire form via `protocol::json` — the
-/// `engagement_session_json`/`engagement_preview_operation_json` persisted-string fields need real
-/// JSON text (not a `DslValue`, which never touches the wire directly).
+/// 🔁️ Encodes any `ToValue` type to its JSON-text wire form via `protocol::json` — the window transient's
+/// `engagement_session_json` carries real JSON text (not a `DslValue`, which never touches the wire directly).
 fn json_string_of(value: &impl protocol::ToValue) -> String {
     json::to_json_string(value)
 }
@@ -239,22 +272,20 @@ fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
     json::from_json_str::<T>(json).ok()
 }
 
-/// 🔀️ Unpacks artifact-wide `CadConfig` into the ergonomic runtime scratch record. Exact
-/// window-owned camera, sun, and Dislocate state is overlaid by `runtime_of`.
-pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
+/// 🔀️ Unpacks artifact-wide `CadConfig` and the addressed window's engagement transient (design §17.4) into the
+/// ergonomic runtime scratch record. Exact window-owned camera, sun, and Dislocate state is overlaid by `runtime_of`.
+pub fn cad_runtime_from(cfg: &CadConfig, transient: &CadWorldWindowTransient) -> CadPlayRuntime {
     CadPlayRuntime {
         selected_node_ids: cfg.selected_node_ids.clone(),
         hovered_reference_id: cfg.hovered_reference_id.clone(),
-        engagement_input: cfg.engagement_input.clone(),
-        engagement_step: cfg.engagement_step.clone(),
+        engagement_input: transient.engagement_input.clone(),
+        engagement_step: transient.engagement_step.clone(),
         active_example_id: cfg.active_example_id.clone(),
         selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
         selected_reference_id: cfg.selected_reference_id.clone(),
-        engagement_pane: cfg.engagement_pane.clone(),
-        engagement_session: cfg.engagement_session_json.as_deref().and_then(json_string_to),
-        engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
-        engagement_preview_generation: cfg.engagement_preview_generation,
-        last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
+        engagement_pane: transient.engagement_pane.clone(),
+        engagement_session: transient.engagement_session_json.as_deref().and_then(json_string_to),
+        last_finalized_interaction_id: transient.last_finalized_interaction_id.clone(),
         sun: WorldSunConfig::default(),
         camera: CadCamera::default(),
         camera_building: CadCamera::default(),
@@ -264,7 +295,7 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     }
 }
 
-/// 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
+/// 🔀️ The `cad_runtime_from` boundary's outbound twin: repacks the (possibly mutated)
 /// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot. Kept private so production
 /// command modules cannot bypass the checked snapshot authorities below.
 fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
@@ -272,15 +303,19 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         contributions_json: base.contributions_json.clone(),
         selected_node_ids: runtime.selected_node_ids.clone(),
         hovered_reference_id: runtime.hovered_reference_id.clone(),
-        engagement_input: runtime.engagement_input.clone(),
-        engagement_step: runtime.engagement_step.clone(),
         active_example_id: runtime.active_example_id.clone(),
         selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
         selected_reference_id: runtime.selected_reference_id.clone(),
+    }
+}
+
+/// 🫧️ The engagement state of the (possibly mutated) runtime, as the addressed window's transient (design §17.4).
+pub fn cad_transient_from_runtime(runtime: &CadPlayRuntime) -> CadWorldWindowTransient {
+    CadWorldWindowTransient {
+        engagement_input: runtime.engagement_input.clone(),
+        engagement_step: runtime.engagement_step.clone(),
         engagement_pane: runtime.engagement_pane.clone(),
         engagement_session_json: runtime.engagement_session.as_ref().map(json_string_of),
-        engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
-        engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
     }
 }
@@ -358,8 +393,8 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 }
 
 /// 🏷️ Admits resolved CAD text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
-    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI label admission failed"))
 }
 
 pub fn camera_json(camera: &CadCamera) -> String {
@@ -456,9 +491,9 @@ pub fn cad_pane_from_view(view: &ViewModel) -> Result<CadPaneId, Fault> {
     }
 }
 
-/// 🔀️ The `CadConfig -> CadPlayRuntime` boundary every command handler opens with.
-pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
-    let mut runtime = cad_runtime_from_config(cfg.snapshot);
+/// 🔀️ The `CadConfig` + window transient -> `CadPlayRuntime` boundary every command handler and render opens with.
+pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>, transient: &CadWorldWindowTransient) -> CadPlayRuntime {
+    let mut runtime = cad_runtime_from(cfg.snapshot, transient);
     let window = edit::windows::config::current(cfg);
     runtime.sun = cad_sun_config_to_world(&window.sun);
     runtime.camera = window.camera.clone();
@@ -474,29 +509,18 @@ pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
     runtime
 }
 
-/// 🔀️ Emits a non-session config snapshot and fails closed if a caller attempts to bypass the
-/// operation-aware engagement transition authority.
+/// 🔀️ The artifact-wide config snapshot of the (possibly mutated) runtime.
 pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
-    let config = cad_config_from_runtime(runtime, base);
-    if config.engagement_session_json != base.engagement_session_json {
-        return Err(Fault::from("cad.preview.invalid: engagement checkpoint transition requires operation-aware persistence"));
-    }
-    Ok(CadConfigMutation::Snapshot { config: Box::new(config) })
+    Ok(CadConfigMutation::Snapshot { config: Box::new(cad_config_from_runtime(runtime, base)) })
 }
 
-/// 🪪️ The sole engagement-checkpoint persistence authority: it stamps one exact public-operation
-/// identity and advances the bounded generation exactly once iff the checkpoint changed.
-pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig, ctx: &CadDispatchCtx) -> Result<CadConfigMutation, Fault> {
-    let mut config = cad_config_from_runtime(runtime, base);
-    if config.engagement_session_json != base.engagement_session_json {
-        let operation = ctx.preview_operation.as_ref().ok_or_else(|| Fault::from("cad.preview.invalid: engagement transition is missing public operation identity"))?;
-        if base.engagement_preview_generation < 0 {
-            return Err(Fault::from("cad.preview.invalid: engagement preview generation is negative"));
-        }
-        config.engagement_preview_generation = base.engagement_preview_generation.checked_add(1).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
-        config.engagement_preview_operation_json = Some(json_string_of(operation));
+/// 🫧️ Hands the runtime's engagement state to the addressed window's transient when it changed (design §17.4): an
+/// action line, a REPL step, a pointer move or a possible-select is per-frame window state — never config, never history.
+pub fn publish_engagement(runtime: &CadPlayRuntime, ctx: &mut CadDispatchCtx) {
+    let next = cad_transient_from_runtime(runtime);
+    if next != ctx.window_transient {
+        ctx.next_window_transient = Some(next);
     }
-    Ok(CadConfigMutation::Snapshot { config: Box::new(config) })
 }
 //#endregion 🔖️Runtime
 
@@ -1006,64 +1030,22 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-/// 🧵️ Per-dispatch app-struct state carrying the exact public-operation identity used by
-/// `gesture_preview` plus (26/08/14) a read-only
-/// [`CadInteractionSnapshot`] of the framework's `"cad"` domain — the `semio_framework_plugin::
-/// app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
-/// macro's own doc comment on `ctx`), so `ArtifactApp::handle` builds the snapshot once and hands
-/// it down through this app-owned context instead.
+/// 🧵️ Per-dispatch app-struct state: a read-only [`CadInteractionSnapshot`] of the framework's `"cad"` domain — the
+/// `semio_framework_plugin::app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
+/// macro's own doc comment on `ctx`), so the dispatch builds the snapshot once and hands it down through this app-owned
+/// context — the addressed view, and the addressed window's engagement transient in (`window_transient`) and out
+/// (`next_window_transient`, design §17.4).
 pub struct CadDispatchCtx {
     pub interaction: CadInteractionSnapshot,
-    pub preview_operation: Option<CadPreviewOperationIdentity>,
     pub view_state: Option<ViewModel>,
+    pub window_transient: CadWorldWindowTransient,
+    pub next_window_transient: Option<CadWorldWindowTransient>,
 }
 
-/// 🪪️ Collision-free public-operation identity attached to every persisted preview generation.
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CadPreviewOperationIdentity {
-    pub app_instance_id: u32,
-    pub parent_document_id: String,
-    pub operation_id: u64,
-    pub operation_generation: u64,
-    pub canonical_base_revision: String,
-}
-
-impl From<&AppOperationContext> for CadPreviewOperationIdentity {
-    fn from(operation: &AppOperationContext) -> Self {
-        Self {
-            app_instance_id: operation.app_instance_id,
-            parent_document_id: operation.parent_document_id.clone(),
-            operation_id: operation.operation_id,
-            operation_generation: operation.generation,
-            canonical_base_revision: operation.canonical_base_revision_hex(),
-        }
-    }
-}
-
-/// 👁️ Exact freshness stamp; both fields must match/advance, so ABA and finite hashes are absent.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CadPreviewStamp {
-    pub operation: CadPreviewOperationIdentity,
-    pub generation: i32,
-}
-
-impl CadPreviewStamp {
-    pub fn is_fresher_than(&self, current: &CadPreviewStamp) -> bool {
-        self.operation == current.operation && self.generation > current.generation
-    }
-}
-
-/// 👁️ Operation-stamped transient preview payload.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CadGesturePreview {
-    pub stamp: CadPreviewStamp,
-    pub payload: Vec<u8>,
-}
-
-impl CadGesturePreview {
-    pub fn is_fresher_than(&self, current: &CadPreviewStamp) -> bool {
-        self.stamp.is_fresher_than(current)
+impl CadDispatchCtx {
+    /// 🧵️ A dispatch over `interaction` from `view_state`, whose window holds `window_transient`.
+    pub fn new(interaction: CadInteractionSnapshot, view_state: Option<ViewModel>, window_transient: CadWorldWindowTransient) -> Self {
+        Self { interaction, view_state, window_transient, next_window_transient: None }
     }
 }
 
@@ -1235,17 +1217,16 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
 
 //#region 🔖️PlayApp
 // 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
-// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
-// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). Preview freshness is the
-// persisted public-operation identity plus checked generation, never process-local state.
+// `CadPlayRuntime`/`self.runtime` field lives in `CadConfig` (written through `CadConfigMutation`s with real
+// `backwards`) or, for the per-frame engagement state, in the addressed world window's transient (design §17.4).
 #[derive(Default, Clone, Copy)]
 pub struct CadPlayApp;
 
 impl CadPlayApp {
     /// 🪟️ The one window-chrome implementation both trait entry points share — `interaction` is the
     /// live `"cad"` domain for the request-context twin and empty for the interaction-less one.
-    fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction };
+    fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, transient), interaction };
         let labels = cad_labels(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
@@ -1256,9 +1237,9 @@ impl CadPlayApp {
     }
 
     /// 🖼️ The one render implementation both trait entry points share.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction };
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, transient), interaction };
         let labels = cad_labels(view_state);
         let window_kind_id = match body_key {
             shape::BODY_KEY => shape::WINDOW_KIND_ID,
@@ -1284,26 +1265,12 @@ impl CadPlayApp {
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
-
-
-    /// 🔬️ CW7 preview-law seam: reads the operation-stamped engagement checkpoint from config only.
-    pub fn gesture_preview(&self, config: &CadConfig) -> Option<CadGesturePreview> {
-        let session_json = config.engagement_session_json.as_ref()?;
-        if session_json.is_empty() || session_json == "null" {
-            return None;
-        }
-        if !(0..=CAD_PREVIEW_GENERATION_MAX).contains(&config.engagement_preview_generation) {
-            return None;
-        }
-        let operation = json_string_to(config.engagement_preview_operation_json.as_ref()?)?;
-        Some(CadGesturePreview { stamp: CadPreviewStamp { operation, generation: config.engagement_preview_generation }, payload: session_json.as_bytes().to_vec() })
-    }
 }
 
 //#region 🧵️RetainedCommands
 // 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` route through the artifact
 // lane: an interaction step that reaches its commit state lands objects (Artifact) besides the
-// session snapshot (Config).
+// addressed window's engagement transient (WindowTransient, design §17.4).
 const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "setReferenceHidden", "setReferenceLocked", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
@@ -1313,10 +1280,6 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setNodeSelection",
     "setReferenceSelection",
     "referenceHover",
-    "engagementInput",
-    "engagementRepeatLast",
-    "engagementAbort",
-    "worldPointerMove",
     "toggleSun",
     "setSunAzimuth",
     "setSunElevation",
@@ -1325,6 +1288,8 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setActiveExample",
     "importCadFile",
 ];
+/// 🫧️ The engagement steps that commit nothing: they publish only the addressed window's transient (design §17.4).
+const CAD_RETAINED_ENGAGEMENT_TOOL_IDS: &[&str] = &["engagementInput", "engagementRepeatLast", "engagementAbort", "worldPointerMove"];
 /// 📤️ The exports read the scene and hand the host a download; they touch no store.
 const CAD_RETAINED_EXPORT_TOOL_IDS: &[&str] = &["saveSelected", "saveInPlay", "saveCurrent"];
 const CAD_RETAINED_TOOL_IDS: &[&str] = &[
@@ -1390,10 +1355,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    // 🤝️ Interaction steps: the session snapshot (Config) every step, plus the committed objects
-    // (Artifact) on the step that reaches the spec's commit state.
-    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    // 🤝️ Interaction steps: the window's engagement transient (WindowTransient) every step, plus the committed
+    // objects (Artifact) on the step that reaches the spec's commit state — never a config edit (design §17.4).
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -1401,11 +1366,11 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -1414,11 +1379,11 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     // 🗃️ An example switch records the active example id in the session config and hands the host
     // ONE whole-document `LoadDocument` effect, which the store admits through
     // `build_document_store_initialization_job` — never an in-history artifact edit.
-    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "applyTransformation", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    // 🗃️ A whole spatial scene imports like an example switch: the session config plus ONE host `LoadDocument`.
-    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::Config] },
+    // 🗃️ A whole spatial scene imports like an example switch: the window's reset engagement plus ONE host `LoadDocument`.
+    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "saveSelected", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveInPlay", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveCurrent", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1450,38 +1415,62 @@ fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interacti
     CAD_RETAINED_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
-#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
-fn cad_retained_reduce(
-    command: &CadCommand,
-    snapshot: &CadSnapshot,
-    config: &CadConfig,
-    history: &semio_framework_plugin::HistoryView,
-    interaction: &protocol::InteractionState,
-    hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>,
-    operation: &AppOperationContext,
-) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
+/// 🧵️ One retained cad command over the operation's observed roots: the command's reducer over the dispatch context
+/// the operation carries — the addressed window's engagement transient in, its next state out (design §17.4).
+fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<(Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Option<CadWorldWindowTransient>), Fault> {
+    let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let hovered_ids = hover.get(CAD_INTERACTION_DOMAIN).filter(|hover| hover.channel == CadInteractionSnapshot::POINTER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
     let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id, hovered_ids };
-    let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)), view_state: context.and_then(|context| context.view_state.clone()) };
-    if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
+    let mut ctx = CadDispatchCtx::new(retained_interaction, context.and_then(|context| context.view_state.clone()), window_transient::from_snapshot(context.and_then(|context| context.window_transient.as_ref())));
+    let command_id = command.command_id();
+    let emit = if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command_id) || CAD_RETAINED_EXPORT_TOOL_IDS.contains(&command_id) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;
-        return command.dispatch(&doc, &cfg, &mut ctx);
-    }
-    if CAD_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else if CAD_RETAINED_CONFIG_TOOL_IDS.contains(&command_id) {
         admit_cad_config(config).map_err(Fault::from)?;
-        return command.dispatch(&doc, &cfg, &mut ctx);
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else if CAD_RETAINED_ENGAGEMENT_TOOL_IDS.contains(&command_id) {
+        command.dispatch(&doc, &cfg, &mut ctx)?
+    } else {
+        match command {
+            CadCommand::LoadRawRequest(payload) => load_raw_request::handle(payload, &doc, &cfg, &mut ctx)?,
+            _ => return Err(Fault::from("cad-retained-route-mismatch")),
+        }
+    };
+    Ok((emit, ctx.next_window_transient))
+}
+
+/// 🧵️ The ONE retained work every cad tool runs ([`cad_retained_reduce`]): it completes with the addressed window's
+/// next engagement transient as ephemeral local-only window state when the command changed it — a dispatch that
+/// addresses no window (an agent, the palette) keeps none.
+struct CadRetainedCommandWork {
+    tool_id: &'static str,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
     }
-    if CAD_RETAINED_EXPORT_TOOL_IDS.contains(&command.command_id()) {
-        admit_cad_snapshot(snapshot).map_err(Fault::from)?;
-        return command.dispatch(&doc, &cfg, &mut ctx);
+
+    fn extent(&self, command: &CadCommand, snapshot: &CadSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>) -> Option<usize> {
+        cad_retained_extent(command, snapshot, interaction)
     }
-    match command {
-        CadCommand::LoadRawRequest(payload) => load_raw_request::handle(payload, &doc, &cfg, &mut ctx),
-        _ => Err(Fault::from("cad-retained-route-mismatch")),
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<CadPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("cad-retained-work-repeated"));
+        }
+        self.consumed = true;
+        let (emit, transient) = cad_retained_reduce(input)?;
+        let view = input.context.and_then(|context| context.view_state.as_ref()).filter(|view| view.window_id.is_some());
+        Ok(match (transient, view) {
+            (Some(transient), Some(view)) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_framework_plugin::EphemeralEmit { window_transient: vec![window_transient::addressed(view, transient)?], ..Default::default() } },
+            _ => ArtifactCommandWorkStep::Complete(emit),
+        })
     }
 }
 
@@ -1561,10 +1550,6 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         config.active_example_id.as_deref(),
         config.selected_reference_model_definition_id.as_deref(),
         config.selected_reference_id.as_deref(),
-        config.engagement_pane.as_deref(),
-        config.engagement_session_json.as_deref(),
-        config.engagement_preview_operation_json.as_deref(),
-        config.last_finalized_interaction_id.as_deref(),
     ]
     .into_iter()
     .flatten()
@@ -1574,8 +1559,6 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .iter()
         .fold(0usize, |bytes, value| bytes.saturating_add(value.len()))
         .saturating_add(option_bytes)
-        .saturating_add(config.engagement_input.len())
-        .saturating_add(config.engagement_step.len())
         .saturating_add(config.contributions_json.len())
 }
 
@@ -2092,6 +2075,11 @@ impl ArtifactEditor for CadPlayApp {
         registry.register::<structure_classic::config::CadStructureClassicWindowConfigOwner>()
     }
 
+    /// 🫧️ Every world window's engagement transient (design §17.4).
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        window_transient::register(registry)
+    }
+
     const DIALECT: Dialect = crate::CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
@@ -2167,7 +2155,7 @@ impl ArtifactEditor for CadPlayApp {
             return Err(Fault::from("cad-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
-        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, cad_retained_reduce, cad_retained_extent));
+        let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(CadRetainedCommandWork { tool_id, consumed: false });
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -2196,7 +2184,7 @@ impl ArtifactEditor for CadPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(crate::editor::cad::config::schema::app_schema_descriptor())
     }
 
@@ -2297,7 +2285,7 @@ impl ArtifactEditor for CadPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
-        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::from_interaction(interaction), preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)), view_state: view_state.cloned() };
+        let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::from_interaction(interaction), view_state.cloned(), CadWorldWindowTransient::default());
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -2305,7 +2293,7 @@ impl ArtifactEditor for CadPlayApp {
     /// framework's own `render_with_request_context` default body): one render implementation
     /// ([`Self::render_body`]) against an empty `"cad"` domain.
     fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, CadInteractionSnapshot::default())
+        Self::render_body(body_key, doc, cfg, view_state, &CadWorldWindowTransient::default(), CadInteractionSnapshot::default())
     }
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: resolves the live `"cad"` domain (selection +
@@ -2318,16 +2306,16 @@ impl ArtifactEditor for CadPlayApp {
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
         view_state: &ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, CadInteractionSnapshot::from_interaction(interaction))
+        Self::render_body(body_key, doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
     }
 
     /// 🕹️ Interaction-less twin of [`Self::window_engagements_with_request_context`] — the HUD's
     /// selected count reads `0` here, which is correct for an empty `"cad"` domain.
     fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        Self::window_engagements_body(doc, cfg, view_state, CadInteractionSnapshot::default())
+        Self::window_engagements_body(doc, cfg, view_state, &CadWorldWindowTransient::default(), CadInteractionSnapshot::default())
     }
 
     /// 🕹️ The engagement HUD's `"N selected"` status reads the live framework-owned `"cad"` selection —
@@ -2337,17 +2325,17 @@ impl ArtifactEditor for CadPlayApp {
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
         view_state: &ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
-        Self::window_engagements_body(doc, cfg, view_state, CadInteractionSnapshot::from_interaction(interaction))
+        Self::window_engagements_body(doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
     }
 
     /// 🪟️ Resolves measures for the exact addressed world-window instance.
     fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let Some(kind) = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str()) else { return HashMap::new() };
-        let runtime = runtime_of(cfg);
+        let runtime = runtime_of(cfg, &CadWorldWindowTransient::default());
         let is_de = cad_is_de_locale(view_state);
         let measures = match kind {
             shape::WINDOW_KIND_ID => shape::window_measures(&runtime, is_de),

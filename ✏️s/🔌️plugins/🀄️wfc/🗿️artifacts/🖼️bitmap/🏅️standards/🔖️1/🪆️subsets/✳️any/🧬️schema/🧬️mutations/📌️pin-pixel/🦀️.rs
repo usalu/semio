@@ -32,8 +32,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for PinPixel {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Pin ({}, {}) to colour {}", self.x, self.y, self.color), &format!("({}, {}) auf Farbe {} fixieren", self.x, self.y, self.color))
     }
     fn target(&self) -> Vec<String> {
         vec![crate::schema::snapshot::pin_key(self.x, self.y)]

@@ -1,6 +1,6 @@
 /** 🕒 Direct `touch-artifact` payload. */
 export interface TouchArtifact {
   id: string;
-  updatedAtMs: number;
+  updatedAtMs: bigint;
   updatedBy: string;
 }

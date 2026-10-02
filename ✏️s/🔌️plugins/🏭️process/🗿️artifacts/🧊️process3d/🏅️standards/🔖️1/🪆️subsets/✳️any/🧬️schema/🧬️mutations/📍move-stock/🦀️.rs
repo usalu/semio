@@ -30,8 +30,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for MoveStock 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move stock", "Rohteil verschieben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move stock", "Rohteil verschieben")
     }
 }
 //#endregion 🔖️MoveStock

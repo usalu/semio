@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "routes": [
+    {
+      "id": "orphan-bare-literal",
+      "files": {
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "unmounted",
+        "targets": [
+          "leaf.rs"
+        ],
+        "provenance": "physical",
+        "reason": null
+      }
+    },
+    {
+      "id": "orphan-crate-head",
+      "files": {
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse crate::item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "crate::item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "unmounted",
+        "targets": [],
+        "provenance": null,
+        "reason": "unmounted-path"
+      }
+    },
+    {
+      "id": "admitted-two-manifest-origins",
+      "files": {
+        "a/Cargo.toml": "[package]\nname=\"a\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"../source.rs\"\n",
+        "b/Cargo.toml": "[package]\nname=\"b\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"../source.rs\"\n",
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "admitted",
+        "targets": [
+          "leaf.rs"
+        ],
+        "provenance": "graph",
+        "reason": null
+      }
+    },
+    {
+      "id": "known-unknown-key-both-orders",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n#[cfg(any())] #[rewrite] mod item;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "alternate": {
+        "source.rs": "#[cfg(any())] #[rewrite] mod item;\n#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "denied",
+        "targets": [],
+        "provenance": null,
+        "reason": "unresolved-target"
+      }
+    },
+    {
+      "id": "nonportable-sibling-revokes-manifest",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n#[cfg(any())] #[path=\"C:/outside.rs\"] mod foreign;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "denied",
+        "targets": [],
+        "provenance": null,
+        "reason": "invalid-manifest"
+      }
+    },
+    {
+      "id": "malformed-manifest-is-not-orphan",
+      "files": {
+        "Cargo.toml": "[package\n",
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "denied",
+        "targets": [],
+        "provenance": null,
+        "reason": "invalid-manifest"
+      }
+    },
+    {
+      "id": "unknown-root-does-not-fallback",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "#![cfg_attr(any(), rewrite)]\n#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "denied",
+        "targets": [],
+        "provenance": null,
+        "reason": "unresolved-scope"
+      }
+    },
+    {
+      "id": "orphan-unavailable-target",
+      "files": {
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": "leaf.rs",
+      "expected": {
+        "state": "unmounted",
+        "targets": [],
+        "provenance": null,
+        "reason": "unavailable-source"
+      }
+    },
+    {
+      "id": "orphan-readable-empty-target",
+      "files": {
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::*;\n",
+        "leaf.rs": ""
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::*",
+      "unavailable": null,
+      "expected": {
+        "state": "unmounted",
+        "targets": [
+          "leaf.rs"
+        ],
+        "provenance": "physical",
+        "reason": null
+      }
+    },
+    {
+      "id": "orphan-unrelated-unknown-inline",
+      "files": {
+        "source.rs": "#[path=\"leaf.rs\"] mod item;\nuse item::Mutation;\n#[cfg(any())] #[rewrite] mod sibling {}\n",
+        "leaf.rs": "pub struct Mutation;\n"
+      },
+      "sourcePath": "source.rs",
+      "sourceScope": [],
+      "specifier": "item::Mutation",
+      "unavailable": null,
+      "expected": {
+        "state": "unmounted",
+        "targets": [
+          "leaf.rs"
+        ],
+        "provenance": "physical",
+        "reason": null
+      }
+    }
+  ]
+}

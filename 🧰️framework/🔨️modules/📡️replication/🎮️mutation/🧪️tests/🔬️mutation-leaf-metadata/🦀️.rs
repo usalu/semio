@@ -126,7 +126,7 @@ fn source_contract_rejects_every_workspace_token_byte_and_path_decoy() {
 
 #[test]
 fn exact_domain_layout_preserves_full_identity_and_rejects_unregistered_pairs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json")).expect("shared exact-owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json")).expect("shared exact-owner fixture");
     let root: &'static str = Box::leak(fixture["mutationRoot"].as_str().unwrap().to_string().into_boxed_str());
     let owners: &'static [MutationDomainOperation] = Box::leak(
         fixture["domains"]

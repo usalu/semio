@@ -37,8 +37,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
             vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: (*index).min(base.other_segments.len()) })]
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-other-segment".into()]

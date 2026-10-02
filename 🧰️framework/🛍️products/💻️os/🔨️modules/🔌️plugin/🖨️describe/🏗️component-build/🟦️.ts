@@ -1,8 +1,10 @@
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runCargoTestBudgeted, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { devToolingEnv, resolveWorkspaceBin, runRepositoryCargoTests, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
 export const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
@@ -18,14 +20,14 @@ export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
 export class DescriptorBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--release", "--bin", CRATE_NAME], this.repoRoot);
+    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--release", "--bin", CRATE_NAME], this.repoRoot);
   }
 }
 
 export class DescriptorTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted([CRATE_NAME], this.repoRoot, rest);
+    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, rest);
   }
 }
 

@@ -7,7 +7,15 @@
 
 use crate::EnergyModelSnapshot;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LocalizedLabel, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
 
 //#region 🔖️Constants
 pub const ENERGY_MODEL_INTERACTION_DOMAIN: &str = "energyModel";

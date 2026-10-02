@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Reor
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Reorder node #{} to #{}", self.from, self.to), &format!("Knoten #{} nach #{} verschieben", self.from, self.to))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder node #{} to #{}", self.from, self.to), &format!("Knoten #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string(), self.from.to_string()]

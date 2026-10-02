@@ -38,8 +38,8 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
         vec![PdfA1Mutation::SetPageText(super::SetPageText { text: base.pages[0].text.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Clear page text", "Seitentext leeren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Clear page text", "Seitentext leeren")
     }
 
     fn target(&self) -> Vec<String> {

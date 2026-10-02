@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSecurityRequiremen
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Create security requirement \"{}\"", self.security_requirement.header.name), &format!("Schutzanforderung \"{}\" erstellen", self.security_requirement.header.name))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create security requirement \"{}\"", self.security_requirement.header.name), &format!("Schutzanforderung \"{}\" erstellen", self.security_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.security_requirement.header.id.0.clone()]

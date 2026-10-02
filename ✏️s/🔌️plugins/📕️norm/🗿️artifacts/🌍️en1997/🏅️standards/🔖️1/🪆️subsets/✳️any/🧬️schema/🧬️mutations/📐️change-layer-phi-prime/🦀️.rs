@@ -24,7 +24,7 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeLayerPhiPr
     fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change effective friction angle φ′ of the soil layer", "Effektiven Reibungswinkel φ′ der Bodenschicht ändern")
     }
 }

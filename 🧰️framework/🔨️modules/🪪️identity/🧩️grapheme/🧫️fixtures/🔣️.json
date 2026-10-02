@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "value": "",
+      "expected": {
+        "emoji": "",
+        "rest": "",
+        "first": ""
+      },
+      "oracleEmoji": ""
+    },
+    {
+      "id": "plain",
+      "value": "text",
+      "expected": {
+        "emoji": "",
+        "rest": "text",
+        "first": ""
+      },
+      "oracleEmoji": ""
+    },
+    {
+      "id": "later",
+      "value": "x😀",
+      "expected": {
+        "emoji": "",
+        "rest": "x😀",
+        "first": ""
+      },
+      "oracleEmoji": ""
+    },
+    {
+      "id": "leading-space",
+      "value": " 😀",
+      "expected": {
+        "emoji": "",
+        "rest": " 😀",
+        "first": ""
+      },
+      "oracleEmoji": ""
+    },
+    {
+      "id": "simple",
+      "value": "😀text",
+      "expected": {
+        "emoji": "😀",
+        "rest": "text",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    },
+    {
+      "id": "selector",
+      "value": "🧰️tool",
+      "expected": {
+        "emoji": "🧰️",
+        "rest": "tool",
+        "first": "🧰️"
+      },
+      "oracleEmoji": "🧰"
+    },
+    {
+      "id": "stacked",
+      "value": "😀😃pair",
+      "expected": {
+        "emoji": "😀😃",
+        "rest": "pair",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀😃"
+    },
+    {
+      "id": "spaced",
+      "value": "😀 text",
+      "expected": {
+        "emoji": "😀",
+        "rest": " text",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    },
+    {
+      "id": "zwj-skin",
+      "value": "👩🏽‍💻coder",
+      "expected": {
+        "emoji": "👩🏽‍💻",
+        "rest": "coder",
+        "first": "👩🏽‍💻"
+      },
+      "oracleEmoji": "👩🏽‍💻"
+    },
+    {
+      "id": "family",
+      "value": "👨‍👩‍👧‍👦family",
+      "expected": {
+        "emoji": "👨‍👩‍👧‍👦",
+        "rest": "family",
+        "first": "👨‍👩‍👧‍👦"
+      },
+      "oracleEmoji": "👨‍👩‍👧‍👦"
+    },
+    {
+      "id": "flag",
+      "value": "🇨🇭flag",
+      "expected": {
+        "emoji": "🇨🇭",
+        "rest": "flag",
+        "first": "🇨🇭"
+      },
+      "oracleEmoji": "🇨🇭"
+    },
+    {
+      "id": "rainbow",
+      "value": "🏳️‍🌈flag",
+      "expected": {
+        "emoji": "🏳️‍🌈",
+        "rest": "flag",
+        "first": "🏳️‍🌈"
+      },
+      "oracleEmoji": "🏳️‍🌈"
+    },
+    {
+      "id": "keycap",
+      "value": "1️⃣one",
+      "expected": {
+        "emoji": "1️⃣",
+        "rest": "one",
+        "first": "1️⃣"
+      },
+      "oracleEmoji": "1️⃣"
+    },
+    {
+      "id": "keycap-unselected",
+      "value": "1⃣one",
+      "expected": {
+        "emoji": "1⃣",
+        "rest": "one",
+        "first": "1⃣"
+      },
+      "oracleEmoji": "1⃣"
+    },
+    {
+      "id": "hash-keycap",
+      "value": "#️⃣hash",
+      "expected": {
+        "emoji": "#️⃣",
+        "rest": "hash",
+        "first": "#️⃣"
+      },
+      "oracleEmoji": "#️⃣"
+    },
+    {
+      "id": "copyright",
+      "value": "©mark",
+      "expected": {
+        "emoji": "©",
+        "rest": "mark",
+        "first": "©"
+      },
+      "oracleEmoji": "©"
+    },
+    {
+      "id": "copyright-presented",
+      "value": "©️mark",
+      "expected": {
+        "emoji": "©️",
+        "rest": "mark",
+        "first": "©️"
+      },
+      "oracleEmoji": "©️"
+    },
+    {
+      "id": "trademark",
+      "value": "™mark",
+      "expected": {
+        "emoji": "™",
+        "rest": "mark",
+        "first": "™"
+      },
+      "oracleEmoji": "™"
+    },
+    {
+      "id": "nfc-rest",
+      "value": "😀é",
+      "expected": {
+        "emoji": "😀",
+        "rest": "é",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    },
+    {
+      "id": "slash-rest",
+      "value": "😀/child",
+      "expected": {
+        "emoji": "😀",
+        "rest": "/child",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    },
+    {
+      "id": "newline-rest",
+      "value": "😀\nchild",
+      "expected": {
+        "emoji": "😀",
+        "rest": "\nchild",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    },
+    {
+      "id": "lone-selector",
+      "value": "️x",
+      "expected": {
+        "emoji": "️",
+        "rest": "x",
+        "first": "️"
+      },
+      "oracleEmoji": ""
+    },
+    {
+      "id": "text-selector",
+      "value": "☀︎sun",
+      "expected": {
+        "emoji": "☀︎",
+        "rest": "sun",
+        "first": "☀︎"
+      },
+      "oracleEmoji": "☀"
+    },
+    {
+      "id": "only-emoji",
+      "value": "😀",
+      "expected": {
+        "emoji": "😀",
+        "rest": "",
+        "first": "😀"
+      },
+      "oracleEmoji": "😀"
+    }
+  ],
+  "removal": {
+    "owner": "🧰️framework/🔨️modules/🪪️identity/🧩️grapheme",
+    "selectedLaws": [
+      "neutral grapheme vectors preserve exact leading emoji, first grapheme and original rest",
+      "independent TypeScript runtime keeps the neutral implementation"
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/sqlite-laws.json",
+  "title": "Workflow SQLite Laws",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "binary64Words",
+    "mediaClasses",
+    "mediaForms",
+    "malformedSql",
+    "control"
+  ],
+  "properties": {
+    "snapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/snapshot.json"
+    },
+    "binary64Words": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{16}$"
+      }
+    },
+    "mediaClasses": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "twoD",
+          "threeD",
+          "text",
+          "data",
+          "graph",
+          "kit",
+          "computation",
+          "presentation"
+        ]
+      }
+    },
+    "mediaForms": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "any",
+          "vector",
+          "raster",
+          "brep",
+          "mesh",
+          "document",
+          "value",
+          "dag",
+          "trinity",
+          "type",
+          "design",
+          "kit",
+          "flow",
+          "sequence",
+          "procedure",
+          "deck"
+        ]
+      }
+    },
+    "malformedSql": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectionLength",
+        "largeCharacters",
+        "cancelAfterBytes",
+        "maxOwnedBytes",
+        "tinyFileBytes"
+      ],
+      "properties": {
+        "collectionLength": {
+          "const": 2048
+        },
+        "largeCharacters": {
+          "const": 65537
+        },
+        "cancelAfterBytes": {
+          "const": 65536
+        },
+        "maxOwnedBytes": {
+          "const": 200000
+        },
+        "tinyFileBytes": {
+          "const": 4096
+        }
+      }
+    }
+  }
+}

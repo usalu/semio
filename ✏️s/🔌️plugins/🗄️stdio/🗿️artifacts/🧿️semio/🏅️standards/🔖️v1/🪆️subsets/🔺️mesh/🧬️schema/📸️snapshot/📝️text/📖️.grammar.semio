@@ -46,7 +46,7 @@ rgba = "[" number "," number "," number "," number "]"
 index-list = INT {"," INT}*
 topology = "P" | "L" | "S" | "T" | "X" | "F"
 option-hex = "[" "0" "]" | "[" "1" "," hex "]"
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `id`/`mime` leaf string and
@@ -54,3 +54,5 @@ number = INT | FLOAT
 # production→macro fallback resolves bare `hex` automatically, with real backtracking — a
 # hand-rolled `{INT|IDENT}*` production would be wrong here (see the sibling `🔺️diff`/
 # `🧬️mutations` grammars' own `hex` doc comment for the two independent reasons why).
+
+# 🔢️ Numeric identifiers are inf or nan64_/nan32_ with exact IEEE NaN bits; the typed parser validates width and class.

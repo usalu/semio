@@ -1,77 +1,66 @@
-/** 🧬️ Din18599 direct-mutation discriminated union — mirrors `Din18599Mutation` in `🦀️.rs`
- * (13 variants: one `change-<field>` leaf per document-root scalar, plus one `update-climate` for
- * the inseparable two-array `MonthlyClimate` facet). */
-
-export type UseClass = "Residential" | "Office" | "School";
-
-export interface MonthlyClimate {
-  thetaEC: [number, number, number, number, number, number, number, number, number, number, number, number];
-  gHWM2: [number, number, number, number, number, number, number, number, number, number, number, number];
-}
-
-export interface ChangeUseClass {
-  newUseClass: UseClass;
-}
-
-export interface ChangeHeatedAreaM2 {
-  newHeatedAreaM2: number;
-}
-
-export interface ChangeOccupants {
-  newOccupants: number;
-}
-
-export interface ChangeHT {
-  newHT: number;
-}
-
-export interface ChangeHV {
-  newHV: number;
-}
-
-export interface ChangeInternalGainsWM2 {
-  newInternalGainsWM2: number;
-}
-
-export interface ChangeSolarGainsKwh {
-  newSolarGainsKwh: number;
-}
-
-export interface ChangeSystemLossesKwh {
-  newSystemLossesKwh: number;
-}
-
-export interface ChangeRenewableKwh {
-  newRenewableKwh: number;
-}
-
-export interface ChangeAnnualLimitKwh {
-  newAnnualLimitKwh: number;
-}
-
-export interface ChangeEnergyCarrier {
-  newEnergyCarrier: string;
-}
-
-export interface ChangeReferenceQPKwh {
-  newReferenceQPKwh: number;
-}
-
-export interface UpdateClimate {
-  newClimate: MonthlyClimate;
-}
+/** 🧺️ `Din18599Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormWireReader, normWireTagged } from "../../../../../../../../📇️registry/🧬️contract/🟦️.ts";
+import { parseUpdateRenewables, type UpdateRenewables } from "./☀️update-renewables/🧬️schema/🟦️.ts";
+import { type ChangeGegQpFactor, parseChangeGegQpFactor } from "./⚖️change-geg-qp-factor/🧬️schema/🟦️.ts";
+import { parseUpdateCooling, type UpdateCooling } from "./❄️update-cooling/🧬️schema/🟦️.ts";
+import { type ChangeDeltaUWb, parseChangeDeltaUWb } from "./🌉change-delta-u-wb/🧬️schema/🟦️.ts";
+import { type ChangeElementU, parseChangeElementU } from "./🌡️change-element-u/🧬️schema/🟦️.ts";
+import { parseUpdateClimate, type UpdateClimate } from "./🌦️update-climate/🧬️schema/🟦️.ts";
+import { parseUpdateVentilation, type UpdateVentilation } from "./🌬️update-ventilation/🧬️schema/🟦️.ts";
+import { type ChangeAutomationClass, parseChangeAutomationClass } from "./🎛️change-automation-class/🧬️schema/🟦️.ts";
+import { type ChangeBuildingCategory, parseChangeBuildingCategory } from "./🏠️change-building-category/🧬️schema/🟦️.ts";
+import { type ChangeUseClass, parseChangeUseClass } from "./🏷️change-use-class/🧬️schema/🟦️.ts";
+import { parseUpdateLighting, type UpdateLighting } from "./💡update-lighting/🧬️schema/🟦️.ts";
+import { type ChangeNetFloorAreaM2, parseChangeNetFloorAreaM2 } from "./📐️change-net-floor-area-m2/🧬️schema/🟦️.ts";
+import { type ChangeHeatedVolumeM3, parseChangeHeatedVolumeM3 } from "./📦change-heated-volume-m3/🧬️schema/🟦️.ts";
+import { parseSpecifyHeatingSystem, type SpecifyHeatingSystem } from "./🔥specify-heating-system/🧬️schema/🟦️.ts";
+import { parseReplaceZones, type ReplaceZones } from "./🗺️replace-zones/🧬️schema/🟦️.ts";
+import { parseReplaceElements, type ReplaceElements } from "./🧩replace-elements/🧬️schema/🟦️.ts";
+import { type ChangeMethod, parseChangeMethod } from "./🧮change-method/🧬️schema/🟦️.ts";
+import { type ChangeAttachment, parseChangeAttachment } from "./🧱change-attachment/🧬️schema/🟦️.ts";
+import { parseSpecifyDhwSystem, type SpecifyDhwSystem } from "./🚿specify-dhw-system/🧬️schema/🟦️.ts";
 
 export type Din18599Mutation =
-  | ({ mutation: "changeUseClass" } & ChangeUseClass)
-  | ({ mutation: "changeHeatedAreaM2" } & ChangeHeatedAreaM2)
-  | ({ mutation: "changeOccupants" } & ChangeOccupants)
-  | ({ mutation: "changeHT" } & ChangeHT)
-  | ({ mutation: "changeHV" } & ChangeHV)
-  | ({ mutation: "changeInternalGainsWM2" } & ChangeInternalGainsWM2)
-  | ({ mutation: "changeSolarGainsKwh" } & ChangeSolarGainsKwh)
-  | ({ mutation: "changeSystemLossesKwh" } & ChangeSystemLossesKwh)
-  | ({ mutation: "changeRenewableKwh" } & ChangeRenewableKwh)
-  | ({ mutation: "changeAnnualLimitKwh" } & ChangeAnnualLimitKwh)
-  | ({ mutation: "changeEnergyCarrier" } & ChangeEnergyCarrier)
-  | ({ mutation: "changeReferenceQPKwh" } & ChangeReferenceQPKwh)
-  | ({ mutation: "updateClimate" } & UpdateClimate);
+  | ChangeBuildingCategory
+  | ChangeAttachment
+  | ChangeUseClass
+  | ChangeMethod
+  | ChangeNetFloorAreaM2
+  | ChangeHeatedVolumeM3
+  | ChangeGegQpFactor
+  | ChangeDeltaUWb
+  | ChangeAutomationClass
+  | SpecifyHeatingSystem
+  | SpecifyDhwSystem
+  | UpdateVentilation
+  | UpdateCooling
+  | UpdateLighting
+  | UpdateRenewables
+  | ReplaceZones
+  | ReplaceElements
+  | ChangeElementU
+  | UpdateClimate;
+
+export const parseDin18599Mutation: NormWireReader<Din18599Mutation> = normWireTagged<Din18599Mutation, "mutation">("mutation", {
+  changeBuildingCategory: parseChangeBuildingCategory,
+  changeAttachment: parseChangeAttachment,
+  changeUseClass: parseChangeUseClass,
+  changeMethod: parseChangeMethod,
+  changeNetFloorAreaM2: parseChangeNetFloorAreaM2,
+  changeHeatedVolumeM3: parseChangeHeatedVolumeM3,
+  changeGegQpFactor: parseChangeGegQpFactor,
+  changeDeltaUWb: parseChangeDeltaUWb,
+  changeAutomationClass: parseChangeAutomationClass,
+  specifyHeatingSystem: parseSpecifyHeatingSystem,
+  specifyDhwSystem: parseSpecifyDhwSystem,
+  updateVentilation: parseUpdateVentilation,
+  updateCooling: parseUpdateCooling,
+  updateLighting: parseUpdateLighting,
+  updateRenewables: parseUpdateRenewables,
+  replaceZones: parseReplaceZones,
+  replaceElements: parseReplaceElements,
+  changeElementU: parseChangeElementU,
+  updateClimate: parseUpdateClimate,
+});

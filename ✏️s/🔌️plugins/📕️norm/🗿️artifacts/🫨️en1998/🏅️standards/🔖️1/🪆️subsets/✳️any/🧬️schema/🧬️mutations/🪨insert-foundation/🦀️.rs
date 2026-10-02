@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for InsertFoundation
     fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert foundation", "Gründung einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert foundation", "Gründung einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-foundation".into()]

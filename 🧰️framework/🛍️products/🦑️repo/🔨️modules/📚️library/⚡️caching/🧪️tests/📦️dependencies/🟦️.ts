@@ -75,7 +75,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   assert.ok(native.stdout.toString().includes(manifest.dependencies.nx));
   const bootstrap = fixture.tooling.path.replace(/\/🛠️tools$/, "/📜️script.ts"), library = fixture.tooling.path.split("/⚡️caching/")[0];
   const eager = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../🧫️fixtures/nx-bootstrap/🔣️.json"), "utf8")).eagerSources;
-  for (const path of [...eager, fixture.entry, fixture.tooling.path + "/📜️script.ts", library + "/⚡️caching/🔒️leases/🟦️.ts"]) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
+  for (const path of [...eager, fixture.entry, fixture.tooling.path + "/📜️script.ts", "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts"]) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
   writeFileSync(join(root, "📜️script.ts"), "throw new Error('Application code must not run during Nx acquisition');");
   const publicRun = Bun.spawn([process.execPath, join(root, bootstrap), "nx", "--version"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr, status] = await Promise.all([new Response(publicRun.stdout).text(), new Response(publicRun.stderr).text(), publicRun.exited]);

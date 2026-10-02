@@ -11,12 +11,7 @@
       },
       "dependsOn": [
         "build",
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
       ],
       "cache": false,
       "continuous": true
@@ -34,12 +29,7 @@
         "{projectRoot}/../../../client.exe"
       ],
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
       ]
     },
     "test": {
@@ -50,12 +40,7 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
       ]
     },
     "test-quick": {
@@ -66,12 +51,7 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
       ]
     },
     "test-long": {
@@ -82,12 +62,7 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
       ]
     },
     "test-exhaustive": {
@@ -98,16 +73,63 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        {
-          "target": "generate",
-          "projects": [
-            "@semio-tech/framework-schema"
-          ]
-        }
+        "generate-entity-kinds"
+      ]
+    },
+    "generate-entity-kinds": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-entity-kinds"
+      },
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🏷️entity-kinds/🐹️.go"
+      ]
+    },
+    "preview-generated": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "check-entity-kinds": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-entity-kinds"
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "test-entity-kinds": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-entity-kinds"
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "generate-entity-kinds"
       ]
     }
   },
   "implicitDependencies": [
     "@semio-tech/framework-schema"
-  ]
+  ],
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+    ]
+  }
 }

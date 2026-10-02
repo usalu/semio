@@ -71,7 +71,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.tsv".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Tsv", "Tsv"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Tsv", "Tsv"),
         source_format: STDIO_TSV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

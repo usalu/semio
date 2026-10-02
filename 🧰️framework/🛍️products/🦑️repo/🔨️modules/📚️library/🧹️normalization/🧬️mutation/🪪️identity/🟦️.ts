@@ -1,5 +1,4 @@
-import { canonicalPrimaryFilenameForKind } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { loadCatalogTaxonomy, taxonomyRelativePathIsExcluded } from "../../../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, taxonomyRelativePathIsExcluded } from "../../../🔍️discovery/🟦️.ts";
 import { isAbsolute } from "node:path";
 
 /** 🧹️Drops every non-ASCII codepoint (emoji + variation selectors), e.g. `"📐️cad"` -> `"cad"`, `"🗣️dsl"` -> `"dsl"`. */

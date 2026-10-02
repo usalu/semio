@@ -1,0 +1,41 @@
+{
+  "description": "The browser wgpu shell's folder door (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, S2-W2C): the browser build has no filesystem, so — like React's worker — it keeps a folder- or file-bound document's archive through the dev host's backbone route (`GET|PUT /semio-backbone?uri=&documentId=&schema=`, the Vite `semioBackboneVitePlugin`), asked through the page-owned `semioWgpuHostIo` door because the shell runs in the frame Worker. `requests` are what the Rust shell sends (`json`, compared as JSON values) and the one fetch the page makes for each (`fetch`); `answers` are what the page hands back for each HTTP outcome (`page`) and what the shell reads from them: a read's archive bytes (base64, `null` = nothing written yet), a write's acknowledgement, or the refusal it tells.",
+  "endpoint": "/semio-backbone",
+  "requests": [
+    {
+      "name": "reading a folder document",
+      "verb": "read",
+      "uri": "folder:///Users/ada/drawings",
+      "documentId": "puzzle.2d.fixture",
+      "schema": null,
+      "json": { "op": "backbone-folder", "verb": "read", "uri": "folder:///Users/ada/drawings", "documentId": "puzzle.2d.fixture" },
+      "fetch": { "method": "GET", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=puzzle.2d.fixture", "body": false }
+    },
+    {
+      "name": "writing a folder document carries its schema and its archive bytes",
+      "verb": "write",
+      "uri": "folder:///Users/ada/drawings",
+      "documentId": "puzzle.2d.fixture",
+      "schema": "s.puzzle.2d",
+      "json": { "op": "backbone-folder", "verb": "write", "uri": "folder:///Users/ada/drawings", "documentId": "puzzle.2d.fixture", "schema": "s.puzzle.2d" },
+      "fetch": { "method": "PUT", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=puzzle.2d.fixture&schema=s.puzzle.2d", "body": true }
+    },
+    {
+      "name": "reading a file document",
+      "verb": "read",
+      "uri": "file:///Users/ada/drawings/board.spk",
+      "documentId": "puzzle.2d.fixture",
+      "schema": null,
+      "json": { "op": "backbone-folder", "verb": "read", "uri": "file:///Users/ada/drawings/board.spk", "documentId": "puzzle.2d.fixture" },
+      "fetch": { "method": "GET", "url": "/semio-backbone?uri=file%3A%2F%2F%2FUsers%2Fada%2Fdrawings%2Fboard.spk&documentId=puzzle.2d.fixture", "body": false }
+    }
+  ],
+  "answers": [
+    { "name": "a stored archive is read as its bytes", "verb": "read", "response": { "status": 200, "body": "AQID" }, "page": { "status": 200, "bodyBase64": "AQID" }, "shell": { "bytes": "AQID" } },
+    { "name": "a document nothing has written yet reads as no archive", "verb": "read", "response": { "status": 204 }, "page": { "status": 204 }, "shell": { "bytes": null } },
+    { "name": "a host without the route refuses the read by its status", "verb": "read", "response": { "status": 404 }, "page": { "status": 404 }, "shell": { "error": "backbone-folder.status-404" } },
+    { "name": "a fetch that never reached the host is told as itself", "verb": "read", "response": { "error": "Failed to fetch" }, "page": { "error": "Failed to fetch" }, "shell": { "error": "Failed to fetch" } },
+    { "name": "a written archive is acknowledged", "verb": "write", "response": { "status": 200 }, "page": { "status": 200 }, "shell": { "written": true } },
+    { "name": "a write the host failed is refused by its status", "verb": "write", "response": { "status": 500 }, "page": { "status": 500 }, "shell": { "error": "backbone-folder.status-500" } }
+  ]
+}

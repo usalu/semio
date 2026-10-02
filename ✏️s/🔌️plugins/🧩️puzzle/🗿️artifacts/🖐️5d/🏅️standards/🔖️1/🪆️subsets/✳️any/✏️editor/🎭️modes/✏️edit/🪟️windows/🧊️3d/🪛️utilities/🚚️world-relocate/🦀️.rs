@@ -2,7 +2,8 @@
 //! grip that lands within the proximity radius. Bound only by the 3D world window (the flat board has
 //! no world origin to drag).
 
-use semio_framework_plugin::{LocalizedLabel, UtilityDefinition};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::UtilityDefinition;
 
 pub const UTILITY_ID: &str = "worldRelocate";
 

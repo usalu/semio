@@ -28,8 +28,8 @@ impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
     fn plan(&self, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
         super::plan::plan(self, base, planner)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Duplicate widget \"{}\"", self.source_id), &format!("Widget \"{}\" duplizieren", self.source_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate widget \"{}\"", self.source_id), &format!("Widget \"{}\" duplizieren", self.source_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.source_id.clone(), self.new_id.clone()]

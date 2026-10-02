@@ -13,7 +13,7 @@
 //! `semantic-ooxml-xlsx-transitional-v1` compares them. The subject half is `sut`-gated so the
 //! oracle-only run never compiles the local implementation.
 //!
-//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module, under a profile that declares no writer freedom at all, and no kind is exempt from any
 //! of them. Only ONE kind — `remove-conformance-attribute` — needs an arranged pre-state. This
 //! catalog has NO VML rule at all: ISO/IEC 29500-4 Transitional deliberately retains VML, so
@@ -21,8 +21,8 @@
 //! reason this subset declares two kinds fewer than its 🔒️strict sibling.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, oracle_stamp, project_package};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, oracle_stamp, project_package};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📕️reuse-marketplaces.xlsx";
@@ -111,8 +111,8 @@ mod subject {
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_xlsx_transitional_mutation, stamp_conformance_class_mutation, XlsxTransitionalMutation};
     use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::transitional::project_package;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::transitional::project_package;
+    use semio_repo_test_host::law::wire_operation;
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
         decode_xlsx(bytes).map_err(|error| error.to_string())

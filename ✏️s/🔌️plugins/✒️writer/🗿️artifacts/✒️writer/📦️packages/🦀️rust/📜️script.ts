@@ -12,7 +12,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "writer-window-state") {
-      const { testWriterWindowStateOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state-ownership/🟦️.ts");
+      const { testWriterWindowStateOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state/🟦️.ts");
       testWriterWindowStateOracle();
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");

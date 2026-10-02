@@ -1,4 +1,5 @@
 # 🧬️ Shooting mutation schema — artifact-lane fields only.
+scalar UInt32
 
 type ShootingMutation {
   schema: String! @state(class: ARTIFACT)
@@ -38,8 +39,8 @@ type ShootingAsset {
 type ShootingShot {
   id: String!
   label: String!
-  width: Int!
-  height: Int!
+  width: UInt32!
+  height: UInt32!
   format: String!
   shape: String!
   background: String
@@ -80,5 +81,4 @@ type ShootingSceneLighting {
   ambient: ShootingAmbient!
   shadow: ShootingShadow!
   material: ShootingMaterial!
-  emblemBase64: String
 }

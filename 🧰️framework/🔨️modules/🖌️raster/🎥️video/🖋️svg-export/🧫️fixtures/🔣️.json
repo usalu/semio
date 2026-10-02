@@ -1,0 +1,139 @@
+{
+  "schema": "framework.raster.svg-video.portable/v1",
+  "requests": [
+    {
+      "id": "two-native-frames",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "odd-edge-normalization",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 63,
+        "height": 47,
+        "fps": 2,
+        "durationSeconds": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "zero-fps",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 0,
+        "durationSeconds": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "fractional-fps",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 2.5,
+        "durationSeconds": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "oversized-edge",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 4097,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "negative-duration",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": -1
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-artifact-root",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "",
+        "width": 64,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-option",
+      "value": {
+        "inputSvgPath": "input.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": 1,
+        "fallback": true
+      },
+      "accepted": false
+    },
+    {
+      "id": "control-character-path",
+      "value": {
+        "inputSvgPath": "bad\npath.svg",
+        "outputMp4Path": "output.mp4",
+        "artifactRoot": "artifacts",
+        "width": 64,
+        "height": 48,
+        "fps": 2,
+        "durationSeconds": 1
+      },
+      "accepted": false
+    }
+  ],
+  "native": {
+    "width": 64,
+    "height": 48,
+    "fps": 2,
+    "durationSeconds": 1,
+    "frames": 2,
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"48\" viewBox=\"0 0 64 48\"><rect width=\"64\" height=\"48\" fill=\"#00ff00\"/></svg>"
+  },
+  "logoPaths": [
+    "🎞️animation/1️⃣one/🖋️vector.svg",
+    "🎞️animation/2️⃣two/🖋️vector.svg",
+    "🎞️animation/3️⃣three/🖋️vector.svg",
+    "🎞️animation/4️⃣four/🖋️vector.svg",
+    "🎞️animation/5️⃣five/🖋️vector.svg",
+    "🎞️animation/6️⃣six/🖋️vector.svg"
+  ]
+}

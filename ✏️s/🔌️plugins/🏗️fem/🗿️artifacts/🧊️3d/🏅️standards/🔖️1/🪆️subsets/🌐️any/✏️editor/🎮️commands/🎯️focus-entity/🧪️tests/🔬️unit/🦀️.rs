@@ -26,7 +26,7 @@ fn focus_entity_re_aims_the_addressed_window_orbit() {
     assert_eq!(focused.zoom, initial.zoom);
     assert_eq!(focused.up, initial.up);
     assert!(handle_window(&FocusEntity { id: "ghost".into() }, &view_doc, &cfg, &view(model::FEM3D_WINDOW_MODEL)).is_err());
-    assert!(handle_window(&FocusEntity { id: "n20_l1".into() }, &view_doc, &cfg, &semio_framework_plugin::ViewModel::default()).is_err());
+    assert!(handle_window(&FocusEntity { id: "n20_l1".into() }, &view_doc, &cfg, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_err());
     assert!(handle(&FocusEntity { id: "n20_l1".into() }, &view_doc, &cfg).is_err());
     let results = handle_window(&FocusEntity { id: "sol1".into() }, &view_doc, &cfg, &view(results::FEM3D_WINDOW_RESULTS)).expect("focus on results");
     assert_eq!(results.window_config_mutations[0].window_id(), "results-left");

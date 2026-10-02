@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import { startNativeProgress } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 📦️ norm artifact Rust package router + example-asset regeneration. */
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { runOwnedCommand, startNativeProgress } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 
 const packageRoot = import.meta.dir;
@@ -13,7 +14,7 @@ class RegenerateExampleAssetsScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     const stop = startNativeProgress(`artifact-rust:${cargoName}:regenerate-example-assets`);
     try {
-      await runOwnedCommand(
+      await runRepositoryCommand(
         "cargo",
         [
           "run",
@@ -37,5 +38,5 @@ if (command === "regenerate-example-assets") {
   const router = new ScriptRouter(packageRoot).register("regenerate-example-assets", RegenerateExampleAssetsScript);
   await router.run(["regenerate-example-assets"]);
 } else {
-  await runArtifactRustPackageMain(packageRoot, cargoName);
+  await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});
 }

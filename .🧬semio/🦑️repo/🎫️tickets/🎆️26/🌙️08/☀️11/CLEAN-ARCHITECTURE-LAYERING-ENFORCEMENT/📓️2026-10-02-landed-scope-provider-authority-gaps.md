@@ -1,0 +1,19 @@
+# Landed Scope Provider Authority Gaps
+
+Read-only actual source inspection; no tests/native jobs. Root reports genuine 30-row RED before this implementation; no GREEN claimed. Locations refer to `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts`.
+
+## Concrete remaining grants
+
+**Targets survive invalid manifest revocation.** Graph marks strict manifests invalid when a mounted path is nonportable (:8660) or a source-chain cycle occurs (:8666). Final contexts filter invalidManifests (:8690), but final targets deletion (:8689) only checks unresolved key prefixes. Example inventory: valid package/root; root has `#[path="leaf.rs"] mod sealed;` plus an absolute path module. First target remains `crateRoot\0sealed -> leaf.rs` while every context from that manifest is revoked. This is contradictory admitted authority for graph-target consumers. Final target admission must also account for invalid owning manifest roots, preserving alternate genuinely valid manifest origins if they share the root. Cycle branch likewise needs revoked root target authority. namedCrates/dependencies are currently published before root proof (:8649–8651); consumers must not treat those indexes alone as source ownership.
+
+**Unavailable source becomes an authoritative empty body.** sourceFacts (:8626–8628) calls `inspectRustModuleGraphFacts(readSource(path) ?? "")`. sourceFiles membership only comes from filenames. If captured readSource returns undefined for an inventoried root or leaf, empty text supplies a resolved root scope [0,0), so :8651/:8665 grants context/target. Minimal direct API case: files `[pkg/Cargo.toml,pkg/root.rs,pkg/leaf.rs]`, readable valid manifest and root mounting leaf, unreadable leaf. Leaf gets admitted context despite absent bytes. Missing root read similarly admits empty crate root. Distinguish unavailable source from legitimately empty source and record unresolved root/child key before publishing context. Normalization's captured hash checks can reject later, but that does not close the canonical graph API itself.
+
+## Landed pieces inspected without finding a new issue
+
+The changes are in the intended graph-fact parser `inspectRustModuleGraphFacts` (:8695 onward), not an unrelated mutation metadata parser. Required scopes array returns root/inline bodies (:8719/:8758), raw module symbols use rustIdentifierSymbol (:8745), inline module outer unresolved metadata is passed into parseScope (:8753), and rustModuleScopeProof (:8762–8774) requires one exact enclosing chain and refuses unresolved rows. Unknown inner attrs are captured in the source scope (:8710–8716). Root inherited unknown body is refused by selector before nested admission.
+
+unresolvedTargets is separate from ambiguousTargets; final canonical prefix pruning (:8687–8690) covers descendants and is keyed by crateRoot/module segments, not physical filename. Included source root proof (:8681) correctly poisons the importing module key when included bytes contain unknown inner scope metadata. Includes whose target is absent, cyclic or generated are skipped (:8676–8679); this audit does not establish an additional successful authority restoration exploit from those skip branches, so no speculative fix is asserted here. Preserve the physical input executor's separate missing-target/refusal evidence.
+
+## Small closed API laws
+
+Add graph-output expectations for (1) readable valid root + readable leaf + a second nonportable module path revoking the manifest, (2) readable valid root/manifest but unavailable inventoried leaf bytes, and (3) unavailable inventoried crate-root bytes. Assert no admitted context/target for revoked/unavailable origins; distinguish readable empty leaf, which remains legal source. These are captured-authority API laws, not claims that native rustc accepts missing source bytes.

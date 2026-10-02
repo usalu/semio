@@ -44,7 +44,7 @@ fn entity_points_frame_geometry_bearing_entities() {
 
 #[test]
 fn the_transform_utility_is_read_from_the_addressed_window() {
-    let mut view = ViewModel { window_id: Some("model-left".into()), ..Default::default() };
+    let mut view = ViewModel { window_id: Some("model-left".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     assert!(!fem3d_transform_armed(&view));
     view.active_utility_by_window_id.insert("model-left".into(), FEM3D_UTILITY_TRANSFORM.into());
     assert!(fem3d_transform_armed(&view));

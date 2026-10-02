@@ -59,8 +59,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeSki
         vec![super::GltfMutation::UnbindNodeSkin(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Node Skin", "Bindung des Knoten-Skins aufheben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind Node Skin", "Bindung des Knoten-Skins aufheben")
     }
 
     fn target(&self) -> Vec<String> {

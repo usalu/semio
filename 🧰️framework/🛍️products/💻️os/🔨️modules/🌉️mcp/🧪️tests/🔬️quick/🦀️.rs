@@ -5,7 +5,7 @@ use super::*;
 /// census injects THIS, never `build_catalog()`, whose whole job since ticket
 /// 26/08/29/AI-MCP-END-TO-END is to discover whichever plugins are really installed.
 fn fixture_catalog() -> std::sync::Arc<Catalog> {
-    std::sync::Arc::new(compile(&note_and_cad_source(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("the note+cad fixture always compiles"))
+    std::sync::Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
 
 /// 🧫️ [`build_server`] over [`fixture_catalog`] — a deterministic capability census.

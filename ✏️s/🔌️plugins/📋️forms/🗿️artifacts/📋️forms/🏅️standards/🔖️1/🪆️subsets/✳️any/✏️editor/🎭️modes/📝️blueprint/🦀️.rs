@@ -1,7 +1,10 @@
 //! 📝️ Design the form beside its interactive preview.
 
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard};
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
 
 pub const FORMS_PLAY_MODE_BLUEPRINT: &str = "blueprint";
 

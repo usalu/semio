@@ -9,7 +9,9 @@
     "🎮️playground/🖥️native-host/🟨️.mjs",
     "📇️catalog/🚚️deployment/🟨️.mjs",
     "../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
-    "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"
+    "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+    "../../../💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
+    "⚡️caching/📥️inference/🟨️.mjs"
   ],
   "runtimes": [
     "bun",

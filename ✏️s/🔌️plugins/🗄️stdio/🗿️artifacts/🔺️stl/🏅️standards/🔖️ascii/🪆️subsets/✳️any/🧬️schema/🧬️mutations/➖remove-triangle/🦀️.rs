@@ -21,8 +21,8 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for RemoveTriangle {
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {
         agg_inverse(&StlMutation::RemoveTriangle(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove triangle", "Dreieck entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove triangle", "Dreieck entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

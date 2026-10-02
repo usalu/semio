@@ -1,3 +1,29 @@
 syntax = "proto3";
 package semio.stdio_jpg.snapshot_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+message Snapshot {
+ string schema = 1;
+ uint32 width = 2;
+ uint32 height = 3;
+ bytes pixels = 4;
+ optional uint32 re_encode_quality = 5;
+ repeated uint32 jfif_version = 6;
+ DensityUnits jfif_density_units = 7;
+ uint32 jfif_x_density = 8;
+ uint32 jfif_y_density = 9;
+ optional Thumbnail jfif_thumbnail = 10;
+ optional Frame frame = 11;
+ uint32 sof_marker = 12;
+ bool arithmetic = 13;
+ repeated Quantization quant_tables = 14;
+ repeated Huffman huffman_tables = 15;
+ optional uint32 restart_interval = 16;
+ repeated Segment other_segments = 17;
+}
+enum DensityUnits { ASPECT = 0; PIXELS_PER_INCH = 1; PIXELS_PER_CM = 2; }
+message Thumbnail { uint32 width = 1; uint32 height = 2; bytes rgb_data = 3; }
+message Frame { uint32 precision = 1; uint32 width = 2; uint32 height = 3; repeated Component components = 4; }
+message Component { uint32 id = 1; uint32 h_sampling = 2; uint32 v_sampling = 3; uint32 quant_table_id = 4; }
+message Quantization { uint32 id = 1; uint32 precision = 2; repeated uint32 values = 3; }
+enum HuffmanClass { DC = 0; AC = 1; }
+message Huffman { uint32 id = 1; HuffmanClass class = 2; repeated uint32 bits = 3; bytes values = 4; }
+message Segment { uint32 marker = 1; bytes data = 2; }

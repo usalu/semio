@@ -14,6 +14,6 @@ impl protocol::MutationKind<DrawingSnapshot,DrawingMutation> for SetLayerFillRul
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"set",entity:"layer",kind:"set-layer-fill-rule",record:"SetLayerFillRule"};
     fn diff(&self,base:&DrawingSnapshot)->protocol::MutationOutcome<DrawingDiff> {super::diff::diff(self,base)}
     fn inverse(&self,base:&DrawingSnapshot)->Vec<DrawingMutation> {super::inverse::inverse(self,base)}
-    fn label(&self)->protocol::LocalizedLabel {protocol::LocalizedLabel::native(&format!("Set layer \"{}\" fill rule to {}",self.layer_id,self.fill_rule.as_str()),&format!("Füllregel von Ebene \"{}\" auf {} setzen",self.layer_id,self.fill_rule.as_str()))}
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native(&format!("Set layer \"{}\" fill rule to {}",self.layer_id,self.fill_rule.as_str()),&format!("Füllregel von Ebene \"{}\" auf {} setzen",self.layer_id,self.fill_rule.as_str()))}
     fn target(&self)->Vec<String> {vec![self.layer_id.clone()]}
 }

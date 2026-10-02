@@ -430,18 +430,18 @@ struct DagOwnedSnapshotCursor {
     retirement: DagRetirement,
 }
 
-impl crate::os_store::retirement::RetirementCursor for DagOwnedSnapshotCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> crate::os_store::retirement::RetirementStep {
+impl semio_framework_value::retirement::RetirementCursor for DagOwnedSnapshotCursor {
+    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
         if self.retirement.terminal_is_empty() {
-            return crate::os_store::retirement::RetirementStep::Complete;
+            return semio_framework_value::retirement::RetirementStep::Complete;
         }
         if maximum_bytes == 0 {
-            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+            return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
         }
         match ErasedSnapshotRetirement::close_step(&mut self.retirement, 1, maximum_bytes) {
-            Ok(SnapshotRetirementStep::Complete) => crate::os_store::retirement::RetirementStep::Complete,
-            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => crate::os_store::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
-            Ok(SnapshotRetirementStep::Blocked) | Err(_) => crate::os_store::retirement::RetirementStep::BudgetExhausted,
+            Ok(SnapshotRetirementStep::Complete) => semio_framework_value::retirement::RetirementStep::Complete,
+            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => semio_framework_value::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
+            Ok(SnapshotRetirementStep::Blocked) | Err(_) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
         }
     }
 
@@ -450,8 +450,8 @@ impl crate::os_store::retirement::RetirementCursor for DagOwnedSnapshotCursor {
     }
 }
 
-impl crate::os_store::retirement::RetireOwned for DagSnapshot {
-    fn retirement(self) -> Box<dyn crate::os_store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for DagSnapshot {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         Box::new(DagOwnedSnapshotCursor { retirement: DagRetirement::from_snapshot(self) })
     }
 }

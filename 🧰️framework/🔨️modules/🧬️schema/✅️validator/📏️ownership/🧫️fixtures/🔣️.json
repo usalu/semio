@@ -1,0 +1,11 @@
+{
+  "validatorPackage": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/Cargo.toml",
+  "httpModule": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🦀️.rs",
+  "retiredHttpModule": "🧰️framework/🔨️modules/🧬️schema/🌐️document-http/🦀️.rs",
+  "httpFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌐️document-http/🧫️fixtures/🔣️.json",
+  "genericFacade": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+  "neutralDependencies": [
+    "semio-framework-value",
+    "semio-framework-pack"
+  ]
+}

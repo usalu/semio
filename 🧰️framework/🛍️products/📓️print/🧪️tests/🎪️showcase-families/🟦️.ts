@@ -11,7 +11,18 @@
  */
 
 // #region 🔌️Adapters
-import { defineTestAdapter, type AdapterContext } from "../../../🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+// #region 🧲️Header
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// #endregion 🧲️Header
+/** 🎪️ Adapter for `showcase-families`: the nine capability families of `semio-viz-showcase`.
+ *
+ * Subject: the LaTeX families, probed through `semio-viz-probe` with one scenario per catalogue
+ * kind. Oracle: the catalogue itself — no third-party library draws a taxonomy of print
+ * visualization capabilities, so the promise a catalogue entry makes is the specification.
+ */
+// #region 🔌️Adapters
+import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { compileVizProbe, roundProbeNumbers, type ProbeProjection, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters

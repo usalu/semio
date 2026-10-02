@@ -5,8 +5,22 @@ use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::editor::sourcing::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
-use semio_framework_plugin::plugin_app_close_prelude::{self as ui, InputKind, Label};
-use semio_framework_plugin::{Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, TableCell, Trigger, UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude as ui;
+use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_framework_plugin::Buildable;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::HasBase;
+use semio_framework_plugin::HasChildren;
+use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::TableCell;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_POOL: &str = "sourcing-pool";

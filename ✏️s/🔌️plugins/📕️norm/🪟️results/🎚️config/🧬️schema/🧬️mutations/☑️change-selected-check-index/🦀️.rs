@@ -24,8 +24,8 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
         vec![Self { index: base.selected_check_index }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         match self.index {
             Some(index) => format!("Select compliance check {index}"),
             None => "Clear selected compliance check".into(),

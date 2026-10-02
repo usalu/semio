@@ -17,7 +17,7 @@ fn count_nodes(tree: &UiTree, id: NodeId) -> usize {
 
 #[test]
 fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
 
     let root = shell.tree().root.expect("expected a root node");
@@ -31,7 +31,7 @@ fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape()
 
 #[test]
 fn set_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_not_panic() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
     let first_count = count_nodes(shell.tree(), shell.tree().root.unwrap());
 
@@ -44,7 +44,7 @@ fn set_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_no
 
 #[test]
 fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
@@ -57,7 +57,7 @@ fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
 
 #[test]
 fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
@@ -78,7 +78,7 @@ fn only_window_button(shell: &Shell) -> UiButtonNode {
 
 #[test]
 fn a_window_with_no_role_paints_no_role_chrome() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
     let button = only_window_button(&shell);
     assert_eq!(button.label.as_str(), "app.viewport");
@@ -87,7 +87,7 @@ fn a_window_with_no_role_paints_no_role_chrome() {
 
 #[test]
 fn set_window_role_viewer_appends_the_title_chip_and_swaps_to_the_lock_icon() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_role("app.viewport", ChromeRole::Viewer);
     shell.set_window_layout(single_window_layout("app.viewport"));
     let button = only_window_button(&shell);
@@ -97,7 +97,7 @@ fn set_window_role_viewer_appends_the_title_chip_and_swaps_to_the_lock_icon() {
 
 #[test]
 fn set_window_role_editor_appends_the_title_chip_but_keeps_the_window_kind_icon() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_kind_icons(std::collections::HashMap::from([("app.viewport".to_string(), IconName::Folder)]));
     shell.set_window_role("app.viewport", ChromeRole::Editor);
     shell.set_window_layout(single_window_layout("app.viewport"));
@@ -108,7 +108,7 @@ fn set_window_role_editor_appends_the_title_chip_but_keeps_the_window_kind_icon(
 
 #[test]
 fn set_window_role_after_the_layout_is_already_set_repaints_immediately() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_layout(single_window_layout("app.viewport"));
     assert_eq!(only_window_button(&shell).label.as_str(), "app.viewport", "no role yet");
 
@@ -121,7 +121,7 @@ fn set_window_role_after_the_layout_is_already_set_repaints_immediately() {
 
 #[test]
 fn set_locale_de_resolves_the_german_title_chip() {
-    let mut shell = Shell::new();
+    let mut shell = Shell::new(semio_framework_ui_locale::Locale::En);
     shell.set_window_role("app.viewport", ChromeRole::Viewer);
     shell.set_locale(Locale::De);
     shell.set_window_layout(single_window_layout("app.viewport"));

@@ -13,13 +13,13 @@ export interface ObjFaceVertex { vertex: number; texcoord?: number; normal?: num
 /** 🧩 A `f` line, kept as its original n-gon. */
 export interface ObjFace { vertices: ObjFaceVertex[]; }
 /** 🏷️ A named `g` group — face-index membership list (a face may be in several groups at once). */
-export interface ObjGroup { name: string; faces: number[]; }
+export interface ObjGroup { name: string; faces: bigint[]; }
 /** 🏷️ A named `o` object — face-index membership list (exactly one object active at a time). */
-export interface ObjObject { name: string; faces: number[]; }
+export interface ObjObject { name: string; faces: bigint[]; }
 /** 🎨 One `usemtl` transition: material active from faceIndexFrom onward. */
-export interface ObjUsemtlRange { faceIndexFrom: number; material: string; }
+export interface ObjUsemtlRange { faceIndexFrom: bigint; material: string; }
 /** 🧵 One `s` transition: smoothing group active from faceIndexFrom onward (undefined group = `s off`). */
-export interface ObjSmoothingRange { faceIndexFrom: number; group?: number; }
+export interface ObjSmoothingRange { faceIndexFrom: bigint; group?: number; }
 /** 🕳️ A real source line the codec doesn't otherwise model (comments + unrecognized keywords),
  * retained verbatim in original relative order. */
 export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }

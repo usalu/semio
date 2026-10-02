@@ -26,8 +26,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerMRdNm
     fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Change design bending resistance of the tower", "Bemessungswert der Biegetragfähigkeit des Turms ändern")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change design bending resistance of the tower", "Bemessungswert der Biegetragfähigkeit des Turms ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tower-m-rd-nm".into()]

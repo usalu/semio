@@ -3,7 +3,9 @@ use crate::editor::cad::config::CadConfig;
 use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::CadPlayApp;
 use crate::standards::v1::subsets::any::schema::inferences::default_document;
-use semio_framework_plugin::{ArtifactView, Locale, ViewModel};
+use semio_framework_plugin::ArtifactView;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin::ViewModel;
 
 #[semio_framework_async_macros::async_test]
 async fn cad_labels_translate_catalogue_typologies_in_german() {
@@ -12,7 +14,7 @@ async fn cad_labels_translate_catalogue_typologies_in_german() {
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
     let config = CadConfig::default();
-    let view_state = ViewModel { locale: Locale::De, ..ViewModel::default() };
+    let view_state = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config, &view_state).expect("CAD UI assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection");
     assert!(json.contains("Typologien"));

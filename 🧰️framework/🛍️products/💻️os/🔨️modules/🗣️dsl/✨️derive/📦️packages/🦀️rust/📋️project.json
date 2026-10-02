@@ -35,7 +35,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source-authority-source",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-exports-source": {
       "executor": "nx:run-commands",
@@ -43,7 +49,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports-source",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-exports": {
       "executor": "nx:run-commands",
@@ -51,7 +63,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -59,7 +77,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",
@@ -67,7 +91,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-long": {
       "executor": "nx:run-commands",
@@ -75,7 +105,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
@@ -83,7 +119,13 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     }
   }
 }

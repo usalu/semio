@@ -1,3 +1,5 @@
+import { resolveTestLevel, atTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic browser host staging owner. */
 
@@ -7,13 +9,13 @@ import { artifactFiles } from "../../../../🔌️plugin/🌐️browser-bundle/�
 
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../🟦️.ts";
 
-import { stageArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -166,7 +168,7 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
     if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
     writeFileSync(join(roots.browserHostRoot, "extensions", ".nx-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
     const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256, componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 }, { byteLength: spaceComponent.size, sha256: spaceComponentSha256 });
-    await stageArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
+    await stageRepositoryArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
     const finalRoot = join(artifactRoot, "browser-host");
     return resolveTestBrowserHostRootsV1({
       SEMIO_TEST_ARTIFACT_DIR: artifactRoot,

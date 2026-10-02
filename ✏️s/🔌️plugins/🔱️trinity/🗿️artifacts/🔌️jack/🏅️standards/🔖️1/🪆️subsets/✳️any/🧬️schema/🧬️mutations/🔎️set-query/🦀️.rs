@@ -25,8 +25,8 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for SetQuery {
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Edit Jack query", "Jack-Abfrage bearbeiten")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Edit Jack query", "Jack-Abfrage bearbeiten")
     }
     fn target(&self) -> Vec<String> {
         vec!["query".to_string()]

@@ -60,6 +60,32 @@
       "id": "unrelated-label-functions",
       "rust": "impl Widget for Slider {\n    fn label(&self) -> LocalizedLabel {\n        LocalizedLabel::data(\"x\")\n    }\n}\n",
       "sites": []
+    },
+    {
+      "id": "commit-with-a-literal-label",
+      "rust": "fn delete_objects(mutations: Vec<Op>) -> Result<Emit<Op, Cfg>, Fault> {\n    Ok(Emit::commit(mutations, \"Delete objects\"))\n}\n",
+      "sites": [{ "trait": "Emit", "implementor": "commit", "verdict": "labelHandwritten", "texts": [["Delete objects", null]] }]
+    },
+    {
+      "id": "commit-with-a-computed-label-qualified-and-turbofished",
+      "rust": "fn edit(mutation: Op, description: String) -> Result<Emit<Op, Cfg>, Fault> {\n    let first = semio_framework_plugin::Emit::commit(vec![mutation.clone()], description.clone());\n    let second = Emit::<Op, Cfg>::commit(vec![mutation], format!(\"Edit {}\", description));\n    Ok(first.merge(second))\n}\n",
+      "sites": [
+        { "trait": "Emit", "implementor": "commit", "verdict": "labelHandwritten", "texts": [[null, null]] },
+        { "trait": "Emit", "implementor": "commit", "verdict": "labelHandwritten", "texts": [["Edit {}", null]] }
+      ]
+    },
+    {
+      "id": "described-emission-literals",
+      "rust": "fn fill(mutation: Op, description: Option<String>) -> Result<Emit<Op, Cfg>, Fault> {\n    if mutation.is_empty() {\n        return Ok(Emit { effects: start_fill_effects(), description: Some(\"Commit fill\".into()), ..Default::default() });\n    }\n    Ok(semio_framework_plugin::Emit { artifact_mutations: vec![mutation], description, ..Default::default() })\n}\n",
+      "sites": [
+        { "trait": "Emit", "implementor": "description", "verdict": "labelHandwritten", "texts": [["Commit fill", null]] },
+        { "trait": "Emit", "implementor": "description", "verdict": "labelHandwritten", "texts": [[null, null]] }
+      ]
+    },
+    {
+      "id": "emissions-labelled-by-their-leaves",
+      "rust": "pub struct Emit<M, C> {\n    pub artifact_mutations: Vec<M>,\n    pub description: Option<String>,\n}\nimpl<M, C> Default for Emit<M, C> {\n    fn default() -> Self {\n        Self { artifact_mutations: Vec::new(), description: None }\n    }\n}\nfn plain() -> Emit {\n    Emit::default()\n}\nfn gesture(transaction: TransactionRef, ops: Vec<Op>, op: Op) -> Vec<Emit<Op, Cfg>> {\n    vec![Emit::commit_transaction(transaction, ops), Emit::mutations(vec![op.clone()]), Emit { artifact_mutations: vec![op], description: None, ..Default::default() }]\n}\nfn publish(emit: Emit<Op, Cfg>) -> Option<String> {\n    let Emit { artifact_mutations, description, .. } = emit;\n    match description {\n        Some(text) if artifact_mutations.is_empty() => Some(text),\n        _ => None,\n    }\n}\n",
+      "sites": []
     }
   ]
 }

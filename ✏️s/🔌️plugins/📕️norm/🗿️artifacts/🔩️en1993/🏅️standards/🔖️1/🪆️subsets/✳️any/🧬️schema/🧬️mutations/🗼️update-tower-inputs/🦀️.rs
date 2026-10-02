@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTowerInput
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Update tower leg {}", self.tower_leg.id),
             &format!("Turmstiel {} aktualisieren", self.tower_leg.id),
         )

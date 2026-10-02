@@ -12,7 +12,7 @@ class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "procedure-document-contract") {
       const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      const { testProcedureDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
+      const { testProcedureDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
       testProcedureDocumentContractOracle();
       const schemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), ...["--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)]], { cwd: this.repoRoot });
@@ -23,4 +23,4 @@ if (segments[0] === "procedure-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-imperative-procedure", { commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-imperative-procedure", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript } });

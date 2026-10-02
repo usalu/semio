@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "Ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION: split out of the former `✳️any` catch-all. The GIF89a Specification (CompuServe, 1990) §24 defines the Comment Extension as a self-contained, optional block (block label 0x21 0xFE) of plain-text sub-blocks with no rendering effect. `insert-comment`/`remove-comment` are that block's own vocabulary, owned here rather than by `🧱️base`, for the same family-module reuse rationale as `../../🎛️graphic-control/🔮️oracles/🔣️.json`.",
   "oracles": [],
@@ -117,5 +117,6 @@
         "remove-comment"
       ]
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

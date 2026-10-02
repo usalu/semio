@@ -1,0 +1,8 @@
+{
+  "source": "📇️registry/🧬️contract/🦀️.rs",
+  "mount": "🧾️definition/🦀️.rs",
+  "definition": "📇️registry/🧬️contract/🧾️definition/🦀️.rs",
+  "retired": "🗿️artifacts/🦀️.rs",
+  "forbiddenPrefix": "🗿️artifacts/",
+  "expectedEdges": []
+}

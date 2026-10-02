@@ -119,23 +119,6 @@
             "order": 60
           }
         },
-        "cameraDraftLabel": {
-          "type": "string",
-          "x-semio-ui": {
-            "widget": "text",
-            "role": "value",
-            "label": {
-              "en": "Camera name draft",
-              "de": "Entwurf Kameraname"
-            },
-            "description": {
-              "en": "Name typed for the next saved camera.",
-              "de": "Eingegebener Name für die nächste gespeicherte Kamera."
-            },
-            "group": "camera",
-            "order": 70
-          }
-        },
         "camera": {
           "type": "object",
           "properties": {
@@ -312,7 +295,6 @@
         "selectedShotIds",
         "centerModel",
         "fitRevision",
-        "cameraDraftLabel",
         "camera"
       ],
       "additionalProperties": false,

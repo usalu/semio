@@ -20,7 +20,7 @@ mod subject {
     use semio_s_artifact_sequence_sequence::document_dsl::{parse_dsl, print_dsl};
     use semio_s_artifact_sequence_sequence::mutations::encode_sequence_projection_json;
     use semio_s_artifact_sequence_sequence::SequenceSnapshot;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, round_trip_preserves};
+    use semio_repo_test_host::law::{carrier_is_exact, round_trip_preserves};
 
     fn projection(snapshot: &SequenceSnapshot) -> Result<Json, String> {
         parse_json(&encode_sequence_projection_json(snapshot))

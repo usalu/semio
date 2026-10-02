@@ -1,0 +1,81 @@
+{
+  "name": "@semio-tech/2d-compute",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test-schema": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+        "command": "bun ./📜️script.ts test schema"
+      }
+    },
+    "check-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+        "command": "bun ./📜️script.ts check types"
+      }
+    },
+    "test-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/tsconfig.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/◻️2d/🧮️compute",
+        "command": "bun ./📜️script.ts test ownership"
+      }
+    }
+  }
+}

@@ -35,8 +35,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveSt
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove frame {} from stream \"{}\"", self.frame_index, self.id), &format!("Einzelbild {} aus Datenstrom \"{}\" entfernen", self.frame_index, self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove frame {} from stream \"{}\"", self.frame_index, self.id), &format!("Einzelbild {} aus Datenstrom \"{}\" entfernen", self.frame_index, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

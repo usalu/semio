@@ -20,7 +20,7 @@ fn addressed(utility: &str) -> ViewModel {
         window_id: Some("w".into()),
         window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: WINDOW_KIND_ID.into() }],
         active_utility_id: Some(utility.into()),
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 

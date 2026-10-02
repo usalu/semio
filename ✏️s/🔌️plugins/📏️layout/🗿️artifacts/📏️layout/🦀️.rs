@@ -56,11 +56,11 @@ pub struct LayoutDrawingChild {
     pub content: SemioDrawingSnapshot,
 }
 
-impl semio_framework_schema::ChildFieldRefs for LayoutDrawingChild {
+impl semio_framework_schema_composition::ChildFieldRefs for LayoutDrawingChild {
     const MANY: bool = false;
-    fn visit_child_field<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
+    fn visit_child_field<'a, V: semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
         visitor.step()?;
-        semio_framework_schema::ChildFieldRefs::visit_child_field(&self.handle, slot, visitor)
+        semio_framework_schema_composition::ChildFieldRefs::visit_child_field(&self.handle, slot, visitor)
     }
 }
 
@@ -521,7 +521,7 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::LayoutSnapshot;
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.layout".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Layout", "Layout"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Layout", "Layout"),
         source_format: LAYOUT_DOCUMENT_SCHEMA.into(),
         component_kind: "layout".into(),
         dimension: "2d".into(),

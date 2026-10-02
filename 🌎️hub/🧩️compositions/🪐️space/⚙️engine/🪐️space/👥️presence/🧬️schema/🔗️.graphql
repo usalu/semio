@@ -1,3 +1,4 @@
+"""👥️ Hub Studio presence: https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/presence/schema.json"""
 type SpacePresence {
   camera: [SpaceWindowCameraEntry!]! @state(class: PRESENCE)
   activeNodeId: String @state(class: PRESENCE)

@@ -5,24 +5,24 @@
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 use std::sync::Arc;
-use store::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
+use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
 
 //#region 🖐️Block5dRows
-store::artifact_retire_struct!(Block5dPart2d { shape, radius, width, height, color, icon_kind });
-store::artifact_retire_struct!(Block5dGripKind { id, name, label, color, default_rope_kind });
-store::artifact_retire_struct!(Block5dSnapshot { schema, part_kind, part_2d, part_3d, representations, grip_kinds, grips, compatibility, attributes, authors, camera2d, camera3d, meta });
+semio_framework_value::artifact_retire_struct!(Block5dPart2d { shape, radius, width, height, color, icon_kind });
+semio_framework_value::artifact_retire_struct!(Block5dGripKind { id, name, label, color, default_rope_kind });
+semio_framework_value::artifact_retire_struct!(Block5dSnapshot { schema, part_kind, part_2d, part_3d, representations, grip_kinds, grips, compatibility, attributes, authors, camera2d, camera3d, meta });
 
 impl RetireOwned for Block5dPart3d {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         let Block5dPart3d { orientation, scale } = self;
-        store::artifact_retirement_sequence![orientation.map(Vec::from), scale.map(Vec::from)]
+        semio_framework_value::artifact_retirement_sequence![orientation.map(Vec::from), scale.map(Vec::from)]
     }
 }
 
 impl RetireOwned for Block5dGripTemplate {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         let Block5dGripTemplate { id, grip_kind, angle, radius_2d, position, direction, radius_3d } = self;
-        store::artifact_retirement_sequence![id, grip_kind, angle, radius_2d, Vec::from(position), Vec::from(direction), radius_3d]
+        semio_framework_value::artifact_retirement_sequence![id, grip_kind, angle, radius_2d, Vec::from(position), Vec::from(direction), radius_3d]
     }
 }
 //#endregion 🖐️Block5dRows
@@ -37,8 +37,8 @@ impl RetireOwned for Block5dMutation {
             Self::ChangePartKindDescription(value) => value.new_description.retirement(),
             Self::ChangePartKindIcon(value) => value.new_icon.retirement(),
             Self::ChangePartKindUnit(value) => value.new_unit.retirement(),
-            Self::UpdatePart2d(value) => store::artifact_retirement_sequence![value.new_shape, value.new_radius, value.new_width, value.new_height, value.new_color, value.new_icon_kind],
-            Self::UpdatePart3d(value) => store::artifact_retirement_sequence![value.new_orientation.map(Vec::from), value.new_scale.map(Vec::from)],
+            Self::UpdatePart2d(value) => semio_framework_value::artifact_retirement_sequence![value.new_shape, value.new_radius, value.new_width, value.new_height, value.new_color, value.new_icon_kind],
+            Self::UpdatePart3d(value) => semio_framework_value::artifact_retirement_sequence![value.new_orientation.map(Vec::from), value.new_scale.map(Vec::from)],
             Self::CreateRepresentation(value) => value.representation.retirement(),
             Self::DeleteRepresentation(value) => value.id.retirement(),
             Self::RenameRepresentation(value) => (value.id, value.new_name).retirement(),

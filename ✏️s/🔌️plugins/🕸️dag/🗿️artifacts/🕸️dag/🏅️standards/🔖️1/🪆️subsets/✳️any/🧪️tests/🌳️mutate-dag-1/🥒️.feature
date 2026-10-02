@@ -21,7 +21,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
   this feature's own Rust adapter additionally exercises is reached only by parsing the real
   `.dsl.semio` example through PRODUCTION's own `parse_dag_dsl`, which this Python reference does not
   reimplement. What the Python side DOES cover, and cross-checks against a real committed fixture, is
-  the REJECTION half every one of this vocabulary's fourteen kinds commits to: every `(before,
+  the REJECTION half every one of this vocabulary's seventeen kinds commits to: every `(before,
   mutation, outcome)` triad below is now a declared `asset://` fixture rather than an
   `include_str!`-only literal, for BOTH `@id-mutate` (its own committed rejection vector) and
   `@id-inverse` (the SAME rejection vector, restated — a rejection has nothing to invert, so
@@ -37,7 +37,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
   observability surface — it moves if and only if the working scene moved. And a committed
   `➡️after` for an APPLIED mutation would have to carry a hand-forged
   `std::collections::hash_map::DefaultHasher` digest, a value the standard library explicitly
-  refuses to specify, which is why all fourteen committed specification vectors under
+  refuses to specify, which is why all seventeen committed specification vectors under
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<slug>/` are REJECTION vectors
   and say so in their own leaf tests.
 
@@ -80,7 +80,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
     Then the vector is refused with exactly <code>, its content handle is untouched, the real application moves the handle, and the two implementations agree on the rejection
     Examples:
       | id                        | dir                          | fixture                                                       | code                    | params                                                                                                                                                                                            |
-      | create-node               | 🌱create-node                | 🧪️rejects                               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadic_inputs": false, "variadic_outputs": false}} |
+      | create-node               | 🌱create-node                | 🧪️rejects-a-duplicate-node-id           | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadic_inputs": false, "variadic_outputs": false}} |
       | delete-node               | 🗑️delete-node               | 🧪️rejects                           | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
       | rename-node               | 🏷️rename-node               | 🧪️rejects                           | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
       | change-node-name          | 🔤change-node-name           | 🧪️rejects              | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
@@ -94,6 +94,9 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
       | reorder-nodes             | 🔀reorder-nodes              | 🧪️rejects                       | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
       | connect-nodes             | 🤝️connect-nodes              | 🧪️rejects                             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
       | disconnect-nodes          | ✂️disconnect-nodes          | 🧪️rejects                      | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
+      | move-nodes                | 🚚️move-nodes                | 🧪️rejects                      | mutation.target-missing | {"mutation": "moveNodes", "ids": ["scale", "combine"], "dx": 40.0, "dy": -12.5}                                                                                                                 |
+      | set-node-positions        | 📍️set-node-positions        | 🧪️rejects                      | mutation.target-missing | {"mutation": "setNodePositions", "positions": [{"id": "screen", "x": 520.0, "y": 40.0}, {"id": "mode", "x": -400.0, "y": 140.0}]}                                                              |
+      | set-slider                | 🎚️set-slider                | 🧪️rejects                      | mutation.target-missing | {"mutation": "setSlider", "id": "slider", "field": "value", "value": 7.5}                                                                                                                       |
 
   @id-inverse
   @level-exhaustive
@@ -110,7 +113,7 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
     Then the document equals the pipeline again, content handle included — which for a content-addressed child means the whole scene came back — and, on the same kind's own committed rejection vector, both implementations agree there is nothing to invert
     Examples:
       | id                        | dir                          | fixture                                                       | code                    | params                                                                                                                                                                                            |
-      | create-node               | 🌱create-node                | 🧪️rejects                               | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadic_inputs": false, "variadic_outputs": false}} |
+      | create-node               | 🌱create-node                | 🧪️rejects-a-duplicate-node-id           | mutation.duplicate-id   | {"mutation": "createNode", "node": {"id": "gain", "name": "Gain", "abbreviation": "Gain", "icon": "", "x": -260.0, "y": 180.0, "width": 104.0, "height": 14.0, "properties": {}, "kind": "computation", "inputs": [], "outputs": [], "variadic_inputs": false, "variadic_outputs": false}} |
       | delete-node               | 🗑️delete-node               | 🧪️rejects                           | mutation.target-missing | {"mutation": "deleteNode", "id": "mode"}                                                                                                                                                          |
       | rename-node               | 🏷️rename-node               | 🧪️rejects                           | mutation.target-missing | {"mutation": "renameNode", "id": "scale", "newId": "gain"}                                                                                                                                        |
       | change-node-name          | 🔤change-node-name           | 🧪️rejects              | mutation.target-missing | {"mutation": "changeNodeName", "id": "combine", "newName": "Merge"}                                                                                                                               |
@@ -124,6 +127,9 @@ Feature: Apply every typed DAG mutation to the real committed pipeline, to its r
       | reorder-nodes             | 🔀reorder-nodes              | 🧪️rejects                       | mutation.invariant      | {"mutation": "reorderNodes", "order": ["screen", "combine", "scale", "mode", "slider"]}                                                                                                            |
       | connect-nodes             | 🤝️connect-nodes              | 🧪️rejects                             | mutation.target-missing | {"mutation": "connectNodes", "id": "e5", "source": "slider@out", "target": "combine@a", "routeStyle": "bezier", "properties": {}}                                                                   |
       | disconnect-nodes          | ✂️disconnect-nodes          | 🧪️rejects                      | mutation.target-missing | {"mutation": "disconnectNodes", "id": "e3"}                                                                                                                                                       |
+      | move-nodes                | 🚚️move-nodes                | 🧪️rejects                      | mutation.target-missing | {"mutation": "moveNodes", "ids": ["scale", "combine"], "dx": 40.0, "dy": -12.5}                                                                                                                 |
+      | set-node-positions        | 📍️set-node-positions        | 🧪️rejects                      | mutation.target-missing | {"mutation": "setNodePositions", "positions": [{"id": "screen", "x": 520.0, "y": 40.0}, {"id": "mode", "x": -400.0, "y": 140.0}]}                                                              |
+      | set-slider                | 🎚️set-slider                | 🧪️rejects                      | mutation.target-missing | {"mutation": "setSlider", "id": "slider", "field": "value", "value": 7.5}                                                                                                                       |
 
   @id-identity-round-trip
   @level-long

@@ -192,7 +192,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
                     assert!(decoder.terminal_is_empty());
                     assert_eq!(snapshot, expected(&row["snapshot"]));
                     assert_eq!(snapshot.encode_pack(), wire, "existing encoder and independent fixture agree");
-                    close(store::retirement::owned_retirement(snapshot).as_mut());
+                    close(semio_framework_value::retirement::owned_retirement(snapshot).as_mut());
                     close(&mut input);
                 } else {
                     let diagnostic = match row["reason"].as_str().unwrap() {
@@ -290,7 +290,7 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
     let large_snapshot = expected(&large);
     let large_wire = large_snapshot.encode_pack();
     assert_eq!(large_wire.len(), row["wireBytes"].as_u64().unwrap() as usize);
-    assert_eq!(close(store::retirement::owned_retirement(large_snapshot).as_mut()), row["snapshotRetiredBytes"].as_u64().unwrap() as usize);
+    assert_eq!(close(semio_framework_value::retirement::owned_retirement(large_snapshot).as_mut()), row["snapshotRetiredBytes"].as_u64().unwrap() as usize);
     for grants in lifecycle["retirementGrants"].as_array().unwrap() {
         let grants = grants.as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).collect::<Vec<_>>();
         let mut decoder = SemioFlowSnapshotDecode::begin(request(&large_wire, "flow")).unwrap_or_else(|_| panic!("large Flow identity"));

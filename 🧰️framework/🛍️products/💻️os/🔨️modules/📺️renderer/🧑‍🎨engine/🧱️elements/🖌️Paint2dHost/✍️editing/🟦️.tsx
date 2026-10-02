@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEven
 import { GestureRecognizer } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/🟦️.tsx";
 import { useTranslation } from "@semio-tech/ui-react";
-import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelColor, type PixelImage, type PixelOperation, type PixelPoint, type SelectionMerge } from "../../../../../../../../🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+import { combineSelections, floodSelection, selectPixels, validateExtent, type PixelImage, type PixelOperation, type PixelPoint, type SelectionMerge } from "../../../../../../../../🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import { editSelection, layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, selectionSpans, restoreSelection, type PixelLayer } from "./🟦️.ts";
 
 const labels = {
@@ -111,7 +111,6 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   const mask=source&&"spans" in source&&coverage?.key===selectionKey?coverage.mask:undefined;
   const selectionReady=!source||("spans" in source&&coverage?.key===selectionKey);
 
-  const foreground=():PixelColor=>[parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16),255];
   const ready=!!active?.visible && progress===null && !pending && selectionReady;
   const editable=ready&&!active?.locked;
 
@@ -251,13 +250,13 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   };
   const pick=async(point:PixelPoint,signal:AbortSignal)=>{
     if(!active) return;
-    const image=await decodeLayer(active,assetsJson,signal),x=Math.floor(point[0]),y=Math.floor(point[1]);
+    const x=Math.floor(point[0]),y=Math.floor(point[1]);
+    if(tool==="bucket") {if(!signal.aborted&&!active.locked&&x>=0&&y>=0&&x<active.width&&y<active.height)await dispatchEdit("fillRegion",{layerId:active.id,x:point[0],y:point[1],tolerance});return;}
+    const image=await decodeLayer(active,assetsJson,signal);
     if(x<0 || y<0 || x>=image.width || y>=image.height) return;
     if(tool==="eyedropper") {setColor("#"+[...image.pixels.slice((y*image.width+x)*4,(y*image.width+x)*4+3)].map(v=>v.toString(16).padStart(2,"0")).join(""));return;}
-    const selected=await floodSelection(image,x,y,tolerance,{signal,selection:tool==="bucket"?mask:undefined,onProgress:p=>setProgress((tool==="bucket"?1:0.5)*p.completed/p.total)});
-    if(signal.aborted) return;
-    if(tool==="bucket") await submit({kind:"fill",color:foreground()},selected,signal);
-    else await select(selected,signal);
+    const selected=await floodSelection(image,x,y,tolerance,{signal,onProgress:p=>setProgress(0.5*p.completed/p.total)});
+    if(!signal.aborted) await select(selected,signal);
   };
   const down=(event:PointerEvent<HTMLDivElement>)=>{
     if(event.button!==0 && event.button!==1) return;

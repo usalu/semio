@@ -23,6 +23,8 @@ name = "semio-shard"
 path = "../../🧵️shard/👶️child/🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-ui-contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }

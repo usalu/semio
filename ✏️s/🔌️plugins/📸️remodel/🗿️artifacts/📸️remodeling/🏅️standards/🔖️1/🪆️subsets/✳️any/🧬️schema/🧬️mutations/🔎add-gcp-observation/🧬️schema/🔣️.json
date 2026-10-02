@@ -34,74 +34,8 @@
       }
     },
     "observation": {
-      "type": "object",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GcpObservation",
       "title": "GcpObservation",
-      "additionalProperties": false,
-      "required": [
-        "streamId",
-        "frameIndex",
-        "pixel"
-      ],
-      "properties": {
-        "streamId": {
-          "type": "string",
-          "x-semio-ui": {
-            "widget": "reference",
-            "role": "target",
-            "label": {
-              "en": "Stream",
-              "de": "Stream"
-            },
-            "description": {
-              "en": "The stream of the measured frame.",
-              "de": "Stream des gemessenen Bildes."
-            },
-            "ref": {
-              "kind": "stream"
-            },
-            "group": "media",
-            "order": 10
-          }
-        },
-        "frameIndex": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "x-semio-ui": {
-            "widget": "stepper",
-            "role": "value",
-            "label": {
-              "en": "Frame Index",
-              "de": "Bildindex"
-            },
-            "step": 1,
-            "precision": 0,
-            "group": "media",
-            "order": 20
-          }
-        },
-        "pixel": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 2,
-          "maxItems": 2,
-          "x-semio-ui": {
-            "widget": "vector",
-            "role": "value",
-            "label": {
-              "en": "Pixel Position (px)",
-              "de": "Bildposition (px)"
-            },
-            "unit": "px",
-            "step": 0.1,
-            "group": "geometry",
-            "order": 30
-          }
-        }
-      },
       "x-semio-ui": {
         "role": "value",
         "label": {

@@ -45,6 +45,8 @@ pub(crate) mod context {
         App { definition: create_playbook_play_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("playbook", PlaybookPlayApp, playbook_manifest_for_tests, "../..");
+
     /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
     /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
@@ -66,7 +68,7 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
-        project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
 }
 

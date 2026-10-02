@@ -56,7 +56,7 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::default()).await
+        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
     }
     
     /// 🌍️ The localized twin of [`render`] — labels resolve off `ViewModel::locale`, so a translation
@@ -72,6 +72,8 @@ pub(crate) mod context {
     pub fn generation2d_manifest_for_tests() -> App {
         App { definition: create_generation2d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("procedural", Generation2dPlayApp, generation2d_manifest_for_tests, "../..");
     
     /// 🧹️ `FlowEvalSession` rejects a live drop, so a test that owns one must walk it across the close
     /// boundary itself — the same `begin_close` + granted `close_step` loop
@@ -86,7 +88,7 @@ pub(crate) mod context {
             semio_framework::ViewWindowInstance { id: "flow-1".into(), window_kind_id: flow_window::GENERATION2D_PLAY_WINDOW_MAIN.into() },
             semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..Default::default() };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         (view.for_window_instance("flow-1").expect("flow window instance"), view.for_window_instance("preview-1").expect("preview window instance"))
     }
 
@@ -98,7 +100,7 @@ pub(crate) mod context {
             semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
             semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
         ];
-        let view = ViewModel { window_instances: roster, ..Default::default() };
+        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         (view.for_window_instance("generations-1").expect("generations window instance"), ["preview-a", "preview-b"].iter().map(|id| view.for_window_instance(id).expect("generate preview window instance")).collect())
     }
 
@@ -280,7 +282,8 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
                 "forwards": mutation_hex,
                 "inverse": [],
                 "sequenceNumber": 1,
-                "startedAt": "1"
+                "startedAt": "1",
+                "line": null
             }],
             "changes": [],
             "checkpoints": [],
@@ -979,7 +982,7 @@ async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
 async fn context_menu_stays_within_disclosure_budget() {
     let mut app = app_with_registry().await;
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     close(app);
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
     assert!(items.iter().all(|item| item.id != "delete-selection"), "an empty selection must not offer delete-selection");
@@ -987,7 +990,7 @@ async fn context_menu_stays_within_disclosure_budget() {
 
 /// 🕹️ The runtime funnels every right-click through `context_menu_with_request_context`, so a node
 /// selected through the framework-owned `graph` domain must unfold the destructive delete row that
-/// dispatches `nodeGraphEdit`/`deleteSelection` against that live selection.
+/// dispatches `nodeGraphEdit` with a `delete {nodeIds, synapseIds}` row naming that selection.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_reads_the_framework_owned_graph_selection() {
     let mut app = app_with_registry().await;
@@ -995,11 +998,14 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
     let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
         menu.iter().flat_map(|item| std::iter::once(item.id.clone()).chain(item.children.iter().flatten().map(|child| child.id.clone()))).collect()
     };
-    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
     assert!(!unselected.iter().any(|id| id.contains("delete")), "an empty selection must not offer delete: {unselected:?}");
     context::select_graph(&mut app, "node", &["slider"]).await;
-    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await);
     assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
+    let rows = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.into_iter().find(|item| item.id == "delete-selection").and_then(|item| item.args).expect("the delete row carries its nodeGraphEdit arguments");
+    let rows = semio_framework_tool_machine::node_graph_edit_rows(&rows).expect("the delete row speaks the shared row vocabulary");
+    assert_eq!(rows, vec![semio_framework_tool_machine::NodeGraphEditRow::Delete { node_ids: vec!["slider".into()], synapse_ids: Vec::new() }], "the row names the live selection by id");
     close(app);
 }
 //#endregion 🔖️ContextMenuTests

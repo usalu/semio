@@ -73,7 +73,8 @@ solid-shell = "[" hex "," bool "]"
 solid-shell-list = "[" solid-shell-items? "]"
 solid-shell-items = solid-shell {"," solid-shell}*
 hex-list = "[" hex-items? "]"
-hex-items = hex {"," hex}*
+hex-items = loop-id {"," loop-id}*
+loop-id = "[" hex "]"
 
 # `BrepCurve`: `L[origin,direction]` (Line) / `C[center,axis,radius]` (Circle) /
 # `E[center,axis,radiusMajor,radiusMinor]` (Ellipse) / `N[controlPoints,weights,degree,knots]`
@@ -97,7 +98,7 @@ bool = "0" | "1"
 # `SemioPoint3.x`/`.y`/`.z` and every `f64`/`u32` field print via plain Rust `{v}` Display — the
 # shared lexer's `INT`/`FLOAT` scanners already capture a leading `-` when digit-adjacent (P2-M1's
 # trailing-dot-float work), matching `enc_f64` lexeme-for-lexeme.
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
 
 # `hex` (bare `hex`, deliberately NOT defined as a production here) is the framework's built-in
 # `hex` MACRO (`📖️grammar/🦀️.rs`'s `default_macros`) — every `id`/`schema` leaf string is

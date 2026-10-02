@@ -60,3 +60,46 @@ This API is not yet authored. The current public cumulative Pack regressions mus
 ## Additional Public Inline Collection Law
 
 The public kernel integration now also reads the neutral empty-buffer expansion case through `pack_rt::encode_record_body` / `decode_record_body`. Its compact input fits the caller's16384-byte ceiling, while2048owned empty buffer slots exceed it. The law asserts refusal before admitting that expanded owned collection. The current inline context still has no cumulative ledger, so this is an authored pending RED alongside the actual compressed-document counter law; it has not yet executed.
+
+## Actual Native Admission Stack
+
+The live public-kernel Cargo51224 was sampled read-only after approximately54minutes without a compiler child. Its main thread is entirely in `BuildRunner::prepare_units → Layout::new → Filesystem::open_rw_exclusive_create → flock`. This is layout admission, before the fixture compilation or assertions. Its open lock files are the canonical `build/debug/.cargo-build-lock`, `target/debug/.cargo-lock`, and `target/debug/.cargo-artifact-lock` (FD7/8/9). Numerous other live Cargo processes reference the same three nodes. No processes or lock/cache files were modified or removed.
+
+The exact generated sample is retained as `🗑️generated/kernel-cargo-admission-stack.txt`; temporary diagnostic output is scoped to the ticket. The cause cannot yet be assigned to a specific holder from this sample alone. This waiting attempt provides no red/green assertion evidence.
+
+## First Public Runtime Results
+
+Registered public integration run `32c7c111-3807-44a8-af97-9e5999f6bb31` executed7laws in0.248seconds after59minutes of build admission:5passed and2failed. The new inline empty-collection law produced a genuine RED:2048empty buffers were admitted despite the16384-byte ownership ceiling. The retirement, encoding-preflight and three intrinsic-octet laws all passed through the public production kernel seam.
+
+The compressed aggregate law's first failure was its prerequisite assertion (`fixture must exercise decoded expansion`), not the intended decoder counter. The current canonical Pack encoder writes intrinsic chunk payloads as identity fragments, so forcing chunking did not create a compressed expansion. This fixture is corrected to keep intrinsic bytes inline and split the compressed Document into32768-byte frames. Each frame fits below the caller ceiling while the aggregated body/owned buffers exceed it. No canonical chunk semantics were changed. A focused registered retry is pending; this first attempt is not claimed as an aggregate decoder RED.
+
+## Separate Physical SQLite Storage Accounting Observation
+
+The physical engine's `value_size` intentionally charges `Null=0`, numbers=8, and text/blob payload length. `read_record` grows an owned `Vec<SqliteValue>` while enforcing that semantic byte sum, and `import_sqlite_database` accumulates the same value sizes before pushing owned rows. It enforces row/column/file bounds separately. Thus `max_value_bytes` is a semantic payload ceiling, not a ceiling on total owned row/value slots. A wide row with nullable columns can consume significantly more owned slot memory than that value-byte count.
+
+This observation is distinct from the Pack native materialization repair and has not been changed in this integration scope. If a strict total owned-memory ceiling is part of the shared control contract, it needs an explicit physical row/value allocation budget or separately named limit in both native and TypeScript physical engines, plus a language-neutral wide-null-row resource law. The present integer/blob/string budget tests should not be represented as proving that total slot-allocation bound.
+
+## Controlled Native Decode Ownership And Admission Work
+
+The trait now declares `decode_sqlite_snapshot_native(payload: &IoPayload, control: &mut SqliteSnapshotControl) -> Result<Self, String>`. Its default checks cancellation at DecodeNative and rejects a missing owner implementation. Erased dispatch has not yet been switched while the cumulative Pack law is awaiting its actual RED. This is an interface declaration, not an implemented universal bounded decoding claim. Concrete owners must carry callbacks and caller budgets inside parsing and final typed construction; wrapping an ordinary parser with start/end callbacks is insufficient.
+
+The inline Pack context now enables its cumulative materialization ledger following the actual empty-collection RED. Document decoding remains awaiting its focused counter RED. A further neutral case separates body-only admission from simultaneous body plus typed ownership: six2048-byte buffers and a20000-byte ceiling. Both physical body and semantic fields fit separately, while simultaneous ownership exceeds the allowance. This case has not executed yet.
+
+Additional metadata allocation admission is authored in the physical Pack symbol/chunk-table decoders: checked address-space lengths, cumulative symbol strings plus slots, bounded chunk slots, fallible pre-reservation, and source length admission before superblock reads. These changes have not yet passed a fresh native gate.
+
+The current JPG Cargo70019 was sampled read-only after58minutes, showing the same Layout::new/flock admission stack and no compiler child. The sample is retained under generated output; no other process or shared cache was changed.
+
+## Explicit Metadata Resource Boundary
+
+The direct Rust Projection now counts only actual domain rows, matching TypeScript. Hidden reservation of a metadata row made a direct three-row provider fail under maxRows3 even though its returned database contained no metadata. Rust worker authored identical exact-three-row neutral Playbook and Procedure laws first; their native execution remains queued and is not reported as an observed RED.
+
+Actual I/O metadata attachment now accepts caller control and checks the final domain-plus-metadata row total, semantic scalar/text/blob bytes, summed SQL-plus-table-name bytes, final table count and six required metadata columns before cloning or mutating the database. Cancellation is checked before traversal and before copying metadata. Typed and erased I/O, guest-host import, and the PDF forged-profile fixture use this canonical controlled boundary.
+
+The public kernel integration adds `sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database`: a neutral three-domain-row/four-file-row fixture, five resource refusals and cancellation leave the original database unchanged; an admitted file is checked independently with Ajv and Bun SQLite integrity and row counts. This new law is authored but not executed yet. The public integration now contains eight laws; the last actual five-pass/two-fail run predates this addition.
+
+
+### Retained DEFLATE Working Storage
+
+After strict controlled dispatch activation, the actual 26-law kernel gate produced 25 passes and one failure (Nextest `af7eb6a2-f8c2-42ed-80ad-b7a1c9d17613`). The old positive case admitted two 16,384-byte buffers with a 100,000-byte cumulative native budget, which now correctly includes retained inflater history together with physical parser storage and final typed ownership. Each compressed segment's retained DEFLATE cursor requires a bounded history allocation of up to 32 KiB, admitted and charged before allocation. That cumulative storage remains charged across stages; the byte limit is not only the final intrinsic buffer sum.
+
+The same 100,000-byte fixture is retained as the explicit `retained-inflater-working-storage` refusal. A separate `admitted-buffers` positive fixture requests a bounded 262,144-byte allowance. Neither the strict inflater physical ceiling nor any of the existing expansion/slot refusal cases is weakened. The changed neutral fixture passed the complete registered private-lane kernel gate: 26/26 laws GREEN, Nextest `1d1f77e8-7a05-437f-ad0c-168f698bdf92`, 0.764s assertions/33.5s uncached Nx. Strict dispatch, cumulative parser/inflater/typed ownership, all expansion refusals and cancellation remain covered. Independent Bun SQLite validates the exact logical intrinsic byte total for every case, and Ajv admits the neutral fixture against its owned schema.

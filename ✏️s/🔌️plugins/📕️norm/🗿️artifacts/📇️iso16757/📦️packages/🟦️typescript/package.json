@@ -1,0 +1,29 @@
+{
+  "name": "@semio-tech/norm-iso16757",
+  "version": "0.1.0",
+  "description": "ISO16757 owned building-services catalogue schema and exact SQLite snapshot package.",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/🟦️.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
+  "scripts": {
+    "build": "bun nx run @semio-tech/norm-iso16757:build",
+    "check": "bun nx run @semio-tech/norm-iso16757:check",
+    "test": "bun nx run @semio-tech/norm-iso16757:test"
+  },
+  "dependencies": {},
+  "license": "LGPL-3.0-or-later",
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

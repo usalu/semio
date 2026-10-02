@@ -1,0 +1,28 @@
+{
+  "beforeFixtureJson": null,
+  "lhsJson": null,
+  "rhsJson": null,
+  "parameterBindings": null,
+  "ruleLayout": {
+    "entries": [
+      {
+        "key": "lhs-match",
+        "precondition": "present",
+        "operation": {
+          "kind": "remove"
+        }
+      },
+      {
+        "key": "rhs-parameter-0",
+        "precondition": "any",
+        "operation": {
+          "kind": "set",
+          "value": {
+            "x": 40.0,
+            "y": 300.0
+          }
+        }
+      }
+    ]
+  }
+}

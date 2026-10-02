@@ -1,5 +1,5 @@
 CREATE TABLE ply_document (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
+  id INTEGER PRIMARY KEY,
   schema TEXT NOT NULL,
   format TEXT NOT NULL CHECK (format IN ('ascii', 'binary_little_endian', 'binary_big_endian'))
 );
@@ -36,7 +36,11 @@ CREATE TABLE ply_row (
 CREATE TABLE ply_cell (
   id INTEGER PRIMARY KEY,
   row_id INTEGER NOT NULL REFERENCES ply_row(id),
-  property_id INTEGER NOT NULL REFERENCES ply_property(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  value_id INTEGER NOT NULL REFERENCES ply_value(id)
+);
+CREATE TABLE ply_value (
+  id INTEGER PRIMARY KEY,
   kind TEXT NOT NULL CHECK (kind IN ('char', 'uchar', 'short', 'ushort', 'int', 'uint', 'float', 'double', 'list')),
   integer_value INTEGER,
   real_value REAL,
@@ -47,13 +51,7 @@ CREATE TABLE ply_cell (
 );
 CREATE TABLE ply_list_item (
   id INTEGER PRIMARY KEY,
-  cell_id INTEGER NOT NULL REFERENCES ply_cell(id),
+  list_id INTEGER NOT NULL REFERENCES ply_value(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
-  kind TEXT NOT NULL CHECK (kind IN ('char', 'uchar', 'short', 'ushort', 'int', 'uint', 'float', 'double')),
-  integer_value INTEGER,
-  real_value REAL,
-  real_value_ieee754_bits INTEGER,
-  real_value_numeric_class TEXT CHECK(real_value_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),
-  CHECK ((kind IN ('char', 'uchar', 'short', 'ushort', 'int', 'uint') AND integer_value IS NOT NULL AND real_value IS NULL AND real_value_ieee754_bits IS NULL AND real_value_numeric_class IS NULL) OR (kind IN ('float', 'double') AND integer_value IS NULL AND real_value_ieee754_bits IS NOT NULL AND real_value_numeric_class IS NOT NULL AND ((real_value_numeric_class='nan' AND real_value IS NULL) OR (real_value_numeric_class!='nan' AND real_value IS NOT NULL)))),
-  CHECK(kind!='float' OR real_value_ieee754_bits BETWEEN 0 AND 4294967295)
+  value_id INTEGER NOT NULL REFERENCES ply_value(id)
 );

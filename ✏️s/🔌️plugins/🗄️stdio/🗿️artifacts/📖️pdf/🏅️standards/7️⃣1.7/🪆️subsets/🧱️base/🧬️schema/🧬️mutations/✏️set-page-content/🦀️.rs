@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageContent {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageContent(SetPageContent { index: self.index, content: page.content.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Inhalt von Seite {} setzen", self.index))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set page {} content", self.index), &format!("Inhalt von Seite {} setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

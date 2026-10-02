@@ -23,8 +23,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::SetSoftwareInfo(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set software info", "Softwareinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

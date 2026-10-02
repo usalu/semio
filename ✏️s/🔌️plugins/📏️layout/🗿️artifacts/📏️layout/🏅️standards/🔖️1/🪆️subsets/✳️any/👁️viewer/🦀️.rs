@@ -11,7 +11,7 @@ use crate::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -73,7 +73,7 @@ impl ArtifactViewer for LayoutViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             preview::BODY_KEY => preview::render(doc.snapshot)?,
-            _ => return semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            _ => return semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }

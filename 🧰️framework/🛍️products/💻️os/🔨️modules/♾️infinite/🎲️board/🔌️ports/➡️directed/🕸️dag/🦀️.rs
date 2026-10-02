@@ -77,6 +77,16 @@ pub enum DagPortSide {
     Input,
     Output,
 }
+
+impl DagPortSide {
+    /// 🔤️ The side as the `insertPort` row names it: `input` or `output`.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Input => "input",
+            Self::Output => "output",
+        }
+    }
+}
 // #endregion 🔖️PortSide
 
 
@@ -2058,18 +2068,33 @@ pub struct DagHost {
     pending_graph_edits: Vec<DagGraphEdit>,
 }
 
-/// 🔗️ One graph edit a completed pointer gesture performed on this host's own graph, in the guest's
-/// own sub-operation vocabulary (`connect`, `disconnect` by synapse id, `move` — the node-graph gesture record of design
-/// §13.3: the press, the moved node ids and their ONE relative offset) rather than in engine handle/edge ids. The renderer drains these after a gesture and dispatches them as
-/// a `nodeGraphEdit`, which is how a wire the user drew — or a node they dragged — survives the
-/// guest's next fixture push. React reaches the same end by re-publishing the WHOLE fixture
-/// (`commitFixture`), a payload no bounded-action budget on the wgpu target can carry; its SSR
-/// `Diagram` fallback dispatches this exact narrow shape instead (`onNodeDragStop`/`onConnect`).
+/// 🔗️ One graph edit a completed gesture performed on this host's own graph, in the guest's own `nodeGraphEdit` row
+/// vocabulary (design §13.3) rather than in engine handle/edge ids: `connect`, `disconnect` by synapse id, `move` (the
+/// press, the moved node ids and their ONE relative offset), `setSlider` (the value an inline slider was released on) and
+/// `insertPort` (a variadic port inserted at `index`). Every renderer — React and wgpu alike — drains these after a
+/// gesture and dispatches exactly them ([`dag_graph_edit_rows_json`]); no renderer ever publishes the whole fixture.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DagGraphEdit {
     Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
     Disconnect { synapse_id: String },
     Move { gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64 },
+    SetSlider { node_id: String, value: f64 },
+    InsertPort { node_id: String, side: DagPortSide, index: usize },
+}
+
+/// 🧾️ `edits` as the `nodeGraphEdit` arguments a renderer dispatches, `{"operations":[…]}` in the row vocabulary of
+/// [`DagGraphEdit`]: `connect {sourceNodeId, sourcePortId, targetNodeId, targetPortId}`, `disconnect {synapseId}`,
+/// `move {gestureId, nodeIds, dx, dy}`, `setSlider {widgetId, value}`, `insertPort {nodeId, side, index}`.
+pub fn dag_graph_edit_rows_json(edits: Vec<DagGraphEdit>) -> String {
+    let row = |operation: &str, fields: Vec<(&str, Value)>| os_pack::json::object(std::iter::once(("operation".to_string(), Value::from(operation))).chain(fields.into_iter().map(|(field, value)| (field.to_string(), value))));
+    let rows = edits.into_iter().map(|edit| match edit {
+        DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => row("connect", vec![("sourceNodeId", Value::from(source_node_id)), ("sourcePortId", Value::from(source_port_id)), ("targetNodeId", Value::from(target_node_id)), ("targetPortId", Value::from(target_port_id))]),
+        DagGraphEdit::Disconnect { synapse_id } => row("disconnect", vec![("synapseId", Value::from(synapse_id))]),
+        DagGraphEdit::Move { gesture_id, node_ids, dx, dy } => row("move", vec![("gestureId", Value::from(gesture_id)), ("nodeIds", os_pack::json::array(node_ids.into_iter().map(Value::from))), ("dx", Value::from(dx)), ("dy", Value::from(dy))]),
+        DagGraphEdit::SetSlider { node_id, value } => row("setSlider", vec![("widgetId", Value::from(node_id)), ("value", Value::from(value))]),
+        DagGraphEdit::InsertPort { node_id, side, index } => row("insertPort", vec![("nodeId", Value::from(node_id)), ("side", Value::from(side.as_str())), ("index", Value::from(index))]),
+    });
+    os_pack::json::to_string(&os_pack::json::object([("operations".to_string(), os_pack::json::array(rows))]))
 }
 
 /// 🆔️ The gesture id of the drag a press began: `node-drag:<press>`, unique per host for the press's projection revision.
@@ -2861,6 +2886,7 @@ impl DagHostRetirement {
                     node_ids.push(gesture_id);
                     node_ids
                 }
+                DagGraphEdit::SetSlider { node_id, .. } | DagGraphEdit::InsertPort { node_id, .. } => vec![node_id],
             };
             let remaining_backing_bytes = dag_vec_backing_bytes(&values);
             return self.credit_owner(DagRetirementOwner::Strings { values, remaining_backing_bytes }, maximum_items, maximum_bytes);
@@ -4958,9 +4984,39 @@ impl DagHost {
         true
     }
 
-    /// 🔗️ Whether the journal holds a wire edit — a connect or a disconnect the last gesture performed.
-    pub fn journals_wire_edits(&self) -> bool {
-        self.pending_graph_edits.iter().any(|edit| !matches!(edit, DagGraphEdit::Move { .. }))
+    /// 📍️ Every node's id and centre, in node order — the baseline an embedding host records at a press so
+    /// [`Self::journal_moves_since`] can narrate what the gesture moved.
+    pub fn node_positions(&self) -> Vec<(String, f64, f64)> {
+        self.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect()
+    }
+
+    /// ✋️ Journals every node that moved since `baseline` ([`Self::node_positions`] at the press) as node-graph gesture
+    /// records of `gesture_id` (design §13.3): one record per distinct offset (a grid snap or an align lands nodes on
+    /// different offsets), the nodes of each in node order. `false` when the bounded journal could not take them all.
+    pub fn journal_moves_since(&mut self, gesture_id: &str, baseline: &[(String, f64, f64)]) -> bool {
+        let mut drags: Vec<(f64, f64, Vec<String>)> = Vec::new();
+        for node in &self.host_snapshot.nodes {
+            let Some((_, x, y)) = baseline.iter().find(|(id, _, _)| *id == node.id) else { continue };
+            let (dx, dy) = (node.x - x, node.y - y);
+            if (dx, dy) == (0.0, 0.0) {
+                continue;
+            }
+            match drags.iter_mut().find(|(known_x, known_y, _)| (*known_x, *known_y) == (dx, dy)) {
+                Some((_, _, ids)) => ids.push(node.id.clone()),
+                None => drags.push((dx, dy, vec![node.id.clone()])),
+            }
+        }
+        drags.into_iter().all(|(dx, dy, node_ids)| self.journal_drag(gesture_id.to_string(), node_ids, dx, dy))
+    }
+
+    /// 🔌️ Journals a variadic port the embedding host inserted on node `node_id` at `index` of `side`. `false`, journalling
+    /// nothing, when the bounded journal is full.
+    pub fn journal_port_insert(&mut self, node_id: String, side: DagPortSide, index: usize) -> bool {
+        if self.pending_graph_edits.len() >= DAG_GRAPH_EDIT_CAPACITY {
+            return false;
+        }
+        self.push_graph_edit(DagGraphEdit::InsertPort { node_id, side, index });
+        true
     }
 
     /// 🖱️ Whether a screen-space interaction only `pointer_*_screen` implements is already in flight
@@ -5672,7 +5728,11 @@ impl DagHost {
         self.sync_connection_hit_picking_for_lod();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
-        if self.widget_drag.take().is_some() {
+        if let Some(index) = self.widget_drag.take() {
+            if let Some(DagNodeSpec { id, kind: DagNodeKind::Slider { value, .. }, .. }) = self.host_snapshot.nodes.get(index) {
+                let edit = DagGraphEdit::SetSlider { node_id: id.clone(), value: *value };
+                self.push_graph_edit(edit);
+            }
             return;
         }
         let world = self.screen_to_world_point(sx, sy);
@@ -6946,6 +7006,10 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔗️wire-edit/🦀️.rs"]
 mod wire_edit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️node-graph-edit-rows/🦀️.rs"]
+mod node_graph_edit_rows_tests;
 // #endregion 🔖️Tests
 
 //#region 🔖️WasmBridge

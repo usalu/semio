@@ -49,17 +49,14 @@ pub struct Shell {
     /// no role chrome (matches today's zero-role-aware-sessions reality; set via
     /// `set_window_role`/`set_window_roles` once the host resolves a session's `AppDefinition.role`).
     window_roles: std::collections::HashMap<String, ChromeRole>,
-    /// 🌐️ The locale used to resolve role-chrome strings (title chip, "Open with…", "Set as
-    /// default") — `Locale::En` first per this repo's own "no default language, English declared
-    /// first" convention (`Locale`'s own `#[default]`); the host sets this explicitly once it knows
-    /// the active locale, same boundary as `set_window_kind_icons`.
+    /// 🌐️ Caller-selected language used to resolve role chrome strings.
     locale: Locale,
 }
 
 impl Shell {
     /// 🌱️ An empty shell: no layout applied yet, no navbar items, no role chrome.
-    pub fn new() -> Self {
-        Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None, window_kind_icons: std::collections::HashMap::new(), window_roles: std::collections::HashMap::new(), locale: Locale::default() }
+    pub fn new(locale: Locale) -> Self {
+        Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None, window_kind_icons: std::collections::HashMap::new(), window_roles: std::collections::HashMap::new(), locale }
     }
 
     /// 🪟️ Maps window kind ids to Lucide icon ids for tab-cap painting in `set_window_layout`.
@@ -180,12 +177,6 @@ impl Shell {
             _ => {}
         }
         out
-    }
-}
-
-impl Default for Shell {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

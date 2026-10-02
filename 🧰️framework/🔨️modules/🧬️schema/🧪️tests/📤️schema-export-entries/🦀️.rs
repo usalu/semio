@@ -15,7 +15,14 @@
 //! through the owned draft-07 validator, and — from the same fixture — against `ajv` in
 //! `🧪️tests/📤️schema-export-entries/🟦️.ts`.
 
-use semio_framework_schema::{register_framework_schema_exports, register_scope_schema_exports, schema_export_catalog_entries, structural_validator_for, FacetLeaves, SchemaExport, SchemaExportEntries, SchemaFormat, ScopeSchemaExports, FRAMEWORK_SCHEMA_SCOPE};
+use {semio_framework_schema::register_framework_schema_exports, semio_framework_schema::structural_validator_for, semio_framework_schema::FRAMEWORK_SCHEMA_SCOPE};
+use semio_framework_schema_registry::register_scope_schema_exports;
+use semio_framework_schema_registry::schema_export_catalog_entries;
+use semio_framework_schema_registry::FacetLeaves;
+use semio_framework_schema_registry::SchemaExport;
+use semio_framework_schema_registry::SchemaExportEntries;
+use semio_framework_schema_registry::SchemaFormat;
+use semio_framework_schema_registry::ScopeSchemaExports;
 use std::path::Path;
 
 const RUST_ENTRIES_GENERATOR: &str = "cargo test -p semio-framework-schema --test schema-export-entries";

@@ -4,7 +4,7 @@ Validates the corpus against its JSON Schema and every leaf against its puzzle 2
 re-folds each scenario's edited log (`log` with its `drafts`, withdrawn leaves dropped) over the board with shapely's
 affine transforms and requires the scenario's `head`. Written from the leaf schemas and design §8, not from the Rust:
 locked and missing targets are skipped, a rotation turns positions about the recorded pivot, a scaling spreads them.
-Exits non-zero on the first disagreement.
+Exits non-zero on the first disagreement; an optional argument names another corpus (negative controls).
 """
 
 import json
@@ -85,7 +85,7 @@ def fold(board, log):
 
 
 def main():
-    corpus = load(EDITOR / "🧫️fixtures" / "🧫️select-tool-history" / "🔣️.json")
+    corpus = load(pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else EDITOR / "🧫️fixtures" / "🧫️select-tool-history" / "🔣️.json")
     jsonschema.Draft7Validator(load(EDITOR / "🧬️schema" / "🔣️select-tool-history" / "🔣️.json")).validate(corpus)
     checked = 0
     for scenario in corpus["scenarios"]:

@@ -12,7 +12,7 @@
 //! local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_svg_tiny};
+use semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::tiny::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_svg_tiny};
 
 
 //#region 🔖️Input
@@ -100,10 +100,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_svg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, SvgTinyMutation};
-    use semio_s_plugin_stdio_test_oracle::artifacts::svg::standards::v1_1::subsets::tiny::project_svg_tiny;
+    use semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::tiny::project_svg_tiny;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own

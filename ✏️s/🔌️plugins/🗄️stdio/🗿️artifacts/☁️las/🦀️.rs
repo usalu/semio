@@ -160,7 +160,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.las".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Las", "Las"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Las", "Las"),
         source_format: STDIO_LAS_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

@@ -9,7 +9,16 @@
 use crate::{element_id, load_id, Fem3dSnapshot, FemLoad};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LocalizedLabel, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ViewModel};
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Constants
 pub use crate::standards::v1::subsets::any::scene::{

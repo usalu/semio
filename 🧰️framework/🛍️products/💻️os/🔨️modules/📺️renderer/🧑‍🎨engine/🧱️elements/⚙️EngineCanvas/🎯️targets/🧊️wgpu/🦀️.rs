@@ -1694,13 +1694,31 @@ struct TextEditorDeliverySnapshot {
 }
 
 /// ⌨️ The editor's open typing run as its host sees it (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
-/// window folds every `textEdit` delivery that names the buffer (`typing`) into ONE run; the host ends it on idle and on a pure
-/// caret move with one commit signal, never one edit per keystroke.
+/// window folds every `textEdit` delivery that names the buffer (`typing`) into ONE run; the host ends it on idle, on a pure
+/// caret move, when the editor loses focus and when the page is hidden, with one commit signal, never one edit per keystroke.
 #[derive(Clone, Debug, PartialEq)]
 struct TextEditorTypingRun {
     controller_id: String,
     surface_id: String,
     last_ms: f64,
+}
+
+/// 🏁️ Why the host ends an open typing run before its idle bound (the `typingCommit` reasons of the text-splice corpus
+/// `hostSignals`): the editor lost keyboard focus, or the page was hidden or left.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextEditorTypingEnd {
+    Blur,
+    Hidden,
+}
+
+impl TextEditorTypingEnd {
+    /// 🏷️ The `typingCommit` reason the commit signal carries.
+    pub fn reason(self) -> &'static str {
+        match self {
+            Self::Blur => "blur",
+            Self::Hidden => "hidden",
+        }
+    }
 }
 
 /// ⏰️ The host clock the typing run's idle bound reads.
@@ -1752,6 +1770,7 @@ struct TextEditorDeliveryState {
     explicit_active: Option<std::num::NonZeroU64>,
     explicit_error: Option<String>,
     typing: Option<TextEditorTypingRun>,
+    typing_end: Option<TextEditorTypingEnd>,
 }
 
 impl TextEditorDeliveryState {
@@ -1777,6 +1796,16 @@ impl TextEditorDeliveryState {
             self.publication = None;
         }
         self.latest = Some(snapshot);
+    }
+
+    /// 🏁️ Marks the open typing run (or the one its in-flight keystroke opens) to end for `end` once nothing is in flight;
+    /// `false` when the editor neither types nor has a delivery in flight.
+    fn end_typing(&mut self, end: TextEditorTypingEnd) -> bool {
+        let typing = self.typing.is_some() || self.active.is_some() || self.latest.is_some() || self.publication.is_some();
+        if typing {
+            self.typing_end = Some(end);
+        }
+        typing
     }
 
     fn guest_has_text(&self, text: &str) -> bool {
@@ -1856,6 +1885,11 @@ impl TextEditorDeliveryState {
         self.explicit_publication = None;
         self.explicit_active = None;
         self.explicit_error = None;
+        if self.typing.as_mut().is_some_and(|run| Self::close_string(&mut run.controller_id) || Self::close_string(&mut run.surface_id)) {
+            return false;
+        }
+        self.typing = None;
+        self.typing_end = None;
         true
     }
 
@@ -1876,6 +1910,8 @@ impl TextEditorDeliveryState {
             && self.explicit_publication.is_none()
             && self.explicit_active.is_none()
             && self.explicit_error.is_none()
+            && self.typing.is_none()
+            && self.typing_end.is_none()
     }
 }
 
@@ -3654,6 +3690,7 @@ fn flow_widget_drop_args(descriptor: &Value, x: f64, y: f64) -> Option<semio_fra
     crate::action_args_json!({
         "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
         "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
+        "label": descriptor.get("label").and_then(|value| value.as_str()),
         "format": descriptor.get("format").and_then(|value| value.as_str()),
         "action": descriptor.get("action").and_then(|value| value.as_str()),
         "x": x,
@@ -4084,16 +4121,15 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
     })
 }
 
-/// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for, in the guest's own operation
-/// vocabulary — the very shape React's own `onConnect`/`onNodeDragStop` dispatch
-/// (`{operations: [{operation: "connect", sourceNodeId, sourcePortId, targetNodeId, targetPortId}]}`,
-/// `{operations: [{operation: "move", gestureId, nodeIds, dx, dy}]}` — the node-graph gesture record of design §13.3).
+/// 🔗️ Writes the `nodeGraphEdit` one gesture's graph edits ask for, in the guest's own row vocabulary — byte for byte
+/// the rows React dispatches from the same journal (`flow::dag::dag_graph_edit_rows_json`, design §13.3): `connect`,
+/// `disconnect`, `move {gestureId, nodeIds, dx, dy}`, `setSlider {widgetId, value}`, `insertPort {nodeId, side, index}`.
 fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, edits: &[flow::dag::DagGraphEdit]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if edits.is_empty() {
         return Ok(());
     }
     let edit_action = "nodeGraphEdit";
-    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "gestureId", "nodeIds", "dx", "dy"];
+    let mut parts: Vec<&str> = vec![controller_id, edit_action, "operations", "operation", "connect", "disconnect", "move", "setSlider", "insertPort", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId", "synapseId", "gestureId", "nodeIds", "dx", "dy", "widgetId", "value", "nodeId", "side", "index"];
     for edit in edits {
         match edit {
             flow::dag::DagGraphEdit::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => parts.extend([source_node_id.as_str(), source_port_id.as_str(), target_node_id.as_str(), target_port_id.as_str()]),
@@ -4102,6 +4138,8 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
                 parts.push(gesture_id.as_str());
                 parts.extend(node_ids.iter().map(String::as_str));
             }
+            flow::dag::DagGraphEdit::SetSlider { node_id, .. } => parts.push(node_id.as_str()),
+            flow::dag::DagGraphEdit::InsertPort { node_id, side, .. } => parts.extend([node_id.as_str(), side.as_str()]),
         }
     }
     let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
@@ -4132,6 +4170,17 @@ fn write_graph_edit_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
                     builder.end_container()?;
                     builder.number(Some("dx"), *dx)?;
                     builder.number(Some("dy"), *dy)?;
+                }
+                flow::dag::DagGraphEdit::SetSlider { node_id: widget_id, value } => {
+                    builder.string(Some("operation"), "setSlider")?;
+                    builder.string(Some("widgetId"), widget_id)?;
+                    builder.number(Some("value"), *value)?;
+                }
+                flow::dag::DagGraphEdit::InsertPort { node_id, side, index } => {
+                    builder.string(Some("operation"), "insertPort")?;
+                    builder.string(Some("nodeId"), node_id)?;
+                    builder.string(Some("side"), side.as_str())?;
+                    builder.number(Some("index"), *index as f64)?;
                 }
             }
             builder.end_container()?;
@@ -6399,7 +6448,7 @@ fn text_editor_receipt_token(sequence: u64, slot: usize) -> Option<std::num::Non
 pub(crate) fn has_pending_text_editor_outbox() -> bool {
     ENGINE_SURFACES.with(|cell| {
         cell.borrow().slots.iter().any(|slot| {
-            slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some() || surface.editor_delivery.typing.is_some())
+            slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some() || surface.editor_delivery.typing.is_some() || surface.editor_delivery.typing_end.is_some())
         })
     })
 }
@@ -6424,20 +6473,48 @@ fn write_text_editor_typing_commit(input: &mut ui_wgpu::wgpu::InputState<ActionD
     Ok(true)
 }
 
-/// ⏱️ Ends every typing run idle past [`ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS`] whose editor has nothing in flight, with ONE
-/// commit signal each. `true` when a signal went out this frame.
-fn drive_text_editor_typing_idle(registry: &mut EngineSurfaceRegistry, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, now_ms: f64) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let lapsed = registry.slots.iter().position(|slot| {
+/// 🏁️ Ends the open typing run of the editor `host_id` for `end` (it lost keyboard focus, the page was hidden): the commit
+/// signal goes out once every delivery it typed left, so the run keeps its last keystrokes. `false` when the editor holds no run
+/// and has nothing in flight.
+pub fn end_text_editor_typing(host_id: &str, end: TextEditorTypingEnd) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(host_id).is_some_and(|surface| surface.editor_delivery.end_typing(end)))
+}
+
+/// 🏁️ Ends every editor's open typing run for `end` (the page was hidden or left); answers how many runs it ended.
+pub fn end_every_text_editor_typing(end: TextEditorTypingEnd) -> usize {
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().slots.iter_mut().filter_map(|slot| slot.value.as_mut()).map(|surface| surface.editor_delivery.end_typing(end)).filter(|ended| *ended).count())
+}
+
+/// 🫥️ The hidden-page door of the browser frame Worker (`host-page-hidden`): the page was hidden or left, so every open typing
+/// run ends (`hidden`) on the Worker's next frame turn.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuHostPageHidden)]
+pub fn semio_wgpu_host_page_hidden() {
+    end_every_text_editor_typing(TextEditorTypingEnd::Hidden);
+}
+
+/// ⏱️ Ends the first typing run that was ended ([`end_text_editor_typing`]) or idles past
+/// [`ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS`] once its editor has nothing in flight, with ONE commit signal naming why. An end
+/// that finds no run left (the window already took a caret move) is dropped. `true` when a signal went out this frame.
+fn drive_text_editor_typing_end(registry: &mut EngineSurfaceRegistry, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, now_ms: f64) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let ended = registry.slots.iter().position(|slot| {
         slot.value.as_ref().is_some_and(|surface| {
             let delivery = &surface.editor_delivery;
-            delivery.active.is_none() && delivery.latest.is_none() && delivery.publication.is_none() && delivery.typing.as_ref().is_some_and(|run| now_ms - run.last_ms >= ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS as f64)
+            delivery.active.is_none()
+                && delivery.latest.is_none()
+                && delivery.publication.is_none()
+                && (delivery.typing_end.is_some() || delivery.typing.as_ref().is_some_and(|run| now_ms - run.last_ms >= ui_wgpu::wgpu::TEXT_EDITOR_TYPING_IDLE_MS as f64))
         })
     });
-    let Some(index) = lapsed else { return Ok(false) };
-    let surface = registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-    let run = surface.editor_delivery.typing.clone().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-    if write_text_editor_typing_commit(input, &run, "idle")? {
-        surface.editor_delivery.typing = None;
+    let Some(index) = ended else { return Ok(false) };
+    let delivery = &mut registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery;
+    let Some(run) = delivery.typing.clone() else {
+        delivery.typing_end = None;
+        return Ok(false);
+    };
+    if write_text_editor_typing_commit(input, &run, delivery.typing_end.map_or("idle", TextEditorTypingEnd::reason))? {
+        delivery.typing = None;
+        delivery.typing_end = None;
         return Ok(true);
     }
     Ok(false)
@@ -6447,7 +6524,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let now_ms = text_editor_now_ms();
-        if drive_text_editor_typing_idle(&mut registry, input, now_ms)? {
+        if drive_text_editor_typing_end(&mut registry, input, now_ms)? {
             return Ok(true);
         }
         let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
@@ -6486,7 +6563,9 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
                 if !write_text_editor_typing_commit(input, &run, "selectionJump")? {
                     return Ok(false);
                 }
-                registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.typing = None;
+                let delivery = &mut registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery;
+                delivery.typing = None;
+                delivery.typing_end = None;
             }
         }
         let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;

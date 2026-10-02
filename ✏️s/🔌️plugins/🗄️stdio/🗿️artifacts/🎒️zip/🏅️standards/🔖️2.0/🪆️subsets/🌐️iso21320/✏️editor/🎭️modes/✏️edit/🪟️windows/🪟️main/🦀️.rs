@@ -2,7 +2,10 @@
 
 use crate::ZipSnapshot;
 use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -32,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// ✏️ Shares the same localized, guarded editing controls across ZIP dialects.
-pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_framework_plugin::Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     crate::editor::editing::render(document, windows, locale)
 }
 //#endregion 🔖️Render

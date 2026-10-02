@@ -42,7 +42,7 @@ mod document_window_replacement_tests {
     fn retained_window_input_retirement_reaches_later_document_generations() {
         let mut blocked = WindowTransientOwnerRegistry::for_document_generation(1);
         blocked.register::<RetirementWindow>().unwrap();
-        let view = ViewModel { window_id: Some("first".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "first".into(), window_kind_id: "canvas".into() }], ..Default::default() };
+        let view = ViewModel { window_id: Some("first".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "first".into(), window_kind_id: "canvas".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let held = blocked.capture(Some(&view)).unwrap().unwrap();
         let mut ready = WindowTransientOwnerRegistry::for_document_generation(2);
         ready.register::<RetirementWindow>().unwrap();

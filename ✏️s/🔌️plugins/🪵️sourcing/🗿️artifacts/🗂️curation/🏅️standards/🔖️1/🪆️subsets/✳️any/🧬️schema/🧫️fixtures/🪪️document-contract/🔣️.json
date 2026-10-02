@@ -19,9 +19,7 @@
       }
     ]
   },
-  "invalidChildren": [
-    {},
-    null,
+  "validChildren": [
     {
       "childId": "curation-catalog",
       "target": {
@@ -32,7 +30,11 @@
           "subset": "kit"
         }
       }
-    },
+    }
+  ],
+  "invalidChildren": [
+    {},
+    null,
     {
       "childId": "curation-catalog",
       "target": {

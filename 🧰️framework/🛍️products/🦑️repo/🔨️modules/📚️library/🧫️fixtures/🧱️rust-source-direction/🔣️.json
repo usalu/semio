@@ -130,7 +130,20 @@
         {
           "kind": "include_str",
           "path": "fixture.txt",
-          "line": 1
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 61,
+            "invocationOffset": 126,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
         }
       ]
     },
@@ -171,6 +184,72 @@
           "modulePath": [
             "child"
           ]
+        }
+      ]
+    },
+    {
+      "id": "multiline-raw-module-mount",
+      "source": "#[\npath =\nr###\"module.rs\"###\n]\nmod child;\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "outer-documentation-input",
+      "source": "#[doc = include_str!(\"fixture.txt\")]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "inner-documentation-input",
+      "source": "#![doc = include_str!(\"fixture.txt\")]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "concatenated-documentation-input",
+      "source": "#[doc = concat!(\"Source:\\n\",include_str!(\"fixture.txt\"))]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "active-conditional-documentation-input",
+      "source": "#[cfg_attr(all(), doc = include_str!(\"fixture.txt\"))]\npub struct Subject;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "raw-builtin-input",
+      "source": "const TEXT: &str = r#include_str!(\"fixture.txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
         }
       ]
     }
@@ -252,6 +331,20 @@
           "from": "general/source.rs",
           "to": "specific",
           "kind": "path",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "windows-separator-specific-input",
+      "from": "general/source.rs",
+      "source": "include_str!(r\"..\\specific\\fixture.json\");",
+      "edges": [
+        {
+          "rule": "framework-no-implementation",
+          "from": "general/source.rs",
+          "to": "specific/fixture.json",
+          "kind": "include_str",
           "line": 1
         }
       ]
@@ -381,5 +474,2697 @@
       "id": "conditional-inline-default-alternative",
       "source": "#[cfg_attr(test,path=\"alternate\")] mod mounted { #[path=\"leaf.rs\"] mod child; }"
     }
-  ]
+  ],
+  "targets": [
+    {
+      "id": "regular-text-input",
+      "target": "general/fixture.json",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/fixture.json",
+          "kind": "file"
+        }
+      ],
+      "sources": [],
+      "problem": null
+    },
+    {
+      "id": "linked-text-hidden-product",
+      "target": "general/fixture.json",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/fixture.json",
+          "kind": "symlink"
+        }
+      ],
+      "sources": [],
+      "problem": "linked-input"
+    },
+    {
+      "id": "linked-ancestor-hidden-product",
+      "target": "general/mount/fixture.json",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/mount",
+          "kind": "symlink"
+        }
+      ],
+      "sources": [],
+      "problem": "linked-input"
+    },
+    {
+      "id": "missing-conditional-module",
+      "target": "general/missing.rs",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        }
+      ],
+      "sources": [],
+      "problem": "missing-input"
+    },
+    {
+      "id": "uncensused-source-mount",
+      "target": "general/leaf.rs",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/leaf.rs",
+          "kind": "file"
+        }
+      ],
+      "sources": [],
+      "problem": "uncensused-source"
+    },
+    {
+      "id": "censused-source-mount",
+      "target": "general/leaf.rs",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/leaf.rs",
+          "kind": "file"
+        }
+      ],
+      "sources": [
+        "general/leaf.rs"
+      ],
+      "problem": null
+    },
+    {
+      "id": "inline-directory-mount",
+      "target": "general/nested",
+      "directory": true,
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/nested",
+          "kind": "directory"
+        }
+      ],
+      "sources": [],
+      "problem": null
+    },
+    {
+      "id": "file-as-ancestor",
+      "target": "general/file/fixture.json",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/file",
+          "kind": "file"
+        }
+      ],
+      "sources": [],
+      "problem": "non-directory-ancestor"
+    },
+    {
+      "id": "directory-as-include",
+      "target": "general/nested",
+      "inventory": [
+        {
+          "path": "general",
+          "kind": "directory"
+        },
+        {
+          "path": "general/nested",
+          "kind": "directory"
+        }
+      ],
+      "sources": [],
+      "problem": "unexpected-input-kind"
+    }
+  ],
+  "escapes": [
+    {
+      "id": "posix-absolute",
+      "from": "general/source.rs",
+      "source": "include_str!(\"/specific/fixture.json\");"
+    },
+    {
+      "id": "windows-drive",
+      "from": "general/source.rs",
+      "source": "include_str!(r\"C:\\specific\\fixture.json\");"
+    },
+    {
+      "id": "windows-unc",
+      "from": "general/source.rs",
+      "source": "include_str!(r\"\\\\server\\specific\\fixture.json\");"
+    },
+    {
+      "id": "windows-traversal",
+      "from": "general/source.rs",
+      "source": "include_str!(r\"..\\..\\specific\\fixture.json\");"
+    }
+  ],
+  "ownerCases": [
+    {
+      "id": "framework-implementation-fixture",
+      "source": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"../../../✏️s/🔌️plugins/🧪️probe/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "framework-no-implementation",
+          "from": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "framework-product-fixture",
+      "source": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"../../🛍️products/💻️os/🧪️probe/fixture.txt\");\n",
+        "🧰️framework/🛍️products/💻️os/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "framework-modules-no-products",
+          "from": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
+          "to": "🧰️framework/🛍️products/💻️os/🧪️probe/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "s-module-plugin-fixture",
+      "source": "✏️s/🔨️modules/🧪️probe/🦀️.rs",
+      "files": {
+        "✏️s/🔨️modules/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"../../🔌️plugins/🧪️probe/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "✏️s/🔨️modules/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "s-modules-no-plugins",
+          "from": "✏️s/🔨️modules/🧪️probe/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "plugin-artifact-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"🗿️artifacts/🧪️leaf/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️leaf/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "plugin-no-extension-or-artifact-🧪️probe",
+          "from": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️leaf/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "plugin-extension-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"🧩️extensions/🧪️leaf/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/🧩️extensions/🧪️leaf/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "plugin-no-extension-or-artifact-🧪️probe",
+          "from": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/🧩️extensions/🧪️leaf/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "artifact-plugin-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️leaf/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️leaf/🦀️.rs": "const TEXT: &str = include_str!(\"../../fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🗿️artifacts/🧪️leaf/🦀️.rs"
+      ],
+      "violations": []
+    },
+    {
+      "id": "extension-plugin-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🧩️extensions/🧪️leaf/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🧩️extensions/🧪️leaf/🦀️.rs": "const TEXT: &str = include_str!(\"../../fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🧩️extensions/🧪️leaf/🦀️.rs"
+      ],
+      "violations": []
+    },
+    {
+      "id": "hub-own-fixture",
+      "source": "🌎️hub/🔨️modules/🧪️probe/🦀️.rs",
+      "files": {
+        "🌎️hub/🔨️modules/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"fixture.txt\");\n",
+        "🌎️hub/🔨️modules/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "🌎️hub/🔨️modules/🧪️probe/🦀️.rs"
+      ],
+      "violations": []
+    },
+    {
+      "id": "root-implementation-fixture",
+      "source": "🦀️.rs",
+      "files": {
+        "🦀️.rs": "const TEXT: &str = include_str!(\"✏️s/🔌️plugins/🧪️probe/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "repo-no-implementation",
+          "from": "🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "deleted-specific-owner",
+      "source": "🧰️framework/🔨️modules/🧪️probe/🦀️.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs": "pub const VALUE: usize = 1;\n"
+      },
+      "sources": [
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs"
+      ],
+      "violations": [],
+      "remove": [
+        "✏️s"
+      ]
+    },
+    {
+      "id": "root-manifest-implementation-fixture",
+      "source": "🦀️.rs",
+      "files": {
+        "🦀️.rs": "const TEXT: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/✏️s/🔌️plugins/🧪️probe/fixture.txt\"));\n",
+        "Cargo.toml": "[package]\nname = \"layer-oracle\"\nversion = \"0.0.0\"\nedition = \"2024\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "✏️s/🔌️plugins/🧪️probe/fixture.txt": "retained-owner"
+      },
+      "sources": [
+        "🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "repo-no-implementation",
+          "from": "🦀️.rs",
+          "to": "✏️s/🔌️plugins/🧪️probe/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    }
+  ],
+  "contribution": {
+    "members": [
+      "✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript"
+    ],
+    "files": {
+      "✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript/package.json": "{\"name\":\"@semio-tech/layer-owner-probe\",\"type\":\"module\",\"exports\":{\".\":\"./🟦️.ts\"}}",
+      "✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript/🟦️.ts": "export const value = 1;\n"
+    }
+  },
+  "ownerRejections": [
+    {
+      "id": "linked-root-manifest",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs": "pub const VALUE: usize = 1;\n",
+        "neutral/Cargo.toml": "[workspace]\nmembers = []\n"
+      },
+      "link": {
+        "path": "Cargo.toml",
+        "target": "neutral/Cargo.toml"
+      },
+      "error": "cannot inventory linked input"
+    },
+    {
+      "id": "virtual-root-cannot-own-orphan-source",
+      "files": {
+        "🦀️.rs": "const TEXT: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/neutral.txt\"));\n",
+        "Cargo.toml": "[workspace]\nmembers = []\n",
+        "neutral.txt": "neutral"
+      },
+      "problem": {
+        "code": "unresolved-target",
+        "detail": "manifest provenance"
+      }
+    },
+    {
+      "id": "present-area-is-not-a-directory",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️probe/🦀️.rs": "pub const VALUE: usize = 1;\n",
+        "🌎️hub": "damaged-area"
+      },
+      "error": "requires a physical directory"
+    }
+  ],
+  "inlineScopes": [
+    {
+      "id": "orphan-explicit-current-base",
+      "root": "general/source.rs",
+      "source": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\".\"] mod shared {\n #[path=\"../specific/leaf.rs\"] pub mod leaf;\n}\n",
+        "specific/leaf.rs": "pub const VALUE: u8 = 3;\n"
+      },
+      "targets": [
+        "general",
+        "specific/leaf.rs"
+      ]
+    },
+    {
+      "id": "orphan-nested-explicit-base",
+      "root": "general/source.rs",
+      "source": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\"mount\"] mod shared {\n #[path=\"../alternate\"] mod inner {\n  #[path=\"leaf.rs\"] pub mod leaf;\n }\n}\n",
+        "general/mount/.marker": "",
+        "general/alternate/leaf.rs": "pub const VALUE: u8 = 5;\n"
+      },
+      "targets": [
+        "general/mount",
+        "general/alternate",
+        "general/alternate/leaf.rs"
+      ]
+    },
+    {
+      "id": "orphan-nested-default-after-anchor",
+      "root": "general/source.rs",
+      "source": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\".\"] mod shared {\n mod nested {\n  #[path=\"../../specific/leaf.rs\"] pub mod leaf;\n }\n}\n",
+        "general/nested/.marker": "",
+        "specific/leaf.rs": "pub const VALUE: u8 = 7;\n"
+      },
+      "targets": [
+        "general",
+        "specific/leaf.rs"
+      ]
+    },
+    {
+      "id": "conventional-mounted-explicit-base",
+      "root": "source.rs",
+      "source": "general.rs",
+      "files": {
+        "source.rs": "mod general;\n",
+        "general.rs": "#[path=\"alternate\"] mod shared {\n #[path=\"leaf.rs\"] pub mod leaf;\n}\n",
+        "alternate/leaf.rs": "pub const VALUE: u8 = 11;\n"
+      },
+      "targets": [
+        "alternate",
+        "alternate/leaf.rs"
+      ]
+    },
+    {
+      "id": "explicit-mounted-explicit-base",
+      "root": "source.rs",
+      "source": "general/reader.rs",
+      "files": {
+        "source.rs": "#[path=\"general/reader.rs\"] mod general;\n",
+        "general/reader.rs": "#[path=\".\"] mod shared {\n #[path=\"../specific/leaf.rs\"] pub mod leaf;\n}\n",
+        "specific/leaf.rs": "pub const VALUE: u8 = 13;\n"
+      },
+      "targets": [
+        "general",
+        "specific/leaf.rs"
+      ]
+    },
+    {
+      "id": "anchor-keeps-include-file-origin",
+      "root": "general/source.rs",
+      "source": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\"mount\"] mod shared {\n const TEXT: &str = include_str!(\"../specific/fixture.txt\");\n #[path=\"../specific/leaf.rs\"] pub mod leaf;\n}\n",
+        "general/mount/.marker": "",
+        "specific/fixture.txt": "specific-vector",
+        "general/specific/leaf.rs": "pub const VALUE: u8 = 17;\n"
+      },
+      "targets": [
+        "general/mount",
+        "specific/fixture.txt",
+        "general/specific/leaf.rs"
+      ]
+    },
+    {
+      "id": "root-explicit-current-base",
+      "root": "source.rs",
+      "source": "source.rs",
+      "files": {
+        "source.rs": "#[path=\".\"] mod anchored { #[path=\"leaf.rs\"] pub mod leaf; }\n",
+        "leaf.rs": "pub const VALUE: u8 = 19;\n"
+      },
+      "targets": [
+        ".",
+        "leaf.rs"
+      ]
+    }
+  ],
+  "inlineRejections": [
+    {
+      "id": "unanchored-orphan-keeps-context-obligation",
+      "from": "general/source.rs",
+      "source": "mod shared { #[path=\"leaf.rs\"] mod leaf; }\n",
+      "error": "module provenance"
+    },
+    {
+      "id": "explicit-anchor-cannot-escape-workspace",
+      "from": "general/source.rs",
+      "source": "#[path=\"../..\"] mod shared { #[path=\"leaf.rs\"] mod leaf; }\n",
+      "error": "escapes"
+    }
+  ],
+  "traversals": [
+    {
+      "id": "missing-inline-prefix-before-parent",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\"missing/..\"] mod anchored { #[path=\"leaf.rs\"] pub mod leaf; }\nfn main() { println!(\"{}\", anchored::leaf::VALUE); }\n",
+        "general/leaf.rs": "pub const VALUE: u8 = 17;\n"
+      },
+      "native": false,
+      "failures": [
+        {
+          "code": "missing-input",
+          "to": "general/missing",
+          "kind": "path",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "linked-inline-prefix-before-parent",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "#[path=\"node_modules/..\"] mod anchored { #[path=\"leaf.rs\"] pub mod leaf; }\nfn main() { println!(\"{}\", anchored::leaf::VALUE); }\n",
+        "general/leaf.rs": "pub const VALUE: u8 = 111;\n",
+        "specific/branch/.marker": "",
+        "specific/leaf.rs": "pub const VALUE: u8 = 222;\n"
+      },
+      "link": {
+        "path": "general/node_modules",
+        "target": "specific/branch"
+      },
+      "native": true,
+      "stdout": "222\n",
+      "failures": [
+        {
+          "code": "linked-input",
+          "to": "general/node_modules",
+          "kind": "path",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "missing-literal-prefix-before-parent",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "fn main() { println!(\"{}\", include_str!(\"missing/../fixture.txt\")); }\n",
+        "general/fixture.txt": "neutral"
+      },
+      "native": false,
+      "failures": [
+        {
+          "code": "missing-input",
+          "to": "general/missing",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "linked-literal-prefix-before-parent",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "fn main() { println!(\"{}\", include_str!(\"node_modules/../fixture.txt\")); }\n",
+        "general/fixture.txt": "neutral",
+        "specific/branch/.marker": "",
+        "specific/fixture.txt": "specific-input"
+      },
+      "link": {
+        "path": "general/node_modules",
+        "target": "specific/branch"
+      },
+      "native": true,
+      "stdout": "specific-input\n",
+      "failures": [
+        {
+          "code": "linked-input",
+          "to": "general/node_modules",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    }
+  ],
+  "referenceRejections": [
+    {
+      "id": "inline-base-requires-path-kind",
+      "reference": {
+        "kind": "include_str",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "."
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-requires-module-scope",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "inlineBase": "."
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-grant-manifest",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": ".",
+        "base": "manifest"
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-be-absolute",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "/outside"
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-be-drive-qualified",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "C:/outside"
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-use-backslashes",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "alternate\\child"
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-contain-nul",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "alternate\u0000child"
+      },
+      "invalidSchema": true
+    },
+    {
+      "id": "inline-base-cannot-contradict-context",
+      "reference": {
+        "kind": "path",
+        "path": "leaf.rs",
+        "line": 1,
+        "modulePath": [
+          "shared"
+        ],
+        "inlineBase": "alternate"
+      },
+      "invalidSchema": false,
+      "ownership": {
+        "contexts": [
+          {
+            "crateRoot": "general/source.rs",
+            "manifestPath": null,
+            "modulePath": [
+              "shared"
+            ],
+            "sourceScope": [
+              "shared"
+            ],
+            "moduleBase": "general/different",
+            "sourceChain": [
+              "general/source.rs"
+            ],
+            "mount": {
+              "kind": "module",
+              "from": "general/source.rs",
+              "modulePath": [],
+              "sourceScope": [],
+              "declarationOffset": 0,
+              "inline": true,
+              "visibility": "private"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "macroScopes": [
+    {
+      "id": "unused-boolean-expression",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), $flag) }; }\npub fn main() { let (text, flag) = load!(\"../specific/input.txt\", false); println!(\"{} {}\", text, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 122,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input false\n"
+    },
+    {
+      "id": "unused-identifier-and-closure",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(binary, \"payload\", |a, b| a.len() + b.len());\npub fn main() { println!(\"{}\", binary()); }\n",
+        "specific/payload.bin": "probe"
+      },
+      "references": [
+        {
+          "kind": "include_bytes",
+          "path": "../specific/payload.bin",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 107,
+            "invocationOffset": 245,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "10\n"
+    },
+    {
+      "id": "typed-closure-borrowed-slices",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(binary, r#\"payload\"#, |a: &[u8], b: &[u8]| a.len() + b.len());\npub fn main() { println!(\"{}\", binary()); }\n",
+        "specific/payload.bin": "probe"
+      },
+      "references": [
+        {
+          "kind": "include_bytes",
+          "path": "../specific/payload.bin",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 107,
+            "invocationOffset": 245,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "10\n"
+    },
+    {
+      "id": "closure-block-and-nested-tuple",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(binary, \"payload\", |a, b| { let (_, pair) = (0, (a, b)); pair.0.len() + pair.1.len() });\npub fn main() { println!(\"{}\", binary()); }\n",
+        "specific/payload.bin": "probe"
+      },
+      "references": [
+        {
+          "kind": "include_bytes",
+          "path": "../specific/payload.bin",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 107,
+            "invocationOffset": 245,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "10\n"
+    },
+    {
+      "id": "move-empty-closure",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $derive:expr) => { { let derive: fn() -> bool = $derive; (include_str!($path), derive()) } }; }\npub fn main() { let (text, flag) = load!(\"../specific/input.txt\", move || true); println!(\"{} {}\", text, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 94,
+            "invocationOffset": 167,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input true\n"
+    },
+    {
+      "id": "irrelevant-token-tree-group",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $record:tt) => { { let flag: bool = $record; (include_str!($path), flag) } }; }\npub fn main() { let (text, flag) = load!(\"../specific/input.txt\", { false }); println!(\"{} {}\", text, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 82,
+            "invocationOffset": 151,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input false\n"
+    },
+    {
+      "id": "reachable-concat-expression",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:expr, $flag:expr) => { (include_str!($path), $flag) }; }\npub fn main() { let (text, flag) = load!(concat!(\"../specific/\", \"input.txt\"), true); println!(\"{} {}\", text, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 51,
+            "invocationOffset": 119,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input true\n"
+    },
+    {
+      "id": "multiple-finite-invocations",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($name:ident, $stem:literal, $suffix:literal, $flag:expr) => { fn $name() -> (&'static str, bool) { (include_str!(concat!(\"../specific/\", $stem, $suffix)), $flag) } }; }\nload!(first, \"one\", \".txt\", true);\nload!(second, \"two\", \".txt\", false);\npub fn main() { println!(\"{} {} {} {}\", first().0, first().1, second().0, second().1); }\n",
+        "specific/one.txt": "one",
+        "specific/two.txt": "two"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/one.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 121,
+            "invocationOffset": 190,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/two.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 3,
+            "definitionOffset": 0,
+            "templateOffset": 121,
+            "invocationOffset": 225,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "one true two false\n"
+    },
+    {
+      "id": "irrelevant-numeric-literal",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $count:literal) => { (include_str!($path), $count) }; }\npub fn main() { let (text, count) = load!(\"../specific/input.txt\", 7); println!(\"{} {}\", text, count); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 58,
+            "invocationOffset": 128,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input 7\n"
+    },
+    {
+      "id": "two-template-sites",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), include_str!($path), $flag) }; }\npub fn main() { let (a, b, flag) = load!(\"../specific/input.txt\", false); println!(\"{} {} {}\", a, b, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 143,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 75,
+            "invocationOffset": 143,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input specific-input false\n"
+    },
+    {
+      "id": "same-line-distinct-invocations",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), $flag) }; }\npub fn main() { let a = load!(\"../specific/input.txt\", true); let b = load!(\"../specific/input.txt\", false); println!(\"{} {} {} {}\", a.0, a.1, b.0, b.1); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 111,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 157,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input true specific-input false\n"
+    },
+    {
+      "id": "nested-module-invocation",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), $flag) }; }\nmod nested { pub fn read() -> (&'static str, bool) { load!(\"../specific/input.txt\", true) } }\npub fn main() { let (text, flag) = nested::read(); println!(\"{} {}\", text, flag); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 140,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input true\n"
+    },
+    {
+      "id": "generated-native-test-registration",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal) => { #[test] fn retained_input() { assert_eq!(include_str!($path), \"specific-input\"); } }; }\nload!(\"../specific/input.txt\");\npub fn main() { println!(\"registered\"); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 82,
+            "invocationOffset": 129,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "registered\n",
+      "nativeTests": [
+        "retained_input"
+      ]
+    },
+    {
+      "id": "mixed-constant-and-dynamic-sites",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!(\"../specific/input.txt\"), include_str!($path), $flag) }; }\npub fn main() { let a = load!(\"../specific/input.txt\", true); let b = load!(\"../specific/input.txt\", false); println!(\"{} {} {} {} {} {}\", a.0, a.1, a.2, b.0, b.1, b.2); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 150,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 54,
+            "invocationOffset": 196,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 93,
+            "invocationOffset": 150,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 93,
+            "invocationOffset": 196,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input specific-input true specific-input specific-input false\n"
+    },
+    {
+      "id": "ordinary-template-raw-invocation",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\npub fn main() { let first = load!(\"../specific/input.txt\"); let second = r#load!(\"../specific/escape.txt\"); println!(\"{} {}\", first, second); }\n",
+        "specific/input.txt": "specific-input",
+        "specific/escape.txt": "escaped-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 41,
+            "invocationOffset": 94,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/escape.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 41,
+            "invocationOffset": 139,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input escaped-input\n"
+    },
+    {
+      "id": "raw-template-and-builtin",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! r#load { ($path:literal) => { r#include_str!($path) }; }\npub fn main() { let first = load!(\"../specific/input.txt\"); let second = r#load!(\"../specific/escape.txt\"); println!(\"{} {}\", first, second); }\n",
+        "specific/input.txt": "specific-input",
+        "specific/escape.txt": "escaped-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 43,
+            "invocationOffset": 98,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        },
+        {
+          "kind": "include_str",
+          "path": "../specific/escape.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 43,
+            "invocationOffset": 143,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input escaped-input\n"
+    },
+    {
+      "id": "raw-metavariable-binding",
+      "root": "general/source.rs",
+      "files": {
+        "general/source.rs": "macro_rules! load { ($r#path:literal) => { include_str!($path) }; }\npub fn main() { let value = load!(\"../specific/input.txt\"); println!(\"{}\", value); }\n",
+        "specific/input.txt": "specific-input"
+      },
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "../specific/input.txt",
+          "line": 1,
+          "expansion": {
+            "kind": "local-macro",
+            "macro": "load",
+            "definitionLine": 1,
+            "invocationLine": 2,
+            "definitionOffset": 0,
+            "templateOffset": 43,
+            "invocationOffset": 96,
+            "scope": {
+              "kind": "module",
+              "modulePath": []
+            }
+          }
+        }
+      ],
+      "stdout": "specific-input\n"
+    }
+  ],
+  "macroRejections": [
+    {
+      "id": "raw-input-inside-print-token-tree",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { println!(\"{}\", r#load!(\"../specific/input.txt\")); }\n",
+      "native": true
+    },
+    {
+      "id": "unbound-reachable-value",
+      "source": "macro_rules! load { ($path:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(true); }\n",
+      "native": false
+    },
+    {
+      "id": "identifier-cannot-bind-path",
+      "source": "const INPUT: &str = \"../specific/input.txt\";\nmacro_rules! load { ($path:ident) => { include_str!($path) }; }\nfn main() { let _ = load!(INPUT); }\n",
+      "native": false
+    },
+    {
+      "id": "exported-finite-template",
+      "source": "#[macro_export] macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "repeated-matcher-binding",
+      "source": "macro_rules! load { ($path:literal, $path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", \"../specific/input.txt\"); }\n",
+      "native": false
+    },
+    {
+      "id": "malformed-closure-header",
+      "source": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(binary, \"payload\", |a, b a.len() + b.len());\nfn main() {}\n",
+      "native": false
+    },
+    {
+      "id": "invalid-identifier-argument",
+      "source": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(\"binary\", \"payload\", |a, b| a.len() + b.len());\nfn main() {}\n",
+      "native": false
+    },
+    {
+      "id": "extra-invocation-argument",
+      "source": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), $flag) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", true, false); }\n",
+      "native": false
+    },
+    {
+      "id": "missing-invocation-argument",
+      "source": "macro_rules! load { ($path:literal, $flag:expr) => { (include_str!($path), $flag) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": false
+    },
+    {
+      "id": "multiple-matcher-arms",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; () => { \"\" }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "repeated-matcher-fragment",
+      "source": "macro_rules! load { ($($path:literal),+) => { ($(include_str!($path)),+) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "duplicated-template-name",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn first() { let _ = load!(\"../specific/input.txt\"); }\nmacro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "literal-fragment-requires-token",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(concat!(\"../specific/\", \"input.txt\")); }\n",
+      "native": false
+    },
+    {
+      "id": "qualified-template-invocation",
+      "source": "#[macro_export] macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = crate::load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "unmatched-trailing-comma",
+      "source": "macro_rules! load { ($name:ident, $directory:literal, $derive:expr) => { fn $name() -> usize { let bytes = include_bytes!(concat!(\"../specific/\", $directory, \".bin\")); let derive: fn(&[u8], &[u8]) -> usize = $derive; derive(bytes, bytes) } }; }\nload!(binary, r#\"payload\"#, |a: &[u8], b: &[u8]| a.len() + b.len(),);\nfn main() { println!(\"{}\", binary()); }\n",
+      "native": false
+    },
+    {
+      "id": "recursive-template",
+      "source": "macro_rules! load { ($path:literal) => { (include_str!($path), load!($path)) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": false
+    },
+    {
+      "id": "malformed-unused-expression",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", true false); }\n",
+      "native": false
+    },
+    {
+      "id": "finite-code-include-requires-emission-context",
+      "source": "macro_rules! load { ($path:literal) => { include!($path); }; }\nmod nested { load!(\"../specific/input.rs\"); }\nfn main() {}\n",
+      "native": true,
+      "files": {
+        "specific/input.rs": "pub const VALUE: usize = 1;\n"
+      }
+    },
+    {
+      "id": "unused-malformed-parenthesis",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", (let)); }\n",
+      "native": false
+    },
+    {
+      "id": "unused-malformed-block",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", { let =; }); }\n",
+      "native": false
+    },
+    {
+      "id": "unused-malformed-closure-body",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", |x| x x); }\n",
+      "native": false
+    },
+    {
+      "id": "empty-matcher-parameter",
+      "source": "macro_rules! load { ($path:literal,, $flag:expr) => { (include_str!($path), $flag) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", false); }\n",
+      "native": false
+    },
+    {
+      "id": "conditionally-exported-template",
+      "source": "#[cfg_attr(not(any()), macro_export)] macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "native": true
+    },
+    {
+      "id": "helper-generated-invocation",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nmacro_rules! helper { () => { load!(\"../specific/input.txt\") }; }\nfn main() { let _ = helper!(); }\n",
+      "native": true
+    },
+    {
+      "id": "mut-after-negation",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", -mut value); }\n",
+      "native": false
+    },
+    {
+      "id": "mut-after-logical-not",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", !mut value); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-mut-expression",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", mut); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-placeholder-expression",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", _); }\n",
+      "native": false
+    },
+    {
+      "id": "nonassociative-comparison-chain",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", 1 < 2 < 3); }\n",
+      "native": false
+    },
+    {
+      "id": "external-file-child-can-invoke-template",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nmod child;\nfn main() { let _ = load!(\"../specific/input.txt\"); }\n",
+      "files": {
+        "general/child.rs": "pub const INPUT: &str = load!(\"../specific/input.txt\");\n"
+      },
+      "native": true
+    },
+    {
+      "id": "earlier-helper-can-invoke-template",
+      "source": "macro_rules! helper { () => { load!(\"../specific/input.txt\") }; }\nmacro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\"); let _ = helper!(); }\n",
+      "native": true
+    },
+    {
+      "id": "opaque-macro-token-invocation",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn main() { let _ = stringify!(load!(\"../specific/input.txt\")); }\n",
+      "native": true
+    },
+    {
+      "id": "string-cannot-start-struct",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", \"x\" {}); }\n",
+      "native": false
+    },
+    {
+      "id": "number-cannot-start-struct",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", 1 {}); }\n",
+      "native": false
+    },
+    {
+      "id": "boolean-cannot-start-struct",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", true {}); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-qualified-segment",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", value::fn); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-member-segment",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", value.fn); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-closure-pattern",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", |mut| true); }\n",
+      "native": false
+    },
+    {
+      "id": "reserved-let-pattern",
+      "source": "macro_rules! load { ($path:literal, $unused:expr) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", {let fn=1;true}); }\n",
+      "native": false
+    },
+    {
+      "id": "placeholder-is-not-ident",
+      "source": "macro_rules! load { ($path:literal, $unused:ident) => { include_str!($path) }; }\nfn main() { let _ = load!(\"../specific/input.txt\", _); }\n",
+      "native": false
+    },
+    {
+      "id": "raw-duplicate-symbol",
+      "source": "macro_rules! load { ($path:literal) => { include_str!($path) }; }\nfn first(){let _=load!(\"../specific/input.txt\");}\nmacro_rules! r#load { ($path:literal) => { include_str!($path) }; }\nfn main(){let _=r#load!(\"../specific/input.txt\");}\n",
+      "native": true
+    },
+    {
+      "id": "raw-recursive-symbol",
+      "source": "macro_rules! load { ($path:literal) => { (include_str!($path),r#load!($path)) }; }\nfn main(){let _=load!(\"../specific/input.txt\");}\n",
+      "native": false
+    }
+  ],
+  "graphAuthority": [
+    {
+      "id": "readable-empty-root",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"graph_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "root.rs": ""
+      },
+      "unavailable": null,
+      "nativeInputs": [
+        "root.rs"
+      ],
+      "contexts": [
+        "root.rs"
+      ],
+      "targets": [],
+      "invalidManifests": [],
+      "participations": [
+        {
+          "target": {
+            "kind": "source",
+            "path": "root.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [],
+          "sourceScope": [],
+          "mount": "root",
+          "state": "admitted",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "unavailable-root-bytes",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"graph_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "root.rs": ""
+      },
+      "unavailable": "root.rs",
+      "nativeInputs": [
+        "root.rs"
+      ],
+      "contexts": [],
+      "targets": [],
+      "invalidManifests": [],
+      "participations": [
+        {
+          "target": {
+            "kind": "source",
+            "path": "root.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [],
+          "sourceScope": [],
+          "mount": "root",
+          "state": "denied",
+          "reason": "unavailable-source"
+        }
+      ]
+    },
+    {
+      "id": "readable-empty-leaf",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"graph_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "root.rs": "mod leaf;\n",
+        "leaf.rs": ""
+      },
+      "unavailable": null,
+      "nativeInputs": [
+        "leaf.rs",
+        "root.rs"
+      ],
+      "contexts": [
+        "leaf.rs",
+        "root.rs"
+      ],
+      "targets": [
+        [
+          "root.rs\u0000leaf",
+          "leaf.rs"
+        ]
+      ],
+      "invalidManifests": [],
+      "participations": [
+        {
+          "target": {
+            "kind": "source",
+            "path": "leaf.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [
+            "leaf"
+          ],
+          "sourceScope": [],
+          "mount": "module",
+          "state": "admitted",
+          "reason": null
+        },
+        {
+          "target": {
+            "kind": "source",
+            "path": "root.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [],
+          "sourceScope": [],
+          "mount": "root",
+          "state": "admitted",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "unavailable-leaf-bytes",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"graph_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "root.rs": "mod leaf;\n",
+        "leaf.rs": ""
+      },
+      "unavailable": "leaf.rs",
+      "nativeInputs": [
+        "leaf.rs",
+        "root.rs"
+      ],
+      "contexts": [
+        "root.rs"
+      ],
+      "targets": [],
+      "invalidManifests": [],
+      "participations": [
+        {
+          "target": {
+            "kind": "source",
+            "path": "leaf.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [
+            "leaf"
+          ],
+          "sourceScope": [],
+          "mount": "module",
+          "state": "denied",
+          "reason": "unavailable-source"
+        },
+        {
+          "target": {
+            "kind": "source",
+            "path": "root.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [],
+          "sourceScope": [],
+          "mount": "root",
+          "state": "admitted",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "id": "invalid-manifest-revokes-targets",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"graph_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "root.rs": "mod leaf;\n#[cfg(any())] #[path=\"C:/outside.rs\"] mod foreign;\n",
+        "leaf.rs": ""
+      },
+      "unavailable": null,
+      "nativeInputs": [
+        "leaf.rs",
+        "root.rs"
+      ],
+      "contexts": [],
+      "targets": [],
+      "invalidManifests": [
+        "Cargo.toml"
+      ],
+      "participations": [
+        {
+          "target": {
+            "kind": "manifest",
+            "path": "Cargo.toml"
+          },
+          "state": "denied",
+          "reason": "invalid-manifest"
+        },
+        {
+          "target": {
+            "kind": "source",
+            "path": "leaf.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [
+            "leaf"
+          ],
+          "sourceScope": [],
+          "mount": "module",
+          "state": "denied",
+          "reason": "invalid-manifest"
+        },
+        {
+          "target": {
+            "kind": "source",
+            "path": "root.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [],
+          "sourceScope": [],
+          "mount": "root",
+          "state": "denied",
+          "reason": "invalid-manifest"
+        },
+        {
+          "target": {
+            "kind": "unresolved",
+            "rawPath": "C:/outside.rs"
+          },
+          "crateRoot": "root.rs",
+          "manifestPath": "Cargo.toml",
+          "modulePath": [
+            "foreign"
+          ],
+          "sourceScope": [],
+          "mount": "module",
+          "state": "denied",
+          "reason": "nonportable-target"
+        }
+      ]
+    }
+  ],
+  "macroOwners": [
+    {
+      "id": "private-file-module",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod sealed;\nfn main() { sealed::run(); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ]
+    },
+    {
+      "id": "macro-use-parent",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[macro_use] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();let _=load!(\"escape.txt\");}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "conditional-macro-use-parent",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg_attr(all(), macro_use)] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();let _=load!(\"escape.txt\");}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "public-file-module",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] pub mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "root-module-template",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "include-only-origin",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "mod included { include!(\"leaf.rs\"); }\nfn main(){included::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "include"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "include-and-module-dual-origin",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod included;\nmod included_again { include!(\"leaf.rs\"); }\nfn main(){included::run();included_again::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "include",
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "physically-delete-parent-mount",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod sealed;\nfn main() { sealed::run(); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope",
+      "replace": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "fn main(){}\n"
+      }
+    },
+    {
+      "id": "physically-delete-manifest",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod sealed;\nfn main() { sealed::run(); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "remove": [
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "function-local-template",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 164
+      },
+      "mounts": [
+        "root"
+      ]
+    },
+    {
+      "id": "function-local-with-code-emission",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\ninclude!(\"emission.rs\");\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/emission.rs": "{let _=load!(\"escape.txt\");}\n"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 189
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unsupported-expression"
+    },
+    {
+      "id": "same-module-key-dual-origin",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] #[path=\"leaf.rs\"] mod included;\n#[cfg(any())] mod included { include!(\"leaf.rs\"); }\nfn main(){included::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "alias-can-expose-module-template",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();let _=sealed::exposed!(\"escape.txt\");}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\npub(crate) use load as exposed;\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "dormant-macro-use-parent",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg_attr(any(), macro_use)] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "dormant-module-rewriting-attribute",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg_attr(any(), foreign_transform)] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "authored-module-path-alternatives",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] #[cfg_attr(any(), path=\"alternative.rs\")] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/alternative.rs": "pub fn run(){println!(\"alternative\");}\n"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "attributed-function-cannot-seal",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg_attr(any(), foreign_transform)]\npub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 51,
+        "endOffset": 202
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unsupported-expression"
+    },
+    {
+      "id": "function-local-needs-live-manifest",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 164
+      },
+      "mounts": [],
+      "remove": [
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml"
+      ],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "cfg-predicate-does-not-import-macro",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(any(macro_use, not(macro_use)))] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+        "🧰️framework/🔨️modules/🧪️macro-scope/escape.txt": "escaped-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ]
+    },
+    {
+      "id": "inner-leaf-rewriting-attribute",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "#![cfg_attr(any(), rewrite)]\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "inner-root-rewriting-attribute",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#![cfg_attr(any(), rewrite)]\npub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 42,
+        "endOffset": 193
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "raw-module-default-filename",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/sealed.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "mod r#sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/sealed.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [
+        "module"
+      ]
+    },
+    {
+      "id": "raw-module-identity-ambiguous-target",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/one.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] #[path=\"one.rs\"] mod sealed;\n#[cfg(any())] #[path=\"two.rs\"] mod r#sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/one.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/two.rs": "pub fn run() {}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "function-local-in-inline-module",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "mod inside {\npub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\n}\nfn main(){inside::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 26,
+        "endOffset": 177
+      },
+      "mounts": [
+        "root"
+      ],
+      "contextProof": {
+        "sourceScope": [
+          "inside"
+        ],
+        "mounted": true
+      }
+    },
+    {
+      "id": "inner-inline-rewriting-attribute",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "mod inside {\n#![cfg_attr(any(), rewrite)]\npub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\n}\nfn main(){inside::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 55,
+        "endOffset": 206
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unresolved-template-scope",
+      "contextProof": {
+        "sourceScope": [
+          "inside"
+        ],
+        "mounted": false
+      }
+    },
+    {
+      "id": "known-before-unresolved-module-key",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] #[path=\"leaf.rs\"] mod sealed;\n#[cfg(any())] #[cfg_attr(any(), rewrite)] #[path=\"alternative.rs\"] mod r#sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/alternative.rs": "pub fn run() {}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "unresolved-before-known-module-key",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(any())] #[cfg_attr(any(), rewrite)] #[path=\"alternative.rs\"] mod r#sealed;\n#[cfg(all())] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "macro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\npub fn run() { let (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b); }\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/alternative.rs": "pub fn run() {}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "module",
+        "modulePath": []
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "unresolved-same-file-local-scope",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] #[path=\"leaf.rs\"] mod sealed;\n#[cfg(any())] #[cfg_attr(any(), rewrite)] #[path=\"leaf.rs\"] mod sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/alternative.rs": "pub fn run() {}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 164
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "unresolved-parent-descendant-local-scope",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/nested.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] #[path=\"parent.rs\"] mod sealed;\n#[cfg(any())] #[cfg_attr(any(), rewrite)] #[path=\"alternative.rs\"] mod r#sealed;\nfn main(){sealed::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/parent.rs": "#[path=\"nested.rs\"] mod nested;\npub fn run(){nested::run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/nested.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/alternative.rs": "pub fn run() {}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 164
+      },
+      "mounts": [],
+      "problem": "unresolved-template-scope"
+    },
+    {
+      "id": "local-function-item-rewriting-producer",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "pub fn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\n#[cfg_attr(any(), rewrite)] fn extra() {}\nlet (a,b)=load!(\"input.txt\"); println!(\"{} {}\",a,b);\n}\nfn main(){run();}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 13,
+        "endOffset": 206
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unsupported-expression"
+    },
+    {
+      "id": "builtin-test-local-scope",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "nativeHarness": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 17,
+        "endOffset": 185,
+        "compilerAttributes": [
+          "test"
+        ]
+      },
+      "mounts": [
+        "root"
+      ]
+    },
+    {
+      "id": "builtin-test-literal-doc-local-scope",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[test]\n#[doc = \"Portable scope.\"]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "nativeHarness": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 44,
+        "endOffset": 212,
+        "compilerAttributes": [
+          "test",
+          "doc"
+        ]
+      },
+      "mounts": [
+        "root"
+      ]
+    },
+    {
+      "id": "builtin-test-dormant-rewriter-refusal",
+      "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+      "files": {
+        "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg_attr(any(), rewrite)]\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+        "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+      },
+      "native": true,
+      "nativeHarness": true,
+      "scope": {
+        "kind": "local-block",
+        "startOffset": 45,
+        "endOffset": 213
+      },
+      "mounts": [
+        "root"
+      ],
+      "problem": "unsupported-expression"
+    }
+  ],
+  "attributeOrigins": {
+    "provider": "extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n",
+    "cases": [
+      {
+        "id": "builtin",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": null,
+        "native": {
+          "build": true,
+          "tests": 1,
+          "input": true
+        }
+      },
+      {
+        "id": "explicit-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "use attribute_provider::test;\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": true,
+          "tests": 0,
+          "input": false
+        }
+      },
+      {
+        "id": "renamed-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "use attribute_provider::rewrite as test;\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": true,
+          "tests": 0,
+          "input": false
+        }
+      },
+      {
+        "id": "grouped-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "use attribute_provider::{rewrite as test};\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": true,
+          "tests": 0,
+          "input": false
+        }
+      },
+      {
+        "id": "conditional-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "#[cfg(all())] use attribute_provider::rewrite as test;\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": true,
+          "tests": 0,
+          "input": false
+        }
+      },
+      {
+        "id": "wildcard-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "use attribute_provider::*;\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": false,
+          "tests": null,
+          "input": null,
+          "error": "E0659"
+        }
+      },
+      {
+        "id": "imported-literal-doc",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "use attribute_provider::doc;\n#[test]\n#[doc = \"Portable scope.\"]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": false,
+          "tests": null,
+          "input": null,
+          "error": "E0659"
+        }
+      },
+      {
+        "id": "included-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "include!(\"alias.rs\");\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input",
+          "🧰️framework/🔨️modules/🧪️macro-scope/alias.rs": "use attribute_provider::rewrite as test;\n"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": false,
+          "tests": null,
+          "input": null,
+          "error": "E0659"
+        }
+      },
+      {
+        "id": "parent-reexport-test",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "pub use attribute_provider::rewrite as test;\n#[path=\"leaf.rs\"] mod leaf;\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/leaf.rs": "use super::*;\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": false,
+          "tests": null,
+          "input": null,
+          "error": "E0659"
+        }
+      },
+      {
+        "id": "opaque-import-producer",
+        "root": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "source": "🧰️framework/🔨️modules/🧪️macro-scope/root.rs",
+        "files": {
+          "🧰️framework/🔨️modules/🧪️macro-scope/Cargo.toml": "[package]\nname=\"scope_probe\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"root.rs\"\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/root.rs": "macro_rules! import_tag { () => { use attribute_provider::rewrite as test; }; }\nimport_tag!();\n#[test]\nfn run() {\nmacro_rules! load { ($path:literal) => { (include_str!(\"input.txt\"), include_str!($path)) }; }\nlet (a,b)=load!(\"input.txt\"); assert_eq!(a,b); println!(\"{} {}\",a,b);\n}\n",
+          "🧰️framework/🔨️modules/🧪️macro-scope/input.txt": "sealed-input"
+        },
+        "problem": "unresolved-template-scope",
+        "native": {
+          "build": false,
+          "tests": null,
+          "input": null,
+          "error": "E0659"
+        }
+      }
+    ]
+  }
 }

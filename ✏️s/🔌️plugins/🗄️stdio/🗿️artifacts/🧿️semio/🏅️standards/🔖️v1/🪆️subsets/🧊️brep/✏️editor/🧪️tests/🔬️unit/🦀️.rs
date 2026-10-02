@@ -94,8 +94,8 @@ async fn set_vertex_is_visible_with_required_localized_arguments() {
     let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "set-vertex").expect("set-vertex action");
     assert_eq!(action.args.len(), 2);
     assert!(action.args.iter().all(|argument| argument.required));
-    assert_eq!(action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "Move Vertex");
-    assert_eq!(action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De), "Vertex verschieben");
+    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Move Vertex");
+    assert_eq!(action.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Vertex verschieben");
 }
 
 /// ✏️ Ticket goal: "applying it moves the vertex" — real `protocol::Mutation::diff`/
@@ -157,3 +157,5 @@ async fn registered_set_vertex_refuses_duplicate_ids_without_history() {
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🧪️SetVertex
+
+semio_framework_plugin::history_edit_acceptance_law!("stdio", SemioBrepEditor, || semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() }, "../..");

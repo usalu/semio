@@ -49,3 +49,5 @@ record scale-transforms tag=17
 field payload bytes
 record move-nodes tag=18
 field payload bytes
+record change-widget-input tag=19
+field payload bytes

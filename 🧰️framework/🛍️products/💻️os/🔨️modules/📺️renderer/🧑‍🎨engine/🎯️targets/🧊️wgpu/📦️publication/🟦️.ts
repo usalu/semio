@@ -1,7 +1,7 @@
 import { lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { generatorProjectedInputView, loadCatalogTaxonomy, parseGeneratorInputProjection, registryCatalogInputView, validateTaxonomy } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 import { loadWgpuPackageTaxonomy, renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 
 /** ⚙️ Executes exact preview, generation, or freshness commands without writing outside six owned leaves. */

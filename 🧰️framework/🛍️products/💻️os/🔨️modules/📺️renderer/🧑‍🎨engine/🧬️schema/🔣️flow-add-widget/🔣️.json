@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/renderer/engine/flow-add-widget/schema.json",
+  "title": "FlowAddWidget",
+  "description": "➕️ The add-node record of a flow canvas (the `addWidget` verb): the widget kind, the descriptor fields of its catalogue row and the world position; the owner mints the id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "x",
+    "y"
+  ],
+  "properties": {
+    "kind": {
+      "$ref": "#/$defs/Id"
+    },
+    "neuronKind": {
+      "$ref": "#/$defs/Id"
+    },
+    "label": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    }
+  },
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

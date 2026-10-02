@@ -29,10 +29,10 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelect
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (degrees_en, degrees_de) = puzzle5d_selection_number(self.angle.to_degrees());
         let (en, de) = puzzle5d_selection_items(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {degrees_en}°"), &format!("{de} um {degrees_de}° drehen"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

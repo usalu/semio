@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAcroForm {
         vec![PdfMutation::SetAcroForm(SetAcroForm { form: base.acro_form.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set acro-form", "AcroForm setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set acro-form", "AcroForm setzen")
     }
 
     fn target(&self) -> Vec<String> {

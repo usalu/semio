@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """♻️ An INDEPENDENT second implementation of the `s.trinity.rewriting` graph-rewrite rule and all
-seven of its typed mutations, in Python, serving as this case's differential oracle.
+fourteen of its typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A rewrite rule here is five members:
 three whole JSON DOCUMENTS carried as strings — the before-fixture graph, the left-hand pattern and
@@ -18,12 +18,15 @@ specification, in another language.
   exactly `beforeFixtureJson`, `lhsJson`, `rhsJson` (all three `contentMediaType:
   application/json`), `parameterBindings` (a map of open `PropertyValue`s) and `ruleLayout` (a map of
   `{x, y}` `LayoutPoint`s), `additionalProperties: false`.
-* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the seven verbs and their positional
+* ``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` — the fourteen verbs and their positional
   argument lists: three `edit-<member> text`, `change-parameter-binding key value`,
   `remove-parameter-binding key`, `change-rule-layout-point key point-block`,
-  `remove-rule-layout-point key`.
-* the seven committed `(before, mutation, after, outcome)` specification vectors, which give the
-  INTERNALLY tagged wire form of each verb. All seven are ACCEPTING, so unlike this artifact's
+  `remove-rule-layout-point key`, the relative `drag-working-nodes targets dx dy`, `patch-working-nodes targets field
+  value`, `delete-working-nodes targets`, `connect-working-ports source target kind`, `disconnect-working-edges targets` and
+  `drag-rule-nodes targets dx dy`, and the absolute
+  `set-rule-layout-points placement-table targets`.
+* the fourteen committed `(before, mutation, after, outcome)` specification vectors, which give the
+  INTERNALLY tagged wire form of each verb. All fourteen are ACCEPTING, so unlike this artifact's
   `🔌️jack` sibling the accepting direction here already had committed evidence.
 
 **What this implementation deliberately does not do, and why.** It does not read `.rewriting.dsl.semio`.
@@ -51,7 +54,7 @@ from semio_repo_test import Adapter, Context, Outcome
 MEMBERS = ("beforeFixtureJson", "lhsJson", "rhsJson", "parameterBindings", "ruleLayout")
 """🗂️ The five members `RewritingSnapshot` declares — and the cross-language projection."""
 
-KINDS = ("edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point")
+KINDS = ("edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-working-nodes", "patch-working-nodes", "drag-rule-nodes", "set-rule-layout-points", "delete-working-nodes", "connect-working-ports", "disconnect-working-edges")
 """🏷️ Every kind the catalog declares."""
 
 TAGS = {
@@ -62,11 +65,27 @@ TAGS = {
     "remove-parameter-binding": "removeParameterBinding",
     "change-rule-layout-point": "changeRuleLayoutPoint",
     "remove-rule-layout-point": "removeRuleLayoutPoint",
+    "drag-working-nodes": "dragWorkingNodes",
+    "patch-working-nodes": "patchWorkingNodes",
+    "drag-rule-nodes": "dragRuleNodes",
+    "set-rule-layout-points": "setRuleLayoutPoints",
+    "delete-working-nodes": "deleteWorkingNodes",
+    "connect-working-ports": "connectWorkingPorts",
+    "disconnect-working-edges": "disconnectWorkingEdges",
 }
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed vectors spell it."""
 
 DOCUMENTS = {"edit-before-fixture": ("beforeFixtureJson", "newBeforeFixtureJson"), "edit-lhs": ("lhsJson", "newLhsJson"), "edit-rhs": ("rhsJson", "newRhsJson")}
 """📄️ The three whole-document setters: which member each writes, and what its argument is called."""
+
+WORKING = ("drag-working-nodes", "patch-working-nodes", "delete-working-nodes", "connect-working-ports", "disconnect-working-edges")
+"""🕸️ The five relative working-graph verbs: they move, patch or delete nodes (a delete with every edge touching them), draw or cut
+wires INSIDE the
+before-fixture document and write it back as compact
+JSON with sorted keys, which is the form the leaves' own specification fixes so that a second implementation reproduces the bytes."""
+
+RULE_ROWS = ("create", "merge", "set", "delete", "parameters")
+"""📐️ The RHS clause lists in the row order the rule editor draws them (y = 0, 80, 160, 240, 320; 220 between clauses)."""
 
 # endregion 🔖️Vocabulary
 
@@ -104,6 +123,50 @@ def document_of(payload):
 
 
 # region 🔖️Mutations
+def compact(value):
+    """🗜️ Compact JSON with sorted keys and verbatim UTF-8 — the form the working-graph verbs write the before-fixture in."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def endpoint(key):
+    """🔌️ The node an edge endpoint names: a `node@port` key names its node before the `@`; any other key is the node itself."""
+    node, separator, port = key.partition("@")
+    return node if separator and node and port else key
+
+
+def rule_graph_slots(document):
+    """📐️ Every semantic rule-graph node id with its default position, read from the rule's own two sides: the LHS match at
+    (0, 0), its WHERE clause (when non-blank) at (220, 80), then each RHS clause list row by row, or `rhs-empty` at (0, 0)."""
+    slots = {}
+    try:
+        lhs = json.loads(document["lhsJson"])
+        slots["lhs-match"] = (0.0, 0.0)
+        if (lhs.get("whereClause") or "").strip():
+            slots["lhs-where"] = (220.0, 80.0)
+    except ValueError:
+        pass
+    try:
+        rhs = json.loads(document["rhsJson"])
+        clauses = {}
+        for row, name in enumerate(RULE_ROWS):
+            prefix = "rhs-parameter" if name == "parameters" else "rhs-" + name
+            for index in range(len(rhs.get(name, []))):
+                clauses["%s-%d" % (prefix, index)] = (index * 220.0, row * 80.0)
+        slots.update(clauses or {"rhs-empty": (0.0, 0.0)})
+    except ValueError:
+        pass
+    return slots
+
+
+def rule_position(document, key):
+    """📍️ Where a rule-graph node sits: its layout point, else its default slot; `None` for an id the rule draws no node for."""
+    slots = rule_graph_slots(document)
+    if key not in slots:
+        return None
+    held = document["ruleLayout"].get(key)
+    return (held["x"], held["y"]) if held is not None else slots[key]
+
+
 def kind_of(mutation):
     """🏷️ The kind an internally tagged mutation payload names."""
     if not isinstance(mutation, dict) or "mutation" not in mutation:
@@ -130,6 +193,46 @@ def apply_mutation(document, mutation):
         result["parameterBindings"][mutation["key"]] = copy.deepcopy(mutation["newValue"])
     elif kind == "remove-parameter-binding":
         result["parameterBindings"].pop(mutation["key"], None)
+    elif kind == "delete-working-nodes":
+        graph = json.loads(result["beforeFixtureJson"])
+        gone = {node.get("id") for node in graph["nodes"] if node.get("id") in mutation["targets"]}
+        graph["nodes"] = [node for node in graph["nodes"] if node.get("id") not in gone]
+        if "edges" in graph:
+            graph["edges"] = [edge for edge in graph["edges"] if endpoint(edge.get("source", "")) not in gone and endpoint(edge.get("target", "")) not in gone]
+        if graph.get("rootNodeId") in gone:
+            graph["rootNodeId"] = None
+        result["beforeFixtureJson"] = compact(graph)
+    elif kind == "connect-working-ports":
+        graph = json.loads(result["beforeFixtureJson"])
+        edges = graph.setdefault("edges", [])
+        if not any(edge.get("source") == mutation["source"] and edge.get("target") == mutation["target"] for edge in edges):
+            edges.append({"id": "%s->%s" % (mutation["source"], mutation["target"]), "kind": mutation["kind"], "source": mutation["source"], "target": mutation["target"]})
+        result["beforeFixtureJson"] = compact(graph)
+    elif kind == "disconnect-working-edges":
+        graph = json.loads(result["beforeFixtureJson"])
+        if "edges" in graph:
+            graph["edges"] = [edge for edge in graph["edges"] if edge.get("id") not in mutation["targets"]]
+        result["beforeFixtureJson"] = compact(graph)
+    elif kind in WORKING:
+        graph = json.loads(result["beforeFixtureJson"])
+        for node in graph["nodes"]:
+            if node.get("id") in mutation["targets"]:
+                if kind == "drag-working-nodes":
+                    node["x"] = float(node.get("x", 0.0)) + float(mutation["dx"])
+                    node["y"] = float(node.get("y", 0.0)) + float(mutation["dy"])
+                else:
+                    node[mutation["field"]] = mutation["value"].strip()
+        result["beforeFixtureJson"] = compact(graph)
+    elif kind == "drag-rule-nodes":
+        for key in mutation["targets"]:
+            at = rule_position(document, key)
+            if at is not None:
+                result["ruleLayout"][key] = {"x": float(at[0]) + float(mutation["dx"]), "y": float(at[1]) + float(mutation["dy"])}
+    elif kind == "set-rule-layout-points":
+        for point in mutation["points"]:
+            result["ruleLayout"][point["key"]] = {"x": float(point["x"]), "y": float(point["y"])}
+        for key in mutation["cleared"]:
+            result["ruleLayout"].pop(key, None)
     elif kind == "change-rule-layout-point":
         point = mutation["newPoint"]
         result["ruleLayout"][mutation["key"]] = {"x": float(point["x"]), "y": float(point["y"])}
@@ -145,6 +248,12 @@ def inverse_mutation(document, mutation):
     if kind in DOCUMENTS:
         member, argument = DOCUMENTS[kind]
         return {"mutation": TAGS[kind], argument: document[member]}
+    if kind in WORKING:
+        return {"mutation": TAGS["edit-before-fixture"], "newBeforeFixtureJson": document["beforeFixtureJson"]}
+    if kind in ("drag-rule-nodes", "set-rule-layout-points"):
+        keys = [key for key in mutation["targets"] if rule_position(document, key) is not None] if kind == "drag-rule-nodes" else [point["key"] for point in mutation["points"]] + list(mutation["cleared"])
+        layout = document["ruleLayout"]
+        return {"mutation": TAGS["set-rule-layout-points"], "points": [{"key": key, "x": layout[key]["x"], "y": layout[key]["y"]} for key in keys if key in layout], "cleared": [key for key in keys if key not in layout]}
     map_name = "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
     change, remove = ("change-parameter-binding", "remove-parameter-binding") if map_name == "parameterBindings" else ("change-rule-layout-point", "remove-rule-layout-point")
     key = mutation["key"]
@@ -169,7 +278,7 @@ def touches_one(scenario, kind, before, after):
     """🔀️ Each verb writes exactly ONE of the five members. An implementation that rebuilt the whole
     rule on every edit — re-serializing a JSON member, say — would satisfy an after-snapshot
     comparison and fail this."""
-    written = DOCUMENTS[kind][0] if kind in DOCUMENTS else "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
+    written = DOCUMENTS[kind][0] if kind in DOCUMENTS else "beforeFixtureJson" if kind in WORKING else "parameterBindings" if kind.endswith("parameter-binding") else "ruleLayout"
     moved = [name for name in MEMBERS if before[name] != after[name]]
     if moved != [written]:
         raise AssertionError("%s: this verb writes %s and nothing else, but %r moved" % (scenario, written, moved))
@@ -243,7 +352,7 @@ def mutate_handler(kind):
 def inverse_handler(kind):
     """↩️ Applies one kind to the real derived rule and then its OWN computed inverse.
 
-    The projection carries BOTH rules; projecting only the restored one would make all seven rows
+    The projection carries BOTH rules; projecting only the restored one would make all fourteen rows
     project the same value and the differential would be vacuous.
     """
 

@@ -6,7 +6,7 @@ fn mask_panel_keeps_disabled_masks_and_authors_semantic_controls() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️controls/🔣️.json")).unwrap();
     let document: RasterDocument = dsl::json::from_json_str(&fixture["document"].to_string()).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN, &RasterPlayLabels::NATIVE_DE] {
-        let view = semio_framework_plugin::ViewModel::default();
+        let view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let windows = TreeWindows::for_body(&view, RASTER_PLAY_BODY_MASKS);
         let tree = render(&document, &RasterConfig::default(), labels, &windows).unwrap();
         let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();

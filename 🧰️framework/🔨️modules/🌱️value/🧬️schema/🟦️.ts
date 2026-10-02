@@ -1,4 +1,6 @@
 /** 🌱️ JSON projection of the framework-owned dynamic value tree. */
+export{parseIntrinsicValue,parseIntrinsicValueControlled}from"./🌳️intrinsic/🟦️.ts";
+export type{IntrinsicValue,IntrinsicMember}from"./🌳️intrinsic/🟦️.ts";
 export type DslValue = null | boolean | number | string | DslValue[] | { [key: string]: DslValue };
 
 /** 🌱️ Validates a finite JSON tree without using the native call stack for nested values. */

@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertEl
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
         agg_inverse(&SemioModelMutation::InsertElement(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert element", "Element einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert element", "Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

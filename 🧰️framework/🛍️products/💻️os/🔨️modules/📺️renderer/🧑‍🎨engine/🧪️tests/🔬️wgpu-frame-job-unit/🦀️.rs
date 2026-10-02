@@ -174,7 +174,7 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
 fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::shell::PresentedInputCandidateWitness) {
     crate::interpreter::begin_accessibility_visible_documents();
     let mut interaction = crate::AppInteractionState {
-        shell: crate::shell::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string()),
+        shell: crate::shell::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
         input: ui_wgpu::wgpu::InputState::default(),
         theme: ui_wgpu::wgpu::Theme::default(),
         theme_dark: false,

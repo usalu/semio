@@ -20,7 +20,7 @@
 //   bun 📜️script.ts bmp-project --input <a.bmp>
 //   bun 📜️script.ts bmp-compare --input <expected.bmp> --input <actual.bmp>
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
+// @see 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see ../../../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🔬️probes/📜️script.ts —
 //      the sibling probe suite this file's CLI/dispatch/compare shape is mirrored from.
 // @see ../🏭️generator/🔁️codec/🦀️.rs — the `project` subcommand this file calls

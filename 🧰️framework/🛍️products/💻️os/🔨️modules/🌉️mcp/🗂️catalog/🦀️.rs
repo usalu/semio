@@ -10,7 +10,8 @@
 use crate::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, ui_dialog_open_input_schema};
 use semio_framework::manifest;
 use semio_framework::manifest::kernel;
-use semio_framework::{Locale, Terminology};
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use std::collections::BTreeMap;
 
@@ -1241,7 +1242,7 @@ pub struct DescribedVerb {
 }
 
 impl DescribedVerb {
-    fn from_declaration(id: String, label: &semio_framework_ui::wgpu::LocalizedLabel, description: Option<&semio_framework_ui::wgpu::LocalizedLabel>) -> Self {
+    fn from_declaration(id: String, label: &semio_framework_ui_locale::LocalizedLabel, description: Option<&semio_framework_ui_locale::LocalizedLabel>) -> Self {
         Self {
             id,
             title_en: label.resolve(Terminology::Native, Locale::En).to_string(),

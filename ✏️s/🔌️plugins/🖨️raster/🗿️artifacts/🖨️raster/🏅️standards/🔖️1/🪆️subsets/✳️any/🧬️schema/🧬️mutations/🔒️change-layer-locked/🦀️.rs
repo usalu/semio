@@ -20,6 +20,6 @@ impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerLocked
         let Some(layer)=find_layer(&base.layers,&self.layer_id) else {return Vec::new();};
         vec![RasterMutation::ChangeLayerLocked(Self {layer_id:self.layer_id.clone(),expected:self.locked,locked:layer_locked(layer)})]
     }
-    fn label(&self)->protocol::LocalizedLabel {protocol::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
+    fn label(&self)->semio_framework_ui_locale::LocalizedLabel {semio_framework_ui_locale::LocalizedLabel::native("Change layer protection","Ebenenschutz ändern")}
     fn target(&self)->Vec<String>{vec![self.layer_id.clone()]}
 }

@@ -2,6 +2,7 @@
 
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 export { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
 //#region 🔖️Entities
@@ -92,8 +93,8 @@ export interface EntityHeader {
   status: LifecycleStatus;
   priority: Priority;
   ownership: Ownership;
-  tags?: string[];
-  notes?: TaggedNote[];
+  tags: string[];
+  notes: TaggedNote[];
   timestamps: TimestampMeta;
 }
 
@@ -158,13 +159,13 @@ export interface UserProfile extends EntityHeader {
 }
 
 export interface QuantitySpec {
-  min?: number;
-  max?: number;
-  target?: number;
-  current?: number;
-  forecast?: number;
-  peak?: number;
-  average?: number;
+  min?: Binary64;
+  max?: Binary64;
+  target?: Binary64;
+  current?: Binary64;
+  forecast?: Binary64;
+  peak?: Binary64;
+  average?: Binary64;
   unit: string;
 }
 
@@ -260,10 +261,10 @@ export interface QuantityRequirement extends EntityHeader {
   calculationMethod: string | null;
   source: string | null;
   benchmarkRef: string | null;
-  tolerancePercent: number | null;
-  peakFactor: number | null;
-  growthFactor: number | null;
-  unitCost: number | null;
+  tolerancePercent: Binary64 | null;
+  peakFactor: Binary64 | null;
+  growthFactor: Binary64 | null;
+  unitCost: Binary64 | null;
   currency: string | null;
   verificationMethod: string | null;
   relatedRequirementIds: string[];
@@ -293,7 +294,7 @@ export interface Relationship extends EntityHeader {
   sourceId: string;
   targetId: string;
   kind: RelationshipKind;
-  strength: number | null;
+  strength: Binary64 | null;
   directional: boolean;
   rationale: TextField | null;
   constraints: string[];
@@ -305,7 +306,7 @@ export interface Relationship extends EntityHeader {
   conflictIds: string[];
   traceLinks: TraceLink[];
   bidirectional: boolean;
-  distanceConstraintM: number | null;
+  distanceConstraintM: Binary64 | null;
   capacityConstraint: string | null;
   regulatoryBasis: string[];
   reviewCycle: string | null;
@@ -328,10 +329,10 @@ export interface Adjacency extends EntityHeader {
   kind: AdjacencyKind;
   connection: ConnectionKind;
   separations: SeparationKind[];
-  weight: number;
+  weight: Binary64;
   rationale: TextField | null;
-  distanceMaxM: number | null;
-  distanceMinM: number | null;
+  distanceMaxM: Binary64 | null;
+  distanceMinM: Binary64 | null;
   levelConstraint: string | null;
   accessPath: string | null;
   sharedWall: boolean;
@@ -384,9 +385,9 @@ export interface FlowRequirement extends EntityHeader {
   flowType: string;
   direction: FlowDirection;
   volume: QuantitySpec;
-  peakRate: number | null;
-  clearWidthM: number | null;
-  clearHeightM: number | null;
+  peakRate: Binary64 | null;
+  clearWidthM: Binary64 | null;
+  clearHeightM: Binary64 | null;
   separationRequirements: SeparationKind[];
   accessLevel: AccessLevel;
   timeWindows: string[];
@@ -435,7 +436,7 @@ export interface OperationalRequirement extends EntityHeader {
   cleaningRegime: string | null;
   turnaroundTime: string | null;
   redundancy: string | null;
-  uptimeTarget: number | null;
+  uptimeTarget: Binary64 | null;
   responseTime: string | null;
   equipmentIds: string[];
   elementIds: string[];
@@ -460,18 +461,18 @@ export interface Equipment extends EntityHeader {
   model: string | null;
   quantity: QuantitySpec;
   dimensions: string | null;
-  weightKg: number | null;
-  powerKw: number | null;
+  weightKg: Binary64 | null;
+  powerKw: Binary64 | null;
   utilityConnections: string[];
   ventilation: string | null;
-  noiseLevelDb: number | null;
+  noiseLevelDb: Binary64 | null;
   clearance: string | null;
   mounting: string | null;
   elementIds: string[];
   activityIds: string[];
   maintenanceAccess: string[];
   lifecycleYears: number | null;
-  replacementCost: number | null;
+  replacementCost: Binary64 | null;
   standards: string[];
   supplier: string | null;
   activityLinkIds: string[];
@@ -495,7 +496,7 @@ export interface Resource extends EntityHeader {
   durability: string | null;
   cleaningRequirements: string[];
   replacementCycle: string | null;
-  costPerUnit: number | null;
+  costPerUnit: Binary64 | null;
   supplier: string | null;
   standards: string[];
   ergonomicNotes: string[];
@@ -503,7 +504,7 @@ export interface Resource extends EntityHeader {
   disposalNotes: string[];
   furnitureClass: string | null;
   ergonomicsRating: string | null;
-  sharingRatio: number | null;
+  sharingRatio: Binary64 | null;
 }
 
 export type StorageClass = "general" | "secure" | "climateControlled" | "hazardous" | "archive" | "mobile" | "fixed" | "shared" | "coldChain" | "flammable";
@@ -512,8 +513,8 @@ export interface StorageRequirement extends EntityHeader {
   storedItem: string;
   storageClass: StorageClass;
   quantity: QuantitySpec;
-  volumeM3: number | null;
-  weightKg: number | null;
+  volumeM3: Binary64 | null;
+  weightKg: Binary64 | null;
   temperatureRange: string | null;
   humidityRange: string | null;
   securityLevel: AccessLevel;
@@ -526,7 +527,7 @@ export interface StorageRequirement extends EntityHeader {
   fireProtection: string[];
   ventilation: string | null;
   organizationSystem: string | null;
-  growthAllowance: number | null;
+  growthAllowance: Binary64 | null;
   regulatoryRefs: string[];
   ownerId: string | null;
 }
@@ -536,10 +537,10 @@ export type EnvironmentalParameter = "temperature" | "humidity" | "airQuality" |
 export interface EnvironmentalRequirement extends EntityHeader {
   parameterKind: EnvironmentalParameter;
   parameter: string;
-  targetValue: number | null;
+  targetValue: Binary64 | null;
   unit: string | null;
-  minValue: number | null;
-  maxValue: number | null;
+  minValue: Binary64 | null;
+  maxValue: Binary64 | null;
   comfortBand: string | null;
   measurementMethod: string | null;
   monitoringFrequency: string | null;
@@ -589,10 +590,10 @@ export interface AccessibilityRequirement extends EntityHeader {
   userProfileIds: string[];
   elementIds: string[];
   routeIds: string[];
-  clearWidthM: number | null;
-  clearHeightM: number | null;
-  turningCircleM: number | null;
-  rampSlope: number | null;
+  clearWidthM: Binary64 | null;
+  clearHeightM: Binary64 | null;
+  turningCircleM: Binary64 | null;
+  rampSlope: Binary64 | null;
   liftRequired: boolean;
   tactileGuidance: boolean;
   hearingLoop: boolean;
@@ -710,9 +711,9 @@ export interface RegulatoryRequirement extends EntityHeader {
 export interface SiteContext extends EntityHeader {
   siteName: string;
   address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  elevationM: number | null;
+  latitude: Binary64 | null;
+  longitude: Binary64 | null;
+  elevationM: Binary64 | null;
   climateZone: string | null;
   seismicZone: string | null;
   floodRisk: string | null;
@@ -726,8 +727,8 @@ export interface SiteContext extends EntityHeader {
   environmentalConstraints: string[];
   heritageConstraints: string[];
   zoning: string | null;
-  maxHeightM: number | null;
-  maxCoverage: number | null;
+  maxHeightM: Binary64 | null;
+  maxCoverage: Binary64 | null;
 }
 
 export interface OrganizationalRequirement extends EntityHeader {
@@ -787,12 +788,12 @@ export interface InfrastructureRequirement extends EntityHeader {
   maintenanceAccess: string[];
   standards: string[];
   elementIds: string[];
-  peakDemand: number | null;
-  diversityFactor: number | null;
+  peakDemand: Binary64 | null;
+  diversityFactor: Binary64 | null;
   futureExpansion: string[];
   interfaceRequirements: string[];
   commissioning: string[];
-  lifecycleCost: number | null;
+  lifecycleCost: Binary64 | null;
   ownerId: string | null;
 }
 
@@ -853,7 +854,7 @@ export interface WayfindingRequirement extends EntityHeader {
   colorCoding: string[];
   symbolStandards: string[];
   decisionPoints: string[];
-  maximumSignageDistanceM: number | null;
+  maximumSignageDistanceM: Binary64 | null;
   lightingRequirements: string[];
   maintenancePlan: string | null;
   emergencyEgress: string[];
@@ -893,7 +894,7 @@ export interface FlexibilityRequirement extends EntityHeader {
   adaptationScenarios: string[];
   modularityLevel: string | null;
   reconfigurationTime: string | null;
-  costOfChange: number | null;
+  costOfChange: Binary64 | null;
   technologyReadiness: string | null;
   futureFunctionIds: string[];
   demountablePartitions: boolean;
@@ -910,7 +911,7 @@ export interface FlexibilityRequirement extends EntityHeader {
 
 export interface GrowthPlan extends EntityHeader {
   horizonYears: number;
-  growthRate: number | null;
+  growthRate: Binary64 | null;
   headcountGrowth: QuantitySpec;
   areaGrowth: QuantitySpec;
   phases: string[];
@@ -918,7 +919,7 @@ export interface GrowthPlan extends EntityHeader {
   expansionElementIds: string[];
   reserveAreas: string[];
   infrastructureHeadroom: string[];
-  budgetEnvelope: number | null;
+  budgetEnvelope: Binary64 | null;
   fundingSources: string[];
   riskFactors: string[];
   decisionPoints: string[];
@@ -934,8 +935,8 @@ export interface SustainabilityRequirement extends EntityHeader {
   topic: string;
   target: string | null;
   metric: string | null;
-  baseline: number | null;
-  targetValue: number | null;
+  baseline: Binary64 | null;
+  targetValue: Binary64 | null;
   unit: string | null;
   certification: string[];
   standards: string[];
@@ -946,8 +947,8 @@ export interface SustainabilityRequirement extends EntityHeader {
   waterStrategy: string[];
   wasteStrategy: string[];
   biodiversity: string[];
-  embodiedCarbon: number | null;
-  operationalCarbon: number | null;
+  embodiedCarbon: Binary64 | null;
+  operationalCarbon: Binary64 | null;
   reportingRequirements: string[];
   verificationPlan: string | null;
   ownerId: string | null;
@@ -980,12 +981,12 @@ export type CostBasis = "capital" | "operational" | "lifecycle" | "replacement" 
 export interface CostRequirement extends EntityHeader {
   costItem: string;
   basis: CostBasis;
-  amount: number | null;
+  amount: Binary64 | null;
   currency: string;
   quantityBasis: string | null;
-  unitCost: number | null;
-  contingencyPercent: number | null;
-  escalationRate: number | null;
+  unitCost: Binary64 | null;
+  contingencyPercent: Binary64 | null;
+  escalationRate: Binary64 | null;
   fundingSource: string | null;
   elementIds: string[];
   requirementIds: string[];
@@ -1027,7 +1028,7 @@ export interface Risk extends EntityHeader {
   category: string;
   probability: RiskLevel;
   impact: RiskLevel;
-  riskScore: number | null;
+  riskScore: Binary64 | null;
   causes: string[];
   effects: string[];
   affectedElementIds: string[];
@@ -1061,7 +1062,7 @@ export interface Conflict extends EntityHeader {
   decisionId: string | null;
   stakeholderIds: string[];
   requirementIds: string[];
-  costImpact: number | null;
+  costImpact: Binary64 | null;
   scheduleImpact: string | null;
   qualityImpact: string[];
   resolutionStatus: ValidationStatus;
@@ -1088,7 +1089,7 @@ export interface Requirement extends EntityHeader {
   validationStatus: ValidationStatus;
   conflictIds: string[];
   riskIds: string[];
-  costEstimate: number | null;
+  costEstimate: Binary64 | null;
   scheduleConstraint: string | null;
   regulatoryRefs: string[];
   traceLinks: TraceLink[];
@@ -1100,7 +1101,7 @@ export interface PriorityRecord extends EntityHeader {
   subjectKind: string;
   rankedPriority: Priority;
   rank: number | null;
-  weight: number | null;
+  weight: Binary64 | null;
   rationale: TextField | null;
   decisionId: string | null;
   stakeholderIds: string[];
@@ -1110,7 +1111,7 @@ export interface PriorityRecord extends EntityHeader {
   dependencies: string[];
   conflicts: string[];
   scoringMethod: string | null;
-  score: number | null;
+  score: Binary64 | null;
   criteria: string[];
   approvedBy: string | null;
   approvalDate: string | null;
@@ -1125,11 +1126,11 @@ export interface Scenario extends EntityHeader {
   elementIds: string[];
   requirementIds: string[];
   growthPlanId: string | null;
-  probability: number | null;
+  probability: Binary64 | null;
   impactSummary: TextField | null;
-  costDelta: number | null;
-  areaDelta: number | null;
-  headcountDelta: number | null;
+  costDelta: Binary64 | null;
+  areaDelta: Binary64 | null;
+  headcountDelta: Binary64 | null;
   scheduleDelta: string | null;
   riskIds: string[];
   optionIds: string[];
@@ -1144,9 +1145,9 @@ export interface OptionEvaluation extends EntityHeader {
   optionDescription: TextField;
   scenarioId: string | null;
   criteriaIds: string[];
-  scores: number[];
-  weightedScore: number | null;
-  costEstimate: number | null;
+  scores: Binary64[];
+  weightedScore: Binary64 | null;
+  costEstimate: Binary64 | null;
   scheduleEstimate: string | null;
   riskSummary: string[];
   benefits: string[];
@@ -1175,7 +1176,7 @@ export interface Decision extends EntityHeader {
   reversalConditions: string[];
   impactedRequirementIds: string[];
   impactedElementIds: string[];
-  costImpact: number | null;
+  costImpact: Binary64 | null;
   scheduleImpact: string | null;
   riskImpact: string[];
   approvalStatus: ValidationStatus;
@@ -1208,23 +1209,23 @@ export interface ValidationRecord extends EntityHeader {
 export interface PerformanceCriterion extends EntityHeader {
   criterion: string;
   metric: string;
-  target: number | null;
+  target: Binary64 | null;
   unit: string | null;
-  minimum: number | null;
-  maximum: number | null;
+  minimum: Binary64 | null;
+  maximum: Binary64 | null;
   measurementMethod: string | null;
   frequency: string | null;
   requirementIds: string[];
   elementIds: string[];
-  baseline: number | null;
+  baseline: Binary64 | null;
   benchmarkRef: string | null;
-  weight: number | null;
+  weight: Binary64 | null;
   dataSource: string | null;
   reportingCadence: string | null;
   ownerId: string | null;
   verificationPlan: string | null;
-  penaltyThreshold: number | null;
-  incentiveThreshold: number | null;
+  penaltyThreshold: Binary64 | null;
+  incentiveThreshold: Binary64 | null;
 }
 
 export interface QualityRecord extends EntityHeader {
@@ -1397,7 +1398,7 @@ export interface ChangeRecord extends EntityHeader {
   impactedEntityIds: string[];
   beforeSnapshot: string | null;
   afterSnapshot: string | null;
-  costImpact: number | null;
+  costImpact: Binary64 | null;
   scheduleImpact: string | null;
   riskImpact: string[];
   approvalStatus: ValidationStatus;
@@ -1442,7 +1443,7 @@ export interface AnalysisRecord extends EntityHeader {
   charts: string[];
   runBy: string | null;
   runAt: string | null;
-  durationMs: number | null;
+  durationMs: bigint | null;
   toolVersion: string | null;
   scenarioId: string | null;
   reportId: string | null;
@@ -1493,7 +1494,7 @@ export interface SearchFilter extends EntityHeader {
   isPublic: boolean;
   createdBy: string | null;
   lastUsed: string | null;
-  useCount: number;
+  useCount: bigint;
   pinned: boolean;
 }
 
@@ -1508,7 +1509,7 @@ export interface StatusRecord extends EntityHeader {
   blockers: string[];
   nextActions: string[];
   dueDate: string | null;
-  progressPercent: number | null;
+  progressPercent: Binary64 | null;
   health: string | null;
   escalationLevel: string | null;
   relatedIssueIds: string[];
@@ -1535,7 +1536,7 @@ export interface Workshop extends EntityHeader {
   followUpActions: string[];
   feedback: TaggedNote[];
   recordingRef: string | null;
-  budget: number | null;
+  budget: Binary64 | null;
   workshopStatus: LifecycleStatus;
   surveyIds: string[];
 }
@@ -1550,7 +1551,7 @@ export interface Survey extends EntityHeader {
   launchDate: string | null;
   closeDate: string | null;
   responseCount: number;
-  responseRate: number | null;
+  responseRate: Binary64 | null;
   findings: string[];
   themes: string[];
   recommendations: string[];
@@ -1620,7 +1621,7 @@ export interface TemplateRecord extends EntityHeader {
   applicability: string[];
   authorId: string | null;
   approvalStatus: ValidationStatus;
-  usageCount: number;
+  usageCount: bigint;
   lastApplied: string | null;
   customizationNotes: string[];
   relatedKnowledgeIds: string[];
@@ -1647,14 +1648,14 @@ export interface KnowledgeRecord extends EntityHeader {
   keywords: string[];
   attachments: string[];
   citations: string[];
-  usageCount: number;
+  usageCount: bigint;
 }
 
 export interface BenchmarkRecord extends EntityHeader {
   benchmarkName: string;
   sector: string;
   metric: string;
-  value: number;
+  value: Binary64;
   unit: string;
   sampleSize: number | null;
   source: string | null;
@@ -1901,11 +1902,46 @@ export const architectProgramArtifactGuardNumber = (value: unknown, at: string, 
 };
 export const architectProgramArtifactGuardInteger = (value: unknown, at: string, bounds: architectProgramArtifactGuardRangeBounds = {}): number =>
   Number.isSafeInteger(value) ? architectProgramArtifactGuardNumber(value, at, bounds) : architectProgramArtifactGuardReject(at, "value is not an integer");
+/** 🔢️ Admits the canonical complete native unsigned64 domain without coercion. */
+export const architectProgramArtifactGuardUnsigned64 = (value:unknown,at:string):bigint =>
+  typeof value==="bigint"&&value>=0n&&value<=18446744073709551615n?value:architectProgramArtifactGuardReject(at,"value is not an unsigned64 bigint");
+/** 🧮️ Canonical native doubles own exact words independently of JSON numeric transport. */
+export function architectProgramArtifactGuardBinary64(value:unknown,at:string):Binary64 {
+  const row=architectProgramArtifactGuardExactObject(value,at,["bits"]);
+  try{return parseBinary64(row);}catch{return architectProgramArtifactGuardReject(at,"value is not an exact unsigned binary64 word");}
+}
+function nullableBinary64(value:unknown,at:string):Binary64|null{return value===null?null:architectProgramArtifactGuardBinary64(value,at);}
+/** 📏️ Admit each literal quantity field as a bit-backed optional native double. */
+export function parseQuantitySpec(value:unknown,at="$"):QuantitySpec{
+  const row=architectProgramArtifactGuardExactObject(value,at,["min","max","target","current","forecast","peak","average","unit"],["unit"]);
+  const out:QuantitySpec={unit:architectProgramArtifactGuardString(row.unit,at+".unit")};
+  if(row.min!==undefined)out.min=architectProgramArtifactGuardBinary64(row.min,at+".min");
+  if(row.max!==undefined)out.max=architectProgramArtifactGuardBinary64(row.max,at+".max");
+  if(row.target!==undefined)out.target=architectProgramArtifactGuardBinary64(row.target,at+".target");
+  if(row.current!==undefined)out.current=architectProgramArtifactGuardBinary64(row.current,at+".current");
+  if(row.forecast!==undefined)out.forecast=architectProgramArtifactGuardBinary64(row.forecast,at+".forecast");
+  if(row.peak!==undefined)out.peak=architectProgramArtifactGuardBinary64(row.peak,at+".peak");
+  if(row.average!==undefined)out.average=architectProgramArtifactGuardBinary64(row.average,at+".average");
+  return out;
+}
 export const architectProgramArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
   members.includes(value as T) ? (value as T) : architectProgramArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
 export const architectProgramArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
   value === expected ? expected : architectProgramArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
+
+
+function architectProgramArtifactGuardHeaderObject(value:unknown,at:string,fields:readonly string[],required:readonly string[]):Readonly<Record<string,unknown>>{
+ const row=architectProgramArtifactGuardExactObject(value,at,fields,[...required,"tags","notes"]);
+ architectProgramArtifactGuardArray(row.tags,at+".tags").forEach((item,index)=>architectProgramArtifactGuardString(item,at+".tags["+index+"]"));
+ architectProgramArtifactGuardArray(row.notes,at+".notes").forEach((item,index)=>{const note=architectProgramArtifactGuardExactObject(item,at+".notes["+index+"]",["tag","text"]);architectProgramArtifactGuardString(note.tag,at+".notes["+index+"].tag");architectProgramArtifactGuardString(note.text,at+".notes["+index+"].text")});
+ if(row.description!==undefined){const text=architectProgramArtifactGuardExactObject(row.description,at+".description",["text","format"],["text"]);architectProgramArtifactGuardString(text.text,at+".description.text");if(text.format!==undefined)architectProgramArtifactGuardString(text.format,at+".description.format")}
+ const timestamp=architectProgramArtifactGuardExactObject(row.timestamps,at+".timestamps",["created","updated","createdBy","updatedBy"],["created","updated"]);
+ architectProgramArtifactGuardString(timestamp.created,at+".timestamps.created");architectProgramArtifactGuardString(timestamp.updated,at+".timestamps.updated");
+ if(timestamp.createdBy!==undefined)architectProgramArtifactGuardString(timestamp.createdBy,at+".timestamps.createdBy");
+ if(timestamp.updatedBy!==undefined)architectProgramArtifactGuardString(timestamp.updatedBy,at+".timestamps.updatedBy");
+ return row;
+}
 
 export function parseProgramArtifact(value: unknown, at = "$"): ProgramArtifact {
   const row = architectProgramArtifactGuardExactObject(value, at, PROGRAM_ARTIFACT_FIELDS);
@@ -1986,19 +2022,30 @@ export function parseProgramArtifact(value: unknown, at = "$"): ProgramArtifact 
 }
 
 export function parseAccessRule(value: unknown, at = "$"): AccessRule {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectIds","resourceIds","accessLevel","accessMode","authentication","authorization","timeRestrictions","escortPolicy","visitorPolicy","emergencyOverride","auditRequired","badgeRequired","biometricRequired","zoneIds","exceptions","regulatoryBasis","enforcementMethod","revocationPolicy","trainingRequired","ownerId"], ["id","name","status","priority","ownership","timestamps","subjectIds","resourceIds","accessLevel","accessMode","authentication","authorization","timeRestrictions","escortPolicy","visitorPolicy","emergencyOverride","auditRequired","badgeRequired","biometricRequired","zoneIds","exceptions","regulatoryBasis","enforcementMethod","revocationPolicy","trainingRequired","ownerId"]) as unknown as AccessRule;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectIds","resourceIds","accessLevel","accessMode","authentication","authorization","timeRestrictions","escortPolicy","visitorPolicy","emergencyOverride","auditRequired","badgeRequired","biometricRequired","zoneIds","exceptions","regulatoryBasis","enforcementMethod","revocationPolicy","trainingRequired","ownerId"], ["id","name","status","priority","ownership","timestamps","subjectIds","resourceIds","accessLevel","accessMode","authentication","authorization","timeRestrictions","escortPolicy","visitorPolicy","emergencyOverride","auditRequired","badgeRequired","biometricRequired","zoneIds","exceptions","regulatoryBasis","enforcementMethod","revocationPolicy","trainingRequired","ownerId"]) as unknown as AccessRule;
 }
 
 export function parseAccessibilityRequirement(value: unknown, at = "$"): AccessibilityRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","standard","level","userProfileIds","elementIds","routeIds","clearWidthM","clearHeightM","turningCircleM","rampSlope","liftRequired","tactileGuidance","hearingLoop","visualContrast","signageRequirements","controlsHeight","emergencyEvacuation","serviceAnimalPolicy","companionSeating","verificationPlan","exceptions","wcagConformance","universalDesignPrinciples"], ["id","name","status","priority","ownership","timestamps","standard","level","userProfileIds","elementIds","routeIds","clearWidthM","clearHeightM","turningCircleM","rampSlope","liftRequired","tactileGuidance","hearingLoop","visualContrast","signageRequirements","controlsHeight","emergencyEvacuation","serviceAnimalPolicy","companionSeating","verificationPlan","exceptions","wcagConformance","universalDesignPrinciples"]) as unknown as AccessibilityRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","standard","level","userProfileIds","elementIds","routeIds","clearWidthM","clearHeightM","turningCircleM","rampSlope","liftRequired","tactileGuidance","hearingLoop","visualContrast","signageRequirements","controlsHeight","emergencyEvacuation","serviceAnimalPolicy","companionSeating","verificationPlan","exceptions","wcagConformance","universalDesignPrinciples"], ["id","name","status","priority","ownership","timestamps","standard","level","userProfileIds","elementIds","routeIds","clearWidthM","clearHeightM","turningCircleM","rampSlope","liftRequired","tactileGuidance","hearingLoop","visualContrast","signageRequirements","controlsHeight","emergencyEvacuation","serviceAnimalPolicy","companionSeating","verificationPlan","exceptions","wcagConformance","universalDesignPrinciples"]);
+  nullableBinary64(row.clearWidthM, at+".clearWidthM");
+  nullableBinary64(row.clearHeightM, at+".clearHeightM");
+  nullableBinary64(row.turningCircleM, at+".turningCircleM");
+  nullableBinary64(row.rampSlope, at+".rampSlope");
+  return row as unknown as AccessibilityRequirement;
 }
 
 export function parseActivity(value: unknown, at = "$"): Activity {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","frequency","duration","intensity","participants","equipmentIds","spaceRequirements","environmentalNeeds","privacyNeeds","accessibilityNeeds","adjacentActivities","sequencing","peakPeriods","workflowSteps","inputs","outputs","userProfileIds","functionIds","performanceIndicators","activityType","locationContext","temporalPattern","supervisionLevel"], ["id","name","status","priority","ownership","timestamps","code","category","frequency","duration","intensity","participants","equipmentIds","spaceRequirements","environmentalNeeds","privacyNeeds","accessibilityNeeds","adjacentActivities","sequencing","peakPeriods","workflowSteps","inputs","outputs","userProfileIds","functionIds","performanceIndicators","activityType","locationContext","temporalPattern","supervisionLevel"]) as unknown as Activity;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","frequency","duration","intensity","participants","equipmentIds","spaceRequirements","environmentalNeeds","privacyNeeds","accessibilityNeeds","adjacentActivities","sequencing","peakPeriods","workflowSteps","inputs","outputs","userProfileIds","functionIds","performanceIndicators","activityType","locationContext","temporalPattern","supervisionLevel"], ["id","name","status","priority","ownership","timestamps","code","category","frequency","duration","intensity","participants","equipmentIds","spaceRequirements","environmentalNeeds","privacyNeeds","accessibilityNeeds","adjacentActivities","sequencing","peakPeriods","workflowSteps","inputs","outputs","userProfileIds","functionIds","performanceIndicators","activityType","locationContext","temporalPattern","supervisionLevel"]);
+  parseQuantitySpec(row.participants,at+".participants");
+  return row as unknown as Activity;
 }
 
 export function parseAdjacency(value: unknown, at = "$"): Adjacency {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","elementAId","elementBId","kind","connection","separations","weight","rationale","distanceMaxM","distanceMinM","levelConstraint","accessPath","sharedWall","sharedEntry","trafficIsolation","circulationOverlap","conflictIds","normalized","verificationStatus","sourceRelationshipId","internalExternalAccess"], ["id","name","status","priority","ownership","timestamps","elementAId","elementBId","kind","connection","separations","weight","rationale","distanceMaxM","distanceMinM","levelConstraint","accessPath","sharedWall","sharedEntry","trafficIsolation","circulationOverlap","conflictIds","normalized","verificationStatus","sourceRelationshipId","internalExternalAccess"]) as unknown as Adjacency;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","elementAId","elementBId","kind","connection","separations","weight","rationale","distanceMaxM","distanceMinM","levelConstraint","accessPath","sharedWall","sharedEntry","trafficIsolation","circulationOverlap","conflictIds","normalized","verificationStatus","sourceRelationshipId","internalExternalAccess"], ["id","name","status","priority","ownership","timestamps","elementAId","elementBId","kind","connection","separations","weight","rationale","distanceMaxM","distanceMinM","levelConstraint","accessPath","sharedWall","sharedEntry","trafficIsolation","circulationOverlap","conflictIds","normalized","verificationStatus","sourceRelationshipId","internalExternalAccess"]);
+  architectProgramArtifactGuardBinary64(row.weight, at+".weight");
+  nullableBinary64(row.distanceMaxM, at+".distanceMaxM");
+  nullableBinary64(row.distanceMinM, at+".distanceMinM");
+  return row as unknown as Adjacency;
 }
 
 export function parseAdjacencyKind(value: unknown, at = "$"): AdjacencyKind {
@@ -2006,83 +2053,120 @@ export function parseAdjacencyKind(value: unknown, at = "$"): AdjacencyKind {
 }
 
 export function parseAnalysisRecord(value: unknown, at = "$"): AnalysisRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","title","parameters","inputEntityIds","outputSummary","findings","metrics","charts","runBy","runAt","durationMs","toolVersion","scenarioId","reportId","confidence","limitations","recommendations","rawResultRef"], ["id","name","status","priority","ownership","timestamps","kind","title","parameters","inputEntityIds","outputSummary","findings","metrics","charts","runBy","runAt","durationMs","toolVersion","scenarioId","reportId","confidence","limitations","recommendations","rawResultRef"]) as unknown as AnalysisRecord;
+  const row=architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","title","parameters","inputEntityIds","outputSummary","findings","metrics","charts","runBy","runAt","durationMs","toolVersion","scenarioId","reportId","confidence","limitations","recommendations","rawResultRef"], ["id","name","status","priority","ownership","timestamps","kind","title","parameters","inputEntityIds","outputSummary","findings","metrics","charts","runBy","runAt","durationMs","toolVersion","scenarioId","reportId","confidence","limitations","recommendations","rawResultRef"]);
+  if(row["durationMs"]!==null)architectProgramArtifactGuardUnsigned64(row["durationMs"],`${at}.durationMs`);
+  return row as unknown as AnalysisRecord;
 }
 
 export function parseApprovalRecord(value: unknown, at = "$"): ApprovalRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","approvalType","subjectId","approverIds","approvalDate","conditions","approvalStatus","expiryDate","delegationChain","evidenceRefs","relatedDecisionId","relatedChangeId","authorityBasis","signatureMethod","rejectionReason","resubmissionDate","notificationList","workflowStep","version","auditTrailRef"], ["id","name","status","priority","ownership","timestamps","approvalType","subjectId","approverIds","approvalDate","conditions","approvalStatus","expiryDate","delegationChain","evidenceRefs","relatedDecisionId","relatedChangeId","authorityBasis","signatureMethod","rejectionReason","resubmissionDate","notificationList","workflowStep","version","auditTrailRef"]) as unknown as ApprovalRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","approvalType","subjectId","approverIds","approvalDate","conditions","approvalStatus","expiryDate","delegationChain","evidenceRefs","relatedDecisionId","relatedChangeId","authorityBasis","signatureMethod","rejectionReason","resubmissionDate","notificationList","workflowStep","version","auditTrailRef"], ["id","name","status","priority","ownership","timestamps","approvalType","subjectId","approverIds","approvalDate","conditions","approvalStatus","expiryDate","delegationChain","evidenceRefs","relatedDecisionId","relatedChangeId","authorityBasis","signatureMethod","rejectionReason","resubmissionDate","notificationList","workflowStep","version","auditTrailRef"]) as unknown as ApprovalRecord;
 }
 
 export function parseAssumption(value: unknown, at = "$"): Assumption {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","statement","basis","confidenceLevel","impactIfFalse","relatedEntityIds","validationStatus","validatedBy","validationDate","ownerId","reviewCycle","source","category","dependencies","mitigation","linkedRequirementIds","linkedRiskIds","expirationDate","statusNotes","artifactRefs"], ["id","name","status","priority","ownership","timestamps","statement","basis","confidenceLevel","impactIfFalse","relatedEntityIds","validationStatus","validatedBy","validationDate","ownerId","reviewCycle","source","category","dependencies","mitigation","linkedRequirementIds","linkedRiskIds","expirationDate","statusNotes","artifactRefs"]) as unknown as Assumption;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","statement","basis","confidenceLevel","impactIfFalse","relatedEntityIds","validationStatus","validatedBy","validationDate","ownerId","reviewCycle","source","category","dependencies","mitigation","linkedRequirementIds","linkedRiskIds","expirationDate","statusNotes","artifactRefs"], ["id","name","status","priority","ownership","timestamps","statement","basis","confidenceLevel","impactIfFalse","relatedEntityIds","validationStatus","validatedBy","validationDate","ownerId","reviewCycle","source","category","dependencies","mitigation","linkedRequirementIds","linkedRiskIds","expirationDate","statusNotes","artifactRefs"]) as unknown as Assumption;
 }
 
 export function parseAuditEvent(value: unknown, at = "$"): AuditEvent {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","action","actorId","subjectId","subjectKind","timestamp","details","beforeState","afterState","ipAddress","client","sessionId","changeRecordId","traceLink","success","errorMessage","correlationId","complianceTags","retentionUntil"], ["id","name","status","priority","ownership","timestamps","action","actorId","subjectId","subjectKind","timestamp","details","beforeState","afterState","ipAddress","client","sessionId","changeRecordId","traceLink","success","errorMessage","correlationId","complianceTags","retentionUntil"]) as unknown as AuditEvent;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","action","actorId","subjectId","subjectKind","timestamp","details","beforeState","afterState","ipAddress","client","sessionId","changeRecordId","traceLink","success","errorMessage","correlationId","complianceTags","retentionUntil"], ["id","name","status","priority","ownership","timestamps","action","actorId","subjectId","subjectKind","timestamp","details","beforeState","afterState","ipAddress","client","sessionId","changeRecordId","traceLink","success","errorMessage","correlationId","complianceTags","retentionUntil"]) as unknown as AuditEvent;
 }
 
 export function parseBenchmarkRecord(value: unknown, at = "$"): BenchmarkRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","benchmarkName","sector","metric","value","unit","sampleSize","source","collectionYear","geography","buildingType","confidence","methodology","applicableElementKinds","relatedRequirementIds","comparisonNotes","limitations","license","knowledgeId","lastVerified"], ["id","name","status","priority","ownership","timestamps","benchmarkName","sector","metric","value","unit","sampleSize","source","collectionYear","geography","buildingType","confidence","methodology","applicableElementKinds","relatedRequirementIds","comparisonNotes","limitations","license","knowledgeId","lastVerified"]) as unknown as BenchmarkRecord;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","benchmarkName","sector","metric","value","unit","sampleSize","source","collectionYear","geography","buildingType","confidence","methodology","applicableElementKinds","relatedRequirementIds","comparisonNotes","limitations","license","knowledgeId","lastVerified"], ["id","name","status","priority","ownership","timestamps","benchmarkName","sector","metric","value","unit","sampleSize","source","collectionYear","geography","buildingType","confidence","methodology","applicableElementKinds","relatedRequirementIds","comparisonNotes","limitations","license","knowledgeId","lastVerified"]);
+  if (row["sampleSize"] !== null) architectProgramArtifactGuardInteger(row["sampleSize"], `${at}.sampleSize`, { minimum: 0, maximum: 4294967295 });
+  if (row["collectionYear"] !== null) architectProgramArtifactGuardInteger(row["collectionYear"], `${at}.collectionYear`, { minimum: 0, maximum: 4294967295 });
+  architectProgramArtifactGuardBinary64(row.value, at+".value");
+  return row as unknown as BenchmarkRecord;
 }
 
 export function parseChangeRecord(value: unknown, at = "$"): ChangeRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","changeType","summary","reason","requestedBy","approvedBy","changeDate","effectiveDate","impactedEntityIds","beforeSnapshot","afterSnapshot","costImpact","scheduleImpact","riskImpact","approvalStatus","rollbackPlan","communicationPlan","versionFrom","versionTo","auditEventIds"], ["id","name","status","priority","ownership","timestamps","changeType","summary","reason","requestedBy","approvedBy","changeDate","effectiveDate","impactedEntityIds","beforeSnapshot","afterSnapshot","costImpact","scheduleImpact","riskImpact","approvalStatus","rollbackPlan","communicationPlan","versionFrom","versionTo","auditEventIds"]) as unknown as ChangeRecord;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","changeType","summary","reason","requestedBy","approvedBy","changeDate","effectiveDate","impactedEntityIds","beforeSnapshot","afterSnapshot","costImpact","scheduleImpact","riskImpact","approvalStatus","rollbackPlan","communicationPlan","versionFrom","versionTo","auditEventIds"], ["id","name","status","priority","ownership","timestamps","changeType","summary","reason","requestedBy","approvedBy","changeDate","effectiveDate","impactedEntityIds","beforeSnapshot","afterSnapshot","costImpact","scheduleImpact","riskImpact","approvalStatus","rollbackPlan","communicationPlan","versionFrom","versionTo","auditEventIds"]);
+  nullableBinary64(row.costImpact, at+".costImpact");
+  return row as unknown as ChangeRecord;
 }
 
 export function parseCollaborationRecord(value: unknown, at = "$"): CollaborationRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","sessionType","title","participants","facilitatorId","startTime","endTime","location","agenda","outcomes","actionItems","decisionIds","issueIds","documentIds","recordingRef","feedback","followUpDate","workshopId","surveyId"], ["id","name","status","priority","ownership","timestamps","sessionType","title","participants","facilitatorId","startTime","endTime","location","agenda","outcomes","actionItems","decisionIds","issueIds","documentIds","recordingRef","feedback","followUpDate","workshopId","surveyId"]) as unknown as CollaborationRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","sessionType","title","participants","facilitatorId","startTime","endTime","location","agenda","outcomes","actionItems","decisionIds","issueIds","documentIds","recordingRef","feedback","followUpDate","workshopId","surveyId"], ["id","name","status","priority","ownership","timestamps","sessionType","title","participants","facilitatorId","startTime","endTime","location","agenda","outcomes","actionItems","decisionIds","issueIds","documentIds","recordingRef","feedback","followUpDate","workshopId","surveyId"]) as unknown as CollaborationRecord;
 }
 
 export function parseCommunicationRequirement(value: unknown, at = "$"): CommunicationRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","channel","audienceIds","messageTypes","frequency","medium","language","accessibility","emergencyUse","twoWay","recordingPolicy","signageLocations","technology","escalationPath","feedbackLoop","privacyControls","elementIds","standards","ownerId","templates"], ["id","name","status","priority","ownership","timestamps","channel","audienceIds","messageTypes","frequency","medium","language","accessibility","emergencyUse","twoWay","recordingPolicy","signageLocations","technology","escalationPath","feedbackLoop","privacyControls","elementIds","standards","ownerId","templates"]) as unknown as CommunicationRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","channel","audienceIds","messageTypes","frequency","medium","language","accessibility","emergencyUse","twoWay","recordingPolicy","signageLocations","technology","escalationPath","feedbackLoop","privacyControls","elementIds","standards","ownerId","templates"], ["id","name","status","priority","ownership","timestamps","channel","audienceIds","messageTypes","frequency","medium","language","accessibility","emergencyUse","twoWay","recordingPolicy","signageLocations","technology","escalationPath","feedbackLoop","privacyControls","elementIds","standards","ownerId","templates"]) as unknown as CommunicationRequirement;
 }
 
 export function parseComplianceRecord(value: unknown, at = "$"): ComplianceRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","standardRef","obligation","complianceStatus","evidenceRefs","auditorId","auditDate","nextReview","affectedEntityIds","gapAnalysis","remediationPlan","ownerId","severity","regulatoryBody","certificationTarget","waiverStatus","relatedRequirementIds","monitoringMethod","reportingFrequency","penalties","correctiveActions","artifactRefs"], ["id","name","status","priority","ownership","timestamps","standardRef","obligation","complianceStatus","evidenceRefs","auditorId","auditDate","nextReview","affectedEntityIds","gapAnalysis","remediationPlan","ownerId","severity","regulatoryBody","certificationTarget","waiverStatus","relatedRequirementIds","monitoringMethod","reportingFrequency","penalties","correctiveActions","artifactRefs"]) as unknown as ComplianceRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","standardRef","obligation","complianceStatus","evidenceRefs","auditorId","auditDate","nextReview","affectedEntityIds","gapAnalysis","remediationPlan","ownerId","severity","regulatoryBody","certificationTarget","waiverStatus","relatedRequirementIds","monitoringMethod","reportingFrequency","penalties","correctiveActions","artifactRefs"], ["id","name","status","priority","ownership","timestamps","standardRef","obligation","complianceStatus","evidenceRefs","auditorId","auditDate","nextReview","affectedEntityIds","gapAnalysis","remediationPlan","ownerId","severity","regulatoryBody","certificationTarget","waiverStatus","relatedRequirementIds","monitoringMethod","reportingFrequency","penalties","correctiveActions","artifactRefs"]) as unknown as ComplianceRecord;
 }
 
 export function parseConflict(value: unknown, at = "$"): Conflict {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","summary","entityAId","entityBId","severity","detectedBy","detectionDate","tradeOffOptions","recommendedResolution","decisionId","stakeholderIds","requirementIds","costImpact","scheduleImpact","qualityImpact","resolutionStatus","ownerId","escalationLevel","relatedRiskIds"], ["id","name","status","priority","ownership","timestamps","kind","summary","entityAId","entityBId","severity","detectedBy","detectionDate","tradeOffOptions","recommendedResolution","decisionId","stakeholderIds","requirementIds","costImpact","scheduleImpact","qualityImpact","resolutionStatus","ownerId","escalationLevel","relatedRiskIds"]) as unknown as Conflict;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","summary","entityAId","entityBId","severity","detectedBy","detectionDate","tradeOffOptions","recommendedResolution","decisionId","stakeholderIds","requirementIds","costImpact","scheduleImpact","qualityImpact","resolutionStatus","ownerId","escalationLevel","relatedRiskIds"], ["id","name","status","priority","ownership","timestamps","kind","summary","entityAId","entityBId","severity","detectedBy","detectionDate","tradeOffOptions","recommendedResolution","decisionId","stakeholderIds","requirementIds","costImpact","scheduleImpact","qualityImpact","resolutionStatus","ownerId","escalationLevel","relatedRiskIds"]);
+  nullableBinary64(row.costImpact, at+".costImpact");
+  return row as unknown as Conflict;
 }
 
 export function parseConstraintRecord(value: unknown, at = "$"): ConstraintRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","constraintType","summary","severity","affectedEntityIds","source","regulatoryBasis","mitigationOptions","ownerId","effectiveDate","expiryDate","waiverStatus","waiverApprover","impactAssessment","resolutionPlan","relatedRequirementIds","relatedDecisionIds","monitoringFrequency","complianceStatus","exceptions","traceLinks","escalationContactId"], ["id","name","status","priority","ownership","timestamps","constraintType","summary","severity","affectedEntityIds","source","regulatoryBasis","mitigationOptions","ownerId","effectiveDate","expiryDate","waiverStatus","waiverApprover","impactAssessment","resolutionPlan","relatedRequirementIds","relatedDecisionIds","monitoringFrequency","complianceStatus","exceptions","traceLinks","escalationContactId"]) as unknown as ConstraintRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","constraintType","summary","severity","affectedEntityIds","source","regulatoryBasis","mitigationOptions","ownerId","effectiveDate","expiryDate","waiverStatus","waiverApprover","impactAssessment","resolutionPlan","relatedRequirementIds","relatedDecisionIds","monitoringFrequency","complianceStatus","exceptions","traceLinks","escalationContactId"], ["id","name","status","priority","ownership","timestamps","constraintType","summary","severity","affectedEntityIds","source","regulatoryBasis","mitigationOptions","ownerId","effectiveDate","expiryDate","waiverStatus","waiverApprover","impactAssessment","resolutionPlan","relatedRequirementIds","relatedDecisionIds","monitoringFrequency","complianceStatus","exceptions","traceLinks","escalationContactId"]) as unknown as ConstraintRecord;
 }
 
 export function parseCostRequirement(value: unknown, at = "$"): CostRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","costItem","basis","amount","currency","quantityBasis","unitCost","contingencyPercent","escalationRate","fundingSource","elementIds","requirementIds","phase","cashFlowProfile","valueEngineeringNotes","benchmarkRef","approvalStatus","ownerId","assumptions","sensitivityFactors"], ["id","name","status","priority","ownership","timestamps","costItem","basis","amount","currency","quantityBasis","unitCost","contingencyPercent","escalationRate","fundingSource","elementIds","requirementIds","phase","cashFlowProfile","valueEngineeringNotes","benchmarkRef","approvalStatus","ownerId","assumptions","sensitivityFactors"]) as unknown as CostRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","costItem","basis","amount","currency","quantityBasis","unitCost","contingencyPercent","escalationRate","fundingSource","elementIds","requirementIds","phase","cashFlowProfile","valueEngineeringNotes","benchmarkRef","approvalStatus","ownerId","assumptions","sensitivityFactors"], ["id","name","status","priority","ownership","timestamps","costItem","basis","amount","currency","quantityBasis","unitCost","contingencyPercent","escalationRate","fundingSource","elementIds","requirementIds","phase","cashFlowProfile","valueEngineeringNotes","benchmarkRef","approvalStatus","ownerId","assumptions","sensitivityFactors"]);
+  nullableBinary64(row.amount, at+".amount");
+  nullableBinary64(row.unitCost, at+".unitCost");
+  nullableBinary64(row.contingencyPercent, at+".contingencyPercent");
+  nullableBinary64(row.escalationRate, at+".escalationRate");
+  return row as unknown as CostRequirement;
 }
 
 export function parseDecision(value: unknown, at = "$"): Decision {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","decisionStatement","context","optionsConsidered","selectedOptionId","rationale","decisionMakerIds","consultedIds","informedIds","decisionDate","effectiveDate","reversalConditions","impactedRequirementIds","impactedElementIds","costImpact","scheduleImpact","riskImpact","approvalStatus","meetingRef","artifactRefs"], ["id","name","status","priority","ownership","timestamps","decisionStatement","context","optionsConsidered","selectedOptionId","rationale","decisionMakerIds","consultedIds","informedIds","decisionDate","effectiveDate","reversalConditions","impactedRequirementIds","impactedElementIds","costImpact","scheduleImpact","riskImpact","approvalStatus","meetingRef","artifactRefs"]) as unknown as Decision;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","decisionStatement","context","optionsConsidered","selectedOptionId","rationale","decisionMakerIds","consultedIds","informedIds","decisionDate","effectiveDate","reversalConditions","impactedRequirementIds","impactedElementIds","costImpact","scheduleImpact","riskImpact","approvalStatus","meetingRef","artifactRefs"], ["id","name","status","priority","ownership","timestamps","decisionStatement","context","optionsConsidered","selectedOptionId","rationale","decisionMakerIds","consultedIds","informedIds","decisionDate","effectiveDate","reversalConditions","impactedRequirementIds","impactedElementIds","costImpact","scheduleImpact","riskImpact","approvalStatus","meetingRef","artifactRefs"]);
+  nullableBinary64(row.costImpact, at+".costImpact");
+  return row as unknown as Decision;
 }
 
 export function parseDeliveryConstraint(value: unknown, at = "$"): DeliveryConstraint {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","constraintType","constraintDetails","phase","hardDeadline","softDeadline","impactedElementIds","impactedRequirementIds","workHours","noiseRestrictions","accessRestrictions","siteLogistics","procurementLeadTime","approvalGates","occupancyConstraints","weatherWindows","penaltyClauses","mitigationOptions","ownerId","riskIds","constraintStatus"], ["id","name","status","priority","ownership","timestamps","constraintType","constraintDetails","phase","hardDeadline","softDeadline","impactedElementIds","impactedRequirementIds","workHours","noiseRestrictions","accessRestrictions","siteLogistics","procurementLeadTime","approvalGates","occupancyConstraints","weatherWindows","penaltyClauses","mitigationOptions","ownerId","riskIds","constraintStatus"]) as unknown as DeliveryConstraint;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","constraintType","constraintDetails","phase","hardDeadline","softDeadline","impactedElementIds","impactedRequirementIds","workHours","noiseRestrictions","accessRestrictions","siteLogistics","procurementLeadTime","approvalGates","occupancyConstraints","weatherWindows","penaltyClauses","mitigationOptions","ownerId","riskIds","constraintStatus"], ["id","name","status","priority","ownership","timestamps","constraintType","constraintDetails","phase","hardDeadline","softDeadline","impactedElementIds","impactedRequirementIds","workHours","noiseRestrictions","accessRestrictions","siteLogistics","procurementLeadTime","approvalGates","occupancyConstraints","weatherWindows","penaltyClauses","mitigationOptions","ownerId","riskIds","constraintStatus"]) as unknown as DeliveryConstraint;
 }
 
 export function parseArtifactRecord(value: unknown, at = "$"): ArtifactRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","documentType","title","version","fileRef","format","authorIds","reviewerIds","approverIds","issueDate","revisionDate","distributionList","relatedEntityIds","classification","retentionPeriod","accessControls","supersedes","documentStatus","checksum","sourceSystem"], ["id","name","status","priority","ownership","timestamps","documentType","title","version","fileRef","format","authorIds","reviewerIds","approverIds","issueDate","revisionDate","distributionList","relatedEntityIds","classification","retentionPeriod","accessControls","supersedes","documentStatus","checksum","sourceSystem"]) as unknown as ArtifactRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","documentType","title","version","fileRef","format","authorIds","reviewerIds","approverIds","issueDate","revisionDate","distributionList","relatedEntityIds","classification","retentionPeriod","accessControls","supersedes","documentStatus","checksum","sourceSystem"], ["id","name","status","priority","ownership","timestamps","documentType","title","version","fileRef","format","authorIds","reviewerIds","approverIds","issueDate","revisionDate","distributionList","relatedEntityIds","classification","retentionPeriod","accessControls","supersedes","documentStatus","checksum","sourceSystem"]) as unknown as ArtifactRecord;
 }
 
 export function parseEnvironmentalRequirement(value: unknown, at = "$"): EnvironmentalRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","parameterKind","parameter","targetValue","unit","minValue","maxValue","comfortBand","measurementMethod","monitoringFrequency","elementIds","occupancyBasis","seasonalVariation","energyImplications","standards","certificationTargets","outdoorConditions","ventilationStrategy","daylightTarget","acousticTarget","iaqTarget","verificationPlan"], ["id","name","status","priority","ownership","timestamps","parameterKind","parameter","targetValue","unit","minValue","maxValue","comfortBand","measurementMethod","monitoringFrequency","elementIds","occupancyBasis","seasonalVariation","energyImplications","standards","certificationTargets","outdoorConditions","ventilationStrategy","daylightTarget","acousticTarget","iaqTarget","verificationPlan"]) as unknown as EnvironmentalRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","parameterKind","parameter","targetValue","unit","minValue","maxValue","comfortBand","measurementMethod","monitoringFrequency","elementIds","occupancyBasis","seasonalVariation","energyImplications","standards","certificationTargets","outdoorConditions","ventilationStrategy","daylightTarget","acousticTarget","iaqTarget","verificationPlan"], ["id","name","status","priority","ownership","timestamps","parameterKind","parameter","targetValue","unit","minValue","maxValue","comfortBand","measurementMethod","monitoringFrequency","elementIds","occupancyBasis","seasonalVariation","energyImplications","standards","certificationTargets","outdoorConditions","ventilationStrategy","daylightTarget","acousticTarget","iaqTarget","verificationPlan"]);
+  nullableBinary64(row.targetValue, at+".targetValue");
+  nullableBinary64(row.minValue, at+".minValue");
+  nullableBinary64(row.maxValue, at+".maxValue");
+  return row as unknown as EnvironmentalRequirement;
 }
 
 export function parseEquipment(value: unknown, at = "$"): Equipment {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","manufacturer","model","quantity","dimensions","weightKg","powerKw","utilityConnections","ventilation","noiseLevelDb","clearance","mounting","elementIds","activityIds","maintenanceAccess","lifecycleYears","replacementCost","standards","supplier","activityLinkIds","installationRequirements","commissioningNotes","spareParts"], ["id","name","status","priority","ownership","timestamps","code","category","manufacturer","model","quantity","dimensions","weightKg","powerKw","utilityConnections","ventilation","noiseLevelDb","clearance","mounting","elementIds","activityIds","maintenanceAccess","lifecycleYears","replacementCost","standards","supplier","activityLinkIds","installationRequirements","commissioningNotes","spareParts"]) as unknown as Equipment;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","manufacturer","model","quantity","dimensions","weightKg","powerKw","utilityConnections","ventilation","noiseLevelDb","clearance","mounting","elementIds","activityIds","maintenanceAccess","lifecycleYears","replacementCost","standards","supplier","activityLinkIds","installationRequirements","commissioningNotes","spareParts"], ["id","name","status","priority","ownership","timestamps","code","category","manufacturer","model","quantity","dimensions","weightKg","powerKw","utilityConnections","ventilation","noiseLevelDb","clearance","mounting","elementIds","activityIds","maintenanceAccess","lifecycleYears","replacementCost","standards","supplier","activityLinkIds","installationRequirements","commissioningNotes","spareParts"]);
+  if (row["lifecycleYears"] !== null) architectProgramArtifactGuardInteger(row["lifecycleYears"], `${at}.lifecycleYears`, { minimum: 0, maximum: 4294967295 });
+  nullableBinary64(row.weightKg, at+".weightKg");
+  nullableBinary64(row.powerKw, at+".powerKw");
+  nullableBinary64(row.noiseLevelDb, at+".noiseLevelDb");
+  nullableBinary64(row.replacementCost, at+".replacementCost");
+  parseQuantitySpec(row.quantity,at+".quantity");
+  return row as unknown as Equipment;
 }
 
 export function parseFlexibilityRequirement(value: unknown, at = "$"): FlexibilityRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","flexibilityType","elementIds","adaptationScenarios","modularityLevel","reconfigurationTime","costOfChange","technologyReadiness","futureFunctionIds","demountablePartitions","raisedFloor","overheadServices","expansionDirection","contractionScenario","multiUsePotential","furnitureStrategy","infrastructureSpareCapacity","leaseImplications","ownerId"], ["id","name","status","priority","ownership","timestamps","flexibilityType","elementIds","adaptationScenarios","modularityLevel","reconfigurationTime","costOfChange","technologyReadiness","futureFunctionIds","demountablePartitions","raisedFloor","overheadServices","expansionDirection","contractionScenario","multiUsePotential","furnitureStrategy","infrastructureSpareCapacity","leaseImplications","ownerId"]) as unknown as FlexibilityRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","flexibilityType","elementIds","adaptationScenarios","modularityLevel","reconfigurationTime","costOfChange","technologyReadiness","futureFunctionIds","demountablePartitions","raisedFloor","overheadServices","expansionDirection","contractionScenario","multiUsePotential","furnitureStrategy","infrastructureSpareCapacity","leaseImplications","ownerId"], ["id","name","status","priority","ownership","timestamps","flexibilityType","elementIds","adaptationScenarios","modularityLevel","reconfigurationTime","costOfChange","technologyReadiness","futureFunctionIds","demountablePartitions","raisedFloor","overheadServices","expansionDirection","contractionScenario","multiUsePotential","furnitureStrategy","infrastructureSpareCapacity","leaseImplications","ownerId"]);
+  nullableBinary64(row.costOfChange, at+".costOfChange");
+  return row as unknown as FlexibilityRequirement;
 }
 
 export function parseFlowRequirement(value: unknown, at = "$"): FlowRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","fromElementId","toElementId","kind","flowType","direction","volume","peakRate","clearWidthM","clearHeightM","separationRequirements","accessLevel","timeWindows","equipmentClearance","signageRequired","escortRequired","emergencyRoute","barrierFree","monitoringRequired","processId","conflictIds","verificationMethod"], ["id","name","status","priority","ownership","timestamps","fromElementId","toElementId","kind","flowType","direction","volume","peakRate","clearWidthM","clearHeightM","separationRequirements","accessLevel","timeWindows","equipmentClearance","signageRequired","escortRequired","emergencyRoute","barrierFree","monitoringRequired","processId","conflictIds","verificationMethod"]) as unknown as FlowRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","fromElementId","toElementId","kind","flowType","direction","volume","peakRate","clearWidthM","clearHeightM","separationRequirements","accessLevel","timeWindows","equipmentClearance","signageRequired","escortRequired","emergencyRoute","barrierFree","monitoringRequired","processId","conflictIds","verificationMethod"], ["id","name","status","priority","ownership","timestamps","fromElementId","toElementId","kind","flowType","direction","volume","peakRate","clearWidthM","clearHeightM","separationRequirements","accessLevel","timeWindows","equipmentClearance","signageRequired","escortRequired","emergencyRoute","barrierFree","monitoringRequired","processId","conflictIds","verificationMethod"]);
+  nullableBinary64(row.peakRate, at+".peakRate");
+  nullableBinary64(row.clearWidthM, at+".clearWidthM");
+  nullableBinary64(row.clearHeightM, at+".clearHeightM");
+  parseQuantitySpec(row.volume,at+".volume");
+  return row as unknown as FlowRequirement;
 }
 
 export function parseFunction(value: unknown, at = "$"): Function {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","purpose","criticality","performanceTargets","serviceLevel","operatingHours","staffing","equipmentIds","resourceIds","activityIds","elementIds","dependencies","interfaces","constraints","qualityCriteria","regulatoryRefs","futureChanges","ownerStakeholderId","successMetrics","hierarchyParentId","conflictIds"], ["id","name","status","priority","ownership","timestamps","code","kind","purpose","criticality","performanceTargets","serviceLevel","operatingHours","staffing","equipmentIds","resourceIds","activityIds","elementIds","dependencies","interfaces","constraints","qualityCriteria","regulatoryRefs","futureChanges","ownerStakeholderId","successMetrics","hierarchyParentId","conflictIds"]) as unknown as Function;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","purpose","criticality","performanceTargets","serviceLevel","operatingHours","staffing","equipmentIds","resourceIds","activityIds","elementIds","dependencies","interfaces","constraints","qualityCriteria","regulatoryRefs","futureChanges","ownerStakeholderId","successMetrics","hierarchyParentId","conflictIds"], ["id","name","status","priority","ownership","timestamps","code","kind","purpose","criticality","performanceTargets","serviceLevel","operatingHours","staffing","equipmentIds","resourceIds","activityIds","elementIds","dependencies","interfaces","constraints","qualityCriteria","regulatoryRefs","futureChanges","ownerStakeholderId","successMetrics","hierarchyParentId","conflictIds"]);
+  parseQuantitySpec(row.staffing,at+".staffing");
+  return row as unknown as Function;
 }
 
 export function parseGovernance(value: unknown, at = "$"): Governance {
@@ -2090,63 +2174,102 @@ export function parseGovernance(value: unknown, at = "$"): Governance {
 }
 
 export function parseGrowthPlan(value: unknown, at = "$"): GrowthPlan {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","horizonYears","growthRate","headcountGrowth","areaGrowth","phases","triggerEvents","expansionElementIds","reserveAreas","infrastructureHeadroom","budgetEnvelope","fundingSources","riskFactors","decisionPoints","scenarioIds","decommissionPlan","relocationStrategy","stakeholderImpact","regulatoryConsiderations","ownerId"], ["id","name","status","priority","ownership","timestamps","horizonYears","growthRate","headcountGrowth","areaGrowth","phases","triggerEvents","expansionElementIds","reserveAreas","infrastructureHeadroom","budgetEnvelope","fundingSources","riskFactors","decisionPoints","scenarioIds","decommissionPlan","relocationStrategy","stakeholderImpact","regulatoryConsiderations","ownerId"]) as unknown as GrowthPlan;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","horizonYears","growthRate","headcountGrowth","areaGrowth","phases","triggerEvents","expansionElementIds","reserveAreas","infrastructureHeadroom","budgetEnvelope","fundingSources","riskFactors","decisionPoints","scenarioIds","decommissionPlan","relocationStrategy","stakeholderImpact","regulatoryConsiderations","ownerId"], ["id","name","status","priority","ownership","timestamps","horizonYears","growthRate","headcountGrowth","areaGrowth","phases","triggerEvents","expansionElementIds","reserveAreas","infrastructureHeadroom","budgetEnvelope","fundingSources","riskFactors","decisionPoints","scenarioIds","decommissionPlan","relocationStrategy","stakeholderImpact","regulatoryConsiderations","ownerId"]);
+  architectProgramArtifactGuardInteger(row["horizonYears"], `${at}.horizonYears`, { minimum: 0, maximum: 4294967295 });
+  nullableBinary64(row.growthRate, at+".growthRate");
+  nullableBinary64(row.budgetEnvelope, at+".budgetEnvelope");
+  parseQuantitySpec(row.headcountGrowth,at+".headcountGrowth");
+  parseQuantitySpec(row.areaGrowth,at+".areaGrowth");
+  return row as unknown as GrowthPlan;
 }
 
 export function parseHumanFactorRequirement(value: unknown, at = "$"): HumanFactorRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","aspect","factor","userProfileIds","activityIds","ergonomicCriteria","cognitiveLoad","visualDemands","auditoryDemands","postureRequirements","reachEnvelope","lightingForTasks","thermalComfort","privacyNeeds","socialInteraction","stressFactors","mitigationMeasures","trainingNeeds","standards","researchBasis","elementIds","verificationMethod"], ["id","name","status","priority","ownership","timestamps","aspect","factor","userProfileIds","activityIds","ergonomicCriteria","cognitiveLoad","visualDemands","auditoryDemands","postureRequirements","reachEnvelope","lightingForTasks","thermalComfort","privacyNeeds","socialInteraction","stressFactors","mitigationMeasures","trainingNeeds","standards","researchBasis","elementIds","verificationMethod"]) as unknown as HumanFactorRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","aspect","factor","userProfileIds","activityIds","ergonomicCriteria","cognitiveLoad","visualDemands","auditoryDemands","postureRequirements","reachEnvelope","lightingForTasks","thermalComfort","privacyNeeds","socialInteraction","stressFactors","mitigationMeasures","trainingNeeds","standards","researchBasis","elementIds","verificationMethod"], ["id","name","status","priority","ownership","timestamps","aspect","factor","userProfileIds","activityIds","ergonomicCriteria","cognitiveLoad","visualDemands","auditoryDemands","postureRequirements","reachEnvelope","lightingForTasks","thermalComfort","privacyNeeds","socialInteraction","stressFactors","mitigationMeasures","trainingNeeds","standards","researchBasis","elementIds","verificationMethod"]) as unknown as HumanFactorRequirement;
 }
 
 export function parseInformationRequirement(value: unknown, at = "$"): InformationRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","informationType","format","sourceSystem","destinationSystems","updateFrequency","retentionPeriod","accessControls","classification","qualityCriteria","metadataRequirements","integrationPoints","backupRequirements","disasterRecovery","privacyControls","auditTrail","elementIds","stakeholderIds","standards","ownerId"], ["id","name","status","priority","ownership","timestamps","informationType","format","sourceSystem","destinationSystems","updateFrequency","retentionPeriod","accessControls","classification","qualityCriteria","metadataRequirements","integrationPoints","backupRequirements","disasterRecovery","privacyControls","auditTrail","elementIds","stakeholderIds","standards","ownerId"]) as unknown as InformationRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","informationType","format","sourceSystem","destinationSystems","updateFrequency","retentionPeriod","accessControls","classification","qualityCriteria","metadataRequirements","integrationPoints","backupRequirements","disasterRecovery","privacyControls","auditTrail","elementIds","stakeholderIds","standards","ownerId"], ["id","name","status","priority","ownership","timestamps","informationType","format","sourceSystem","destinationSystems","updateFrequency","retentionPeriod","accessControls","classification","qualityCriteria","metadataRequirements","integrationPoints","backupRequirements","disasterRecovery","privacyControls","auditTrail","elementIds","stakeholderIds","standards","ownerId"]) as unknown as InformationRequirement;
 }
 
 export function parseInfrastructureRequirement(value: unknown, at = "$"): InfrastructureRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","system","category","capacity","redundancy","distribution","entryPoints","utilitySource","standbyPower","monitoring","maintenanceAccess","standards","elementIds","peakDemand","diversityFactor","futureExpansion","interfaceRequirements","commissioning","lifecycleCost","ownerId"], ["id","name","status","priority","ownership","timestamps","system","category","capacity","redundancy","distribution","entryPoints","utilitySource","standbyPower","monitoring","maintenanceAccess","standards","elementIds","peakDemand","diversityFactor","futureExpansion","interfaceRequirements","commissioning","lifecycleCost","ownerId"]) as unknown as InfrastructureRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","system","category","capacity","redundancy","distribution","entryPoints","utilitySource","standbyPower","monitoring","maintenanceAccess","standards","elementIds","peakDemand","diversityFactor","futureExpansion","interfaceRequirements","commissioning","lifecycleCost","ownerId"], ["id","name","status","priority","ownership","timestamps","system","category","capacity","redundancy","distribution","entryPoints","utilitySource","standbyPower","monitoring","maintenanceAccess","standards","elementIds","peakDemand","diversityFactor","futureExpansion","interfaceRequirements","commissioning","lifecycleCost","ownerId"]);
+  nullableBinary64(row.peakDemand, at+".peakDemand");
+  nullableBinary64(row.diversityFactor, at+".diversityFactor");
+  nullableBinary64(row.lifecycleCost, at+".lifecycleCost");
+  parseQuantitySpec(row.capacity,at+".capacity");
+  return row as unknown as InfrastructureRequirement;
 }
 
 export function parseIssue(value: unknown, at = "$"): Issue {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","issueType","summary","issueDescription","severity","issuePriority","reporterId","assigneeId","affectedEntityIds","rootCause","resolution","workaround","dueDate","resolvedDate","relatedConflictIds","relatedRiskIds","decisionId","comments","attachments","escalationLevel"], ["id","name","status","priority","ownership","timestamps","issueType","summary","issueDescription","severity","issuePriority","reporterId","assigneeId","affectedEntityIds","rootCause","resolution","workaround","dueDate","resolvedDate","relatedConflictIds","relatedRiskIds","decisionId","comments","attachments","escalationLevel"]) as unknown as Issue;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","issueType","summary","issueDescription","severity","issuePriority","reporterId","assigneeId","affectedEntityIds","rootCause","resolution","workaround","dueDate","resolvedDate","relatedConflictIds","relatedRiskIds","decisionId","comments","attachments","escalationLevel"], ["id","name","status","priority","ownership","timestamps","issueType","summary","issueDescription","severity","issuePriority","reporterId","assigneeId","affectedEntityIds","rootCause","resolution","workaround","dueDate","resolvedDate","relatedConflictIds","relatedRiskIds","decisionId","comments","attachments","escalationLevel"]) as unknown as Issue;
 }
 
 export function parseKnowledgeRecord(value: unknown, at = "$"): KnowledgeRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","topic","category","summary","content","sources","references","lessonsLearned","bestPractices","applicableSectors","relatedEntityKinds","authorIds","expertiseLevel","validationStatus","lastReviewed","keywords","attachments","citations","usageCount"], ["id","name","status","priority","ownership","timestamps","topic","category","summary","content","sources","references","lessonsLearned","bestPractices","applicableSectors","relatedEntityKinds","authorIds","expertiseLevel","validationStatus","lastReviewed","keywords","attachments","citations","usageCount"]) as unknown as KnowledgeRecord;
+  const row=architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","topic","category","summary","content","sources","references","lessonsLearned","bestPractices","applicableSectors","relatedEntityKinds","authorIds","expertiseLevel","validationStatus","lastReviewed","keywords","attachments","citations","usageCount"], ["id","name","status","priority","ownership","timestamps","topic","category","summary","content","sources","references","lessonsLearned","bestPractices","applicableSectors","relatedEntityKinds","authorIds","expertiseLevel","validationStatus","lastReviewed","keywords","attachments","citations","usageCount"]);
+  architectProgramArtifactGuardUnsigned64(row["usageCount"],`${at}.usageCount`);
+  return row as unknown as KnowledgeRecord;
 }
 
 export function parseMeetingRecord(value: unknown, at = "$"): MeetingRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","meetingType","scheduledDate","duration","location","chairId","attendeeIds","agendaItems","minutes","actionItems","decisionsMade","artifactRefs","followUpDate","recordingRef","quorumMet","meetingStatus","workshopId","stakeholderIds","requirementIds","issueIds","approvalIds"], ["id","name","status","priority","ownership","timestamps","meetingType","scheduledDate","duration","location","chairId","attendeeIds","agendaItems","minutes","actionItems","decisionsMade","artifactRefs","followUpDate","recordingRef","quorumMet","meetingStatus","workshopId","stakeholderIds","requirementIds","issueIds","approvalIds"]) as unknown as MeetingRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","meetingType","scheduledDate","duration","location","chairId","attendeeIds","agendaItems","minutes","actionItems","decisionsMade","artifactRefs","followUpDate","recordingRef","quorumMet","meetingStatus","workshopId","stakeholderIds","requirementIds","issueIds","approvalIds"], ["id","name","status","priority","ownership","timestamps","meetingType","scheduledDate","duration","location","chairId","attendeeIds","agendaItems","minutes","actionItems","decisionsMade","artifactRefs","followUpDate","recordingRef","quorumMet","meetingStatus","workshopId","stakeholderIds","requirementIds","issueIds","approvalIds"]) as unknown as MeetingRecord;
 }
 
 export function parseOperationalRequirement(value: unknown, at = "$"): OperationalRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","operation","serviceLevel","operatingHours","staffing","maintenanceInterval","cleaningRegime","turnaroundTime","redundancy","uptimeTarget","responseTime","equipmentIds","elementIds","processIds","utilities","wasteStreams","contingencyPlan","trainingRequirements","sopReferences","kpiTargets","ownerId","serviceCategory","shiftPattern","slaTarget","escalationContactId"], ["id","name","status","priority","ownership","timestamps","operation","serviceLevel","operatingHours","staffing","maintenanceInterval","cleaningRegime","turnaroundTime","redundancy","uptimeTarget","responseTime","equipmentIds","elementIds","processIds","utilities","wasteStreams","contingencyPlan","trainingRequirements","sopReferences","kpiTargets","ownerId","serviceCategory","shiftPattern","slaTarget","escalationContactId"]) as unknown as OperationalRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","operation","serviceLevel","operatingHours","staffing","maintenanceInterval","cleaningRegime","turnaroundTime","redundancy","uptimeTarget","responseTime","equipmentIds","elementIds","processIds","utilities","wasteStreams","contingencyPlan","trainingRequirements","sopReferences","kpiTargets","ownerId","serviceCategory","shiftPattern","slaTarget","escalationContactId"], ["id","name","status","priority","ownership","timestamps","operation","serviceLevel","operatingHours","staffing","maintenanceInterval","cleaningRegime","turnaroundTime","redundancy","uptimeTarget","responseTime","equipmentIds","elementIds","processIds","utilities","wasteStreams","contingencyPlan","trainingRequirements","sopReferences","kpiTargets","ownerId","serviceCategory","shiftPattern","slaTarget","escalationContactId"]);
+  nullableBinary64(row.uptimeTarget, at+".uptimeTarget");
+  parseQuantitySpec(row.staffing,at+".staffing");
+  return row as unknown as OperationalRequirement;
 }
 
 export function parseOptionEvaluation(value: unknown, at = "$"): OptionEvaluation {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","optionName","optionDescription","scenarioId","criteriaIds","scores","weightedScore","costEstimate","scheduleEstimate","riskSummary","benefits","drawbacks","assumptions","dependencies","stakeholderFeedback","recommendation","decisionId","evaluationStatus","evaluatorIds","evaluationDate"], ["id","name","status","priority","ownership","timestamps","optionName","optionDescription","scenarioId","criteriaIds","scores","weightedScore","costEstimate","scheduleEstimate","riskSummary","benefits","drawbacks","assumptions","dependencies","stakeholderFeedback","recommendation","decisionId","evaluationStatus","evaluatorIds","evaluationDate"]) as unknown as OptionEvaluation;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","optionName","optionDescription","scenarioId","criteriaIds","scores","weightedScore","costEstimate","scheduleEstimate","riskSummary","benefits","drawbacks","assumptions","dependencies","stakeholderFeedback","recommendation","decisionId","evaluationStatus","evaluatorIds","evaluationDate"], ["id","name","status","priority","ownership","timestamps","optionName","optionDescription","scenarioId","criteriaIds","scores","weightedScore","costEstimate","scheduleEstimate","riskSummary","benefits","drawbacks","assumptions","dependencies","stakeholderFeedback","recommendation","decisionId","evaluationStatus","evaluatorIds","evaluationDate"]);
+  architectProgramArtifactGuardArray(row.scores, at+".scores").forEach((value,index)=>architectProgramArtifactGuardBinary64(value,at+".scores["+index+"]"));
+  nullableBinary64(row.weightedScore, at+".weightedScore");
+  nullableBinary64(row.costEstimate, at+".costEstimate");
+  return row as unknown as OptionEvaluation;
 }
 
 export function parseOrganizationalRequirement(value: unknown, at = "$"): OrganizationalRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","department","reportingLine","headcount","growthPlanId","workPatterns","collaborationModel","hierarchyLevels","decisionMaking","cultureNotes","changeReadiness","unionConsiderations","trainingNeeds","elementIds","stakeholderIds","serviceRequirementIds","brandingRequirements","wellnessPlugins","diversityGoals","ownerId"], ["id","name","status","priority","ownership","timestamps","department","reportingLine","headcount","growthPlanId","workPatterns","collaborationModel","hierarchyLevels","decisionMaking","cultureNotes","changeReadiness","unionConsiderations","trainingNeeds","elementIds","stakeholderIds","serviceRequirementIds","brandingRequirements","wellnessPlugins","diversityGoals","ownerId"]) as unknown as OrganizationalRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","department","reportingLine","headcount","growthPlanId","workPatterns","collaborationModel","hierarchyLevels","decisionMaking","cultureNotes","changeReadiness","unionConsiderations","trainingNeeds","elementIds","stakeholderIds","serviceRequirementIds","brandingRequirements","wellnessPlugins","diversityGoals","ownerId"], ["id","name","status","priority","ownership","timestamps","department","reportingLine","headcount","growthPlanId","workPatterns","collaborationModel","hierarchyLevels","decisionMaking","cultureNotes","changeReadiness","unionConsiderations","trainingNeeds","elementIds","stakeholderIds","serviceRequirementIds","brandingRequirements","wellnessPlugins","diversityGoals","ownerId"]);
+  parseQuantitySpec(row.headcount,at+".headcount");
+  return row as unknown as OrganizationalRequirement;
 }
 
 export function parsePerformanceCriterion(value: unknown, at = "$"): PerformanceCriterion {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","criterion","metric","target","unit","minimum","maximum","measurementMethod","frequency","requirementIds","elementIds","baseline","benchmarkRef","weight","dataSource","reportingCadence","ownerId","verificationPlan","penaltyThreshold","incentiveThreshold"], ["id","name","status","priority","ownership","timestamps","criterion","metric","target","unit","minimum","maximum","measurementMethod","frequency","requirementIds","elementIds","baseline","benchmarkRef","weight","dataSource","reportingCadence","ownerId","verificationPlan","penaltyThreshold","incentiveThreshold"]) as unknown as PerformanceCriterion;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","criterion","metric","target","unit","minimum","maximum","measurementMethod","frequency","requirementIds","elementIds","baseline","benchmarkRef","weight","dataSource","reportingCadence","ownerId","verificationPlan","penaltyThreshold","incentiveThreshold"], ["id","name","status","priority","ownership","timestamps","criterion","metric","target","unit","minimum","maximum","measurementMethod","frequency","requirementIds","elementIds","baseline","benchmarkRef","weight","dataSource","reportingCadence","ownerId","verificationPlan","penaltyThreshold","incentiveThreshold"]);
+  nullableBinary64(row.target, at+".target");
+  nullableBinary64(row.minimum, at+".minimum");
+  nullableBinary64(row.maximum, at+".maximum");
+  nullableBinary64(row.baseline, at+".baseline");
+  nullableBinary64(row.weight, at+".weight");
+  nullableBinary64(row.penaltyThreshold, at+".penaltyThreshold");
+  nullableBinary64(row.incentiveThreshold, at+".incentiveThreshold");
+  return row as unknown as PerformanceCriterion;
 }
 
 export function parsePriorityRecord(value: unknown, at = "$"): PriorityRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","rankedPriority","rank","weight","rationale","decisionId","stakeholderIds","effectiveFrom","effectiveUntil","reviewCycle","dependencies","conflicts","scoringMethod","score","criteria","approvedBy","approvalDate","rankingNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","rankedPriority","rank","weight","rationale","decisionId","stakeholderIds","effectiveFrom","effectiveUntil","reviewCycle","dependencies","conflicts","scoringMethod","score","criteria","approvedBy","approvalDate","rankingNotes"]) as unknown as PriorityRecord;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","rankedPriority","rank","weight","rationale","decisionId","stakeholderIds","effectiveFrom","effectiveUntil","reviewCycle","dependencies","conflicts","scoringMethod","score","criteria","approvedBy","approvalDate","rankingNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","rankedPriority","rank","weight","rationale","decisionId","stakeholderIds","effectiveFrom","effectiveUntil","reviewCycle","dependencies","conflicts","scoringMethod","score","criteria","approvedBy","approvalDate","rankingNotes"]);
+  if (row["rank"] !== null) architectProgramArtifactGuardInteger(row["rank"], `${at}.rank`, { minimum: 0, maximum: 4294967295 });
+  nullableBinary64(row.weight, at+".weight");
+  nullableBinary64(row.score, at+".score");
+  return row as unknown as PriorityRecord;
 }
 
 export function parsePrivacyRequirement(value: unknown, at = "$"): PrivacyRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","privacyKind","privacyType","level","subjectIds","elementIds","visualPrivacy","acousticPrivacy","dataPrivacy","screeningRequired","enclosureRequired","accessRestrictions","observationRisk","regulatoryBasis","culturalConsiderations","technologyControls","signage","monitoringRestrictions","retentionPolicy","breachResponse","ownerId"], ["id","name","status","priority","ownership","timestamps","privacyKind","privacyType","level","subjectIds","elementIds","visualPrivacy","acousticPrivacy","dataPrivacy","screeningRequired","enclosureRequired","accessRestrictions","observationRisk","regulatoryBasis","culturalConsiderations","technologyControls","signage","monitoringRestrictions","retentionPolicy","breachResponse","ownerId"]) as unknown as PrivacyRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","privacyKind","privacyType","level","subjectIds","elementIds","visualPrivacy","acousticPrivacy","dataPrivacy","screeningRequired","enclosureRequired","accessRestrictions","observationRisk","regulatoryBasis","culturalConsiderations","technologyControls","signage","monitoringRestrictions","retentionPolicy","breachResponse","ownerId"], ["id","name","status","priority","ownership","timestamps","privacyKind","privacyType","level","subjectIds","elementIds","visualPrivacy","acousticPrivacy","dataPrivacy","screeningRequired","enclosureRequired","accessRestrictions","observationRisk","regulatoryBasis","culturalConsiderations","technologyControls","signage","monitoringRestrictions","retentionPolicy","breachResponse","ownerId"]) as unknown as PrivacyRequirement;
 }
 
 export function parseProcess(value: unknown, at = "$"): Process {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","trigger","inputs","outputs","steps","actors","equipmentIds","elementIds","duration","frequency","criticalPath","bottlenecks","dependencies","kpis","automationLevel","failureModes","improvementOpportunities","regulatoryRefs","ownerId","workflowType","handoffPoints","qualityGates"], ["id","name","status","priority","ownership","timestamps","code","category","trigger","inputs","outputs","steps","actors","equipmentIds","elementIds","duration","frequency","criticalPath","bottlenecks","dependencies","kpis","automationLevel","failureModes","improvementOpportunities","regulatoryRefs","ownerId","workflowType","handoffPoints","qualityGates"]) as unknown as Process;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","trigger","inputs","outputs","steps","actors","equipmentIds","elementIds","duration","frequency","criticalPath","bottlenecks","dependencies","kpis","automationLevel","failureModes","improvementOpportunities","regulatoryRefs","ownerId","workflowType","handoffPoints","qualityGates"], ["id","name","status","priority","ownership","timestamps","code","category","trigger","inputs","outputs","steps","actors","equipmentIds","elementIds","duration","frequency","criticalPath","bottlenecks","dependencies","kpis","automationLevel","failureModes","improvementOpportunities","regulatoryRefs","ownerId","workflowType","handoffPoints","qualityGates"]) as unknown as Process;
 }
 
 export function parseProgramElement(value: unknown, at = "$"): ProgramElement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","parentId","level","area","volume","height","occupancy","functionIds","activityIds","userProfileIds","adjacencyIds","quantityIds","requirementIds","locationHint","orientation","daylightRequirement","acousticClass","securityZone","flexibilityNotes","growthAllocation","circulationRole","visibilityLevel","adjacencyPreferences","environmentalZone"], ["id","name","status","priority","ownership","timestamps","code","kind","parentId","level","area","volume","height","occupancy","functionIds","activityIds","userProfileIds","adjacencyIds","quantityIds","requirementIds","locationHint","orientation","daylightRequirement","acousticClass","securityZone","flexibilityNotes","growthAllocation","circulationRole","visibilityLevel","adjacencyPreferences","environmentalZone"]) as unknown as ProgramElement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","parentId","level","area","volume","height","occupancy","functionIds","activityIds","userProfileIds","adjacencyIds","quantityIds","requirementIds","locationHint","orientation","daylightRequirement","acousticClass","securityZone","flexibilityNotes","growthAllocation","circulationRole","visibilityLevel","adjacencyPreferences","environmentalZone"], ["id","name","status","priority","ownership","timestamps","code","kind","parentId","level","area","volume","height","occupancy","functionIds","activityIds","userProfileIds","adjacencyIds","quantityIds","requirementIds","locationHint","orientation","daylightRequirement","acousticClass","securityZone","flexibilityNotes","growthAllocation","circulationRole","visibilityLevel","adjacencyPreferences","environmentalZone"]);
+  parseQuantitySpec(row.area,at+".area");
+  parseQuantitySpec(row.volume,at+".volume");
+  parseQuantitySpec(row.height,at+".height");
+  parseQuantitySpec(row.occupancy,at+".occupancy");
+  return row as unknown as ProgramElement;
 }
 
 export function parseProgramMeta(value: unknown, at = "$"): ProgramMeta {
@@ -2158,91 +2281,144 @@ export function parseProjectDefinition(value: unknown, at = "$"): ProjectDefinit
 }
 
 export function parseQualityRecord(value: unknown, at = "$"): QualityRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","qualityTopic","standard","targetLevel","inspectionPoints","acceptanceCriteria","testingRequirements","sampleRate","defectCategories","correctiveActionProcess","elementIds","requirementIds","supplierRequirements","documentationRequirements","trainingRequirements","auditSchedule","kpis","ownerId","certificationTargets","continuousImprovement"], ["id","name","status","priority","ownership","timestamps","qualityTopic","standard","targetLevel","inspectionPoints","acceptanceCriteria","testingRequirements","sampleRate","defectCategories","correctiveActionProcess","elementIds","requirementIds","supplierRequirements","documentationRequirements","trainingRequirements","auditSchedule","kpis","ownerId","certificationTargets","continuousImprovement"]) as unknown as QualityRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","qualityTopic","standard","targetLevel","inspectionPoints","acceptanceCriteria","testingRequirements","sampleRate","defectCategories","correctiveActionProcess","elementIds","requirementIds","supplierRequirements","documentationRequirements","trainingRequirements","auditSchedule","kpis","ownerId","certificationTargets","continuousImprovement"], ["id","name","status","priority","ownership","timestamps","qualityTopic","standard","targetLevel","inspectionPoints","acceptanceCriteria","testingRequirements","sampleRate","defectCategories","correctiveActionProcess","elementIds","requirementIds","supplierRequirements","documentationRequirements","trainingRequirements","auditSchedule","kpis","ownerId","certificationTargets","continuousImprovement"]) as unknown as QualityRecord;
 }
 
 export function parseQuantityRequirement(value: unknown, at = "$"): QuantityRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","targetElementId","metric","quantity","basis","calculationMethod","source","benchmarkRef","tolerancePercent","peakFactor","growthFactor","unitCost","currency","verificationMethod","relatedRequirementIds","assumptions","constraints","schedulePhase","responsibleParty","lastVerified","varianceNotes"], ["id","name","status","priority","ownership","timestamps","targetElementId","metric","quantity","basis","calculationMethod","source","benchmarkRef","tolerancePercent","peakFactor","growthFactor","unitCost","currency","verificationMethod","relatedRequirementIds","assumptions","constraints","schedulePhase","responsibleParty","lastVerified","varianceNotes"]) as unknown as QuantityRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","targetElementId","metric","quantity","basis","calculationMethod","source","benchmarkRef","tolerancePercent","peakFactor","growthFactor","unitCost","currency","verificationMethod","relatedRequirementIds","assumptions","constraints","schedulePhase","responsibleParty","lastVerified","varianceNotes"], ["id","name","status","priority","ownership","timestamps","targetElementId","metric","quantity","basis","calculationMethod","source","benchmarkRef","tolerancePercent","peakFactor","growthFactor","unitCost","currency","verificationMethod","relatedRequirementIds","assumptions","constraints","schedulePhase","responsibleParty","lastVerified","varianceNotes"]);
+  nullableBinary64(row.tolerancePercent, at+".tolerancePercent");
+  nullableBinary64(row.peakFactor, at+".peakFactor");
+  nullableBinary64(row.growthFactor, at+".growthFactor");
+  nullableBinary64(row.unitCost, at+".unitCost");
+  parseQuantitySpec(row.quantity,at+".quantity");
+  return row as unknown as QuantityRequirement;
 }
 
 export function parseRegulatoryRequirement(value: unknown, at = "$"): RegulatoryRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","jurisdiction","code","clause","title","requirementText","applicability","elementIds","complianceMethod","evidenceRequired","authority","effectiveDate","expiryDate","penalties","exemptions","relatedRequirementIds","interpretationNotes","verificationStatus","consultantRefs","updateSource"], ["id","name","status","priority","ownership","timestamps","jurisdiction","code","clause","title","requirementText","applicability","elementIds","complianceMethod","evidenceRequired","authority","effectiveDate","expiryDate","penalties","exemptions","relatedRequirementIds","interpretationNotes","verificationStatus","consultantRefs","updateSource"]) as unknown as RegulatoryRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","jurisdiction","code","clause","title","requirementText","applicability","elementIds","complianceMethod","evidenceRequired","authority","effectiveDate","expiryDate","penalties","exemptions","relatedRequirementIds","interpretationNotes","verificationStatus","consultantRefs","updateSource"], ["id","name","status","priority","ownership","timestamps","jurisdiction","code","clause","title","requirementText","applicability","elementIds","complianceMethod","evidenceRequired","authority","effectiveDate","expiryDate","penalties","exemptions","relatedRequirementIds","interpretationNotes","verificationStatus","consultantRefs","updateSource"]) as unknown as RegulatoryRequirement;
 }
 
 export function parseRelationship(value: unknown, at = "$"): Relationship {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","sourceId","targetId","kind","strength","directional","rationale","constraints","conditions","relationshipPriority","validFrom","validUntil","evidence","conflictIds","traceLinks","bidirectional","distanceConstraintM","capacityConstraint","regulatoryBasis","reviewCycle","ownerId","proximityRequirement","compatibilityRequirement","incompatibilityRequirement","separationRequirements"], ["id","name","status","priority","ownership","timestamps","sourceId","targetId","kind","strength","directional","rationale","constraints","conditions","relationshipPriority","validFrom","validUntil","evidence","conflictIds","traceLinks","bidirectional","distanceConstraintM","capacityConstraint","regulatoryBasis","reviewCycle","ownerId","proximityRequirement","compatibilityRequirement","incompatibilityRequirement","separationRequirements"]) as unknown as Relationship;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","sourceId","targetId","kind","strength","directional","rationale","constraints","conditions","relationshipPriority","validFrom","validUntil","evidence","conflictIds","traceLinks","bidirectional","distanceConstraintM","capacityConstraint","regulatoryBasis","reviewCycle","ownerId","proximityRequirement","compatibilityRequirement","incompatibilityRequirement","separationRequirements"], ["id","name","status","priority","ownership","timestamps","sourceId","targetId","kind","strength","directional","rationale","constraints","conditions","relationshipPriority","validFrom","validUntil","evidence","conflictIds","traceLinks","bidirectional","distanceConstraintM","capacityConstraint","regulatoryBasis","reviewCycle","ownerId","proximityRequirement","compatibilityRequirement","incompatibilityRequirement","separationRequirements"]);
+  nullableBinary64(row.strength, at+".strength");
+  nullableBinary64(row.distanceConstraintM, at+".distanceConstraintM");
+  return row as unknown as Relationship;
 }
 
 export function parseReportRecord(value: unknown, at = "$"): ReportRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","title","audience","sections","generatedAt","generatedBy","analysisIds","format","fileRef","distributionList","approvalStatus","approverId","version","templateId","parameters","confidentiality","expiryDate","relatedDecisionIds"], ["id","name","status","priority","ownership","timestamps","kind","title","audience","sections","generatedAt","generatedBy","analysisIds","format","fileRef","distributionList","approvalStatus","approverId","version","templateId","parameters","confidentiality","expiryDate","relatedDecisionIds"]) as unknown as ReportRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","kind","title","audience","sections","generatedAt","generatedBy","analysisIds","format","fileRef","distributionList","approvalStatus","approverId","version","templateId","parameters","confidentiality","expiryDate","relatedDecisionIds"], ["id","name","status","priority","ownership","timestamps","kind","title","audience","sections","generatedAt","generatedBy","analysisIds","format","fileRef","distributionList","approvalStatus","approverId","version","templateId","parameters","confidentiality","expiryDate","relatedDecisionIds"]) as unknown as ReportRecord;
 }
 
 export function parseRequirement(value: unknown, at = "$"): Requirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","statement","rationale","source","stakeholderIds","elementIds","functionIds","parentRequirementId","childRequirementIds","acceptanceCriteria","verificationMethod","validationStatus","conflictIds","riskIds","costEstimate","scheduleConstraint","regulatoryRefs","traceLinks","supersededBy"], ["id","name","status","priority","ownership","timestamps","code","kind","statement","rationale","source","stakeholderIds","elementIds","functionIds","parentRequirementId","childRequirementIds","acceptanceCriteria","verificationMethod","validationStatus","conflictIds","riskIds","costEstimate","scheduleConstraint","regulatoryRefs","traceLinks","supersededBy"]) as unknown as Requirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","kind","statement","rationale","source","stakeholderIds","elementIds","functionIds","parentRequirementId","childRequirementIds","acceptanceCriteria","verificationMethod","validationStatus","conflictIds","riskIds","costEstimate","scheduleConstraint","regulatoryRefs","traceLinks","supersededBy"], ["id","name","status","priority","ownership","timestamps","code","kind","statement","rationale","source","stakeholderIds","elementIds","functionIds","parentRequirementId","childRequirementIds","acceptanceCriteria","verificationMethod","validationStatus","conflictIds","riskIds","costEstimate","scheduleConstraint","regulatoryRefs","traceLinks","supersededBy"]);
+  nullableBinary64(row.costEstimate, at+".costEstimate");
+  return row as unknown as Requirement;
 }
 
 export function parseResilienceRequirement(value: unknown, at = "$"): ResilienceRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","hazard","riskLevel","scenario","recoveryTime","recoveryPoint","redundancy","hardeningMeasures","backupSystems","alternateSites","supplyChain","communicationPlan","drillRequirements","elementIds","infrastructureIds","standards","insuranceImplications","climateAdaptation","ownerId","verificationPlan"], ["id","name","status","priority","ownership","timestamps","hazard","riskLevel","scenario","recoveryTime","recoveryPoint","redundancy","hardeningMeasures","backupSystems","alternateSites","supplyChain","communicationPlan","drillRequirements","elementIds","infrastructureIds","standards","insuranceImplications","climateAdaptation","ownerId","verificationPlan"]) as unknown as ResilienceRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","hazard","riskLevel","scenario","recoveryTime","recoveryPoint","redundancy","hardeningMeasures","backupSystems","alternateSites","supplyChain","communicationPlan","drillRequirements","elementIds","infrastructureIds","standards","insuranceImplications","climateAdaptation","ownerId","verificationPlan"], ["id","name","status","priority","ownership","timestamps","hazard","riskLevel","scenario","recoveryTime","recoveryPoint","redundancy","hardeningMeasures","backupSystems","alternateSites","supplyChain","communicationPlan","drillRequirements","elementIds","infrastructureIds","standards","insuranceImplications","climateAdaptation","ownerId","verificationPlan"]) as unknown as ResilienceRequirement;
 }
 
 export function parseResource(value: unknown, at = "$"): Resource {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","resourceType","quantity","mobility","sharingModel","allocation","elementIds","activityIds","userProfileIds","storageRequirementId","durability","cleaningRequirements","replacementCycle","costPerUnit","supplier","standards","ergonomicNotes","customization","disposalNotes","furnitureClass","ergonomicsRating","sharingRatio"], ["id","name","status","priority","ownership","timestamps","code","category","resourceType","quantity","mobility","sharingModel","allocation","elementIds","activityIds","userProfileIds","storageRequirementId","durability","cleaningRequirements","replacementCycle","costPerUnit","supplier","standards","ergonomicNotes","customization","disposalNotes","furnitureClass","ergonomicsRating","sharingRatio"]) as unknown as Resource;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","category","resourceType","quantity","mobility","sharingModel","allocation","elementIds","activityIds","userProfileIds","storageRequirementId","durability","cleaningRequirements","replacementCycle","costPerUnit","supplier","standards","ergonomicNotes","customization","disposalNotes","furnitureClass","ergonomicsRating","sharingRatio"], ["id","name","status","priority","ownership","timestamps","code","category","resourceType","quantity","mobility","sharingModel","allocation","elementIds","activityIds","userProfileIds","storageRequirementId","durability","cleaningRequirements","replacementCycle","costPerUnit","supplier","standards","ergonomicNotes","customization","disposalNotes","furnitureClass","ergonomicsRating","sharingRatio"]);
+  nullableBinary64(row.costPerUnit, at+".costPerUnit");
+  nullableBinary64(row.sharingRatio, at+".sharingRatio");
+  parseQuantitySpec(row.quantity,at+".quantity");
+  return row as unknown as Resource;
 }
 
 export function parseRisk(value: unknown, at = "$"): Risk {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","riskStatement","category","probability","impact","riskScore","causes","effects","affectedElementIds","affectedRequirementIds","mitigation","contingency","ownerId","reviewDate","triggerIndicators","residualProbability","residualImpact","relatedConflictIds","escalationPath","monitoringPlan"], ["id","name","status","priority","ownership","timestamps","riskStatement","category","probability","impact","riskScore","causes","effects","affectedElementIds","affectedRequirementIds","mitigation","contingency","ownerId","reviewDate","triggerIndicators","residualProbability","residualImpact","relatedConflictIds","escalationPath","monitoringPlan"]) as unknown as Risk;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","riskStatement","category","probability","impact","riskScore","causes","effects","affectedElementIds","affectedRequirementIds","mitigation","contingency","ownerId","reviewDate","triggerIndicators","residualProbability","residualImpact","relatedConflictIds","escalationPath","monitoringPlan"], ["id","name","status","priority","ownership","timestamps","riskStatement","category","probability","impact","riskScore","causes","effects","affectedElementIds","affectedRequirementIds","mitigation","contingency","ownerId","reviewDate","triggerIndicators","residualProbability","residualImpact","relatedConflictIds","escalationPath","monitoringPlan"]);
+  nullableBinary64(row.riskScore, at+".riskScore");
+  return row as unknown as Risk;
 }
 
 export function parseSafetyRequirement(value: unknown, at = "$"): SafetyRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","safetyDomain","hazard","riskLevel","affectedElementIds","affectedUserIds","mitigationMeasures","ppeRequirements","emergencyProcedures","evacuationRequirements","fireProtection","structuralSafety","slipTripFall","chemicalSafety","electricalSafety","machinerySafety","standards","inspectionFrequency","trainingRequirements","incidentReporting","residualRisk"], ["id","name","status","priority","ownership","timestamps","safetyDomain","hazard","riskLevel","affectedElementIds","affectedUserIds","mitigationMeasures","ppeRequirements","emergencyProcedures","evacuationRequirements","fireProtection","structuralSafety","slipTripFall","chemicalSafety","electricalSafety","machinerySafety","standards","inspectionFrequency","trainingRequirements","incidentReporting","residualRisk"]) as unknown as SafetyRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","safetyDomain","hazard","riskLevel","affectedElementIds","affectedUserIds","mitigationMeasures","ppeRequirements","emergencyProcedures","evacuationRequirements","fireProtection","structuralSafety","slipTripFall","chemicalSafety","electricalSafety","machinerySafety","standards","inspectionFrequency","trainingRequirements","incidentReporting","residualRisk"], ["id","name","status","priority","ownership","timestamps","safetyDomain","hazard","riskLevel","affectedElementIds","affectedUserIds","mitigationMeasures","ppeRequirements","emergencyProcedures","evacuationRequirements","fireProtection","structuralSafety","slipTripFall","chemicalSafety","electricalSafety","machinerySafety","standards","inspectionFrequency","trainingRequirements","incidentReporting","residualRisk"]) as unknown as SafetyRequirement;
 }
 
 export function parseScenario(value: unknown, at = "$"): Scenario {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","hypothesis","assumptions","variables","elementIds","requirementIds","growthPlanId","probability","impactSummary","costDelta","areaDelta","headcountDelta","scheduleDelta","riskIds","optionIds","baseline","preferred","analysisIds","ownerId"], ["id","name","status","priority","ownership","timestamps","code","hypothesis","assumptions","variables","elementIds","requirementIds","growthPlanId","probability","impactSummary","costDelta","areaDelta","headcountDelta","scheduleDelta","riskIds","optionIds","baseline","preferred","analysisIds","ownerId"]) as unknown as Scenario;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","code","hypothesis","assumptions","variables","elementIds","requirementIds","growthPlanId","probability","impactSummary","costDelta","areaDelta","headcountDelta","scheduleDelta","riskIds","optionIds","baseline","preferred","analysisIds","ownerId"], ["id","name","status","priority","ownership","timestamps","code","hypothesis","assumptions","variables","elementIds","requirementIds","growthPlanId","probability","impactSummary","costDelta","areaDelta","headcountDelta","scheduleDelta","riskIds","optionIds","baseline","preferred","analysisIds","ownerId"]);
+  nullableBinary64(row.probability, at+".probability");
+  nullableBinary64(row.costDelta, at+".costDelta");
+  nullableBinary64(row.areaDelta, at+".areaDelta");
+  nullableBinary64(row.headcountDelta, at+".headcountDelta");
+  return row as unknown as Scenario;
 }
 
 export function parseScheduleRequirement(value: unknown, at = "$"): ScheduleRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","milestone","phase","startDate","endDate","duration","dependencies","predecessors","successors","critical","floatDays","resourceRequirements","occupancyImpact","phasingStrategy","decantRequirements","commissioningWindow","stakeholderIds","riskIds","contingencyDays","reportingCadence","ownerId"], ["id","name","status","priority","ownership","timestamps","milestone","phase","startDate","endDate","duration","dependencies","predecessors","successors","critical","floatDays","resourceRequirements","occupancyImpact","phasingStrategy","decantRequirements","commissioningWindow","stakeholderIds","riskIds","contingencyDays","reportingCadence","ownerId"]) as unknown as ScheduleRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","milestone","phase","startDate","endDate","duration","dependencies","predecessors","successors","critical","floatDays","resourceRequirements","occupancyImpact","phasingStrategy","decantRequirements","commissioningWindow","stakeholderIds","riskIds","contingencyDays","reportingCadence","ownerId"], ["id","name","status","priority","ownership","timestamps","milestone","phase","startDate","endDate","duration","dependencies","predecessors","successors","critical","floatDays","resourceRequirements","occupancyImpact","phasingStrategy","decantRequirements","commissioningWindow","stakeholderIds","riskIds","contingencyDays","reportingCadence","ownerId"]);
+  if (row["floatDays"] !== null) architectProgramArtifactGuardInteger(row["floatDays"], `${at}.floatDays`, { minimum: 0, maximum: 4294967295 });
+  if (row["contingencyDays"] !== null) architectProgramArtifactGuardInteger(row["contingencyDays"], `${at}.contingencyDays`, { minimum: 0, maximum: 4294967295 });
+  return row as unknown as ScheduleRequirement;
 }
 
 export function parseSearchFilter(value: unknown, at = "$"): SearchFilter {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","filterName","filterDescription","keywords","categories","ownerIds","statuses","priorities","sources","dateFrom","dateTo","entityKinds","tagFilters","sortField","sortDirection","isPublic","createdBy","lastUsed","useCount","pinned"], ["id","name","status","priority","ownership","timestamps","filterName","filterDescription","keywords","categories","ownerIds","statuses","priorities","sources","dateFrom","dateTo","entityKinds","tagFilters","sortField","sortDirection","isPublic","createdBy","lastUsed","useCount","pinned"]) as unknown as SearchFilter;
+  const row=architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","filterName","filterDescription","keywords","categories","ownerIds","statuses","priorities","sources","dateFrom","dateTo","entityKinds","tagFilters","sortField","sortDirection","isPublic","createdBy","lastUsed","useCount","pinned"], ["id","name","status","priority","ownership","timestamps","filterName","filterDescription","keywords","categories","ownerIds","statuses","priorities","sources","dateFrom","dateTo","entityKinds","tagFilters","sortField","sortDirection","isPublic","createdBy","lastUsed","useCount","pinned"]);
+  architectProgramArtifactGuardUnsigned64(row["useCount"],`${at}.useCount`);
+  return row as unknown as SearchFilter;
 }
 
 export function parseSecurityRequirement(value: unknown, at = "$"): SecurityRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","controlKind","threat","riskLevel","assetIds","zoneIds","accessLevel","perimeterControls","surveillance","intrusionDetection","cybersecurity","screening","visitorManagement","keyManagement","standards","responseProcedures","drillFrequency","liaisonContacts","classifiedLevel","redundancy","auditRequirements"], ["id","name","status","priority","ownership","timestamps","controlKind","threat","riskLevel","assetIds","zoneIds","accessLevel","perimeterControls","surveillance","intrusionDetection","cybersecurity","screening","visitorManagement","keyManagement","standards","responseProcedures","drillFrequency","liaisonContacts","classifiedLevel","redundancy","auditRequirements"]) as unknown as SecurityRequirement;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","controlKind","threat","riskLevel","assetIds","zoneIds","accessLevel","perimeterControls","surveillance","intrusionDetection","cybersecurity","screening","visitorManagement","keyManagement","standards","responseProcedures","drillFrequency","liaisonContacts","classifiedLevel","redundancy","auditRequirements"], ["id","name","status","priority","ownership","timestamps","controlKind","threat","riskLevel","assetIds","zoneIds","accessLevel","perimeterControls","surveillance","intrusionDetection","cybersecurity","screening","visitorManagement","keyManagement","standards","responseProcedures","drillFrequency","liaisonContacts","classifiedLevel","redundancy","auditRequirements"]) as unknown as SecurityRequirement;
 }
 
 export function parseServiceRequirement(value: unknown, at = "$"): ServiceRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","serviceName","serviceType","provider","serviceLevel","operatingHours","capacity","responseTime","queueManagement","customerProfiles","elementIds","equipmentIds","staffing","qualityMetrics","costModel","contractRefs","dependencies","failureImpact","backupService","feedbackChannels"], ["id","name","status","priority","ownership","timestamps","serviceName","serviceType","provider","serviceLevel","operatingHours","capacity","responseTime","queueManagement","customerProfiles","elementIds","equipmentIds","staffing","qualityMetrics","costModel","contractRefs","dependencies","failureImpact","backupService","feedbackChannels"]) as unknown as ServiceRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","serviceName","serviceType","provider","serviceLevel","operatingHours","capacity","responseTime","queueManagement","customerProfiles","elementIds","equipmentIds","staffing","qualityMetrics","costModel","contractRefs","dependencies","failureImpact","backupService","feedbackChannels"], ["id","name","status","priority","ownership","timestamps","serviceName","serviceType","provider","serviceLevel","operatingHours","capacity","responseTime","queueManagement","customerProfiles","elementIds","equipmentIds","staffing","qualityMetrics","costModel","contractRefs","dependencies","failureImpact","backupService","feedbackChannels"]);
+  parseQuantitySpec(row.capacity,at+".capacity");
+  parseQuantitySpec(row.staffing,at+".staffing");
+  return row as unknown as ServiceRequirement;
 }
 
 export function parseSiteContext(value: unknown, at = "$"): SiteContext {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","siteName","address","latitude","longitude","elevationM","climateZone","seismicZone","floodRisk","soilConditions","utilitiesAvailable","accessRoads","publicTransit","neighbors","views","noiseSources","environmentalConstraints","heritageConstraints","zoning","maxHeightM","maxCoverage"], ["id","name","status","priority","ownership","timestamps","siteName","address","latitude","longitude","elevationM","climateZone","seismicZone","floodRisk","soilConditions","utilitiesAvailable","accessRoads","publicTransit","neighbors","views","noiseSources","environmentalConstraints","heritageConstraints","zoning","maxHeightM","maxCoverage"]) as unknown as SiteContext;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","siteName","address","latitude","longitude","elevationM","climateZone","seismicZone","floodRisk","soilConditions","utilitiesAvailable","accessRoads","publicTransit","neighbors","views","noiseSources","environmentalConstraints","heritageConstraints","zoning","maxHeightM","maxCoverage"], ["id","name","status","priority","ownership","timestamps","siteName","address","latitude","longitude","elevationM","climateZone","seismicZone","floodRisk","soilConditions","utilitiesAvailable","accessRoads","publicTransit","neighbors","views","noiseSources","environmentalConstraints","heritageConstraints","zoning","maxHeightM","maxCoverage"]);
+  nullableBinary64(row.latitude, at+".latitude");
+  nullableBinary64(row.longitude, at+".longitude");
+  nullableBinary64(row.elevationM, at+".elevationM");
+  nullableBinary64(row.maxHeightM, at+".maxHeightM");
+  nullableBinary64(row.maxCoverage, at+".maxCoverage");
+  return row as unknown as SiteContext;
 }
 
 export function parseStakeholder(value: unknown, at = "$"): Stakeholder {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","role","organization","department","contactEmail","contactPhone","influence","interest","engagement","expectations","concerns","requirementIds","decisionAuthority","communicationPreferences","reportingFrequency","involvementPhases","availability","representativeOf","delegatedTo","relationshipToClient","powerInterestNotes","stakeholderType","influenceStrategy","communicationChannels","successMetrics"], ["id","name","status","priority","ownership","timestamps","role","organization","department","contactEmail","contactPhone","influence","interest","engagement","expectations","concerns","requirementIds","decisionAuthority","communicationPreferences","reportingFrequency","involvementPhases","availability","representativeOf","delegatedTo","relationshipToClient","powerInterestNotes","stakeholderType","influenceStrategy","communicationChannels","successMetrics"]) as unknown as Stakeholder;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","role","organization","department","contactEmail","contactPhone","influence","interest","engagement","expectations","concerns","requirementIds","decisionAuthority","communicationPreferences","reportingFrequency","involvementPhases","availability","representativeOf","delegatedTo","relationshipToClient","powerInterestNotes","stakeholderType","influenceStrategy","communicationChannels","successMetrics"], ["id","name","status","priority","ownership","timestamps","role","organization","department","contactEmail","contactPhone","influence","interest","engagement","expectations","concerns","requirementIds","decisionAuthority","communicationPreferences","reportingFrequency","involvementPhases","availability","representativeOf","delegatedTo","relationshipToClient","powerInterestNotes","stakeholderType","influenceStrategy","communicationChannels","successMetrics"]) as unknown as Stakeholder;
 }
 
 export function parseStatusRecord(value: unknown, at = "$"): StatusRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","recordStatus","previousStatus","changedBy","changedAt","reason","blockers","nextActions","dueDate","progressPercent","health","escalationLevel","relatedIssueIds","relatedRiskIds","milestoneId","reportingPeriod","statusNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","recordStatus","previousStatus","changedBy","changedAt","reason","blockers","nextActions","dueDate","progressPercent","health","escalationLevel","relatedIssueIds","relatedRiskIds","milestoneId","reportingPeriod","statusNotes"]) as unknown as StatusRecord;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","recordStatus","previousStatus","changedBy","changedAt","reason","blockers","nextActions","dueDate","progressPercent","health","escalationLevel","relatedIssueIds","relatedRiskIds","milestoneId","reportingPeriod","statusNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","recordStatus","previousStatus","changedBy","changedAt","reason","blockers","nextActions","dueDate","progressPercent","health","escalationLevel","relatedIssueIds","relatedRiskIds","milestoneId","reportingPeriod","statusNotes"]);
+  nullableBinary64(row.progressPercent, at+".progressPercent");
+  return row as unknown as StatusRecord;
 }
 
 export function parseStorageRequirement(value: unknown, at = "$"): StorageRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","storedItem","storageClass","quantity","volumeM3","weightKg","temperatureRange","humidityRange","securityLevel","hazardClass","retentionPeriod","accessFrequency","elementIds","equipmentIds","handlingEquipment","fireProtection","ventilation","organizationSystem","growthAllowance","regulatoryRefs","ownerId"], ["id","name","status","priority","ownership","timestamps","storedItem","storageClass","quantity","volumeM3","weightKg","temperatureRange","humidityRange","securityLevel","hazardClass","retentionPeriod","accessFrequency","elementIds","equipmentIds","handlingEquipment","fireProtection","ventilation","organizationSystem","growthAllowance","regulatoryRefs","ownerId"]) as unknown as StorageRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","storedItem","storageClass","quantity","volumeM3","weightKg","temperatureRange","humidityRange","securityLevel","hazardClass","retentionPeriod","accessFrequency","elementIds","equipmentIds","handlingEquipment","fireProtection","ventilation","organizationSystem","growthAllowance","regulatoryRefs","ownerId"], ["id","name","status","priority","ownership","timestamps","storedItem","storageClass","quantity","volumeM3","weightKg","temperatureRange","humidityRange","securityLevel","hazardClass","retentionPeriod","accessFrequency","elementIds","equipmentIds","handlingEquipment","fireProtection","ventilation","organizationSystem","growthAllowance","regulatoryRefs","ownerId"]);
+  nullableBinary64(row.volumeM3, at+".volumeM3");
+  nullableBinary64(row.weightKg, at+".weightKg");
+  nullableBinary64(row.growthAllowance, at+".growthAllowance");
+  parseQuantitySpec(row.quantity,at+".quantity");
+  return row as unknown as StorageRequirement;
 }
 
 export function parseSurvey(value: unknown, at = "$"): Survey {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","surveyType","title","objectives","questions","targetAudience","distributionChannels","launchDate","closeDate","responseCount","responseRate","findings","themes","recommendations","confidentiality","consentProcess","analysisId","workshopId","ownerId","surveyStatus"], ["id","name","status","priority","ownership","timestamps","surveyType","title","objectives","questions","targetAudience","distributionChannels","launchDate","closeDate","responseCount","responseRate","findings","themes","recommendations","confidentiality","consentProcess","analysisId","workshopId","ownerId","surveyStatus"]) as unknown as Survey;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","surveyType","title","objectives","questions","targetAudience","distributionChannels","launchDate","closeDate","responseCount","responseRate","findings","themes","recommendations","confidentiality","consentProcess","analysisId","workshopId","ownerId","surveyStatus"], ["id","name","status","priority","ownership","timestamps","surveyType","title","objectives","questions","targetAudience","distributionChannels","launchDate","closeDate","responseCount","responseRate","findings","themes","recommendations","confidentiality","consentProcess","analysisId","workshopId","ownerId","surveyStatus"]);
+  architectProgramArtifactGuardInteger(row["responseCount"], `${at}.responseCount`, { minimum: 0, maximum: 4294967295 });
+  nullableBinary64(row.responseRate, at+".responseRate");
+  return row as unknown as Survey;
 }
 
 export function parseSustainabilityRequirement(value: unknown, at = "$"): SustainabilityRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","topic","target","metric","baseline","targetValue","unit","certification","standards","elementIds","strategies","materialsPreferences","energyStrategy","waterStrategy","wasteStrategy","biodiversity","embodiedCarbon","operationalCarbon","reportingRequirements","verificationPlan","ownerId"], ["id","name","status","priority","ownership","timestamps","topic","target","metric","baseline","targetValue","unit","certification","standards","elementIds","strategies","materialsPreferences","energyStrategy","waterStrategy","wasteStrategy","biodiversity","embodiedCarbon","operationalCarbon","reportingRequirements","verificationPlan","ownerId"]) as unknown as SustainabilityRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","topic","target","metric","baseline","targetValue","unit","certification","standards","elementIds","strategies","materialsPreferences","energyStrategy","waterStrategy","wasteStrategy","biodiversity","embodiedCarbon","operationalCarbon","reportingRequirements","verificationPlan","ownerId"], ["id","name","status","priority","ownership","timestamps","topic","target","metric","baseline","targetValue","unit","certification","standards","elementIds","strategies","materialsPreferences","energyStrategy","waterStrategy","wasteStrategy","biodiversity","embodiedCarbon","operationalCarbon","reportingRequirements","verificationPlan","ownerId"]);
+  nullableBinary64(row.baseline, at+".baseline");
+  nullableBinary64(row.targetValue, at+".targetValue");
+  nullableBinary64(row.embodiedCarbon, at+".embodiedCarbon");
+  nullableBinary64(row.operationalCarbon, at+".operationalCarbon");
+  return row as unknown as SustainabilityRequirement;
 }
 
 export function parseTemplateRecord(value: unknown, at = "$"): TemplateRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","templateType","sector","projectType","version","contentRef","entityKinds","defaultFields","checklists","standards","applicability","authorId","approvalStatus","usageCount","lastApplied","customizationNotes","relatedKnowledgeIds","benchmarkIds","license","sourceOrganization"], ["id","name","status","priority","ownership","timestamps","templateType","sector","projectType","version","contentRef","entityKinds","defaultFields","checklists","standards","applicability","authorId","approvalStatus","usageCount","lastApplied","customizationNotes","relatedKnowledgeIds","benchmarkIds","license","sourceOrganization"]) as unknown as TemplateRecord;
+  const row=architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","templateType","sector","projectType","version","contentRef","entityKinds","defaultFields","checklists","standards","applicability","authorId","approvalStatus","usageCount","lastApplied","customizationNotes","relatedKnowledgeIds","benchmarkIds","license","sourceOrganization"], ["id","name","status","priority","ownership","timestamps","templateType","sector","projectType","version","contentRef","entityKinds","defaultFields","checklists","standards","applicability","authorId","approvalStatus","usageCount","lastApplied","customizationNotes","relatedKnowledgeIds","benchmarkIds","license","sourceOrganization"]);
+  architectProgramArtifactGuardUnsigned64(row["usageCount"],`${at}.usageCount`);
+  return row as unknown as TemplateRecord;
 }
 
 export function parseTraceLink(value: unknown, at = "$"): TraceLink {
@@ -2250,17 +2426,21 @@ export function parseTraceLink(value: unknown, at = "$"): TraceLink {
 }
 
 export function parseUserProfile(value: unknown, at = "$"): UserProfile {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","category","demographic","ageRange","abilities","disabilities","occupation","roleTitle","department","mobilityProfile","sensoryProfile","cognitiveProfile","behavioralPatterns","usageFrequency","usageDuration","peakUsageTimes","technologyProficiency","preferences","painPoints","goals","activityIds","researchMethod","personaArchetype","validated","stakeholderIds"], ["id","name","status","priority","ownership","timestamps","category","demographic","ageRange","abilities","disabilities","occupation","roleTitle","department","mobilityProfile","sensoryProfile","cognitiveProfile","behavioralPatterns","usageFrequency","usageDuration","peakUsageTimes","technologyProficiency","preferences","painPoints","goals","activityIds","researchMethod","personaArchetype","validated","stakeholderIds"]) as unknown as UserProfile;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","category","demographic","ageRange","abilities","disabilities","occupation","roleTitle","department","mobilityProfile","sensoryProfile","cognitiveProfile","behavioralPatterns","usageFrequency","usageDuration","peakUsageTimes","technologyProficiency","preferences","painPoints","goals","activityIds","researchMethod","personaArchetype","validated","stakeholderIds"], ["id","name","status","priority","ownership","timestamps","category","demographic","ageRange","abilities","disabilities","occupation","roleTitle","department","mobilityProfile","sensoryProfile","cognitiveProfile","behavioralPatterns","usageFrequency","usageDuration","peakUsageTimes","technologyProficiency","preferences","painPoints","goals","activityIds","researchMethod","personaArchetype","validated","stakeholderIds"]) as unknown as UserProfile;
 }
 
 export function parseValidationRecord(value: unknown, at = "$"): ValidationRecord {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","validationType","method","criteria","result","evidence","validatorIds","validationDate","nextReviewDate","findings","nonConformities","correctiveActions","waivers","standards","traceLinks","reportId","confidenceLevel","validationNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","validationType","method","criteria","result","evidence","validatorIds","validationDate","nextReviewDate","findings","nonConformities","correctiveActions","waivers","standards","traceLinks","reportId","confidenceLevel","validationNotes"]) as unknown as ValidationRecord;
+  return architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","subjectId","subjectKind","validationType","method","criteria","result","evidence","validatorIds","validationDate","nextReviewDate","findings","nonConformities","correctiveActions","waivers","standards","traceLinks","reportId","confidenceLevel","validationNotes"], ["id","name","status","priority","ownership","timestamps","subjectId","subjectKind","validationType","method","criteria","result","evidence","validatorIds","validationDate","nextReviewDate","findings","nonConformities","correctiveActions","waivers","standards","traceLinks","reportId","confidenceLevel","validationNotes"]) as unknown as ValidationRecord;
 }
 
 export function parseWayfindingRequirement(value: unknown, at = "$"): WayfindingRequirement {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","userProfileIds","elementIds","destinationTypes","signageTypes","languages","tactileRequired","audioRequired","digitalWayfinding","landmarkStrategy","colorCoding","symbolStandards","decisionPoints","maximumSignageDistanceM","lightingRequirements","maintenancePlan","emergencyEgress","visitorJourney","staffJourney","brandIntegration"], ["id","name","status","priority","ownership","timestamps","userProfileIds","elementIds","destinationTypes","signageTypes","languages","tactileRequired","audioRequired","digitalWayfinding","landmarkStrategy","colorCoding","symbolStandards","decisionPoints","maximumSignageDistanceM","lightingRequirements","maintenancePlan","emergencyEgress","visitorJourney","staffJourney","brandIntegration"]) as unknown as WayfindingRequirement;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","userProfileIds","elementIds","destinationTypes","signageTypes","languages","tactileRequired","audioRequired","digitalWayfinding","landmarkStrategy","colorCoding","symbolStandards","decisionPoints","maximumSignageDistanceM","lightingRequirements","maintenancePlan","emergencyEgress","visitorJourney","staffJourney","brandIntegration"], ["id","name","status","priority","ownership","timestamps","userProfileIds","elementIds","destinationTypes","signageTypes","languages","tactileRequired","audioRequired","digitalWayfinding","landmarkStrategy","colorCoding","symbolStandards","decisionPoints","maximumSignageDistanceM","lightingRequirements","maintenancePlan","emergencyEgress","visitorJourney","staffJourney","brandIntegration"]);
+  nullableBinary64(row.maximumSignageDistanceM, at+".maximumSignageDistanceM");
+  return row as unknown as WayfindingRequirement;
 }
 
 export function parseWorkshop(value: unknown, at = "$"): Workshop {
-  return architectProgramArtifactGuardExactObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"], ["id","name","status","priority","ownership","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"]) as unknown as Workshop;
+  const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"], ["id","name","status","priority","ownership","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"]);
+  nullableBinary64(row.budget, at+".budget");
+  return row as unknown as Workshop;
 }

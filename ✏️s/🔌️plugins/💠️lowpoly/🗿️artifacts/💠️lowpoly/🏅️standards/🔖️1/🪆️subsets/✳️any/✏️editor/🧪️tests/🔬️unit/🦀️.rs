@@ -46,6 +46,8 @@ pub(crate) mod context {
         App { definition: create_lowpoly_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("lowpoly", LowpolyPlayApp, lowpoly_manifest_for_tests, "../..");
+
     /// 🧪️ The registry-backed app every unit test builds on. It used to be the registry-less
     /// `new_app`, which fails closed since lowpoly's 47 tools became `Migrated` with exact factories: an
     /// empty registry has no migrated ids, so the tool-proof catalog rejects the first factory
@@ -66,7 +68,7 @@ pub(crate) mod context {
     pub fn action_meta() -> semio_framework_plugin::ActionMeta {
         let id = edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN;
         let mut action = meta("local");
-        action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: id.into() }], ..Default::default() });
+        action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: id.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         action
     }
 
@@ -171,7 +173,7 @@ pub(crate) mod context {
     /// 🖼️ Renders one body and projects it to JSON through the fixture observer, which also retires the
     /// paged children a serde projection cannot carry (`BuiltChildren requires retained page transport`).
     pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String {
-        let tree = app.0.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let tree = app.0.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
         project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
     }
 

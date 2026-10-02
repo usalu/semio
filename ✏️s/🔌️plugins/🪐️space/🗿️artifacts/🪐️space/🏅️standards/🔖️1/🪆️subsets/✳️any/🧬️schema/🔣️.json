@@ -81,16 +81,18 @@
         },
         "createdAtMs": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 0
+          "format": "uint64",
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "createdBy": {
           "type": "string"
         },
         "updatedAtMs": {
           "type": "integer",
-          "format": "int64",
-          "minimum": 0
+          "format": "uint64",
+          "minimum": 0,
+          "maximum": 18446744073709551615
         },
         "updatedBy": {
           "type": "string"

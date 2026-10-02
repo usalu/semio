@@ -21,6 +21,7 @@ fn canonical(value: &DslValue) -> String {
             if value.is_finite() && value.fract() == 0.0 && value.abs() <= 9_007_199_254_740_991.0 { (value as i64).to_string() } else { value.to_string() }
         }
         DslValue::String(text) => dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&DslValue::String(text.clone()))),
+        DslValue::Bytes(bytes) => format!("[{}]", bytes.iter().map(u8::to_string).collect::<Vec<_>>().join(",")),
         DslValue::Array(items) => format!("[{}]", items.iter().map(canonical).collect::<Vec<_>>().join(",")),
         DslValue::Object(entries) => {
             let mut sorted: Vec<&(String, DslValue)> = entries.iter().collect();

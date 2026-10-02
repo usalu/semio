@@ -2,7 +2,7 @@
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { projectTaxonomySourceAdmission } from "../../🟦️.ts";
+import { projectTaxonomySourceAdmission } from "../../🚪️source-admission/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract

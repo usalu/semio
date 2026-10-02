@@ -555,7 +555,7 @@ fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color
 
 /// 🎨️ Paints the armed gumball of `scene` over its canvas `inner` under `camera` — the handles of
 /// `🟦️GumballOverlay.tsx`, the press marker while a gesture is open and the ghost of a non-live gesture.
-pub(crate) fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), draw: &mut ui_wgpu::wgpu::DrawList) {
+pub(crate) fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &ui_wgpu::wgpu::Theme, draw: &mut ui_wgpu::wgpu::DrawList) {
     if !armed(scene) || inner.w <= 0.0 || inner.h <= 0.0 {
         return;
     }
@@ -586,10 +586,10 @@ pub(crate) fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64
         let (x, y) = knob(GumballHandle::ScaleUniform);
         disc(draw, x, y, radius, axis(2, 1.0));
     }
-    disc(draw, cx, cy, 4.0, Rgba::from_srgb8(255, 255, 255, 255));
-    ring(draw, cx, cy, 4.0, Rgba::from_srgb8(148, 163, 184, 255), 1.0, false);
+    disc(draw, cx, cy, 4.0, theme.text);
+    ring(draw, cx, cy, 4.0, theme.text_muted, 1.0, false);
     let Some(slot) = GUMBALL.with(|cell| cell.borrow().clone().filter(|slot| slot.host_id == scene.host_id)) else { return };
-    let marker = Rgba::from_srgb8(250, 204, 21, 230);
+    let marker = theme.warning.with_alpha(0.9);
     if !slot.gesture.live {
         let (pointer_x, pointer_y) = (inner.x + slot.pointer.0 as f32, inner.y + slot.pointer.1 as f32);
         let (start_x, start_y) = (inner.x + slot.gesture.start.0 as f32, inner.y + slot.gesture.start.1 as f32);

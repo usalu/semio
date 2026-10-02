@@ -251,9 +251,9 @@ fn close_session(session: &mut Generation3dMutationSession) {
 }
 
 #[test]
-fn every_nineteen_variant_decodes_through_retained_structural_grants() {
+fn every_variant_decodes_through_retained_structural_grants() {
     let mutations = generation3d_all_retained_mutation_fixtures_for_test();
-    assert_eq!(mutations.len(), GENERATION3D_MUTATION_VARIANT_COUNT);
+    assert_eq!(mutations.iter().map(std::mem::discriminant).collect::<std::collections::HashSet<_>>().len(), GENERATION3D_MUTATION_VARIANT_COUNT, "the fixtures cover every variant");
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P3 retained mutation fixture encode");
         let mut session = Generation3dMutationSession::new(bytes.len(), GENERATION3D_MAXIMUM_DOMAIN_ITEMS).expect("P3 retained mutation preflight");
@@ -392,7 +392,7 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_the_fixed_page_
 fn semantic_wire_vectors_match_independent_json_oracle() {
     use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector, generation3d_param_number};
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
-    every_nineteen_variant_decodes_through_retained_structural_grants();
+    every_variant_decodes_through_retained_structural_grants();
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("independent serde corpus");
     for case in corpus["cases"].as_array().expect("wire vectors") {
         let mutation = <Generation3dMutation as dsl::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
@@ -423,6 +423,11 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
             Generation3dMutation::MoveNodes(_) => {
                 let layout = snapshot.host_snapshot.layout.get("slider").expect("addressed layout");
                 assert_eq!([layout.x, layout.y], [expected["layout"][0].as_f64().unwrap(), expected["layout"][1].as_f64().unwrap()]);
+            }
+            Generation3dMutation::ChangeWidgetInput(payload) => {
+                let params = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.id).map(dsl::ToValue::to_value).and_then(|widget| widget.get("params").cloned()).expect("addressed operator params");
+                let literal: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(params.get(&payload.channel).expect("the addressed input"))).expect("literal json");
+                assert_eq!(literal, expected["input"], "{}.{}", payload.id, payload.channel);
             }
             _ => {
                 let (index, key) = match &mutation { Generation3dMutation::DragTransforms(_) => (1, "offset"), Generation3dMutation::RotateTransforms(_) => (2, "axis"), Generation3dMutation::ScaleTransforms(_) => (3, "factor"), _ => unreachable!() };

@@ -10,6 +10,6 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeConnection
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "connection-t1M", kind: "change-connection-t1", record: "ChangedConnectionT1" };
     fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<<En1995Mutation as protocol::Mutation<En1995Snapshot>>::Diff> { super::diff::diff(self, base) }
     fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> { super::inverse::inverse(self, base) }
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native(&format!("Change Member thickness t₁ of connection {}", self.connection_id), &format!("Bauteildicke t₁ von Verbindung {} ändern", self.connection_id)) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Member thickness t₁ of connection {}", self.connection_id), &format!("Bauteildicke t₁ von Verbindung {} ändern", self.connection_id)) }
     fn target(&self) -> Vec<String> { vec![self.connection_id.clone()] }
 }

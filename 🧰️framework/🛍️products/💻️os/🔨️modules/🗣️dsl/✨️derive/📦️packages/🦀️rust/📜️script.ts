@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ✨️ `@semio-tech/dsl-derive-rs` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { resolveTestLevel, runCargo, runCargoTestBudgeted } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -74,7 +75,7 @@ class CheckGeneratedScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, rest);
+    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, rest);
   }
 }
 

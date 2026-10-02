@@ -78,6 +78,18 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     expect(document.activeElement).not.toBe(input);
     view.unmount();
 
+    const refusedChanges: number[] = [];
+    const refused = render(h(Stepper, { id: "stepper.refused", ...uniform, onChange: (value: number) => refusedChanges.push(value) }));
+    const refusedInput = refused.container.querySelector<HTMLInputElement>("[data-stepper-input='true']")!;
+    fireEvent.focus(refusedInput);
+    fireEvent.change(refusedInput, { target: { value: stepperEditingFixture.refusedEdit.input } });
+    expect(refusedChanges).toEqual([]);
+    expect(refusedInput.value).toBe(stepperEditingFixture.refusedEdit.expectedDisplay);
+    expect(refusedInput.getAttribute("aria-invalid")).toBe("true");
+    fireEvent.blur(refusedInput);
+    expect(refusedInput.value).toBe(stepperEditingFixture.refusedEdit.expectedDisplay);
+    refused.unmount();
+
     const mixed = render(h(Stepper, { id: "stepper.mixed", ...stepperEditingFixture.mixed, mixed: true, value: undefined }));
     const mixedInput = mixed.container.querySelector<HTMLInputElement>("[data-stepper-input='true']")!;
     fireEvent.focus(mixedInput);
@@ -192,7 +204,11 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
       if (rejected.exit === "blur") fireEvent.blur(rejectedEditor);
       else fireEvent.keyDown(rejectedEditor, { key: rejected.exit });
       expect(rejectedChanges, rejected.id).toHaveLength(rejected.actionCount);
-      expect(rejectedView.container.querySelector("[data-slot='slider-value']")?.textContent, rejected.id).toBe(rejected.expectedDisplay);
+      if (rejected.editing) {
+        expect([rejectedEditor.value, rejectedEditor.getAttribute("aria-invalid")], rejected.id).toEqual([rejected.expectedDisplay, "true"]);
+      } else {
+        expect(rejectedView.container.querySelector("[data-slot='slider-value']")?.textContent, rejected.id).toBe(rejected.expectedDisplay);
+      }
       rejectedView.unmount();
     }
 

@@ -49,5 +49,5 @@ export const stdioJpgJfif101DocumentSnapshotTextGuardConstant = <T extends strin
 //#endregion 🚪️Parsers
 
 export function parseJpgSnapshotText(value: unknown, at = "$"): JpgSnapshotText {
-  return stdioJpgJfif101DocumentSnapshotTextGuardObject(value, `${at}`);
+  return stdioJpgJfif101DocumentSnapshotTextGuardString(value, at);
 }

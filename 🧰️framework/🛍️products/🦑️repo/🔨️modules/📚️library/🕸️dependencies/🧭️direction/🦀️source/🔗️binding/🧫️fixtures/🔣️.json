@@ -1,0 +1,1140 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "direct-renamed-provider",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "absolute-import",
+      "source": "use ::wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "nested-group-and-underscore",
+      "source": "use wire::{self as api, nested::{VALUE as Value, Trait as _}};",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire",
+        "wire",
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "glob-import",
+      "source": "use wire::nested::*;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "comment-string-decoys",
+      "source": "// use missing::VALUE;\nconst TEXT:&str=\"use missing::VALUE;\";\nuse wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "body-local-import",
+      "source": "fn main(){ use wire::VALUE; let _ = VALUE; }",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "inline-module-import",
+      "source": "mod child { use wire::VALUE; }",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "raw-root-import",
+      "source": "use r#wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "extern-alias",
+      "source": "extern crate wire as api; use api::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire",
+        "api"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "unknown-root",
+      "source": "use absent::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "absent"
+      ],
+      "expectedProblems": [
+        "unknown-extern-root"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "self-alias-local",
+      "source": "extern crate self as api; use crate::Thing;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "self",
+        "crate"
+      ],
+      "expectedProblems": [
+        "local-route-unproven",
+        "local-route-unproven"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "unicode-byte-span",
+      "source": "const É:&str=\"λ\"; use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "cfg-alternative",
+      "source": "#[cfg(feature=\"special\")] use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "macro-output-obligation",
+      "source": "wire::emit!();",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [],
+      "expectedProblems": [
+        "unproven-macro-output"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "qualified-body-obligation",
+      "source": "fn main(){let _=wire::VALUE;}",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [],
+      "expectedProblems": [
+        "unproven-path-namespace"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "dev-not-library",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dev-dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unknown-extern-root"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "dev-test-context",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "test",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dev-dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "build-context",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "build",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[build-dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "unrenamed-explicit-lib",
+      "source": "use different_library::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nprovider-a={path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "different_library"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "workspace-inherited-rename",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={workspace=true}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n",
+        "Cargo.toml": "[workspace]\nmembers=[\"consumer\",\"provider-a\"]\n[workspace.dependencies]\nwire={package=\"provider-a\",path=\"provider-a\"}\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "package-identity-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"wrong-package\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "provider-package-mismatch",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "implicit-library-unproven",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unproven-library-identity",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "local-module-shadows",
+      "source": "mod wire { pub const VALUE:u32=7; } use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "local-route-unproven"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "absolute-bypasses-local-module",
+      "source": "mod wire { pub const VALUE:u32=7; } use ::wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "block-type-shadows",
+      "source": "fn main(){ type wire=u32; use wire::VALUE; }",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "local-route-unproven"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "raw-keyword-is-not-module-declaration",
+      "source": "struct r#mod; use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "undeclared-package-rename-refusal",
+      "source": "use different_library::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\ndifferent_library={path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "different_library"
+      ],
+      "expectedProblems": [
+        "provider-package-mismatch",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "outer-rewrite-refusal",
+      "source": "#[rewrite] use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unproven-attribute-output"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "inner-rewrite-refusal",
+      "source": "#![cfg_attr(any(), rewrite)] use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unproven-attribute-output",
+        "orphan-context",
+        "orphan-context"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "hoisted-extern-alias-import",
+      "source": "use api::VALUE; extern crate wire as api;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "api",
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "root-extern-alias-child-import",
+      "source": "extern crate wire as api; mod child { use api::VALUE; }",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire",
+        "api"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "ordinary-parent-import-not-child-scope",
+      "source": "use wire as api; mod child { use api::VALUE; }",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire",
+        "api"
+      ],
+      "expectedProblems": [
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "block-parent-import-scope",
+      "source": "fn f(){use wire as api; {use api::VALUE;}}",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire",
+        "api"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml",
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "absent-edition-prelude-unproven",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unsupported-edition-namespace"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "explicit-old-edition-prelude-unproven",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2015\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unsupported-edition-namespace"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "invalid-edition-manifest-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"invalid\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "invalid-manifest",
+        "unsupported-edition-namespace"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "workspace-edition-authority",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition={workspace=true}\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n",
+        "Cargo.toml": "[workspace]\nmembers=[\"consumer\",\"provider-a\"]\n[workspace.package]\nedition=\"2024\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "dependency-raw-missing-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../blocked/../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "missing-input",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "blocked": "missing"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "dependency-path"
+      }
+    },
+    {
+      "id": "dependency-raw-symlink-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../blocked/../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "linked-input",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "blocked": "symlink"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "dependency-path"
+      }
+    },
+    {
+      "id": "dependency-raw-file-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../blocked/../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "non-directory-ancestor",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "blocked": "file"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "dependency-path"
+      }
+    },
+    {
+      "id": "library-raw-missing-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"blocked/../lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "missing-input",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "provider-a/blocked": "missing"
+      },
+      "authorityWitness": {
+        "manifest": "provider-a/Cargo.toml",
+        "field": "library-path"
+      }
+    },
+    {
+      "id": "library-raw-symlink-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"blocked/../lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "linked-input",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "provider-a/blocked": "symlink"
+      },
+      "authorityWitness": {
+        "manifest": "provider-a/Cargo.toml",
+        "field": "library-path"
+      }
+    },
+    {
+      "id": "library-raw-file-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"blocked/../lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "non-directory-ancestor",
+        "unknown-extern-root"
+      ],
+      "expectedProviders": [],
+      "inputNodes": {
+        "provider-a/blocked": "file"
+      },
+      "authorityWitness": {
+        "manifest": "provider-a/Cargo.toml",
+        "field": "library-path"
+      }
+    },
+    {
+      "id": "workspace-raw-missing-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nworkspace=\"../blocked/..\"\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n",
+        "Cargo.toml": "[workspace]\nmembers=[\"consumer\",\"provider-a\"]\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "missing-input"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ],
+      "inputNodes": {
+        "blocked": "missing"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "workspace-path"
+      }
+    },
+    {
+      "id": "workspace-raw-symlink-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nworkspace=\"../blocked/..\"\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n",
+        "Cargo.toml": "[workspace]\nmembers=[\"consumer\",\"provider-a\"]\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "linked-input"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ],
+      "inputNodes": {
+        "blocked": "symlink"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "workspace-path"
+      }
+    },
+    {
+      "id": "workspace-raw-file-prefix-refusal",
+      "source": "use wire::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nworkspace=\"../blocked/..\"\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n",
+        "Cargo.toml": "[workspace]\nmembers=[\"consumer\",\"provider-a\"]\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "non-directory-ancestor"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ],
+      "inputNodes": {
+        "blocked": "file"
+      },
+      "authorityWitness": {
+        "manifest": "consumer/Cargo.toml",
+        "field": "workspace-path"
+      }
+    },
+    {
+      "id": "opaque-unqualified-macro-refusal",
+      "source": "emit!{use wire::VALUE;}",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [],
+      "expectedProblems": [
+        "unproven-macro-output"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "opaque-qualified-macro-refusal",
+      "source": "wire::emit!{use wire::VALUE;}",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [],
+      "expectedProblems": [
+        "unproven-macro-output"
+      ],
+      "expectedProviders": []
+    },
+    {
+      "id": "generic-scope-import-unproven",
+      "source": "fn f<wire>(){use wire::VALUE;}",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "wire"
+      ],
+      "expectedProblems": [
+        "unproven-generic-scope"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ]
+    },
+    {
+      "id": "split-file-root-extern-alias",
+      "source": "use api::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "api"
+      ],
+      "expectedProblems": [],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ],
+      "sourceLocator": "general.rs",
+      "rootSources": {
+        "consumer/lib.rs": "extern crate wire as api; #[path=\"../general.rs\"] mod shared;"
+      }
+    },
+    {
+      "id": "split-file-root-attribute-remains-unproven",
+      "source": "use api::VALUE;",
+      "consumerManifest": "consumer/Cargo.toml",
+      "compileKind": "library",
+      "manifests": {
+        "consumer/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+        "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"different_library\"\npath=\"lib.rs\"\n"
+      },
+      "expectedRoots": [
+        "api"
+      ],
+      "expectedProblems": [
+        "unproven-attribute-output"
+      ],
+      "expectedProviders": [
+        "provider-a/Cargo.toml"
+      ],
+      "sourceLocator": "general.rs",
+      "rootSources": {
+        "consumer/lib.rs": "#[rewrite] extern crate wire as api; #[path=\"../general.rs\"] mod shared;"
+      }
+    }
+  ],
+  "nativeCases": [
+    {
+      "id": "renamed-custom-library",
+      "source": "use wire::VALUE; fn main(){print!(\"{}\",VALUE);}",
+      "accept": true,
+      "output": "19"
+    },
+    {
+      "id": "absolute-external-prelude",
+      "source": "mod wire{pub const VALUE:u32=7;} use ::wire::VALUE; fn main(){print!(\"{}\",VALUE);}",
+      "accept": true,
+      "output": "19"
+    },
+    {
+      "id": "module-shadows-external",
+      "source": "mod wire{pub const VALUE:u32=7;} use wire::VALUE; fn main(){print!(\"{}\",VALUE);}",
+      "accept": true,
+      "output": "7"
+    },
+    {
+      "id": "block-local-import",
+      "source": "fn main(){use wire::VALUE;print!(\"{}\",VALUE);}",
+      "accept": true,
+      "output": "19"
+    },
+    {
+      "id": "root-extern-alias-child",
+      "source": "extern crate wire as api; mod child{pub fn value()->u32{api::VALUE}} fn main(){print!(\"{}\",child::value());}",
+      "accept": true,
+      "output": "19"
+    },
+    {
+      "id": "ordinary-parent-import-not-inherited",
+      "source": "use wire as api; mod child{pub fn value()->u32{api::VALUE}} fn main(){print!(\"{}\",child::value());}",
+      "accept": false
+    },
+    {
+      "id": "value-binding-does-not-shadow-module",
+      "source": "fn main(){let wire=7;print!(\"{}:{}\",wire,wire::VALUE);}",
+      "accept": true,
+      "output": "7:19"
+    },
+    {
+      "id": "generic-type-shadows-external",
+      "source": "fn value<wire>()->u32{wire::VALUE} fn main(){}",
+      "accept": false
+    },
+    {
+      "id": "absolute-bypasses-generic-type",
+      "source": "fn value<wire>()->u32{::wire::VALUE} fn main(){print!(\"{}\",value::<u32>());}",
+      "accept": true,
+      "output": "19"
+    },
+    {
+      "id": "hoisted-extern-alias",
+      "source": "use api::VALUE; extern crate wire as api; fn main(){print!(\"{}\",VALUE);}",
+      "accept": true,
+      "output": "19"
+    }
+  ],
+  "mountCase": {
+    "id": "one-physical-source-two-contexts",
+    "sources": {
+      "general.rs": "use wire::VALUE; pub fn value()->u32{VALUE}",
+      "a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer_a\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-a\",path=\"../provider-a\"}\n",
+      "a/lib.rs": "#[path=\"../general.rs\"] mod shared; fn main(){print!(\"{}\",shared::value());}",
+      "provider-a/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-a\"\nversion=\"0.1.0\"\n[lib]\nname=\"identical_library\"\npath=\"lib.rs\"\n",
+      "provider-a/lib.rs": "pub const VALUE:u32=19;",
+      "b/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"consumer-b\"\nversion=\"0.1.0\"\n[lib]\nname=\"consumer_b\"\npath=\"lib.rs\"\n[dependencies]\nwire={package=\"provider-b\",path=\"../provider-b\"}\n",
+      "b/lib.rs": "#[path=\"../general.rs\"] mod shared; fn main(){print!(\"{}\",shared::value());}",
+      "provider-b/Cargo.toml": "[package]\nedition=\"2021\"\nname=\"provider-b\"\nversion=\"0.1.0\"\n[lib]\nname=\"identical_library\"\npath=\"lib.rs\"\n",
+      "provider-b/lib.rs": "pub const VALUE:u32=37;"
+    },
+    "source": "general.rs",
+    "expectedBindings": [
+      {
+        "from": "general.rs",
+        "root": "a/lib.rs",
+        "provider": "provider-a/Cargo.toml",
+        "module": [
+          "shared"
+        ]
+      },
+      {
+        "from": "general.rs",
+        "root": "b/lib.rs",
+        "provider": "provider-b/Cargo.toml",
+        "module": [
+          "shared"
+        ]
+      }
+    ],
+    "nativeOutputs": [
+      "19",
+      "37"
+    ],
+    "linkedAncestor": "provider-a",
+    "expectedLinkedProblem": "linked-input"
+  },
+  "scopeCases": [
+    {
+      "id": "transparent-root",
+      "source": "use wire::VALUE;",
+      "sourceScope": [],
+      "state": "resolved",
+      "modulePaths": [
+        []
+      ]
+    },
+    {
+      "id": "transparent-inline-ancestor",
+      "source": "mod child { use wire::VALUE; }",
+      "sourceScope": [
+        "child"
+      ],
+      "state": "resolved",
+      "modulePaths": [
+        [],
+        [
+          "child"
+        ]
+      ]
+    },
+    {
+      "id": "root-inner-rewrite-refuses-descendant",
+      "source": "#![rewrite] mod child { use wire::VALUE; }",
+      "sourceScope": [
+        "child"
+      ],
+      "state": "unresolved",
+      "modulePath": [],
+      "code": "unsupported-attribute"
+    },
+    {
+      "id": "inline-inner-rewrite-refuses-descendant",
+      "source": "mod child { #![rewrite] use wire::VALUE; }",
+      "sourceScope": [
+        "child"
+      ],
+      "state": "unresolved",
+      "modulePath": [
+        "child"
+      ],
+      "code": "unsupported-attribute"
+    },
+    {
+      "id": "absent-inline-source-scope",
+      "source": "use wire::VALUE;",
+      "sourceScope": [
+        "missing"
+      ],
+      "state": "unresolved",
+      "modulePath": [
+        "missing"
+      ],
+      "code": "scope-not-unique",
+      "count": 0
+    }
+  ]
+}

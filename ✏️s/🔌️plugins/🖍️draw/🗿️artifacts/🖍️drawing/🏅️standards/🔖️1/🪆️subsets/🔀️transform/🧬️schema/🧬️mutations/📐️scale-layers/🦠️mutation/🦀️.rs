@@ -33,10 +33,10 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ScaleLayers {
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((x_en, x_de), (y_en, y_de)) = (drawing_label_number(self.scale_x), drawing_label_number(self.scale_y));
         let (en, de) = drawing_label_layers(self.targets.len());
-        protocol::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en})"), &format!("{de} um ({x_de}; {y_de}) skalieren"))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({x_en}, {y_en})"), &format!("{de} um ({x_de}; {y_de}) skalieren"))
     }
     fn target(&self) -> Vec<String> {
         self.targets.clone()

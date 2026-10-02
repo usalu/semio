@@ -1,3 +1,6 @@
+import { testLevelBudgetMs } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { parseFeature, type ParsedFeature } from "../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { type AdapterContext, type TestCasePlan, type SubsetTarget, type ComparisonProfile, type SubjectRawInputs, type Implementation, type FeatureStep, type FeatureScenario, type TestMode, type ResolvedFixture, type FixtureManifest, type FixtureClass, type MutationOutcomeClass, type FixtureUnits, type FixtureFile, type FixtureGenerator, type PlatformId, type EngineFamily, type FixtureProvenance, type ToleranceOverride, type FixtureInvariants, type TestRole, type AdapterOutcome, type TestAdapter, IMPLEMENTATIONS, TEST_MODES, FIXTURE_CLASSES, MUTATION_OUTCOME_CLASSES, TEST_ROLES, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -15,11 +18,13 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
-import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../📚️library/🔍️discovery/🟦️.ts";
+import { type Taxonomy, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../📚️library/🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings } from "../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import protocolSchema from "./🧬️schema/🔣️.json";
+import protocolSchema from "../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 //#endregion 🔌️Adapters
 
@@ -31,23 +36,23 @@ export const TAXONOMY_REL_PATH = "🧰️framework/🛍️products/🦑️repo/�
 export const TEST_DOMAIN_REL_PATH = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
 
 /** 🧪️ Implementations a test case may claim an adapter for. */
-export const IMPLEMENTATIONS = ["rust", "typescript", "go", "python", "dotnet"] as const;
-export type Implementation = (typeof IMPLEMENTATIONS)[number];
+
+
 
 /** 🎭️ The two roles one scenario is executed in — the third-party reference and this repository's code. */
-export const TEST_ROLES = ["oracle", "subject"] as const;
-export type TestRole = (typeof TEST_ROLES)[number];
+
+
 
 /** 🎯️ Execution modes a scenario declares with `@mode-…`. */
-export const TEST_MODES = ["differential", "conformance", "round-trip", "property", "error"] as const;
-export type TestMode = (typeof TEST_MODES)[number];
+
+
 
 /**
  * ⚖️ A comparison profile id. Deliberately an OPEN string rather than a closed union: the framework
  * owns the comparison MECHANISM and its domain-neutral profiles, while a profile that knows a file
  * format is contributed by the owner of that format. Adding one must never require editing this file.
  */
-export type ComparisonProfile = string;
+
 
 /**
  * ⚖️ The declarative policy of one profile. Everything a profile can say is data, so a new profile is
@@ -222,284 +227,7 @@ export function setDigest(pairs: readonly (readonly [string, string])[]): string
 }
 //#endregion #⃣Digest
 
-//#region 🥒️Gherkin
-/** 🥒️ One `Given`/`When`/`Then` step. `And`/`But` inherit the previous step's canonical keyword. */
-export type FeatureStep = Readonly<{ keyword: "Given" | "When" | "Then"; rawKeyword: string; text: string; docString?: string; dataTable?: readonly (readonly string[])[] }>;
 
-/** 🥒️ One executable scenario, after `Scenario Outline` expansion. */
-export type FeatureScenario = Readonly<{
-  id: string;
-  name: string;
-  level: TestLevel;
-  mode: TestMode;
-  tags: readonly string[];
-  steps: readonly FeatureStep[];
-  seed?: string;
-  platforms?: readonly string[];
-  requires?: readonly string[];
-  implementations?: readonly Implementation[];
-  outlineOf?: string;
-  line: number;
-}>;
-
-/** 🥒️ The parsed, language-neutral behavioural contract of one test case. */
-export type ParsedFeature = Readonly<{
-  name: string;
-  description: string;
-  tags: readonly string[];
-  capability: string | null;
-  oracle: string | null;
-  noOracleDecision: string | null;
-  comparison: ComparisonProfile | null;
-  /** 📥️ The produced subject artifact an oracle must consume, if it validates bytes rather than re-producing them. */
-  oracleInput: "subject-raw" | null;
-  /** 🦠️ The mutation catalog this feature claims to cover exhaustively, from `@mutations-<id>`. */
-  mutationCatalog: string | null;
-  background: readonly FeatureStep[];
-  scenarios: readonly FeatureScenario[];
-  errors: readonly string[];
-}>;
-
-const STEP_KEYWORDS = new Set(["Given", "When", "Then", "And", "But", "*"]);
-
-function tagValue(tags: readonly string[], prefix: string): string | null {
-  const hit = tags.find((tag) => tag.startsWith(prefix));
-  return hit ? hit.slice(prefix.length) : null;
-}
-
-function tagValues(tags: readonly string[], prefix: string): string[] {
-  return tags.filter((tag) => tag.startsWith(prefix)).map((tag) => tag.slice(prefix.length));
-}
-
-function splitTags(line: string): string[] {
-  return line
-    .split(/\s+/)
-    .map((piece) => piece.trim())
-    .filter((piece) => piece.startsWith("@"));
-}
-
-function splitTableRow(line: string): string[] {
-  const trimmed = line.trim();
-  const inner = trimmed.slice(1, trimmed.length - 1);
-  return inner.split("|").map((cell) => cell.trim().replace(/\\\|/g, "|"));
-}
-
-function substitute(text: string, row: Readonly<Record<string, string>>): string {
-  return text.replace(/<([^<>]+)>/g, (whole, key: string) => (key in row ? row[key]! : whole));
-}
-
-type FeatureBlock = { kind: "none" | "feature" | "background" | "scenario" | "outline"; name: string; tags: string[]; steps: FeatureStep[]; examples: Record<string, string>[]; line: number };
-
-/**
- * 🥒️ Parses the repository's restricted Gherkin profile into one owned plan. The coordinator parses
- * a feature exactly once and hands every native host the resulting plan — no host re-reads or
- * reinterprets `component.feature`, which is what keeps five languages provably in agreement.
- * @see https://cucumber.io/docs/gherkin/reference/
- */
-export function parseFeature(source: string): ParsedFeature {
-  const errors: string[] = [];
-  const lines = source.split(/\r?\n/);
-
-  let featureName = "";
-  const descriptionLines: string[] = [];
-  let featureTags: string[] = [];
-  let pendingTags: string[] = [];
-  const background: FeatureStep[] = [];
-  const scenarios: FeatureScenario[] = [];
-
-  let block: FeatureBlock = { kind: "none", name: "", tags: [], steps: [], examples: [], line: 0 };
-  let lastKeyword: "Given" | "When" | "Then" = "Given";
-  let exampleHeader: string[] | null = null;
-  let inExamples = false;
-
-  const flush = (): void => {
-    if (block.kind === "background") background.push(...block.steps);
-    if (block.kind === "scenario") scenarios.push(...materializeScenario(block, null, errors));
-    if (block.kind === "outline") {
-      if (block.examples.length === 0) errors.push(`Scenario Outline "${block.name}" (line ${block.line}) has no Examples rows`);
-      block.examples.forEach((row, index) => scenarios.push(...materializeScenario(block, { row, index }, errors)));
-    }
-    block = { kind: "none", name: "", tags: [], steps: [], examples: [], line: 0 };
-    exampleHeader = null;
-    inExamples = false;
-  };
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const raw = lines[i]!;
-    const line = raw.trim();
-    const lineNo = i + 1;
-    if (line === "" || line.startsWith("#")) continue;
-
-    if (line.startsWith("@")) {
-      pendingTags = [...pendingTags, ...splitTags(line)];
-      continue;
-    }
-
-    const header = line.match(/^(Feature|Background|Scenario Outline|Scenario Template|Scenario|Example|Examples|Scenarios):\s*(.*)$/);
-    if (header) {
-      const keyword = header[1]!;
-      const name = header[2]!.trim();
-      if (keyword === "Examples" || keyword === "Scenarios") {
-        if (block.kind !== "outline") errors.push(`Examples at line ${lineNo} does not follow a Scenario Outline`);
-        inExamples = true;
-        exampleHeader = null;
-        pendingTags = [];
-        continue;
-      }
-      if (keyword === "Feature") {
-        flush();
-        featureName = name;
-        featureTags = pendingTags;
-        pendingTags = [];
-        block = { kind: "feature", name, tags: [], steps: [], examples: [], line: lineNo };
-        continue;
-      }
-      flush();
-      if (keyword === "Background") {
-        block = { kind: "background", name, tags: [], steps: [], examples: [], line: lineNo };
-      } else if (keyword === "Scenario Outline" || keyword === "Scenario Template") {
-        block = { kind: "outline", name, tags: pendingTags, steps: [], examples: [], line: lineNo };
-      } else {
-        block = { kind: "scenario", name, tags: pendingTags, steps: [], examples: [], line: lineNo };
-      }
-      pendingTags = [];
-      lastKeyword = "Given";
-      continue;
-    }
-
-    if (line.startsWith("|")) {
-      const cells = splitTableRow(line);
-      if (inExamples) {
-        if (exampleHeader === null) {
-          exampleHeader = cells;
-        } else {
-          const row: Record<string, string> = {};
-          exampleHeader.forEach((key, index) => {
-            row[key] = cells[index] ?? "";
-          });
-          block.examples.push(row);
-        }
-        continue;
-      }
-      const target = block.steps[block.steps.length - 1];
-      if (!target) {
-        errors.push(`Data table at line ${lineNo} does not follow a step`);
-        continue;
-      }
-      block.steps[block.steps.length - 1] = { ...target, dataTable: [...(target.dataTable ?? []), cells] };
-      continue;
-    }
-
-    if (line === '"""' || line === "```") {
-      const closer = line;
-      const body: string[] = [];
-      let j = i + 1;
-      while (j < lines.length && lines[j]!.trim() !== closer) {
-        body.push(lines[j]!);
-        j += 1;
-      }
-      if (j >= lines.length) errors.push(`Unterminated doc string opened at line ${lineNo}`);
-      const target = block.steps[block.steps.length - 1];
-      if (!target) errors.push(`Doc string at line ${lineNo} does not follow a step`);
-      else block.steps[block.steps.length - 1] = { ...target, docString: dedent(body) };
-      i = j;
-      continue;
-    }
-
-    const stepMatch = line.match(/^(Given|When|Then|And|But|\*)\s+(.*)$/);
-    if (stepMatch && STEP_KEYWORDS.has(stepMatch[1]!)) {
-      const rawKeyword = stepMatch[1]!;
-      const keyword: "Given" | "When" | "Then" = rawKeyword === "Given" || rawKeyword === "When" || rawKeyword === "Then" ? rawKeyword : lastKeyword;
-      lastKeyword = keyword;
-      if (block.kind === "none" || block.kind === "feature") {
-        errors.push(`Step at line ${lineNo} is outside a Background or Scenario`);
-        continue;
-      }
-      block.steps.push({ keyword, rawKeyword, text: stepMatch[2]!.trim() });
-      continue;
-    }
-
-    if (block.kind === "feature") {
-      descriptionLines.push(raw.trim());
-      continue;
-    }
-    errors.push(`Unrecognized line ${lineNo}: ${JSON.stringify(line)}`);
-  }
-  flush();
-
-  if (featureName === "") errors.push("Feature has no `Feature:` header");
-  const capability = tagValue(featureTags, "@capability-");
-  const oracle = tagValue(featureTags, "@oracle-");
-  const noOracleDecision = tagValue(featureTags, "@no-oracle-");
-  const comparisonRaw = tagValue(featureTags, "@comparison-");
-  const oracleInput = tagValue(featureTags, "@oracle-input-");
-  const mutationCatalog = tagValue(featureTags, "@mutations-");
-  // 🧭️The parser records the declared profile; whether that profile EXISTS is registry knowledge and
-  // is checked in the contract phase, so the Gherkin profile stays independent of which formats the
-  // repository happens to own today.
-  const comparison: ComparisonProfile | null = comparisonRaw;
-
-  const seen = new Set<string>();
-  for (const scenario of scenarios) {
-    if (seen.has(scenario.id)) errors.push(`Duplicate scenario id @id-${scenario.id}`);
-    seen.add(scenario.id);
-  }
-
-  if (oracleInput !== null && oracleInput !== "subject-raw") errors.push(`Unknown oracle input @oracle-input-${oracleInput}`);
-  return { name: featureName, description: descriptionLines.join("\n").trim(), tags: featureTags, capability, oracle, noOracleDecision, comparison, oracleInput: oracleInput === "subject-raw" ? oracleInput : null, mutationCatalog, background, scenarios, errors };
-}
-
-function dedent(body: readonly string[]): string {
-  const indents = body.filter((line) => line.trim() !== "").map((line) => line.length - line.trimStart().length);
-  const shift = indents.length === 0 ? 0 : Math.min(...indents);
-  return body.map((line) => line.slice(shift)).join("\n");
-}
-
-function materializeScenario(block: FeatureBlock, example: { row: Record<string, string>; index: number } | null, errors: string[]): FeatureScenario[] {
-  const tags = block.tags;
-  const baseId = tagValue(tags, "@id-");
-  const levels = tagValues(tags, "@level-").filter((value) => (TEST_LEVELS as readonly string[]).includes(value)) as TestLevel[];
-  const modes = tagValues(tags, "@mode-").filter((value) => (TEST_MODES as readonly string[]).includes(value)) as TestMode[];
-  const where = `"${block.name}" (line ${block.line})`;
-  if (baseId === null) errors.push(`Scenario ${where} is missing its @id-<stable-id> tag`);
-  if (levels.length !== 1) errors.push(`Scenario ${where} must carry exactly one @level-<fundamental|quick|long|exhaustive> tag (found ${levels.length})`);
-  if (modes.length !== 1) errors.push(`Scenario ${where} must carry exactly one @mode-<differential|conformance|round-trip|property|error> tag (found ${modes.length})`);
-  if (baseId === null || levels.length !== 1 || modes.length !== 1) return [];
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(baseId)) {
-    errors.push(`Scenario id @id-${baseId} is not kebab-case`);
-    return [];
-  }
-  const row = example?.row ?? {};
-  if (example !== null && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.id ?? "")) {
-    errors.push(`Scenario Outline ${where} Examples row ${example.index + 1} needs a kebab-case \`id\` cell: its scenario id is @id-${baseId}-<id>, and a row index would rename every later row when one is inserted`);
-    return [];
-  }
-  const id = example === null ? baseId : `${baseId}-${row.id}`;
-  const implementations = tagValues(tags, "@implementation-").filter((value) => (IMPLEMENTATIONS as readonly string[]).includes(value)) as Implementation[];
-  const steps = block.steps.map((step) => ({ ...step, text: substitute(step.text, row), docString: step.docString === undefined ? undefined : substitute(step.docString, row), dataTable: step.dataTable?.map((cells) => cells.map((cell) => substitute(cell, row))) }));
-  return [
-    {
-      id,
-      name:
-        example === null
-          ? block.name
-          : `${block.name} [${Object.entries(row)
-              .map(([key, value]) => `${key}=${value}`)
-              .join(", ")}]`,
-      level: levels[0]!,
-      mode: modes[0]!,
-      tags,
-      steps,
-      seed: tagValue(tags, "@seed-") ?? undefined,
-      platforms: tagValues(tags, "@platform-"),
-      requires: tagValues(tags, "@requires-"),
-      implementations: implementations.length > 0 ? implementations : undefined,
-      outlineOf: example === null ? undefined : baseId,
-      line: block.line,
-    },
-  ];
-}
-//#endregion 🥒️Gherkin
 
 //#region 🔍️Discovery
 /** 🔍️ One discovered test case: its owner, slug, feature, adapters and fixtures. */
@@ -1119,7 +847,7 @@ export function subjectFeaturesFor(registry: OracleRegistry, owner: string, impl
 
 //#region 🧫️Fixtures
 /** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
-export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "asset" | "schema"; name: string; path: string; digest: string }>;
+
 
 const FIXTURE_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
 
@@ -1188,7 +916,7 @@ export function fixtureFilesUnder(repoRoot: string, relDir: string | null): stri
  * (`@oracle-input-subject-raw`) judges one scenario's output at a time, so the routing must never fold a case's
  * scenarios into one map: a flat implementation → path map hands every oracle scenario the LAST subject scenario's bytes.
  */
-export type SubjectRawInputs = Readonly<Record<string, Readonly<Partial<Record<Implementation, string>>>>>;
+
 
 /** 📥️ Routes every passed subject result that produced raw bytes to its own scenario id. */
 export function subjectRawInputsByScenario(results: readonly TestResult[]): SubjectRawInputs {
@@ -1198,46 +926,7 @@ export function subjectRawInputsByScenario(results: readonly TestResult[]): Subj
 }
 
 /** 📋️ The owned execution plan one native host receives — hosts never re-parse the feature. */
-export type TestCasePlan = Readonly<{
-  schemaVersion: 2;
-  baselineSha?: string;
-  owner: string;
-  case: string;
-  featurePath: string;
-  featureHash: string;
-  featureName: string;
-  description: string;
-  capability: string;
-  /** 🪆️ The smallest owning subset this case is scoped to. A case that mutates an artifact without one is unscoped, which v2 forbids. */
-  target: SubsetTarget | null;
-  /** #⃣ Digest of the owning mutation manifest, so a manifest edit invalidates every cached result of this case. */
-  mutationManifestDigest: string | null;
-  oracle: string | null;
-  noOracleDecision: string | null;
-  comparison: ComparisonProfile;
-  /** 📥️ The subject artifact an oracle consumes when the feature declares an external byte decoder. */
-  oracleInput: "subject-raw" | null;
-  /** 📦️ Raw outputs produced by subject hosts before this oracle host starts, per scenario id then implementation. */
-  subjectRawInputs?: SubjectRawInputs;
-  /** ⚖️ The multi-artifact, externally-probed pipeline this case compares under, when it produces more than a projection. */
-  comparisonPipeline: string | null;
-  toleranceProfile: string | null;
-  background: readonly FeatureStep[];
-  scenarios: readonly FeatureScenario[];
-  adapters: Readonly<Partial<Record<Implementation, string>>>;
-  fixtures: readonly ResolvedFixture[];
-  /** 🧫️ The full provenance record of every fixture this case reads — hosts never re-derive it. */
-  fixtureManifests: readonly FixtureManifest[];
-  workDir: string;
-  resultsPath: string;
-  outputDir: string;
-  /** 📦️ Where a host writes its produced artifact bundle. Separate from `workDir` so a mutable scratch copy is never mistaken for a result. */
-  artifactDir: string;
-  level: TestLevel;
-  role: TestRole;
-  implementation: Implementation;
-  platform: PlatformId;
-}>;
+
 
 /** 🎚️ Levels at or below `level` — running a level runs every lower level, cumulatively. */
 export function levelsUpTo(level: TestLevel): readonly TestLevel[] {
@@ -3110,49 +2799,16 @@ export function dotnetPackageReferences(repoRoot: string, csprojRel: string): { 
 
 //#region 🧭️Adapters
 /** 🧭️ Context one scenario handler receives — its plan slice, resolved fixtures and its work directory. */
-export type AdapterContext = Readonly<{
-  plan: TestCasePlan;
-  scenario: FeatureScenario;
-  role: TestRole;
-  repoRoot: string;
-  workDir: string;
-  /** 🧫️ Absolute path of a resolved fixture; throws for an unresolved URI rather than returning a silent default. */
-  fixture(uri: string): string;
-  /** 🧫️ Bytes of a resolved fixture. */
-  fixtureBytes(uri: string): Uint8Array;
-  /** 🧫️ Copies an immutable fixture into the case's work directory and returns the mutable copy's path. */
-  copyFixture(uri: string, as?: string): string;
-  /** 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an `@oracle-input-subject-raw` oracle; throws when absent. */
-  subjectRawBytes(implementation: Implementation): Uint8Array;
-  /** 📦️ Directory a handler writes its produced artifact bundle into. */
-  artifactDir: string;
-  /** 📦️ Absolute path to write one named result artifact to — `<artifactDir>/<scenario id>/<role>/<filename>`, so a
-   *  scenario's artifacts never overwrite another's; creates parent directories. */
-  artifact(role: string, filename: string): string;
-  /** 🎲️ Deterministic seed for this scenario, from its `@seed-…` tag. */
-  seed: string;
-  /** 🪆️ The Examples row id this scenario expands; throws for a plain scenario. */
-  row(): string;
-}>;
+
 
 /** 🧭️ What a scenario handler returns: the raw artifact plus the projection the profile compares. */
-export type AdapterOutcome = Readonly<{
-  raw?: string | Uint8Array;
-  projection: unknown;
-  /** 📦️ Named files this handler produced, relative to `ctx.artifactDir`. A BRep case returns its STEP and its mesh here rather than smuggling them through the projection. */
-  artifacts?: readonly { role: string; path: string; mediaType: string }[];
-  /** 🏭️ Set by a SUBJECT handler that invoked production dispatch. Omitting it is how a vector-replay adapter is detected. */
-  productionDispatch?: { invoked: true; operation: string; bridgeVersion: number };
-  diagnostics?: readonly { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
-}>;
+
 
 /** 🧭️ One implementation's registration for a case: which scenarios it serves, in which roles. */
-export type TestAdapter = Readonly<{ implementation: Implementation; scenarios: Readonly<Record<string, Readonly<{ subject?: (ctx: AdapterContext) => AdapterOutcome | Promise<AdapterOutcome>; oracle?: (ctx: AdapterContext) => AdapterOutcome | Promise<AdapterOutcome> }>>> }>;
+
 
 /** 🧭️ Declares a TypeScript adapter. The coordinator validates the registration against the feature. */
-export function defineTestAdapter(adapter: TestAdapter): TestAdapter {
-  return adapter;
-}
+
 
 /**
  * 📦️ The answer of a READER oracle whose expected state is committed, not computed: the one fixture the scenario's
@@ -3435,7 +3091,7 @@ export function formatMetrics(metrics: CoverageMetrics, perImplementation: reado
 
 //#region 🪆️Subset
 /** 🖥️ A supported execution platform, the last coordinate of every coverage row. */
-export type PlatformId = `${"linux" | "darwin" | "win32"}-${"x64" | "arm64"}`;
+
 
 /** 🖥️ This process's platform coordinate. Never inferred from a hostname or a CI variable. */
 export function currentPlatform(): PlatformId {
@@ -3449,14 +3105,7 @@ export function currentPlatform(): PlatformId {
  * it. There is deliberately no wildcard: an operation that spans subsets declares an explicit typed
  * `compound`, and falling back to the whole artifact is a contract failure rather than a default.
  */
-export type SubsetTarget = Readonly<{
-  artifact: string;
-  standard: string;
-  subset: string;
-  surface?: string;
-  compound?: readonly string[];
-  selector?: Readonly<{ type: "entity-id" | "entity-path" | "entity-set" | "whole-subset"; value: string | readonly string[] }>;
-}>;
+
 
 /** 🚫️ Subset ids that name "everything" rather than a semantic scope. */
 export const WILDCARD_SUBSET_IDS: readonly string[] = ["*", "any", "all", "unconstrained", ""];
@@ -3591,8 +3240,8 @@ export function subsetCoordinatesOfOwner(owner: string): { standardDirectoryName
 
 //#region 🧬️Manifest
 /** 🎯️ The semantic class a fixture DECLARES for its mutation. "Any non-crash result" is not a class. */
-export const MUTATION_OUTCOME_CLASSES = ["applied", "no-op", "empty", "disjoint", "rejected"] as const;
-export type MutationOutcomeClass = (typeof MUTATION_OUTCOME_CLASSES)[number];
+
+
 
 /** 🚦️ Whether a raw value is one of the protocol's outcome classes. */
 export function isMutationOutcomeClass(value: unknown): value is MutationOutcomeClass {
@@ -3662,7 +3311,7 @@ export type NativeSecondImplementationEvidence = Readonly<{
 }>;
 
 /** ⚙️ The kernel a reference or a probe actually sits on — the unit independence is accounted in. */
-export type EngineFamily = Readonly<{ family: string; implementation: string; version: string }>;
+
 
 /** ⚙️ Stable identity of one engine family, ignoring the wrapper that exposes it. */
 export function engineFamilyId(engine: EngineFamily | undefined): string {
@@ -3692,7 +3341,7 @@ export type ManifestMutation = Readonly<{
 }>;
 
 /** 🧷️ Named invariants a mutation or fixture must keep, locally and in its enclosing artifact. */
-export type FixtureInvariants = Readonly<{ local?: readonly string[]; enclosing?: readonly string[] }>;
+
 
 /** 🧬️ One owner's authoritative mutation inventory for one artifact/standard/subset. */
 export type MutationManifest = Readonly<{
@@ -3881,48 +3530,26 @@ export function compareInventories(manifest: MutationManifest, runtime: RuntimeM
 
 //#region 🧫️Fixture
 /** 🧫️ What a fixture IS. Every fixture is exactly one of these — there is no fourth, unlabelled kind. */
-export const FIXTURE_CLASSES = ["real-world", "handcrafted", "third-party-generated"] as const;
-export type FixtureClass = (typeof FIXTURE_CLASSES)[number];
+
+
 
 /** 🧫️ One file inside a fixture bundle, addressed by ROLE so nothing downstream names a path. */
-export type FixtureFile = Readonly<{ role: string; path: string; mediaType: string; sha256: string; bytes?: number }>;
+
 
 /** 🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. */
-export type FixtureGenerator = Readonly<{ oracle: string; packageVersion: string; engineFamily: string; engineVersion: string; command: string; seed?: string | number; platform: PlatformId; sourceDigest?: string; exportEngine?: EngineFamily }>;
+
 
 /** 📜️ Where a fixture came from and under what licence it may be committed. */
-export type FixtureProvenance = Readonly<{ source: "generated" | "authored" | "downloaded" | "vendored"; license: string; acquiredAt?: string; attribution?: string; url?: string; security?: "scanned-clean" | "unscanned" | "quarantined"; privacy?: "no-personal-data" | "reviewed" | "unreviewed" }>;
+
 
 /** 📐️ The units and frame a fixture's numbers are expressed in. Absent units make every metric meaningless. */
-export type FixtureUnits = Readonly<{ length: string; angle: string; handedness?: "right" | "left"; up?: "y" | "z" }>;
+
 
 /** ⚠️ A fixture-level loosening of its tolerance profile — every field mandatory, and always reported. */
-export type ToleranceOverride = Readonly<{ reason: string; measuredBaseline: number; factor: number; approvedBy: string }>;
+
 
 /** 🧫️ One immutable fixture bundle with complete provenance. */
-export type FixtureManifest = Readonly<{
-  schema: "semio.repository-test.fixture/v2";
-  id: string;
-  class: FixtureClass;
-  target: SubsetTarget;
-  mutation?: string;
-  outcome?: MutationOutcomeClass;
-  units: FixtureUnits;
-  files: readonly FixtureFile[];
-  generator?: FixtureGenerator;
-  provenance: FixtureProvenance;
-  comparisonProfile: string;
-  toleranceProfile?: string;
-  toleranceOverride?: ToleranceOverride;
-  reproducible: boolean;
-  family?: string;
-  notes?: string;
-  invariants?: FixtureInvariants;
-  comparisonPipeline?: string;
-  reproducibilityDiffs?: readonly string[];
-  /** 📁️ Repo-relative directory the manifest was read from; `files[].path` resolves against it. */
-  manifestDir?: string;
-}>;
+
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/;
 

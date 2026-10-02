@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { canonicalJson } from "../../🟦️.ts";
+import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 
 export function taxonomyCliRecord(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object.`);

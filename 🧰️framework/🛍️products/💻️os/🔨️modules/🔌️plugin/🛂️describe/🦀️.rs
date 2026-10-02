@@ -12,10 +12,7 @@
 //! the three is computable by `describe()` itself, running inside the not-yet-hashed wasm. Unchanged
 //! from E1's own placeholder.
 
-use semio_framework::{
-    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType,
-    PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
-};
+use semio_framework::{io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, };
 
 /// 📚️ The largest example document body a descriptor still carries inline.
 ///
@@ -171,10 +168,7 @@ async fn plugin_contributions<PA: crate::app::PluginApp>(runtime: &crate::plugin
 }
 
 fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
-    let value = dsl::to_dsl_value(descriptor).unwrap_or_else(|error| {
-        let bounded = error.chars().take(1024).collect::<String>();
-        panic!("package descriptor structural encoding failed: {bounded}")
-    });
+    let value = semio_framework_value::ToValue::to_value(descriptor);
     store::pack_rt::encode_wire_value(&value)
 }
 

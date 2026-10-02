@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🔮️ Oracle registry for s.wfc.bitmap@1/*. The mutation vocabulary is adjudicated by an in-repository Python second implementation; the collapse itself is the engine crate's own subject and is not a vector here.",
   "oracles": [
@@ -454,13 +454,7 @@
       ]
     }
   ],
-  "oracleHostPackages": [
-    {
-      "implementation": "rust",
-      "package": "semio-s-plugin-stdio-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
-    }
-  ],
+  "oracleHostPackages": [],
   "subjectFeatures": [
     {
       "implementation": "rust",

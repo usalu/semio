@@ -1,0 +1,39 @@
+{
+  "brush": {
+    "color": [
+      0.0,
+      0.5,
+      1.0,
+      1.0
+    ],
+    "hardness": 1.0,
+    "opacity": 1.0,
+    "size": 3.0
+  },
+  "layerId": "paint",
+  "mutation": "paintStroke",
+  "points": [
+    {
+      "x": 0.0,
+      "y": 2.0
+    },
+    {
+      "x": 6.0,
+      "y": 2.0
+    }
+  ],
+  "selection": [
+    {
+      "coverage": 255,
+      "length": 3,
+      "start": 6
+    },
+    {
+      "coverage": 128,
+      "length": 6,
+      "start": 12
+    }
+  ],
+  "target": "pixels",
+  "tool": "brush"
+}

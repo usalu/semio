@@ -101,6 +101,7 @@ import {
   WORLD3D_SCENE_LANE_KEY_PREFIX,
   board2dSceneFromLanes,
   canvas2dSceneFromLanes,
+  continuousPressIdentity,
   createContinuousGestureLane,
   paint2dSceneFromLanes,
   sceneFromLanes,
@@ -153,7 +154,7 @@ import {
 import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
-import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
@@ -1083,11 +1084,8 @@ function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, tr
  * always the newest — and always sends the release.
  *
  * `context` and `record` are read through a ref because both identities change on every render while
- * the lane must outlive them: a lane recreated per render is not a lane. */
-/** 🔢️ Page-wide press serial: two presses of one control in the same millisecond still carry distinct identities, so the
- * guest never mistakes the second for a late tick of the first it already closed. */
-let continuousPressSerial = 0;
-
+ * the lane must outlive them: a lane recreated per render is not a lane. Press identities come from
+ * `continuousPressIdentity`, unique per page even within one millisecond. */
 function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
   const bindingRef = useRef({ context, record });
   bindingRef.current = { context, record };
@@ -1102,7 +1100,7 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
       // while a program that cares can fold a whole press into ONE undoable edit
       // (`📓️slider-preview-update-2026-09-15.md`).
       send: (value, phase) => {
-        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.record.key}:${Date.now()}:${(continuousPressSerial += 1)}`;
+        if (gestureRef.current === null) gestureRef.current = continuousPressIdentity(bindingRef.current.record.key);
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
         return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
@@ -1212,7 +1210,7 @@ function useDeclarativeLane(onAction: (action: ActionDescriptor) => void, descri
   if (laneRef.current === null) {
     laneRef.current = createContinuousGestureLane<number>({
       send: (value, phase) => {
-        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.key}:${Date.now()}:${(continuousPressSerial += 1)}`;
+        if (gestureRef.current === null) gestureRef.current = continuousPressIdentity(bindingRef.current.key);
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
         dispatchDeclarativeControlAction(bindingRef.current.onAction, bindingRef.current.descriptor, { value, gesture, commit: phase === "commit" });
@@ -1241,7 +1239,7 @@ function DeclarativeSliderControl({ control, onAction, path }: { readonly contro
       step={control.step}
       snapValues={control.snaps}
       value={[control.value]}
-      aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])], precision: null, displayUnit: null, displayFactor: null, limits: null }).valueText ?? undefined}
+      aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined}
       onValueChange={(values) => lane.offer(values[0] ?? control.value)}
       onValueCommit={(values) => lane.commit(values[0] ?? control.value)}
       onPointerCancel={() => lane.abort("captureLost")}
@@ -1453,14 +1451,16 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
     (event.target as HTMLInputElement | HTMLTextAreaElement).blur();
   };
-  /** 📌️ A number field's page keys follow the shared keyboard law: the adjacent detent (`snaps`), else ten steps —
+  /** 📌️ A number field's keys follow the shared keyboard law (design §18, `uiNumberFieldKey`): arrows one step (Shift: ten)
+   * then the detent within tolerance, page keys the adjacent detent (`snaps`) else ten steps, Home/End a bound the field has —
    * staged in the draft of a blur-committed field, offered on the lane of a continuous one. */
-  const pageKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>): boolean => {
+  const lawKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>): boolean => {
     const typed = Number((event.target as HTMLInputElement).value);
-    if (component.kind !== "number" || (event.key !== "PageUp" && event.key !== "PageDown") || !Number.isFinite(typed)) return false;
+    const key = component.kind === "number" ? uiNumberFieldKey(event.key, event.shiftKey, component.min, component.max) : null;
+    if (key === null || !Number.isFinite(typed)) return false;
     event.preventDefault();
     const current = uiNumberTypedValue(typed, factor, component.precision, [storedNumber, ...(component.snaps ?? [])]);
-    const next = uiNumberKeyValue(current, component.min ?? null, component.max ?? null, component.step ?? 1, component.snaps ?? [], event.key === "PageUp" ? "pageUp" : "pageDown", false);
+    const next = uiNumberKeyValue(current, component.min ?? null, component.max ?? null, component.step ?? 0, component.precision ?? null, factor, component.snaps ?? [], key.key, key.large);
     const text = shownText(next);
     if (commitOnBlur) setDraft(text);
     else commitValue(text);
@@ -1502,19 +1502,19 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       step={shown(component.step) ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
-      onKeyDown={(event) => { if (!pageKey(event) && commitOnBlur) commitOnEnter(event); }}
+      onKeyDown={(event) => { if (!lawKey(event) && commitOnBlur) commitOnEnter(event); }}
       onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? () => lane.commit() : undefined}
     />
   );
-  const field = refusal?.message ? (
-    <span data-slot="input-field" className="flex w-full min-w-0 flex-col">
+  const field = (
+    <>
       {input}
-      <span id={refusalId} role="alert" data-slot="input-refusal" className="text-destructive text-xs leading-tight">
-        {refusal.message}
-      </span>
-    </span>
-  ) : (
-    input
+      {refusal?.message ? (
+        <span id={refusalId} role="alert" data-slot="input-refusal" className="text-destructive block w-full text-xs leading-tight">
+          {refusal.message}
+        </span>
+      ) : null}
+    </>
   );
   return picker ? <span ref={pickerRef} className="contents">{field}</span> : field;
 }
@@ -3028,6 +3028,8 @@ if (import.meta.vitest) {
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests1: registerContinuousPressTests } = await import("./🧪️tests/🧪️continuous-presses/🟦️.tsx");
   await registerContinuousPressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerNumberKeyboardLawTests } = await import("./🧪️tests/🧪️number-keyboard-law/🟦️.tsx");
+  await registerNumberKeyboardLawTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");

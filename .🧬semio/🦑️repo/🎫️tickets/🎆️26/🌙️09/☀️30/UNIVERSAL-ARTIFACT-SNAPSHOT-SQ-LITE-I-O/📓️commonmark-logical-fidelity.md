@@ -27,3 +27,13 @@ Fresh registered public gate `@semio-tech/stdio-md:test --skip-nx-cache`: GREEN 
 
 
 Fresh registered native semantic gate GREEN: 10 / 10 selected laws passed, 47 other package laws filtered, Nextest runtime 0.909 seconds, owning gate 17m46s including queue/compile. This is actual after emitted schema hash/demo alignment and handwritten grammar correction, including erased Binary/Text full authored tree and 1024-level controlled ownership laws. Full owning package suite is now queued to verify all existing demo/grammar/protocol/codec laws against current shipped assets.
+
+
+## Full Owner Native Gate
+
+Fresh uncached registered `@semio-tech/stdio-md-rs:test` completed successfully: all 57 selected tests passed (0.430 seconds test execution), with three generator dependencies successful. Evidence: retained `md-native-full-owned-first.log`. This includes owner logical Text/Pack demos, native factory/declaration identity, editor and standard conformance consumers in addition to the ten semantic SQLite laws.
+
+
+## Normative Grammar Alignment After Full Native57 Green
+
+The actual prior full owner gate remains57/57; it predates this metadata follow-up. Read-only review found the historical snapshot grammar still named a stdio.md wire-style prefix rather than the printed semio envelope and flat logical records. The asset is now individually handwritten for exact envelope/schema/ordered roots, seven block kinds/list-item ownership and nine inline kinds/named optional fields. A native recognizer law covers the shared full-kind corpus and empty owned document. This extra law is not yet executed; a fresh sequential native run is required after the current JSON/GLTF queues. No old57 result is relabeled as coverage of the changed grammar asset.

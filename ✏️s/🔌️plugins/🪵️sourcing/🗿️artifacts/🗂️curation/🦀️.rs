@@ -267,7 +267,7 @@ pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "catalogue.sourcing".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Sourcing Curation", "Beschaffungskuratierung"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Sourcing Curation", "Beschaffungskuratierung"),
         source_format: "sourcing.curation".into(),
         component_kind: "catalogue".into(),
         dimension: "data".into(),
@@ -786,7 +786,7 @@ pub mod editor {
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️set-artifact-json/🦀️.rs"]
             pub mod set_artifact_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️set-filter-min-availability/🦀️.rs"]
             pub mod set_filter_min_availability;

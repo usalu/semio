@@ -12,45 +12,33 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import {
-  defineOwnedBuildConfig,
-  uiReactBuildPlugin,
-  uiTailwindBuildPlugins,
   type OwnedBuildConfig,
   type OwnedBuildMiddleware,
   type OwnedBuildPlugin,
 } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import {
-  PLAYGROUND_PORTS,
-  allPlaygroundReservedPorts,
-  playgroundDevPort,
-  playgroundDevPortString,
-  playgroundPlayViteDefine,
-  playgroundPortEnv,
-  playgroundTestPort,
-  playgroundTestPortString,
-  type PlaygroundHostKind,
-} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1 } from "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🗂️assets/🟦️.ts";
-import type { PlaygroundAssetSpec } from "../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1, type TileProxyAssetSpecV1 } from "../../../../🖼️assets/🗺️tile-proxy/🟦️.ts";
+import type { AssetDeliveryDeclarationV1, AssetDeliveryModeV1, AssetDeliveryProviderV1 } from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import providerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
 import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
 import { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
 // #endregion 🔌️Adapters
 
-export type { PlaygroundAssetSpec };
 export { playgroundIframeEmbedHeadersPlugin };
 
-export {
-  PLAYGROUND_PORTS,
-  allPlaygroundReservedPorts,
-  playgroundDevPort,
-  playgroundDevPortString,
-  playgroundPortEnv,
-  playgroundTestPort,
-  playgroundTestPortString,
-  type PlaygroundHostKind,
-};
+/** 🥽️ Supplies one owner-authored mesh catalog to its build provider. */
+export type MeshCollectionAssetSpecV1 = { readonly kind: "mesh-collection"; readonly route: string; readonly catalog: string };
+
+/** 🗂️ Supplies one owner-authored directory to its build provider. */
+export type StaticDirectoryAssetSpecV1 = { readonly kind: "static-dir"; readonly route: string; readonly root: string };
+
+function admitBuildAssetSpecV1<K extends keyof typeof providerSchema.definitions>(value: AssetDeliveryDeclarationV1, kind: K): K extends "MeshCollectionAssetSpecV1" ? MeshCollectionAssetSpecV1 : StaticDirectoryAssetSpecV1 {
+  const failures = validateJsonSchemaSubset(providerSchema.definitions[kind], value);
+  if (failures.length) throw Error("Invalid " + kind + ": " + failures.join("; "));
+  return value as K extends "MeshCollectionAssetSpecV1" ? MeshCollectionAssetSpecV1 : StaticDirectoryAssetSpecV1;
+}
 
 //#region 🔖️ViteElementsAssets
 /** @emoji 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
@@ -315,14 +303,14 @@ function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
 }
 
 //#region 🔖️MeshCollectionAssetPlugin
-function readMeshDeliveryCatalog(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): MeshDeliveryCatalog {
+function readMeshDeliveryCatalog(repoRoot: string, spec: MeshCollectionAssetSpecV1): MeshDeliveryCatalog {
   if (spec.route !== "/mesh") throw new Error(`Unsupported mesh catalog route: ${spec.route}`);
   const read = (path: string): unknown => JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
   return parseMeshDeliveryCatalog(read(spec.catalog), read);
 }
 
 /** 🌐️ Serves only explicit catalog transport paths, retaining public identity at the caller boundary. */
-function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildMiddleware {
+function createMeshCollectionMiddleware(repoRoot: string, spec: MeshCollectionAssetSpecV1): OwnedBuildMiddleware {
   const route = `${spec.route}/`;
   const catalog = new Map(readMeshDeliveryCatalog(repoRoot, spec).map(entry => [`${route}${entry.path}`, entry]));
   return (req, res, next) => {
@@ -359,7 +347,7 @@ function copyMeshCollectionGlbs(repoRoot: string, catalog: MeshDeliveryCatalog, 
 }
 
 /** 🧊️ Dev and static delivery share one explicit public-ID/source/output authority. */
-export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildPlugin[] {
+export function meshCollectionVitePlugin(repoRoot: string, spec: MeshCollectionAssetSpecV1): OwnedBuildPlugin[] {
   const serveMeshes = createMeshCollectionMiddleware(repoRoot, spec);
   const catalog = readMeshDeliveryCatalog(repoRoot, spec);
   const destName = spec.route.replace(/^\//, "");
@@ -1012,20 +1000,6 @@ export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath:
   };
 }
 
-export type PlaygroundPlayViteOptions = {
-  readonly playDir: string;
-  readonly repoRoot: string;
-  /** @emoji 🎯️ When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
-  readonly playEntryKind?: string;
-  readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
-  readonly extraPlugins?: readonly OwnedBuildPlugin[];
-  readonly watchIgnored?: readonly string[];
-  readonly build?: OwnedBuildConfig["build"];
-  readonly server?: OwnedBuildConfig["server"];
-  readonly optimizeDeps?: OwnedBuildConfig["optimizeDeps"];
-  readonly resolveDedupe?: readonly string[];
-};
-
 /** @emoji 🎬️ R3F packages that must resolve once with {@link sceneHostPort} and drei controls. */
 export const PLAYGROUND_SCENE_HOST_DEDUPE = ["@react-three/fiber", "@react-three/drei"] as const;
 
@@ -1062,17 +1036,6 @@ export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBu
   const exclude = [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(extra?.exclude ?? [])];
   return { include: [...new Set(include)], exclude: [...new Set(exclude)] };
 }
-
-/** 🗂️ Selects fetching or prepared-cache delivery for any declared asset owner. */
-export type AssetServeMode = "fetch" | "bundle";
-
-/** 🛂️ Reads the neutral caller's explicit asset serving option. */
-export function resolveAssetServeMode(value?: string): AssetServeMode {
-  if (value === undefined || value === "" || value === "fetch") return "fetch";
-  if (value === "bundle") return "bundle";
-  throw Error("asset serve mode must be fetch or bundle");
-}
-
 
 //#region 🔖️TileProxyAssetPlugin
 /** @emoji 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
@@ -1161,7 +1124,7 @@ async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z:
 
 /** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
  * (and caching) from the declared upstream on a miss. */
-function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: AssetServeMode, userAgent: string): OwnedBuildMiddleware {
+function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: AssetDeliveryModeV1, userAgent: string): OwnedBuildMiddleware {
   const prefix = route.endsWith("/") ? route : `${route}/`;
   const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)/(\\d+)/(\\d+)\\.(\\w+)(?:\\?.*)?$`);
   return async (req, res, next) => {
@@ -1217,7 +1180,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
 
 /** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
  * owner-authored route and request coordinates into the neutral transport. */
-export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: AssetServeMode = "fetch"): OwnedBuildPlugin[] {
+export function tileProxyVitePlugin(repoRoot: string, spec: TileProxyAssetSpecV1, mode: AssetDeliveryModeV1 = "fetch"): OwnedBuildPlugin[] {
   const admitted = parseTileProxyAssetSpecV1(spec);
   const cacheRoot = resolve(repoRoot, admitted.cache);
   const serveTiles = createTileProxyMiddleware(admitted.route, cacheRoot, admitted.upstream, mode, admitted.userAgent);
@@ -1257,64 +1220,7 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   return plugins;
 }
 
-/** @emoji 🌐️ Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
- * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
-export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: AssetServeMode = "fetch", host = "127.0.0.1"): Server {
-  const seen = new Set<string>();
-  const middlewares: OwnedBuildMiddleware[] = [];
-  for (const spec of specs) {
-    const key = `${spec.kind}:${spec.route}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    if (spec.kind === "tile-proxy") {
-      const admitted = parseTileProxyAssetSpecV1(spec);
-      middlewares.push(createTileProxyMiddleware(admitted.route, resolve(repoRoot, admitted.cache), admitted.upstream, mode, admitted.userAgent));
-    } else if (spec.kind === "mesh-collection") {
-      middlewares.push(createMeshCollectionMiddleware(repoRoot, spec));
-    } else {
-      middlewares.push(createStaticDirMiddleware(repoRoot, spec));
-    }
-  }
-  const server = createServer((req, res) => {
-    const run = (i: number): void => {
-      if (i >= middlewares.length) {
-        res.statusCode = 404;
-        res.end();
-        return;
-      }
-      middlewares[i]!(req, res, () => run(i + 1));
-    };
-    run(0);
-  });
-  server.listen(port, host);
-  return server;
-}
 //#endregion 🔖️TileProxyAssetPlugin
-
-//#region 🔖️PlaygroundAssetVitePlugins
-/** @emoji 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
- * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
- * metadata instead of hand-picking per-app plugin factories. */
-export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: AssetServeMode = "fetch"): OwnedBuildPlugin[] {
-  const seen = new Set<string>();
-  const plugins: OwnedBuildPlugin[] = [];
-  for (const spec of specs) {
-    const key = `${spec.kind}:${spec.route}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    if (spec.kind === "tile-proxy") {
-      plugins.push(...tileProxyVitePlugin(repoRoot, spec, mode));
-    } else if (spec.kind === "static-dir") {
-      plugins.push(...staticDirVitePlugin(repoRoot, spec));
-    } else {
-      plugins.push(...meshCollectionVitePlugin(repoRoot, spec));
-    }
-  }
-  return plugins;
-}
-//#endregion 🔖️PlaygroundAssetVitePlugins
 
 /** @emoji 🦀️ Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
 export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
@@ -1406,7 +1312,7 @@ export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerRespo
 }
 
 /** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
-function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildMiddleware {
+function createStaticDirMiddleware(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   return (req, res, next) => {
@@ -1442,7 +1348,7 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
 /** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
  * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
  * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
-export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildPlugin[] {
+export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAssetSpecV1): OwnedBuildPlugin[] {
   const serveFixture = createStaticDirMiddleware(repoRoot, spec);
   const fixtureRoot = resolve(repoRoot, spec.root);
   const destName = spec.route.replace(/^\//, "");
@@ -1489,7 +1395,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
  * The table therefore refuses a route claimed twice and orders the halves by nesting: serving
  * most-specific route first, build copies parent first (a parent copy replaces its destination).
  * Fixture law: `🧫️fixtures/🗂️static-dir-mounts/🔣️.json`. */
-export function staticDirMountVitePlugins(repoRoot: string, specs: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[]): OwnedBuildPlugin[] {
+export function staticDirMountVitePlugins(repoRoot: string, specs: readonly StaticDirectoryAssetSpecV1[]): OwnedBuildPlugin[] {
   const routes = specs.map((spec) => spec.route.replace(/\/+$/, ""));
   const claimed = routes.find((route, index) => routes.indexOf(route) !== index);
   if (claimed !== undefined) throw new Error(`Two static-dir roots claim one route: ${claimed}`);
@@ -1501,10 +1407,6 @@ export function staticDirMountVitePlugins(repoRoot: string, specs: readonly Extr
   ];
 }
 
-/** @emoji 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
-export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
-  { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },
-];
 //#endregion 🔖️StaticDirAssetPlugin
 
 /** @emoji 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
@@ -1564,66 +1466,34 @@ export function findWorkspacePackages(repoRoot: string): string[] {
   return packages;
 }
 
-/** @emoji 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
-export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
-  const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
-  const osHubAliases =
-    playEntryKind === "s"
-      ? [
-          {
-            find: "@semio-tech/graph-dsl-core",
-            replacement: resolve(repoRoot, "mathematical/graph/dsl/core/js/index.ts"),
-          },
-        ]
-      : [];
-  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [...extraAliases, ...osHubAliases]);
-  const workerStubPlugins = [playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()];
-  return defineOwnedBuildConfig({
-    root: playDir,
-    base: ".",
-    publicDir: resolve(playDir, "public"),
-    assetsInclude: ["**/*.wasm"],
-    worker: {
-      format: "es",
-      plugins: () => workerStubPlugins,
-    },
-    define: {
-      ...playgroundPlayViteDefine(playEntryKind ? { "import.meta.env.PLAYGROUND_APP_KIND": JSON.stringify(playEntryKind) } : {}),
-    },
-    plugins: [
-      playgroundPlayBootHtmlPlugin(),
-      playgroundFlowWasmDevStubPlugin(repoRoot),
-      ...semioAssetsVitePlugin(repoRoot),
-      ...semioFaviconVitePlugin(repoRoot),
-      ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),
-      ...uiTailwindBuildPlugins(),
-      uiReactBuildPlugin(),
-      playgroundPlaywrightDevStubPlugin(),
-      playgroundVitestDevStubPlugin(),
-      playgroundIframeEmbedHeadersPlugin(),
-      playgroundStaleOptimizeDepPlugin(),
-      ...extraPlugins,
-    ],
-    build: playgroundStaticSiteBuildOptions(build),
-    server: {
-      ...workspaceResolve.server,
-      ...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),
-      ...server,
-    },
-    resolve: {
-      ...workspaceResolve.resolve,
-      dedupe: [...(workspaceResolve.resolve?.dedupe ?? []), ...(resolveDedupe ?? [])],
-    },
-    optimizeDeps: {
-      ...workspaceResolve.optimizeDeps,
-      ...optimizeDeps,
-      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...(optimizeDeps?.exclude ?? [])],
-    },
-  });
-}
+/** 🗺️ Contributes tile transport only when the caller explicitly registers it. */
+export const TILE_PROXY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.freeze<AssetDeliveryProviderV1>({
+  kind: "tile-proxy",
+  middleware: (context, declaration) => {
+    const spec = parseTileProxyAssetSpecV1(declaration);
+    return createTileProxyMiddleware(spec.route, resolve(context.root, spec.cache), spec.upstream, context.mode, spec.userAgent);
+  },
+  plugins: (context, declaration) => tileProxyVitePlugin(context.root, parseTileProxyAssetSpecV1(declaration), context.mode),
+});
+
+/** 🥽️ Contributes catalog transport only when the caller explicitly registers it. */
+export const MESH_COLLECTION_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.freeze<AssetDeliveryProviderV1>({
+  kind: "mesh-collection",
+  middleware: (context, declaration) => createMeshCollectionMiddleware(context.root, admitBuildAssetSpecV1(declaration, "MeshCollectionAssetSpecV1")),
+  plugins: (context, declaration) => meshCollectionVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "MeshCollectionAssetSpecV1")),
+});
+
+/** 🗂️ Contributes directory transport only when the caller explicitly registers it. */
+export const STATIC_DIRECTORY_ASSET_PROVIDER_V1: AssetDeliveryProviderV1 = Object.freeze<AssetDeliveryProviderV1>({
+  kind: "static-dir",
+  middleware: (context, declaration) => createStaticDirMiddleware(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
+  plugins: (context, declaration) => staticDirVitePlugin(context.root, admitBuildAssetSpecV1(declaration, "StaticDirectoryAssetSpecV1")),
+});
 
 if (import.meta.vitest) {
+  const { createAssetHttpServerV1, createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } = await import("../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts");
+  const { MESH_DELIVERY_CATALOG } = await import("../../../../🖼️assets/🥽️mesh/📇️catalog/🟦️.ts");
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { MESH_DELIVERY_CATALOG, TILE_PROXY_ASSET_PROVIDER_V1, MESH_COLLECTION_ASSET_PROVIDER_V1, STATIC_DIRECTORY_ASSET_PROVIDER_V1, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_VIEWPORT_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, createAssetBuildPluginsV1, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, resolve, resolveAssetDeliveryModeV1, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, createAssetHttpServerV1, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

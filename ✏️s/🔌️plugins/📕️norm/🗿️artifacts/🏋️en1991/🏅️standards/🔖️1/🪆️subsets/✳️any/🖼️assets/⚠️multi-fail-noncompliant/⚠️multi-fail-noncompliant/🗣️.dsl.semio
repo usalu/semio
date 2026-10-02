@@ -13,5 +13,5 @@ wind-faces [id:TEXT zone:TEXT z:QTY c-pe10:NUM c-pe1:NUM c-pi:NUM c-s:NUM c-d:NU
   facade-d D 8m 0.8 1 0.2 1 1 10m2 100Pa
 }
 accidental-cases [id:TEXT impact:LIST explosion:LIST] {
-  impact-1 [ vehicle-mass=15000kg vehicle-speed=13.9m/s assumed-force=50000N ] [ ]
+  impact-1 [ { vehicle-mass=15000kg vehicle-speed=13.9m/s assumed-force=50000N } ] [ ]
 }

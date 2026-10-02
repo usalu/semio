@@ -21,8 +21,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveCurve {
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete curve \"{}\"", self.id), &format!("Kurve \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete curve \"{}\"", self.id), &format!("Kurve \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

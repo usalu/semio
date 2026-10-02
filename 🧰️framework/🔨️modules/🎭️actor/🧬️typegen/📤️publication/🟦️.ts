@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 
 /** 📤️ Publishes the actor mirror before pruning exact siblings from its owned output root. */
 export function publishActorTypegen(target: string, content: Uint8Array, admittedRoot = dirname(dirname(target))): void {

@@ -37,8 +37,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveOtherSegmentMuta
             None => Vec::new(),
         }
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove other segment", "Sonstiges Segment entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove other segment", "Sonstiges Segment entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-other-segment".into()]

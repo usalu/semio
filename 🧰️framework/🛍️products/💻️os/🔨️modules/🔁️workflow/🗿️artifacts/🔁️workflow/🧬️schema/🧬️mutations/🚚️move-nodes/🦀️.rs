@@ -55,9 +55,9 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNodes {
         }
         vec![WorkflowMutation::SetNodePositions(super::super::SetNodePositions { positions })]
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let [(x_en, x_de), (y_en, y_de)] = [self.dx, self.dy].map(workflow_label_number);
-        protocol::LocalizedLabel::native(&format!("Move {} workflow node(s) by ({x_en}, {y_en})", self.node_ids.len()), &format!("{} Arbeitsablaufknoten um ({x_de}; {y_de}) verschieben", self.node_ids.len()))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {} workflow node(s) by ({x_en}, {y_en})", self.node_ids.len()), &format!("{} Arbeitsablaufknoten um ({x_de}; {y_de}) verschieben", self.node_ids.len()))
     }
     fn target(&self) -> Vec<String> {
         std::iter::once("nodes".to_string()).chain(self.node_ids.iter().cloned()).collect()

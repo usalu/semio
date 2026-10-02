@@ -49,6 +49,8 @@ const WIDTHS:&[(&str,usize)]=&[
  ("gltf_texture",10),("gltf_image",10),("gltf_sampler",14),("gltf_skin",10),("gltf_skin_joint",5),
  ("gltf_animation",6),("gltf_animation_sampler",10),("gltf_animation_channel",7),("gltf_animation_channel_target",6),("gltf_camera",7),("gltf_camera_orthographic",15),("gltf_camera_perspective",15)
 ];
+fn owned<T:dsl::DslField>(value:T)->dsl::__rt::DecodedFieldOwner<T>{dsl::__rt::DecodedFieldOwner::new(value,T::retire_decoded)}
+fn owned_option<T:dsl::DslField>(value:Option<T>)->dsl::__rt::DecodedFieldOwner<Option<T>>{dsl::__rt::DecodedFieldOwner::new(value,|value|{if let Some(value)=value{T::retire_decoded(value);}})}
 struct Read<'a,'c,'p>{database:&'a SqliteDatabase,control:&'c mut SqliteSnapshotControl<'p>,keys:BTreeMap<&'static str,BTreeMap<i64,&'a SqliteRow>>,groups:BTreeMap<&'static str,Group<'a>>,used:BTreeMap<&'static str,BTreeSet<i64>>,visits:usize}
 impl<'a,'c,'p> Read<'a,'c,'p>{
  fn new(database:&'a SqliteDatabase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,String>{
@@ -81,14 +83,39 @@ impl<'a,'c,'p> Read<'a,'c,'p>{
  fn index(&mut self,row:&SqliteRow,column:usize)->Result<usize,String>{usize::try_from(self.word(row,column)?).map_err(|error|error.to_string())}
  fn optional_index(&mut self,row:&SqliteRow,column:usize)->Result<Option<usize>,String>{self.optional_word(row,column)?.map(|value|usize::try_from(value).map_err(|error|error.to_string())).transpose()}
  fn boolean(&mut self,row:&SqliteRow,column:usize)->Result<bool,String>{self.scalar()?;match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err("GLTF boolean must be zero or one".into())}}
+ fn json_owned(&mut self,row:&SqliteRow,column:usize)->Result<dsl::__rt::DecodedFieldOwner<Option<GltfJson>>,String>{self.json(row,column).map(owned_option)}
  fn json(&mut self,row:&SqliteRow,column:usize)->Result<Option<GltfJson>,String>{match row.values.get(column){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Integer(id)) if *id>0=>extras::reconstruct(self,*id).map(Some),_=>Err("GLTF extras root must be a positive entity or absent".into())}}
  fn finish(self)->Result<(),String>{for table in &self.database.tables{let used=self.used.iter().find(|(name,_)|name.eq_ignore_ascii_case(&table.name)).map(|(_,used)|used);for row in &table.rows{if !used.is_some_and(|used|used.contains(&row.rowid)){return Err(format!("GLTF unowned entity remains in {}",table.name));}}}self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,self.visits,self.visits)}
 }
 
 impl ArtifactSqliteSnapshot for GltfSnapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{
+  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;let length=match payload{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err("GLTF native input exceeds file byte limit".into())}
+  let snapshot={let mut progress=|state:protocol::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::DecodeNative,state.completed,state.total).is_ok();let mut native=protocol::native_decoding::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);let spec=<Self as store::ArtifactPack>::record_spec().ok_or("GLTF logical RecordSpec missing")?;
+   let record=match payload{store::os_io::IoPayload::Binary(bytes)=>{let body=store::semio_format::unwrap_binary_controlled(bytes,"stdio.gltf",store::semio_format::Component::Pack,1,&mut native).map_err(|e|e.to_string())?;store::pack_rt::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(|e|e.to_string())?.0},store::os_io::IoPayload::Text(text)=>{let body=store::semio_format::split_text_preamble_controlled(text,"stdio.gltf",store::semio_format::Component::Dsl,1,&mut native).map_err(|e|e.to_string())?;dsl::schema::parse_exact_controlled(body,&spec,&dsl::ParseOptions{limits:dsl::Limits::default(),mode:dsl::SourceMode::Document},&mut native).map_err(|e|e.message)?}};
+   super::owned_pack::reconstruct_record_controlled(&record,&mut native)?};
+  let mut owner=dsl::__rt::DecodedFieldOwner::new(snapshot,Self::retire_sqlite_snapshot);owner.as_mut().to_sqlite_database(control)?;Ok(owner.take())
+ }
+ fn retire_sqlite_snapshot(self){<GltfDocument as dsl::DslField>::retire_decoded(self.document);}
  const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{encoding::check(self,control)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{let mut write=Write::new(control)?;document::project(&mut write,self)?;node::project(&mut write,&self.document.nodes)?;mesh::project(&mut write,&self.document.meshes)?;buffer::project(&mut write,&self.document)?;material::project(&mut write,&self.document.materials)?;texture::project(&mut write,&self.document)?;skin::project(&mut write,&self.document.skins)?;animation::project(&mut write,&self.document.animations)?;camera::project(&mut write,&self.document.cameras)?;write.finish()}
- fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{let mut read=Read::new(database,control)?;let mut snapshot=document::reconstruct(&mut read)?;snapshot.document.nodes=node::reconstruct(&mut read)?;snapshot.document.meshes=mesh::reconstruct(&mut read)?;buffer::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.materials=material::reconstruct(&mut read)?;texture::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.skins=skin::reconstruct(&mut read)?;snapshot.document.animations=animation::reconstruct(&mut read)?;snapshot.document.cameras=camera::reconstruct(&mut read)?;read.finish()?;Ok(snapshot)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IoOutcome<()>,IoError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.gltf"||dialect.standard!="2.0"||dialect.subset!="*"{return Err(String::from("GLTF owned SQLite dialect differs").into());}let row=database.table("gltf_document")?.single_row()?;if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(String::from("GLTF document identity differs from its semantic projection").into());}Ok(IoOutcome::clean(()))}
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{let mut read=Read::new(database,control)?;let mut owner=dsl::__rt::DecodedFieldOwner::new(document::reconstruct(&mut read)?,GltfSnapshot::retire_sqlite_snapshot);let snapshot=owner.as_mut();snapshot.document.nodes=node::reconstruct(&mut read)?;snapshot.document.meshes=mesh::reconstruct(&mut read)?;buffer::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.materials=material::reconstruct(&mut read)?;texture::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.skins=skin::reconstruct(&mut read)?;snapshot.document.animations=animation::reconstruct(&mut read)?;snapshot.document.cameras=camera::reconstruct(&mut read)?;read.finish()?;Ok(owner.take())}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IoOutcome<()>,IoError>{
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;
+  if dialect.artifact_kind!="s.stdio.gltf"||dialect.standard!="2.0"||dialect.subset!="*"{return Err(String::from("GLTF owned SQLite dialect differs").into());}
+  validate_sqlite_database_schema(database,SQLITE_SCHEMA,control.limits()).map_err(|error|IoError::from(error.to_string()))?;
+  let expected=self.to_sqlite_database(control)?;let mut candidate=dsl::__rt::DecodedFieldOwner::new(Self::from_sqlite_database(database,control)?,Self::retire_sqlite_snapshot);let canonical=candidate.as_mut().to_sqlite_database(control)?;drop(candidate);let total=expected.tables.iter().map(|table|table.rows.len()).sum();let mut completed=0;
+  for table in &expected.tables{
+   let actual=canonical.tables.iter().find(|actual|actual.name==table.name).ok_or_else(||String::from("GLTF owned table missing"))?;
+   if actual.rows.len()!=table.rows.len(){return Err(String::from("GLTF owned state differs from semantic projection").into());}
+   let rows:BTreeMap<_,_>=actual.rows.iter().map(|row|(row.rowid,row)).collect();
+   if rows.len()!=actual.rows.len(){return Err(String::from("GLTF repeated semantic row identifier").into());}
+   for row in &table.rows{
+    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,completed,total)?;completed+=1;
+    if rows.get(&row.rowid).is_none_or(|actual|actual.values!=row.values){return Err(String::from("GLTF owned state differs from semantic projection").into());}
+   }
+  }
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,total,total)?;Ok(IoOutcome::clean(()))
+ }
 }

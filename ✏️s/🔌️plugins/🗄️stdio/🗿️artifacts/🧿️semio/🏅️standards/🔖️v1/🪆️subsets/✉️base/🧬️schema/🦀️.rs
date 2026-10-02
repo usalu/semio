@@ -38,31 +38,31 @@ impl SemioArtifact {
 
 /// 📚️ semio's shared schema documents — named exports of the `s.stdio.semio` scope that the subsets' facets `$ref`
 /// (`base/geometry.json`, `base/child.json`), declared with the artifact (`ArtifactDeclarationBuilder::schema_documents`).
-pub const SEMIO_SHARED_SCHEMA_DOCUMENTS: framework_schema::ScopeSchemaExports = framework_schema::ScopeSchemaExports {
+pub const SEMIO_SHARED_SCHEMA_DOCUMENTS: semio_framework_schema_registry::ScopeSchemaExports = semio_framework_schema_registry::ScopeSchemaExports {
     scope: "s.stdio.semio",
-    exports: &[framework_schema::SchemaExport { id: "geometry", leaves: framework_schema::FacetLeaves { rust: include_str!("🧮️geometry/🦀️.rs"), typescript: include_str!("🧮️geometry/🟦️.ts"), graphql: include_str!("🧮️geometry/🔗️.graphql"), json_schema: include_str!("🧮️geometry/🔣️.json"), proto: include_str!("🧮️geometry/🛰️.proto") } }, framework_schema::SchemaExport { id: "child", leaves: framework_schema::FacetLeaves { rust: include_str!("🪆️child/🦀️.rs"), typescript: include_str!("🪆️child/🟦️.ts"), graphql: "", json_schema: include_str!("🪆️child/🔣️.json"), proto: "" } }],
+    exports: &[semio_framework_schema_registry::SchemaExport { id: "geometry", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🧮️geometry/🦀️.rs"), typescript: include_str!("🧮️geometry/🟦️.ts"), graphql: include_str!("🧮️geometry/🔗️.graphql"), json_schema: include_str!("🧮️geometry/🔣️.json"), proto: include_str!("🧮️geometry/🛰️.proto") } }, semio_framework_schema_registry::SchemaExport { id: "child", leaves: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🪆️child/🦀️.rs"), typescript: include_str!("🪆️child/🟦️.ts"), graphql: "", json_schema: include_str!("🪆️child/🔣️.json"), proto: "" } }],
 };
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn semio_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.semio",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

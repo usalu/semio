@@ -31,7 +31,7 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for AddMember {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Add member", "Bauteil hinzufügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add member", "Bauteil hinzufügen")
     }
 }

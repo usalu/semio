@@ -118,7 +118,7 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor());
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::model::schema::semio_model_artifact_schema_descriptor()).expect("schema descriptor publication");
         semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("model") }, store::ArtifactCodec::bare::<SemioModelSnapshot, crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation>(
             crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
         ))
@@ -151,7 +151,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::framework_schema::register_artifact_inference_descriptor(crate::standards::v1::subsets::model::schema::inferences::semio_model_artifact_inference_descriptor());
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::model::schema::inferences::semio_model_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 

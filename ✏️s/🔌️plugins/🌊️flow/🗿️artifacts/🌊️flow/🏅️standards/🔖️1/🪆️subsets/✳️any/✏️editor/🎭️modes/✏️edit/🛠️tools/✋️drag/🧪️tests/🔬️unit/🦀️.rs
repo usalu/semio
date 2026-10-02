@@ -44,11 +44,11 @@ fn a_seeded_release_is_a_child_transaction_and_a_seedless_one_is_plain() {
     let emit = flow_drag_tool_emit("child-1", "moveMediaNode", "seed-1", &base, Vec::new(), &[record(&["c"], -20.0, 20.0)]);
     let transaction = emit.transaction.as_ref().expect("a seeded release carries its transaction");
     assert_eq!(transaction.tool, format!("{FLOW_EDITOR_APP_ID}#moveMediaNode"));
-    assert!(emit.artifact_mutations.is_empty() && emit.coalesce_key.is_none() && emit.description.is_none());
+    assert!(emit.artifact_mutations.is_empty() && emit.description.is_none());
     assert_eq!(emit.child_emits.len(), 1);
     let child = &emit.child_emits[0];
     assert_eq!((child.slot.as_str(), child.child_id.as_str(), child.ops.len()), ("content", "child-1", 1));
-    assert_eq!(child.labels[0].resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 node by (-20, 20)");
+    assert_eq!(child.labels[0].resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 node by (-20, 20)");
     let plain = flow_drag_tool_emit("child-1", "moveMediaNode", "", &base, Vec::new(), &[record(&["c"], -20.0, 20.0)]);
     assert!(plain.transaction.is_none() && plain.child_emits.len() == 1);
     let nothing = flow_drag_tool_emit("child-1", "moveMediaNode", "seed-1", &base, Vec::new(), &[record(&["c"], 0.0, 0.0)]);

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "id": "retained-original-png-oracle-with-pdf-absent",
+      "retainedOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+      "adapter": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs",
+      "removedOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf",
+      "requiredScenarios": ["rgba-gradient-round-trips", "non-square-image-round-trips", "single-pixel-round-trips"],
+      "role": "oracle",
+      "implementation": "rust",
+      "execution": "all-original-scenarios",
+      "features": ["oracles"]
+    },
+    {
+      "id": "retained-original-ifc-oracle-with-step-absent",
+      "retainedOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base",
+      "adapter": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🦀️.rs",
+      "removedOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+      "requiredScenarios": [],
+      "role": "oracle",
+      "implementation": "rust",
+      "execution": "all-original-scenarios",
+      "features": ["oracles"]
+    }
+  ],
+  "lowerPlugin": {
+    "owner": "✏️s/🔌️plugins/🗄️stdio",
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+    "removedOwner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts",
+    "testTargets": ["lib", "authored_assembly"],
+    "nativeRequired": true
+  }
+}

@@ -12,8 +12,11 @@
       "executor": "nx:run-commands",
       "cache": true,
       "inputs": [
-        "production",
-        "^production"
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": [
         "{projectRoot}/dist/build"
@@ -30,13 +33,75 @@
         "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
     }

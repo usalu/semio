@@ -16,17 +16,7 @@ use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_sn
 use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-
-//#region 🔖️DoubleOption
-/// 🪆️ Decodes a present key of an `Option<Option<T>>` field as `Some(inner)`, so a present `null` is `Some(None)` (a
-/// valueless attribute) and only an absent key (the field's `default`) is `None` (remove the attribute) — the blanket
-/// `Option<T>` impl would collapse both to `None`. Paired with `skip_serializing_if = "Option::is_none"`,
-/// `payload_value()` and `with_payload_value()` round-trip.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
-    <Option<T> as dsl::FromValue>::from_value(value).map(Some)
-}
-//#endregion 🔖️DoubleOption
+use semio_s_artifact_stdio_contract::deserialize_double_option;
 
 //#region 🔖️Mutations
 #[path = "➕insert-node/🦀️.rs"]

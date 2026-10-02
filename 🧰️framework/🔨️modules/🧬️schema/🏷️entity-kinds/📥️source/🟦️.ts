@@ -1,7 +1,8 @@
 /** 📥️ Parsed entity-kind catalog source and projection provenance. */
+import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { parseEntityKindCatalog, type EntityKindCatalog } from "../../🟦️.ts";
 
 export const GENERATOR_ID = "schema-entity-catalog";
@@ -9,7 +10,7 @@ export const REFRESH_COMMAND = "bun nx run @semio-tech/framework-schema:generate
 export type EntityCatalogSource = { readonly kinds: EntityKindCatalog; readonly sourceRel: string; readonly sha256: string };
 
 export function readEntityCatalog(repoRoot: string): EntityCatalogSource {
-  const path = join(import.meta.dir, "..", "🔣️.json");
+  const path = join(dirname(fileURLToPath(import.meta.url)), "..", "🔣️.json");
   const bytes = readFileSync(path);
   return {
     kinds: parseEntityKindCatalog(JSON.parse(bytes.toString("utf8"))),

@@ -16,6 +16,9 @@ message PatchWorkingNodes { repeated string targets = 1; string field = 2; strin
 message DragRuleNodes { repeated string targets = 1; double dx = 2; double dy = 3; }
 message RuleLayoutPlacement { string key = 1; double x = 2; double y = 3; }
 message SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated string cleared = 2; }
+message DeleteWorkingNodes { repeated string targets = 1; }
+message ConnectWorkingPorts { string source = 1; string target = 2; string kind = 3; }
+message DisconnectWorkingEdges { repeated string targets = 1; }
 
 message RewriteRuleMutation {
   oneof mutation {
@@ -30,5 +33,8 @@ message RewriteRuleMutation {
     PatchWorkingNodes patch_working_nodes = 9;
     DragRuleNodes drag_rule_nodes = 10;
     SetRuleLayoutPoints set_rule_layout_points = 11;
+    DeleteWorkingNodes delete_working_nodes = 12;
+    ConnectWorkingPorts connect_working_ports = 13;
+    DisconnectWorkingEdges disconnect_working_edges = 14;
   }
 }

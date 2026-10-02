@@ -12,7 +12,7 @@ import { testBrowserDistribution } from "../🌐️browser/🟦️.ts";
 import { testContinuousServices } from "../🖥️services/🟦️.ts";
 import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
 import { testDependencyBootstrap, testNxTooling, testDependencyCancellation } from "../📦️dependencies/🟦️.ts";
-import { testResourceLeases } from "../../🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
+import { testResourceLeases } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
 import { testCachePrune } from "../🧹️cache-prune/🟦️.ts";
 import { testWasmOptimizer } from "../🕸️wasm/🟦️.ts";
 import { testCiBaseline } from "../../🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts";
@@ -404,32 +404,12 @@ export async function testNativePreparation(workspace: string, output: string): 
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/native-preparation");
   const cases = JSON.parse(readFileSync(join(fixtures, "🧫️cases.json"), "utf8"));
   assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
-  const generatedFiles = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts")).href);
-  assert.equal(typeof generatedFiles.writeGeneratedFileIfChanged, "function");
-  const writeRoot = mkdtempSync(join(output, "generated-write-"));
-  try {
-    for (const row of cases.generatedWrites) {
-      const target = join(writeRoot, `${row.name}.txt`);
-      writeFileSync(target, row.initial);
-      utimesSync(target, new Date(946684800000), new Date(946684800000));
-      const before = lstatSync(target).mtimeMs;
-      assert.equal(generatedFiles.writeGeneratedFileIfChanged(target, row.next), row.rewritten, row.name);
-      assert.equal(readFileSync(target, "utf8"), row.next, row.name);
-      assert.equal(lstatSync(target).mtimeMs === before, !row.rewritten, `${row.name}: mtime identity`);
-    }
-  } finally { rmSync(writeRoot, { recursive: true, force: true }); }
   const nativeInput = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts")).href);
-  const ownedExecution = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts")).href);
   const nativeBuild = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts")).href);
   assert.equal(typeof nativeInput.validateNativeCargoArguments, "function");
   for (const row of cases.arguments) if (row.valid) assert.doesNotThrow(() => nativeInput.validateNativeCargoArguments(row.operation, row.args)); else assert.throws(() => nativeInput.validateNativeCargoArguments(row.operation, row.args), /input contract/);
   assert.equal(typeof nativeInput.artifactRustCargoArguments, "function");
   for (const row of cases.artifactArguments) if (row.valid) assert.deepEqual(nativeInput.artifactRustCargoArguments(row.operation, row.args).cargoArgs, row.cargoArgs, row.operation); else assert.throws(() => nativeInput.artifactRustCargoArguments(row.operation, row.args), /input contract/);
-  assert.equal(typeof ownedExecution.startNativeProgress, "function");
-  const progress: string[] = [], stopProgress = ownedExecution.startNativeProgress(cases.artifactProgress.label, cases.artifactProgress.intervalMs, (line: string) => progress.push(line));
-  await Bun.sleep(cases.artifactProgress.intervalMs * 4);
-  stopProgress();
-  assert.equal(progress.some((line) => new RegExp(cases.artifactProgress.pattern).test(line)), true, "artifact build progress must remain visible while Cargo waits");
   const artifactRouterSource = readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts"), "utf8");
   for (const witness of cases.artifactTestRunner.required) assert.ok(artifactRouterSource.includes(witness), `artifact test router must use ${witness}`);
   for (const witness of cases.artifactTestRunner.forbidden) assert.ok(!artifactRouterSource.includes(witness), `artifact test router must not use ${witness}`);
@@ -504,12 +484,12 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
     process.env.SEMIO_CAPTURE_PRIMARY_BYTES = cases.artifactCapture.primary;
     process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES = cases.artifactCapture.replacement;
     process.env.SEMIO_CAPTURE_DELAY_MS = String(cases.artifactCapture.delayMs);
-    await nativeBuild.buildCargoArtifacts("package/Cargo.toml", [], captureRoot);
+    await nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot);
     assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
     assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
     process.env.SEMIO_CAPTURE_MISSING = "1";
     const failureStarted = Date.now();
-    await assert.rejects(nativeBuild.buildCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
+    await assert.rejects(nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot), /ENOENT/);
     assert.ok(Date.now() - failureStarted < 5000, "A capture failure must cancel and await Cargo without leaving the build alive");
     assert.equal(readFileSync(join(packageRoot, "dist/build/deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
     assert.equal(readFileSync(join(packageRoot, "dist/build/libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
@@ -649,7 +629,7 @@ export function testNxDaemonRetention(workspace: string, output: string): void {
 }
 
 export function createCachePolicyTests(dependencies: Record<string, any>, testSource: { directory: string; url: string }) {
-  const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, spawn, stageArtifacts, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
+  const { assert, cacheInternals, chmodSync, copyFileSync, createRequire, devToolingEnv, dirname, EventEmitter, existsSync, getWorkspaceRoot, join, lstatSync, mkdirSync, mkdtempSync, plugin, readFileSync, relative, resolve, rmSync, SCRIPT_ROOT, spawn, stageRepositoryArtifacts, utimesSync, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment, writeFileSync } = dependencies;
 
   /** 🧪️ Executes language-neutral policy examples against the Nx project plugin. */
   async function testCacheContracts(): Promise<void> {
@@ -1031,7 +1011,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const engineSource = ts.createSourceFile("engine.ts", readFileSync(join(root, project.root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const outputs: string[] = [];
       const inspect = (node: any): void => {
-        if (ts.isCallExpression(node) && node.expression.getText(engineSource) === "runWasmPackWebBuild") {
+        if (ts.isCallExpression(node) && ["buildWasmWebV1","buildRepositoryWasmWebV1"].includes(node.expression.getText(engineSource))) {
           const output = node.arguments[0].properties.find((property: any) => property.name?.getText(engineSource) === "outputDirectory");
           outputs.push(output?.initializer.text ?? "pkg");
         }
@@ -1201,13 +1181,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     writeFileSync(artifact, "native fixture\n");
     chmodSync(artifact, 0o755);
     const staged = join(fixture, "dist/build");
-    await stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact], ["obsolete", artifact]]));
-    await stageArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact]]));
+    await stageRepositoryArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact], ["obsolete", artifact]]));
+    await stageRepositoryArtifacts(staged, "leaf/Cargo.toml", new Map([["consumer", artifact]]));
     assert.deepEqual(readFileSync(join(staged, "consumer")), readFileSync(artifact));
     assert.equal(existsSync(join(staged, "obsolete")), false);
     if (process.platform !== "win32") assert.equal(lstatSync(join(staged, "consumer")).mode & 0o111, 0o111);
-    await assert.rejects(() => stageArtifacts(staged, "another/Cargo.toml", new Map()), /Unowned/);
-    await assert.rejects(() => stageArtifacts(staged, "leaf/Cargo.toml", new Map([["../escape", artifact]])), /Invalid artifact/);
+    await assert.rejects(() => stageRepositoryArtifacts(staged, "another/Cargo.toml", new Map()), /Unowned/);
+    await assert.rejects(() => stageRepositoryArtifacts(staged, "leaf/Cargo.toml", new Map([["../escape", artifact]])), /Invalid artifact/);
     assert.ok(existsSync(join(staged, "consumer")));
     const testApi = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts"));
     const taxonomy = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";

@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 import fixture from "../../../🧫️fixtures/🪶️sqlite/🔣️.json";
 import { validateGeoJsonSnapshotSqliteDialect } from "../../🪶️sqlite/🟦️.ts";
 import { jsonSnapshotToSqliteDatabase, jsonSnapshotFromSqliteDatabase } from "../../../../🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
-import type { JsonValue } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import type { JsonSnapshot, JsonValue } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 function value(input: unknown): JsonValue { if (input === null) return { kind: "null" }; if (typeof input === "boolean") return { kind: "bool", value: input }; if (typeof input === "string") return { kind: "string", value: input }; if (typeof input === "number") return { kind: "number", lexeme: String(input) }; if (Array.isArray(input)) return { kind: "array", items: input.map(value) }; return { kind: "object", members: Object.entries(input as Record<string, unknown>).map(([key, input]) => ({ key, value: value(input) })) }; }
 test("GeoJSON neutral profile cases admit their borrowed typed JSON and queryable SQLite", async () => {
@@ -28,4 +28,18 @@ test("GeoJSON exact document identity and cancellable foreign-member traversal",
  await expect(validateGeoJsonSnapshotSqliteDialect({ ...snapshot, schema: "different" }, dialect, database)).rejects.toThrow("identity");
  const before = new AbortController(); before.abort(); await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: before.signal })).rejects.toMatchObject({ name: "AbortError" });
  const during = new AbortController(); let visited = 0; await expect(validateGeoJsonSnapshotSqliteDialect(snapshot, dialect, database, { signal: during.signal, onProgress: event => { if (event.completed >= 256) { visited = event.completed; during.abort(); } } })).rejects.toMatchObject({ name: "AbortError" }); expect(visited).toBe(256);
+});
+test("GeoJSON typed numeric meaning belongs to its named guard while raw strings remain relational",async()=>{
+ for(const item of fixture.typedNumberCases){
+  const snapshot:JsonSnapshot={schema:"owned",value:{kind:"object",members:[{key:"type",value:{kind:"string",value:"Point"}},{key:"coordinates",value:{kind:"array",items:[{kind:"number",lexeme:item.lexeme},{kind:"number",lexeme:"0"}]}}]}};
+  const database=await jsonSnapshotToSqliteDatabase(snapshot);
+  expect(await jsonSnapshotFromSqliteDatabase(database)).toEqual(snapshot);
+  const diagnostics=await validateGeoJsonSnapshotSqliteDialect(snapshot,{artifactKind:"s.stdio.json",standard:"rfc8259",subset:"geojson"},database);
+  expect(diagnostics.some(d=>d.severity==="error")).toBe(item.hard);
+ }
+ for(const item of fixture.foreignNumberCases){
+  const snapshot:JsonSnapshot={schema:"owned",value:{kind:"object",members:[{key:"type",value:{kind:"string",value:"Feature"}},{key:"geometry",value:{kind:"null"}},{key:"properties",value:{kind:"object",members:[{key:"number",value:{kind:"number",lexeme:item.lexeme}}]}}]}};
+  const diagnostics=await validateGeoJsonSnapshotSqliteDialect(snapshot,{artifactKind:"s.stdio.json",standard:"rfc8259",subset:"geojson"},await jsonSnapshotToSqliteDatabase(snapshot));
+  expect(diagnostics.some(d=>d.severity==="error")).toBe(item.hard);
+ }
 });

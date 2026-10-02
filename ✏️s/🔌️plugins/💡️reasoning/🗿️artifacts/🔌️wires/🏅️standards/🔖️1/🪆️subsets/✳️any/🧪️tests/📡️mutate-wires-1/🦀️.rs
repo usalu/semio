@@ -45,7 +45,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 /// 🦀️.rs`) — duplicated, not imported, because the oracle-only build must not link the
 /// subject crate. The contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
-const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes"];
+const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes", "move-nodes", "set-node-positions"];
 
 /// 🗣️ The real committed board — one `node-1` identity circle at the canvas origin, carried as five
 /// hex-encoded `DslValue` lines.
@@ -120,6 +120,18 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧪️rejects/🎯️outcome/🔣️.json"),
+        ),
+        "move-nodes" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️reports/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️reports/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️reports/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚚️move-nodes/🧪️reports/🎯️outcome/🔣️.json"),
+        ),
+        "set-node-positions" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️reports/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️reports/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️reports/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️set-node-positions/🧪️reports/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-wires-1: no specification vector registered for kind {other:?}"),
     }

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "actual-package-policy",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+      "classification": "package",
+      "policy": "owned"
+    },
+    {
+      "id": "actual-virtual-workspace-no-foreign-policy",
+      "manifest": "Cargo.toml",
+      "cwd": ".",
+      "classification": "workspace",
+      "policy": "absent"
+    },
+    {
+      "id": "invalid-manifest-refuses-child",
+      "manifestText": "[dependencies]\n",
+      "classification": "invalid",
+      "policy": "refused"
+    }
+  ]
+}

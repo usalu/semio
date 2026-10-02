@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Solar Thermal System Azimuth of solar thermal system {}", self.id.0), &format!("Azimut von Solarthermieanlage {} ändern", self.id.0))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Solar Thermal System Azimuth of solar thermal system {}", self.id.0), &format!("Azimut von Solarthermieanlage {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

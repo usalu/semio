@@ -1,0 +1,39 @@
+{
+  "name": "@semio-tech/ui-locale",
+  "targets": {
+    "test-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test contract",
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": []
+    },
+    "check-types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts check types",
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+        "sharedGlobals"
+      ],
+      "outputs": []
+    }
+  }
+}

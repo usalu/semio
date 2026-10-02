@@ -31,8 +31,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for UpdateCamera {
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom), &format!("Kamera auf ({}, {}, Zoom {}) aktualisieren", self.camera.x, self.camera.y, self.camera.zoom))
     }
 }
 //#endregion 🔖️UpdateCamera

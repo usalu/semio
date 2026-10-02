@@ -14,14 +14,6 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts members --check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "members",
-            "--check"
-          ]
-        }
       }
     },
     "members-write": {
@@ -31,14 +23,6 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts members --write",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "members",
-            "--write"
-          ]
-        }
       }
     },
     "contract-check": {
@@ -48,14 +32,6 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts contract-check",
         "forwardAllArgs": true
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "cargo-workspaces-contract"
-          ]
-        }
       }
     },
     "queued-contract-check": {
@@ -64,8 +40,7 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts queued-contract-check"
-      },
-      "metadata": { "semio": { "workspaceCommand": ["check", "cargo-workspaces-queued-contract"] } }
+      }
     },
     "bun-contract-check": {
       "executor": "nx:run-commands",
@@ -73,14 +48,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts bun-contract-check"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "cargo-workspaces-bun-contract"
-          ]
-        }
       }
     },
     "prepare": {
@@ -89,14 +56,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts prepare --manifest Cargo.toml"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "prepare",
-            "cargo-workspaces-manifest"
-          ]
-        }
       }
     },
     "runtime-contract-check": {
@@ -105,14 +64,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts runtime-contract-check"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "cargo-workspaces-runtime-contract"
-          ]
-        }
       }
     },
     "capability-contract-check": {
@@ -121,14 +72,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts capability-contract-check"
-      },
-      "metadata": {
-        "semio": {
-          "workspaceCommand": [
-            "check",
-            "cargo-workspaces-capability-contract"
-          ]
-        }
       }
     }
   }

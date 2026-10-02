@@ -1,0 +1,17 @@
+{
+  "annex": "De",
+  "members": [
+    {"id":"same timber 世界","labelEn":"Beam \u0000 north","labelDe":"Träger 🪵","role":"bridge","strengthClass":"arbitrary persisted strength","serviceClass":255,"support":"continuousTwoSpan","bM":0.2,"hM":0.4,"spanM":5.125,"supportLengthM":0.15,"bearingLengthM":-0.15,"bucklingLengthYM":5.25,"bucklingLengthZM":1.5,"lateralRestraintSpacingM":-1.75,"notchDepthM":0.01,"notchDistanceM":0.125,"mCritNm":180000.5,"massKgPerM":120.25,"massKgPerM2":450.5,"dampingXi":0.04,"fireDurationS":3600.25,"bridgeNObs":1000.5,"bridgeTLYears":50.25,"bridgeBeta":-2.5,"bridgeA":7.75,"bridgeB":-3.125,"bridgeCrowdPerM2":1.25,"actions":[
+      {"id":"same action","kind":"arbitrary persisted kind","category":"B 🏢","loadDuration":"arbitrary duration","qLineNPerM":2500.5,"fPointN":120.25,"mKNm":10.5,"vKN":20.75,"nKN":-30.25,"nTKN":40.125,"fC90KN":-50.5},
+      {"id":"same action","kind":"","category":"","loadDuration":"","qLineNPerM":-2500.5,"fPointN":-120.25,"mKNm":-10.5,"vKN":-20.75,"nKN":30.25,"nTKN":-40.125,"fC90KN":50.5}
+    ]},
+    {"id":"same timber 世界","labelEn":"","labelDe":"","role":"column","strengthClass":"","serviceClass":0,"support":"cantilever","bM":-0.2,"hM":-0.4,"spanM":-5.125,"supportLengthM":-0.15,"bearingLengthM":0.15,"bucklingLengthYM":-5.25,"bucklingLengthZM":-1.5,"lateralRestraintSpacingM":1.75,"notchDepthM":-0.01,"notchDistanceM":-0.125,"mCritNm":-180000.5,"massKgPerM":-120.25,"massKgPerM2":-450.5,"dampingXi":-0.04,"fireDurationS":-3600.25,"bridgeNObs":-1000.5,"bridgeTLYears":-50.25,"bridgeBeta":2.5,"bridgeA":-7.75,"bridgeB":3.125,"bridgeCrowdPerM2":-1.25,"actions":[]}
+  ],
+  "connections": [
+    {"id":"same connection 世界","labelEn":"Joint \u0000 A","labelDe":"Verbindung 🔗","fastenerType":"arbitrary fastener","strengthClass":"arbitrary strength","serviceClass":255,"diameterM":0.012,"number":4294967295,"rows":4294967294,"spacingM":0.06,"edgeDistanceM":0.05,"endDistanceM":-0.08,"t1M":0.04,"t2M":-0.06,"steelPlate":true,"steelPlateThicknessM":0.01,"shearPlanes":4294967295,"fUK":800000000.5,"actions":[
+      {"id":"same joint action","kind":"arbitrary kind","loadDuration":"arbitrary duration","fKN":42000.25},
+      {"id":"same joint action","kind":"","loadDuration":"","fKN":-42000.25}
+    ]},
+    {"id":"same connection 世界","labelEn":"","labelDe":"","fastenerType":"","strengthClass":"","serviceClass":0,"diameterM":-0.012,"number":0,"rows":0,"spacingM":-0.06,"edgeDistanceM":-0.05,"endDistanceM":0.08,"t1M":-0.04,"t2M":0.06,"steelPlate":false,"steelPlateThicknessM":-0.01,"shearPlanes":0,"fUK":-800000000.5,"actions":[]}
+  ]
+}

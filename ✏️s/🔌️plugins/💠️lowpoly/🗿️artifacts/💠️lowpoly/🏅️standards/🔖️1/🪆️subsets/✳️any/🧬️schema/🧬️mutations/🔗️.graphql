@@ -151,7 +151,7 @@ input ApplyPaintStrokeInput {
   objectId: String!
   layerIndex: Int!
   eraser: Boolean!
-  color: [Int!]!
+  color: [Float!]!
   radius: Float!
   hardness: Float!
   opacity: Float!
@@ -421,7 +421,7 @@ type ApplyPaintStrokePayload {
   objectId: String!
   layerIndex: Int!
   eraser: Boolean!
-  color: [Int!]!
+  color: [Float!]!
   radius: Float!
   hardness: Float!
   opacity: Float!

@@ -82,13 +82,13 @@ impl protocol::MutationDiff<WiresCanvasTransient> for WiresCanvasTransient {
 mod mutations;
 pub use mutations::*;
 
-store::artifact_retire_struct!(WiresCanvasTransient { drag_node_id, drag_start_x, drag_start_y, drag_last_x, drag_last_y, drag_zoom });
-store::artifact_retire_struct!(SetDrag { node_id, start_x, start_y, last_x, last_y, zoom });
+semio_framework_value::artifact_retire_struct!(WiresCanvasTransient { drag_node_id, drag_start_x, drag_start_y, drag_last_x, drag_last_y, drag_zoom });
+semio_framework_value::artifact_retire_struct!(SetDrag { node_id, start_x, start_y, last_x, last_y, zoom });
 
-impl store::retirement::RetireOwned for WiresCanvasTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for WiresCanvasTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         match self {
-            Self::SetDrag(value) => store::retirement::sequence(vec![store::retirement::leaf(0u8), store::retirement::RetireOwned::retirement(value)]),
+            Self::SetDrag(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(value)]),
         }
     }
 }
@@ -129,8 +129,8 @@ impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner 
     type Mutation = WiresCanvasTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(wires_canvas_transient_footprint, wires_canvas_transient_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

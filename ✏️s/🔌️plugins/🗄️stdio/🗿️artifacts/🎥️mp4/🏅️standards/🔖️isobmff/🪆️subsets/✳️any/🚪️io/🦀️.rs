@@ -44,7 +44,7 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::framework_schema::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences().await;
         semio_framework_plugin::io::register_native_document_codec(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.mp4", standard: semio_framework_plugin::StandardId("isobmff"), subset: semio_framework_plugin::SubsetId("*") }, store::ArtifactCodec::bare::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
@@ -54,7 +54,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::framework_schema::register_artifact_inference_descriptor(crate::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor());
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 }

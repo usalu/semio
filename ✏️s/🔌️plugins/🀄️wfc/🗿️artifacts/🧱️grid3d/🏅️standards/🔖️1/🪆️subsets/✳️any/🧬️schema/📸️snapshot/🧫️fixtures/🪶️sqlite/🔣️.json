@@ -1,1 +1,124 @@
-{"schema":"s.wfc.grid3d","seed":"18446744073709551615","width":4294967295,"height":2,"depth":3,"periodicX":true,"periodicY":false,"periodicZ":true,"cellSizesXBits":["8000000000000000","7ff0000000000001"],"cellSizesYBits":["0000000000000001"],"cellSizesZBits":["7ff0000000000000","fff0000000000000"],"tiles":[{"id":"mesh 🧬","label":"","weightBits":"3ff0000000000000","media":{"kind":"mesh","positionsBits":["8000000000000000","7ff8000000004321","0000000000000001","3ff0000000000000"],"indices":[4294967295,0],"color":{"r":4294967295,"g":2,"b":3,"a":4}}},{"id":"child","weightBits":"7ff0000000000001","media":{"kind":"meshChild","childId":"owned-child","target":{"artifactId":"semio-mesh","dialect":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"mesh"}}}}],"rules":[{"id":"permission","tileAId":"mesh 🧬","tileBId":"child","direction":"FRONT","allowed":false}],"pinned":[{"x":4294967295,"y":2,"z":3,"tileId":"child"}],"masked":[{"x":4,"y":5,"z":6},{"x":0,"y":0,"z":0}]}
+{
+  "schema": "s.wfc.grid3d",
+  "payloadMedia": [
+    {"kind": "mesh", "mesh": {"positions": [0, 0.125, -2], "indices": [4294967295, 0], "color": {"r": 4294967295, "g": 2, "b": 3, "a": 4}}},
+    {"kind": "meshChild", "child": {"childId": "local\u0000😀", "target": {"artifactId": "", "dialect": {"artifactKind": "arbitrary!@/", "standard": "", "subset": "*"}}}}
+  ],
+  "seed": "18446744073709551615",
+  "width": 4294967295,
+  "height": 2,
+  "depth": 3,
+  "periodicX": true,
+  "periodicY": false,
+  "periodicZ": true,
+  "cellSizesXBits": [
+    "8000000000000000",
+    "7ff0000000000001"
+  ],
+  "cellSizesYBits": [
+    "0000000000000001"
+  ],
+  "cellSizesZBits": [
+    "7ff0000000000000",
+    "fff0000000000000"
+  ],
+  "tiles": [
+    {
+      "id": "mesh 🧬",
+      "label": "",
+      "weightBits": "3ff0000000000000",
+      "media": {
+        "kind": "mesh",
+        "positionsBits": [
+          "8000000000000000",
+          "7ff8000000004321",
+          "0000000000000001",
+          "3ff0000000000000"
+        ],
+        "indices": [
+          4294967295,
+          0
+        ],
+        "color": {
+          "r": 4294967295,
+          "g": 2,
+          "b": 3,
+          "a": 4
+        }
+      }
+    },
+    {
+      "id": "child",
+      "weightBits": "7ff0000000000001",
+      "media": {
+        "kind": "meshChild",
+        "childId": "owned-child",
+        "target": {
+          "artifactId": "semio-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "permission",
+      "tileAId": "mesh 🧬",
+      "tileBId": "child",
+      "direction": "FRONT",
+      "allowed": false
+    }
+  ],
+  "pinned": [
+    {
+      "x": 4294967295,
+      "y": 2,
+      "z": 3,
+      "tileId": "child"
+    }
+  ],
+  "masked": [
+    {
+      "x": 4,
+      "y": 5,
+      "z": 6
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  ],
+  "controlledAdmission": {
+    "items": 1024,
+    "cancelAfter": 256,
+    "textBytes": 100000,
+    "smallValueBudget": 128
+  },
+  "literalIdentityStates": [
+    {
+      "tileIds": [
+        "same",
+        "same"
+      ],
+      "ruleId": "repeated",
+      "tileAId": "missing 🧬\u0000!@/",
+      "tileBId": "",
+      "pinTileId": "unresolved"
+    },
+    {
+      "tileIds": [
+        "",
+        ""
+      ],
+      "ruleId": "",
+      "tileAId": "unresolved!@/",
+      "tileBId": "absent",
+      "pinTileId": ""
+    }
+  ]
+}

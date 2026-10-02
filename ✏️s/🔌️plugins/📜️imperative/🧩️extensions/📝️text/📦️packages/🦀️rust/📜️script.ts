@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
-import { runCargoTestBudgeted, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["semio-s-plugin-imperative-text"], this.repoRoot);
+  async run(_segments: string[]): Promise<void> {
+    await runRepositoryCargoTests(["semio-s-plugin-imperative-text"], this.repoRoot);
   }
 }
 

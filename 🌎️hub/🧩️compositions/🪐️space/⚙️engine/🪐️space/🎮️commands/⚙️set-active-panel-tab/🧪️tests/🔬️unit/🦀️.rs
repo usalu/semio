@@ -43,7 +43,7 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
         .await)
         .await
         .build_definition();
-    let mut app_json = pack::json_from_dsl_value(&dsl::to_dsl_value(&definition).expect("serialize AppDefinition"));
+    let mut app_json = pack::json_from_dsl_value(&semio_framework_value::ToValue::to_value(&definition));
     // 🩹️ `AppDefinition`'s wire field is `breadcrumb` (`AppBuilder::document(...)` is the builder
     // METHOD name that sets it, not the serialized field name — `#[serde(rename_all =
     // "camelCase")]` leaves the single-word `breadcrumb` unchanged). Blanking `"document"` here was
@@ -59,7 +59,7 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
     studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(crate::engine::space::commands::set_app_registrations::SetAppRegistrations { json: wire })).await.expect("handle");
     assert!(os_app_registration("root", &root_tool_id).is_some(), "SetAppRegistrations must populate this wasm instance's own registry");
     assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == root_tool_id), "workflow_palette must surface the pushed app");
-    let labels = semio_framework_plugin::resolve_labels::<crate::engine::space::terminology::SStudioLabels>(&semio_framework_plugin::ViewModel::default());
+    let labels = semio_framework_plugin::resolve_labels::<crate::engine::space::terminology::SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let tree = crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).await.expect("catalogue tree");
     let json_tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection");
     assert!(json_tree.contains(&format!("s-play-catalogue.document.{root_tool_id}")), "an empty-document app must still surface as a top-level catalogue leaf, json={json_tree}");

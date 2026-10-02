@@ -61,6 +61,8 @@ describe("🖱️ Canvas2d mounted input contract", () => {
         ...fixture.pointer.down.modifiers,
         width: fixture.surface.width,
         height: fixture.surface.height,
+        worldX: fixture.pointer.down.world.x,
+        worldY: fixture.pointer.down.world.y,
       },
     });
     expect(actions[1]?.args).toEqual({
@@ -73,6 +75,8 @@ describe("🖱️ Canvas2d mounted input contract", () => {
       alt: false,
       width: fixture.surface.width,
       height: fixture.surface.height,
+      worldX: fixture.pointer.cancel.world.x,
+      worldY: fixture.pointer.cancel.world.y,
       cancelled: true,
     });
   });

@@ -10,11 +10,14 @@ import {
   HISTORY_EDIT_ARG_GENERATION,
   HISTORY_EDIT_ARG_MUTATION_ID,
   HISTORY_EDIT_ARG_NAME,
+  HISTORY_EDIT_ARG_EDIT,
   HISTORY_EDIT_ARG_PATH,
   HISTORY_EDIT_ARG_STORE,
   HISTORY_EDIT_ARG_VALUE,
   HISTORY_EDIT_CHOICE_OVERWRITE,
   HISTORY_EDIT_FINALIZE_DIALOG_ID,
+  HISTORY_EDIT_INPUT_INSERT,
+  HISTORY_EDIT_INPUT_REMOVE,
 } from "../../🟦️.ts";
 
 const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
@@ -38,6 +41,9 @@ describe("✏️ manifest history-edit verbs", () => {
       store: HISTORY_EDIT_ARG_STORE,
       path: HISTORY_EDIT_ARG_PATH,
       value: HISTORY_EDIT_ARG_VALUE,
+      edit: HISTORY_EDIT_ARG_EDIT,
+      insert: HISTORY_EDIT_INPUT_INSERT,
+      remove: HISTORY_EDIT_INPUT_REMOVE,
       generation: HISTORY_EDIT_ARG_GENERATION,
       name: HISTORY_EDIT_ARG_NAME,
       choice: DIALOG_CHOICE_ARG,

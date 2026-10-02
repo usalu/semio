@@ -22,8 +22,8 @@ impl protocol::MutationKind<GisMapViewerWindowConfig, GisMapViewerWindowConfigMu
     fn inverse(&self, base: &GisMapViewerWindowConfig) -> Vec<GisMapViewerWindowConfigMutation> {
         (base.camera != self.camera).then(|| GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: base.camera })).into_iter().collect()
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set camera", "Kamera setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

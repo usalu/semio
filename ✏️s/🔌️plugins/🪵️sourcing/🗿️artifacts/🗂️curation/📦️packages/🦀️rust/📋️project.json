@@ -56,6 +56,42 @@
           ]
         }
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
     }
   }
 }

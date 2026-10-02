@@ -662,7 +662,7 @@ fn face_sweep_extrude_evaluates_to_a_closed_solid() {
 
 #[test]
 fn hexagonal_mushroom_column_evaluates_to_the_analytic_prism() {
-    assert_example(include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio"), include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🧫️fixtures/🧩️example/🔣️.json"));
+    assert_example(include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio"), include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]
@@ -732,7 +732,7 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     let _guard = exclusive();
     operators_installed();
     let expected: SceneBridgeFixture = serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses");
-    let dsl = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
+    let dsl = include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
     let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
     let cfg = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig::default();
@@ -1200,7 +1200,7 @@ fn delivery_face_sweep_extrude() {
 
 #[test]
 fn delivery_hexagonal_mushroom_column() {
-    assert_delivery(include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio"), include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom/🧫️fixtures/🧩️example/🔣️.json"));
+    assert_delivery(include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio"), include_str!("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧫️fixtures/🧩️example/🔣️.json"));
 }
 
 #[test]

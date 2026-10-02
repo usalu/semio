@@ -23,8 +23,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RetireSubjec
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Delete dictionary subject \"{}\"", self.id), &format!("Wörterbuchthema \"{}\" löschen", self.id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete dictionary subject \"{}\"", self.id), &format!("Wörterbuchthema \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

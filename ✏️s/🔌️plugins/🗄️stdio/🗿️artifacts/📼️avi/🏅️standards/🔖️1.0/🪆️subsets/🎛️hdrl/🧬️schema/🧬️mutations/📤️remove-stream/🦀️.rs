@@ -20,8 +20,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveStream {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::RemoveStream(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove stream", "Datenstrom entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

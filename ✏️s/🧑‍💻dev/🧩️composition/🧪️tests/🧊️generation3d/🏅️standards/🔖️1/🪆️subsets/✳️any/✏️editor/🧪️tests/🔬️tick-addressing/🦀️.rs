@@ -59,7 +59,7 @@ fn roster(fixture: &TickAddressingFixture, attached: &[AttachedWindow]) -> ViewM
         .iter()
         .map(|window| ViewWindowInstance { id: window.id.clone(), window_kind_id: fixture.window_kinds.get(&window.kind).unwrap_or_else(|| panic!("fixture window kind {}", window.kind)).clone() })
         .collect();
-    ViewModel { window_instances, ..Default::default() }
+    ViewModel { window_instances, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 /// 🪟️ The distinct windows a driven run's hops addressed, sorted.
@@ -87,7 +87,7 @@ async fn every_run_hop_names_a_preview_window_that_is_actually_attached() {
         expected.sort();
         eprintln!("run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), receipt.hop_windows);
         assert_eq!(hop_windows(&receipt), expected, "arming case {}", case.id);
-        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::default()).await.is_empty(), "no roster at all starts nothing");
+        assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.is_empty(), "no roster at all starts nothing");
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 }

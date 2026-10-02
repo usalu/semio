@@ -63,25 +63,25 @@ impl DrawingArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.draw.drawing` — twenty handcrafted schema leaves.
-pub fn drawing_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn drawing_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.draw.drawing",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -534,7 +534,7 @@ pub fn drawing_layer_bounds_with_parent(layer: &DrawingLayerNode, parent: [f64;6
     }
     let rectangle = match layer {
         DrawingLayerNode::Text(text) => {
-            let [width, height] = semio_s_2d::text::drawing_text_fallback_extent(&text.content, text.size);
+            let [width, height] = semio_framework_2d::text::drawing_text_fallback_extent(&text.content, text.size);
             Some((text.x, text.y, width.max(8.0), height.max(8.0)))
         },
         DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
@@ -1077,8 +1077,8 @@ pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
-    use semio_s_2d::PathSegment as KernelSegment;
+fn to_kernel_segment(segment: &PathSegment) -> semio_framework_2d::PathSegment {
+    use semio_framework_2d::PathSegment as KernelSegment;
     match segment {
         PathSegment::Move { to } => KernelSegment::Move { to: *to },
         PathSegment::Line { to } => KernelSegment::Line { to: *to },
@@ -1089,8 +1089,8 @@ fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
     }
 }
 
-fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
-    use semio_s_2d::PathSegment as KernelSegment;
+fn from_kernel_segment(segment: &semio_framework_2d::PathSegment) -> PathSegment {
+    use semio_framework_2d::PathSegment as KernelSegment;
     match segment {
         KernelSegment::Move { to } => PathSegment::Move { to: *to },
         KernelSegment::Line { to } => PathSegment::Line { to: *to },
@@ -1101,11 +1101,11 @@ fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
     }
 }
 
-fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_s_2d::PathSegment> {
+fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_framework_2d::PathSegment> {
     segments.iter().map(to_kernel_segment).collect()
 }
 
-fn from_kernel_segments(segments: &[semio_s_2d::PathSegment]) -> Vec<PathSegment> {
+fn from_kernel_segments(segments: &[semio_framework_2d::PathSegment]) -> Vec<PathSegment> {
     segments.iter().map(from_kernel_segment).collect()
 }
 
@@ -1121,8 +1121,8 @@ fn resolve_boolean_layer_segments(doc: &DrawingSnapshot, boolean: &DrawingBoolea
     if child_segments.is_empty() {
         return Vec::new();
     }
-    let kernel_inputs: Vec<Vec<semio_s_2d::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
-    match semio_s_2d::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
+    let kernel_inputs: Vec<Vec<semio_framework_2d::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
+    match semio_framework_2d::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
         Ok(result) => from_kernel_segments(&result),
         Err(_) => Vec::new(),
     }
@@ -1179,7 +1179,7 @@ fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody)
     };
     let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
     let Some((width, height, luma)) = decode_drawing_image_asset_luma(asset) else { return Vec::new() };
-    let traced = match semio_s_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
+    let traced = match semio_framework_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
         Ok(segments) => from_kernel_segments(&segments),
         Err(_) => return Vec::new(),
     };
@@ -1194,7 +1194,7 @@ fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody)
 /// 🔎 Returns whether `s.draw.drawing` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `default_drawing_document` (same rule; mirrors `s.lowpoly.lowpoly`'s identical move).
 pub fn artifact_schema_registered() -> bool {
-    ::framework_schema::artifact_schema_descriptor_registered("s.draw.drawing")
+    ::semio_framework_schema_registry::artifact_schema_descriptor_registered("s.draw.drawing")
 }
 //#endregion 🔖️DocumentHelpers
 

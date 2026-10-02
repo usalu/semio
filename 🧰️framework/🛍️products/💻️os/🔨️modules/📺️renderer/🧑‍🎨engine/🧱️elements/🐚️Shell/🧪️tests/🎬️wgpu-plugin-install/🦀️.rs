@@ -37,7 +37,7 @@ fn the_host_plugin_is_not_the_owner_of_every_kind() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn installing_without_a_resident_program_is_refused() {
-    let mut shell = ShellState::new(Vec::new(), "s".into());
+    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(shell.plugin_install.is_none());
     let outcome = semio_framework_async::block_on(shell.install_plugin("cad"));
     assert_eq!(outcome, Err("plugin modules root is unavailable".to_string()));
@@ -50,7 +50,7 @@ fn installing_without_a_resident_program_is_refused() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn cancelling_clears_only_a_settled_install_record() {
-    let mut shell = ShellState::new(Vec::new(), "s".into());
+    let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.cancel_plugin_install();
     assert!(shell.plugin_install.is_none());
     shell.plugin_install = Some(ShellPluginInstall { plugin_id: "cad".into(), phase: ShellPluginInstallPhase::Failed("boom".into()), cancel: CancelToken::root_now() });

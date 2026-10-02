@@ -20,10 +20,14 @@ connection = "[" hex "," hex "," hex "," hex "," hex "]"
 transform = "[" number "," number "," number "," number "," number "," number "," number "," number "," number "," number "]"
 
 child-list = "[" {child {"," child}*}? "]"
-child = "[" hex "," hex "]"
+child = "[" hex "," reference "]"
 
 link-list = "[" {link {"," link}*}? "]"
-link = "[" hex "," pin "," hex "]"
+link = "[" reference "," pin "," hex "]"
 pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"
 
-number = INT | FLOAT
+number = INT | FLOAT | IDENT | "-" "inf"
+
+reference = "[" hex "," hex "," hex "," hex "]"
+
+# 🔢️ Numeric identifiers are inf or nan64_ followed by exactly sixteen hexadecimal IEEE754 bits of NaN class.

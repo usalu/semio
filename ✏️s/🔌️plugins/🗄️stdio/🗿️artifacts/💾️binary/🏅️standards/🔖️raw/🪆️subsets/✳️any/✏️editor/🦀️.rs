@@ -3,7 +3,7 @@
 //! possible document: one opaque `bytes: Vec<u8>` buffer. One window, `🪟️main` (`TextWindowKit`),
 //! renders it as a complete paged hex dump; its `textEdit` action funnels through the one typed command
 //! this surface declares, `BinaryEditorCommand::ReplaceText`, which parses the hex text back into
-//! bytes and emits a whole-buffer `BinaryMutation::ReplaceByteRange` through the artifact-owned
+//! bytes and emits ONE net `BinaryMutation::ReplaceByteRange` over the bytes it changed (nothing when it changed none) through the artifact-owned
 //! retained command factory.
 
 use crate::editor::binary::modes::edit;
@@ -13,12 +13,38 @@ use crate::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 #[cfg(test)]
 use semio_framework_plugin::Component;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault,
-    InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ToolExecutionContract,
-    ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
-};
-use store::EngineHandles;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Dialect;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::NoPresence;
+use semio_framework_plugin::NoPresenceMutation;
+use semio_framework_plugin::NoTransient;
+use semio_framework_plugin::NoTransientMutation;
+use semio_framework_plugin::StandardId;
+use semio_framework_plugin::SubsetId;
+use semio_framework_plugin::ToolExecutionContract;
+use semio_framework_plugin::ToolFactoryKey;
+use semio_framework_plugin::ToolJobFactory;
+use semio_framework_plugin::ToolJobFactoryError;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.binary@raw/*`, verified against this artifact's
@@ -46,7 +72,7 @@ impl protocol::OpText for BinaryEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -56,7 +82,7 @@ impl protocol::OpText for BinaryEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
     }
 }
 
@@ -66,7 +92,7 @@ impl protocol::OpBinary for BinaryEditorCommand {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -84,7 +110,7 @@ impl protocol::OpBinary for BinaryEditorCommand {
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
+        let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
@@ -149,11 +175,25 @@ fn binary_text_emit(
             "The byte editor contains an odd digit count or a non-hexadecimal character.",
         )
     })?;
-    Ok(Emit {
-        artifact_mutations: vec![BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: snapshot.bytes.len(), insert: parsed })],
-        description: Some("Replace bytes".into()),
-        ..Default::default()
-    })
+    Ok(Emit::mutations(binary_net_replacement(&snapshot.bytes, &parsed).into_iter().collect()))
+}
+
+/// 🧮️ The net leaves of one document-details edit: the ONE `replace-byte-range` that carries `base`'s bytes to `next`'s; another
+/// document schema is the one genuine whole-document replacement (`set-snapshot`).
+fn binary_net_mutations(base: &BinarySnapshot, next: &BinarySnapshot) -> Vec<BinaryMutation> {
+    if base.schema != next.schema {
+        return vec![BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() })];
+    }
+    binary_net_replacement(&base.bytes, &next.bytes).into_iter().collect()
+}
+
+/// ✂️ The ONE byte-range replacement that carries `old` to `new`: the bytes both share at either end stay untouched, so history
+/// edits the range an author changed, never the whole buffer; `None` when nothing changed.
+fn binary_net_replacement(old: &[u8], new: &[u8]) -> Option<BinaryMutation> {
+    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
+    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
+    let (remove_len, insert) = (old.len() - prefix - suffix, &new[prefix..new.len() - suffix]);
+    (remove_len > 0 || !insert.is_empty()).then(|| BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: prefix, remove_len, insert: insert.to_vec() }))
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -322,8 +362,8 @@ impl ArtifactEditor for BinaryEditor {
         BinarySnapshot::default()
     }
 
-    /// ✏️ Parses the hex text and, if well-formed, replaces the WHOLE buffer via
-    /// `BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: <old len>, insert: <parsed> })`. Malformed
+    /// ✏️ Parses the hex text and, if well-formed, replaces exactly the bytes it changed via ONE
+    /// `BinaryMutation::ReplaceByteRange` (the shared prefix and suffix stay; nothing when unchanged). Malformed
     /// hex (odd length or an invalid digit) returns a fault without changing the document.
     fn handle(
         command: &Self::Command,
@@ -366,7 +406,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BinaryE
 
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, binary_net_mutations)
     }
 }
 //#endregion 🔖️Editor

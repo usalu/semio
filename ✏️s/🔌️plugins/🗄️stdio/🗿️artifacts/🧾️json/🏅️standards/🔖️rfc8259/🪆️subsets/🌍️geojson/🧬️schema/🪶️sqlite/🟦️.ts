@@ -1,4 +1,5 @@
 /** 🌍️ Borrowed RFC7946 semantic admission preserves the shared JSON syntax snapshot. */
+import { jsonNumberMeaning } from "../../../🧱️base/🧬️schema/📸️snapshot/🔢️number/🟦️.ts";
 import type { JsonSnapshot, JsonValue } from "../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import type { ArtifactDialect } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import type { SqliteDatabase } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
@@ -25,7 +26,7 @@ export async function checkGeoJsonConformanceControlled(snapshot: JsonSnapshot, 
  await artifactSqliteCheckpoint(options, "projectSnapshot", 0, 0, false);
  const stack: { value: JsonValue; index: number }[] = [{ value: snapshot.value, index: -1 }], active = new Set<JsonValue>();
  while (stack.length) {
-  const frame = stack.at(-1)!; if (frame.index === -1) { if (active.has(frame.value)) throw Error("GeoJSON typed JSON contains a cycle"); active.add(frame.value); if (steps >= (options.maxRows ?? 1_000_000)) throw Error("GeoJSON conformance row limit"); await tick(); frame.index = 0; }
+  const frame = stack.at(-1)!; if (frame.index === -1) { if (active.has(frame.value)) throw Error("GeoJSON typed JSON contains a cycle"); active.add(frame.value); if (steps >= (options.maxRows ?? 1_000_000)) throw Error("GeoJSON conformance row limit"); await tick(); if(frame.value.kind === "number" && !(await jsonNumberMeaning(frame.value.lexeme,options,"projectSnapshot",steps,0)).valid) return [{code:"stdio.json.geojson.not-rfc7946",severity:"error",message:"GeoJSON /: a number requires an RFC8259 lexeme"}]; frame.index = 0; }
   const child = frame.value.kind === "array" ? frame.value.items[frame.index] : frame.value.kind === "object" ? frame.value.members[frame.index]?.value : undefined;
   if (child) { frame.index++; stack.push({ value: child, index: -1 }); } else { active.delete(frame.value); stack.pop(); }
  }

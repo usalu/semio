@@ -120,6 +120,58 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "test-actor-transport": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.{ts,json}",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,json}"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick actor-transport"
+      }
+    },
+    "test-media-transport": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎬️media-transport-reservation/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-media-transport"
+      }
+    },
+    "test-store-oracles": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️tool-transaction/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-replay/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️tool-transaction/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-store-oracles"
+      }
     }
   }
 }

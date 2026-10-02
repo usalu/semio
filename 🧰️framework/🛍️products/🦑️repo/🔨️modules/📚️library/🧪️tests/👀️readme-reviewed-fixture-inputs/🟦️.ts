@@ -338,7 +338,7 @@ test("reviewed fixture gate registration matches its package route and both laun
   });
   expect({ packageName: packageManifest.name, packageCommand: packageManifest.scripts?.[expected.target], target: project.targets[expected.target], branches: branches.length, launches }).toEqual({ packageName: expected.packageName, packageCommand: expected.packageCommand, target: { executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } }, branches: 1, launches: launches.map(({ path }) => ({ path, rows: [{ name: expected.launchName, type: "node-terminal", request: "launch", command: expected.launchCommand, cwd: "${workspaceFolder}", presentation: { group: expected.launchGroup, order: expected.launchOrder } }], orderRows: 1 })) });
   expect(branches[0]!.thenStatement.getText(tree)).toContain("join(this.repoRoot, " + JSON.stringify(expected.source) + ")");
-  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
+  expect(branches[0]!.thenStatement.getText(tree)).toContain('await runRepositoryTestCommand(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });');
 });
 
 afterAll(() => {

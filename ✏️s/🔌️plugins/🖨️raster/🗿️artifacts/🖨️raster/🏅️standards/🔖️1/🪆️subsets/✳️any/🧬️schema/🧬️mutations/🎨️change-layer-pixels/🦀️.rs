@@ -39,7 +39,7 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerPixel
         vec![RasterMutation::ChangeLayerPixels(Self { layer_id: self.layer_id.clone(), expected_image_key: self.content.image_key.clone(), content: RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height }, transform: self.transform.as_ref().map(|_| transform.clone()) })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel { protocol::LocalizedLabel::native("Edit layer pixels", "Ebenenpixel bearbeiten") }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit layer pixels", "Ebenenpixel bearbeiten") }
     fn target(&self) -> Vec<String> { vec![self.layer_id.clone()] }
 }
 

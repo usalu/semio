@@ -1,6 +1,7 @@
 //! 📚️ Example non-compliant EN 1995-2 footbridge girder — dense crowd, low damping and a steep fatigue curve.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_plugin::ExampleSource;
+use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "overloaded-footbridge";
 pub fn label() -> LocalizedLabel {

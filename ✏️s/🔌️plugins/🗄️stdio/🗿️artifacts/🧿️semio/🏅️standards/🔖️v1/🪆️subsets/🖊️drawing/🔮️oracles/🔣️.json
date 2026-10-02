@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is an independent Python implementation of the semio-native carrier and the seventeen verbs, written from this subset's own committed grammar and protocol documents.",
   "oracles": [
@@ -836,13 +836,13 @@
     {
       "id": "drawing-exact",
       "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this subset lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
-      "absoluteLength": 1e-09,
+      "absoluteLength": 1e-9,
       "relativeLength": 1e-12,
-      "absoluteArea": 1e-09,
+      "absoluteArea": 1e-9,
       "relativeArea": 1e-11,
-      "absoluteVolume": 1e-09,
+      "absoluteVolume": 1e-9,
       "relativeVolume": 1e-11,
-      "normalizedHausdorffMax": 1e-09,
+      "normalizedHausdorffMax": 1e-9,
       "normalizedCentroidDistanceMax": 1e-10,
       "maxOverrideFactor": 1
     }
@@ -1523,6 +1523,28 @@
           ]
         },
         {
+          "id": "set-snapshot",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-snapshot",
+            "bridgeVersion": 1,
+            "variant": "SetSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ]
+        },
+        {
           "id": "unflatten-node",
           "capability": "semio-v1-drawing-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -1613,14 +1635,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke/⬅️before.svg",
+          "path": "../🧫️fixtures/🖌️change-stroke-color/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke/➡️after.svg",
+          "path": "../🧫️fixtures/🖌️change-stroke-color/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a7a0f32ddaf424f2caedd1a8ef4c36d945931d68027bbb1c1a895ca91f0ac07b",
           "bytes": 440
@@ -2511,5 +2533,6 @@
       "family": "drawing-svg-carrier",
       "notes": "Authored (before, after) SVG pair for `ungroup-node`. The pair is the expectation; quick-xml reads both halves."
     }
-  ]
+  ],
+  "oracleHostPackages": []
 }

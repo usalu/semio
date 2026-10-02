@@ -188,7 +188,7 @@ use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schem
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set/🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
 
@@ -210,7 +210,7 @@ use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::se
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod/🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
 
@@ -679,7 +679,7 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::se
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
 
@@ -728,7 +728,7 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Gen
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::text::{generation3d_host_snapshot_operations, generation_mutation_to_generation3d, Generation3dMutation};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, example_snapshot, is_generation3d_example_id};
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
 
@@ -774,7 +774,7 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::se
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod/🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
 

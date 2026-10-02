@@ -16,7 +16,7 @@
     "aPortDragPublishesConnect": "An output→input drag across two different nodes publishes `{operation: \"connect\", sourceNodeId, sourcePortId, targetNodeId, targetPortId}`. The board refuses output→output, input→input, same-node and cycle-forming pairs by design, so a failed pair proves nothing about the mechanism.",
     "aDetachedWirePublishesDisconnect": "Dragging a WIRED input's endpoint off its port and releasing over empty canvas cuts the wire and publishes `{operation: \"disconnect\", synapseId}` naming the synapse the guest knows, never the engine's private edge number.",
     "aMinimapClickMovesTheCamera": "A press inside the minimap panel but outside its viewport rectangle re-centres the camera and publishes the moved `nodeGraphViewport`.",
-    "aContentlessGestureDispatchesNothing": "A released gesture that changed no widget, no synapse and no layout dispatches NOTHING — not a narrow operation and not the whole-fixture commit either. The host answers that question itself (`hostSnapshotChanged`, the same `content_changed` predicate it decides an undo entry by, true only for content its narrow journal does not narrate); a renderer that reads an empty `operations` as permission to commit the fixture writes a document mutation per plain CLICK, and a landed mutation owes every attached preview a fresh evaluation, so a shell nobody touched dispatches `nodeGraphEdit` and re-arms `flowEvalTick`."
+    "aContentlessGestureDispatchesNothing": "A released gesture that changed no widget, no synapse and no layout dispatches NOTHING — not a narrow operation and not the whole-fixture commit either. The host journal narrates every content change a gesture makes (wires, the moved nodes, an inline slider's value, an inserted port) and nothing else, so an empty journal is the whole answer; a renderer that read an empty `operations` as permission to commit the fixture wrote a document mutation per plain CLICK, and a landed mutation owes every attached preview a fresh evaluation, so a shell nobody touched dispatches `nodeGraphEdit` and re-arms `flowEvalTick`."
   },
   "graph": {
     "example": "hexagonal-mushroom-column",
@@ -88,6 +88,8 @@
   "operationFields": {
     "move": ["gestureId", "nodeIds", "dx", "dy"],
     "connect": ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"],
-    "disconnect": ["synapseId"]
+    "disconnect": ["synapseId"],
+    "setSlider": ["widgetId", "value"],
+    "insertPort": ["nodeId", "side", "index"]
   }
 }

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "ordinary-warm",
+      "action": "none",
+      "accepted": true,
+      "physical": "file"
+    },
+    {
+      "id": "same-bytes-new-root",
+      "action": "new-root",
+      "accepted": true,
+      "physical": "file"
+    },
+    {
+      "id": "warm-deleted-leaf",
+      "action": "delete-leaf",
+      "accepted": false,
+      "physical": "absent"
+    },
+    {
+      "id": "warm-linked-leaf",
+      "action": "link-leaf",
+      "accepted": false,
+      "physical": "symlink"
+    },
+    {
+      "id": "warm-linked-inner-parent",
+      "action": "link-parent",
+      "accepted": false,
+      "physical": "symlink"
+    },
+    {
+      "id": "warm-linked-root",
+      "action": "link-root",
+      "accepted": false,
+      "physical": "symlink"
+    },
+    {
+      "id": "warm-linked-root-ancestor",
+      "action": "link-ancestor",
+      "accepted": false,
+      "physical": "symlink"
+    },
+    {
+      "id": "missing-prefix-before-parent",
+      "action": "missing-prefix",
+      "accepted": false,
+      "physical": "absent"
+    },
+    {
+      "id": "linked-prefix-before-parent",
+      "action": "linked-prefix",
+      "accepted": false,
+      "physical": "symlink"
+    }
+  ],
+  "witnessCases": [
+    {
+      "id": "unchanged-after-capture",
+      "action": "none",
+      "accepted": true,
+      "physical": "directory"
+    },
+    {
+      "id": "replaced-after-capture",
+      "action": "replace",
+      "accepted": false,
+      "physical": "directory"
+    },
+    {
+      "id": "linked-after-capture",
+      "action": "link",
+      "accepted": false,
+      "physical": "symlink"
+    },
+    {
+      "id": "absent-after-capture",
+      "action": "delete",
+      "accepted": false,
+      "physical": "absent"
+    }
+  ]
+}

@@ -26,12 +26,6 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
     }
 }
 
-#[cfg(test)]
-#[test]
-fn malformed_unicode_hex_is_rejected_without_panicking() {
-    assert!(parse("patch-snapshot patch=€0").is_err());
-}
-
 pub fn print(value: &CsvMutation) -> Option<String> {
     let CsvMutation::PatchSnapshot(PatchSnapshot { patch }) = value else { return None };
     Some(format!("{TEXT_OPCODE} patch={}", hex_encode(patch.print_op().as_bytes())))

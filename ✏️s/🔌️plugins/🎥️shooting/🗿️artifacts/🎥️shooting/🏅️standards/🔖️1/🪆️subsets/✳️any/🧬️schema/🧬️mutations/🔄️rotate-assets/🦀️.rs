@@ -26,10 +26,10 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for RotateAssets {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         match self.asset_ids.len() {
-            1 => protocol::LocalizedLabel::native("Rotate 1 asset", "1 Asset drehen"),
-            count => protocol::LocalizedLabel::native(&format!("Rotate {count} assets"), &format!("{count} Assets drehen")),
+            1 => semio_framework_ui_locale::LocalizedLabel::native("Rotate 1 asset", "1 Asset drehen"),
+            count => semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {count} assets"), &format!("{count} Assets drehen")),
         }
     }
     fn target(&self) -> Vec<String> {

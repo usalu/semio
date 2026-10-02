@@ -1,2 +1,2 @@
-/** 🚪️ IO facet barrel — WASM facades land in W7. */
-export {};
+/** 🚪️ Published declared Puzzle5d file boundary. */
+export {puzzle5dSnapshotFromJsonText,puzzle5dSnapshotToJsonText} from "./🔣️json/🟦️.ts";

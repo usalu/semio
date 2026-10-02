@@ -21,8 +21,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::DeclareDoctype(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

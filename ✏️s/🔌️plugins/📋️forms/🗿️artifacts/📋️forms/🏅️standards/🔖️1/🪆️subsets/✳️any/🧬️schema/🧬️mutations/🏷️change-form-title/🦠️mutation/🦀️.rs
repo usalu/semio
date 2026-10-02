@@ -24,8 +24,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeFormTitle {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_change_form_title(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&{
         match &self.new_title {
             Some(title) => format!("Change form title to \"{title}\""),
             None => "Clear form title".to_string(),

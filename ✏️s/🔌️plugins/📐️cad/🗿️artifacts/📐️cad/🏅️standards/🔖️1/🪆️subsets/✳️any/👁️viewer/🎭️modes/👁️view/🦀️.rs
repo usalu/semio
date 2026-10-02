@@ -4,7 +4,12 @@
 //! Structure Classic read-only windows are a follow-up, not a purity or completeness requirement.
 
 use crate::viewer::cad::modes::view::windows::shape;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const CAD_VIEW_MODE_VIEW: &str = "view";
 

@@ -367,7 +367,7 @@ fn another_pointers_cancellation_preserves_the_captured_scene_drag() {
 fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let capacity = fixture["captureCapacity"].as_u64().unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
     let scene = ui_wgpu::wgpu::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
@@ -427,7 +427,7 @@ pub(super) fn pointer_interaction(shell: ShellState, input: InputState<ActionDes
 
 pub(super) fn retained_world_sequence_probe(scenario: &str) {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock_tabs = ShellDock::default();
     let mut active_documents = Vec::new();
@@ -728,14 +728,14 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
 }
 
 fn pane_owner_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️window-surface-owner/🔣️.json")).expect("window surface ownership fixture")
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪪️window-surface-owner/🔣️.json")).expect("window surface ownership fixture")
 }
 
 #[test]
 fn retained_pane_pointer_activation_preserves_the_concrete_window_owner() {
     let fixture = pane_owner_fixture();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let owner = case["window"].as_str().unwrap();
         let surface = case["surface"].as_str().unwrap();
         let previous = fixture["previousWindow"].as_str().unwrap();
@@ -1280,7 +1280,7 @@ fn content_focus_tracker_ignores_non_focus_commands() {
 /// to the ROOT, exactly as React's `collapseLayout` does.
 #[test]
 fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a"), DockStackTab::new("b"), DockStackTab::new("c")], active: "a".into() }, 1.0)]);
     let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), window_kind_id: "a".into(), template_id: None, source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
     let zone = DockDropZone::Tab { stack_path: vec![], corner: WindowStackCorner::TopLeft, index: 2 };
@@ -1298,7 +1298,7 @@ fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
 fn normalized_tab_drop_uses_shifted_destination_and_refuses_invalid_path_atomically() {
     for invalid in [false, true] {
         let stack = |id: &str| DockNode::Stack { windows: vec![DockStackTab::new(id)], active: id.into() };
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.dock.root = DockNode::Row(vec![(stack("a"), 1.0), (stack("b"), 1.0), (stack("c"), 1.0)]);
         let before = shell.dock.root.clone();
         let rect = Rect::new(20.0, 20.0, 20.0, 24.0);
@@ -1361,7 +1361,7 @@ fn normalized_dock_tab_pointer_sequence_promotes_the_drag_before_release() {
 
 #[test]
 fn context_menu_point_resolves_the_exact_concrete_window_instance() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(0.0, 0.0, 100.0, 100.0), "canvas".into()), (vec![1], Rect::new(100.0, 0.0, 100.0, 100.0), "canvas-copy".into())];
     let mut input = InputState::<ActionDescriptor>::default();
     assert_eq!(shell.context_window_instance_id(25.0, 25.0), None, "candidate geometry does not route input before presentation");
@@ -1383,7 +1383,7 @@ fn context_menu_point_resolves_the_exact_concrete_window_instance() {
 /// `📓️wgpu-generation-publication-2026-09-13.md`).
 #[test]
 fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let opened_with = "procedural-main";
     let pressed = "generation3d-generations";
     shell.active_window_id = Some(opened_with.into());
@@ -1406,7 +1406,7 @@ fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
 /// (`route_retained_pointer_press`'s own `else if !down` arm).
 #[test]
 fn only_the_press_half_of_a_body_click_moves_the_active_window() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.active_window_id = Some("procedural-main".into());
     let mut input = InputState::<ActionDescriptor>::default();
     let body = Rect::new(3.0, 54.0, 315.0, 814.0);
@@ -1423,7 +1423,7 @@ fn published_tree_handle_routes_through_shell_and_preserves_label_selection() {
     let surface = "tree-pointer-host-boundary";
     let body = Rect::new(17.0, 31.0, 360.0, 240.0);
     let theme = Theme::default();
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let (mut document, item_key) = published_tree_pointer_document(&mut shell, surface);
     let mut input = paint_tree_pointer_document(&mut shell, surface, &document, body);
     assert_eq!(crate::interpreter::accessibility_visible_window_ids(), vec![surface.to_string()], "the same completed retained-body publication owns the unnamed accessibility surface set");
@@ -1727,7 +1727,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let world_host = shell.world3d_host_id_for_window("main-2").expect("the accepted body registers its World3d host").to_string();
     assert!(shell.world3d_states.contains_key(&world_host), "the published body registers a live World3d owner before any example switch");
     assert!(body_input.hits().iter().any(|hit| hit.kind == HitKind::World3d), "the new instance publishes a physical World3d hit target");
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).unwrap();
     let world_hit = body_input.hits().iter().find(|hit| hit.kind == HitKind::World3d).unwrap();
     assert!(shell.retained_hit_window(world_hit).is_some(), "the actual retained publication registers this scene's body ownership");
     let point = (world_hit.rect.x + world_hit.rect.w * 0.5, world_hit.rect.y + world_hit.rect.h * 0.5);
@@ -1926,12 +1926,16 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let down_args = canvas_action_args(&actions[0]);
     assert_json_number_eq(&down_args["x"], &down["x"], "pointer down x");
     assert_json_number_eq(&down_args["y"], &down["y"], "pointer down y");
+    assert_json_number_eq(&down_args["worldX"], &down["world"]["x"], "pointer down world x");
+    assert_json_number_eq(&down_args["worldY"], &down["world"]["y"], "pointer down world y");
     for modifier in ["shift", "ctrl", "meta", "alt"] {
         assert_eq!(down_args[modifier], down["modifiers"][modifier]);
     }
     let cancelled = canvas_action_args(&actions[1]);
     assert_json_number_eq(&cancelled["x"], &fixture["pointer"]["cancel"]["x"], "cancel x");
     assert_json_number_eq(&cancelled["y"], &fixture["pointer"]["cancel"]["y"], "cancel y");
+    assert_json_number_eq(&cancelled["worldX"], &fixture["pointer"]["cancel"]["world"]["x"], "cancel world x");
+    assert_json_number_eq(&cancelled["worldY"], &fixture["pointer"]["cancel"]["world"]["y"], "cancel world y");
     assert_eq!(cancelled["cancelled"], true);
     for modifier in ["shift", "ctrl", "meta", "alt"] {
         assert_eq!(cancelled[modifier], false);
@@ -2237,7 +2241,7 @@ fn the_shells_own_overlay_fields_do_not_count_as_the_user_typing() {
 /// every later keystroke search for `p<whatever the user meant>` and `Enter` activate nothing at all.
 #[test]
 fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = palette_chord();
 
@@ -2265,7 +2269,7 @@ fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
 /// left the palette with no keyboard route out at all once the toggle was broken too.
 #[test]
 fn escape_closes_the_palette_rather_than_committing_its_query_field() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = palette_chord();
     shell.handle_keyboard(action, &modifiers, &mut input);

@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertBasicElemen
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::InsertBasicElement(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Insert basic element", "Basic-Element einfügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Insert basic element", "Basic-Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

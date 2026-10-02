@@ -1,6 +1,9 @@
+"""🔢️ Exact unsigned64 Home catalog generation, 0..18446744073709551615."""
+scalar HomeCatalogGenerationUInt64
+
 # 🧬️ S Home artifact schema — every field with its state class.
 
 type SHomeArtifact {
   schema: String! @state(class: ARTIFACT)
-  catalogGeneration: Long! @state(class: ARTIFACT)
+  catalogGeneration: HomeCatalogGenerationUInt64! @state(class: ARTIFACT)
 }

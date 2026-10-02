@@ -20,8 +20,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetRelat
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
         agg_inverse(&PptxTransitionalMutation::SetRelationshipBase(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set relationship base", "Beziehungsbasis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

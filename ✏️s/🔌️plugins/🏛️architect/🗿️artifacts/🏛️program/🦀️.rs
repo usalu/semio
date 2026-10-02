@@ -220,7 +220,7 @@ pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "data.program".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Architect Program", "Raumprogramm"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Architect Program", "Raumprogramm"),
         source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
         component_kind: "architect".into(),
         dimension: "data".into(),

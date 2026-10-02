@@ -1,3 +1,4 @@
+import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -8,7 +9,7 @@ import ts from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const sourcePath = join(root, library, "🧹️normalization/🟦️.ts"), source = readFileSync(sourcePath, "utf8");
+const sourcePath = join(root, library, "🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath);
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🛤️typescript-path-collection/🔣️.json"), "utf8"));
 type Span = { value: string; start: number; end: number; physicalTargets: string[] };

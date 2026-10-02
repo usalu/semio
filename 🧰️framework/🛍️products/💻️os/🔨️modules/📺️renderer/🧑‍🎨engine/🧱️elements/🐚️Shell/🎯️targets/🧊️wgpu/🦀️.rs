@@ -17,10 +17,27 @@ use ui_wgpu::wgpu::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
-use ui_wgpu::wgpu::{
-    Label, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent,
-};
+use semio_framework_ui_locale::Label;
+use ui_wgpu::wgpu::UiButtonNode;
+use ui_wgpu::wgpu::UiControlNode;
+use ui_wgpu::wgpu::UiFieldNode;
+use ui_wgpu::wgpu::UiInputNode;
+use ui_wgpu::wgpu::UiNode;
+use ui_wgpu::wgpu::UiNumberStepperNode;
+use ui_wgpu::wgpu::UiPresence;
+use ui_wgpu::wgpu::UiRingNode;
+use ui_wgpu::wgpu::UiSectionNode;
+use ui_wgpu::wgpu::UiSelectItem;
+use ui_wgpu::wgpu::UiSelectNode;
+use ui_wgpu::wgpu::UiSliderNode;
+use ui_wgpu::wgpu::UiStackNode;
+use ui_wgpu::wgpu::UiTextNode;
+use ui_wgpu::wgpu::UiToggleNode;
+use ui_wgpu::wgpu::UiTreeItemNode;
+use ui_wgpu::wgpu::UiTreeNode;
+use ui_wgpu::wgpu::UiTreeSectionNode;
+use ui_wgpu::wgpu::UiTreeWindow;
+use ui_wgpu::wgpu::UiTreeWindowRowExtent;
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
 use crate::hub_connection::{
@@ -105,10 +122,18 @@ use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, Rgba, Theme,
     TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowLayout, WindowStackCorner,
 };
-use ui_wgpu::wgpu::{
-    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityNode, WindowEngagement, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
-};
+use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::Terminology;
+use ui_wgpu::wgpu::UtilityNode;
+use ui_wgpu::wgpu::WindowEngagement;
+use ui_wgpu::wgpu::WindowMeasure;
+use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID;
+use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID;
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const COMPOSE_WINDOW_TEMPLATE_MIME: &str = "application/x-compose-window-template";
@@ -120,7 +145,7 @@ use protocol::{FromValue, ToValue};
 #[cfg(not(target_arch = "wasm32"))]
 use protocol::os_directory::client::{DocumentHttpPortDeclarationV1, InstalledServiceContributionV1, InstalledServiceDriverV1, InstalledServiceTurnV1, InstalledServiceStatusV1, DOCUMENT_HTTP_PORT_TOPIC};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_schema::CompiledDocumentHttpPortV1;
+use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
 use serde_json::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -4010,9 +4035,9 @@ pub struct ShellState {
     /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
     /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
     /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease
-    /// lane — so nothing native fills this in yet and every port refuses with a localized terminal.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub document_execution_target_lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
+    /// lane — so nothing native fills this in yet and every port refuses with a localized terminal. Both builds retain
+    /// the lease a hub document's open admitted and drop it on detach; only the native inference port reads it.
+    pub document_execution_target_lease: Option<semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
     /// 🏠️ Shell-lifetime Home projection and its fetch → terminal Config receipt → ACK → live owner.
     #[cfg(not(target_arch = "wasm32"))]
     directory_home: Option<DirectoryHomeProjection>,
@@ -4080,6 +4105,12 @@ pub struct ShellState {
     local_folder_bindings: Option<semio_framework_os_config::opening_config::mutations::LocalFolderBindings>,
     /// 🔁️ The document whose remembered folder the direct reattach already tried, so a failure is offered, not retried.
     local_folder_reattach_tried: Option<String>,
+    /// 🚪️ Whether this build reopens a remembered folder by itself (native) or offers it for the person's gesture
+    /// (browser) — `📎️local-folders`'s `LOCAL_FOLDER_DIRECT_REATTACH`.
+    local_folder_direct_reattach: bool,
+    /// 🌐️ The folder- or file-bound document the browser build keeps through the dev host's backbone route.
+    #[cfg(any(target_arch = "wasm32", test))]
+    host_route_folder: Option<local_folders::HostRouteFolder>,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
     /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
     /// `None` whenever nothing is uncommitted.
@@ -6165,6 +6196,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     on_change: on_change.clone(),
                     presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
                     menu: None,
+                    ..Default::default()
                 })),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             },
@@ -6191,6 +6223,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     on_repeat_last: None,
                     presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
                     menu: None,
+                    ..Default::default()
                 })),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             },
@@ -6427,11 +6460,15 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
 /// by the command palette's staged form and a window's Actions form. `stage` is `stageCommandArg`/`stageActionArg`
 /// with the row's own coordinates; every editor sends it, so the value buffers and nothing fires until Execute.
 ///
-/// 🎛️ One control per scalar kind — text, number, a stepper, a slider or dial with its detents painted as ticks, a
-/// toggle, a select. The multi-part kinds open child rows of one control each, so every part is its own focus stop
-/// with its own accessible name: a segmented choice's pressed buttons (`option`), a vector's labelled axes
-/// (`index`/`dims`, spliced into the staged tuple by [`staged_arg_value`]), and a reference list's removable chips
-/// plus its "use current selection" button, which stages the live selection of the argument's domain.
+/// 🎛️ One control per scalar kind — text, number, a stepper, a slider or dial, a toggle, a select. Every number control
+/// carries the facets [`semio_framework::ActionArgDef::number_facets`] derives (the one mapping the time-travel editor
+/// shares): look and axis, travel or key range, step, stored and shown unit, display factor, precision, detents painted
+/// as ticks, and the schema's hard limits, whose localized refusal names the crossed bound and which make a slider's
+/// travel soft — a staged value is never clamped to the travel. The multi-part kinds open child rows of one control
+/// each, so every part is its own focus stop with its own accessible name: a segmented choice's pressed buttons
+/// (`option`), a vector's labelled axes (`index`/`dims`, spliced into the staged tuple by [`staged_arg_value`]), and a
+/// reference list's removable chips plus its "use current selection" button, which stages the live selection of the
+/// argument's domain.
 #[allow(clippy::too_many_arguments, reason = "one staged row: its two ids, the definition, the value, its stage verb and the live selection")]
 fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, stage: &ActionDescriptor, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
     use ui_wgpu::wgpu::component::ui::UiControlNode as Control;
@@ -6440,9 +6477,9 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
     let with = |extra: Value| ActionDescriptor { controller_id: stage.controller_id.clone(), action: stage.action.clone(), args: staged_arg_args(stage.args.as_ref(), extra) };
     let text = value.map(|value| value.as_str().map(ToOwned::to_owned).unwrap_or_else(|| value.to_string())).unwrap_or_default();
     let number = value.and_then(staged_number);
-    let precision = |precision: Option<u32>| precision.map(|precision| u16::try_from(precision).unwrap_or(ui_contract::UI_NUMBER_PRECISION_MAX));
+    let facets = arg.number_facets(locale);
     let child = |id: String, label: String, control: Control| UiTreeItemNode { id, label: Label::data(label), control: Some(control), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) };
-    let field = |id: String, input_kind: &str, value: String, accessibility_label: Option<String>, bounds: (Option<f64>, Option<f64>, Option<f64>), precision: Option<u16>, snaps: Vec<f64>, on_change: ActionDescriptor| {
+    let field = |id: String, input_kind: &str, value: String, accessibility_label: Option<String>, facets: Option<&semio_framework::ActionArgNumberFacets>, on_change: ActionDescriptor| {
         Control::Input(UiInputNode {
             id,
             input_kind: input_kind.into(),
@@ -6450,18 +6487,21 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
             placeholder: Some(Label::data(label.clone())),
             accessibility_label: accessibility_label.map(Label::data),
             commit: Some("blur".into()),
-            min: bounds.0,
-            max: bounds.1,
-            step: bounds.2,
+            min: facets.and_then(|facets| facets.min),
+            max: facets.and_then(|facets| facets.max),
+            step: facets.and_then(|facets| facets.step),
             accept: None,
-            precision,
-            snaps,
+            precision: facets.and_then(|facets| facets.precision),
+            snaps: facets.map(|facets| facets.snaps.clone()).unwrap_or_default(),
+            display_factor: facets.and_then(|facets| facets.display_factor),
+            limits: facets.map(|facets| facets.limits.clone()),
             on_change,
             on_submit: None,
             on_abort: None,
             on_repeat_last: None,
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         })
     };
     let (control, mut items) = match arg.control() {
@@ -6513,31 +6553,57 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
             })),
             None,
         ),
-        semio_framework::ActionArgControl::Slider { min, max, step, unit, snaps, .. } | semio_framework::ActionArgControl::Dial { min, max, step, unit, snaps, .. } => {
-            let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min, max) { snaps } else { Vec::new() };
-            (Some(Control::Slider(UiSliderNode { id: control_id.to_string(), value: number.unwrap_or(min).clamp(min, max.max(min)), min, max, step: step.filter(|step| *step > 0.0).unwrap_or(1.0), unit, snaps, on_change: stage.clone(), presence: UiPresence::default(), menu: None })), None)
+        semio_framework::ActionArgControl::Slider { .. } | semio_framework::ActionArgControl::Dial { .. } => {
+            let facets = facets.unwrap_or_default();
+            let min = facets.min.unwrap_or(0.0);
+            (
+                Some(Control::Slider(UiSliderNode {
+                    id: control_id.to_string(),
+                    value: number.unwrap_or(min),
+                    min,
+                    max: facets.max.unwrap_or(0.0),
+                    step: facets.step.unwrap_or(1.0),
+                    unit: facets.unit,
+                    snaps: facets.snaps,
+                    appearance: facets.appearance,
+                    scale: facets.scale,
+                    precision: facets.precision,
+                    display_unit: facets.display_unit,
+                    display_factor: facets.display_factor,
+                    limits: Some(facets.limits),
+                    on_change: stage.clone(),
+                    ..Default::default()
+                })),
+                None,
+            )
         }
-        semio_framework::ActionArgControl::Stepper { min, max, step, precision: digits, .. } => (
-            Some(Control::NumberStepper(UiNumberStepperNode {
-                id: control_id.to_string(),
-                value: number.or(min).unwrap_or(0.0),
-                step: step.filter(|step| *step > 0.0).unwrap_or(1.0),
-                uniform: true,
-                min,
-                max,
-                precision: precision(digits),
-                on_absolute: stage.clone(),
-                on_delta: ActionDescriptor { controller_id: String::new(), action: String::new(), args: None },
-                presence: UiPresence::default(),
-                menu: None,
-            })),
-            None,
-        ),
-        semio_framework::ActionArgControl::Number { min, max, step, precision: digits, .. } => (Some(field(control_id.to_string(), "number", text, None, (min, max, step), precision(digits), Vec::new(), stage.clone())), None),
-        semio_framework::ActionArgControl::Vector { dims, min, max, step, snaps, precision: digits, .. } => {
+        semio_framework::ActionArgControl::Stepper { .. } => {
+            let facets = facets.unwrap_or_default();
+            let unit = facets.shown_unit().map(ToOwned::to_owned);
+            (
+                Some(Control::NumberStepper(UiNumberStepperNode {
+                    id: control_id.to_string(),
+                    value: number.or(facets.min).unwrap_or(0.0),
+                    step: facets.step.unwrap_or(1.0),
+                    uniform: true,
+                    min: facets.min,
+                    max: facets.max,
+                    precision: facets.precision,
+                    snaps: facets.snaps,
+                    unit,
+                    display_factor: facets.display_factor,
+                    limits: Some(facets.limits),
+                    on_absolute: stage.clone(),
+                    on_delta: ActionDescriptor { controller_id: String::new(), action: String::new(), args: None },
+                    ..Default::default()
+                })),
+                None,
+            )
+        }
+        semio_framework::ActionArgControl::Number { .. } => (Some(field(control_id.to_string(), "number", text, None, facets.as_ref(), stage.clone())), None),
+        semio_framework::ActionArgControl::Vector { dims, .. } => {
             let dims = dims as usize;
-            let digits = precision(digits);
-            let snaps = if ui_contract::snaps_are_valid(snaps.iter().copied(), min.unwrap_or(f64::NEG_INFINITY), max.unwrap_or(f64::INFINITY)) { snaps } else { Vec::new() };
+            let facets = facets.unwrap_or_default();
             let mut tuple: Vec<f64> = value.and_then(Value::as_array).map(|components| components.iter().map(|component| staged_number(component).unwrap_or(0.0)).collect()).unwrap_or_default();
             tuple.resize(dims, 0.0);
             let axes = ["x", "y", "z", "w"];
@@ -6545,8 +6611,11 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
                 .map(|index| {
                     let axis = axes.get(index).map_or_else(|| index.to_string(), |axis| (*axis).to_string());
                     let on_change = with(serde_json::json!({ "index": index, "dims": dims, "tuple": tuple }));
-                    let shown = digits.map_or_else(|| ui_contract::format_ui_number(tuple[index]), |digits| ui_contract::format_ui_number_fixed(tuple[index], digits));
-                    child(format!("{row_id}.{axis}"), axis.clone(), field(format!("{control_id}.{axis}"), "number", shown, Some(format!("{label} {axis}")), (min, max, step), digits, snaps.clone(), on_change))
+                    let shown = match (facets.display_factor, facets.precision) {
+                        (None, Some(digits)) => ui_contract::format_ui_number_fixed(tuple[index], digits),
+                        _ => ui_contract::format_ui_number(tuple[index]),
+                    };
+                    child(format!("{row_id}.{axis}"), axis.clone(), field(format!("{control_id}.{axis}"), "number", shown, Some(format!("{label} {axis}")), Some(&facets), on_change))
                 })
                 .collect();
             (None, Some(items))
@@ -6560,16 +6629,16 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
             let hex = LocalizedLabel::native("Hex", "Hex").resolve(terminology, locale).to_string();
             let opacity = LocalizedLabel::native("Opacity", "Deckkraft").resolve(terminology, locale).to_string();
             let mut items = vec![
-                child(format!("{row_id}.swatch"), label.clone(), field(format!("{control_id}.swatch"), "color", ui_contract::ui_color_hex(&rgba, false), Some(label.clone()), (None, None, None), None, Vec::new(), with(color.clone()))),
-                child(format!("{row_id}.hex"), hex.clone(), field(format!("{control_id}.hex"), "text", ui_contract::ui_color_hex(&rgba, alpha), Some(hex), (None, None, None), None, Vec::new(), with(color.clone()))),
+                child(format!("{row_id}.swatch"), label.clone(), field(format!("{control_id}.swatch"), "color", ui_contract::ui_color_hex(&rgba, false), Some(label.clone()), None, with(color.clone()))),
+                child(format!("{row_id}.hex"), hex.clone(), field(format!("{control_id}.hex"), "text", ui_contract::ui_color_hex(&rgba, alpha), Some(hex), None, with(color.clone()))),
             ];
             if alpha {
-                items.push(child(format!("{row_id}.alpha"), opacity, Control::Slider(UiSliderNode { id: format!("{control_id}.alpha"), value: rgba[3], min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: with(color), presence: UiPresence::default(), menu: None })));
+                items.push(child(format!("{row_id}.alpha"), opacity, Control::Slider(UiSliderNode { id: format!("{control_id}.alpha"), value: rgba[3], min: 0.0, max: 1.0, step: 0.01, unit: None, snaps: Vec::new(), on_change: with(color), presence: UiPresence::default(), menu: None, ..Default::default() })));
             }
             (None, Some(items))
         }
         semio_framework::ActionArgControl::Reference { domain, granularity, many, id_type, .. } => {
-            let text = |id: &Value| semio_framework::reference_id_text(&semio_framework::DslValue::from(id));
+            let text = |id: &Value| semio_framework::reference_id_text(&DslValue::from(id));
             let ids: Vec<String> = match value {
                 Some(Value::Array(ids)) => ids.iter().filter_map(text).collect(),
                 Some(id) => text(id).into_iter().collect(),
@@ -6609,7 +6678,7 @@ fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::Actio
             items.push(child(format!("{row_id}.useSelection"), use_label, Control::Button(use_selection)));
             (None, Some(items))
         }
-        _ => (Some(field(control_id.to_string(), "text", text, None, (None, None, None), None, Vec::new(), stage.clone())), None),
+        _ => (Some(field(control_id.to_string(), "text", text, None, None, stage.clone())), None),
     };
     if arg.nullable {
         let clear_label = match locale {
@@ -6873,12 +6942,12 @@ impl ShellState {
     /// React renderer is (no per-window locale/terminology context is threaded through render
     /// calls), so every `LocalizedLabel` in this file resolves against this shell-wide value.
     pub fn active_locale(&self) -> Locale {
-        Locale::parse(&self.locale_id).unwrap_or_default()
+        Locale::parse(&self.locale_id).expect("shell locale has explicit admitted authority")
     }
 
     /// 🗣️ Active `Terminology` derived from `terminology_id`. See `active_locale` doc.
     pub fn active_terminology(&self) -> Terminology {
-        Terminology::parse(&self.terminology_id).unwrap_or_default()
+        Terminology::parse(&self.terminology_id).expect("shell terminology has explicit admitted authority")
     }
 
     pub(crate) fn canonical_tree_open(&self, id: &str, default_open: bool) -> bool {
@@ -6949,7 +7018,7 @@ impl ShellState {
     /// 🌐️ The browser half of the same seam: the page door owns no pool, no scope and no socket —
     /// every hop is one `fetch` the page makes on this shell's behalf — so the transport is a unit
     /// value and only the cancellation root has to be minted.
-    pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String) -> Self {
+    pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology) -> Self {
         let space_mode = is_space_mode(&plugin_filter);
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
@@ -7010,8 +7079,8 @@ impl ShellState {
             search_open: false,
             find_open: false,
             appearance_id: "system".into(),
-            locale_id: "en".into(),
-            terminology_id: "native".into(),
+            locale_id: locale.as_str().into(),
+            terminology_id: terminology.as_str().into(),
             right_click: RightClickState::default(),
             uri_history: vec!["/".into()],
             uri_index: 0,
@@ -7162,14 +7231,13 @@ impl ShellState {
             plugin_install: None,
             document_opening: None,
             icon_export: None,
-            #[cfg(not(target_arch = "wasm32"))]
             document_execution_target_lease: None,
             #[cfg(not(target_arch = "wasm32"))]
             directory_home: None,
             directory_transport,
             directory_cancel,
             directory_commands: ShellDirectoryCommandQueueV1::default(),
-            hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), ui_wgpu::wgpu::Locale::En)),
+            hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), semio_framework_ui_locale::Locale::En)),
             hub_sign_in_task: None,
             hub_spaces_task: None,
             hub_workspace_open: false,
@@ -7188,6 +7256,9 @@ impl ShellState {
             time_travel_polled_at_ms: 0.0,
             local_folder_bindings: None,
             local_folder_reattach_tried: None,
+            local_folder_direct_reattach: local_folders::LOCAL_FOLDER_DIRECT_REATTACH,
+            #[cfg(any(target_arch = "wasm32", test))]
+            host_route_folder: None,
             last_uncommitted_edit_at_ms: None,
             auto_checkin_pending: false,
             checkpoint_dispatched: false,
@@ -9111,6 +9182,7 @@ impl ShellState {
                 on_repeat_last: None,
                 presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             })),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
         });
@@ -9495,6 +9567,7 @@ impl ShellState {
                         on_repeat_last: None,
                         presence: UiPresence::default(),
                         menu: None,
+                        ..Default::default()
                     })),
                     ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
                 },
@@ -9871,6 +9944,7 @@ impl ShellState {
             on_repeat_last: None,
             presence: UiPresence { state: if connected { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
+            ..Default::default()
         }));
         children.push(UiNode::Button(UiButtonNode {
             id: Some("framework.chat.send".into()),
@@ -9936,6 +10010,7 @@ impl ShellState {
                 on_repeat_last: None,
                 presence: UiPresence::default(),
                 menu: None,
+                ..Default::default()
             }));
             if kind != "remote" {
                 children.push(UiNode::Button(UiButtonNode {
@@ -10727,6 +10802,8 @@ impl ShellState {
         let directory_changed = self.drain_progress_history_patches().await || directory_changed;
         let directory_changed = self.publish_peer_time_travel_notes() || directory_changed;
         let directory_changed = self.reattach_remembered_local_folder().await || directory_changed;
+        #[cfg(target_arch = "wasm32")]
+        let directory_changed = self.flush_host_route_folder().await || directory_changed;
         self.poll_auto_checkin().await;
         let directory_changed = self.advance_document_opening().await || directory_changed;
         let directory_changed = self.advance_sync_reseed().await || directory_changed;
@@ -11004,13 +11081,12 @@ impl ShellState {
         self.seed_history_snapshot().await;
     }
 
-    /// 🧾️ The seeding half of [`Self::refresh_history_snapshot`]: the `ReadHistory`/`ReadConflicts`
-    /// exchange exists only on the native program bridge (the JS bridge has no `exchange` door), so
-    /// the browser projection starts empty and folds every later `history_patch` exactly as native.
+    /// 🧾️ The seeding half of [`Self::refresh_history_snapshot`]: the program's whole history projection, read through
+    /// the native exchange's `ReadHistory` or the browser bridge's `readHistory` alike, so a session start or a restored
+    /// archive shows its rows and head on both builds before the next `history_patch` folds in.
     ///
     /// ⚔️ A freshly attached document brings its own open conflicts with it — React seeds the
-    /// Conflicts panel on the same session-start/switch edge.
-    #[cfg(not(target_arch = "wasm32"))]
+    /// Conflicts panel on the same session-start/switch edge; the `ReadConflicts` exchange is native-only.
     async fn seed_history_snapshot(&mut self) {
         let Some(session) = self.session.as_ref() else { return };
         let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return };
@@ -11025,14 +11101,8 @@ impl ShellState {
         self.conflicts_seeded = false;
         self.open_conflicts.clear();
         self.selected_conflict_id = None;
+        #[cfg(not(target_arch = "wasm32"))]
         self.seed_open_conflicts().await;
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    async fn seed_history_snapshot(&mut self) {
-        self.conflicts_seeded = false;
-        self.open_conflicts.clear();
-        self.selected_conflict_id = None;
     }
 
     /// 🧾️ ticket §C5 — folds an `InvocationResult.history_patch` (present on every `handleAction`/
@@ -11236,7 +11306,7 @@ impl ShellState {
             arguments,
         };
         let command_json = dsl::os_pack::json::to_json_string(&invocation);
-        let view_state = ViewModel { locale: self.active_locale(), terminology: self.active_terminology(), ..Default::default() };
+        let view_state = ViewModel::new(self.active_locale(), self.active_terminology());
         match program.handle_command(instance_id, &command_json, &view_state).await {
             Ok(result) => match route_document_backbone_effects(&actor_uri, &channels.cmd_tx, result.requested_effects) {
                 Ok(remaining) => self.queue_host_effects(&app.controller_id, remaining),
@@ -11401,6 +11471,10 @@ impl ShellState {
                     self.show_transient_notice(text, semio_framework::Severity::Warning, Some(local_folders::SYNC_DOCUMENT_UNIDENTIFIED_CODE));
                     return Ok(());
                 };
+                #[cfg(target_arch = "wasm32")]
+                if !SHELL_DOCUMENT_TRANSPORTS.folder && local_folders::is_host_route_uri(&uri) {
+                    return self.attach_host_route_backbone(uri, identity).await;
+                }
                 (identity.document_id, Self::parse_persistence_binding(&uri)?, None)
             }
         };
@@ -11672,6 +11746,10 @@ impl ShellState {
                     self.attach_sync_backbone(uri).await
                 }
                 "detach" => {
+                    #[cfg(target_arch = "wasm32")]
+                    if self.detach_host_route_folder().await {
+                        return Ok(());
+                    }
                     let folder_document = self.sync_backbone_uri.as_deref().filter(|uri| uri.starts_with("folder://") || uri.starts_with("file://")).and_then(|_| self.sync_channel.as_ref()).map(|channel| channel.document_id.clone());
                     self.checkpoint_before_detach().await;
                     self.detach_sync_backbone_internal().await?;
@@ -21837,6 +21915,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
             on_change: on_change.clone().unwrap_or_else(inert),
             presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
             menu: None,
+            ..Default::default()
         })],
         Control::Stepper { id, value, step, disabled, on_change, .. } => vec![UiNode::NumberStepper(UiNumberStepperNode {
             id: id.clone().unwrap_or_else(|| "engagement-control.stepper".to_string()),
@@ -21850,6 +21929,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
             on_delta: on_change.clone().unwrap_or_else(inert),
             presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
             menu: None,
+            ..Default::default()
         })],
         Control::ToggleGroup { id, value, options, disabled, on_select, .. } => {
             if options.is_empty() {
@@ -22254,6 +22334,7 @@ impl ShellState {
             on_repeat_last: (!session_active).then(|| input.on_repeat_last.clone()).flatten(),
             presence: UiPresence { state: if input.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
             menu: None,
+            ..Default::default()
         })];
         let possibles: &[ui_wgpu::wgpu::WindowEngagementPossible] = engagement.possible_engagements.as_deref().unwrap_or(&[]);
         if !possibles.is_empty() {
@@ -24656,7 +24737,7 @@ impl ChromeDialogRequest {
             (true, true) => ui_contract::SliderKey::PageUp,
             (true, false) => ui_contract::SliderKey::PageDown,
         };
-        self.set_draft(index, chrome_dialog_number_text(ui_contract::ui_number_key_value(current, min, max, step, snaps, key, false), precision));
+        self.set_draft(index, chrome_dialog_number_text(ui_contract::ui_number_key_value(current, min, max, step, precision, None, snaps, key, false), precision));
     }
 
     /// 🔢️ Steps a number or axis field one rung of its step ladder.
@@ -24708,7 +24789,7 @@ impl ChromeDialogRequest {
     fn slide(&mut self, index: usize, action: &ui_wgpu::wgpu::KeyAction, large: bool) -> bool {
         use ui_contract::SliderKey;
         use ui_wgpu::wgpu::KeyAction;
-        let (Some(ChromeDialogFieldKind::Slider { min, max, step, snaps, .. }), Some(value)) = (self.fields.get(index).map(|field| field.kind.clone()), self.slider_value(index)) else { return false };
+        let (Some(ChromeDialogFieldKind::Slider { min, max, step, precision, snaps, .. }), Some(value)) = (self.fields.get(index).map(|field| field.kind.clone()), self.slider_value(index)) else { return false };
         let key = match action {
             KeyAction::ArrowLeft | KeyAction::ArrowDown => SliderKey::Decrement,
             KeyAction::ArrowRight | KeyAction::ArrowUp => SliderKey::Increment,
@@ -24718,7 +24799,7 @@ impl ChromeDialogRequest {
             KeyAction::End => SliderKey::End,
             _ => return false,
         };
-        self.set_slider(index, ui_contract::slider_key_value(value, min, max, step, snaps, key, large));
+        self.set_slider(index, ui_contract::slider_key_value(value, min, max, step, precision, None, snaps, key, large));
         true
     }
 
@@ -24847,7 +24928,7 @@ impl ChromeDialogRequest {
     #[cfg(test)]
     fn confirm(id: &str, title: &str, action: &str) -> Self {
         let dialog = semio_framework::DialogDefinition::new(id, LocalizedLabel::native(title, title), semio_framework::ActionRef::new(action));
-        Self::from_definition("test", &dialog, None, Terminology::default(), Locale::En)
+        Self::from_definition("test", &dialog, None, Terminology::Native, Locale::En)
     }
 }
 
@@ -27061,8 +27142,8 @@ impl ShellState {
                 let preferences = read_ui_preferences();
                 let custom_themes = custom_themes_from(&preferences);
                 self.appearance_id = resolve_appearance_id(&preferences);
-                self.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences);
-                self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
+                self.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences, self.active_locale());
+                self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
                 self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
@@ -32783,9 +32864,22 @@ fn resolve_appearance_id(preferences: &UiPreferences) -> String {
 /// 🗣️ The ONE locale-resolution law, mirroring `🏛️ShellHost/🟦️.tsx`'s
 /// `locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(navigator.language)` term
 /// for term — a lock wins, then the persisted preference, then the host's own language read published
-/// through `semioWgpuSetHostLocale`, then `detectShellLocale`'s own `"en"` answer for a host that
-/// said nothing.
-fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences) -> String {
+/// through `semioWgpuSetHostLocale`, then the caller's already admitted locale when no preference source speaks.
+/// 🌐️ Admits the host selected language and terminology before shell construction.
+pub(crate) fn shell_language_axes() -> Result<(Locale, Terminology), String> {
+    let preferences = read_ui_preferences();
+    let locale_id = env_lock("SEMIO_LOCKED_LOCALE")
+        .or_else(|| preferences.locale.map(|locale| match locale { OsUiLocale::En => "en".to_string(), OsUiLocale::De => "de".to_string() }))
+        .or_else(|| crate::host_locale().map(ToOwned::to_owned))
+        .ok_or_else(|| "missing explicit shell locale authority".to_string())?;
+    let terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology)
+        .ok_or_else(|| "missing explicit shell terminology authority".to_string())?;
+    let locale = Locale::parse(&locale_id).ok_or_else(|| "unsupported shell locale authority".to_string())?;
+    let terminology = Terminology::parse(&terminology_id).ok_or_else(|| "unsupported shell terminology authority".to_string())?;
+    Ok((locale, terminology))
+}
+
+fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences, selected: Locale) -> String {
     lock.or_else(|| {
         preferences.locale.map(|locale| match locale {
             OsUiLocale::De => "de".to_string(),
@@ -32793,7 +32887,7 @@ fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences) -> Strin
         })
     })
     .or_else(|| crate::host_locale().map(ToOwned::to_owned))
-    .unwrap_or_else(|| "en".to_string())
+    .unwrap_or_else(|| selected.as_str().to_string())
 }
 
 fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
@@ -32903,8 +32997,8 @@ impl ShellState {
         let locks = shell_pref_locks();
         let preferences = read_ui_preferences();
         self.appearance_id = resolve_appearance_id(&preferences);
-        self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences);
-        self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
+        self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences, self.active_locale());
+        self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         self.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
         self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
@@ -33878,6 +33972,7 @@ fn theme_editor_input_item(id: &str, label: &str, value: &str, action: &str, arg
             on_repeat_last: None,
             presence: UiPresence::default(),
             menu: None,
+            ..Default::default()
         })),
         ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
     }

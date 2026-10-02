@@ -18,7 +18,7 @@
 
 use dsl::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use ui_wgpu::wgpu::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 
 use crate::IconName;
 

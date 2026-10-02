@@ -91,6 +91,7 @@ plugin-entry = []
 component-receipt-acceptance = []
 
 [dependencies]
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true, features = ["component-app-assembly"] }

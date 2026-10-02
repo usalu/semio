@@ -127,7 +127,7 @@ async fn create_layer_outcome_obeys_the_policy_matrix() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_registers_semantic_descriptors() {
-    register_drawing_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_drawing_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", "drag-layers" | "rotate-layers" | "scale-layers" => "layers", "drag-path-points" => "path-points", _ => "layer" });
@@ -305,5 +305,33 @@ async fn a_drag_retargeted_onto_a_missing_layer_blocks_finalizing() {
     let report = replay_history_edit(&base, &log, 0, &drag_layers(vec!["ghost".into()], 10.0, 0.0)).await;
     assert!(report.blocks_finalize(), "{report:?}");
     assert!(report.outcomes[0].messages.iter().any(|message| message.code.0 == "mutation.target-missing"), "{report:?}");
+}
+
+/// 🪧️ A history-edit reference chip reads a layer by its own name in the shown document (the generic default, gap N3), and
+/// every layer reference of the four selection leaves takes "Use selection" from the canvas selection domain.
+#[test]
+fn layer_references_read_their_name_and_take_the_canvas_selection() {
+    let base = base_document();
+    let id = crate::schema::layer_id(&base.layers[0]).to_string();
+    let names = semio_framework_plugin::app::time_travel::time_travel_entity_names(&semio_framework_value::ToValue::to_value(&base), &[id.as_str()].into_iter().collect());
+    assert_eq!(names.get(&id).map(|label| label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_owned()).as_deref(), Some("Rect"));
+    fn references(value: &serde_json::Value, into: &mut Vec<serde_json::Value>) {
+        match value {
+            serde_json::Value::Object(fields) => {
+                into.extend(fields.get("x-semio-ui").and_then(|ui| ui.get("ref")).cloned());
+                fields.values().for_each(|field| references(field, into));
+            }
+            serde_json::Value::Array(items) => items.iter().for_each(|item| references(item, into)),
+            _ => {}
+        }
+    }
+    for schema in [<DragLayers as protocol::MutationLeaf>::PAYLOAD_SCHEMA, <RotateLayers as protocol::MutationLeaf>::PAYLOAD_SCHEMA, <ScaleLayers as protocol::MutationLeaf>::PAYLOAD_SCHEMA, <DragPathPoints as protocol::MutationLeaf>::PAYLOAD_SCHEMA] {
+        let mut found = Vec::new();
+        references(&serde_json::from_str(schema).expect("leaf schema"), &mut found);
+        assert!(!found.is_empty(), "{schema}");
+        for reference in found {
+            assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(crate::editor::drawing::DRAWING_INTERACTION_DOMAIN), Some(crate::editor::drawing::DRAWING_INTERACTION_GRANULARITY)), "{reference}");
+        }
+    }
 }
 //#endregion ⏪️TimeTravel

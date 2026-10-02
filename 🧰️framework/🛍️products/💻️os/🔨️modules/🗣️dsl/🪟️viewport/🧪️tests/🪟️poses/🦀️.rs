@@ -5,7 +5,7 @@ use crate::os_dsl::schema::{parse_exact, print_record, JoinMode, ParseOptions, W
 fn check<T: DslField + FromValue + PartialEq + std::fmt::Debug>(value: &serde_json::Value) {
     let pose = <T as FromValue>::from_value(DslValue::from(value.clone())).unwrap();
     let Shape::Record(spec) = T::shape() else { panic!("viewport record shape"); };
-    let spec = spec();
+    let spec = (spec.ordinary)();
     let FieldValue::Record(record) = DslField::to_value(&pose) else { panic!("viewport record value"); };
     for mode in [JoinMode::Inline, JoinMode::Document] {
         let mut writer = Writer::new();

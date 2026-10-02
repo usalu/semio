@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 📦️ flow flow Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runCmd, runCargo, runVitest, runExactCargoLaws, runTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { strict as assert } from "node:assert";
@@ -27,7 +27,7 @@ if (segments[0] === "flow-window-ownership") {
 }
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await runTestBudgeted(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot});
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot});
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
   }
 }
@@ -35,7 +35,7 @@ class SourceTestScript extends BundleScript {
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,
       groups: [
@@ -67,7 +67,7 @@ class ChildIdentityCheckScript extends BundleScript {
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,
       groups: [
@@ -195,7 +195,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await this.oracle();
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({
+    const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
       cargoArgs: segments,
       groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }],

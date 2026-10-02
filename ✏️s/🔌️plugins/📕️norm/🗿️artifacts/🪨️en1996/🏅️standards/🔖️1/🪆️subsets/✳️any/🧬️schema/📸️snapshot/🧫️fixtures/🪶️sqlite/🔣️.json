@@ -1,0 +1,55 @@
+{
+  "annex": "De",
+  "masonryClass": "Class5",
+  "designSituation": "Seismic",
+  "storeys": 4294967295,
+  "walls": [
+    {
+      "id": "duplicate wall 世界",
+      "labelEn": "Wall \u0000 north",
+      "labelDe": "Tragende Wand 🧱",
+      "wallType": "NonLoadBearing",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.125,
+      "supportSides": 255,
+      "openings": [
+        {"id": "same opening", "widthM": 1.25, "heightM": 2.5, "sillHeightM": 0.75},
+        {"id": "same opening", "widthM": -1.25, "heightM": -2.5, "sillHeightM": -0.75}
+      ],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": -0.015,
+      "unitGroup": "Group4",
+      "unitMaterial": "CalciumSilicate",
+      "fBPa": 20000000.25,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "Lightweight",
+      "mortarClass": "M2_5",
+      "mortarStrengthPa": 2500000.5,
+      "bedJointThicknessM": 0.012,
+      "reinforced": true,
+      "asVerticalM2": 0.0006,
+      "asHorizontalM2": -0.0004,
+      "fYdPa": 435000000.75,
+      "fireReiMin": 4294967295,
+      "exposure": "Mx5",
+      "mu": 0.4,
+      "densityKgM3": 1800.25,
+      "phiInfinity": 1.5,
+      "isBasement": true,
+      "loadCases": [
+        {"id": "case 世界", "designSituation": "arbitrary persisted situation", "imposedCategory": "B 🏢", "gKSlabN": 120000.5, "qKImposedPa": 2000.25, "tributaryAreaM2": 12.5, "slabSpanM": 4.5, "qKSnowPa": -0.25, "qPWindPa": 800.75, "cPe": 0.8, "hKEarthN": 45000.5, "concentrated": [
+          {"id": "same beam", "forceN": 35000.25, "bearingAreaM2": 0.04, "bearingLengthM": 0.2},
+          {"id": "same beam", "forceN": -35000.25, "bearingAreaM2": -0.04, "bearingLengthM": -0.2}
+        ]},
+        {"id": "case 世界", "designSituation": "", "imposedCategory": "", "gKSlabN": -120000.5, "qKImposedPa": -2000.25, "tributaryAreaM2": -12.5, "slabSpanM": -4.5, "qKSnowPa": 0.25, "qPWindPa": -800.75, "cPe": -0.8, "hKEarthN": -45000.5, "concentrated": []}
+      ]
+    },
+    {
+      "id": "duplicate wall 世界", "labelEn": "", "labelDe": "", "wallType": "Shear", "thicknessM": -0.365, "heightM": -2.75, "lengthM": -5.125, "supportSides": 0, "openings": [], "slabBearingDepthM": -0.12, "eccentricityTopM": -0.02, "eccentricityBottomM": 0.015, "unitGroup": "Group1", "unitMaterial": "Aerated", "fBPa": -20000000.25, "unitLengthM": -0.24, "unitWidthM": -0.365, "unitHeightM": -0.113, "mortarType": "ThinLayer", "mortarClass": "M20", "mortarStrengthPa": -2500000.5, "bedJointThicknessM": -0.012, "reinforced": false, "asVerticalM2": -0.0006, "asHorizontalM2": 0.0004, "fYdPa": -435000000.75, "fireReiMin": 0, "exposure": "Mx1", "mu": -0.4, "densityKgM3": -1800.25, "phiInfinity": -1.5, "isBasement": false, "loadCases": []
+    }
+  ]
+}

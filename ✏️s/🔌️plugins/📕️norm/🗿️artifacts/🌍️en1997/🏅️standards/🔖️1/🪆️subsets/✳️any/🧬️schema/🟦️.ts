@@ -1,123 +1,35 @@
-/** 🗿️ En1997Artifact — hierarchical geotechnical subject (SI: N, m, Pa). */
-
-export type AnnexChoice = "de" | "en";
-
-export interface SoilLayer {
-  id: string;
-  soilType: string;
-  depthTop: number;
-  depthBottom: number;
-  gamma: number;
-  gammaPrime: number;
-  phiPrimeDeg: number;
-  cohesionEffective: number;
-  cohesionUndrained: number;
-  oedometricModulus: number;
-  poissonRatio: number;
-  cptQc: number;
-  sptN: number;
-}
-
-export interface FoundationLoadCase {
-  id: string;
-  designSituation: string;
-  verticalPermanent: number;
-  verticalVariable: number;
-  horizontalPermanent: number;
-  horizontalVariable: number;
-  momentPermanent: number;
-  momentVariable: number;
-}
-
-export interface SpreadFoundation {
-  id: string;
-  width: number;
-  length: number;
-  embedment: number;
-  baseInclinationDeg: number;
-  settlementLimit: number;
-  loadCases: FoundationLoadCase[];
-}
-
-export interface PileTestProfile {
-  id: string;
-  shaftResistance: number;
-  baseResistance: number;
-}
-
-export interface Pile {
-  id: string;
-  pileType: string;
-  diameter: number;
-  length: number;
-  count: number;
-  alphaS: number;
-  unitShaftResistance: number;
-  unitBaseResistance: number;
-  compressionPermanent: number;
-  compressionVariable: number;
-  tensionPermanent: number;
-  tensionVariable: number;
-  testProfiles: PileTestProfile[];
-}
-
-export interface RetainingWall {
-  id: string;
-  height: number;
-  embedment: number;
-  baseWidth: number;
-  stemThickness: number;
-  backfillPhiDeg: number;
-  backfillGamma: number;
-  wallFrictionDeg: number;
-  earthPressureMode: string;
-  wallMovement: string;
-  ocr: number;
-  concreteGamma: number;
-  surcharge: number;
-  verticalPermanent: number;
-  horizontalPermanent: number;
-}
-
-export interface Slope {
-  id: string;
-  angleDeg: number;
-  height: number;
-  length: number;
-  governingLayerId: string;
-}
-
-export interface UpliftCase {
-  id: string;
-  permanentStabilizing: number;
-  permanentDestabilizing: number;
-  variableDestabilizing: number;
-  porePressure: number;
-  totalStress: number;
-}
+/** 🧬️ `En1997Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { type NormJson, normWireArray, normWireInteger, normWireJson, normWireLiteral, normWireMap, normWireNumber, normWireObject, type NormWireReader, normWireRequired, normWireString } from "../../../../../../../📇️registry/🧬️contract/🟦️.ts";
 
 export interface En1997Artifact {
+  /** @state artifact */
   structureId: string;
+  /** @state artifact */
   geotechnicalCategory: number;
+  /** @state artifact */
   designSituation: string;
+  /** @state artifact */
   designApproach: string;
-  annex: AnnexChoice;
+  /** @state artifact */
+  annex: "de" | "en";
+  /** @state artifact */
   groundwaterLevel: number;
+  /** @state artifact */
   investigationDepth: number;
-  layers: SoilLayer[];
-  footings: SpreadFoundation[];
-  piles: Pile[];
-  retainingWalls: RetainingWall[];
-  slopes: Slope[];
-  upliftCases: UpliftCase[];
+  /** @state artifact */
+  layers: { [key: string]: NormJson }[];
+  /** @state artifact */
+  footings: { [key: string]: NormJson }[];
+  /** @state artifact */
+  piles: { [key: string]: NormJson }[];
+  /** @state artifact */
+  retainingWalls: { [key: string]: NormJson }[];
+  /** @state artifact */
+  slopes: { [key: string]: NormJson }[];
+  /** @state artifact */
+  upliftCases: { [key: string]: NormJson }[];
 }
 
-export type En1997Snapshot = En1997Artifact;
-
-export function parseEn1997Artifact(value: unknown, _at = "$"): En1997Artifact {
-  return value as En1997Artifact;
-}
-
-export function parseEn1997Fields(value: unknown, _partial: boolean, at = "$"): Partial<En1997Artifact> {
-  return parseEn1997Artifact(value, at);
-}
+export const parseEn1997Artifact: NormWireReader<En1997Artifact> = normWireObject<En1997Artifact>({ structureId: normWireRequired(normWireString), geotechnicalCategory: normWireRequired(normWireInteger), designSituation: normWireRequired(normWireString), designApproach: normWireRequired(normWireString), annex: normWireRequired(normWireLiteral("de", "en")), groundwaterLevel: normWireRequired(normWireNumber), investigationDepth: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireMap(normWireJson))), footings: normWireRequired(normWireArray(normWireMap(normWireJson))), piles: normWireRequired(normWireArray(normWireMap(normWireJson))), retainingWalls: normWireRequired(normWireArray(normWireMap(normWireJson))), slopes: normWireRequired(normWireArray(normWireMap(normWireJson))), upliftCases: normWireRequired(normWireArray(normWireMap(normWireJson))) });

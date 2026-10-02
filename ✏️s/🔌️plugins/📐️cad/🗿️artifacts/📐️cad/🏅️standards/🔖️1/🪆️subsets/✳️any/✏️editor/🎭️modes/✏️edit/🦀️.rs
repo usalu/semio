@@ -13,10 +13,28 @@ use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadOb
 use crate::standards::v1::subsets::any::schema::inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
 use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use protocol::DslValue;
-use semio_framework_plugin::{
-    mesh_from_kind, scene_surface, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput,
-    WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, World3dScene,
-};
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::scene_surface;
+use semio_framework_plugin::world3d_environment_json;
+use semio_framework_plugin::world3d_fit_json;
+use semio_framework_plugin::world3d_mesh_id_from_url;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementPossible;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
+use semio_framework_plugin::World3dScene;
 use std::hash::{Hash, Hasher};
 
 pub const CAD_PLAY_MODE_EDIT: &str = "edit";

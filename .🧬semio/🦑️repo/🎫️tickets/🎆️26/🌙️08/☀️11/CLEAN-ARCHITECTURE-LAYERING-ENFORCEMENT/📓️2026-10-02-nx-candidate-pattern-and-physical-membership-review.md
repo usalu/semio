@@ -1,0 +1,27 @@
+# Nx Candidate Pattern and Physical Membership Review
+
+Read-only source inspection; no tests, Nx jobs, compiler or generation executed. High reports discovery 108.814 seconds and duplicate callback 112.669 seconds for 521 projects; those measurements are supplied coordination evidence, not independently rerun here.
+
+## Actual candidate contract
+
+The test plugin `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs:309` declares `**/*.feature`; `testCaseProjects:183–196` currently ignores supplied configFiles and rescans all cases. The canonical taxonomy feature basename is subsequently checked at :204–208. `nx.json:96–100` supplies this plugin options {}, without plugin include/exclude.
+
+Installed Nx primary implementation is `.🧬semio/🦑️repo/⚡️cache/tools/nx-tooling/0cc5c92966e134b641c211f0ad122528aacc2f4af1f3a5b4c6022c8da8d369b9/node_modules/nx/dist/src/project-graph/`. `plugins/loaded-nx-plugin.js:17–29` forwards pluginDefinition include/exclude and callback configFiles. `utils/project-configuration-utils.js:318–325` explicitly says supplied projectFiles already satisfy the declared createNodes pattern and applies include/exclude before callback. Its :287–316 matcher has ordered negative patterns: later matches override earlier ones; a leading negation starts from everything. Empty include accepts all, empty exclude excludes nothing. These are not simple positive-set subtraction semantics.
+
+Therefore the callback should consume exactly supplied current candidates, validate membership, deduplicate and sort; it must not refill missing candidates from global discovery. An empty callback is genuinely empty. Omitted candidates may represent deliberate Nx exclusion, not absence on disk. Direct domain callers must supply freshly discovered lists using the same declared pattern and inclusion policy. The named `listNxTestFeatureFiles` was not found in the inspected authored Repo/test/library and root script sources at this snapshot; its implementation cannot be certified by name alone.
+
+## Concrete acceptance and project-loss boundaries
+
+1. Current full discovery :318–342 rejects linked ancestor directories and linked feature leaves by Dirent before descent. Current candidate loop :200 only uses existsSync, which follows both. Replacing discovery with callback candidates without a segment-by-segment physical no-follow check newly admits a linked case, tests directory, owner ancestor or feature leaf. Validate workspace boundary and raw prefixes before path normalization; regular file leaf and directory ancestors are required. Root/root-ancestor link behavior must be explicitly owned rather than silently inferred from relative segments.
+2. Normalize separators once for portable Nx paths before dirname/basename and exclusion logic. Reject absolute, drive/UNC, traversal and noncanonical relative candidates rather than normalize them into membership. `nxPath:54` converts backslashes; `isExcluded:70–83` normalizes only its segment check while suffix/prefix checks use its original relPath. Passing normalized rel consistently avoids Windows exclusion drift.
+3. Keep canonical taxonomy basename, immediate tests-directory placement and canonicalCase checks :202–210. Broad `**/*.feature` intentionally includes noncanonical feature names; a supplied candidate is discovery evidence, not test ownership. Keep reserved subtree, ignored-path and pathExclusions filtering :70–83.
+4. Preserve fresh deletion/type checks for each supplied candidate, and deduplicate by canonical relative candidate before project generation. A retained callback list must not grant a removed file or changed link. Conversely do not demand a global tree rescan to validate a present candidate.
+5. Current layout self-test `🧪️tests/📐️test-layout/🟦️.ts:282–292` calls the callback with synthetic paths without materializing files, then checks whether any project returned. Its old full rescan can satisfy this with unrelated projects. Authoritative candidates expose this harness defect: assert exact candidate project membership with real fixture files, rather than preserve unrelated project fallback.
+
+## Small closed extension
+
+Extend existing `🧫️fixtures/🚷️discovery-boundaries/🔣️.json`, matching schema and `🧪️tests/🚷️discovery-boundaries/🟦️.ts`: supplied subset excludes a second valid case; empty list; duplicate and portable separator variants; noncanonical basename; linked leaf/linked tests parent/linked owner parent; removed file; reserved-subtree candidate. Separate Nx include/exclude oracle rows should cover leading negative include and later positive reinclusion, and positive exclude followed by negative reinclusion. Preserve exact complete 521-project census as an independently measured integration expectation, not a substitute for subset membership assertions.
+
+## Resident authority
+
+Do not remove resident-module freshness while reducing enumeration. Library `🟨️.mjs:1539–1555` hashes taxonomy, caching policy and authored helper authorities and reloads implementation revisions. Test plugin :188–191 also reads the library module revision. Existing native-input owner `🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts:105–109` deliberately mutates a dependency helper and requires refusal followed by restored acceptance. Candidate optimization must preserve these facts. No evidence here establishes that all current library authority refresh paths can be replaced by a configFiles-based cache.

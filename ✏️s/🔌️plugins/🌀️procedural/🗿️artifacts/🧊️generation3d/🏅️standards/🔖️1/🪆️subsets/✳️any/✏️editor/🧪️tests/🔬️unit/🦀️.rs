@@ -273,7 +273,8 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
                 "forwards": mutation_hex,
                 "inverse": [],
                 "sequenceNumber": 1,
-                "startedAt": "1"
+                "startedAt": "1",
+                "line": null
             }],
             "changes": [],
             "checkpoints": [],

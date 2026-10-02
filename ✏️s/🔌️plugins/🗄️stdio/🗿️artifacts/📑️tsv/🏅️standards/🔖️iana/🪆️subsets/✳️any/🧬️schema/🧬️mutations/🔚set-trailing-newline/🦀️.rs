@@ -21,8 +21,8 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
         agg_inverse(&TsvMutation::SetTrailingNewline(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

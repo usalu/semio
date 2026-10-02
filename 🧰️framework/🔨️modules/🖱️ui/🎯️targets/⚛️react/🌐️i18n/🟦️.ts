@@ -991,6 +991,7 @@ export const uiChromeTranslationBundles = {
             schemaUnavailable: { label: { normal: "Das Eingabeschema dieser Mutation ist nicht verfügbar", beginner: "Das Eingabeschema dieser Mutation ist nicht verfügbar" } },
             replayFaulted: { label: { normal: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden", beginner: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden" } },
             commitFailed: { label: { normal: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert", beginner: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert" } },
+            memberGone: { label: { normal: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen", beginner: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen" } },
           },
         },
         history: {
@@ -2012,6 +2013,7 @@ export const uiChromeTranslationBundles = {
             schemaUnavailable: { label: { normal: "The input schema of this mutation is unavailable", beginner: "The input schema of this mutation is unavailable" } },
             replayFaulted: { label: { normal: "Replay failed: later mutations could not be checked", beginner: "Replay failed: later mutations could not be checked" } },
             commitFailed: { label: { normal: "Finalizing failed: the history is unchanged", beginner: "Finalizing failed: the history is unchanged" } },
+            memberGone: { label: { normal: "The part this history edit targets was closed", beginner: "The part this history edit targets was closed" } },
           },
         },
         history: {

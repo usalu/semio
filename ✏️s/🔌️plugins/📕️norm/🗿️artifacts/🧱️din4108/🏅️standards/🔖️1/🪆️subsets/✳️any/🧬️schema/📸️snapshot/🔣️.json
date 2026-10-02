@@ -17,7 +17,7 @@
   ],
   "properties": {
     "climateZone": {
-      "type": "string"
+      "$ref": "#/$defs/ClimateZoneDe"
     },
     "usage": {
       "type": "string"
@@ -40,208 +40,19 @@
     "zones": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "floorAreaM2",
-          "heaviness",
-          "nightVentilation",
-          "windows"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "floorAreaM2": {
-            "type": "number"
-          },
-          "heaviness": {
-            "type": "string"
-          },
-          "nightVentilation": {
-            "type": "string"
-          },
-          "windows": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "orientation",
-                "areaM2",
-                "gValue",
-                "shadingFc",
-                "inclinationDeg"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "orientation": {
-                  "type": "string"
-                },
-                "areaM2": {
-                  "type": "number"
-                },
-                "gValue": {
-                  "type": "number"
-                },
-                "shadingFc": {
-                  "type": "number"
-                },
-                "inclinationDeg": {
-                  "type": "number"
-                }
-              }
-            }
-          }
-        }
+        "$ref": "#/$defs/ThermalZone"
       }
     },
     "elements": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "kind",
-          "zoneId",
-          "orientationDeg",
-          "inclinationDeg",
-          "adjacent",
-          "areaM2",
-          "layers",
-          "deltaUG",
-          "deltaUF",
-          "deltaUR"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "zoneId": {
-            "type": "string"
-          },
-          "orientationDeg": {
-            "type": "number"
-          },
-          "inclinationDeg": {
-            "type": "number"
-          },
-          "adjacent": {
-            "type": "string"
-          },
-          "areaM2": {
-            "type": "number"
-          },
-          "layers": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "materialId",
-                "thicknessM",
-                "lambda",
-                "mu",
-                "density",
-                "segments"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "materialId": {
-                  "type": "string"
-                },
-                "thicknessM": {
-                  "type": "number"
-                },
-                "lambda": {
-                  "type": "number"
-                },
-                "mu": {
-                  "type": "number"
-                },
-                "density": {
-                  "type": "number"
-                },
-                "segments": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "materialId",
-                      "fraction",
-                      "lambda",
-                      "mu",
-                      "density"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "materialId": {
-                        "type": "string"
-                      },
-                      "fraction": {
-                        "type": "number"
-                      },
-                      "lambda": {
-                        "type": "number"
-                      },
-                      "mu": {
-                        "type": "number"
-                      },
-                      "density": {
-                        "type": "number"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "deltaUG": {
-            "type": "number"
-          },
-          "deltaUF": {
-            "type": "number"
-          },
-          "deltaUR": {
-            "type": "number"
-          }
-        }
+        "$ref": "#/$defs/EnvelopeElement"
       }
     },
     "thermalBridges": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "id",
-          "psi",
-          "lengthM",
-          "bb2Type"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "psi": {
-            "type": "number"
-          },
-          "lengthM": {
-            "type": "number"
-          },
-          "bb2Type": {
-            "type": "string"
-          }
-        }
+        "$ref": "#/$defs/ThermalBridge"
       }
     }
   },
@@ -866,7 +677,14 @@
       "title": "LayerSegment",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "id",
+        "materialId",
+        "fraction",
+        "lambda",
+        "mu",
+        "density"
+      ],
       "properties": {
         "id": {
           "type": "string"
@@ -945,5 +763,6 @@
         "🔣️jsonschema"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

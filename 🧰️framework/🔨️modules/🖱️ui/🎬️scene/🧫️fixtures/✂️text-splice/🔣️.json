@@ -2005,5 +2005,27 @@
         }
       ]
     }
+  ],
+  "hostSignals": [
+    {
+      "signal": "idle",
+      "commit": "idle",
+      "note": "no delivery for the idle bound: the host ends the run on its own"
+    },
+    {
+      "signal": "caretMove",
+      "commit": "selectionJump",
+      "note": "a pure caret move (no edit) ends the run before the selection it reports"
+    },
+    {
+      "signal": "blur",
+      "commit": "blur",
+      "note": "the editor lost keyboard focus (a press elsewhere, an accessibility blur, another editor focused, the editor unmounted)"
+    },
+    {
+      "signal": "hidden",
+      "commit": "hidden",
+      "note": "the page was hidden or left (visibilitychange to hidden, pagehide): the keystrokes of the last idle bound are never lost"
+    }
   ]
 }

@@ -84,22 +84,22 @@ pub use mutations::*;
 
 pub struct Block3dWorldWindowTransientOwner;
 
-impl store::retirement::RetireOwned for Block3dBrushPreview {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::sequence(vec![store::retirement::leaf(self.position), store::retirement::leaf(self.direction)])
+impl semio_framework_value::retirement::RetireOwned for Block3dBrushPreview {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(self.position), semio_framework_value::retirement::leaf(self.direction)])
     }
 }
 
-impl store::retirement::RetireOwned for Block3dWorldWindowTransient {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
-        store::retirement::RetireOwned::retirement(self.brush_preview)
+impl semio_framework_value::retirement::RetireOwned for Block3dWorldWindowTransient {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        semio_framework_value::retirement::RetireOwned::retirement(self.brush_preview)
     }
 }
 
-impl store::retirement::RetireOwned for Block3dWorldWindowTransientMutation {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+impl semio_framework_value::retirement::RetireOwned for Block3dWorldWindowTransientMutation {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
         let Self::SetBrushPreview(mutation) = self;
-        store::retirement::RetireOwned::retirement(mutation.preview)
+        semio_framework_value::retirement::RetireOwned::retirement(mutation.preview)
     }
 }
 
@@ -119,8 +119,8 @@ impl semio_framework_plugin::WindowTransientOwner for Block3dWorldWindowTransien
     type Mutation = Block3dWorldWindowTransientMutation;
 
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::State>::default());
-        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
+        let state: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::State>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::State>::default());
+        let mutation: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preview_footprint, preview_transfer, state.clone(), mutation.clone()));
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }

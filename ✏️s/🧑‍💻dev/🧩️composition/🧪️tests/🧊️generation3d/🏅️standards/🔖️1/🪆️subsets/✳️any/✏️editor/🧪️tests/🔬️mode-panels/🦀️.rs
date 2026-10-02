@@ -64,7 +64,7 @@ fn mode_panel_fixture() -> ModePanelFixture {
 /// projection the host mounts panels with.
 fn panel_view(case: &ModePanelCase) -> ViewModel {
     let roster = case.windows.iter().map(|window| ViewWindowInstance { id: window.id.clone(), window_kind_id: window.kind.clone() }).collect();
-    ViewModel { active_mode_id: Some(case.mode.clone()), focused_window_id: Some(case.focused_window.clone()), window_instances: roster, ..Default::default() }
+    ViewModel { active_mode_id: Some(case.mode.clone()), focused_window_id: Some(case.focused_window.clone()), window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
         .for_panel()
 }
 //#endregion 📌️Fixture

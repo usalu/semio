@@ -41,6 +41,8 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_raster_app(), examples: Vec::new() }
     }
 
+    semio_framework_plugin::history_edit_acceptance_law!("raster", RasterPlayApp, raster_app_manifest_for_tests, "../..");
+
     /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
     /// `EditorApp<RasterPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
     /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
@@ -64,7 +66,7 @@ pub(crate) mod context {
         ViewModel {
             window_id: Some(id.into()),
             window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
 
@@ -90,7 +92,7 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::default()).await
+        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
     }
     
     pub async fn render_with_view(app: &mut RasterApp, body_key: &str, view_state: &ViewModel) -> String {
@@ -337,7 +339,7 @@ async fn raster_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn raster_labels_resolve_german_locale() {
     let mut app = app().await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::De, ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native) };
     let layers_json = render_with_view(&mut app, document::RASTER_PLAY_BODY_LAYERS, &view_state).await;
     assert!(layers_json.contains("Pixel hinzufügen"));
     assert!(layers_json.contains("Gruppe hinzufügen"));
@@ -684,6 +686,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::EditMask(edit_mask::EditMask {layer_id:"l1".into(),expected_mask:"{}".into(),operation:r#"{"kind":"alphaFill","alpha":0,"opacity":1}"#.into(),selection:None}),
         RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:"[[0,1,255]]".into()}),
         RasterCommand::PaintStroke(paint_stroke::PaintStroke { layer_id: "l1".into(), tool: "eraser".into(), xs: vec![0.5, 3.25], ys: vec![1.5, 2.0] }),
+        RasterCommand::FillRegion(fill_region::FillRegion { layer_id: "l1".into(), x: 1.5, y: 0.25, tolerance: 24 }),
     ]
 }
 
@@ -692,9 +695,9 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape,ToolJobFactory};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 26);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 27);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 26);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 27);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 28);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 27);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
@@ -704,9 +707,9 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
     assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
 
-    // 🛣️ Lane discipline, read off the handlers: ten document verbs publish into the artifact lane,
-    // five session verbs into the config lane, and no route publishes into both.
-    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "editPixels", "editMask", "maskFromSelection", "flattenLayers", "mergeDown"].into_iter().collect();
+    // 🛣️ Lane discipline, read off the handlers: the document verbs publish into the artifact lane, the session verbs
+    // into the config lane, and no route publishes into both.
+    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "editPixels", "editMask", "paintStroke", "fillRegion", "maskFromSelection", "flattenLayers", "mergeDown"].into_iter().collect();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
         let expected = if artifact_lane.contains(tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::Config };
@@ -764,7 +767,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 26, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 28, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -781,6 +784,8 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         .map(|command| {
             let keyword: &'static str = match &command {
                 RasterCommand::ExportPng(_) => "export-png",
+                RasterCommand::PaintStroke(_) => "paint-stroke",
+                RasterCommand::FillRegion(_) => "fill-region",
                 RasterCommand::AddLayer(_) => "add-layer",
                 RasterCommand::DropLayerKind(_) => "drop-layer-kind",
                 RasterCommand::SetLayerVisible(_) => "set-layer-visible",
@@ -952,7 +957,7 @@ pub(crate) mod mounted {
     pub async fn dispatch(app: &mut MountedRasterApp, command: RasterCommand) -> InvocationResult {
         let id = "raster-composite";
         let mut action = meta("local");
-        action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..Default::default() });
+        action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);

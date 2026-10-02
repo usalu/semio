@@ -44,12 +44,12 @@ impl dsl::ToValue for SemioKitArtifact {
             ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
             ("types".to_string(), dsl::ToValue::to_value(&self.types)),
             ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
-            ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
-            ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
-            ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
+            ("objects".to_string(), semio_framework_value::ToValue::to_value(&self.objects)),
+            ("models".to_string(), semio_framework_value::ToValue::to_value(&self.models)),
+            ("representations".to_string(), semio_framework_value::ToValue::to_value(&self.representations)),
         ];
         if let Some(properties) = &self.properties {
-            entries.push(("properties".to_string(), dsl::to_dsl_value(properties).expect("ArtifactChild serializes")));
+            entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(properties)));
         }
         dsl::DslValue::object(entries)
     }
@@ -63,10 +63,10 @@ impl dsl::FromValue for SemioKitArtifact {
             schema: dsl::FromValue::from_value(field("schema")?)?,
             types: get("types").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
             designs: get("designs").map(dsl::FromValue::from_value).transpose()?.unwrap_or_default(),
-            objects: get("objects").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
-            models: get("models").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
-            properties: get("properties").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?,
-            representations: get("representations").map(dsl::from_dsl_value).transpose().map_err(dsl::ValueError::new)?.unwrap_or_default(),
+            objects: get("objects").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
+            models: get("models").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
+            properties: get("properties").map(semio_framework_value::FromValue::from_value).transpose()?,
+            representations: get("representations").map(semio_framework_value::FromValue::from_value).transpose()?.unwrap_or_default(),
         })
     }
 }
@@ -102,25 +102,25 @@ impl SemioKitArtifact {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_kit_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
-    framework_schema::ArtifactSchemaDescriptor {
+pub fn semio_kit_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.semio.kit",
-        artifact: framework_schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: framework_schema::FacetLeaves {
+        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        snapshot: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: framework_schema::FacetLeaves {
+        diff: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: framework_schema::FacetLeaves {
+        mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

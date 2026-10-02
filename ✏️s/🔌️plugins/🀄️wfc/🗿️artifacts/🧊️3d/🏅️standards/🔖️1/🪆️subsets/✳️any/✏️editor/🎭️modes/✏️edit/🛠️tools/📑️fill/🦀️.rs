@@ -6,7 +6,13 @@ use crate::editor::wfc3d::modes::edit::windows::preview::WFC_3D_PREVIEW_WINDOW;
 use crate::editor::wfc3d::transient::{SetSolve, Wfc3dTransientMutation};
 use crate::Wfc3dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
-use semio_framework_plugin::{Effect, Fault, LocalizedLabel, RequestId, ToolDefinition, ToolRunJobPurpose, ToolRunJobRequest};
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Fault;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::RequestId;
+use semio_framework_plugin::ToolDefinition;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy,
     ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,

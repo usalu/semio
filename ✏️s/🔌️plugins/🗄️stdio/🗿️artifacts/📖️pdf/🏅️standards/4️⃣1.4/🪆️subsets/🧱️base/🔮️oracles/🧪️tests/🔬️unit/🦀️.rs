@@ -1,5 +1,5 @@
 
-use super::*;
+use super::{build_document, independent_pages, oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, page, project_pdf_1_4, spec, KINDS};
 use semio_repo_test_host::parse_json;
 
 #[test]
@@ -35,7 +35,7 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
         }
         let inverse = oracle_inverse_spec(&base, &forward).unwrap();
         let restored = oracle_apply_mutation(&mutated, &inverse).unwrap();
-        crate::law::inverse_restores_within(&forward.str("kind"), &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
+        semio_repo_test_host::law::inverse_restores_within(&forward.str("kind"), &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
     }
 }
 
@@ -44,15 +44,15 @@ fn every_real_document_feature_row_is_observable_and_invertible() {
     let base = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf").to_vec();
     assert_eq!(independent_pages(&base).unwrap().len(), 65);
     let feature = include_str!("../../../🧪️tests/📑️mutate-pdf-1-4/🥒️.feature");
-    let rows = crate::law::feature_rows(feature);
+    let rows = semio_repo_test_host::law::feature_rows(feature);
     assert_eq!(rows.len(), KINDS.len());
     for (kind, params) in rows {
         assert!(KINDS.contains(&kind.as_str()));
         let forward = spec(&kind, params);
         let mutated = oracle_apply_mutation(&base, &forward).unwrap();
-        crate::law::mutation_is_observable_within(&kind, &project_pdf_1_4(&mutated).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], &[], 0.001).unwrap();
+        semio_repo_test_host::law::mutation_is_observable_within(&kind, &project_pdf_1_4(&mutated).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], &[], 0.001).unwrap();
         let restored = oracle_apply_mutation(&mutated, &oracle_inverse_spec(&base, &forward).unwrap()).unwrap();
-        crate::law::inverse_restores_within(&kind, &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
+        semio_repo_test_host::law::inverse_restores_within(&kind, &project_pdf_1_4(&restored).unwrap(), &project_pdf_1_4(&base).unwrap(), &[], 0.001).unwrap();
     }
     let rewritten = oracle_round_trip(&base).unwrap();
     assert_ne!(rewritten, base);

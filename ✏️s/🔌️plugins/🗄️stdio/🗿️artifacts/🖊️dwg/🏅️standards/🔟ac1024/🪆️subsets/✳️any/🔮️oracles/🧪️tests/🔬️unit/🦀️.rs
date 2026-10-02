@@ -179,7 +179,7 @@ fn every_ac1018_facet_is_a_re_export_of_this_one() {
         ("mutations", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"), "crate::standards"),
         ("schema", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "crate::standards"),
         ("snapshot", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"), "crate::standards"),
-        ("oracle", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🦀️.rs"), "crate::artifacts::dwg::standards"),
+        ("oracle", include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🦀️.rs"), "crate::standards"),
     ] {
         assert!(source.contains(&format!("pub use {root}::v_ac1024::subsets::any::")), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
     }

@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutat
         vec![super::GltfMutation::MoveMesh(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Move Mesh", "Netz verschieben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Move Mesh", "Netz verschieben")
     }
 
     fn target(&self) -> Vec<String> {

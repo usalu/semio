@@ -32,8 +32,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DuplicateLayer
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Duplicate layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" duplizieren", self.layer_id))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Duplicate layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" duplizieren", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

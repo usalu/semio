@@ -1,0 +1,15 @@
+# Directory Chain Owner Remap
+
+Read-only current source census; no jobs. Root reports selected taxonomy proof GREEN3/987/6.78s with picomatch fastpaths:false. This report makes no independent execution claim.
+
+Move `normalization/🚪️source-admission/📁️io/🟦️.ts:22,44–53` class/function together to `normalization/📁️input/🟦️.ts`, rename UnsafeDirectoryAncestorError/noFollowDirectoryChain. Exact closure is node:path parse/sep/join, node:fs lstatSync/Stats and the shared class. Return witnessed `{path,stat}` array unchanged. All callers must use this one class identity so instanceof catch continues to distinguish unsafe ancestry from permission/drift failures. Do not retain old aliases.
+
+Production rebindings: IO sourceAdmissionLstat57 and candidate error64; PrepareOptions89; Walk catch188; StructuralDirectories237; Observation catch250. Normalization imports old function12 and calls8753. Taxonomy can import directly from input owner and validate resolved root chain before snapshot without IO reverse edge. This fixes root-ancestor authority only; raw dot/prefix normalization remains its own explicitly unfixed frontier.
+
+Fixture/schema rebindings: normalization/🧫️fixtures/🚪️source-admission/🧪️io/🔣️.json row root-and-candidate-nofollow expected.error old class string; normalization/🧬️schema/🚪️source-admission/🧪️io/🔣️.json $defs.nofollow expected.error const same. Change both to canonical class name together.
+
+Exact IO harness sites: unsafe class extraction27; directory chain symbol and injected class52; candidate function injected chain/class55; observation/class59 and61; Walk injected class66 and71; PrepareOptions injected chain81. Existing normalizationSourceDeclarations helper reads input owner already, so symbol selection can find actual moved declaration; update explicit dependency identifiers as well as lookup names.
+
+Minimal permanent laws: retain existing root-and-candidate-nofollow row proving descendantLstat0; add ordinary root chain positive with ordered root→ancestor→root witnesses; linked ancestor refusal before taxonomy snapshot invocation; linked root refusal before snapshot; permission error propagates as original error and is not converted into unsafeAncestor observation; existing candidate unsafe catch continues returning unobserved/unsafeAncestor. An actual ticket-owned physical linked-ancestor tree should independently prove lstat link and standalone load refusal after a prior valid warm load. Valid ordinary tree with same bytes remains positive. No compiler cohort needed.
+
+Root chain function starts from parse(repoRoot).root; caller must supply resolved absolute native root. Keep platform drive/root handling using node:path rather than fabricated POSIX slash on Windows. Current existing synthetic harness uses injected parse/sep and does not itself prove native Windows root spelling. Add native-root expected component sequence through owned platform interface. Do not weaken refusal where Windows symlink construction needs junction semantics.

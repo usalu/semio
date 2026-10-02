@@ -21,8 +21,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for IntroduceGeo
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(
             &format!("Create geometry \"{}\"", self.geometry_object.id),
             &format!("Geometrie \"{}\" erstellen", self.geometry_object.id),
         )

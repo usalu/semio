@@ -8,11 +8,13 @@
 // domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
-const dependencyRevision = createHash("sha256").update(readFileSync(dependencyModule)).digest("hex");
+const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
 let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner;
 const testBootstrap = import(`${dependencyModule.href}?revision=${dependencyRevision}`).then((deps) => {
   cargoPackage = deps.cargoPackage;
@@ -21,7 +23,7 @@ const testBootstrap = import(`${dependencyModule.href}?revision=${dependencyRevi
   ownerContributions = deps.ownerContributions;
   packagesForOwner = deps.packagesForOwner;
 });
-const implementationRevision = () => createHash("sha256").update(readFileSync(new URL(import.meta.url))).update(readFileSync(dependencyModule)).digest("hex");
+const implementationRevision = () => createHash("sha256").update(readAuthoritySource(new URL(import.meta.url))).update(readAuthoritySource(dependencyModule)).digest("hex");
 const loadedRevision = implementationRevision();
 
 const TAXONOMY_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
@@ -41,11 +43,49 @@ function canonicalCase(vocabulary, owner, name) {
 
 /** 🔣️ Reads the frozen test vocabulary; the plugin never re-declares taxonomy strings. */
 function taxonomy(workspaceRoot) {
-  return JSON.parse(readFileSync(join(workspaceRoot, TAXONOMY_REL), "utf8"));
+  const authority = workspaceAdmission(workspaceRoot);
+  if (!authority.file(TAXONOMY_REL)) throw new Error("Test discovery requires real no-follow taxonomy authority");
+  return JSON.parse(readFileSync(join(authority.root, TAXONOMY_REL), "utf8"));
 }
 
-/** @param {string} p */
-const nxPath = (p) => p.split("\\").join("/");
+/** 🛡️ Admits fresh workspace ancestry and relative real-file candidates without normalization. */
+function workspaceAdmission(input) {
+  if (typeof input !== "string" || !input || input.includes("\0") || input.split(/[\\/]/u).some(part => part === "." || part === "..")) throw new Error("Test discovery requires an unnormalized real workspace root");
+  const root = resolve(input), ancestry = [];
+  for (let current = root; ; current = dirname(current)) { ancestry.push(current); if (current === dirname(current)) break; }
+  for (const path of ancestry.reverse()) { const value = lstatSync(path); if (!value.isDirectory() || value.isSymbolicLink()) throw new Error(`Test discovery requires real workspace ancestry: ${path}`); }
+  const directories = new Map([[root, true]]);
+  const file = value => {
+    if (typeof value !== "string" || !value || value.includes("\0")) return false;
+    const path = nxPath(value), parts = path.split("/");
+    if (isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === "..")) return false;
+    let current = root;
+    for (const part of parts.slice(0, -1)) {
+      current = join(current, part);
+      if (!directories.has(current)) { try { const entry = lstatSync(current); directories.set(current, entry.isDirectory() && !entry.isSymbolicLink()); } catch (error) { if (error.code !== "ENOENT" && error.code !== "ENOTDIR") throw error; directories.set(current, false); } }
+      if (!directories.get(current)) return false;
+    }
+    try { const entry = lstatSync(join(current, parts.at(-1))); return entry.isFile() && !entry.isSymbolicLink(); } catch (error) { if (error.code !== "ENOENT" && error.code !== "ENOTDIR") throw error; return false; }
+  };
+  return { root, file };
+}
+
+/** 📄️ Reads implementation bytes only through fresh physical source authority. */
+function readAuthoritySource(url) {
+  const path = fileURLToPath(url), authority = workspaceAdmission(dirname(path));
+  if (!authority.file(basename(path))) throw new Error(`Test discovery implementation must be a real file: ${path}`);
+  return readFileSync(path);
+}
+
+/** 📋️ Selects only the complete current Nx inventory admitted by owned physical case rules. */
+function candidateFiles(configFiles, vocabulary, authority) {
+  const filename = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
+  return [...new Set(configFiles.filter(value => typeof value === "string").map(nxPath))].filter(path => {
+    if (path.includes("\uFFFD") || isExcluded(vocabulary, path) || !authority.file(path)) return false;
+    const casePath = dirname(path), testsPath = dirname(casePath);
+    return basename(path) === filename && basename(testsPath) === vocabulary.testsDirName && canonicalCase(vocabulary, dirname(testsPath), basename(casePath));
+  }).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+}
 
 /** 📄️ Resolves the taxonomy-ordered primary kind-only filename from taxonomy v7. */
 function filenameForKind(vocabulary, fileKindId) {
@@ -183,17 +223,20 @@ function target(domain, command, inputs, cacheable = true, scope) {
 async function testCaseProjects(configFiles, _options, context) {
   const { workspaceRoot } = context;
   const vocabulary = taxonomy(workspaceRoot);
-  const featureFilename = filenameForKind(vocabulary, vocabulary.testFeatureFileKindId);
+  const authority = workspaceAdmission(workspaceRoot);
+  const featureCandidates = candidateFiles(configFiles, vocabulary, authority);
   const results = [];
+  const policyPath = `${dirname(TAXONOMY_REL)}/⚡️caching/🔣️policy.json`;
+  if (!authority.file(policyPath)) throw new Error("Test discovery requires real no-follow cache policy authority");
+  const policy = JSON.parse(readFileSync(join(workspaceRoot, policyPath), "utf8"));
+  if (featureCandidates.length === 0) return results;
   const libraryModule = new URL("../📚️library/🟨️.mjs", import.meta.url);
-  const libraryRevision = createHash("sha256").update(readFileSync(libraryModule)).digest("hex");
+  const libraryRevision = createHash("sha256").update(readAuthoritySource(libraryModule)).digest("hex");
   const { cacheInternals: native } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
-  const policy = JSON.parse(readFileSync(join(workspaceRoot, dirname(TAXONOMY_REL), "⚡️caching/🔣️policy.json"), "utf8"));
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
   let commandInputs;
 
-  const featureCandidates = discoverCaseDirs(workspaceRoot).map((dir) => `${dir}/${featureFilename}`);
   for (const configFile of featureCandidates) {
     if (configFile.includes("\uFFFD")) continue;
     const rel = nxPath(configFile);
@@ -203,7 +246,7 @@ async function testCaseProjects(configFiles, _options, context) {
     const caseRel = dirname(rel);
     const testsRel = dirname(caseRel);
     if (basename(testsRel) !== vocabulary.testsDirName) continue;
-    if (basename(rel) !== featureFilename) continue;
+
     const ownerRel = dirname(testsRel);
     const caseSlug = basename(caseRel);
     if (!canonicalCase(vocabulary, ownerRel, caseSlug)) continue;
@@ -213,7 +256,7 @@ async function testCaseProjects(configFiles, _options, context) {
     for (const fileKindId of Object.values(vocabulary.testAdapterFileKinds)) {
       const filename = filenameForKind(vocabulary, fileKindId);
       const adapterRel = `${caseRel}/${filename}`;
-      if (existsSync(join(workspaceRoot, adapterRel))) adapters.push(adapterRel);
+      if (authority.file(adapterRel)) adapters.push(adapterRel);
     }
 
     const name = projectNameFor(ownerRel, caseSlug, await ownerHash(ownerRel));

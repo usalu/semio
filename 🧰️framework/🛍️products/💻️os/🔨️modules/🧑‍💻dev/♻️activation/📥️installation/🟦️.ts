@@ -2,7 +2,7 @@
 
 import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
-import { stageArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -68,7 +68,7 @@ async function publishActivatedExtension(target: DeployedRegistryEntryV1, source
     const metadata = join(temporary, EXTENSION_INSTALL_META);
     writeFileSync(metadata, JSON.stringify(record) + "\n");
     files.set(EXTENSION_INSTALL_META, metadata);
-    await stageArtifacts(output, `development-extension:${target.pluginId}`, files, { signal });
+    await stageRepositoryArtifacts(output, `development-extension:${target.pluginId}`, files, { signal });
     console.log(`Activated extension ${target.pluginId}`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

@@ -18,6 +18,8 @@ pub(crate) mod context {
     pub fn gis3d_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_gis3d_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("gis", Gis3dPlayApp, gis3d_app_manifest_for_tests, "../..");
     
     /// 🪟️ Targets the real Terrain window instance for render and command authority.
     pub fn main_window_view() -> ViewModel {
@@ -27,7 +29,7 @@ pub(crate) mod context {
                 id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
                 window_kind_id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
             }],
-            ..Default::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
     

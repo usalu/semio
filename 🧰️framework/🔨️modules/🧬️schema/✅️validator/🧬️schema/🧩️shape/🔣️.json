@@ -1,0 +1,286 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "json",
+    "runtime"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "json": {
+      "type": "array",
+      "minItems": 28,
+      "maxItems": 28,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "guard",
+          "value",
+          "label",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "guard": {
+            "enum": [
+              "record",
+              "array",
+              "string",
+              "literal",
+              "keys"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "admitted",
+              "diagnostic"
+            ],
+            "properties": {
+              "admitted": {
+                "type": "boolean"
+              },
+              "diagnostic": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "value": {}
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "guard": {
+                  "const": "literal"
+                }
+              },
+              "required": [
+                "guard"
+              ]
+            },
+            "then": {
+              "required": [
+                "allowed"
+              ],
+              "properties": {
+                "allowed": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "allowed"
+                ],
+                "properties": {
+                  "allowed": {}
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "guard": {
+                  "const": "keys"
+                }
+              },
+              "required": [
+                "guard"
+              ]
+            },
+            "then": {
+              "required": [
+                "keys"
+              ],
+              "properties": {
+                "keys": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "keys"
+                ],
+                "properties": {
+                  "keys": {}
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "runtime": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "guard",
+          "mode",
+          "label",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "guard": {
+            "enum": [
+              "record",
+              "array",
+              "string",
+              "literal",
+              "keys"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "admitted",
+              "diagnostic"
+            ],
+            "properties": {
+              "admitted": {
+                "type": "boolean"
+              },
+              "diagnostic": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "mode": {
+            "enum": [
+              "date",
+              "inherited",
+              "inherited-number",
+              "inherited-string",
+              "map",
+              "nonenumerable",
+              "null-prototype",
+              "sparse",
+              "symbol",
+              "undefined"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "guard": {
+                  "const": "literal"
+                }
+              },
+              "required": [
+                "guard"
+              ]
+            },
+            "then": {
+              "required": [
+                "allowed"
+              ],
+              "properties": {
+                "allowed": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "allowed"
+                ],
+                "properties": {
+                  "allowed": {}
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "guard": {
+                  "const": "keys"
+                }
+              },
+              "required": [
+                "guard"
+              ]
+            },
+            "then": {
+              "required": [
+                "keys"
+              ],
+              "properties": {
+                "keys": {}
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "keys"
+                ],
+                "properties": {
+                  "keys": {}
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

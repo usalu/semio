@@ -16,7 +16,7 @@
 
 use crate::wgpu::Label;
 use crate::wgpu::UiTreeActionPlacement;
-use dsl::DslValue;
+use semio_framework_value::DslValue;
 #[cfg(any(test, feature = "testkit"))]
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -917,10 +917,12 @@ fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         commit: props.commit.as_ref().map(|value| value.as_str().to_string()),
         min: props.min,
         max: props.max,
-        step: props.step.or_else(|| props.precision.filter(|_| props.kind == ui_contract::InputKind::Number).map(|precision| 10_f64.powi(-i32::from(precision.min(ui_contract::UI_NUMBER_PRECISION_MAX))))),
+        step: props.step.or_else(|| props.precision.filter(|_| props.kind == ui_contract::InputKind::Number).map(|precision| 10_f64.powi(-i32::from(precision.min(ui_contract::UI_NUMBER_PRECISION_MAX))) / props.display_factor.unwrap_or(1.0))),
         accept: props.accept.as_ref().map(|value| value.as_str().to_string()),
         precision: props.precision.filter(|_| props.kind == ui_contract::InputKind::Number),
         snaps: if props.kind == ui_contract::InputKind::Number { props.snaps.iter().copied().collect() } else { Vec::new() },
+        display_factor: props.display_factor.filter(|_| props.kind == ui_contract::InputKind::Number),
+        limits: props.limits.clone().filter(|_| props.kind == ui_contract::InputKind::Number),
         on_change: input_commit_action(record, props, controller),
         // ⏎️⎋️🔁️ The three moments React's `SearchInput` binds BESIDE `onChange`. They are read
         // per-trigger (not resolved into the single `on_change` slot the way `input_commit_action`
@@ -991,6 +993,12 @@ fn slider_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         step: props.step,
         unit: props.unit.as_ref().map(|value| value.as_str().to_string()),
         snaps: props.snaps.iter().copied().collect(),
+        appearance: props.appearance,
+        scale: props.scale,
+        precision: props.precision,
+        display_unit: props.display_unit.as_ref().map(|value| value.as_str().to_string()),
+        display_factor: props.display_factor,
+        limits: props.limits.clone(),
         on_change: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
         presence: record_presence(record),
         menu: menu_ref(record),
@@ -1007,6 +1015,10 @@ fn number_stepper_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         min: props.min,
         max: props.max,
         precision: props.precision,
+        snaps: props.snaps.iter().copied().collect(),
+        unit: props.display_unit.as_ref().or(props.unit.as_ref()).map(|value| value.as_str().to_string()),
+        display_factor: props.display_factor,
+        limits: props.limits.clone(),
         on_absolute: record_action_or_inert(record, ui_contract::Trigger::Change, controller),
         on_delta: record_action_or_inert(record, ui_contract::Trigger::Delta, controller),
         presence: record_presence(record),
@@ -1062,7 +1074,7 @@ fn media_transport_revision(value: Option<&serde_json::Value>) -> bool {
         .is_some_and(|value| (value == "0" || (value.len() <= 20 && value.as_bytes().first().is_some_and(|first| (b'1'..=b'9').contains(first)) && value.as_bytes()[1..].iter().all(u8::is_ascii_digit))) && value.parse::<u64>().is_ok())
 }
 
-pub(crate) fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
+pub fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
     const ROOT_KEYS: &[&str] = &["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight"];
     const LABEL_KEYS: &[&str] = &["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "audio", "video"];
     let Some(root) = value.as_object().filter(|root| json_object_has_exact_keys(root, ROOT_KEYS)) else { return false };
@@ -1786,7 +1798,7 @@ fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     match (previous, next) {
         (UiNode::Stack(p), UiNode::Stack(n)) => p.direction != n.direction || p.gap != n.gap || p.padding != n.padding || p.children.len() != n.children.len(),
         (UiNode::Text(p), UiNode::Text(n)) => p.value != n.value,
-        (UiNode::Slider(p), UiNode::Slider(n)) => crate::wgpu::layout::slider_unit_label(p.value, p.unit.as_deref()) != crate::wgpu::layout::slider_unit_label(n.value, n.unit.as_deref()),
+        (UiNode::Slider(p), UiNode::Slider(n)) => p.unit_label() != n.unit_label(),
         (UiNode::Field(p), UiNode::Field(n)) => p.label != n.label || p.description != n.description || p.error != n.error,
         (UiNode::Section(p), UiNode::Section(n)) => p.label != n.label || p.children.len() != n.children.len(),
         _ => false,

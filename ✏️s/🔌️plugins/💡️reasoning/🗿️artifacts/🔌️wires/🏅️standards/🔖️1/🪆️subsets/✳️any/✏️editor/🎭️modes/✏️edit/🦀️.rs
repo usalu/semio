@@ -2,7 +2,11 @@
 
 use crate::editor::wires::modes::edit::tools::reorganize;
 use crate::editor::wires::modes::edit::windows::canvas;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, ToolRef, WindowLayout};
+use semio_framework_plugin::create_default_layout;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::ToolRef;
+use semio_framework_plugin::WindowLayout;
 
 pub const WIRES_PLAY_MODE_EDIT: &str = "edit";
 

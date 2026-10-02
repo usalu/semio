@@ -4,6 +4,7 @@
     "slab": {
       "id": "slab-new",
       "spanM": 3.0,
+      "support": "simply_supported",
       "sheeting": {
         "profile": "trapezoidal",
         "heightM": 0.055,
@@ -16,7 +17,6 @@
       "mFactor": 180.0,
       "kFactor": 0.05,
       "asM2PerM": 0.00025,
-      "support": "simply_supported",
       "actions": [
         {
           "id": "G-slab",

@@ -7,7 +7,7 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
     let mut app = new_app().await;
     let before = to_json_string(&app.snapshot().expect("initial payload"));
     for input in fixture["cases"].as_array().expect("embedded inputs") {
-        let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": "params", "paramsJson": input.to_string() }).to_string()), ..ViewModel::default() };
+        let view = ViewModel { extension_input_json: Some(serde_json::json!({ "bodyKey": "params", "paramsJson": input.to_string() }).to_string()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let tree = app.render(BODY_PARAMS, None, &view).await.expect("embedded params");
         let projection = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire params tree");
         let tree: serde_json::Value = serde_json::from_str(&projection).expect("independent projection oracle");
@@ -158,7 +158,7 @@ async fn module_manifest_contributes_building_component() {
 async fn preview_body_emits_world_scene() {
     let mut app = new_app().await;
     let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
-    let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
+    let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("preview projection");
     assert!(json.contains("world-3d"));
     artifact_app_laws::close_registered_fixture_app(&mut app);
@@ -167,7 +167,7 @@ async fn preview_body_emits_world_scene() {
 #[semio_framework_async_macros::async_test]
 async fn params_body_lists_flow_inputs() {
     let mut app = new_app().await;
-    let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(BODY_PARAMS, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
     let fields = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["role"] == "field").map(|child| child["component"]["label"].as_str().expect("field label")).collect::<Vec<_>>();
@@ -178,7 +178,7 @@ async fn params_body_lists_flow_inputs() {
 #[semio_framework_async_macros::async_test]
 async fn params_body_includes_media_export_buttons() {
     let mut app = new_app().await;
-    let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(BODY_PARAMS, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("params projection");
     let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
     let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["component"]["type"] == "button").count();

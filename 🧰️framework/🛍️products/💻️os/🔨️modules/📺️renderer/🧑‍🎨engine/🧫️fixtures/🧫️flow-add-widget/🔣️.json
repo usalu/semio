@@ -1,0 +1,63 @@
+{
+  "addWidget": [
+    {
+      "id": "operator",
+      "descriptor": "{\"kind\":\"neuron\",\"neuronKind\":\"math.add\"}",
+      "x": 40,
+      "y": 41,
+      "args": {
+        "kind": "neuron",
+        "neuronKind": "math.add",
+        "x": 40,
+        "y": 41
+      }
+    },
+    {
+      "id": "labelled-slider",
+      "descriptor": "{\"kind\":\"inputSlider\",\"label\":\"Height\"}",
+      "x": 0,
+      "y": -10,
+      "args": {
+        "kind": "inputSlider",
+        "label": "Height",
+        "x": 0,
+        "y": -10
+      }
+    },
+    {
+      "id": "export",
+      "descriptor": "{\"kind\":\"outputExport\",\"format\":\"stl\"}",
+      "x": 1,
+      "y": 2,
+      "args": {
+        "kind": "outputExport",
+        "format": "stl",
+        "x": 1,
+        "y": 2
+      }
+    },
+    {
+      "id": "action",
+      "descriptor": "{\"kind\":\"outputAction\",\"action\":\"flow.extension.reorganize\"}",
+      "x": 3,
+      "y": 4,
+      "args": {
+        "kind": "outputAction",
+        "action": "flow.extension.reorganize",
+        "x": 3,
+        "y": 4
+      }
+    },
+    {
+      "id": "non-text-fields-dropped",
+      "descriptor": "{\"kind\":\"inputNote\",\"label\":7,\"id\":\"n1\"}",
+      "x": 5,
+      "y": 6,
+      "args": {
+        "kind": "inputNote",
+        "x": 5,
+        "y": 6
+      }
+    }
+  ]
+}

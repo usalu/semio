@@ -1,0 +1,53 @@
+use super::*;
+use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database,import_sqlite_database,SqliteSnapshotPhase}};
+
+#[test]
+fn sqlite_snapshot_home_controlled_native_output_retains_exact_fields_and_cancels_inside_unicode(){
+ let(fixture,snapshots)=fixtures();let mut snapshot=snapshots.last().unwrap().clone();snapshot.schema=fixture["schemaScanSeeds"][1].as_str().unwrap().repeat(fixture["schemaScanRepeat"].as_u64().unwrap()as usize);
+ let limits=SqliteDatabaseLimits::default();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);let mut interior=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:snapshot.schema.len()-1,..limits})).is_err());assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:0,..limits})).is_err());}
+}
+fn fixtures()->(serde_json::Value,Vec<SHomeSnapshot>){let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();let snapshots=fixture["cases"].as_array().unwrap().iter().map(|row|SHomeSnapshot{schema:row["schema"].as_str().unwrap().into(),catalog_generation:row["catalogGeneration"].as_str().unwrap().parse().unwrap()}).collect();(fixture,snapshots)}
+#[test]
+fn sqlite_snapshot_home_unicode_native_parser_known_work_and_interior_cancellation(){
+ let(fixture,_)=fixtures();let limits=SqliteDatabaseLimits::default();
+ for seed in fixture["schemaScanSeeds"].as_array().unwrap(){
+  let snapshot=SHomeSnapshot{schema:seed.as_str().unwrap().repeat(fixture["schemaScanRepeat"].as_u64().unwrap()as usize),catalog_generation:u64::MAX};
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+   let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};
+   assert_eq!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+   let mut observed=None;
+   assert!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>=65536&&event.completed<event.total{observed=Some((event.completed,event.total));false}else{true}},limits)).is_err());
+   let(completed,total)=observed.expect("Home native parser must report real known interior work");assert!(completed>=65536&&completed<total);
+   assert!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:snapshot.schema.len()-1,..limits})).is_err());
+  }
+ }
+}
+#[test]
+fn sqlite_snapshot_home_full_u64_strings_and_independent_sql_edit(){
+ use std::{io::Write,process::{Command,Stdio}};let(fixture,snapshots)=fixtures();let limits=SqliteDatabaseLimits::default();
+ for snapshot in snapshots{
+  let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(SHomeSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
+  let bytes=export_sqlite_database(&database,limits,&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const row=d.query('SELECT schema,catalog_generation_high AS high,catalog_generation_low AS low FROM home_document').get();const expected=BigInt(process.argv[1]);if(row.schema!==JSON.parse(process.argv[2])||row.high!==Number(expected>>32n)||row.low!==Number(expected&0xffffffffn))throw Error('logical fields');const f=JSON.parse(process.argv[3]);for(const sql of f.renumberSql)d.run(sql);d.query('UPDATE home_document SET schema=?,catalog_generation_high=?,catalog_generation_low=?').run(f.editedSchema,f.editedGenerationHigh,f.editedGenerationLow);await Bun.write(Bun.stdout,d.serialize());d.close();";
+  let mut child=Command::new("bun").args(["-e",script]).arg(snapshot.catalog_generation.to_string()).arg(serde_json::to_string(&snapshot.schema).unwrap()).arg(fixture.to_string()).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
+  let restored=SHomeSnapshot::from_sqlite_database(&import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.schema,fixture["editedSchema"].as_str().unwrap());assert_eq!(restored.catalog_generation,(fixture["editedGenerationHigh"].as_u64().unwrap()<<32)|fixture["editedGenerationLow"].as_u64().unwrap());
+ }
+}
+#[test]
+fn sqlite_snapshot_home_complete_guard_controls_and_actual_erased_both_encodings(){
+ let(fixture,snapshots)=fixtures();let limits=SqliteDatabaseLimits::default();let dialect=store::io_schema::ArtifactDialect{artifact_kind:"s.space.home".into(),standard:"1".into(),subset:"*".into()};let codec=store::ArtifactCodec::bare::<SHomeSnapshot,crate::SHomeMutation>(crate::S_HOME_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.as_ref().unwrap();
+ for snapshot in snapshots{
+  let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+  for wrong in fixture["invalidDialects"].as_array().unwrap(){let invalid=store::io_schema::ArtifactDialect{artifact_kind:wrong["artifactKind"].as_str().unwrap().into(),standard:wrong["standard"].as_str().unwrap().into(),subset:wrong["subset"].as_str().unwrap().into()};assert!(snapshot.validate_sqlite_snapshot_subset(&invalid,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}
+  let mut aliased=database.clone();let row=&mut aliased.table_mut("home_document").unwrap().rows[0];row.rowid=-17;row.values[0]=store::sqlite_snapshot::SqliteValue::Integer(-17);snapshot.validate_sqlite_snapshot_subset(&dialect,&aliased,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();aliased.table_mut("home_document").unwrap().rows[0].values[1]=store::sqlite_snapshot::SqliteValue::Text("mismatching owned state".into());assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&aliased,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};let file=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;assert_eq!(file,database);let payload=(provider.import)(&codec.schema,&dialect,file,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;assert_eq!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);for limited in[SqliteDatabaseLimits{max_rows:0,..limits},SqliteDatabaseLimits{max_value_bytes:8,..limits}]{assert!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}let mut cancelled=false;assert!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>0&&event.total>0{cancelled=true;false}else{true}},limits)).is_err());assert!(cancelled);}
+  assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());assert!(SHomeSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());
+ }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_home_actual_owned_declaration_public_and_erased_routes(){
+ use store::io::{ArtifactDialect,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control}};
+ let plugin=semio_framework_plugin::Plugin::<semio_framework_plugin::plugin_app_close_prelude::NoPluginApp>::builder("space").label("Home SQLite owning declaration").version("0.0.1").package_id("semio:space").artifact(crate::declaration().await.unwrap()).try_build().unwrap();
+ let(_,snapshots)=fixtures();let snapshot=snapshots.last().unwrap();let limits=SqliteDatabaseLimits::default();let dialect=ArtifactDialect{artifact_kind:"s.space.home".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let export=io_route(&dialect,&sqlite,1).await.unwrap().value;let import=io_route(&sqlite,&dialect,1).await.unwrap().value;
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let file=io_export_sqlite_snapshot(&dialect,snapshot,encoding,limits,&mut |_|true).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<SHomeSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value,*snapshot);let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))};let file=io_run_with_snapshot_control(&export,payload,limits,&mut |_|true).await.unwrap().value;let payload=io_run_with_snapshot_control(&import,file,limits,&mut |_|true).await.unwrap().value;assert_eq!(SHomeSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),*snapshot);}drop(plugin);
+}

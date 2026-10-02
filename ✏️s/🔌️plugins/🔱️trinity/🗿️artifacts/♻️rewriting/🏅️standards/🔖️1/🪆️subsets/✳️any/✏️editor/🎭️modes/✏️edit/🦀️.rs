@@ -5,7 +5,14 @@
 use crate::editor::rewriting::{
     TRINITY_REWRITING_PLAY_WINDOW_AFTER, TRINITY_REWRITING_PLAY_WINDOW_BEFORE, TRINITY_REWRITING_PLAY_WINDOW_JACK, TRINITY_REWRITING_PLAY_WINDOW_LHS, TRINITY_REWRITING_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITING_PLAY_WINDOW_RHS,
 };
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutAxisNode;
+use semio_framework_plugin::WindowLayoutChild;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const TRINITY_REWRITING_MODE_EDIT: &str = "edit";
 

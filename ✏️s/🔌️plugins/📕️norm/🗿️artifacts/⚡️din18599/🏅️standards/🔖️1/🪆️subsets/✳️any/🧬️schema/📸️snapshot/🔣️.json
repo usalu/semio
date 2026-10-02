@@ -26,16 +26,16 @@
   ],
   "properties": {
     "buildingCategory": {
-      "type": "string"
+      "$ref": "#/$defs/BuildingCategory"
     },
     "attachment": {
-      "type": "string"
+      "$ref": "#/$defs/Attachment"
     },
     "useClass": {
-      "type": "string"
+      "$ref": "#/$defs/UseClass"
     },
     "method": {
-      "type": "string"
+      "$ref": "#/$defs/CalculationMethod"
     },
     "netFloorAreaM2": {
       "type": "number"
@@ -50,120 +50,18 @@
       "type": "number"
     },
     "automationClass": {
-      "type": "string"
+      "$ref": "#/$defs/AutomationClass"
     },
     "zones": {
       "type": "array",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "labelEn",
-          "labelDe",
-          "usageProfile",
-          "areaM2",
-          "volumeM3",
-          "thetaIHeatC",
-          "thetaICoolC",
-          "occupants",
-          "internalGainsWM2",
-          "lightingPowerWM2"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "labelEn": {
-            "type": "string"
-          },
-          "labelDe": {
-            "type": "string"
-          },
-          "usageProfile": {
-            "type": "string"
-          },
-          "areaM2": {
-            "type": "number"
-          },
-          "volumeM3": {
-            "type": "number"
-          },
-          "thetaIHeatC": {
-            "type": "number"
-          },
-          "thetaICoolC": {
-            "type": "number"
-          },
-          "occupants": {
-            "type": "integer"
-          },
-          "internalGainsWM2": {
-            "type": "number"
-          },
-          "lightingPowerWM2": {
-            "type": "number"
-          }
-        }
+        "$ref": "#/$defs/ThermalZone"
       }
     },
     "elements": {
       "type": "array",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "labelEn",
-          "labelDe",
-          "kind",
-          "zoneId",
-          "areaM2",
-          "uValueWM2k",
-          "orientationDeg",
-          "tiltDeg",
-          "gValue",
-          "fc",
-          "adjacency"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "labelEn": {
-            "type": "string"
-          },
-          "labelDe": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "zoneId": {
-            "type": "string"
-          },
-          "areaM2": {
-            "type": "number"
-          },
-          "uValueWM2k": {
-            "type": "number"
-          },
-          "orientationDeg": {
-            "type": "number"
-          },
-          "tiltDeg": {
-            "type": "number"
-          },
-          "gValue": {
-            "type": "number"
-          },
-          "fc": {
-            "type": "number"
-          },
-          "adjacency": {
-            "type": "string"
-          }
-        }
+        "$ref": "#/$defs/EnvelopeElement"
       }
     },
     "heating": {
@@ -787,13 +685,7 @@
           }
         },
         "usageProfile": {
-          "$ref": "#/$defs/UsageProfile",
-          "x-semio-ui": {
-            "label": {
-              "en": "Usage profile",
-              "de": "Nutzungsprofil"
-            }
-          }
+          "$ref": "#/$defs/UsageProfile"
         },
         "areaM2": {
           "type": "number",
@@ -854,7 +746,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "internalGainsWM2": {
           "type": "number",
@@ -1075,13 +968,7 @@
           }
         },
         "adjacency": {
-          "$ref": "#/$defs/Adjacency",
-          "x-semio-ui": {
-            "label": {
-              "en": "Adjacent space",
-              "de": "Angrenzender Bereich"
-            }
-          }
+          "$ref": "#/$defs/Adjacency"
         }
       },
       "x-semio-formats": [

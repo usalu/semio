@@ -14,7 +14,7 @@
 //! local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_valid};
+use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::valid::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_valid};
 
 
 //#region 🔖️Input
@@ -121,10 +121,10 @@ mod subject {
     use super::{mutable_input, projection_divergence};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::{apply_xml_valid_mutation, XmlValidMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_xml::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_xml::XmlSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::valid::project_xml_valid;
+    use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::valid::project_xml_valid;
 
     //#region 🔖️SpecCodec
     /// 📄️ The scenario's `<id>`/`<params>` spec decoded as the leaf wire payload it is, through the aggregate's own

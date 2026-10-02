@@ -21,7 +21,7 @@ fn flow_main_window_meta() -> ActionMeta {
             window_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
             active_window_kind_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
             window_instances: vec![ViewWindowInstance { id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }],
-            ..Default::default()
+            ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }),
         ..meta("local")
     }

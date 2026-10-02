@@ -90,6 +90,21 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ]
+    },
+    "native-schema-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../📜️artifact-definition.json"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts native-schema-check",
+        "forwardAllArgs": true
+      }
     }
   }
 }

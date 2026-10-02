@@ -1,6 +1,11 @@
 {
   "schema": "stdio.semio.video",
   "timestamp": "18446744073709551615",
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32
+  },
   "rateNumerator": "-9223372036854775808",
   "rateDenominator": "9223372036854775807",
   "codec": "typed/世界",
@@ -27,5 +32,6 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeOutputBytes": 100000
 }

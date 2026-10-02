@@ -70,13 +70,13 @@ fn window_law_no_continuation(node: &BuiltNode) {
 }
 
 fn window_law_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
-    ViewModel { tree_windows: requests, ..Default::default() }
+    ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_oversized_rig_stamps_the_full_total_and_materialises_at_most_its_slice() {
     let scene = oversized_calibration(OVERSIZED);
-    let tree = render(&scene, remodeling_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the calibration panel builds");
+    let tree = render(&scene, remodeling_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the calibration panel builds");
     let gcps = window_law_node(&tree, GCPS_SECTION);
     assert_eq!(window_law_extent(gcps), (OVERSIZED as u32, 0));
     assert!(gcps.children.len() < OVERSIZED, "only the first-paint slice is materialised: {}", gcps.children.len());
@@ -87,7 +87,7 @@ async fn an_oversized_rig_stamps_the_full_total_and_materialises_at_most_its_sli
 async fn a_closed_section_stamps_its_total_and_builds_no_children() {
     let scene = oversized_calibration(OVERSIZED);
     let view = window_law_view(vec![window_law_request(GCPS_SECTION, Some(false), 0, 32)]);
-    let tree = render(&scene, remodeling_labels(&ViewModel::default()), &TreeWindows::for_body(&view, REMODELING_PLAY_BODY_CALIBRATION)).expect("the calibration panel builds");
+    let tree = render(&scene, remodeling_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, REMODELING_PLAY_BODY_CALIBRATION)).expect("the calibration panel builds");
     let gcps = window_law_node(&tree, GCPS_SECTION);
     assert_eq!(window_law_extent(gcps), (OVERSIZED as u32, 0));
     assert_eq!(gcps.children.len(), 0);
@@ -97,7 +97,7 @@ async fn a_closed_section_stamps_its_total_and_builds_no_children() {
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_gcp_id() {
     let scene = oversized_calibration(OVERSIZED);
     let view = window_law_view(vec![window_law_request(GCPS_SECTION, Some(true), 100, 4)]);
-    let tree = render(&scene, remodeling_labels(&ViewModel::default()), &TreeWindows::for_body(&view, REMODELING_PLAY_BODY_CALIBRATION)).expect("the calibration panel builds");
+    let tree = render(&scene, remodeling_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::for_body(&view, REMODELING_PLAY_BODY_CALIBRATION)).expect("the calibration panel builds");
     let gcps = window_law_node(&tree, GCPS_SECTION);
     assert_eq!(window_law_extent(gcps), (OVERSIZED as u32, 100));
     assert_eq!(window_law_keys(gcps), (100..104).map(|index| format!("remodeling-calibration.gcp.gcp-{index:03}")).collect::<Vec<_>>());
@@ -108,7 +108,7 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_gcp_id
 #[semio_framework_async_macros::async_test]
 async fn the_count_lines_live_in_their_own_fixed_section() {
     let scene = oversized_calibration(4);
-    let tree = render(&scene, remodeling_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the calibration panel builds");
+    let tree = render(&scene, remodeling_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), &TreeWindows::unhosted()).expect("the calibration panel builds");
     assert_eq!(window_law_keys(window_law_node(&tree, "remodeling-calibration.summary")), vec!["remodeling-calibration.summary".to_string(), "remodeling-calibration.gcp-count".to_string()]);
 }
 

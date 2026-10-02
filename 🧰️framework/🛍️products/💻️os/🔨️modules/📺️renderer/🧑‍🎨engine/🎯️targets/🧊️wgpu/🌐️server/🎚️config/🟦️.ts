@@ -1,10 +1,11 @@
+import { resolveAssetDeliveryModeV1 } from "../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-import { resolveAssetServeMode, semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, "../../../../../../../../..");
@@ -25,7 +26,7 @@ export default () => {
     extensionRoot: join(runtime, "extensions"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
     assets: playground.assets,
-    assetServeMode: resolveAssetServeMode(process.env.SEMIO_ASSET_SERVE_MODE),
+    assetServeMode: resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE),
   });
-  return { ...config, plugins: [semioServeCloseVitePlugin(), ...config.plugins!, ...semioAssetsVitePlugin(workspace), ...semioSourceFreshnessVitePlugins({ repoRoot: workspace })], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
+  return { ...config, plugins: [semioServeCloseVitePlugin(), ...config.plugins!, semioBackboneVitePlugin(), ...semioAssetsVitePlugin(workspace), ...semioSourceFreshnessVitePlugins({ repoRoot: workspace })], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
 };

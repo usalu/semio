@@ -1,0 +1,22 @@
+{
+  "schema": "independent recursive PLY state",
+  "format": "ascii",
+  "comments": [],
+  "elements": [
+    {
+      "name": "independent",
+      "count": "18446744073709551615",
+      "properties": [{ "form": "scalar", "name": "declared", "kind": "double" }],
+      "rows": [
+        { "values": [] },
+        { "values": [{ "kind": "uChar", "value": 255 }, { "kind": "list", "value": [{ "kind": "list", "value": [] }, { "kind": "list", "value": [{ "kind": "int", "value": -2147483648 }, { "kind": "uInt", "value": 4294967295 }] }] }] }
+      ]
+    },
+    {
+      "name": "without declarations",
+      "count": "0",
+      "properties": [],
+      "rows": [{ "values": [{ "kind": "short", "value": -32768 }] }]
+    }
+  ]
+}

@@ -78,7 +78,7 @@ fn canonical(text: &str) -> Json {
 mod subject {
     use super::{canonical, vector, DERIVED_ASSET, DSL_ASSET, FIELDS, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::mutations::gis_terrain_mutation_report_json;
     use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::snapshot::gis_terrain_identity_report_json;
 

@@ -1,6 +1,3 @@
-/** mutation payload — mirrors `AddSelectionConstraint`. */
-import type { SelectionConstraint } from "../../🟦️.ts";
-
-export interface AddSelectionConstraint {
-  constraint: SelectionConstraint;
-}
+/** 🔒️ `add-selection-constraint` payload twin of the split leaf layout: the generated wire twin, re-exported.
+ * @see ../🧬️schema/🔣️.json */
+export { parseAddSelectionConstraint, type AddSelectionConstraint } from "../🧬️schema/🟦️.ts";

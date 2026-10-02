@@ -1,7 +1,7 @@
 semio drawing.drawing.dsl v1
 schema=drawing.document id=semio title="Semio Emblem"
 layers {
-  group
+  group isolation=false
   base {
     id=emblem-group name="Semio Emblem" visible=true locked=false opacity=1 blend-mode=normal
     transform {

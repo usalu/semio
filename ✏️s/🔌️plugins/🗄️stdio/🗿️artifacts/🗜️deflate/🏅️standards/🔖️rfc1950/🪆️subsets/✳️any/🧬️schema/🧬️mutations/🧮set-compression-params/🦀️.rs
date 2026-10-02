@@ -29,8 +29,8 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetCompression
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {
         agg_inverse(&DeflateMutation::SetCompressionParams(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set compression params", "Kompressionsparameter setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

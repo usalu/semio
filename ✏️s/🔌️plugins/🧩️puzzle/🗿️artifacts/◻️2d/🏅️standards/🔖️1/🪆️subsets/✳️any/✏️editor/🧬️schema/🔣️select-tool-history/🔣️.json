@@ -29,7 +29,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["worst", "code", "target"],
-      "properties": { "row": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 }, "worst": { "$ref": "#/definitions/Severity" }, "code": { "type": "string" }, "target": { "$ref": "#/definitions/Ids" } }
+      "properties": { "row": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 }, "worst": { "$ref": "#/definitions/Severity" }, "code": { "type": "string" }, "target": { "$ref": "#/definitions/Ids" }, "introduced": { "type": "boolean" } }
     },
     "Input": {
       "type": "object",
@@ -44,7 +44,8 @@
         "snapSource": { "type": "string" },
         "step": { "type": "number", "exclusiveMinimum": 0 },
         "scale": { "enum": ["linear", "log"] },
-        "snaps": { "type": "array", "items": { "type": "number" } }
+        "snaps": { "type": "array", "items": { "type": "number" } },
+        "component": { "type": "object", "required": ["type"], "description": "A subset of the UI contract component the history editor renders for the input (every facet the descriptor carries: appearance, scale, travel, step, detents, units, display factor, precision, hard limits with their refusals)." }
       }
     },
     "Expect": {
@@ -68,6 +69,7 @@
         "preview": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Point" } },
         "absent": { "$ref": "#/definitions/Ids" },
         "highlighted": { "$ref": "#/definitions/Ids" },
+        "chips": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
         "draft": { "type": "object" }
       }
     },

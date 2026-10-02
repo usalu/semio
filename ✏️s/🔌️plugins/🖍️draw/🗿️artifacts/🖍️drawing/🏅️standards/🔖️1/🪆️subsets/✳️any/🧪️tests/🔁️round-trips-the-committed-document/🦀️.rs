@@ -20,7 +20,7 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use super::DSL_ASSET;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law;
+    use semio_repo_test_host::law;
     use semio_s_artifact_draw_drawing::standards::v1::subsets::any::schema::mutations::round_trip_drawing_dsl;
 
     /// 🔁️ The identity law in role, on the real committed example. Its two halves are asserted

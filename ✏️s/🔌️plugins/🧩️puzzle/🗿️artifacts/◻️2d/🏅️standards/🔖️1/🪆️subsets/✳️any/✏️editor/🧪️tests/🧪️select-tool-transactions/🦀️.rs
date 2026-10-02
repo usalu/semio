@@ -16,7 +16,7 @@ use semio_framework_plugin::InvocationResult;
 /// 🧱️ The select-tool corpus board (`🧫️fixtures/🧫️select-tool-history`): three circle nodes on one line — `left`, `mid`
 /// and a locked `pin` — whose `v0` handles are compatible.
 fn board_app() -> Puzzle2dApp {
-    super::select_tool_history_tests::seeded_app(&super::select_tool_history_tests::corpus()["board"])
+    select_tool_history_tests::seeded_app(&select_tool_history_tests::corpus()["board"])
 }
 
 /// 🎲️ A board host painted from the app's current document, camera at the origin, zoom 1, rotate ring off.

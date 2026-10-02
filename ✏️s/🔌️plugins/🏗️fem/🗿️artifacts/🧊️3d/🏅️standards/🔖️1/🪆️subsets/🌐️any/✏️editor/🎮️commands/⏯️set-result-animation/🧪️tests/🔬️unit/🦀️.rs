@@ -36,7 +36,7 @@ fn results_view() -> ViewModel {
     ViewModel {
         window_id: Some("results-left".into()),
         window_instances: vec![ViewWindowInstance { id: "results-left".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() }],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }
 
@@ -147,7 +147,7 @@ async fn set_result_animation_honours_the_window_a_control_tagged() {
             ViewWindowInstance { id: "results-right".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
             ViewWindowInstance { id: "model-left".into(), window_kind_id: crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL.into() },
         ],
-        ..Default::default()
+        ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let tagged = |window_id: &str| SetResultAnimation { playing: Some(true), window_id: Some(window_id.into()), ..blank() };
     let emit = handle_window(&tagged("results-right"), &doc, &cfg, &split).expect("a tagged control addresses its own pane");

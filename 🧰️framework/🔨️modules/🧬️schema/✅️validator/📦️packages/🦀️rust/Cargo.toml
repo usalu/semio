@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-schema-validator"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Neutral bounded cancellable JSON Schema validation over owned values"
+build = false
+
+[package.metadata.semio]
+role = "framework"
+id = "schema-validator"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-pack = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

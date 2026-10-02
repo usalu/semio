@@ -12,7 +12,7 @@
 //! `semantic-ooxml-docx-transitional-v1` compares them. The subject half is `sut`-gated so the
 //! oracle-only run never compiles the local implementation.
 //!
-//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law`
+//! ⚖️ All three laws are asserted IN ROLE through the shared `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️law`
 //! module, under a profile that declares no writer freedom at all, and no kind is exempt from any
 //! of them. Only ONE kind — `remove-conformance-attribute` — needs an arranged pre-state, three
 //! fewer than the 📏️strict sibling, because a Transitional fixture already sits where this class
@@ -20,8 +20,8 @@
 //! Transitional markup, so this case polices neither and claims nothing about them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, oracle_stamp, project_package};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
+use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, oracle_stamp, project_package};
+use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📜️example-readme.docx";
@@ -109,12 +109,12 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_docx_transitional_mutation, stamp_conformance_class_mutation, DocxTransitionalMutation};
     use semio_s_artifact_stdio_docx::DocxSnapshot;
-    use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
+    use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
 
     fn decode(bytes: &[u8]) -> Result<DocxSnapshot, String> {
         decode_docx(bytes).map_err(|error| error.to_string())

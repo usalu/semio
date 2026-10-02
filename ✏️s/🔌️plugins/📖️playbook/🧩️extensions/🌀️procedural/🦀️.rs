@@ -18,11 +18,38 @@ use semio_framework_job::Operation;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{bounded_config_store_one_item_preparation_factory, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, PluginCloseStep};
-use semio_framework_plugin::{
-    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
-    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, FaultCode, FaultOrigin, InteractiveJobClassification, LocalizedLabel,
-    NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
-};
+use semio_framework_ui_locale::app_labels;
+use semio_framework_plugin::create_default_layout;
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::world3d_default_camera;
+use semio_framework_plugin::world3d_scene;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::App;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactApp;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::ExecutionMode;
+use semio_framework_plugin::ExtensionBundle;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::Plugin;
+use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::WorldSunConfig;
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
 // unchanged everywhere else. `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`)
@@ -34,7 +61,7 @@ use semio_framework_plugin::{
 #[cfg(test)]
 use pack::to_json_string;
 use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, JsonObject as Map, JsonValue as Value};
-use store::EngineHandles;
+use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";

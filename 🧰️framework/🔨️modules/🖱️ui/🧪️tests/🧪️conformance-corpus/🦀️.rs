@@ -63,7 +63,7 @@ impl crate::wgpu::scene_slots::SceneHost for NoSceneHost {
 /// 🌳️ Publishes, reconciles, lays out and paints one snapshot in its own window; answers the engine and
 /// the painted UI instance count.
 fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     assert!(ui.publish_document(window, document(snapshot, 1)), "{window}: the document publishes");
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
@@ -85,14 +85,17 @@ fn mount(window: &str, snapshot: &serde_json::Value) -> (Ui, usize) {
     ui.set_viewport(window, 960.0, 720.0);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let mut preview_sequence = 0;
-    let mut settled = false;
-    for _ in 0..200_000 {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let settled = loop {
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
         if matches!(ui.step_layouts(&pool, &mut atlas, &mut cx), UiLayoutStep::Idle) {
-            settled = true;
-            break;
+            break true;
         }
-    }
+        if std::time::Instant::now() > deadline {
+            break false;
+        }
+        std::thread::yield_now();
+    };
     assert!(settled, "{window}: layout settles");
     let draw = ui.frame::<NoSceneHost>(window, 960.0, 720.0, &mut atlas, None, None).unwrap_or_else(|| panic!("{window}: a mounted document paints"));
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len() + layer.raster_instances.len()).sum();
@@ -110,7 +113,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
     let cases = accept_cases();
-    assert_eq!(cases.len(), 49, "the shape groups hold every accept case of the corpus");
+    assert_eq!(cases.len(), 54, "the shape groups hold every accept case of the corpus");
     for (group, case, snapshot, expectation) in &cases {
         let window = format!("conformance.{case}");
         let (ui, instances) = mount(&window, snapshot);
@@ -120,7 +123,7 @@ fn every_accept_case_of_the_corpus_mounts_every_record() {
             let id = UiNodeId(shape["id"].as_u64().expect("shape id"));
             assert!(tree.document_node(id).is_some(), "{group}/{case}: record {id:?} mounts");
         }
-        if ["slider-with-snaps", "stepper-precision", "vector-input", "color-input", "reference-list", "dialog-choices", "tree-row-recipes", "slider", "number-stepper", "dialog"].contains(&case.as_str()) {
+        if ["slider-with-snaps", "stepper-precision", "vector-input", "color-input", "reference-list", "dialog-choices", "tree-row-recipes", "slider", "number-stepper", "dialog", "dial-with-snaps", "log-slider", "display-factor", "stepper-detents", "hard-bound-refusal"].contains(&case.as_str()) {
             assert!(instances > 0, "{group}/{case}: the mounted document paints");
         }
     }
@@ -139,12 +142,12 @@ fn slider_with_snaps_paints_one_tick_per_detent() {
     let (_, without_ticks) = mount("conformance.bare", &bare);
     assert_eq!(with_ticks - without_ticks, snaps.len(), "one tick instance per detent");
     let rail = crate::wgpu::geometry::Rect::new(10.0, 0.0, 100.0, 4.0);
-    let ticks: Vec<f32> = crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, &snaps, 2.0, 8.0).map(|tick| tick.x + tick.w * 0.5).collect();
+    let ticks: Vec<f32> = crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).map(|tick| tick.x + tick.w * 0.5).collect();
     assert_eq!(ticks, vec![35.0, 60.0, 85.0]);
     for flow in [ui_contract::FlowInline::Ltr, ui_contract::FlowInline::Rtl] {
         let bounds = crate::wgpu::geometry::Rect::new(0.0, 0.0, 240.0, 24.0);
         let rail = crate::wgpu::layout::slider_presentation(bounds, 0.0, 0.0, 10.0, flow).rail;
-        for (tick, snap) in crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, &snaps, 2.0, 8.0).zip(&snaps) {
+        for (tick, snap) in crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).zip(&snaps) {
             let thumb = crate::wgpu::layout::slider_presentation(bounds, *snap, 0.0, 10.0, flow).thumb;
             assert!(((tick.x + tick.w * 0.5) - (thumb.x + thumb.w * 0.5)).abs() < 1e-3, "{flow:?}: the tick of detent {snap} sits under the thumb resting on it");
         }
@@ -206,7 +209,7 @@ fn precision_reaches_the_stepper_and_every_vector_axis() {
     let stepper = read(&corpus_dir().join("🧩️component/🎯️stepper-precision/📸️snapshot.json"));
     let (ui, _) = mount("conformance.stepper", &stepper);
     let UiNode::NumberStepper(node) = node_of(&ui, "conformance.stepper", 0) else { panic!("a stepper node") };
-    assert_eq!((node.precision, crate::wgpu::stepper::stepper_value_text(node.value, node.precision)), (Some(2), "2.50".to_string()));
+    assert_eq!((node.precision, crate::wgpu::stepper::stepper_value_text(node.value, node.precision, node.display_factor)), (Some(2), "2.50".to_string()));
     let vector = read(&corpus_dir().join("🖥️composite/🧭️vector-input/📸️snapshot.json"));
     let (ui, _) = mount("conformance.vector", &vector);
     for id in [2, 4] {
@@ -305,3 +308,70 @@ fn peer_notes_are_announced_after_a_tree_rows_description() {
     }
 }
 
+/// 🧭️ LAW (G6): the dial, log, display-factor, detent and hard-bound cases carry every facet into their retained nodes and
+/// paint it — a degree dial with one radial tick per detent, its needle and pointer angle snapping onto 90°, a log slider's
+/// ticks at their log positions, a radian stepper reading `45 °`, page keys stopping on detents, and typed values beyond a
+/// hard bound refused with the producer's message naming it.
+#[test]
+fn the_g6_number_control_cases_carry_and_paint_every_facet() {
+    let dial = read(&corpus_dir().join("🧩️component/🧭️dial-with-snaps/📸️snapshot.json"));
+    let (ui, with_ticks) = mount("conformance.dial", &dial);
+    let UiNode::Slider(angle) = node_of(&ui, "conformance.dial", 0) else { panic!("a dial node") };
+    assert_eq!((angle.appearance, angle.unit.as_deref(), angle.display_unit.as_deref(), angle.snaps.len()), (ui_contract::SliderAppearance::Dial, Some("rad"), Some("°"), 5));
+    assert_eq!((angle.readout(angle.value), angle.unit_label()), ("90".to_string(), Some("90 °".to_string())));
+    assert_eq!(angle.limits, Some(ui_contract::UiNumberLimits::default()), "a dial without hard bounds has open limits");
+    let mut bare = dial.clone();
+    bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
+    let (_, without_ticks) = mount("conformance.dial.bare", &bare);
+    assert!(with_ticks > without_ticks, "the dial paints its detent ticks");
+    let track = crate::wgpu::geometry::Rect::new(0.0, 0.0, 200.0, 40.0);
+    let face = crate::wgpu::slider::dial_face(track);
+    let ticks: Vec<[f32; 4]> = crate::wgpu::slider::dial_tick_lines(face, angle).collect();
+    assert_eq!(ticks.len(), 5, "one radial tick per detent");
+    assert!((ticks[3][0] - face.cx).abs() < 1e-3 && ticks[3][1] < face.cy && ticks[3][3] < ticks[3][1], "the 90° tick points up: {:?}", ticks[3]);
+    assert!(ticks[2][0] > face.cx && (ticks[2][1] - face.cy).abs() < 1e-3, "the 0° tick points to three o'clock: {:?}", ticks[2]);
+    let towards = |degrees: f64| crate::wgpu::slider::dial_point(face, degrees.to_radians(), 0.9);
+    let (x, y) = towards(88.0);
+    assert_eq!(crate::wgpu::slider::slider_node_pointer_value(angle, track, x, y), std::f64::consts::FRAC_PI_2, "a pointer at 88° lands on the 90° detent");
+    let (x, y) = towards(-120.0);
+    let pointed = crate::wgpu::slider::slider_node_pointer_value(angle, track, x, y);
+    assert!((pointed.to_degrees() + 120.0).abs() < 1e-6, "a pointer at -120° reads -120°: {}", pointed.to_degrees());
+    let arrow = ui_contract::slider_key_value(0.0, angle.min, angle.max, angle.step, angle.precision, angle.display_factor, angle.snaps.iter().copied(), ui_contract::SliderKey::Increment, false);
+    assert_eq!(ui_contract::ui_number_display_text(arrow, angle.display_factor, None), "1", "an arrow steps one degree");
+    let page = ui_contract::slider_key_value(0.0, angle.min, angle.max, angle.step, angle.precision, angle.display_factor, angle.snaps.iter().copied(), ui_contract::SliderKey::PageUp, false);
+    assert_eq!(page, std::f64::consts::FRAC_PI_2, "a page key jumps to the next detent");
+
+    let log = read(&corpus_dir().join("🧩️component/📈️log-slider/📸️snapshot.json"));
+    let (ui, _) = mount("conformance.log", &log);
+    let UiNode::Slider(factor) = node_of(&ui, "conformance.log", 0) else { panic!("a log slider node") };
+    assert_eq!((factor.scale, factor.precision, factor.readout(factor.value)), (ui_contract::UiNumberScale::Log, Some(2), "1.00".to_string()));
+    let rail = crate::wgpu::geometry::Rect::new(0.0, 0.0, 100.0, 4.0);
+    let centres: Vec<f64> = crate::wgpu::slider::slider_tick_rects(rail, factor.min, factor.max, factor.scale, &factor.snaps, 2.0, 8.0).map(|tick| f64::from(tick.x + tick.w * 0.5)).collect();
+    for (centre, snap) in centres.iter().zip(&factor.snaps) {
+        assert!((centre - (snap / 0.1).ln() / 100f64.ln() * 100.0).abs() < 1e-3, "the {snap} tick sits at its log position: {centre}");
+    }
+    assert!((centres[2] - 50.0).abs() < 1e-3, "the unit factor ticks the middle of the log axis");
+    assert_eq!(crate::wgpu::events::typed_number("-5", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Err("Must be greater than 0".to_string()));
+    assert_eq!(crate::wgpu::events::typed_number("20", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Ok(20.0), "a soft travel admits a typed value beyond it");
+
+    let heading = read(&corpus_dir().join("🧩️component/🔁️display-factor/📸️snapshot.json"));
+    let (ui, _) = mount("conformance.heading", &heading);
+    let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.heading", 0) else { panic!("a stepper node") };
+    assert_eq!((stepper.value_text(stepper.value), stepper.unit.as_deref()), ("45 °".to_string(), Some("°")));
+    assert_eq!(crate::wgpu::events::typed_number("90", stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()), Ok(std::f64::consts::FRAC_PI_2), "a typed 90 keeps the exact π/2 detent");
+
+    let gap = read(&corpus_dir().join("🧩️component/📍️stepper-detents/📸️snapshot.json"));
+    let (ui, _) = mount("conformance.gap", &gap);
+    let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.gap", 0) else { panic!("a stepper node") };
+    assert_eq!((stepper.snaps.clone(), stepper.value_text(stepper.value)), (vec![0.0, 5.0, 10.0], "2.0 mm".to_string()));
+    assert_eq!(ui_contract::ui_number_key_value(stepper.value, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), ui_contract::SliderKey::PageUp, false), 5.0);
+    assert_eq!(crate::wgpu::events::typed_number("12", None, stepper.precision, [stepper.value], stepper.min, stepper.max, stepper.limits.as_ref()), Err("Must be at most 10 mm".to_string()));
+
+    let width = read(&corpus_dir().join("🧩️component/⛔️hard-bound-refusal/📸️snapshot.json"));
+    let (ui, _) = mount("conformance.width", &width);
+    let UiNode::Input(field) = node_of(&ui, "conformance.width", 0) else { panic!("a number field") };
+    let limits = field.limits.as_ref().expect("the field carries its limits");
+    for (typed, verdict) in [("-1", Err("Must be greater than 0".to_string())), ("0", Err("Must be greater than 0".to_string())), ("120", Err("Must be at most 100".to_string())), ("4.5", Ok(4.5)), ("x", Err(String::new()))] {
+        assert_eq!(crate::wgpu::events::typed_number(typed, field.display_factor, field.precision, [4.0], field.min, field.max, Some(limits)), verdict, "{typed}");
+    }
+}

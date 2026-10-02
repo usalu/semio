@@ -109,12 +109,12 @@ pub(crate) mod context {
             active_utility_id: Some(BLOCK3D_UTILITY_SURFACE_BRUSH.into()),
             window_id: Some(window_id.into()),
             window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: world::BLOCK3D_WINDOW_WORLD.into() }],
-            ..ViewModel::default()
+            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         }
     }
     
     pub async fn render(app: &mut Block3dApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
     
     /// ☑️ Window measures are collected PER LIVE WINDOW INSTANCE (`EditorApp::window_measures` walks

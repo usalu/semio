@@ -1,6 +1,5 @@
 /** 🧬️ Playbook document fields reference their canonical composed child owners. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseDslValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 
 export interface PlaybookArtifact {
   /** @state artifact */
@@ -19,7 +18,6 @@ export interface PlaybookArtifact {
 
 /** 🪪️ Validates exact document fields, including the required nullable native title. */
 export function parsePlaybookArtifact(value: unknown, at = "$"): PlaybookArtifact {
-  parseDslValue(value);
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected a Playbook document`);
   const row = value as Record<string, unknown>;
   const keys = ["schema", "id", "version", "title", "document", "flow"];

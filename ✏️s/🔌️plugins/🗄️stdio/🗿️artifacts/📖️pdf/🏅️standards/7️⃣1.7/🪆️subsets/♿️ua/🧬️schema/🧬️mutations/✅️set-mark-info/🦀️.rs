@@ -33,8 +33,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
         }
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))
     }
 
     fn target(&self) -> Vec<String> {

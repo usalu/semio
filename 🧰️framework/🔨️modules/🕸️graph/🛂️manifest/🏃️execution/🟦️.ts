@@ -1,15 +1,19 @@
+import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
+import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🏃️ Graph generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
-import { getWorkspaceRoot, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd, runCargo } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";
 
 export class GenerateScript extends BundleScript {
-  run(): void {
-    const root = getWorkspaceRoot();
+  async run(): Promise<void> {
+    const root = this.repoRoot;
     const outDir = join(this.root, "..", "..", "🤖️generated");
     const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")));
     writeGraphArtifacts(outDir, rendered.artifacts);
@@ -19,8 +23,8 @@ export class GenerateScript extends BundleScript {
 
 /** 🧾️Emits exact graph bytes, nested owners, and stale removals without writing the output root. */
 export class PreviewGeneratedScript extends BundleScript {
-  run(): void {
-    const root = getWorkspaceRoot();
+  async run(): Promise<void> {
+    const root = this.repoRoot;
     const outDir = join(this.root, "..", "..", "🤖️generated");
     const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")),false);
     const rootPath = relative(root, outDir).replaceAll("\\", "/").normalize("NFC");
@@ -40,42 +44,50 @@ export class PreviewGeneratedScript extends BundleScript {
 
 /** ✅️ Checks exact graph catalog bytes and output membership without rewriting artifacts. */
 export class CheckGeneratedScript extends BundleScript {
-  run(): void {
-    const root = getWorkspaceRoot();
+  async run(): Promise<void> {
+    const root = this.repoRoot;
     const outDir = join(this.root, "..", "..", "🤖️generated");
     const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")));
     const expected = graphOutputNodes(outDir, rendered.artifacts);
     const actual = graphOutputInventory(outDir);
     const stale = rendered.artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => basename(artifact.path));
     if (JSON.stringify(actual) !== JSON.stringify(expected) || stale.length > 0) throw new Error(`framework-graph generated catalog is stale: membership=${JSON.stringify(actual) !== JSON.stringify(expected)}, files=${JSON.stringify(stale)}`);
-    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 60_000 });
+    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", 60_000, {env: process.env});
     console.log(`[framework-graph] ${rendered.manifestCount} generated manifests are fresh`);
   }
 }
 
 export class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot });
-    runCargoTestBudgeted(["semio-framework-graph"], this.repoRoot, rest);
+    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-graph"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 
 /** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework-graph --all-targets -- -D warnings`. */
 export class LintScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargoLint(["semio-framework-graph"], this.repoRoot, segments);
+  async run(segments: string[]): Promise<void> {
+    await runCargoLintV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));
   }
 }
 
 
 /** 🧪️ Runs the owning package's generated exact-total enum wire laws. */
 export class OwnerGraphWireCheckScript extends BundleScript {
-  run(segments:string[]):void {
+  async run(segments:string[]):Promise<void> {
     if(segments.length) throw new Error("Owned graph wire law has no arguments");
     const manifest=Bun.TOML.parse(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package?:{name?:string}};
     const name=manifest.package?.name;
     if(typeof name!=="string" || !/^[a-z][a-z0-9-]+$/u.test(name)) throw new Error("Owned graph wire law requires an actual Cargo package identity");
-    runCargo(["test","--manifest-path","Cargo.toml","-p",name,"--lib","owner_wire_law","--","--nocapture"],this.repoRoot);
+    await runOwnedCommand("cargo",["test","--manifest-path",join(this.root,"Cargo.toml"),"-p",name,"--lib","owner_wire_law","--","--nocapture"],this.root,"cargo:owner-wire",buildBudgetMs(),{env:process.env});
+  }
+}
+
+/** 🧪️Runs portable graph ownership and independent schema laws without native compilation. */
+export class ManifestContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Graph manifest contract takes no arguments");
+    await runOwnedCommand("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "graph:manifest-contract", cmdBudgetMs(), { env: process.env });
   }
 }

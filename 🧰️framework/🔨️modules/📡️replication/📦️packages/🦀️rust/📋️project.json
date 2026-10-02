@@ -60,7 +60,13 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-local-interaction-native",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-local-interaction-source": {
       "executor": "nx:run-commands",
@@ -68,7 +74,13 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-local-interaction-source",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "test-source": {
       "executor": "nx:run-commands",
@@ -76,7 +88,13 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     },
     "build": {
       "executor": "nx:run-commands",
@@ -96,7 +114,13 @@
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json"
+      ]
     }
   }
 }

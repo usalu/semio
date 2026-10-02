@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.block.block2d` is a semio-NATIVE KIND DEFINITION — one node kind's identity and presentation, the handle kinds it declares, the handles on its rim, the compatibility relation between those kinds, its attributes, authors, camera and metadata. No symbol- or component-library format models that and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, grammar and specification vectors.",
   "oracles": [

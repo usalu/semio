@@ -1,12 +1,18 @@
-(* ebnf stdio.jpg snapshot -- semio preamble + the real JFIF byte stream hex-encoded (ITU-T
-   T.81/ISO 10918-1), not a placeholder octet blob. *)
-document = preamble, newline, payload ;
-preamble = "semio", space, "dsl", space, integer, space, "stdio.jpg" ;
-payload = { hex byte } ;                 (* hex-decodes to a real marker-segment jpeg stream *)
-jpeg stream = SOI, { segment }, app0, { segment }, sof0, { segment }, sos, entropy data, EOI ;
-SOI = "0xFF", "0xD8" ;
-EOI = "0xFF", "0xD9" ;
-segment = marker, length, body ;
-app0 = "0xFF", "0xE0", length, "JFIF", "0x00", version, units, x density, y density, thumb dims, thumb rgb ;
-sof0 = "0xFF", "0xC0", length, precision, height, width, n components, component, { component } ;
-sos = "0xFF", "0xDA", length, n scan components, scan component, { scan component }, Ss, Se, AhAl ;
+document = "semio stdio.jpg.dsl v1", newline, snapshot ;
+snapshot = "schema=", text, "width=", uint, "height=", uint, "pixels=", text,
+ "jfifXDensity=", uint, "jfifYDensity=", uint, "sofMarker=", uint, "arithmetic=", boolean,
+ "reEncodeQuality=", optional_uint, "jfifVersion=[", uint, uint, "]", "jfifDensityUnits=", text,
+ "jfifThumbnail=", thumbnail, "frame=", frame,
+ "quantTables=[", { quantization }, "]", "huffmanTables=[", { huffman }, "]",
+ "restartInterval=", optional_uint, "otherSegments=[", { segment }, "]" ;
+optional_uint = "null" | uint ;
+octets = "bytes64(", text, ")" ;
+thumbnail = "null" | "{height=", uint, "rgbData=", octets, "width=", uint, "}" ;
+frame = "null" | "{components=[", { component }, "] height=", uint, "precision=", uint, "width=", uint, "}" ;
+component = "{hSampling=", uint, "id=", uint, "quantTableId=", uint, "vSampling=", uint, "}" ;
+quantization = "{id=", uint, "precision=", uint, "values=[", { uint }, "]}" ;
+huffman = "{bits=[", { uint }, "] class=", text, "id=", uint, "values=", octets, "}" ;
+segment = "{data=", octets, "marker=", uint, "}" ;
+boolean = "true" | "false" ;
+uint = digit, { digit } ;
+text = '"', { scalar | escape }, '"' ;

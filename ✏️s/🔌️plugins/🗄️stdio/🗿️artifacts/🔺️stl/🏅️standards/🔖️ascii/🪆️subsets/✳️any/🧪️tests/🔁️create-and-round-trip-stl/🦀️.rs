@@ -6,7 +6,7 @@
 //! them. The subject half is gated behind the generated host's `sut` feature.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::mesh::{oracle_create_stl, project_stl, MeshSpec};
+use semio_s_plugin_stdio_mesh_test_oracle::{oracle_create_stl, project_stl, MeshSpec};
 
 //#region 🔖️Input
 const SCENARIOS: [&str; 2] = ["tetrahedron-round-trips", "quad-round-trips"];
@@ -30,7 +30,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::spec;
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_stdio_test_oracle::mesh::{oracle_create_stl, project_stl};
+    use semio_s_plugin_stdio_mesh_test_oracle::{oracle_create_stl, project_stl};
     use semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::{decode_stl_binary, encode_stl_binary};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {

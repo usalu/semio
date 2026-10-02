@@ -31,13 +31,13 @@ impl store::ArtifactDsl for FormsSnapshot {
             },
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-        let snapshot = Self::__dsl_from_record(&record)?;
+        let record = dsl::parse(body, &crate::schema::snapshot::native_pack::record_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let snapshot = crate::schema::snapshot::native_pack::reconstruct_record(&record)?;
         snapshot.validate().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = dsl::print(&crate::schema::snapshot::native_pack::record(self).expect("valid Forms native state"), &crate::schema::snapshot::native_pack::record_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }

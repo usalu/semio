@@ -1,5 +1,8 @@
+"""🔢️ Exact unsigned64 Home catalog generation, 0..18446744073709551615."""
+scalar HomeCatalogGenerationUInt64
+
 # 🏠️ Space Home direct mutation aggregate.
-input ChangeCatalogGenerationInput { newCatalogGeneration: Long! }
+input ChangeCatalogGenerationInput { newCatalogGeneration: HomeCatalogGenerationUInt64! }
 
 input SHomeMutationInput {
   changeCatalogGeneration: ChangeCatalogGenerationInput

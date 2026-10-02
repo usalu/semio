@@ -29,8 +29,8 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for ReplaceByteRange
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {
         agg_inverse(&BinaryMutation::ReplaceByteRange(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Replace byte range", "Bytebereich ersetzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

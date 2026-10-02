@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "$schema": "../../../🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "🎥️ The raster video tier's contribution to the repository test platform. The tier writes H.264 and MP4 by itself (no encoder library at runtime), so the reference is the decoder every media stack is measured against: FFmpeg's `mov` demuxer and `h264` decoder, driven as a third-party CLI from the TypeScript adapter of `🧪️tests/🎞️ffmpeg-decode`.",
   "oracles": [

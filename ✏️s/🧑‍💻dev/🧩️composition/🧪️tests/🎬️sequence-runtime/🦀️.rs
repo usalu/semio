@@ -63,7 +63,7 @@ mod context {
     }
     pub fn script_window_meta() -> semio_framework_plugin::ActionMeta {
         let window = ViewWindowInstance { id: format!("{SEQUENCE_PLAY_WINDOW_SCRIPT}#1"), window_kind_id: SEQUENCE_PLAY_WINDOW_SCRIPT.into() };
-        semio_framework_plugin::ActionMeta { view_state: Some(ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..Default::default() }), ..meta("local") }
+        semio_framework_plugin::ActionMeta { view_state: Some(ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), ..meta("local") }
     }
     pub async fn dispatch_in_script(app: &mut SequenceApp, command: SequenceCommand) {
         app.0.dispatch_typed(command, &script_window_meta()).await.expect("dispatch");

@@ -4,6 +4,7 @@
 //! no `serde_json::Value`, no bare tuples/nested fixed arrays (geometry fields reuse
 //! `engine::geometry`'s named structs throughout).
 
+use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
@@ -195,11 +196,11 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    crate::standards::v1::subsets::base::schema::geometry::native::parse(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f32(s: &str) -> Result<f32, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
+    crate::standards::v1::subsets::base::schema::geometry::native::parse32(s)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_bool(b: bool) -> &'static str {
@@ -246,7 +247,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
-    format!("[{},{}]", p.x, p.y)
+    format!("[{},{}]", NativeF64(p.x), NativeF64(p.y))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
@@ -256,7 +257,7 @@ pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_point3(p: &SemioPoint3) -> String {
-    format!("[{},{},{}]", p.x, p.y, p.z)
+    format!("[{},{},{}]", NativeF64(p.x), NativeF64(p.y), NativeF64(p.z))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
@@ -266,7 +267,7 @@ pub(crate) fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_quaternion(q: &SemioQuaternion) -> String {
-    format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
+    format!("[{},{},{},{}]", NativeF64(q.x), NativeF64(q.y), NativeF64(q.z), NativeF64(q.w))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_quaternion(s: &str) -> Result<SemioQuaternion, String> {
@@ -286,7 +287,7 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_rgba(c: &SemioRgba) -> String {
-    format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
+    format!("[{},{},{},{}]", NativeF32(c.r), NativeF32(c.g), NativeF32(c.b), NativeF32(c.a))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
@@ -305,7 +306,7 @@ pub(crate) fn enc_path_segment(seg: &PathSegment) -> String {
         PathSegment::CubicTo { c1, c2, to } => format!("C[{},{},{}]", enc_point2(c1), enc_point2(c2), enc_point2(to)),
         PathSegment::QuadTo { c, to } => format!("Q[{},{}]", enc_point2(c), enc_point2(to)),
         PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => {
-            format!("A[{},{},{},{},{},{}]", rx, ry, x_rotation, enc_bool(*large_arc), enc_bool(*sweep), enc_point2(to))
+            format!("A[{},{},{},{},{},{}]", NativeF64(*rx), NativeF64(*ry), NativeF64(*x_rotation), enc_bool(*large_arc), enc_bool(*sweep), enc_point2(to))
         }
         PathSegment::Close => "Z".to_string(),
     }
@@ -351,7 +352,7 @@ pub(crate) fn enc_node(n: &DrawNode) -> String {
         DrawNode::Path { segments, style } => format!("P[{},{}]", enc_list(segments, enc_path_segment), encode_option(style, |s| enc_str(s))),
         DrawNode::Text { value, at, style } => format!("T[{},{},{}]", enc_str(value), enc_point2(at), encode_option(style, |s| enc_str(s))),
         DrawNode::Group { transform, children } => format!("G[{},{}]", enc_transform(transform), enc_list(children, enc_node)),
-        DrawNode::Image { at, width, height, mime, bytes } => format!("I[{},{},{},{},{}]", enc_point2(at), width, height, enc_str(mime), hex_encode(bytes)),
+        DrawNode::Image { at, width, height, mime, bytes } => format!("I[{},{},{},{},{}]", enc_point2(at), NativeF64(*width), NativeF64(*height), enc_str(mime), hex_encode(bytes)),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -385,7 +386,7 @@ pub(crate) fn dec_node(s: &str) -> Result<DrawNode, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_style(s: &DrawStyle) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| v.to_string()), encode_option(&s.opacity, |v: &f32| v.to_string()),)
+    format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| NativeF64(*v).to_string()), encode_option(&s.opacity, |v: &f32| NativeF32(*v).to_string()),)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_style(s: &str) -> Result<DrawStyle, String> {
@@ -407,7 +408,7 @@ pub(crate) fn dec_layer(s: &str) -> Result<DrawLayer, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_canvas(c: &DrawCanvas) -> String {
-    format!("[{},{},{}]", c.width, c.height, encode_option(&c.background, enc_rgba))
+    format!("[{},{},{}]", NativeF64(c.width), NativeF64(c.height), encode_option(&c.background, enc_rgba))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
@@ -940,3 +941,8 @@ mod sqlite;
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_tests;
+
+#[path = "🛬️native/🦀️.rs"]
+pub(crate) mod native_decoding;
+#[path = "🛫️native/🦀️.rs"]
+pub(crate) mod native_encoding;

@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::ui::{ModeDefinition, WindowKindDefinition};
-use ui_wgpu::wgpu::LocalizedLabel;
+use semio_framework_ui_locale::LocalizedLabel;
 
 #[semio_framework_async_macros::async_test]
 async fn adds_first_app_as_active() {

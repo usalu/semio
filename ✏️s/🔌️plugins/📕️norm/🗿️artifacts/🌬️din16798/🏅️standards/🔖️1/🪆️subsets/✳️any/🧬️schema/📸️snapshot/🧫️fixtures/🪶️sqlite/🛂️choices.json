@@ -1,0 +1,1 @@
+{"annex":["En","De"],"invalidUnsigned8":[-1,256,1.25],"validUnsigned8":[0,1,254,255],"invalidUnsigned32":[-1,4294967296,1.25],"validUnsigned32":[0,1,4294967294,4294967295]}

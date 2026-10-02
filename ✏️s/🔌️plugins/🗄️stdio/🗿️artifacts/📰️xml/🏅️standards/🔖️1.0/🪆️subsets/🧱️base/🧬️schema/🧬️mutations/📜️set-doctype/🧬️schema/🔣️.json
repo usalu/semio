@@ -25,17 +25,17 @@
       ],
       "properties": {
         "prologPosition": {
-          "type": "integer",
-          "minimum": 0,
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20,
           "x-semio-ui": {
-            "widget": "stepper",
             "label": {
               "en": "Prolog position",
               "de": "Position im Prolog"
             },
             "description": {
-              "en": "Number of prolog nodes before the document type declaration.",
-              "de": "Anzahl der Prolog-Knoten vor der Dokumenttypdeklaration."
+              "en": "Number of prolog nodes before the document type declaration, as an unsigned decimal.",
+              "de": "Anzahl der Prolog-Knoten vor der Dokumenttypdeklaration, als vorzeichenlose Dezimalzahl."
             }
           }
         },

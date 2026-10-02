@@ -23,7 +23,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameProject {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Rename project to \"{}\"", self.new_code), &format!("Projekt in \"{}\" umbenennen", self.new_code))
     }
 }

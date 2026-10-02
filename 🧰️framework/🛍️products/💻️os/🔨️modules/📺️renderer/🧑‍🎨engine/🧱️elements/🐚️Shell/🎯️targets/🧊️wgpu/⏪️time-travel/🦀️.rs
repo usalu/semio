@@ -584,19 +584,19 @@ pub(crate) fn time_travel_peer_presence<'a>(editing: impl IntoIterator<Item = (&
 //#endregion 👥️PeerHistoryEdits
 
 impl ShellState {
-    /// ⏪️ Takes the session status one history patch carries (absent = no session). The edge into a session reveals
-    /// the History panel tab, whose Rust-built body holds the editor — the twin of the tool-run panel reveal — and every
-    /// edge names where keyboard focus goes ([`time_travel_focus_target`]); [`Self::resolve_time_travel_focus`] moves it
-    /// once the target is on screen. A closed session drops a focus still waiting.
+    /// ⏪️ Takes the session status one history patch carries (absent = no session) and answers its transition
+    /// ([`time_travel_transition`]): the edge into a new session reveals the History panel tab — or, below the mobile
+    /// breakpoint, opens the one mobile panel on it — whose Rust-built body holds the editor, and every edge that names a
+    /// focus target leaves it waiting for [`Self::resolve_time_travel_focus`]. A closed session drops a focus still waiting.
     pub(crate) fn observe_history_time_travel(&mut self, time_travel: Option<&HistoryTimeTravel>) {
-        let began = self.history_time_travel.is_none() && time_travel.is_some();
-        if let Some(focus) = time_travel_focus_target(self.history_time_travel.as_ref(), time_travel) {
+        let transition = time_travel_transition(self.history_time_travel.as_ref(), time_travel);
+        if let Some(focus) = transition.focus {
             self.time_travel_focus = Some((focus, chrome_now_ms() + TIME_TRAVEL_FOCUS_SETTLE_MS));
         } else if time_travel.is_none() {
             self.time_travel_focus = None;
         }
         self.history_time_travel = time_travel.cloned();
-        if began {
+        if transition.reveal {
             self.reveal_dock_tab(FRAMEWORK_PANEL_TAB_HISTORY_ID);
             if self.mobile_panel_active() {
                 self.reveal_mobile_panel_tab(FRAMEWORK_PANEL_TAB_HISTORY_ID);
@@ -612,37 +612,37 @@ impl ShellState {
         self.mobile_panel_visible = true;
     }
 
-    /// 🎯️ Moves keyboard focus to the waiting time-travel target the moment a presented frame shows it, so the ARIA
-    /// mirror (which follows the projected `focused` node) and the keyboard ring land on it together: a band control
-    /// becomes the focused chrome control, the editor or Next problem receives an accessibility focus in its retained
-    /// window, and the open finalize prompt already focuses its first stop. A target that has not appeared within
-    /// [`TIME_TRAVEL_FOCUS_SETTLE_MS`] takes its band fallback, else focus stays.
+    /// 🎯️ Moves keyboard focus to the waiting time-travel target the moment a presented frame shows it — React's
+    /// `scheduleTimeTravelFocusV1` — so the ARIA mirror (which follows the projected `focused` node) lands on it: the
+    /// editor's first input receives an accessibility focus in its retained window, the band's live status node becomes
+    /// the focused chrome node, and the open finalize prompt already focuses its first stop. A person typing in a field
+    /// elsewhere keeps their focus, and a target that has not appeared within [`TIME_TRAVEL_FOCUS_SETTLE_MS`] is given up.
     pub(crate) fn resolve_time_travel_focus(&mut self, input: &mut InputState<ActionDescriptor>) {
         let Some((focus, deadline)) = self.time_travel_focus else { return };
+        if self.time_travel_focus_is_held(input) || chrome_now_ms() > deadline {
+            self.time_travel_focus = None;
+            return;
+        }
         let moved = match focus {
-            TimeTravelFocus::Control(verb) => self.focus_time_travel_control(verb, input),
             TimeTravelFocus::Dialog => self.chrome_build.dialog_open(),
-            TimeTravelFocus::Editor | TimeTravelFocus::NextProblem => {
-                let target = crate::interpreter::visible_retained_accessibility_target(|nodes| time_travel_focus_node(focus, nodes));
-                target.is_some_and(|target| self.focus_retained_accessibility_target(&target, input))
-            }
+            TimeTravelFocus::Band => self.history_time_travel.is_some() && !self.chrome_build.dialog_open() && {
+                input.blur_input();
+                self.accessibility_focused_control_id = Some(TIME_TRAVEL_BAND_STATUS_ID.to_string());
+                true
+            },
+            TimeTravelFocus::Editor => crate::interpreter::visible_retained_accessibility_target(time_travel_editor_focus_node).is_some_and(|target| self.focus_retained_accessibility_target(&target, input)),
         };
         if moved {
             self.time_travel_focus = None;
-        } else if chrome_now_ms() >= deadline {
-            self.time_travel_focus = focus.fallback().map(|verb| (TimeTravelFocus::Control(verb), f64::INFINITY)).filter(|_| self.history_time_travel.is_some());
         }
     }
 
-    /// 🔘️ Focuses one band control when this frame registered it; `false` while it is not on screen.
-    fn focus_time_travel_control(&mut self, verb: TimeTravelVerb, input: &mut InputState<ActionDescriptor>) -> bool {
-        let control_id = verb.control_id();
-        if self.chrome_build.dialog_open() || !input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(control_id)) {
-            return false;
-        }
-        input.blur_input();
-        self.accessibility_focused_control_id = Some(control_id.to_string());
-        true
+    /// ✋️ Whether moving focus now would take it from someone typing elsewhere — React's `timeTravelFocusIsHeldV1`: a
+    /// chrome text field outside the finalize prompt, or a retained input outside the History panel, keeps its focus.
+    fn time_travel_focus_is_held(&self, input: &InputState<ActionDescriptor>) -> bool {
+        let chrome = input.focused_id.is_some() && !self.chrome_build.dialog_open();
+        let retained = self.chrome_build.focused_retained_surface.as_deref().is_some_and(|surface| surface != FRAMEWORK_PANEL_TAB_HISTORY_ID && self.chrome_build.content_focus.get(surface).and_then(Option::as_ref).is_some_and(|focus| focus.kind == RetainedNodeFocusKind::Input));
+        chrome || retained
     }
 
     /// 🎯️ Gives one retained node the same accessibility focus a reader's focus would give it, and hands the keyboard
@@ -820,10 +820,13 @@ impl ShellState {
     }
 
     /// 🔊️ The band's live node: a progress bar while replaying with a known total, a polite status otherwise, named by
-    /// the band's own message so a reader hears exactly what is painted.
+    /// the band's own message so a reader hears exactly what is painted. It takes focus programmatically (never by Tab) —
+    /// React's band region — so a replay or a review moves the reader onto the band.
     pub(crate) fn time_travel_status_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.history_time_travel.as_ref()?;
         let mut node = chrome_status_accessibility_node(node_id, TIME_TRAVEL_BAND_STATUS_ID, time_travel_band_lines(status, self.active_terminology(), self.active_locale()).message());
+        node.focusable = true;
+        node.focused = self.accessibility_focused_control_id.as_deref() == Some(TIME_TRAVEL_BAND_STATUS_ID);
         if let (HistoryTimeTravelStage::Replaying, Some(total)) = (status.stage, status.total) {
             node.role = "progressbar".into();
             node.value_min = Some(0.0);

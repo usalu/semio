@@ -37,8 +37,8 @@
 //! R2004+ decoder, and assert their laws in role.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1018::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_refusal, oracle_restore, oracle_round_trip, project_dwg};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, divergence, inverse_restores, round_trip_preserves};
+use semio_s_artifact_stdio_dwg_test_oracle::standards::v_ac1018::subsets::any::{dwgread_agrees, oracle_apply_mutation, oracle_refusal, oracle_restore, oracle_round_trip, project_dwg};
+use semio_repo_test_host::law::{carrier_is_exact, divergence, inverse_restores, round_trip_preserves};
 
 
 //#region 🔖️Input
@@ -189,8 +189,8 @@ mod subject {
     use semio_s_artifact_stdio_dwg::standards::v_ac1018::subsets::any::schema::mutations::DwgMutation;
     use semio_s_artifact_stdio_dwg::standards::v_ac1018::subsets::any::schema::snapshot::{decode_dwg, encode_dwg};
     use semio_s_artifact_stdio_dwg::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_plugin_stdio_test_oracle::artifacts::dwg::standards::v_ac1018::subsets::any::project_dwg;
-    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};
+    use semio_s_artifact_stdio_dwg_test_oracle::standards::v_ac1018::subsets::any::project_dwg;
+    use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};
 
     /// 🦠️ The spec's wire payload, decoded by `DwgMutation`'s own payload constructor reached through this standard's
     /// module path — for AC1018 that path re-exports the AC1024 vocabulary, so if the re-export stops resolving this

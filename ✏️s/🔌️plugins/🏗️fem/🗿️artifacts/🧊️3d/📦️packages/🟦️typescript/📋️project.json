@@ -1,0 +1,8 @@
+{
+ "name":"@semio-tech/fem-3d","projectType":"library","tags":["language:typescript","role:artifact","family:fem"],
+ "targets":{
+  "build":{"executor":"nx:run-commands","cache":true,"inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🟦️.ts","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],"outputs":["{projectRoot}/dist"],"options":{"cwd":"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript","command":"bun ./📜️script.ts build","forwardAllArgs":true}},
+  "check":{"executor":"nx:run-commands","cache":true,"inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🟦️.ts","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],"options":{"cwd":"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript","command":"bun ./📜️script.ts check","forwardAllArgs":true}},
+  "test":{"executor":"nx:run-commands","cache":true,"inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🟦️.ts","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],"options":{"cwd":"✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}}
+ }
+}

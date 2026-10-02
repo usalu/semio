@@ -4,17 +4,17 @@ extension semio
 start document
 
 document = "schema" "=" text "version" "=" text "topics" "=" "[" topic* "]" "parts" "=" "[" raw-part* "]"
-topic = "guid" "=" text "title" "=" text "description" "=" text "status" "=" text "priority" "=" text "creation-date" "=" text "creation-author" "=" text "labels" "=" "[" text* "]" "comments" "=" "[" comment* "]" "viewpoints" "=" "[" viewpoint* "]"
-comment = "guid" "=" text "date" "=" text "author" "=" text "text" "=" text ("viewpoint-ref" "=" text)?
-viewpoint = "guid" "=" text camera? ("components" "=" components)? ("snapshot" "=" "[" INT* "]")?
+topic = "{" "guid" "=" text "title" "=" text "description" "=" text "status" "=" text "priority" "=" text "creation-date" "=" text "creation-author" "=" text "labels" "=" "[" text* "]" "comments" "=" "[" comment* "]" "viewpoints" "=" "[" viewpoint* "]" "}"
+comment = "{" "guid" "=" text "date" "=" text "author" "=" text "text" "=" text ("viewpoint-ref" "=" text)? "}"
+viewpoint = "{" "guid" "=" text camera? ("components" "=" components)? ("snapshot" "=" "[" INT* "]")? "}"
 camera = "camera" "{" (perspective / orthogonal) "}"
 perspective = "perspective" "field-of-view" "=" number "view-point" "=" point "direction" "=" point "up-vector" "=" point
 orthogonal = "orthogonal" "view-to-world-scale" "=" number "view-point" "=" point "direction" "=" point "up-vector" "=" point
 point = "x" "=" number "y" "=" number "z" "=" number
 components = "selection" "=" "[" text* "]" "visibility" "=" visibility "coloring" "=" "[" coloring* "]"
 visibility = "default-visibility" "=" boolean "exceptions" "=" "[" text* "]"
-coloring = "color" "=" text "components" "=" "[" text* "]"
-raw-part = "name" "=" text "data" "=" STRING
+coloring = "{" "color" "=" text "components" "=" "[" text* "]" "}"
+raw-part = "{" "name" "=" text "data" "=" STRING "}"
 boolean = "true" / "false"
 number = INT / FLOAT / IDENT
 text = STRING / IDENT / INT / FLOAT

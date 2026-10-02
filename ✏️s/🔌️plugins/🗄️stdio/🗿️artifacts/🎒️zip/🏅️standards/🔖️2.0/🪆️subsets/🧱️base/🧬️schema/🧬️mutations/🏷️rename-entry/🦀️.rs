@@ -24,8 +24,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RenameEntry {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::RenameEntry(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

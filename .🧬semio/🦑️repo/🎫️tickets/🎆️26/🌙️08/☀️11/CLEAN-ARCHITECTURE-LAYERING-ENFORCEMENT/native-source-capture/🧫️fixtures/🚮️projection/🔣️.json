@@ -1,0 +1,56 @@
+{
+  "schema": "semio.native.deletion-projection-plan/v1",
+  "projections": [
+    {
+      "id": "png-pdf-absent",
+      "absent": ["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf"],
+      "project": "test-s-plugins-stdio-artifacts-png-standards-12-subsets-any-8d6c3a-🎨️create-and-round-trip-png",
+      "target": "test-oracle",
+      "role": "oracle",
+      "implementation": "rust",
+      "level": "exhaustive",
+      "features": ["oracles"],
+      "scenarios": [
+        {"id": "rgba-gradient-round-trips", "examples": []},
+        {"id": "non-square-image-round-trips", "examples": []},
+        {"id": "single-pixel-round-trips", "examples": []}
+      ],
+      "adapter": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🦀️.rs",
+      "feature": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️tests/🎨️create-and-round-trip-png/🥒️.feature"
+    },
+    {
+      "id": "ifc2x3-step-absent",
+      "absent": ["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step"],
+      "project": "test-s-plugins-stdio-artifacts-ifc-standards-2x3-subsets-base-1f441c-🧱️mutate-ifc-2x3",
+      "target": "test-oracle",
+      "role": "oracle",
+      "implementation": "rust",
+      "level": "exhaustive",
+      "features": ["oracles"],
+      "scenarios": [
+        {"id": "mutate", "examples": ["set-snapshot", "upsert-instance", "remove-instance", "set-header"]},
+        {"id": "inverse", "examples": ["set-snapshot", "upsert-instance", "remove-instance", "set-header"]},
+        {"id": "identity-round-trip", "examples": []}
+      ],
+      "adapter": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🦀️.rs",
+      "feature": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️mutate-ifc-2x3/🥒️.feature"
+    },
+    {
+      "id": "stdio-all-artifacts-absent",
+      "absent": ["✏️s/🔌️plugins/🗄️stdio/🗿️artifacts"],
+      "project": "@semio-tech/stdio-assembly-rs",
+      "target": "test",
+      "role": "unit",
+      "implementation": "rust",
+      "level": "long",
+      "features": [],
+      "testTargets": ["lib", "authored_assembly"],
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml"
+    }
+  ],
+  "requiredEvidence": ["physical-absence", "source-before-and-after", "normal-cargo-materialization", "locked-metadata", "fresh-compiler-source-closure", "all-original-runtime-scenarios"],
+  "laterProjections": [
+    {"id": "framework-products-and-s-absent", "absent": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"]},
+    {"id": "norm-all-artifacts-absent", "absent": ["✏️s/🔌️plugins/📕️norm/🗿️artifacts"], "project": "@semio-tech/norm-artifact-contract-rs", "target": "test"}
+  ]
+}

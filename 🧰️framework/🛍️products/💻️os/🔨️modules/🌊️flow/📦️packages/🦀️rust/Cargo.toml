@@ -25,6 +25,8 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }

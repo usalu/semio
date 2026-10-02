@@ -523,16 +523,16 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
     let (descriptor_bytes, runtime, compiled) = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
     let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
-    let mut descriptor: PackageDescriptor = dsl::from_dsl_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
+    let mut descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
 
     descriptor.hashes.wasm_sha256 = wasm_sha256;
     descriptor.hashes.core_wasm_sha256 = core_wasm_sha256;
     descriptor.hashes.descriptor_sha256 = String::new();
-    let prehash_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor for hashing: {error}")))?;
+    let prehash_value = semio_framework_value::ToValue::to_value(&descriptor);
     let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value);
     descriptor.hashes.descriptor_sha256 = semio_framework_hash::sha256_hex(&prehash_bytes);
 
-    let final_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding final descriptor: {error}")))?;
+    let final_value = semio_framework_value::ToValue::to_value(&descriptor);
     let final_bytes = store::pack_rt::encode_wire_value(&final_value);
     let final_json = store::json::to_string_pretty(&store::json::from_dsl_value(&final_value));
 

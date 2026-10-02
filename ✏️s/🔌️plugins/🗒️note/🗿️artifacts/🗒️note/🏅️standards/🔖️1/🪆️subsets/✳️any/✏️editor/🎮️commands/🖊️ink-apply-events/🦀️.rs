@@ -304,8 +304,8 @@ pub struct NoteInkToolState {
     pub entries: Vec<NoteInkToolEntry>,
 }
 
-store::artifact_retire_struct!(NoteInkToolEntry { key, mutation });
-store::artifact_retire_struct!(NoteInkToolState { states, verb, authoring_seed, base_revision, transaction, entries });
+semio_framework_value::artifact_retire_struct!(NoteInkToolEntry { key, mutation });
+semio_framework_value::artifact_retire_struct!(NoteInkToolState { states, verb, authoring_seed, base_revision, transaction, entries });
 
 /// 🎚️ Where one dispatch sits in an ink gesture: a one-shot `Once`, a `Stream` tick into the window's open
 /// transaction, the `Commit` that ends it, or a host `Abort` with its reason.

@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-stl-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-mesh-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ]
+}

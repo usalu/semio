@@ -1,0 +1,156 @@
+{
+  "snapshot": {
+    "schema": "os.run",
+    "workflowRef": "\u0000世界",
+    "workflowCheckpointId": "",
+    "inputCollectionRef": "!@/",
+    "inputSnapshotId": "😀",
+    "parameterValues": [
+      {
+        "parameterId": "",
+        "value": "{\"intrinsic\":\"string\"}"
+      },
+      {
+        "parameterId": "",
+        "value": "\u0000世界"
+      }
+    ],
+    "outputCollectionRef": "",
+    "status": "canceled",
+    "trigger": {
+      "kind": "automation",
+      "automationRef": "",
+      "eventFingerprint": "😀\u0000"
+    },
+    "nodeRecords": [
+      {
+        "nodeId": "",
+        "status": "computed",
+        "documentFingerprint": "😀",
+        "configFingerprint": "\u0000",
+        "inputFingerprints": [
+          {
+            "portId": "",
+            "fingerprint": "one"
+          },
+          {
+            "portId": "",
+            "fingerprint": "two"
+          }
+        ],
+        "outputFingerprints": [
+          {
+            "portId": "",
+            "fingerprint": ""
+          }
+        ],
+        "outputs": [
+          {
+            "portId": "",
+            "artifactId": "unresolved!@/",
+            "path": "\u0000😀"
+          }
+        ],
+        "durationMs": 1.25
+      },
+      {
+        "nodeId": "",
+        "status": "cacheHit",
+        "documentFingerprint": "",
+        "configFingerprint": "",
+        "inputFingerprints": [],
+        "outputFingerprints": [],
+        "outputs": [],
+        "durationMs": -2
+      },
+      {
+        "nodeId": "unresolved",
+        "status": "failed",
+        "documentFingerprint": "",
+        "configFingerprint": "",
+        "inputFingerprints": [],
+        "outputFingerprints": [],
+        "outputs": [],
+        "durationMs": 0
+      }
+    ],
+    "logs": [
+      {
+        "nodeId": "",
+        "level": "",
+        "message": "😀\u0000世界",
+        "at": ""
+      },
+      {
+        "nodeId": "unresolved",
+        "level": "custom",
+        "message": "",
+        "at": "literal"
+      }
+    ],
+    "startedAt": "",
+    "finishedAt": "",
+    "sealed": true
+  },
+  "statuses": [
+    "pending",
+    "running",
+    "succeeded",
+    "failed",
+    "canceled"
+  ],
+  "nodeStatuses": [
+    "computed",
+    "cacheHit",
+    "failed"
+  ],
+  "triggers": [
+    {
+      "kind": "manual",
+      "actor": "\u0000😀"
+    },
+    {
+      "kind": "automation",
+      "automationRef": "",
+      "eventFingerprint": "😀\u0000"
+    }
+  ],
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "fff8000000000077"
+  ],
+  "malformedSql": [
+    "DELETE FROM run_document",
+    "UPDATE run_document SET status=5",
+    "UPDATE run_document SET sealed=2",
+    "UPDATE run_parameter_value SET ordinal=99 WHERE id=(SELECT min(id) FROM run_parameter_value)",
+    "UPDATE run_trigger SET kind='unknown'",
+    "UPDATE run_trigger SET actor='conflicting'",
+    "DELETE FROM run_trigger",
+    "INSERT INTO run_trigger SELECT id+99,document_id,kind,actor,automation_ref,event_fingerprint FROM run_trigger",
+    "UPDATE run_node SET status=3",
+    "UPDATE run_node SET document_id=99",
+    "UPDATE run_node SET ordinal=99 WHERE id=(SELECT min(id) FROM run_node)",
+    "UPDATE run_node SET duration_ms_bits=0",
+    "UPDATE run_port_fingerprint SET node_id=999",
+    "UPDATE run_port_fingerprint SET direction='unknown'",
+    "UPDATE run_port_fingerprint SET ordinal=99 WHERE id=(SELECT min(id) FROM run_port_fingerprint)",
+    "UPDATE run_output_artifact SET node_id=999",
+    "UPDATE run_parameter_value SET document_id=999",
+    "UPDATE run_log SET ordinal=99 WHERE id=(SELECT min(id) FROM run_log)"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeCharacters": 65537,
+    "cancelAfterBytes": 65536,
+    "maxOwnedBytes": 200000,
+    "tinyFileBytes": 4096
+  }
+}

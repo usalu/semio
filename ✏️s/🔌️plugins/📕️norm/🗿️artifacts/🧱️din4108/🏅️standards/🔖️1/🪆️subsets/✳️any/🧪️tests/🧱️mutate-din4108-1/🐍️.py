@@ -117,6 +117,22 @@ VECTORS = {
     "change-zone-window-inclination-deg": ("📐change-zone-window-inclination-deg", "✅apply"),
     "change-layer-application-type": ("🏷️change-layer-application-type", "✅apply"),
     "change-layer-compressive-class": ("🏷️change-layer-compressive-class", "✅apply"),
+    "change-climate-zone-noop": ("change-climate-zone", "🌦️change-climate-zone", "🟰noop"),
+    "change-usage-noop": ("change-usage", "🗂️change-usage", "🟰noop"),
+    "change-t-int-c-rule": ("change-t-int-c", "🌡️change-t-int-c", "🚫rule"),
+    "change-t-int-c-noop": ("change-t-int-c", "🌡️change-t-int-c", "🟰noop"),
+    "change-rh-int-rule": ("change-rh-int", "💧️change-rh-int", "🚫rule"),
+    "change-rh-int-noop": ("change-rh-int", "💧️change-rh-int", "🟰noop"),
+    "change-airtightness-n50-rule": ("change-airtightness-n50", "💨️change-airtightness-n50", "🚫rule"),
+    "change-airtightness-n50-noop": ("change-airtightness-n50", "💨️change-airtightness-n50", "🟰noop"),
+    "change-has-mechanical-ventilation-noop": ("change-has-mechanical-ventilation", "💨change-has-mechanical-ventilation", "🟰noop"),
+    "change-bb2-details-conform-noop": ("change-bb2-details-conform", "✅️change-bb2-details-conform", "🟰noop"),
+    "insert-zone-dupe": ("insert-zone", "➕️insert-zone", "⛔dupe"),
+    "insert-zone-clamp": ("insert-zone", "➕️insert-zone", "📏clamp"),
+    "insert-element-dupe": ("insert-element", "🏠️insert-element", "⛔dupe"),
+    "insert-element-clamp": ("insert-element", "🏠️insert-element", "📏clamp"),
+    "insert-thermal-bridge-dupe": ("insert-thermal-bridge", "🌉️insert-thermal-bridge", "⛔dupe"),
+    "insert-thermal-bridge-clamp": ("insert-thermal-bridge", "🌉️insert-thermal-bridge", "📏clamp"),
 }
 
 #: 📐️ Each kind's committed leaf payload schema, read where the subset keeps it; its stated bounds are the payload's.

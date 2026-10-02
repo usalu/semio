@@ -16,8 +16,8 @@
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_jpg_mutation};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_jpg_mutation};
+use semio_repo_test_host::law;
 
 
 //#region 🔖️Input
@@ -139,10 +139,10 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, JpgMutation};
-    use semio_s_plugin_stdio_test_oracle::law::wire_operation;
+    use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
+    use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read

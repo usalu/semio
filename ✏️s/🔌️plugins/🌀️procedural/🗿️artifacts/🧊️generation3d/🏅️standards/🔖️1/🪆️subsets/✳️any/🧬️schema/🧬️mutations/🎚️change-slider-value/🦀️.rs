@@ -33,9 +33,9 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (en, de) = generation3d_label_number(self.value);
-        protocol::LocalizedLabel::native(&format!("Set slider \"{}\" to {en}", self.id), &format!("Schieberegler \"{}\" auf {de} setzen", self.id))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Set slider \"{}\" to {en}", self.id), &format!("Schieberegler \"{}\" auf {de} setzen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

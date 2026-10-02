@@ -191,19 +191,23 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
-    /// for the demo mesh — same preamble-stripped body reconstruction
-    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_snapshot` uses, so this is a
-    /// direct proof this artifact will pass that harness once graduated, not merely an
-    /// analogue.
+    /// ✅️ The authored snapshot grammar recognizes actual complete native text for empty,
+    /// demo and independent intermediate states, including exact IEEE words and source indices.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
-        let text = store::ArtifactDsl::print_dsl(&crate::engine::demo_obj_snapshot());
-        let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
-        let reconstructed = format!("{}\n{body}", envelope.envelope_id());
-        assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
+        let mut intermediate=crate::engine::empty_obj_snapshot();
+        intermediate.schema="nondefault owned state".into();
+        intermediate.vertices.push(ObjVertex{x:f64::from_bits(0x7ff0000000000001),y:-0.0,z:f64::INFINITY,w:Some(f64::NEG_INFINITY)});
+        intermediate.faces.push(ObjFace{vertices:vec![]});
+        intermediate.groups.push(ObjGroup{name:"Unresolved".into(),faces:vec![u64::MAX]});
+        intermediate.usemtl.push(ObjUsemtlRange{face_index_from:u64::MAX,material:"M".into()});
+        for snapshot in [crate::engine::empty_obj_snapshot(),crate::engine::demo_obj_snapshot(),intermediate]{
+            let text=store::ArtifactDsl::print_dsl(&snapshot);
+            assert!(recognizer.recognize(&text).expect("recognize"),"grammar did not recognize owned snapshot:\n{text}");
+            assert!(!recognizer.recognize(&format!("{text}\nopaque=[]")).expect("recognize unknown field"),"snapshot grammar must reject fields outside its authored owned model");
+        }
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`

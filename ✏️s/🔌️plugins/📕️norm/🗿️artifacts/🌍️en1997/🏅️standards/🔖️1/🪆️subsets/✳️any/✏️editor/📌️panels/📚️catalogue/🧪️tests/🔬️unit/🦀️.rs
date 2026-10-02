@@ -21,7 +21,7 @@ async fn renders_this_standards_catalogue_headline() {
 fn renders_reference_tables_with_examples() {
     let node = render(
         Vec::new(),
-        semio_framework_plugin::Locale::En,
+        semio_framework_ui_locale::Locale::En,
         "norm.catalogue",
         &semio_framework_plugin::TreeWindows::unhosted(),
     )

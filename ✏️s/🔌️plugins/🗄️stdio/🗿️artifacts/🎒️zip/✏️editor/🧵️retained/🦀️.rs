@@ -130,7 +130,6 @@ impl ArchiveTextCursor {
         }
         Ok(Some(Emit {
             artifact_mutations: vec![ZipMutation::RenameEntry(crate::schema::mutations::rename_entry::RenameEntry { name: entry.name.clone(), new_name: value.into() })],
-            description: Some("Rename archive entry".into()),
             ..Default::default()
         }))
     }

@@ -133,7 +133,7 @@ fn document_scalar_mutations_inverse_law() {
 
 #[test]
 fn dispatch_registers_semantic_descriptors() {
-    register_puzzle5d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
+    register_puzzle5d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in <Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }

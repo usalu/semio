@@ -76,7 +76,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.wav".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Wav", "Wav"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Wav", "Wav"),
         source_format: STDIO_WAV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),

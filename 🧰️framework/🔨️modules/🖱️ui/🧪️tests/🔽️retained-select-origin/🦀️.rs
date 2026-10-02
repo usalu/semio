@@ -137,7 +137,7 @@ fn actual_pointer_open_translates_bottom_and_top_popup_paint_and_hits_by_the_fra
         let trigger = rect(&test_case["triggerLocal"]);
         let expected_menu = rect(&test_case["menuGlobal"]);
         let expected_option = rect(&test_case["firstOptionGlobal"]);
-        let mut ui = Ui::new();
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         ui.apply_tree("fixture", &select_tree(item_count));
         let mut atlas = FontAtlas::builtin();
         settle_layout(&mut ui, &mut atlas, viewport);
@@ -175,7 +175,7 @@ fn mounted_layout_pointer_open_frame_and_option_activation_share_one_local_autho
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
@@ -216,7 +216,7 @@ fn normal_upward_tree_frame_paints_rows_and_each_inline_control_once_at_the_moun
     let origin = &law["viewport"]["origin"];
     let size = &law["viewport"]["size"];
     let viewport = Rect::new(origin[0].as_f64().unwrap() as f32, origin[1].as_f64().unwrap() as f32, size[0].as_f64().unwrap() as f32, size[1].as_f64().unwrap() as f32);
-    let mut ui = Ui::new();
+    let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("fixture", &upward_tree_select(law["row"]["itemCount"].as_u64().unwrap() as usize));
     ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));

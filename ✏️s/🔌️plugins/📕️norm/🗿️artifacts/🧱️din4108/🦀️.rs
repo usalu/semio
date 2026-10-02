@@ -576,8 +576,6 @@ pub mod standards {
                             pub mod inverse;
                         }
                         #[path = "."]
-                        
-                        #[path = "."]
                         pub mod change_element_orientation_deg {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭change-element-orientation-deg/🦀️.rs"]
                             mod component;

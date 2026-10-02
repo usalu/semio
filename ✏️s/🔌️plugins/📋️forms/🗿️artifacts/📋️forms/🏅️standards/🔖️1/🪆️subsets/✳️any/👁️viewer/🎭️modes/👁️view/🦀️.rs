@@ -2,7 +2,12 @@
 //! the editor's `blueprint` mode's two-window authoring layout.
 
 use crate::viewer::forms::modes::view::windows::try_wizard;
-use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::ModeDefinition;
+use semio_framework_plugin::WindowLayout;
+use semio_framework_plugin::WindowLayoutRoot;
+use semio_framework_plugin::WindowLayoutStackNode;
+use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const FORMS_VIEW_MODE_VIEW: &str = "view";
 

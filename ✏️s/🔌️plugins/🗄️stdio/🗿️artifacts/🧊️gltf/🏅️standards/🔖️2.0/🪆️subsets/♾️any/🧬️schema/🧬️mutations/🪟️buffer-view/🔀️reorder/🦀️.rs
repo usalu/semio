@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderBuffer
         vec![super::GltfMutation::ReorderBufferViews(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Reorder Buffer Views", "Pufferansichten umordnen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Reorder Buffer Views", "Pufferansichten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

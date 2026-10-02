@@ -6,7 +6,11 @@ use crate::editor::layout::LayoutInteractionSnapshot;
 use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use crate::LayoutSnapshot;
-use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::Canvas2dScene;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowOptions;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_WINDOW_PREVIEW: &str = "layout-preview";

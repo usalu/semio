@@ -8,7 +8,7 @@ async fn renders_compiled_dag_editor() {
     // empty `AppActionRegistry` declares none of them as `Migrated`, so the registry-LESS
     // `VcsArtifactApp::new` fails construction with `interactive-job.catalog-authority`.
     let mut app = crate::engine::space::unit_tests::context::app_with_registry().await;
-    let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).await.expect("render");
+    let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("compiled DAG tree projection");
     assert!(json.contains("text-editor"));
     let wire = compiled_dag_wire_literal(&demo_space_projection().await).await;

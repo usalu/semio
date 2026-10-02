@@ -78,12 +78,12 @@
     "color": {
       "type": "array",
       "items": {
-        "type": "integer",
+        "type": "number",
         "minimum": 0,
-        "maximum": 255
+        "maximum": 1
       },
-      "minItems": 4,
-      "maxItems": 4,
+      "minItems": 3,
+      "maxItems": 3,
       "x-semio-ui": {
         "widget": "color",
         "role": "value",
@@ -92,10 +92,9 @@
           "de": "Farbe"
         },
         "description": {
-          "en": "Red, green, blue and alpha of the brush, each from 0 to 255.",
-          "de": "Rot, Grün, Blau und Alpha des Pinsels, jeweils von 0 bis 255."
+          "en": "Red, green and blue of the brush (sRGB, each from 0 to 1); the opacity sets how much alpha a dab adds.",
+          "de": "Rot, Grün und Blau des Pinsels (sRGB, jeweils von 0 bis 1); die Deckkraft bestimmt, wie viel Alpha ein Tupfer hinzufügt."
         },
-        "step": 1,
         "group": "brush",
         "order": 20
       }

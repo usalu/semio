@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "fields": [
+    [
+      0,
+      "kind",
+      false
+    ],
+    [
+      1,
+      "actor",
+      true
+    ],
+    [
+      2,
+      "automation_ref",
+      true
+    ],
+    [
+      3,
+      "event_fingerprint",
+      true
+    ]
+  ],
+  "statuses": [
+    [
+      [
+        "pending",
+        0
+      ],
+      [
+        "running",
+        1
+      ],
+      [
+        "succeeded",
+        2
+      ],
+      [
+        "failed",
+        3
+      ],
+      [
+        "canceled",
+        4
+      ]
+    ],
+    [
+      [
+        "computed",
+        0
+      ],
+      [
+        "cacheHit",
+        1
+      ],
+      [
+        "failed",
+        2
+      ]
+    ]
+  ],
+  "maximumBytes": 1048576,
+  "tinyBytes": 1
+}

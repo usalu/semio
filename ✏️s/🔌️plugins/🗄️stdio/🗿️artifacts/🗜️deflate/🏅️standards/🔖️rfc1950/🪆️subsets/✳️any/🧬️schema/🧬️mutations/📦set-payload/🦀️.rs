@@ -28,8 +28,8 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPayload {
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {
         agg_inverse(&DeflateMutation::SetPayload(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set payload", "Nutzlast setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set payload", "Nutzlast setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

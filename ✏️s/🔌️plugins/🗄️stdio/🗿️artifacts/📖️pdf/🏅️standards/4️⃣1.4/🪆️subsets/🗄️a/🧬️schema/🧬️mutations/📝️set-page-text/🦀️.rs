@@ -42,8 +42,8 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for SetPageText {
         vec![PdfA1Mutation::SetPageText(SetPageText { text: base.pages[0].text.clone() })]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set page text", "Seitentext setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set page text", "Seitentext setzen")
     }
 
     fn target(&self) -> Vec<String> {

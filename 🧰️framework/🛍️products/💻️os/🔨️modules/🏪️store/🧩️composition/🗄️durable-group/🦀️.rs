@@ -63,11 +63,11 @@ macro_rules! value_field {
                 Shape::Value
             }
             fn to_value(&self) -> FieldValue {
-                FieldValue::Value(crate::os_dsl::to_dsl_value(self).expect("typed value conversion"))
+                FieldValue::Value(semio_framework_value::ToValue::to_value(self))
             }
             fn from_value(value: &FieldValue) -> Result<Self, String> {
                 match value {
-                    FieldValue::Value(value) => crate::os_dsl::from_dsl_value(value.clone()),
+                    FieldValue::Value(value) => semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| error.to_string()),
                     other => Err(format!("expected Value, found {other:?}")),
                 }
             }

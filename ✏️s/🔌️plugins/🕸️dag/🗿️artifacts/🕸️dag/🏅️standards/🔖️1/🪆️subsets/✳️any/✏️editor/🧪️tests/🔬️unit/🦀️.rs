@@ -21,6 +21,8 @@ pub(crate) mod context {
     pub fn dag_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_dag_app(), examples: Vec::new() }
     }
+
+    semio_framework_plugin::history_edit_acceptance_law!("dag", DagPlayApp, dag_app_manifest_for_tests, "../..");
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> DagApp {
@@ -50,7 +52,7 @@ pub(crate) mod context {
     /// 🖼️ Projects one rendered tree through the retained page transport — a bare `serde_json` of
     /// `tree.root` cannot see `BuiltChildren`, whose rows only exist on the retained transport.
     pub async fn render(app: &mut DagApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
     }
 }
 
@@ -83,9 +85,12 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations: vec![
-                node_graph_edit::DagNodeGraphEditOp::SetHostSnapshot { host_snapshot_json: "{}".into() },
-                node_graph_edit::DagNodeGraphEditOp::DeleteSelection,
                 node_graph_edit::DagNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+                node_graph_edit::DagNodeGraphEditOp::Disconnect { synapse_id: "e1".into() },
+                node_graph_edit::DagNodeGraphEditOp::Move { gesture_id: "node-drag:1".into(), node_ids: vec!["n1".into()], dx: 4.0, dy: -2.5 },
+                node_graph_edit::DagNodeGraphEditOp::SetSlider { widget_id: "n1".into(), value: 6.5 },
+                node_graph_edit::DagNodeGraphEditOp::InsertPort { node_id: "n1".into(), side: "input".into(), index: 2 },
+                node_graph_edit::DagNodeGraphEditOp::Delete { node_ids: vec!["n1".into()], synapse_ids: vec!["e1".into()] },
             ],
         }),
         DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() }),
@@ -256,7 +261,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -387,23 +392,31 @@ fn every_retained_tool_id_is_migrated_contracted_and_served_by_one_factory() {
     }
 }
 
-/// 🌉️ The `{action,args}` bridge resolves every id a shell can express as a flat `{action, args}`
-/// pair, including the example picker's `setActiveExample`, for which dag declared no command at all
-/// until this slice. The five canvas-gesture verbs carry payloads no such pair can state
-/// (edge/port/patch structures), so the bridge faults them `dag.unhandled-action` on purpose rather
-/// than inventing a lossy decoding — they stay reachable only through the typed command channel.
+/// 🌉️ The `{action,args}` bridge resolves every flat verb without a payload, including the example
+/// picker's `setActiveExample`, and decodes each structured canvas/inspector verb from the exact payload
+/// its host dispatches (`NodeGraph/🟦️.tsx` `nodeGraphActions.edit`, the inspector's blur commit). An
+/// absent payload is refused by that verb's own `malformed` code instead of decoding into an empty edit,
+/// and an undeclared verb is `dag.unhandled-action`.
 #[test]
-fn command_from_action_resolves_every_flat_verb_and_names_the_gesture_only_ones() {
-    use semio_framework_plugin::ArtifactEditor;
-    const GESTURE_ONLY: &[&str] = &["nodeGraphEdit", "connectMediaPorts", "moveMediaNode", "renameDagNode", "patchDagNodes"];
-    for tool_id in DAG_RETAINED_TOOL_IDS.iter().filter(|tool_id| !GESTURE_ONLY.contains(tool_id)) {
+fn command_from_action_resolves_every_flat_verb_and_decodes_every_structured_one() {
+    use semio_framework_plugin::{ArtifactEditor, FaultCode};
+    let structured = [
+        ("nodeGraphEdit", "dag.node-graph-edit.malformed", serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": ["slider"], "dx": 4.0, "dy": -2.0 }] })),
+        ("moveMediaNode", "dag.move-media-node.malformed", serde_json::json!({ "nodeId": "slider", "x": 10.0, "y": 20.0 })),
+        ("patchDagNodes", "dag.patch-dag-nodes.malformed", serde_json::json!({ "nodeIds": ["slider"], "field": "value", "value": 7.0 })),
+        ("renameDagNode", "dag.rename-dag-node.malformed", serde_json::json!({ "oldId": "slider", "value": "amount" })),
+        ("connectMediaPorts", "dag.connect-media-ports.malformed", serde_json::json!({ "sourceNodeId": "slider", "targetNodeId": "scale" })),
+    ];
+    for tool_id in DAG_RETAINED_TOOL_IDS.iter().filter(|tool_id| structured.iter().all(|(verb, _, _)| verb != *tool_id)) {
         let command = DagPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
     }
-    for tool_id in GESTURE_ONLY {
-        let error = DagPlayApp::command_from_action(tool_id, None).expect_err("a gesture-only verb must not be silently mis-decoded");
-        assert_eq!(error.code, semio_framework_plugin::FaultCode::new("dag.unhandled-action"));
+    for (verb, code, payload) in &structured {
+        let error = DagPlayApp::command_from_action(verb, None).expect_err("an absent payload must not decode into an empty edit");
+        assert_eq!(error.code, FaultCode::new(*code), "{verb}");
+        let command = DagPlayApp::command_from_action(verb, Some(&dsl::DslValue::from(payload))).unwrap_or_else(|error| panic!("{verb}: {error:?}"));
+        assert_eq!(command.command_id(), *verb);
     }
-    assert!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
+    assert_eq!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None).expect_err("an undeclared verb").code, FaultCode::new("dag.unhandled-action"));
 }
 //#endregion 🧵️RetainedToolCatalog

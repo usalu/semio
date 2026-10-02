@@ -20,8 +20,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveVmlPart 
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
         agg_inverse(&PptxStrictMutation::RemoveVmlPart(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove VML part", "VML-Paketteil entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove VML part", "VML-Paketteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

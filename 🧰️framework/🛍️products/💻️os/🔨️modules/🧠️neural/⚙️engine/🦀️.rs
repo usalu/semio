@@ -11,6 +11,7 @@ use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use protocol::value::ordered::OrderedMap;
 use protocol::value::{DslValue, FromValue, Number, ToValue, ValueError};
+use semio_framework_value::{ValueKind, ValueType};
 
 #[path = "🧵️retirement/🦀️.rs"]
 pub mod retirement;
@@ -143,6 +144,17 @@ impl ToValue for Dictionary {
     fn to_value(&self) -> DslValue {
         DslValue::Object(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        control.scoped_depth(64, |control| control.scoped_stage(|control| {
+            control.begin_stage(self.len()).map_err(ValueError::new)?;
+            let mut entries = Vec::<(String, DslValue)>::guard_decoded(control.allocate_vec(self.len()).map_err(ValueError::new)?);
+            for (key, value) in self.iter() {
+                entries.get_mut().push((control.copy_text(key).map_err(ValueError::new)?, value.to_value_controlled(control)?));
+                control.step().map_err(ValueError::new)?;
+            }
+            Ok(DslValue::Object(entries.take()))
+        }))
+    }
 }
 
 impl FromValue for Dictionary {
@@ -154,6 +166,24 @@ impl FromValue for Dictionary {
         }
         Ok(builder.finish())
     }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        let DslValue::Object(entries) = value else { return Err(ValueError::new("expected an object for Dictionary")); };
+        control.scoped_depth(64, |control| control.scoped_stage(|control| {
+            control.begin_stage(entries.len()).map_err(ValueError::new)?;
+            let mut builder = ColdDictionaryBuilder::new();
+            for (key, value) in entries {
+                let key = control.copy_text(key).map_err(ValueError::new)?;
+                let value = Value::from_value_controlled(value, control)?;
+                builder.insert_controlled(key, value, control).map_err(ValueError::new)?;
+                control.step().map_err(ValueError::new)?;
+            }
+            Ok(builder.finish())
+        }))
+    }
+    fn default_value_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.scoped_stage(|control| { control.begin_stage(1).map_err(ValueError::new)?; control.step().map_err(ValueError::new)?; Ok(Self::new()) })
+    }
+    fn retire_decoded(self) { self.retire_cold(); }
 }
 
 /// 🔑️ Dot-separated camelCase segment path.
@@ -175,6 +205,18 @@ impl Value {
 
     pub fn is_null(&self) -> bool {
         matches!(self, Self::Atom(Atom::Null))
+    }
+
+    /// 🔎️ Borrows schema classification from this evaluator-owned value.
+    pub fn kind(&self) -> ValueKind<'_> {
+        match self {
+            Value::Atom(Atom::Null) => ValueKind::Null,
+            Value::Atom(Atom::Boolean(_)) => ValueKind::Boolean,
+            Value::Atom(Atom::Integer(_)) => ValueKind::Integer,
+            Value::Atom(Atom::Decimal(_)) => ValueKind::Decimal,
+            Value::Atom(Atom::String(_)) => ValueKind::Text,
+            Value::Dictionary(dictionary) => ValueKind::Dictionary(dictionary.schema()),
+        }
     }
 
     pub fn as_atom(&self) -> Option<&Atom> {
@@ -200,6 +242,9 @@ impl ToValue for Value {
             Value::Dictionary(dictionary) => dictionary.to_value(),
         }
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        match self { Self::Atom(value) => value.to_value_controlled(control), Self::Dictionary(value) => value.to_value_controlled(control) }
+    }
 }
 
 impl FromValue for Value {
@@ -209,6 +254,10 @@ impl FromValue for Value {
             other => Ok(Value::Atom(Atom::from_value(other)?)),
         }
     }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        match value { DslValue::Object(_) => Dictionary::from_value_controlled(value, control).map(Self::Dictionary), _ => Atom::from_value_controlled(value, control).map(Self::Atom) }
+    }
+    fn retire_decoded(self) { self.retire_cold(); }
 }
 
 /// ⚛️ Immutable non-dictionary value. `serde` is TEST-ONLY — see `Dictionary`'s docstring above.
@@ -275,6 +324,9 @@ impl ToValue for Atom {
             Atom::String(s) => DslValue::String(s.clone()),
         }
     }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        match self { Self::Null => ().to_value_controlled(control), Self::Boolean(value) => value.to_value_controlled(control), Self::Integer(value) => value.to_value_controlled(control), Self::Decimal(value) => value.to_value_controlled(control), Self::String(value) => value.to_value_controlled(control) }
+    }
 }
 
 impl FromValue for Atom {
@@ -290,92 +342,32 @@ impl FromValue for Atom {
             DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new("expected an atom, found an array or object")),
         }
     }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Null => <()>::from_value_controlled(value, control).map(|()| Self::Null),
+            DslValue::Bool(_) => bool::from_value_controlled(value, control).map(Self::Boolean),
+            DslValue::Number(Number::Int(_) | Number::UInt(_)) => i64::from_value_controlled(value, control).map(Self::Integer),
+            DslValue::Number(Number::Float(_)) => f64::from_value_controlled(value, control).map(Self::Decimal),
+            DslValue::String(_) => String::from_value_controlled(value, control).map(Self::String),
+            _ => Err(ValueError::new("expected an atom")),
+        }
+    }
 }
 // #endregion 🔖️Dictionary
 
 // #region 🔖️Schema
 pub const SCHEMA_KEY: &str = "$schema";
 
-#[derive(Clone, Debug, Default, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", tag = "kind", content = "of"))]
-pub enum ValueType {
-    Boolean,
-    Integer,
-    Decimal,
-    Text,
-    List(Box<ValueType>),
-    Schema(String),
-    #[default]
-    Any,
-}
-
-impl ValueType {
-    pub fn id(&self) -> String {
-        match self {
-            ValueType::Boolean => "boolean".into(),
-            ValueType::Integer => "integer".into(),
-            ValueType::Decimal => "number".into(),
-            ValueType::Text => "text".into(),
-            ValueType::List(_) => "list".into(),
-            ValueType::Schema(id) => id.clone(),
-            ValueType::Any => "value".into(),
-        }
-    }
-
-    pub fn matches(&self, value: &Value) -> bool {
-        if value.is_null() {
-            return false;
-        }
-        match self {
-            ValueType::Any => true,
-            ValueType::Boolean => value.as_atom().is_some_and(|a| matches!(a, Atom::Boolean(_))),
-            ValueType::Integer => value.as_atom().is_some_and(|a| matches!(a, Atom::Integer(_))),
-            ValueType::Decimal => value.as_atom().and_then(|a| a.as_f64()).is_some(),
-            ValueType::Text => value.as_atom().and_then(|a| a.as_str()).is_some(),
-            ValueType::List(_) => value.as_dictionary().is_some_and(|d| d.schema() == Some("list")),
-            ValueType::Schema(schema) => value.as_dictionary().is_some_and(|d| d.schema() == Some(schema.as_str())),
-        }
-    }
-}
-
-/// 🔁️ Mirrors `#[serde(tag = "kind", content = "of")]` above (`serde` stays unconditional here —
-/// `ValueType` never touches `Dictionary`/`Value`, so it was never part of the tenth-seam blocker).
-impl ToValue for ValueType {
-    fn to_value(&self) -> DslValue {
-        match self {
-            ValueType::Boolean => DslValue::object([("kind".to_string(), "boolean".to_value())]),
-            ValueType::Integer => DslValue::object([("kind".to_string(), "integer".to_value())]),
-            ValueType::Decimal => DslValue::object([("kind".to_string(), "decimal".to_value())]),
-            ValueType::Text => DslValue::object([("kind".to_string(), "text".to_value())]),
-            ValueType::List(inner) => DslValue::object([("kind".to_string(), "list".to_value()), ("of".to_string(), inner.to_value())]),
-            ValueType::Schema(id) => DslValue::object([("kind".to_string(), "schema".to_value()), ("of".to_string(), id.to_value())]),
-            ValueType::Any => DslValue::object([("kind".to_string(), "any".to_value())]),
-        }
-    }
-}
-
-impl FromValue for ValueType {
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let kind = value.get("kind").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("kind"))?;
-        match kind.as_str() {
-            "boolean" => Ok(ValueType::Boolean),
-            "integer" => Ok(ValueType::Integer),
-            "decimal" => Ok(ValueType::Decimal),
-            "text" => Ok(ValueType::Text),
-            "list" => Ok(ValueType::List(Box::new(value.get("of").cloned().map(ValueType::from_value).transpose()?.ok_or_else(|| ValueError::new("of"))?))),
-            "schema" => Ok(ValueType::Schema(value.get("of").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("of"))?)),
-            "any" => Ok(ValueType::Any),
-            other => Err(ValueError::new(format!("unknown ValueType kind '{other}'"))),
-        }
-    }
-}
+#[cfg(test)]
+#[path = "🧪️tests/🏷️type/🦀️.rs"]
+mod value_type_reference;
 
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct FieldSpec {
     pub key: String,
+    #[cfg_attr(test, serde(with = "value_type_reference"))]
     pub value: ValueType,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub default: Option<Value>,
@@ -503,7 +495,7 @@ impl Schema {
             let Some(value) = dictionary.get(&field.key) else {
                 return Err(EvalError::MissingInput(field.key.clone()));
             };
-            if !field.value.matches(value) {
+            if !field.value.matches(value.kind()) {
                 return Err(EvalError::InvalidInput(format!("field {} does not match {}", field.key, field.value.id())));
             }
         }

@@ -1,0 +1,22 @@
+[workspace]
+
+[package]
+name = "semio-s-artifact-stdio-png-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Owned independent test oracle provider"
+
+[package.metadata.semio]
+role = "test"
+
+[lib]
+name = "semio_s_artifact_stdio_png_test_oracle"
+path = "../../🦀️.rs"
+
+[features]
+oracles = ["dep:png"]
+
+[dependencies]
+"png" = { version = "0.18", optional = true }
+"semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

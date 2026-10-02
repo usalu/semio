@@ -35,8 +35,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ConnectNodes {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Connect nodes via edge \"{}\"", entity_id(&self.edge, "id").unwrap_or("?")), &format!("Knoten über Kante \"{}\" verbinden", entity_id(&self.edge, "id").unwrap_or("?")))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Connect nodes via edge \"{}\"", entity_id(&self.edge, "id").unwrap_or("?")), &format!("Knoten über Kante \"{}\" verbinden", entity_id(&self.edge, "id").unwrap_or("?")))
     }
     fn target(&self) -> Vec<String> {
         entity_id(&self.edge, "id").map(|id| vec![id.to_string()]).unwrap_or_default()

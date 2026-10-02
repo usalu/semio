@@ -1,0 +1,10 @@
+{
+  "status": "applied",
+  "code": "mutation.clamped",
+  "messages": [
+    {
+      "level": "warning",
+      "code": "mutation.clamped"
+    }
+  ]
+}

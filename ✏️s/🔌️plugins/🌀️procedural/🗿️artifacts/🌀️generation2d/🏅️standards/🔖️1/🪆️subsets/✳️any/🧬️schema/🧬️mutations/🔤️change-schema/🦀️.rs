@@ -29,8 +29,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeSchema {
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.schema), &format!("Schema auf \"{}\" ändern", self.schema))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.schema), &format!("Schema auf \"{}\" ändern", self.schema))
     }
 }
 //#endregion 🔖️ChangeSchema

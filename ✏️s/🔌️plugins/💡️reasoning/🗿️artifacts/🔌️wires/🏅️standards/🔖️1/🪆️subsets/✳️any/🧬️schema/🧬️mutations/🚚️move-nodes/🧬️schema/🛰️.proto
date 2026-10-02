@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.reasoning.wires.mutation.move_nodes;
+
+message MoveNodes {
+  repeated string node_ids = 1;
+  double dx = 2;
+  double dy = 3;
+}

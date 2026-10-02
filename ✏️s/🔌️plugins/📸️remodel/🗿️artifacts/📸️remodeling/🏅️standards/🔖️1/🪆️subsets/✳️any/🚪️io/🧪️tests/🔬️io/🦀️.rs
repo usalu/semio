@@ -34,7 +34,7 @@ fn triangle_count(mesh: &MeshData) -> usize {
 fn scene_with_a_sparse_cloud() -> RemodelingSnapshot {
     let mut scene = default_remodeling_scene();
     scene.results.mesh = RemodelingMesh::default();
-    scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255])) });
+    scene.results.sparse = Some(SparseCloud { points: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]), colors: Some(ByteBuffer::from_u8_slice(&[255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255])) });
     scene
 }
 

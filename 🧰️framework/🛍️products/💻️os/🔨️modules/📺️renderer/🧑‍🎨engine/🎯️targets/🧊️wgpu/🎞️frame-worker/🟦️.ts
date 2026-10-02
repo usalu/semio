@@ -15,6 +15,7 @@ import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } fr
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { installWgpuDynamicExtensionDoor } from "../🧩️dynamic-extension/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
+import { MESH_DELIVERY_CATALOG } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/📇️catalog/🟦️.ts";
 import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "./🧩️asset-cancellation/🟦️.ts";
@@ -86,6 +87,9 @@ type RendererBindings = {
    * before the shell resolves its tongue: a lock, then the stored preference, then this. */
   semioWgpuSetHostLocale?: (locale: string) => void;
   semioWgpuSetHostIntroductionSuppressed?: (suppressed: boolean) => void;
+  /** 🫥️ The hidden-page door (`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuHostPageHidden`): the page was hidden or left, so
+   * every open text-editor typing run ends (`hidden`) on the next frame turn. */
+  semioWgpuHostPageHidden?: () => void;
   /** 🛰️ The agent-bridge door (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` `semioWgpuSetAgentBridgeConfig`): the page's discovered
    * offer; an empty url clears it and parks the bridge in `Disabled`. */
   semioWgpuSetAgentBridgeConfig?: (url: string, admissionProof: string) => void;
@@ -397,6 +401,11 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     return;
   }
   if (closed || closing || failed || quarantined) return;
+  if (message.kind === "host-page-hidden") {
+    ownedStep("host-page-hidden", () => bindings?.semioWgpuHostPageHidden?.());
+    frameTurns?.request();
+    return;
+  }
   if (message.kind === "job-submit" || message.kind === "job-input-page" || message.kind === "job-cancel") {
     if (!interactiveJobs) {
       fault("interactive-job-not-ready", "interactive job arrived before Worker boot completed");
@@ -798,7 +807,7 @@ async function pumpAsset(): Promise<void> {
     responseController = new AbortController();
     assetAbort = responseController;
     const responseCurrent = (): void => assertBrowserAssetResponseContinuation(responseController!, () => ownedStep("asset-response-current", () => runtime!.assetResponseCurrent()));
-    const response = await monitoredSuspension("asset-fetch", () => fetch(publishedPageUrl(meshAssetTransportUrl(request.url!)), { signal: responseController!.signal }));
+    const response = await monitoredSuspension("asset-fetch", () => fetch(publishedPageUrl(meshAssetTransportUrl(request.url!, MESH_DELIVERY_CATALOG)), { signal: responseController!.signal }));
     responseCurrent();
     if (!response.ok || !response.body) throw new Error(`asset-fetch-status: ${response.status}`);
     const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));

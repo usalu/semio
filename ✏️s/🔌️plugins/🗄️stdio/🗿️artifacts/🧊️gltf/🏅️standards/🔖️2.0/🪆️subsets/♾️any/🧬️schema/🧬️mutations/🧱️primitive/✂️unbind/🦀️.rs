@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
         vec![super::GltfMutation::UnbindPrimitiveMaterial(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Unbind Primitive Material", "Bindung des Primitivmaterials aufheben")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Unbind Primitive Material", "Bindung des Primitivmaterials aufheben")
     }
 
     fn target(&self) -> Vec<String> {

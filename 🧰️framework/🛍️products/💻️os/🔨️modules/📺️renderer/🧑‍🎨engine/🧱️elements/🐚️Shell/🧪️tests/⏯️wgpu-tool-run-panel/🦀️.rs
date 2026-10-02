@@ -100,7 +100,7 @@ fn close_panel(surface: &str, document: &mut UiDocumentLease) {
 #[test]
 fn tool_run_panel_of_a_running_run_paints_and_its_buttons_dispatch_the_run() {
     let mut document = publish_panel(FRAMEWORK_PANEL_TAB_TOOL_RUN_ID);
-    let mut shell = ShellState::new(vec![], "test".into());
+    let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut painted = paint_panel(&mut shell, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, &document);
     assert!(painted.instances > 0, "the panel painted instances");
     let targets: Vec<String> = painted.input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect();
@@ -134,7 +134,7 @@ fn arena_index(node: &ui_wgpu::wgpu::NodeId) -> usize {
 fn tool_run_panel_buttons_are_keyboard_reachable() {
     let surface = "framework.panel.toolRun/keyboard";
     let mut document = publish_panel(surface);
-    let mut shell = ShellState::new(vec![], "test".into());
+    let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut painted = paint_panel(&mut shell, surface, &document);
     let records = fixture_records();
     let mut focused = Vec::new();

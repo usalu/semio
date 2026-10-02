@@ -25,23 +25,12 @@
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
 //! and the per-leaf fixture tests that already exercise it.
 //!
-//! @see ../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs — the shared law helpers.
+//! @see semio_repo_test_host::law — the shared law helpers.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
-//#region 🔖️Shared
-/// ⚖️ The repository's shared, dependency-free metamorphic-law helpers, mounted by path rather than
-/// linked: a generated test host may not gain a Cargo dependency on another plugin's crate, and the
-/// module is deliberately format-neutral — it knows about divergences and laws, not about any
-/// document model. `#[path = "."]` re-roots the nested path at THIS file's directory instead of the
-/// implicit `🦀️component/` child directory.
-#[path = "."]
-mod shared {
-    #[path = "../../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🦀️.rs"]
-    pub mod law;
-}
-use shared::law;
-//#endregion 🔖️Shared
+/// ⚖️ Uses the canonical repository-owned format-neutral law helpers.
+use semio_repo_test_host::law;
 
 //#region 🔖️Vocabulary
 /// 🏷️ Mirrors `Block5dMutation::KINDS`

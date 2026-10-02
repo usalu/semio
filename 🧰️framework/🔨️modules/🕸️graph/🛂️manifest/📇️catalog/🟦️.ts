@@ -1,12 +1,13 @@
 /** 📇️ Language-neutral graph output catalog contract. */
 import { readFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { loadTaxonomy, pathEmojiStatuteFindings } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { pathEmojiStatuteFindings } from "../../../🪪️identity/🛣️path/🟦️.ts";
 
 export interface GraphOutputCatalog {
   readonly $schema?: string;
   readonly version: 1;
   readonly inputAreas: readonly string[];
+  readonly policy: Readonly<{ excludedInputPaths: readonly string[]; genericEmojiIdentities: readonly string[] }>;
   readonly shared: Readonly<{ rustRegistry: string; typescriptIndex: string; typescriptTypes: string }>;
   readonly manifests: readonly Readonly<{ id: string; rust: string; typescript: string }>[];
 }
@@ -19,9 +20,18 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     if (required.some((key) => !(key in row)) || Object.keys(row).some((key) => !required.includes(key) && !optional.includes(key))) throw new Error("graph output catalog has missing or unknown fields");
     return row;
   }
-  const root = record(input, ["version", "inputAreas", "shared", "manifests"], ["$schema"]);
+  const root = record(input, ["version", "inputAreas", "policy", "shared", "manifests"], ["$schema"]);
   if (root.version !== 1 || root.$schema !== undefined && typeof root.$schema !== "string") throw new Error("graph output catalog version/schema is invalid");
-  if (!Array.isArray(root.inputAreas) || root.inputAreas.some((area) => typeof area !== "string" || area !== area.normalize("NFC") || !area || /[\\%?#\u0000-\u001f]/u.test(area) || area.startsWith("/") || /^[A-Za-z]:/u.test(area) || area.split("/").some((segment) => !segment || segment === "." || segment === "..")) || new Set(root.inputAreas).size !== root.inputAreas.length) throw new Error("graph input areas must be exact unique workspace-relative owners");
+  function relativePaths(value: unknown): readonly string[] {
+    if (!Array.isArray(value) || value.some((area) => typeof area !== "string" || area !== area.normalize("NFC") || !area || /[\\%?#\u0000-\u001f]/u.test(area) || area.startsWith("/") || /^[A-Za-z]:/u.test(area) || area.split("/").some((segment) => !segment || segment === "." || segment === "..")) || new Set(value).size !== value.length) throw new Error("graph input paths must be exact unique root-relative owners");
+    return Object.freeze([...value] as string[]);
+  }
+  const inputAreas = relativePaths(root.inputAreas);
+  const declaredPolicy = record(root.policy, ["excludedInputPaths", "genericEmojiIdentities"]);
+  const excludedInputPaths = relativePaths(declaredPolicy.excludedInputPaths);
+  const generic = declaredPolicy.genericEmojiIdentities;
+  if (!Array.isArray(generic) || generic.some(value => typeof value !== "string" || !value || value !== value.normalize("NFC")) || new Set(generic).size !== generic.length) throw new Error("graph generic emoji identities must be exact unique strings");
+  const policy = Object.freeze({ excludedInputPaths, genericEmojiIdentities: Object.freeze([...generic] as string[]) });
   const shared = record(root.shared, ["rustRegistry", "typescriptIndex", "typescriptTypes"]);
   const seen = new Set<string>();
   const entries: { path: string; nodeKind: "file" | "directory"; reserved: boolean }[] = [];
@@ -55,9 +65,9 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     return Object.freeze({ id: row.id, rust, typescript });
   });
   if (manifestIds.length !== ids.size || new Set(manifestIds).size !== manifestIds.length || manifestIds.some((id) => !ids.has(id))) throw new Error("graph output catalog and admitted manifest identities differ");
-  const findings = pathEmojiStatuteFindings(entries, loadTaxonomy().pathEmojiPolicy.genericEmojiIdentities);
+  const findings = pathEmojiStatuteFindings(entries, policy.genericEmojiIdentities);
   if (findings.length > 0) throw new Error(`graph output identities breach path statutes: ${JSON.stringify(findings)}`);
-  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), version: 1, inputAreas:Object.freeze(root.inputAreas as string[]), shared: outputShared, manifests: Object.freeze(manifests) });
+  return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), version: 1, inputAreas, policy, shared: outputShared, manifests: Object.freeze(manifests) });
 }
 
 export function readGraphOutputCatalog(path:string): GraphOutputCatalog {

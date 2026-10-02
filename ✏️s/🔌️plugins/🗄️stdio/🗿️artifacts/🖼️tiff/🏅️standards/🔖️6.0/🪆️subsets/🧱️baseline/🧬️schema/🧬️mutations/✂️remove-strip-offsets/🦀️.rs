@@ -18,8 +18,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for RemoveStripO
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::RemoveStripOffsets(self.clone()), base)
     }
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Remove strip offsets", "Streifen-Offsets entfernen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Remove strip offsets", "Streifen-Offsets entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

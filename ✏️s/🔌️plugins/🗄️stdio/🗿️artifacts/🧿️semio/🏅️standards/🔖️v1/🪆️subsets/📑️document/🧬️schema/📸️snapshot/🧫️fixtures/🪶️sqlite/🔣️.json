@@ -68,5 +68,17 @@
       "standard": "v1",
       "subset": "unknown"
     }
-  ]
+  ],
+  "nativeAdmission": {
+    "collectionItems": 1024,
+    "cancelAfter": 256,
+    "tinyBudgetBytes": 32,
+    "maximumDepth": 64
+  },
+  "nativeOutputBytes": 100000,
+  "reconstructionRetirement": {
+    "depth": 8192,
+    "stackBytes": 65536,
+    "schemaBytes": 100000
+  }
 }

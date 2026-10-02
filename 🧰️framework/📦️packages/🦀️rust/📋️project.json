@@ -66,6 +66,10 @@
         "forwardAllArgs": true
       }
     },
+    "test-deflate-encoding": {
+      "executor":"nx:run-commands",
+      "options":{"cwd":"🧰️framework/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-deflate-encoding","forwardAllArgs":true}
+    },
     "test-wire-retirement-source": {
       "executor": "nx:run-commands",
       "options": {

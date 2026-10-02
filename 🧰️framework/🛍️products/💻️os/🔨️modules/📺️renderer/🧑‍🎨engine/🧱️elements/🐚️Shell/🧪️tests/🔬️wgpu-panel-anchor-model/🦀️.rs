@@ -8,7 +8,7 @@ use semio_framework::PanelTabKind;
 /// machine running the test happens to have in its `semio.os.config` document. Every assertion
 /// below explicitly sets the state it exercises afterward, so the outcome never depends on that.
 fn fresh_state() -> ShellState {
-    ShellState::new(Vec::new(), String::new())
+    ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
 }
 
 /// 🎯️ The same neutral owner vectors address each retained spawned document and action.
@@ -20,7 +20,7 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
         app.id = owner["appId"].as_str().unwrap().into();
         app.controller_id = owner["controllerId"].as_str().unwrap().into();
         let id = owner["windowId"].as_str().unwrap().to_string();
-        let mut view_state = ViewModel::default();
+        let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         view_state.window_id = Some(id.clone());
         view_state.focused_window_id = Some(id.clone());
         view_state.window_instances = vec![semio_framework::ViewWindowInstance { id, window_kind_id: "main".into() }];
@@ -122,7 +122,7 @@ pub(super) fn host_test_shell() -> ShellState {
         contributions: vec![],
     };
     let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
-    let mut shell = ShellState::new(vec![bridge], "space".into());
+    let mut shell = ShellState::new(vec![bridge], "space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let base = SpacePanelState {
         active_panel_tab: "s-play-catalogue".into(),
         spawned_apps: vec![
@@ -131,7 +131,7 @@ pub(super) fn host_test_shell() -> ShellState {
         ],
         active_spawned_id: Some("spawned-model".into()),
     };
-    let mut view_state = ViewModel::default();
+    let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view_state.active_mode_id = Some(studio.default_mode_id.clone());
     view_state.active_window_kind_id = Some(studio.window_kinds.first().id.clone());
     view_state.panel_json = Some(ShellState::panel_json(&base).expect("strict base panel"));
@@ -145,7 +145,7 @@ fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriag
     let base: SpacePanelState = serde_json::from_value(fixture["base"].clone()).expect("fixture base");
     let encoded = ShellState::panel_json(&base).expect("strict panel JSON");
     assert!(encoded.starts_with('{'));
-    let mut view = ViewModel::default();
+    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.panel_json = Some(encoded.clone());
     assert_eq!(ShellState::panel_state_from_view(&view).expect("strict decode"), Some(base.clone()));
     view.panel_json = Some(serde_json::json!({ "activePanelTab": "s-play-catalogue", "spawnedApps": [], "programs": [] }).to_string());
@@ -187,7 +187,7 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
 
     let (home, _) = host_test_apps();
     let home_panel = SpacePanelState { active_panel_tab: "s-play-catalogue".into(), spawned_apps: after.spawned_apps.clone(), active_spawned_id: after.active_spawned_id.clone() };
-    let mut home_view = ViewModel::default();
+    let mut home_view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     home_view.active_mode_id = Some(home.default_mode_id.clone());
     home_view.active_window_kind_id = Some(home.window_kinds.first().id.clone());
     home_view.panel_json = Some(ShellState::panel_json(&home_panel).unwrap());
@@ -257,13 +257,13 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
     for case in fixture["cases"].as_array().expect("resize cases") {
         let anchor_id = case["anchor"].as_str().expect("anchor");
         let anchor = PanelAnchor::from_str(anchor_id).expect("known fixture anchor");
-        let mut shell = ShellState::new(Vec::new(), String::new());
+        let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         *shell.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf("fixture.resize", "Resize", "panel-right", 0)];
         shell.anchor_state_mut(anchor).path = vec!["fixture.resize".into()];
         shell.anchor_state_mut(anchor).visible = true;
@@ -334,8 +334,8 @@ fn fixture_dock_shell() -> ShellState {
         })
         .collect();
     app.panel_tabs.push(PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()), label: LocalizedLabel::data("History"), group: PanelGroup::Settings, body_key: Some("framework/history".into()), children: vec![] });
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    shell.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell.sync_backbone_uri = Some("folder:///tmp/fixture".into());
     shell.sync_dock_tabs();
     shell
@@ -1215,7 +1215,7 @@ fn default_dock_display_branch_carries_the_framework_display_leaves() {
     assert_eq!(branch.children.iter().map(|child| child.id.as_str()).collect::<Vec<_>>(), expected);
     assert!(bottom_left.iter().any(|tab| tab.id == "fixture.display"), "🧭️ an app's display-group tab is a SIBLING of the branch, not one of its children");
     assert!(!branch.children.iter().any(|child| child.id == "fixture.display"));
-    let empty_app_shell = ShellState::new(Vec::new(), String::new());
+    let empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(empty_app_shell.default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
 }
 

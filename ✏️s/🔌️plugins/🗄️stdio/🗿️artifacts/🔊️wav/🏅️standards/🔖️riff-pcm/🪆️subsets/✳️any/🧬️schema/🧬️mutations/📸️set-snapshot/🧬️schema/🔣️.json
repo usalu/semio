@@ -404,7 +404,7 @@
           "required": ["kind", "value"],
           "properties": {
             "kind": { "const": "other" },
-            "value": { "type": "integer", "minimum": 0 }
+            "value": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot.json#/$defs/Unsigned64" }
           }
         }
       ]

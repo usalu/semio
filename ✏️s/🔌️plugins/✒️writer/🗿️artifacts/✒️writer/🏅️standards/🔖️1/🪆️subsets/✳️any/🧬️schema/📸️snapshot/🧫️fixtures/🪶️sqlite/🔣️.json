@@ -50,6 +50,19 @@
       "subset": "document"
     }
   ],
+  "referenceCases": [
+    {"childId":"","target":{"artifactId":"","dialect":{"artifactKind":"","standard":"","subset":""}}},
+    {"childId":"child!@/ 世界","target":{"artifactId":"id!@/ 世界","dialect":{"artifactKind":"kind!@/ 世界","standard":"std!@/ 世界","subset":"subset!@/ 世界"}}}
+  ],
+  "renumberSql": [
+    "UPDATE writer_document SET rowid=-17",
+    "UPDATE writer_document_child SET id=-29,document_id=-17"
+  ],
+  "mismatchSql": [
+    "UPDATE writer_document SET text='different text'",
+    "UPDATE writer_document SET language_id='different language'",
+    "UPDATE writer_document_child SET target_artifact_id='different target'"
+  ],
   "limitedRows": 1,
   "limitedValueBytes": 64
 }

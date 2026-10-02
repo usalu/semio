@@ -18,8 +18,8 @@
   ],
   "properties": {
     "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "$ref": "#/$defs/AnnexChoice"
     },
     "title": {
       "type": "string",
@@ -108,9 +108,9 @@
         "name",
         "fYk",
         "eS",
+        "ductility",
         "k",
-        "epsUk",
-        "ductility"
+        "epsUk"
       ],
       "properties": {
         "id": {
@@ -125,12 +125,6 @@
         "eS": {
           "type": "number"
         },
-        "k": {
-          "type": "number"
-        },
-        "epsUk": {
-          "type": "number"
-        },
         "ductility": {
           "type": "string",
           "enum": [
@@ -138,6 +132,12 @@
             "b",
             "c"
           ]
+        },
+        "k": {
+          "type": "number"
+        },
+        "epsUk": {
+          "type": "number"
         }
       },
       "x-semio-formats": [
@@ -221,7 +221,8 @@
             },
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         },
         "position": {
           "type": "string"
@@ -340,7 +341,8 @@
             "widget": "stepper",
             "step": 1,
             "precision": 0
-          }
+          },
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -764,7 +766,12 @@
         "liquidFCtEff",
         "liquidSRMax",
         "bridgeSigmaC",
-        "bridgeDeltaSigmaS"
+        "bridgeDeltaSigmaS",
+        "stirrups",
+        "punching",
+        "prestress",
+        "fire",
+        "tightness"
       ],
       "properties": {
         "id": {

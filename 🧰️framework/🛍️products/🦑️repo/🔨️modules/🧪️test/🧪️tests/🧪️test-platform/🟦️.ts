@@ -16,11 +16,13 @@ import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } fr
 import { isBlockingBreach } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { oracleHostPython, provisionPythonInterpreter, pythonSiteDirectories } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import oracleDirectoryCases from "../../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
-import protocolSchema from "../../🧬️schema/🔣️.json";
+import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, subjectRawInputsByScenario, makeAdapterContext, type TestCasePlan, type FeatureScenario, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type TestCasePlan, type FeatureScenario } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, subjectRawInputsByScenario, makeAdapterContext, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -722,8 +724,8 @@ describe("🪆️ case above subset", () => {
     ({ owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").DiscoveredCase);
   const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️only", kinds: ["set-name"], vectors: [] };
   const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry;
-  const featureTagged = (tag: string): import("../../📦️packages/🟦️typescript/🟦️.ts").ParsedFeature => parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it changed"].join("\n"));
-  const featureUntagged: import("../../📦️packages/🟦️typescript/🟦️.ts").ParsedFeature = parseFeature(["@capability-thing-mutate", "@no-oracle-none", "Feature: Round trip", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it round-trips"].join("\n"));
+  const featureTagged = (tag: string): import("../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts").ParsedFeature => parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it changed"].join("\n"));
+  const featureUntagged: import("../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts").ParsedFeature = parseFeature(["@capability-thing-mutate", "@no-oracle-none", "Feature: Round trip", "  @id-a", "  @level-quick", "  @mode-conformance", "  Scenario: a", "    Given a thing", "    Then it round-trips"].join("\n"));
 
   test("a case sitting above the one real subset its catalog names is a breach", () => {
     const breaches = caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-thing-v1"), registry);
@@ -775,7 +777,7 @@ describe("🧫️ mutation without fixture", () => {
   type Mutation = import("../../📦️packages/🟦️typescript/🟦️.ts").ManifestMutation;
   type Manifest = import("../../📦️packages/🟦️typescript/🟦️.ts").MutationManifest;
   type Catalog = import("../../📦️packages/🟦️typescript/🟦️.ts").MutationCatalog;
-  type Fixture = import("../../📦️packages/🟦️typescript/🟦️.ts").FixtureManifest;
+  type Fixture = import("../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts").FixtureManifest;
   type Registry = import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry;
 
   const mutation = (id: string, capability: string): Mutation => ({ id, capability, outcomes: ["applied"], productionDispatch: { operation: id, bridgeVersion: 1 }, oracleRequirements: [{ capability, qualifyingKind: "third-party-library" as const }] });
@@ -1232,10 +1234,7 @@ describe("🧭️ contribution directory ownership", () => {
 
   test("root dependency discovery and classification honor the same neutral owner contract", async () => {
     const inventory = await import("../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts");
-    const api = { discover: inventory.dependencyDiscoverContributionManifests, classify: inventory.dependencyClassifyOracleEntry } as unknown as {
-      discover(root: string, directory: string, filename: string): string[];
-      classify(entry: { name: string; version: string; kinds: string[]; users: string[]; declarations: { user: string; version: string; kind: string }[]; oracleConflictUsers?: string[] }, oracleIds: readonly string[], testDomain: { readonly directoryNames: readonly string[]; readonly domainPath: string }): void;
-    };
+    const api = { discover: inventory.dependencyDiscoverContributionManifests, classify: inventory.dependencyClassifyOracleEntry };
     const oracleOnlyDomain = { directoryNames: [oracleDirectoryCases.directoryName], domainPath: String(testTaxonomy(repoRoot).testDomainPath) };
     const root = mkdtempSync(join(tmpdir(), "root-contribution-directory-"));
     try {
@@ -1243,7 +1242,7 @@ describe("🧭️ contribution directory ownership", () => {
         const directory = row.path.slice(0, row.path.lastIndexOf("/"));
         mkdirSync(join(root, directory), { recursive: true });
         writeFileSync(join(root, directory, "🔣️.json"), "{}\n");
-        const entry = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: [row.path], declarations: [{ user: row.path, version: "1.0.0", kind: "production-runtime" }] };
+        const entry: Parameters<typeof api.classify>[0] = { ecosystem: "js", name: "reference", version: "1.0.0", productionReachable: true, kinds: ["production-runtime"], users: [row.path], declarations: [{ user: row.path, version: "1.0.0", kind: "production-runtime" }] };
         api.classify(entry, ["reference"], oracleOnlyDomain);
         expect(entry.kinds, row.path).toEqual([row.owned ? "test-oracle" : "production-runtime"]);
       }
@@ -1251,7 +1250,7 @@ describe("🧭️ contribution directory ownership", () => {
       expect(api.discover(root, oracleDirectoryCases.directoryName, "🔣️.json").sort()).toEqual(expected);
       rmSync(join(root, "🎠️kernel/🔮️oracles/🔣️.json"));
       expect(api.discover(root, oracleDirectoryCases.directoryName, "🔣️.json").sort()).toEqual(expected.filter((path) => path !== "🎠️kernel/🔮️oracles/🔣️.json"));
-      const absent = { name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracles/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracles/package.json", version: "1.0.0", kind: "production-runtime" }] };
+      const absent: Parameters<typeof api.classify>[0] = { ecosystem: "js", productionReachable: true, name: "reference", version: "1.0.0", kinds: ["production-runtime"], users: ["🎠️kernel/🔮️oracles/package.json"], declarations: [{ user: "🎠️kernel/🔮️oracles/package.json", version: "1.0.0", kind: "production-runtime" }] };
       api.classify(absent, ["reference"], oracleOnlyDomain);
       expect(absent.kinds).toEqual(["test-oracle"]);
     } finally {
@@ -1349,7 +1348,7 @@ describe("🦠️ mutation completeness gate", () => {
   const discovered = { owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").DiscoveredCase;
   const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: ["set-name", "remove-item"], vectors: [] };
   const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry;
-  const feature = (scenarioIds: readonly string[], tag = "@mutations-thing-v1"): import("../../📦️packages/🟦️typescript/🟦️.ts").ParsedFeature =>
+  const feature = (scenarioIds: readonly string[], tag = "@mutations-thing-v1"): import("../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts").ParsedFeature =>
     parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", ...scenarioIds.flatMap((id) => [`  @id-${id}`, "  @level-exhaustive", "  @mode-differential", `  Scenario: ${id}`, "    Given a thing", "    Then it changed"])].join("\n"));
 
   test("a feature covering every declared kind twice reports nothing", () => {

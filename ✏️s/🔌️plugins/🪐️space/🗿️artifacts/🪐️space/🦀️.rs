@@ -36,7 +36,7 @@ pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_fram
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "space.sspace".into(),
-        label: semio_framework_plugin::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
         source_format: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(),
         component_kind: "space-index".into(),
         dimension: "data".into(),
@@ -84,6 +84,14 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
         .document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()
+        .try_build()
+}
+/// 🪐️ The same owning declaration mounts its codec in headless public I/O hosts.
+#[cfg(not(feature="component-app-assembly"))]
+pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_framework_plugin::ArtifactDefinitionError>{
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
+        .document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)
         .try_build()
 }
 //#endregion 🔖️Declaration

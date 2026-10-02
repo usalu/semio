@@ -1,0 +1,9 @@
+{
+  "$schema": "../../🧬️schema/🔣️history-notices/🔣️.json",
+  "note": "📢️ The notices of the store refusals a history-lane dispatch answers (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §15, §16.6): an edit while a streamed tool transaction is open, a commit or abort naming no open transaction, and an exhausted edit history. The Rust kernel (`HISTORY_NOTICE_LABELS`) and its TypeScript twin carry exactly these rows in this order.",
+  "notices": [
+    { "code": "toolTransaction.open", "en": "A tool is still recording — finish or cancel it first.", "de": "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen." },
+    { "code": "toolTransaction.unknown", "en": "The tool's recording has already ended.", "de": "Die Aufzeichnung des Werkzeugs ist bereits beendet." },
+    { "code": "history.full", "en": "This document's history is full ({n} edits).", "de": "Der Verlauf dieses Dokuments ist voll ({n} Bearbeitungen)." }
+  ]
+}

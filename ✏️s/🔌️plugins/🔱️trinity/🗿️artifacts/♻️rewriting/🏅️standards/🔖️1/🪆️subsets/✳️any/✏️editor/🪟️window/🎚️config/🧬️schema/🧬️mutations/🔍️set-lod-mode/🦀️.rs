@@ -22,8 +22,8 @@ impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation
         vec![Self { value: base.lod_mode.clone() }.into()]
     }
 
-    fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set Window Lod Mode", "Detailstufenmodus des Fensters setzen")
     }
 
     fn target(&self) -> Vec<String> {

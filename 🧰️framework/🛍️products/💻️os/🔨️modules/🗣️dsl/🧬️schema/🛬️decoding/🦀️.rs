@@ -1,0 +1,174 @@
+//! 🛬️ Controlled native schema parsing uses borrowed lookahead and caller-admitted owned fields.
+
+use super::*;
+use crate::os_dsl::NativeDecodeControl;
+use std::mem::size_of;
+
+#[derive(Clone,Copy)]
+struct Token<'a>{kind:TokenKind,text:&'a str,start:usize,end:usize,span:TextSpan}
+
+struct Reader<'s,'c,'p>{source:&'s str,position:usize,line:u32,column:u32,lookahead:[Option<Token<'s>>;2],limits:Limits,tokens:usize,nodes:usize,control:&'c mut NativeDecodeControl<'p>}
+
+impl<'s,'c,'p> Reader<'s,'c,'p>{
+    fn metadata(&mut self,producer:&RecordSpecProducer)->Result<RecordSpec,TextError>{producer.decode(self.control).map_err(|message|self.error(message))}
+    fn error(&self,message:impl Into<String>)->TextError{TextError::new(message,TextSpan::at(self.line,self.column))}
+    fn charge(&mut self,bytes:usize)->Result<(),TextError>{self.control.charge(bytes).map_err(|message|self.error(message))}
+    fn copy(&mut self,text:&str)->Result<String,TextError>{self.control.copy_text(text).map_err(|message|self.error(message))}
+    fn character(&self)->Option<char>{self.source[self.position..].chars().next()}
+    fn consume(&mut self)->Result<char,TextError>{let c=self.character().ok_or_else(||self.error("unexpected native text end"))?;self.position+=c.len_utf8();if c=='\n'{self.line=self.line.checked_add(1).ok_or_else(||self.error("native line count overflow"))?;self.column=1;}else{self.column=self.column.checked_add(1).ok_or_else(||self.error("native column count overflow"))?;}self.control.advance(c.len_utf8()).map_err(|message|self.error(message))?;Ok(c)}
+    fn scan(&mut self)->Result<Token<'s>,TextError>{
+        loop{while self.character().is_some_and(char::is_whitespace){self.consume()?;}if self.character()!=Some('#'){break;}while self.character().is_some_and(|c|c!='\n'){self.consume()?;}}
+        let start=self.position;let span=TextSpan::at(self.line,self.column);let mut content_start=start;let mut content_end;
+        let Some(c)=self.character()else{return Ok(Token{kind:TokenKind::Eof,text:"",start,end:start,span});};
+        let kind=if self.source[start..].starts_with("```"){
+            for _ in 0..3{self.consume()?;}content_start=self.position;
+            while !self.source[self.position..].starts_with("```"){if self.character().is_none(){return Err(self.error("unterminated native text fence"));}self.consume()?;}
+            content_end=self.position;for _ in 0..3{self.consume()?;}TokenKind::Fence
+        }else if c=='"'{
+            self.consume()?;content_start=self.position;
+            while self.character()!=Some('"'){if self.character().is_none(){return Err(self.error("unterminated native quoted text"));}if self.consume()?=='\\'{self.consume()?;}}
+            content_end=self.position;self.consume()?;TokenKind::Text
+        }else{
+            let punctuation=match c{'='=>Some(TokenKind::Equals),','=>Some(TokenKind::Comma),':'=>Some(TokenKind::Colon),'@'=>Some(TokenKind::At),'^'=>Some(TokenKind::Caret),'{'=>Some(TokenKind::LBrace),'}'=>Some(TokenKind::RBrace),'['=>Some(TokenKind::LBracket),']'=>Some(TokenKind::RBracket),'('=>Some(TokenKind::LParen),')'=>Some(TokenKind::RParen),'+' =>Some(TokenKind::Plus),'*'=>Some(TokenKind::Star),'/' =>Some(TokenKind::Slash),_=>None};
+            let kind=if self.source[start..].starts_with(".."){self.consume()?;self.consume()?;TokenKind::DotDot}
+            else if let Some(kind)=punctuation{self.consume()?;kind}
+            else if self.source[start..].starts_with("->"){self.consume()?;self.consume()?;TokenKind::Arrow}
+            else if self.source[start..].starts_with("--"){self.consume()?;self.consume()?;TokenKind::DashArrow}
+            else if self.source[start..].starts_with("<-"){self.consume()?;self.consume()?;TokenKind::BackArrow}
+            else if let Some(end)=if c=='-'{self.fused_end()?}else{None}{while self.position<end{self.consume()?;}TokenKind::EdgeArrow}
+            else if c.is_ascii_digit()||(c=='-'&&self.source[start+1..].starts_with(|next:char|next.is_ascii_digit())){
+                if c=='-'{self.consume()?;}while self.character().is_some_and(|c|c.is_ascii_digit()){self.consume()?;}
+                let mut float=false;if self.character()==Some('.')&&!self.source[self.position..].starts_with(".."){float=true;self.consume()?;while self.character().is_some_and(|c|c.is_ascii_digit()){self.consume()?;}}
+                if matches!(self.character(),Some('e'|'E')){float=true;self.consume()?;if matches!(self.character(),Some('+'|'-')){self.consume()?;}while self.character().is_some_and(|c|c.is_ascii_digit()){self.consume()?;}}
+                if float{TokenKind::Float}else{TokenKind::Int}
+            }else if c=='-'{self.consume()?;if self.source[self.position..].starts_with("inf"){for _ in 0..3{self.consume()?;}TokenKind::Float}else{TokenKind::Minus}}
+            else if c.is_alphabetic()||c=='_'{
+                self.consume()?;
+                let bytes=self.source[start..].as_bytes();let word_width=if bytes.starts_with(b"nan64_")&&bytes.get(6..22).is_some_and(|word|word.iter().all(u8::is_ascii_hexdigit)){Some(22)}else if bytes.starts_with(b"nan32_")&&bytes.get(6..14).is_some_and(|word|word.iter().all(u8::is_ascii_hexdigit)){Some(14)}else{None};
+                if let Some(width)=word_width{while self.position-start<6{self.consume()?;}while self.position-start<width&&self.character().is_some_and(|c|c.is_ascii_hexdigit()){self.consume()?;}if self.position-start!=width{return Err(self.error("invalid native IEEE word"));}TokenKind::Float}
+                else{while self.character().is_some_and(|c|c.is_alphanumeric()||matches!(c,'_'|'-'|'.'|'/')){if self.source[self.position..].starts_with("->")||self.source[self.position..].starts_with("--"){break;}self.consume()?;}if &self.source[start..self.position]=="_"{TokenKind::Placeholder}else{TokenKind::Ident}}
+            }else{return Err(self.error("invalid native schema text character"));};content_end=self.position;kind
+        };
+        self.tokens=self.tokens.checked_add(1).ok_or_else(||self.error("native token count overflow"))?;self.limits.check_tokens(self.tokens,span)?;
+        Ok(Token{kind,text:&self.source[content_start..content_end],start,end:self.position,span})
+    }
+    fn peek(&mut self,offset:usize)->Result<Token<'s>,TextError>{for index in 0..=offset{if self.lookahead[index].is_none(){self.lookahead[index]=Some(self.scan()?);}}Ok(self.lookahead[offset].unwrap())}
+    fn kind(&mut self)->Result<TokenKind,TextError>{Ok(self.peek(0)?.kind)}
+    fn take(&mut self)->Result<Token<'s>,TextError>{let token=self.peek(0)?;self.lookahead[0]=self.lookahead[1].take();Ok(token)}
+    fn expect(&mut self,kind:TokenKind)->Result<Token<'s>,TextError>{if self.kind()?!=kind{return Err(self.error("unexpected native schema token"));}self.take()}
+    fn keyword(&mut self,word:&str)->Result<bool,TextError>{let token=self.peek(0)?;Ok(token.kind==TokenKind::Ident&&token.text==word)}
+    fn attribute(&mut self)->Result<Option<&'s str>,TextError>{let token=self.peek(0)?;Ok((token.kind==TokenKind::Ident&&self.peek(1)?.kind==TokenKind::Equals).then_some(token.text))}
+    fn dynamic_key(&mut self)->Result<Option<Token<'s>>,TextError>{let token=self.peek(0)?;Ok((matches!(token.kind,TokenKind::Ident|TokenKind::Text)&&self.peek(1)?.kind==TokenKind::Equals).then_some(token))}
+    fn node(&mut self,depth:usize)->Result<(),TextError>{self.limits.check_depth(depth,TextSpan::at(self.line,self.column))?;self.nodes=self.nodes.checked_add(1).ok_or_else(||self.error("native node count overflow"))?;self.limits.check_nodes(self.nodes,TextSpan::at(self.line,self.column))}
+    fn push<T>(&mut self,items:&mut Vec<T>,item:T)->Result<(),TextError>{if items.len()==items.capacity(){let capacity=items.len().checked_mul(2).and_then(|n|n.checked_add(1)).ok_or_else(||self.error("native collection size overflow"))?;self.charge(capacity.checked_mul(size_of::<T>()).ok_or_else(||self.error("native collection storage overflow"))?)?;items.try_reserve_exact(capacity-items.len()).map_err(|_|self.error("native collection allocation failed"))?;}items.push(item);Ok(())}
+    fn insert(&mut self,record:&mut RecordValue,id:u16,value:FieldValue)->Result<(),TextError>{if !record.fields.contains_key(&id)&&record.fields.len()==record.fields.capacity(){let buckets=record.fields.len().checked_add(1).and_then(usize::checked_next_power_of_two).and_then(|n|n.checked_mul(2)).ok_or_else(||self.error("native field storage overflow"))?;self.charge(buckets.checked_mul(size_of::<(u16,FieldValue)>()+16).ok_or_else(||self.error("native field storage overflow"))?)?;record.fields.try_reserve(1).map_err(|_|self.error("native field allocation failed"))?;}record.fields.insert(id,value);Ok(())}
+    fn text(&mut self,token:Token<'s>)->Result<String,TextError>{
+        if token.kind==TokenKind::Ident{return self.copy(token.text);}if token.kind!=TokenKind::Text{return Err(self.error("expected native Text"));}
+        self.control.scoped_stage(|control|{control.charge(token.text.len()).map_err(|message|TextError::new(message,token.span))?;control.begin_stage(token.text.len()).map_err(|message|TextError::new(message,token.span))?;let mut output=String::new();output.try_reserve_exact(token.text.len()).map_err(|_|TextError::new("native text allocation failed",token.span))?;let mut chars=token.text.chars();while let Some(c)=chars.next(){control.advance(c.len_utf8()).map_err(|message|TextError::new(message,token.span))?;if c!='\\'{output.push(c);continue;}let next=chars.next().ok_or_else(||TextError::new("dangling native text escape",token.span))?;control.advance(next.len_utf8()).map_err(|message|TextError::new(message,token.span))?;match next{'n'=>output.push('\n'),'r'=>output.push('\r'),'t'=>output.push('\t'),'"'=>output.push('"'),'\\'=>output.push('\\'),'u'=>{if chars.next()!=Some('{'){return Err(TextError::new("invalid native Unicode escape",token.span));}control.advance(1).map_err(|message|TextError::new(message,token.span))?;let mut word=0u32;let mut digits=0;loop{let c=chars.next().ok_or_else(||TextError::new("unterminated native Unicode escape",token.span))?;control.advance(c.len_utf8()).map_err(|message|TextError::new(message,token.span))?;if c=='}'{break;}digits+=1;if digits>6{return Err(TextError::new("invalid native Unicode escape",token.span));}word=word.checked_mul(16).and_then(|n|c.to_digit(16).and_then(|d|n.checked_add(d))).ok_or_else(||TextError::new("invalid native Unicode escape",token.span))?;}if digits==0{return Err(TextError::new("empty native Unicode escape",token.span));}output.push(char::from_u32(word).ok_or_else(||TextError::new("invalid native Unicode scalar",token.span))?);},_=>return Err(TextError::new("unknown native text escape",token.span))}}Ok(output)})
+    }
+    fn octets(&mut self,token:Token<'s>)->Result<Vec<u8>,TextError>{
+        if token.kind!=TokenKind::Text||token.text.len()%4!=0{return Err(self.error("invalid native base64"));}
+        self.control.scoped_stage(|control|{control.begin_stage(token.text.len()).map_err(|message|TextError::new(message,token.span))?;let length=token.text.len()/4*3;let mut output=control.allocate_vec::<u8>(length).map_err(|message|TextError::new(message,token.span))?;
+            fn digit(c:u8)->Option<u8>{match c{b'A'..=b'Z'=>Some(c-b'A'),b'a'..=b'z'=>Some(c-b'a'+26),b'0'..=b'9'=>Some(c-b'0'+52),b'+'=>Some(62),b'/'=>Some(63),_=>None}}
+            for(index,chunk)in token.text.as_bytes().chunks_exact(4).enumerate(){let final_chunk=(index+1)*4==token.text.len();let a=digit(chunk[0]).ok_or_else(||TextError::new("invalid native base64",token.span))?;let b=digit(chunk[1]).ok_or_else(||TextError::new("invalid native base64",token.span))?;let c=if chunk[2]==b'='{0}else{digit(chunk[2]).ok_or_else(||TextError::new("invalid native base64",token.span))?};let d=if chunk[3]==b'='{0}else{digit(chunk[3]).ok_or_else(||TextError::new("invalid native base64",token.span))?};if (chunk[2]==b'='&&(!final_chunk||chunk[3]!=b'='||b&15!=0))||(chunk[3]==b'='&&(!final_chunk||c&3!=0)){return Err(TextError::new("invalid native base64 padding",token.span));}output.push(a<<2|b>>4);if chunk[2]!=b'='{output.push(b<<4|c>>2);}if chunk[3]!=b'='{output.push(c<<6|d);}control.advance(4).map_err(|message|TextError::new(message,token.span))?;}Ok(output)})
+    }
+    fn number(&mut self)->Result<(f64,Token<'s>),TextError>{let mut token=self.take()?;if token.text.len()>2048||!matches!(token.kind,TokenKind::Int|TokenKind::Float|TokenKind::Ident){return Err(self.error("invalid bounded native number"));}if token.kind==TokenKind::Ident&&token.text.len()>3&&(token.text.starts_with("inf")||token.text.starts_with("nan"))&&crate::os_dsl::unit_by_symbol(&token.text[3..]).is_some(){let suffix=Token{kind:TokenKind::Ident,text:&token.text[3..],start:token.start+3,end:token.end,span:TextSpan::at(token.span.line,token.span.column+3)};self.lookahead[1]=self.lookahead[0].take();self.lookahead[0]=Some(suffix);token.text=&token.text[..3];token.end=token.start+3;}let value=parse_f64(token.text).map_err(|_|self.error("invalid native number"))?;Ok((value,token))}
+    fn field(&mut self,field:&FieldSpec,spec:&RecordSpec,record:&RecordValue,depth:usize)->Result<FieldValue,TextError>{if let Shape::EmbedFrom(key)=&field.shape{let language=sibling_text_field(record,spec,key).unwrap_or("");return self.embedded(language);}self.shape(&field.shape,depth)}
+    fn embedded(&mut self,language:&str)->Result<FieldValue,TextError>{let token=self.take()?;if token.kind!=TokenKind::Fence{return self.text(token).map(FieldValue::Text);}let (declared,body)=token.text.split_once('\n').ok_or_else(||self.error("invalid native fence header"))?;if !declared.is_empty()&&!language.is_empty()&&declared!=language{return Err(self.error("native fence language mismatch"));}self.copy(body.strip_suffix('\n').unwrap_or(body)).map(FieldValue::Text)}
+    fn record(&mut self,spec:&RecordSpec,depth:usize)->Result<RecordValue,TextError>{
+        self.node(depth)?;let call=spec.layout==RecordLayout::Call;let mut record=RecordValue::default();
+        if call{let field=spec.fields.iter().find(|field|field.is_call_name).ok_or_else(||self.error("native Call requires a name field"))?;let token=self.expect(TokenKind::Ident)?;let name=self.copy(token.text)?;self.insert(&mut record,field.id,FieldValue::Text(name))?;self.expect(TokenKind::Equals)?;}
+        if let Some(keyword)=spec.keyword.as_deref(){if !self.keyword(keyword)?{return Err(self.error("native record keyword mismatch"));}self.take()?;}else if call{return Err(self.error("native Call requires a keyword"));}
+        if call{self.expect(TokenKind::LParen)?;}
+        let mut positional=Vec::new();for field in spec.fields.iter().filter(|field|field.position.is_some()&&!field.is_call_name){self.push(&mut positional,field)?;}positional.sort_by_key(|field|field.position.unwrap());
+        for field in positional{let value=if field.optional&&self.kind()?==TokenKind::Placeholder{self.take()?;FieldValue::Absent}else if field.optional&&!self.starts(&field.shape)?{FieldValue::Absent}else{self.field(field,spec,&record,depth+1)?};self.insert(&mut record,field.id,value)?;}
+        loop{let token=self.peek(0)?;let attribute=self.attribute()?;
+            let field=if let Some(key)=attribute{spec.fields.iter().find(|field|field.position.is_none()&&!field.is_call_name&&!matches!(field.shape,Shape::Block(_)|Shape::Statements(_))&&field.key==key&&!record.fields.contains_key(&field.id))}else{spec.fields.iter().find(|field|field.position.is_none()&&!record.fields.contains_key(&field.id)&&field.key==token.text&&matches!(field.shape,Shape::Block(_)|Shape::Table(_)))};
+            let Some(field)=field else{break;};self.take()?;let value=if attribute.is_some(){self.expect(TokenKind::Equals)?;self.field(field,spec,&record,depth+1)?}else if let Shape::Table(spec_fn)=field.shape{self.table(spec_fn,depth+1)?}else{self.field(field,spec,&record,depth+1)?};self.insert(&mut record,field.id,value)?;
+        }
+        for field in &spec.fields{if record.fields.contains_key(&field.id){continue;}let value=if matches!(field.shape,Shape::Statements(_)){self.field(field,spec,&record,depth+1)?}else{FieldValue::Absent};self.insert(&mut record,field.id,value)?;}
+        if call{self.expect(TokenKind::RParen)?;}Ok(record)
+    }
+    fn starts(&mut self,shape:&Shape)->Result<bool,TextError>{let kind=self.kind()?;Ok(match shape{Shape::Bool|Shape::Enum(_)|Shape::Count=>kind==TokenKind::Ident,Shape::Int|Shape::UInt=>kind==TokenKind::Int,Shape::Float|Shape::Quantity(_)|Shape::Angle(_)|Shape::Dim(_)=>matches!(kind,TokenKind::Int|TokenKind::Float|TokenKind::Ident),Shape::Text|Shape::Ref(_)=>matches!(kind,TokenKind::Text|TokenKind::Ident),Shape::Bytes64=>kind==TokenKind::Text,Shape::Embed(_)|Shape::EmbedFrom(_)=>matches!(kind,TokenKind::Text|TokenKind::Fence),Shape::Coord(_)=>kind==TokenKind::At,Shape::Dir=>kind==TokenKind::Caret,Shape::Range|Shape::Expr=>kind==TokenKind::LParen,Shape::List(_)|Shape::Table(_)=>kind==TokenKind::LBracket,Shape::Map(_)|Shape::Block(_)=>kind==TokenKind::LBrace,_=>true})}
+    fn shape(&mut self,shape:&Shape,depth:usize)->Result<FieldValue,TextError>{
+        self.node(depth)?;
+        match shape{
+            Shape::Bool=>{let token=self.expect(TokenKind::Ident)?;match token.text{"true"=>Ok(FieldValue::Bool(true)),"false"=>Ok(FieldValue::Bool(false)),_=>Err(self.error("invalid native Bool"))}},
+            Shape::Int|Shape::UInt=>{let token=self.expect(TokenKind::Int)?;if token.text.len()>21{return Err(self.error("native integer is out of range"));}if matches!(shape,Shape::UInt){token.text.parse().map(FieldValue::UInt).map_err(|_|self.error("invalid native UInt"))}else{token.text.parse().map(FieldValue::Int).map_err(|_|self.error("invalid native Int"))}},
+            Shape::Float=>self.number().map(|(value,_)|FieldValue::Float(value)),
+            Shape::Text|Shape::Ref(_)=>{let token=self.take()?;self.text(token).map(FieldValue::Text)},
+            Shape::Bytes64=>{let token=self.expect(TokenKind::Text)?;self.octets(token).map(FieldValue::Bytes64)},
+            Shape::Enum(variants)=>{let token=self.expect(TokenKind::Ident)?;variants.iter().find(|(tag,_)|tag==token.text).map(|(_,value)|FieldValue::Enum(*value)).ok_or_else(||self.error("invalid native enum tag"))},
+            Shape::Count=>{let token=self.expect(TokenKind::Ident)?;token.text.strip_prefix('x').filter(|digits|digits.len()<=20).and_then(|digits|digits.parse().ok()).map(FieldValue::UInt).ok_or_else(||self.error("invalid native count"))},
+            Shape::Quantity(declared)|Shape::Angle(declared)=>{let (value,number)=self.number()?;let suffix=self.peek(0)?;let value=if suffix.kind==TokenKind::Ident&&suffix.start==number.end{self.take()?;let actual=crate::os_dsl::unit_by_symbol(suffix.text).ok_or_else(||self.error("unknown native unit"))?;if actual.dimension!=declared.dimension{return Err(self.error("incompatible native unit"));}if value.is_nan(){value}else{crate::os_dsl::convert(value,actual,declared).ok_or_else(||self.error("incompatible native unit"))?}}else{value};Ok(FieldValue::Float(value))},
+            Shape::Embed(language)=>self.embedded(language),Shape::EmbedFrom(_)=>Err(self.error("native embedded language requires its record")),
+            Shape::Coord(dims)=>{self.expect(TokenKind::At)?;self.fixed_numbers(*dims as usize)},Shape::Dir=>{self.expect(TokenKind::Caret)?;self.fixed_numbers(3)},
+            Shape::Dim(dims)=>{let token=self.peek(0)?;let mut values=Vec::new();if token.kind==TokenKind::Ident&&token.text.contains('x'){self.take()?;for part in token.text.split('x'){if part.len()>2048{return Err(self.error("native dimension number is too long"));}let value=parse_f64(part).map_err(|_|self.error("invalid native dimension number"))?;self.push(&mut values,FieldValue::Float(value))?;}}else{let (first,token)=self.number()?;self.push(&mut values,FieldValue::Float(first))?;if *dims>1{let suffix=self.expect(TokenKind::Ident)?;if suffix.start!=token.end||!suffix.text.starts_with('x'){return Err(self.error("invalid native dimensions"));}for part in suffix.text[1..].split('x'){if part.len()>2048{return Err(self.error("native dimension number is too long"));}let value=parse_f64(part).map_err(|_|self.error("invalid native dimension number"))?;self.push(&mut values,FieldValue::Float(value))?;}}}if values.len()!=*dims as usize{return Err(self.error("native dimension arity mismatch"));}Ok(FieldValue::Tuple(values))},
+            Shape::Range=>{self.expect(TokenKind::LParen)?;let mut values=Vec::new();let token=self.peek(0)?;let (low,high)=if token.kind==TokenKind::Ident&&token.text.contains(".."){self.take()?;let(low,high)=token.text.split_once("..").unwrap();if low.len()>2048||high.len()>2048{return Err(self.error("native range number is too long"));}(parse_f64(low).map_err(|_|self.error("invalid native range number"))?,parse_f64(high).map_err(|_|self.error("invalid native range number"))?)}else{let low=self.number()?.0;self.expect(TokenKind::DotDot)?;let high=self.number()?.0;(low,high)};self.push(&mut values,FieldValue::Float(low))?;self.push(&mut values,FieldValue::Float(high))?;if self.kind()?==TokenKind::Comma{self.take()?;let (step,_)=self.number()?;self.push(&mut values,FieldValue::Float(step))?;}self.expect(TokenKind::RParen)?;Ok(FieldValue::Tuple(values))},
+            Shape::Tuple(inner,length)=>{let mut values=Vec::new();loop{let value=self.shape(inner,depth+1)?;self.push(&mut values,value)?;if self.kind()?!=TokenKind::Comma{break;}self.take()?;}if length.is_some_and(|length|length!=values.len()){return Err(self.error("native tuple arity mismatch"));}Ok(FieldValue::Tuple(values))},
+            Shape::List(inner)=>{self.expect(TokenKind::LBracket)?;let mut values=Vec::new();while self.kind()?!=TokenKind::RBracket{let before=self.peek(0)?.start;let value=if let Shape::Record(make)=inner.as_ref(){self.expect(TokenKind::LBrace)?;let record={let spec=self.metadata(&make)?;self.record(&spec,depth+1)?};self.expect(TokenKind::RBrace)?;FieldValue::Record(record)}else{self.shape(inner,depth+1)?};if self.peek(0)?.start==before{return Err(self.error("native list element made no progress"));}self.push(&mut values,value)?;}self.take()?;Ok(FieldValue::List(values))},
+            Shape::Record(make)=>{let spec=self.metadata(&make)?;self.record(&spec,depth+1).map(FieldValue::Record)},
+            Shape::Block(inner)=>{self.expect(TokenKind::LBrace)?;self.charge(size_of::<FieldValue>())?;let value=self.shape(inner,depth+1)?;self.expect(TokenKind::RBrace)?;Ok(FieldValue::Block(Box::new(value)))},
+            Shape::Statements(variants)=>{let mut values=Vec::new();loop{let token=self.peek(0)?;let Some((keyword,make))=variants.iter().find(|(keyword,_)|keyword==token.text&&token.kind==TokenKind::Ident)else{break;};let before=token.start;let keyword=self.copy(keyword)?;let record={let spec=self.metadata(&make)?;self.record(&spec,depth+1)?};if self.peek(0)?.start==before{return Err(self.error("native statement made no progress"));}self.push(&mut values,(keyword,record))?;}Ok(FieldValue::Statements(values))},
+            Shape::Map(inner)=>{self.expect(TokenKind::LBrace)?;let mut values=Vec::new();while let Some(key)=self.dynamic_key()?{let key=self.text(key)?;self.take()?;self.expect(TokenKind::Equals)?;let value=self.shape(inner,depth+1)?;self.push(&mut values,(key,value))?;}self.expect(TokenKind::RBrace)?;Ok(FieldValue::Map(values))},
+            Shape::Value=>self.dynamic(depth+1).map(FieldValue::Value),
+            Shape::Table(make)=>{self.expect(TokenKind::LBracket)?;let mut rows=Vec::new();while self.kind()?!=TokenKind::RBracket{self.expect(TokenKind::LBrace)?;let record={let spec=self.metadata(&make)?;self.record(&spec,depth+1)?};self.expect(TokenKind::RBrace)?;self.push(&mut rows,FieldValue::Record(record))?;}self.take()?;Ok(FieldValue::List(rows))},
+            Shape::Expr=>{self.expect(TokenKind::LParen)?;let value=self.expression(0,depth+1)?;self.expect(TokenKind::RParen)?;Ok(FieldValue::Expr(value))},
+            Shape::Wire=>self.wire(depth+1).map(FieldValue::Wire),
+        }
+    }
+    fn fused_end(&mut self)->Result<Option<usize>,TextError>{
+        let source=&self.source[self.position+1..];let start=self.position+1;let span=TextSpan::at(self.line,self.column);
+        self.control.scoped_stage(|control|{control.begin_stage(source.len()).map_err(|message|TextError::new(message,span))?;let mut chars=source.char_indices().peekable();let mut colon=false;let mut first=true;while let Some((offset,c))=chars.next(){control.advance(c.len_utf8()).map_err(|message|TextError::new(message,span))?;if c=='>'||c=='-'{if first{return Ok(None);}if c=='-'&&chars.peek().is_some_and(|(_,next)|*next=='-'){return Ok(None);}return Ok(Some(start+offset+1));}if c==':'&&!colon{colon=true;first=true;continue;}if (first&&!(c.is_alphabetic()||c=='_'))||(!first&&!(c.is_alphanumeric()||matches!(c,'_'|'.'|'/'))){return Ok(None);}first=false;}Ok(None)})
+    }
+    fn wire_node(&mut self)->Result<WireNode,TextError>{let token=self.expect(TokenKind::Ident)?;let id=self.copy(token.text)?;let kind=if self.kind()?==TokenKind::Colon{self.take()?;let token=self.expect(TokenKind::Ident)?;Some(self.copy(token.text)?)}else{None};let port=if self.kind()?==TokenKind::At{self.take()?;let token=self.expect(TokenKind::Ident)?;Some(self.copy(token.text)?)}else{None};Ok(WireNode{id,kind,port})}
+    fn wire_label(&mut self)->Result<WireEdgeLabel,TextError>{self.expect(TokenKind::LBracket)?;let id=if self.kind()?==TokenKind::Ident{let token=self.take()?;Some(self.copy(token.text)?)}else{None};let kind=if self.kind()?==TokenKind::Colon{self.take()?;let token=self.expect(TokenKind::Ident)?;Some(self.copy(token.text)?)}else{None};if id.is_none()&&kind.is_none(){return Err(self.error("native wire label requires an identity or kind"));}self.expect(TokenKind::RBracket)?;Ok(WireEdgeLabel{id,kind})}
+    fn wire(&mut self,depth:usize)->Result<WireValue,TextError>{
+        let mut from=self.wire_node()?;let mut edge_label=WireEdgeLabel::default();let token=self.peek(0)?;
+        let edge=match token.kind{
+            TokenKind::Arrow|TokenKind::DashArrow=>{self.take()?;Some((token.kind==TokenKind::Arrow,self.wire_node()?))},
+            TokenKind::BackArrow=>{self.take()?;if self.kind()?==TokenKind::LBracket{edge_label=self.wire_label()?;self.expect(TokenKind::Minus)?;}let to=self.wire_node()?;Some((true,std::mem::replace(&mut from,to)))},
+            TokenKind::Minus if self.peek(1)?.kind==TokenKind::LBracket=>{self.take()?;edge_label=self.wire_label()?;let arrow=self.take()?;if !matches!(arrow.kind,TokenKind::Arrow|TokenKind::DashArrow){return Err(self.error("native wire label requires an arrow"));}Some((arrow.kind==TokenKind::Arrow,self.wire_node()?))},
+            TokenKind::EdgeArrow=>{self.take()?;let body=&token.text[1..token.text.len()-1];let(id,kind)=if let Some(kind)=body.strip_prefix(':'){(None,Some(kind))}else if let Some((id,kind))=body.split_once(':'){(Some(id),Some(kind))}else{(Some(body),None)};edge_label=WireEdgeLabel{id:id.map(|value|self.copy(value)).transpose()?,kind:kind.map(|value|self.copy(value)).transpose()?};Some((token.text.ends_with('>'),self.wire_node()?))},
+            _=>None
+        };
+        let properties=if self.kind()?==TokenKind::LBrace{self.dynamic(depth+1)?}else{DslValue::Object(Vec::new())};Ok(WireValue{from,edge,edge_label,properties})
+    }
+    fn fixed_numbers(&mut self,count:usize)->Result<FieldValue,TextError>{let mut values=Vec::new();for index in 0..count{if index!=0{self.expect(TokenKind::Comma)?;}let(value,_)=self.number()?;self.push(&mut values,FieldValue::Float(value))?;}if self.kind()?==TokenKind::Comma{return Err(self.error("native coordinate arity mismatch"));}Ok(FieldValue::Tuple(values))}
+    fn table(&mut self,make:RecordSpecProducer,depth:usize)->Result<FieldValue,TextError>{
+        let spec=self.metadata(&make)?;validate_table_columns(&spec)?;self.expect(TokenKind::LBracket)?;let mut columns=Vec::new();while self.kind()?!=TokenKind::RBracket{let token=self.expect(TokenKind::Ident)?;let field=spec.fields.iter().find(|field|field.key==token.text).ok_or_else(||self.error("unknown native table column"))?;if columns.iter().any(|column:&&FieldSpec|column.id==field.id){return Err(self.error("duplicate native table column"));}if self.kind()?==TokenKind::Colon{self.take()?;self.expect(TokenKind::Ident)?;}self.push(&mut columns,field)?;}self.take()?;self.expect(TokenKind::LBrace)?;let mut rows=Vec::new();while self.kind()?!=TokenKind::RBrace{if columns.is_empty(){return Err(self.error("native table requires columns"));}self.node(depth)?;let mut record=RecordValue::default();for field in &columns{let value=if self.kind()?==TokenKind::Placeholder{self.take()?;FieldValue::Absent}else if let Shape::Record(make)=field.shape{self.expect(TokenKind::LBrace)?;let record={let spec=self.metadata(&make)?;self.record(&spec,depth+1)?};self.expect(TokenKind::RBrace)?;FieldValue::Record(record)}else{self.shape(&field.shape,depth+1)?};self.insert(&mut record,field.id,value)?;}for field in &spec.fields{if !record.fields.contains_key(&field.id){self.insert(&mut record,field.id,FieldValue::Absent)?;}}self.push(&mut rows,FieldValue::Record(record))?;}self.take()?;Ok(FieldValue::List(rows))
+    }
+    fn dynamic(&mut self,depth:usize)->Result<DslValue,TextError>{
+        self.node(depth)?;let token=self.peek(0)?;match token.kind{
+            TokenKind::LBrace=>{self.take()?;let mut entries=Vec::new();while let Some(key)=self.dynamic_key()?{let key=self.text(key)?;self.take()?;self.expect(TokenKind::Equals)?;let value=self.dynamic(depth+1)?;self.push(&mut entries,(key,value))?;}self.expect(TokenKind::RBrace)?;Ok(DslValue::Object(entries))},
+            TokenKind::LBracket=>{self.take()?;let mut values=Vec::new();while self.kind()?!=TokenKind::RBracket{let value=self.dynamic(depth+1)?;self.push(&mut values,value)?;}self.take()?;Ok(DslValue::Array(values))},
+            TokenKind::Text=>{self.take()?;self.text(token).map(DslValue::String)},
+            TokenKind::Int=>{self.take()?;if token.text.len()>2048{return Err(self.error("native dynamic integer is too long"));}let value=if let Ok(value)=token.text.parse::<u64>(){Number::UInt(value)}else if let Ok(value)=token.text.parse::<i64>(){Number::Int(value)}else{Number::Float(parse_f64(token.text).map_err(|_|self.error("invalid native dynamic number"))?)};Ok(DslValue::Number(value))},
+            TokenKind::Float=>self.number().map(|(value,_)|DslValue::Number(Number::Float(value))),
+            TokenKind::Ident=>{self.take()?;match token.text{"null"=>Ok(DslValue::Null),"true"=>Ok(DslValue::Bool(true)),"false"=>Ok(DslValue::Bool(false)),"nan"|"inf"=>parse_f64(token.text).map(|value|DslValue::Number(Number::Float(value))).map_err(|_|self.error("invalid native dynamic number")),"bytes64"=>{self.expect(TokenKind::LParen)?;let token=self.expect(TokenKind::Text)?;let bytes=self.octets(token)?;self.expect(TokenKind::RParen)?;Ok(DslValue::Bytes(bytes))},_=>Err(self.error("unknown native dynamic literal"))}},
+            _=>Err(self.error("invalid native dynamic value"))
+        }
+    }
+    fn expression(&mut self,minimum:u8,depth:usize)->Result<ExprValue,TextError>{
+        self.node(depth)?;let token=self.peek(0)?;let left=match token.kind{
+            TokenKind::Minus=>{self.take()?;self.charge(size_of::<ExprValue>())?;ExprValue::Neg(Box::new(self.expression(3,depth+1)?))},
+            TokenKind::LParen=>{self.take()?;let value=self.expression(0,depth+1)?;self.expect(TokenKind::RParen)?;value},
+            TokenKind::Ident|TokenKind::Text if token.kind==TokenKind::Text||!matches!(token.text,"inf"|"nan")=>{self.take()?;let name=if token.kind==TokenKind::Text{self.text(token)?}else{self.copy(token.text)?};if self.kind()?==TokenKind::LParen{self.take()?;let mut values=Vec::new();if self.kind()?!=TokenKind::RParen{loop{let value=self.expression(0,depth+1)?;self.push(&mut values,value)?;if self.kind()?!=TokenKind::Comma{break;}self.take()?;}}self.expect(TokenKind::RParen)?;ExprValue::Call(name,values)}else{ExprValue::Var(name)}},
+            _=>ExprValue::Num(self.number()?.0)
+        };
+        self.expression_tail(left,minimum,depth)
+    }
+    fn expression_tail(&mut self,mut left:ExprValue,minimum:u8,depth:usize)->Result<ExprValue,TextError>{
+        let mut count=0usize;
+        loop{let token=self.peek(0)?;let glued=matches!(token.kind,TokenKind::Int|TokenKind::Float)&&token.text.starts_with('-');let operator=if glued{Some(ExprOp::Sub)}else{match token.kind{TokenKind::Plus=>Some(ExprOp::Add),TokenKind::Minus=>Some(ExprOp::Sub),TokenKind::Star=>Some(ExprOp::Mul),TokenKind::Slash=>Some(ExprOp::Div),_=>None}};let Some(operator)=operator else{break;};let precedence=operator.precedence();if precedence<minimum{break;}count+=1;self.node(depth+count)?;self.charge(size_of::<ExprValue>()*2)?;let right=if glued{let value=ExprValue::Num(-self.number()?.0);self.expression_tail(value,precedence+1,depth+1)?}else{self.take()?;self.expression(precedence+1,depth+1)?};left=ExprValue::Binary(operator,Box::new(left),Box::new(right));}Ok(left)
+    }
+}
+
+/// 🧭️ Parses exact schema-owned Text with bounded borrowed scanning, cumulative ownership and interior cancellation.
+pub fn parse_exact_controlled(text:&str,spec:&RecordSpec,options:&ParseOptions,control:&mut NativeDecodeControl<'_>)->Result<Cst,TextError>{
+    options.limits.check_bytes(text.len())?;
+    control.scoped_stage(|control|{control.begin_stage(text.len()).map_err(|message|TextError::new(message,TextSpan::at(1,1)))?;let mut reader=Reader{source:text,position:0,line:1,column:1,lookahead:[None,None],limits:options.limits,tokens:0,nodes:0,control};let record=reader.record(spec,0)?;reader.expect(TokenKind::Eof)?;Ok(record)})
+}
+
+/// 🧮️ Parses a bare semantic expression under the same owned native allocation and input work control.
+pub fn parse_expr_text_controlled(text:&str,limits:&Limits,control:&mut NativeDecodeControl<'_>)->Result<ExprValue,TextError>{limits.check_bytes(text.len())?;control.scoped_stage(|control|{control.begin_stage(text.len()).map_err(|message|TextError::new(message,TextSpan::at(1,1)))?;let mut reader=Reader{source:text,position:0,line:1,column:1,lookahead:[None,None],limits:*limits,tokens:0,nodes:0,control};let value=reader.expression(0,0)?;reader.expect(TokenKind::Eof)?;Ok(value)})}
